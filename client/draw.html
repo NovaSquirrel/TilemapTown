@@ -1,0 +1,226 @@
+<html>
+<head>
+<meta charset="utf-8" /> 
+<title>SparklesWorld</title>
+<style>
+body{
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+</style>
+<script>
+var db32 = [
+  "#000000", "#222034", "#45283c", "#663931",
+  "#8f563b", "#df7126", "#d9a066", "#eec39a",
+  "#fbf236", "#99e550", "#6abe30", "#37946e",
+  "#4b692f", "#524b24", "#323c39", "#3f3f74",
+  "#306082", "#5b6ee1", "#639bff", "#5fcde4",
+  "#cbdbfc", "#ffffff", "#9badb7", "#847e87",
+  "#696a6a", "#595652", "#76428a", "#ac3232",
+  "#d95763", "#d77bba", "#8f974a", "#8a6f30"
+];
+
+var pico8 = [
+  "#000000", "#1D2B53", "#7E2553", "#008751",
+  "#AB5236", "#5F574F", "#C2C3C7", "#FFF1E8",
+  "#FF004D", "#FFA300", "#FFEC27", "#00E436",
+  "#29ADFF", "#83769C", "#FF77A8", "#FFCCAA"
+];
+
+var mainCanvas = null;
+var colorCanvas = null;
+var previewCanvas = null;
+var mainContext = null;
+var colorContext = null;
+var previewContext = null;
+var currentColor = "#000000";
+var mouseIsDown = false;
+
+var IconArray = [];
+var IconWidth = 16;
+var IconHeight = 16;
+
+for(var i=0; i<IconWidth; i++) {
+  IconArray[i] = [];
+  for(var j=0; j<IconHeight; j++) {
+    IconArray[i][j] = "transparent";
+  }
+}
+
+function initDraw() {
+  mainCanvas = document.getElementById('icon');
+  colorCanvas = document.getElementById('palette');
+  previewCanvas = document.getElementById('preview');
+  mainContext = mainCanvas.getContext('2d');
+  colorContext = colorCanvas.getContext('2d');
+  previewContext = previewCanvas.getContext('2d');
+
+  colorCanvas.addEventListener('mousedown', function(evt) {
+    var mousePos = getMousePos(colorCanvas, evt);
+    var realX = Math.floor(mousePos.x/32);
+    var realY = Math.floor(mousePos.y/16);
+    if(realX < 8 && realX >= 0 && realY < 4 && realY >= 0)
+      currentColor = db32[realY*8+realX];
+    else
+      currentColor = "transparent";
+    drawPalette();
+  }, false);
+
+  mainCanvas.addEventListener('mousedown', function(evt) {
+    var mousePos = getMousePos(mainCanvas, evt);
+    var x = Math.floor(mousePos.x/16);
+    var y = Math.floor(mousePos.y/16);
+
+    if(x < 0 || x >= 16 || y < 0 || y >= 16)
+      return;
+    if(evt.button == 2) {
+      currentColor = IconArray[x][y];
+      drawPalette();
+      return;
+    }
+    mouseIsDown = true;
+    plot(x, y);
+  }, false);
+
+  mainCanvas.addEventListener('mouseup', function(evt) {
+    mouseIsDown = false;
+  }, false);
+
+  mainCanvas.addEventListener('mousemove', function(evt) {
+    var mousePos = getMousePos(mainCanvas, evt);
+    if(mouseIsDown)
+      plot(Math.floor(mousePos.x/16), Math.floor(mousePos.y/16));
+  }, false);
+  drawIcon();
+  drawPalette();
+}
+
+function plot(x, y) {
+  if(x < 0 || x >= 16 || y < 0 || y >= 16)
+    return;
+  IconArray[x][y] = currentColor;
+  drawIcon();
+}
+
+function drawIcon() {
+  var tgrid = document.getElementById("tgrid");
+  mainContext.drawImage(tgrid, 0, 0, 256, 256, 0, 0, 256, 256);
+  previewContext.fillStyle="transparent";
+  previewContext.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+  var w = mainCanvas.width/IconWidth;
+  var h = mainCanvas.height/IconHeight;
+  for(var i=0; i<IconWidth; i++) {
+    for(var j=0; j<IconHeight; j++) {
+      mainContext.beginPath();
+      mainContext.fillStyle = IconArray[i][j];
+      mainContext.fillRect(i*w, j*h, w, h);
+      mainContext.fill();
+      previewContext.beginPath();
+      previewContext.fillStyle = IconArray[i][j];
+      previewContext.fillRect(i, j, 1, 1);
+      previewContext.fill();
+    }
+  }
+}
+
+function drawPalette() {
+  var tgrid = document.getElementById("tgrid");
+  colorContext.drawImage(tgrid, 0, 0, 256, 16, 0, 64, 256, 16);
+  var w = colorCanvas.width/8;
+  var h = (colorCanvas.height-16)/4;
+  for(var x=0; x<8; x++) {
+    for(var y=0; y<4; y++) {
+      colorContext.beginPath();
+      colorContext.fillStyle = db32[y*8+x];
+      colorContext.fillRect(x*w, y*h, w, h);
+      colorContext.fill();
+      if(db32[y*8+x] === currentColor) {
+        colorContext.lineWidth=1;
+        colorContext.beginPath();
+        colorContext.strokeStyle = "black";
+        colorContext.rect(x*w, y*h, w, h);
+        colorContext.stroke();
+      }
+    }
+  }
+  if("transparent" === currentColor) {
+    colorContext.lineWidth=1;
+    colorContext.beginPath();
+    colorContext.strokeStyle = "black";
+    colorContext.rect(0, 64, 256, 16);
+    colorContext.stroke();
+  }
+}
+
+function getMousePos(canvas, evt) {
+  var rect = canvas.getBoundingClientRect();
+  return {
+    x: evt.clientX - rect.left,
+    y: evt.clientY - rect.top
+  };
+}
+
+function shiftIcon(offsetX, offsetY) {
+  var NewIcon = [];
+  for(var i=0; i<IconWidth; i++) {
+    NewIcon[i] = [];
+    for(var j=0; j<IconHeight; j++) {
+      NewIcon[i][j] = IconArray[(i-offsetX)&15][(j-offsetY)&15];
+    }
+  }
+  IconArray = NewIcon;
+  drawIcon();
+}
+
+function rotateIcon(callback) {
+  var NewIcon = [];
+  for(var i=0; i<IconWidth; i++) {
+    NewIcon[i] = [];
+    for(var j=0; j<IconHeight; j++) {
+      coordinates = callback(i, j);
+      NewIcon[i][j] = IconArray[coordinates[0]&15][coordinates[1]&15];
+    }
+  }
+  IconArray = NewIcon;
+  drawIcon();
+}
+
+function downloadCanvas(canvasId, filename) {
+  link = document.getElementById('download');
+  link.href = document.getElementById(canvasId).toDataURL();
+  link.download = filename;
+}
+
+</script>
+</head>
+<body onLoad="initDraw();" oncontextmenu="return false;">
+
+<img src="img/tgrid.png" style="display: none;" id="tgrid">
+<table border="0">
+<tr><td><canvas id="preview" width="16" height="16" style="border:1px solid #000000;" imageSmoothingEnabled="false"></canvas></td></tr>
+<tr><td><canvas id="icon" width="256" height="256" style="border:1px solid #000000;" imageSmoothingEnabled="false"></canvas></td></tr>
+<tr><td><canvas id="palette" width="256" height="80" style="border:1px solid #000000;" imageSmoothingEnabled="false"></canvas></td></tr>
+
+<tr><td>
+<input type="button" value="←" onclick="shiftIcon(-1, 0);">
+<input type="button" value="↓" onclick="shiftIcon( 0, 1);">
+<input type="button" value="↑" onclick="shiftIcon( 0,-1);">
+<input type="button" value="→" onclick="shiftIcon( 1, 0);">
+<input type="button" value="↔" onclick="rotateIcon(function(x,y){return [15-x, y]});">
+<input type="button" value="↕" onclick="rotateIcon(function(x,y){return [x, 15-y]});">
+<input type="button" value="↶" onclick="rotateIcon(function(x,y){return [15-y, x]});">
+<input type="button" value="↷" onclick="rotateIcon(function(x,y){return [y, 15-x]});">
+</td></tr>
+<tr><td>
+<a id="download" href="" onclick="downloadCanvas('preview', 'icon.png')">Download</a>
+
+</td></tr>
+
+</table>
+
+</body>
+</html>

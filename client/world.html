@@ -1,0 +1,67 @@
+<html>
+<!-- resources -->
+<head>
+<title>SparklesWorld</title>
+<link rel="stylesheet" type="text/css" href="world.css" />
+<script src="js/ui.js"></script>
+<script src="js/map.js"></script>
+<script src="js/predefined.js"></script>
+</head>
+<body onLoad="initWorld();" ondragstart="return false;" ondrop="return false;">
+
+<div id="wrapper" style="background-color: white; display: flex; flex-direction:column;">
+<!-- image resources -->
+<img src="img/potluck.png" style="display: none;" id="potluck">
+<img src="img/turf.png" style="display: none;" id="turf">
+<img src="img/chicago.png" style="display: none;" id="chicago">
+
+<!-- menu bar -->
+<div style="width: 100%; height: 32px;" class="topnav unselectable">
+  <a href="#">Login</a>
+  <a href="#">Inventory</a>
+  <a href="#" onclick="viewOptions();">Options</a>
+  <a href="#">Help</a>
+  <a href="#"><div style="width:16px; height:16px; background: url(img/potluck.png) -32px -400px;"></div></a>
+</div>
+
+<!-- interface -->
+<div style="display: flex; flex-direction: row; flex-grow: 1; overflow-y: hidden;">
+  <!-- left side, map and other stuff -->
+  <div>
+    <canvas class="unselectable" id="map" width="320" height="320" style="width:320px; height:320px;" imageSmoothingEnabled="false" oncontextmenu="return rightClick();"></canvas><br>
+    <canvas class="unselectable" id="selector" width="320" height="16" style="background-color:white;" imageSmoothingEnabled="false"></canvas><br>
+
+    <div style="overflow: auto; max-height: calc(100% - 16px - 320px - 32px);">
+      <div id="selectionInfo" style="display:none;">
+        <input type="checkbox" id="turfselect" checked="true"><label for="turfselect">Tiles</label></input>
+        <input type="checkbox" id="objselect" checked="true"><label for="objselect">Objects</label></input>
+        <input type="button" value="Delete" onclick="selectionDelete();">
+      </div>
+      <div id="panel"></div>
+      <div id="options" style="display: none;">
+        <input type="checkbox" id="alwayscenter" checked="true"><label for="alwayscenter" class="unselectable">Always center camera</label></input><br>
+        <input type="checkbox" id="doublezoom"><label for="doublezoom" class="unselectable">2x zoom</label></input><br>
+        <input type="number" id="viewwidth" min="1" max="50" size="2" value="20"><label for="viewwidth">View width</label></input><br>
+        <input type="number" id="viewheight" min="1" max="50" size="2" value="20"><label for="viewheight">View height</label></input><br>
+        <input type="button" onclick="applyOptions();" value="Apply changes">
+        <input type="button" onclick="viewOptions();" value="Close options">
+      </div>
+    </div>
+
+   </div>
+
+   <!-- right side, chat -->
+   <div style="display: flex; flex-direction: column; flex-grow: 1; max-height: calc(100% - 32px);">
+     <div id="chatArea" class="chatarea" style="display: block; padding: 2px; overflow-y: scroll; flex-grow: 1;">
+       chat area<br>
+     </div>
+     <div>
+       <input type="text" style="width:100%;" id="chatInput" placeholder="chat here...">
+     </div>
+   </div>
+
+</div>
+
+</div>
+</body>
+</html>
