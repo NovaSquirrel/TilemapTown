@@ -12,16 +12,15 @@
 <div id="wrapper" style="background-color: white; display: flex; flex-direction:column;">
 <!-- image resources -->
 <img src="img/potluck.png" style="display: none;" id="potluck">
-<img src="img/turf.png" style="display: none;" id="turf">
 <img src="img/chicago.png" style="display: none;" id="chicago">
 
 <!-- menu bar -->
 <div style="width: 100%; height: 32px;" class="topnav unselectable">
-  <a href="#">Login</a>
-  <a href="#">Inventory</a>
-  <a href="#" onclick="viewOptions();">Options</a>
-  <a href="#">Help</a>
-  <a href="#"><div style="width:16px; height:16px; background: url(img/potluck.png) -32px -400px;"></div></a>
+  <a id="navlogin"     href="#">Login</a>
+  <a id="navinventory" href="#">Inventory</a>
+  <a id="navoptions"   href="#" onclick="viewOptions();">Options</a>
+  <a id="navhelp"      href="#">Help</a>
+  <a id="navcustomize" href="#" onclick="viewCustomize();"><div style="width:16px; height:16px; background: url(img/potluck.png) -32px -400px;"></div></a>
 </div>
 
 <!-- interface -->
@@ -45,6 +44,11 @@
         <input type="number" id="viewheight" min="1" max="50" size="2" value="20"><label for="viewheight">View height</label></input><br>
         <input type="button" onclick="applyOptions();" value="Apply changes">
         <input type="button" onclick="viewOptions();" value="Close options">
+      </div>
+      <div id="character" style="display: none;">
+        <input id="iconPicker" type="file" onchange="previewIcon();"><br>
+        <img id="iconPreview" src="" width="32" height="32" alt="Image preview"><br>
+        <input type="button" value="Use"><br>
       </div>
     </div>
 

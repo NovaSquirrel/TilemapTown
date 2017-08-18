@@ -1,6 +1,9 @@
 // todo: replace with actual mob drawing
 var PlayerX = 5;
 var PlayerY = 5;
+var PlayerIconSheet = "potluck";
+var PlayerIconX = 2;
+var PlayerIconY = 25;
 
 // camera settings
 var ViewWidth;
@@ -175,7 +178,8 @@ function drawMap() {
   }
 
   // Draw the player
-  ctx.drawImage(pot, 2*16, 25*16, 16, 16, (PlayerX*16)-PixelCameraX, (PlayerY*16)-PixelCameraY, 16, 16);
+//  ctx.drawImage(pot, 2*16, 25*16, 16, 16, (PlayerX*16)-PixelCameraX, (PlayerY*16)-PixelCameraY, 16, 16);
+  ctx.drawImage(document.getElementById(PlayerIconSheet), PlayerIconX*16, PlayerIconY*16, 16, 16, (PlayerX*16)-PixelCameraX, (PlayerY*16)-PixelCameraY, 16, 16);
 
   // Draw a mouse selection if there is one
   if(MouseActive) {
@@ -400,9 +404,35 @@ function rightClick(evt) {
 
 function viewOptions() {
   var options = document.getElementById("options");
-  options.style.display = (options.style.display=='none')?'block':'none';
+  var Hidden = (options.style.display=='none');
+  document.getElementById("navoptions").setAttribute("class", Hidden?"navactive":"");
+  options.style.display = Hidden?'block':'none';
 }
 
 function viewInventory() {
 
+}
+
+function viewCustomize() {
+  var options = document.getElementById("character");
+  var Hidden = (options.style.display=='none');
+  document.getElementById("navcustomize").setAttribute("class", Hidden?"navactive":"");
+  options.style.display = Hidden?'block':'none';
+}
+
+function previewIcon() {
+  var preview = document.getElementById("iconPreview");
+  var file    = document.getElementById("iconPicker").files[0];
+  var reader  = new FileReader();
+
+  reader.addEventListener("load", function () {
+    preview.src = reader.result;
+    PlayerIconSheet = "iconPreview";
+    PlayerIconX = 0;
+    PlayerIconY = 0;
+  }, false);
+
+  if (file) {
+    reader.readAsDataURL(file);
+  }
 }

@@ -36,6 +36,11 @@ body {
     font-size: 17px;
 }
 
+.navactive {
+    background-color: #999;
+    color: white;
+}
+
 .topnav a:hover {
     background-color: #333;
     color: white;
