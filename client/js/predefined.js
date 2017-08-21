@@ -43,7 +43,7 @@ Predefined.stonewall = {
 
 Predefined.xblock = {
   name: "x block",
-  pic: [0, 16, 1],
+  pic: [0, 15, 0],
   density: true,
 };
 
@@ -131,6 +131,29 @@ Predefined.forceright = {
 
 };
 
+Predefined.bluewall = {
+  name: "blue wall",
+  pic: [0, 16, 27],
+  density: true,
+};
+
+Predefined.pinkwall = {
+  name: "pink wall",
+  pic: [0, 17, 27],
+  density: true,
+};
+
+Predefined.greenwall = {
+  name: "green wall",
+  pic: [0, 18, 27],
+  density: true,
+};
+
+Predefined.orangewall = {
+  name: "orange wall",
+  pic: [0, 19, 27],
+  density: true,
+};
 
 
 
@@ -200,7 +223,7 @@ Predefined.flower3 = {
 
 Predefined.flower4 = {
   name: "flowers",
-  pic: [0, 18, 16],
+  pic: [0, 18, 15],
   density: false,
   obj: true,
 };

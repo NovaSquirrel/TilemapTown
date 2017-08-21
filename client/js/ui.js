@@ -206,8 +206,6 @@ function drawText(ctx, x, y, text) {
 }
 
 function drawSelector() {
-  var turf = document.getElementById("turf");
-
   var canvas = document.getElementById("selector");
   var ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -409,8 +407,27 @@ function viewOptions() {
   options.style.display = Hidden?'block':'none';
 }
 
-function viewInventory() {
+function clearInventory() {
+  Inventory = [];
+  drawSelector();
+}
 
+function addInventory(item) {
+  Inventory.push(Predefined[item]);
+  drawSelector();
+}
+
+function viewInventory() {
+  var options = document.getElementById("inventory");
+  var Hidden = (options.style.display=='none');
+  document.getElementById("navinventory").setAttribute("class", Hidden?"navactive":"");
+  options.style.display = Hidden?'block':'none';
+
+  var Complete = "<input type='button' value='Clear' onclick='clearInventory();'><br>";
+  for(var i in Predefined) {
+     Complete+="<a href='#' onclick='addInventory(\""+i+"\");'>"+Predefined[i].name+"</a><br>"
+  }
+  options.innerHTML = Complete;
 }
 
 function viewCustomize() {
