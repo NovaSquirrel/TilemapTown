@@ -36,6 +36,23 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
+function useItem(Placed) {
+  // place the item on the ground
+  if(Placed.obj) {
+    if(Placed.type == AtomTypes.SIGN) {
+      Placed = CloneAtom(Placed);
+      Message = prompt("What should the sign say?");
+      if(Message == null)
+        return;
+      Placed.message = Message;
+    }
+    MapObjs[PlayerX][PlayerY].push(Placed);
+  } else {
+    MapTiles[PlayerX][PlayerY] = Placed;
+  }
+  drawMap();
+}
+
 function keyHandler(e) {
   // ignore keys when typing in a textbox
   if(document.activeElement.tagName == "INPUT")
@@ -66,21 +83,7 @@ function keyHandler(e) {
     // if there's no item, stop
     if(!Inventory[n])
       return;
-    // place the item on the ground
-    if(Inventory[n].obj) {
-      Placed = Inventory[n];
-      if(Placed.type == AtomTypes.SIGN) {
-        Placed = CloneAtom(Placed);
-        Message = prompt("What should the sign say?");
-        if(Message == null)
-          return;
-        Placed.message = Message;
-      }
-      MapObjs[PlayerX][PlayerY].push(Placed);
-    } else {
-      MapTiles[PlayerX][PlayerY] = Inventory[n];
-    }
-    needRedraw = true;
+    useItem(Inventory[n]);
   } else if (e.keyCode == 38) { // up
     PlayerY--;
   } else if (e.keyCode == 40) { // down
@@ -282,6 +285,16 @@ function selectionInfoVisibility(visibility) {
 
 // sets up the mouse event listeners
 function initMouse() {
+  var inventoryCanvas = document.getElementById("inventoryCanvas");
+
+  function getMousePosRaw(canvas, evt) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+      x: (evt.clientX - rect.left)|0,
+      y: (evt.clientY - rect.top)|0
+    };
+  }
+
   function getMousePos(canvas, evt) {
     var rect = canvas.getBoundingClientRect();
     var xratio = canvas.width / parseInt(canvas.style.width);
@@ -299,6 +312,14 @@ function initMouse() {
     pos.y = ((pos.y) + (CameraY>>4))>>4;
     return pos;
   }
+
+  inventoryCanvas.addEventListener('mousedown', function(evt) {
+    var pos = getMousePosRaw(inventoryCanvas, evt);
+    pos.x = pos.x >> 4;
+    pos.y = pos.y >> 4;
+    var index = pos.y * ViewWidth + pos.x;
+    useItem(PredefinedArray[index]);
+  }, false);
 
   mapCanvas.addEventListener('mousedown', function(evt) {
     panel.innerHTML = "";
@@ -423,11 +444,27 @@ function viewInventory() {
   document.getElementById("navinventory").setAttribute("class", Hidden?"navactive":"");
   options.style.display = Hidden?'block':'none';
 
+/*
   var Complete = "<input type='button' value='Clear' onclick='clearInventory();'><br>";
   for(var i in Predefined) {
      Complete+="<a href='#' onclick='addInventory(\""+i+"\");'>"+Predefined[i].name+"</a><br>"
   }
   options.innerHTML = Complete;
+*/
+  var canvas = document.getElementById("inventoryCanvas");
+  var len = Object.keys(Predefined).length;
+  canvas.width = (ViewWidth*16)+"";
+  canvas.height = (Math.floor(len/ViewWidth)*16)+"";
+  var ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  var count = 0;
+  for(var i in Predefined) {
+    var item = Predefined[i];
+    ctx.drawImage(IconSheets[item.pic[0]], item.pic[1]*16, item.pic[2]*16, 16, 16, (count%ViewWidth)*16, Math.floor(count/ViewWidth)*16, 16, 16);
+    count++;
+  }
+
 }
 
 function viewCustomize() {
@@ -452,4 +489,10 @@ function previewIcon() {
   if (file) {
     reader.readAsDataURL(file);
   }
+}
+
+function downloadCanvas(canvasId, filename) {
+  var link = document.getElementById('download');
+  link.href = document.getElementById(canvasId).toDataURL();
+  link.download = filename;
 }

@@ -37,7 +37,9 @@
         <input type="button" value="Delete" onclick="selectionDelete();">
       </div>
       <div id="panel"></div>
-      <div id="inventory" style="display: none;"></div>
+      <div id="inventory" style="display: none;">
+        <canvas class="unselectable" id="inventoryCanvas" width="320" height="320" imageSmoothingEnabled="false"></canvas>
+      </div>
       <div id="options" style="display: none;">
         <input type="checkbox" id="alwayscenter" checked="true"><label for="alwayscenter" class="unselectable">Always center camera</label></input><br>
         <input type="checkbox" id="doublezoom"><label for="doublezoom" class="unselectable">2x zoom</label></input><br>

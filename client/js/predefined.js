@@ -26,13 +26,13 @@ Predefined.purplesand = {
 Predefined.redbrickfloor = {
   name: "red brick floor",
   pic: [0, 10, 8],
-  density: true,
+  density: false,
 };
 
 Predefined.graybrickfloor = {
   name: "gray brick floor",
   pic: [0, 11, 8],
-  density: true,
+  density: false,
 };
 
 Predefined.stonewall = {
@@ -405,6 +405,12 @@ Predefined.potion3 = {
   density: false,
   obj: true,
 };
+
+var PredefinedArray = [];
+var i=0;
+for (var key in Predefined) {
+  PredefinedArray[i++] = Predefined[key];
+}
 
 /*
 for (var key in Predefined) {
