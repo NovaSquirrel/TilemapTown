@@ -36,6 +36,14 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
+function logMessage(Message) {
+  var chatArea = document.getElementById("chatArea");
+  var bottom = chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight < 1;
+  chatArea.innerHTML += Message + "<br>";
+  if(bottom)
+    chatArea.scrollTop = chatArea.scrollHeight;
+}
+
 function useItem(Placed) {
   // place the item on the ground
   if(Placed.obj) {
@@ -54,11 +62,17 @@ function useItem(Placed) {
 }
 
 function keyHandler(e) {
-  // ignore keys when typing in a textbox
-  if(document.activeElement.tagName == "INPUT")
-    return;
-
   var e = e || window.event;
+
+  // ignore keys when typing in a textbox
+  if(document.activeElement.tagName == "INPUT") {
+    if(document.activeElement == chatInput && e.keyCode == 13) {
+      logMessage(chatInput.value);
+      chatInput.value = "";
+    }
+    return;
+  }
+
   var needRedraw = false;
 
   var OldPlayerX = PlayerX;
@@ -122,7 +136,7 @@ function keyHandler(e) {
         PlayerX = OldPlayerX;
         PlayerY = OldPlayerY;
         if(Obj.type == AtomTypes.SIGN) {
-          alert(Obj.message);
+          logMessage("The sign says: "+Obj.message);
         }
         break;
       }
@@ -322,6 +336,8 @@ function initMouse() {
   }, false);
 
   mapCanvas.addEventListener('mousedown', function(evt) {
+    if(evt.button == 2)
+      return;
     panel.innerHTML = "";
     var pos = getTilePos(evt);
     MouseDown = true;
@@ -335,6 +351,8 @@ function initMouse() {
   }, false);
 
   mapCanvas.addEventListener('mouseup', function(evt) {
+    if(evt.button == 2)
+      return;
     MouseDown = false;
     NeedMapRedraw = true;
 
