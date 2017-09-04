@@ -5,10 +5,60 @@ Predefined.grass = {
   density: false,
 };
 
+Predefined.grass2 = {
+  name: "grass",
+  pic: [1, 0, 3],
+  density: false,
+};
+
+Predefined.grass2 = {
+  name: "grass",
+  pic: [1, 3, 0],
+  density: false,
+};
+
+Predefined.grass3 = {
+  name: "grass",
+  pic: [1, 3, 1],
+  density: false,
+};
+
 Predefined.dirt = {
   name: "dirt",
   pic: [0, 6, 4],
   density: false,
+};
+
+Predefined.dirt2 = {
+  name: "dirt",
+  pic: [1, 2, 0],
+  density: false,
+};
+
+Predefined.dirt3 = {
+  name: "dirt",
+  pic: [1, 7, 2],
+  density: false,
+};
+
+Predefined.water = {
+  name: "water",
+  pic: [1, 1, 1],
+  density: true,
+};
+
+Predefined.water2 = {
+  name: "water",
+  pic: [1, 10, 3],
+  density: true,
+};
+
+Predefined.waterfall = {
+  name: "waterfall",
+  pic: [1, 1, 0],
+  density: false,
+  type: AtomTypes.ESCALATOR,
+  dir: Directions.SOUTH,  
 };
 
 Predefined.brownsand = {
@@ -60,6 +110,12 @@ Predefined.brownbricks = {
   density: true,
 };
 
+Predefined.woodfloor2 = {
+  name: "wood floor",
+  pic: [1, 10, 2],
+  density: false,
+};
+
 Predefined.woodfloor = {
   name: "wood floor",
   pic: [0, 1, 6],
@@ -107,6 +163,7 @@ Predefined.forcedown = {
   pic: [0, 12, 19],
   density: false,
   type: AtomTypes.ESCALATOR,
+  dir: Directions.SOUTH,
 };
 
 Predefined.forceup = {
@@ -114,6 +171,7 @@ Predefined.forceup = {
   pic: [0, 13, 19],
   density: false,
   type: AtomTypes.ESCALATOR,
+  dir: Directions.NORTH,
 };
 
 Predefined.forceleft = {
@@ -121,6 +179,7 @@ Predefined.forceleft = {
   pic: [0, 14, 19],
   density: false,
   type: AtomTypes.ESCALATOR,
+  dir: Directions.WEST,
 };
 
 Predefined.forceright = {
@@ -128,7 +187,7 @@ Predefined.forceright = {
   pic: [0, 15, 19],
   density: false,
   type: AtomTypes.ESCALATOR,
-
+  dir: Directions.EAST,
 };
 
 Predefined.bluewall = {
@@ -175,6 +234,13 @@ Predefined.bush1 = {
 Predefined.bush2 = {
   name: "bush",
   pic: [0, 14, 16],
+  density: true,
+  obj: true,
+};
+
+Predefined.bush3 = {
+  name: "bush",
+  pic: [1, 8, 3],
   density: true,
   obj: true,
 };
@@ -260,6 +326,13 @@ Predefined.pot2 = {
 Predefined.barrel = {
   name: "barrel",
   pic: [0, 18, 18],
+  density: true,
+  obj: true,
+};
+
+Predefined.barrel2 = {
+  name: "barrel",
+  pic: [1, 2, 3],
   density: true,
   obj: true,
 };
@@ -364,6 +437,13 @@ Predefined.chest = {
   obj: true,
 };
 
+Predefined.chest = {
+  name: "chest",
+  pic: [1, 3, 3],
+  density: true,
+  obj: true,
+};
+
 Predefined.coin = {
   name: "coin",
   pic: [0, 3, 20],
@@ -403,6 +483,35 @@ Predefined.potion3 = {
   name: "potion",
   pic: [0, 8, 20],
   density: false,
+  obj: true,
+};
+
+Predefined.tree = {
+  name: "tree",
+  pic: [1, 0, 0],
+  density: true,
+  obj: true,
+};
+
+Predefined.tree2 = {
+  name: "tree",
+  pic: [1, 0, 1],
+  density: true,
+  obj: true,
+};
+
+Predefined.treetop = {
+  name: "tree",
+  pic: [1, 6, 3],
+  density: false,
+  obj: true,
+  over: true,
+};
+
+Predefined.treebot = {
+  name: "tree",
+  pic: [1, 7, 3],
+  density: true,
   obj: true,
 };
 

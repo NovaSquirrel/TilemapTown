@@ -1,0 +1,9 @@
+Uses tiles from:
+https://opengameart.org/content/tiny-16-basic
+https://opengameart.org/content/town-tiles
+https://opengameart.org/content/16x16-town-remix
+https://opengameart.org/content/16x16-indoor-rpg-tileset-the-baseline
+https://opengameart.org/content/16x16-overworld-tiles
+
+Potluck tileset credits:
+https://gist.github.com/eevee/59012b2a3d4dcdb40b5247ecdc2cfb34

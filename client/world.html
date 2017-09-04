@@ -12,6 +12,7 @@
 <div id="wrapper" style="background-color: white; display: flex; flex-direction:column;">
 <!-- image resources -->
 <img src="img/potluck.png" style="display: none;" id="potluck">
+<img src="img/extra.png"   style="display: none;" id="extras">
 <img src="img/chicago.png" style="display: none;" id="chicago">
 
 <!-- menu bar -->
@@ -45,6 +46,7 @@
         <input type="checkbox" id="doublezoom"><label for="doublezoom" class="unselectable">2x zoom</label></input><br>
         <input type="number" id="viewwidth" min="1" max="50" size="2" value="20"><label for="viewwidth">View width</label></input><br>
         <input type="number" id="viewheight" min="1" max="50" size="2" value="20"><label for="viewheight">View height</label></input><br>
+        <input type="button" onclick="applyOptions(); viewOptions();" value="OK">
         <input type="button" onclick="applyOptions();" value="Apply changes">
         <input type="button" onclick="viewOptions();" value="Close options">
       </div>

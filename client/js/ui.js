@@ -4,6 +4,7 @@ var PlayerY = 5;
 var PlayerIconSheet = "potluck";
 var PlayerIconX = 2;
 var PlayerIconY = 25;
+var PlayerDir = 0;
 
 // camera settings
 var ViewWidth;
@@ -27,7 +28,7 @@ var chatInput = null;
 var panel = null;
 
 var NeedMapRedraw = false;
-
+var TickCounter = 0;
 var Inventory = [];
 
 function getRandomInt(min, max) {
@@ -59,6 +60,11 @@ function useItem(Placed) {
     MapTiles[PlayerX][PlayerY] = Placed;
   }
   drawMap();
+}
+
+function ClampPlayerPos() {
+  PlayerX = Math.min(Math.max(PlayerX, 0), MapWidth-1);
+  PlayerY = Math.min(Math.max(PlayerY, 0), MapHeight-1);
 }
 
 function keyHandler(e) {
@@ -100,28 +106,35 @@ function keyHandler(e) {
     useItem(Inventory[n]);
   } else if (e.keyCode == 38) { // up
     PlayerY--;
+    PlayerDir = Directions.NORTH;
   } else if (e.keyCode == 40) { // down
     PlayerY++;
+    PlayerDir = Directions.SOUTH;
   } else if (e.keyCode == 37) { // left
     PlayerX--;
+    PlayerDir = Directions.WEST;
   } else if (e.keyCode == 39) { // right
     PlayerX++;
+    PlayerDir = Directions.EAST;
   } else if (e.keyCode == 35) { // end
     PlayerX--;
     PlayerY++;
+    PlayerDir = Directions.SOUTHWEST;
   } else if (e.keyCode == 34) { // pg down
     PlayerX++;
     PlayerY++;
+    PlayerDir = Directions.SOUTHEAST;
   } else if (e.keyCode == 36) { // home
     PlayerX--;
     PlayerY--;
+    PlayerDir = Directions.NORTHWEST;
   } else if (e.keyCode == 33) { // pg up
     PlayerX++;
     PlayerY--;
+    PlayerDir = Directions.NORTHEAST;
   }
 
-  PlayerX = Math.min(Math.max(PlayerX, 0), MapWidth-1);
-  PlayerY = Math.min(Math.max(PlayerY, 0), MapHeight-1);
+  ClampPlayerPos();
 
   // go back if the turf is solid
   if(OldPlayerX != PlayerX || OldPlayerY != PlayerY) {
@@ -152,8 +165,6 @@ document.onkeydown = keyHandler;
 function drawMap() {
   var canvas = mapCanvas;
   var ctx = canvas.getContext("2d");
-
-  var pot = document.getElementById("potluck");
 
   // Clear to black
   ctx.fillStyle="black";
@@ -195,7 +206,6 @@ function drawMap() {
   }
 
   // Draw the player
-//  ctx.drawImage(pot, 2*16, 25*16, 16, 16, (PlayerX*16)-PixelCameraX, (PlayerY*16)-PixelCameraY, 16, 16);
   ctx.drawImage(document.getElementById(PlayerIconSheet), PlayerIconX*16, PlayerIconY*16, 16, 16, (PlayerX*16)-PixelCameraX, (PlayerY*16)-PixelCameraY, 16, 16);
 
   // Draw a mouse selection if there is one
@@ -242,6 +252,22 @@ function tickWorld() {
   var TargetCameraX = (PlayerX-Math.floor(ViewWidth/2))<<8;
   var TargetCameraY = (PlayerY-Math.floor(ViewHeight/2))<<8;
 
+  var Under = MapTiles[PlayerX][PlayerY];
+  if(!(TickCounter & 0x03)) {
+    if(Under.type == AtomTypes.ICE) {
+      PlayerX += DirX[PlayerDir];
+      PlayerY += DirY[PlayerDir];
+      ClampPlayerPos();
+      NeedMapRedraw = true;
+    } else if(Under.type == AtomTypes.ESCALATOR) {
+      PlayerX += DirX[Under.dir];
+      PlayerY += DirY[Under.dir];
+      PlayerDir = Under.dir;
+      ClampPlayerPos();
+      NeedMapRedraw = true;
+    }
+  }
+
   if(CameraX != TargetCameraX || CameraY != TargetCameraY) {
     var DifferenceX = TargetCameraX - CameraX;
     var DifferenceY = TargetCameraY - CameraY;
@@ -262,6 +288,7 @@ function tickWorld() {
     drawMap();
     NeedMapRedraw = false;
   }
+  TickCounter = (TickCounter + 1) & 0xffff;
 }
 
 function selectionCopy() {
@@ -472,7 +499,7 @@ function viewInventory() {
   var canvas = document.getElementById("inventoryCanvas");
   var len = Object.keys(Predefined).length;
   canvas.width = (ViewWidth*16)+"";
-  canvas.height = (Math.floor(len/ViewWidth)*16)+"";
+  canvas.height = (Math.ceil(len/ViewWidth)*16)+"";
   var ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 

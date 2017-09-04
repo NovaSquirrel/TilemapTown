@@ -14,6 +14,20 @@ var AtomLayers = {
   FLY       : 3,
 };
 
+var Directions = {
+  EAST      : 0,
+  SOUTHEAST : 1,
+  SOUTH     : 2,
+  SOUTHWEST : 3,
+  WEST      : 4,
+  NORTHWEST : 5,
+  NORTH     : 6,
+  NORTHEAST : 7,
+}
+
+var DirX = [ 1,  1,  0, -1, -1, -1,  0,  1];
+var DirY = [ 0,  1,  1,  1,  0, -1, -1, -1];
+
 // world map
 var MapTiles  = [];
 var MapWidth  = 60;
@@ -31,6 +45,7 @@ function CloneAtom(atom) {
 
 function initMap() {
   IconSheets[0] = document.getElementById("potluck");
+  IconSheets[1] = document.getElementById("extras");
 
   // Initialize the map
   for(var i=0; i<MapWidth; i++) {
