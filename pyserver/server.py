@@ -66,6 +66,8 @@ async def clientHandler(websocket, path):
 				arg = json.loads(message[4:])
 			if command == "MOV":
 				client.map.broadcast("MOV", {'id': client.id, 'from': arg["from"], 'to': arg["to"]})
+				client.x = arg["to"][0]
+				client.y = arg["to"][1]
 			elif command == "MSG":
 				text = arg["text"];
 				if text[0] == '/' and text[0:4].lower() != "/me ":
@@ -108,7 +110,7 @@ async def clientHandler(websocket, path):
 	client.map.broadcast("WHO", {'remove': client.id})
 	AllClients.remove(client)
 
-start_server = websockets.serve(clientHandler, '127.0.0.1', 12550)
+start_server = websockets.serve(clientHandler, None, 12550)
 
 # Start the event loop
 loop = asyncio.get_event_loop()
