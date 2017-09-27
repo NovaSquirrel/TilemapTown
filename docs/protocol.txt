@@ -1,0 +1,82 @@
+Uses websockets and JSON. WIP.
+
+--> send to server
+<-- receive from server
+
+=== Movement on the map ===
+--> MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0}
+move yourself
+
+--> MOV {"dir": 0}
+change direction only
+
+<-- MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "id": 0}
+move a player on the map
+
+--> TAP {"pos": [x,y]}
+sent by an attempt to move into a dense object.
+can be triggered by clicking too
+
+=== Map contents ===
+--> PUT {"pos": [x,y], "atom": {atom}}
+place a tile on the map
+can use string instead of atom definition if it's predefined
+
+--> MAP - requests the whole thing
+--> MAP {"pos":[x1, y1, x2, y2]}
+<-- MAP {"pos":[x1, y1, x2, y2], "default": default_turf, "turf": [turfs], "obj": [objs]}
+get a partial (or complete) copy of the map
+
+--> MAI
+<-- MAI {"name": map_name, "id": map_id, "owner": whoever, "default": default_turf, "size": [width, height]}
+map info stuff?
+
+--> DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true}
+<-- DEL {same contents, to confirm}
+delete a section of map
+
+=== People on the map ===
+--> WHO
+<-- WHO {"list": [{"id": id, "name": name, "pic": [s, x, y], "pos": [x, y]}]}
+request/get a list of people
+"list" can be replaced with "add", "remove" for just modifications; "add" can be done just to update too.
+
+--> IDN {"name": name}
+specify your identity, probably have authentication later
+
+=== Misellaneous ===
+--> MSG {"text": "[text]"}
+message, or commands (if starting with /)
+
+<-- MSG {"text": "[text"], "nick": speaker, "class": classname}
+display message in log
+"class" is a CSS class to style the image with
+
+<-- ERR {"text": "[text]"}
+error, maybe include the command that failed?
+
+--> BYE
+sign out
+
+--> PIN
+<-- PIN
+ping, if you don't respond fast enough you disconnect
+
+--> VER {"name": client_name, "version":1.0, "code": "https://github.com/NovaSquirrel/BuildingGame"}
+<-- VER {"name": server_name, "version":1.0, "code": "https://github.com/NovaSquirrel/BuildingGame"}
+version information for client and server
+
+=== Items ===
+In addition to regular building objects there will be items that can't just be copied endlessly.
+To be added to the game later.
+
+--> DRO {"id": id, "pos":[0,0]}
+<-- DRO {"id": id, "pos":[0,0]}
+drop item and get confirmation
+
+--> TAK {"id": id, "pos":[0,0]}
+<-- TAK {"id": id, "pos":[0,0]}
+take item and get confirmation
+
+--> USE {"id": id}
+use item
