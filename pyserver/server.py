@@ -64,7 +64,8 @@ async def clientHandler(websocket, path):
 			if command == "MOV":
 				client.map.broadcast("MOV", {'id': client.id, 'from': arg["from"], 'to': arg["to"]})
 			elif command == "MSG":
-				client.map.broadcast("MSG", {'name': client.name, 'text': arg["text"]})
+				escaped = arg["text"].replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+				client.map.broadcast("MSG", {'name': client.name, 'text': escaped})
 			elif command == "DEL":
 				x1 = arg["pos"][0]
 				y1 = arg["pos"][1]
