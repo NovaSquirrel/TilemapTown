@@ -56,8 +56,10 @@ function useItem(Placed) {
       Placed.message = Message;
     }
     MapObjs[PlayerX][PlayerY].push(Placed);
+    SendCmd("PUT", {pos: [PlayerX, PlayerY], obj: true, atom: MapObjs[PlayerX][PlayerY]});
   } else {
     MapTiles[PlayerX][PlayerY] = Placed;
+    SendCmd("PUT", {pos: [PlayerX, PlayerY], obj: false, atom: MapTiles[PlayerX][PlayerY]});
   }
   drawMap();
 }
@@ -313,6 +315,8 @@ function selectionDelete() {
         MapObjs[x][y] = [];        
     }
   }
+  SendCmd("DEL", {pos: [MouseStartX, MouseStartY, MouseEndX, MouseEndY], turf: DeleteTurfs, obj: DeleteObjs});
+
   MouseActive = false;
   NeedMapRedraw = true;
   selectionInfoVisibility(false);
@@ -437,6 +441,9 @@ function initWorld() {
   initMouse();
 
   window.setInterval(tickWorld, 20);
+  if(OnlineServer) {
+    ConnectToServer();
+  }
 }
 
 function applyOptions() {

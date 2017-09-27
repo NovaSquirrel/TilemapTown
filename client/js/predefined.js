@@ -437,7 +437,7 @@ Predefined.chest = {
   obj: true,
 };
 
-Predefined.chest = {
+Predefined.chest2 = {
   name: "chest",
   pic: [1, 3, 3],
   density: true,

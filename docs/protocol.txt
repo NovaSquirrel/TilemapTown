@@ -32,7 +32,7 @@ get a partial (or complete) copy of the map
 map info stuff?
 
 --> DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true}
-<-- DEL {same contents, to confirm}
+<-- MAP {updated map}
 delete a section of map
 
 === People on the map ===
