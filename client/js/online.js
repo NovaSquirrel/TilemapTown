@@ -50,7 +50,8 @@ function SendCmd(commandType, commandArgs) {
 
 function ConnectToServer() {
   OnlineMode = true;
-  OnlineSocket = new WebSocket("ws://127.0.0.1:5678/");
+//  OnlineSocket = new WebSocket("ws://127.0.0.1:5678/");
+  OnlineSocket = new WebSocket("ws://"+OnlineServer+":12550");
   logMessage("Attempting to connect");
 
   OnlineSocket.onopen = function (event) {
@@ -123,6 +124,9 @@ function ConnectToServer() {
       case "PIN":
         SendCmd("PIN", null);
         break;
+      case "ERR":
+        logMessage("Error: "+arg.text);
+		break;
       case "MSG":
         if(arg.name) {
           if(arg.text.slice(0, 4) == "/me ")

@@ -38,6 +38,9 @@ def mainTimer():
 	else:
 		loop.call_later(1, mainTimer)
 
+def escapeTags(text):
+	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
 # Websocket connection handler
 async def clientHandler(websocket, path):
 	client = Client(websocket)
@@ -64,8 +67,18 @@ async def clientHandler(websocket, path):
 			if command == "MOV":
 				client.map.broadcast("MOV", {'id': client.id, 'from': arg["from"], 'to': arg["to"]})
 			elif command == "MSG":
-				escaped = arg["text"].replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
-				client.map.broadcast("MSG", {'name': client.name, 'text': escaped})
+				text = arg["text"];
+				if text[0] == '/' and text[0:4].lower() != "/me ":
+					space = text.find(" ")
+					command2 = text[1:space].lower()
+					arg2 = text[space+1:]
+					if command2 == "nick":
+						client.map.broadcast("MSG", {'text': client.name+" is now known as "+escapeTags(arg2)})
+						client.name = escapeTags(arg2)
+					else:
+						client.send("ERR", {'text': 'Invalid command?'})
+				else:
+					client.map.broadcast("MSG", {'name': client.name, 'text': escapeTags(text)})
 			elif command == "DEL":
 				x1 = arg["pos"][0]
 				y1 = arg["pos"][1]
@@ -95,7 +108,7 @@ async def clientHandler(websocket, path):
 	client.map.broadcast("WHO", {'remove': client.id})
 	AllClients.remove(client)
 
-start_server = websockets.serve(clientHandler, '127.0.0.1', 5678)
+start_server = websockets.serve(clientHandler, '127.0.0.1', 12550)
 
 # Start the event loop
 loop = asyncio.get_event_loop()
