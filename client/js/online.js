@@ -116,10 +116,13 @@ function ConnectToServer() {
           PlayerYou = arg.you;
         if(arg.list)
           PlayerWho = arg.list;
-        else if(arg.add)
+        else if(arg.add) {
+          logMessage("Connected: "+arg.add.name);
           PlayerWho[arg.add.id] = arg.add;
-        else if(arg.remove)
+        } else if(arg.remove) {
+          logMessage("Disconnected: "+PlayerWho[arg.remove].name);
           delete PlayerWho[arg.remove];
+        }
         break;
       case "PIN":
         SendCmd("PIN", null);
