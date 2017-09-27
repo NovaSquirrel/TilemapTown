@@ -27,7 +27,7 @@ class Map(object):
 		self.start_pos = [5, 5]
 		self.name = "Map"
 		self.id = 0
-		self.users = []
+		self.users = set()
 
 		# permissions
 		self.entry_whitelist = False
@@ -58,5 +58,16 @@ class Map(object):
 				if self.objs[x][y] != None:
 					objs.append([x, y, self.objs[x][y]])
 		return {'pos': [x1, y1, x2, y2], 'default': self.default_turf, 'turf': turfs, 'obj': objs}
+
 	def map_info(self):
 		return {'name': self.name, 'id': self.id, 'owner': self.owner, 'default': self.default_turf, 'size': [self.width, self.height]}
+
+	def broadcast(self, commandType, commandParams):
+		for client in self.users:
+			client.send(commandType, commandParams)
+
+	def who(self):
+		players = dict()
+		for client in self.users:
+			players[str(client.id)] = client.who()
+		return players

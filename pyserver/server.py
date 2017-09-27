@@ -42,11 +42,14 @@ def mainTimer():
 async def clientHandler(websocket, path):
 	client = Client(websocket)
 	client.map = MainMap
+	client.map.users.add(client)
 	AllClients.add(client)
 
 	print("connected "+path)
 	client.send("MAI", client.map.map_info())
 	client.send("MAP", client.map.map_section(0, 0, client.map.width-1, client.map.height-1))
+	client.map.broadcast("WHO", {'add': client.who()})
+	client.send("WHO", {'list': client.map.who(), 'you': client.id})
 	try:
 		while True:
 			# Read a message, make sure it's not too short
@@ -59,7 +62,9 @@ async def clientHandler(websocket, path):
 			if len(message) > 4:
 				arg = json.loads(message[4:])
 			if command == "MOV":
-				pass
+				client.map.broadcast("MOV", {'id': client.id, 'from': arg["from"], 'to': arg["to"]})
+			elif command == "MSG":
+				client.map.broadcast("MSG", {'name': client.name, 'text': arg["text"]})
 			elif command == "DEL":
 				x1 = arg["pos"][0]
 				y1 = arg["pos"][1]
@@ -71,6 +76,7 @@ async def clientHandler(websocket, path):
 							client.map.turfs[x][y] = None;
 						if arg["obj"]:
 							client.map.objs[x][y] = None;
+				client.map.broadcast("MAP", client.map.map_section(x1, y1, x2, y2))
 			elif command == "PUT":
 				x = arg["pos"][0]
 				y = arg["pos"][1]
@@ -78,14 +84,14 @@ async def clientHandler(websocket, path):
 					client.map.objs[x][y] = arg["atom"]
 				else:
 					client.map.turfs[x][y] = arg["atom"]
+				client.map.broadcast("MAP", client.map.map_section(x, y, x, y))
 			elif command == "PIN":
-				pass
-
-			elif command == "BYE":
-				pass
+				client.ping_timer = 300
 
 	except websockets.ConnectionClosed:
 		print("disconnected")
+	client.map.users.remove(client)
+	client.map.broadcast("WHO", {'remove': client.id})
 	AllClients.remove(client)
 
 start_server = websockets.serve(clientHandler, '127.0.0.1', 5678)

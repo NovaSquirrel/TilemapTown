@@ -37,9 +37,10 @@ delete a section of map
 
 === People on the map ===
 --> WHO
-<-- WHO {"list": [{"id": id, "name": name, "pic": [s, x, y], "pos": [x, y]}]}
-request/get a list of people
-"list" can be replaced with "add", "remove" for just modifications; "add" can be done just to update too.
+<-- WHO {"list": {"[id]": {"name": name, "pic": [s, x, y], "x": x, "y": y, "id": id}}, "you":id}
+<-- WHO {"add": {"name": name, "pic": [s, x, y], "x": x, "y": y, "id": id}}
+<-- WHO {"remove": id}
+"add" can be used to update too
 
 --> IDN {"name": name}
 specify your identity, probably have authentication later
@@ -48,15 +49,12 @@ specify your identity, probably have authentication later
 --> MSG {"text": "[text]"}
 message, or commands (if starting with /)
 
-<-- MSG {"text": "[text"], "nick": speaker, "class": classname}
+<-- MSG {"text": "[text"], "name": speaker, "class": classname}
 display message in log
 "class" is a CSS class to style the image with
 
 <-- ERR {"text": "[text]"}
 error, maybe include the command that failed?
-
---> BYE
-sign out
 
 --> PIN
 <-- PIN

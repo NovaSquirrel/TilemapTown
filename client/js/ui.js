@@ -1,10 +1,23 @@
-// todo: replace with actual mob drawing
-var PlayerX = 5;
-var PlayerY = 5;
-var PlayerIconSheet = "potluck";
-var PlayerIconX = 2;
-var PlayerIconY = 25;
-var PlayerDir = 0;
+/*
+ * Building game
+ *
+ * Copyright (C) 2017 NovaSquirrel
+ *
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+var PlayerWho = {me: {name: "Player", pic: [0, 2, 25], x: 5, y: 5}}
+var PlayerYou = "me"
 
 // camera settings
 var ViewWidth;
@@ -46,6 +59,9 @@ function logMessage(Message) {
 }
 
 function useItem(Placed) {
+  var PlayerX = PlayerWho[PlayerYou].x;
+  var PlayerY = PlayerWho[PlayerYou].y;
+
   // place the item on the ground
   if(Placed.obj) {
     if(Placed.type == AtomTypes.SIGN) {
@@ -64,18 +80,20 @@ function useItem(Placed) {
   drawMap();
 }
 
-function ClampPlayerPos() {
-  PlayerX = Math.min(Math.max(PlayerX, 0), MapWidth-1);
-  PlayerY = Math.min(Math.max(PlayerY, 0), MapHeight-1);
-}
-
 function keyHandler(e) {
+ 
+  function ClampPlayerPos() {
+    PlayerX = Math.min(Math.max(PlayerX, 0), MapWidth-1);
+    PlayerY = Math.min(Math.max(PlayerY, 0), MapHeight-1);;
+  }
+
   var e = e || window.event;
 
   // ignore keys when typing in a textbox
   if(document.activeElement.tagName == "INPUT") {
     if(document.activeElement == chatInput && e.keyCode == 13) {
-      logMessage(chatInput.value);
+ //     logMessage(chatInput.value);
+      SendCmd("MSG", {text: chatInput.value});
       chatInput.value = "";
     }
     return;
@@ -83,6 +101,8 @@ function keyHandler(e) {
 
   var needRedraw = false;
 
+  var PlayerX = PlayerWho[PlayerYou].x;
+  var PlayerY = PlayerWho[PlayerYou].y;
   var OldPlayerX = PlayerX;
   var OldPlayerY = PlayerY;
 
@@ -156,6 +176,11 @@ function keyHandler(e) {
         break;
       }
     }
+
+    if(OldPlayerX != PlayerX || OldPlayerY != PlayerY)
+      SendCmd("MOV", {from: [OldPlayerX, OldPlayerY], to: [PlayerX, PlayerY], dir: PlayerDir});
+    PlayerWho[PlayerYou].x = PlayerX;
+    PlayerWho[PlayerYou].y = PlayerY;
   }
 
   if(needRedraw)
@@ -191,7 +216,7 @@ function drawMap() {
         continue;
 
       // Draw the turf
-      var Tile = MapTiles[RX][RY];
+      var Tile = AtomFromName(MapTiles[RX][RY]);
       if(Tile) {
         ctx.drawImage(IconSheets[Tile.pic[0]], Tile.pic[1]*16, Tile.pic[2]*16, 16, 16, x*16-OffsetX, y*16-OffsetY, 16, 16);
       }
@@ -199,16 +224,19 @@ function drawMap() {
       var Objs = MapObjs[RX][RY];
       if(Objs) {
         for (var index in Objs) {
-          var Obj = Objs[index];
+          var Obj = AtomFromName(Objs[index]);
           ctx.drawImage(IconSheets[Obj.pic[0]], Obj.pic[1]*16, Obj.pic[2]*16, 16, 16, x*16-OffsetX, y*16-OffsetY, 16, 16);
         }
       }
-
     }
   }
 
   // Draw the player
-  ctx.drawImage(document.getElementById(PlayerIconSheet), PlayerIconX*16, PlayerIconY*16, 16, 16, (PlayerX*16)-PixelCameraX, (PlayerY*16)-PixelCameraY, 16, 16);
+//  ctx.drawImage(document.getElementById(PlayerIconSheet), PlayerIconX*16, PlayerIconY*16, 16, 16, (PlayerX*16)-PixelCameraX, (PlayerY*16)-PixelCameraY, 16, 16);
+  for (var index in PlayerWho) {
+    var Mob = PlayerWho[index];
+    ctx.drawImage(IconSheets[Mob.pic[0]], Mob.pic[1]*16, Mob.pic[2]*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
+  }
 
   // Draw a mouse selection if there is one
   if(MouseActive) {
@@ -251,9 +279,10 @@ function drawSelector() {
 }
 
 function tickWorld() {
-  var TargetCameraX = (PlayerX-Math.floor(ViewWidth/2))<<8;
-  var TargetCameraY = (PlayerY-Math.floor(ViewHeight/2))<<8;
+  var TargetCameraX = (PlayerWho[PlayerYou].x-Math.floor(ViewWidth/2))<<8;
+  var TargetCameraY = (PlayerWho[PlayerYou].y-Math.floor(ViewHeight/2))<<8;
 
+/*
   var Under = MapTiles[PlayerX][PlayerY];
   if(!(TickCounter & 0x03)) {
     if(Under.type == AtomTypes.ICE) {
@@ -269,6 +298,7 @@ function tickWorld() {
       NeedMapRedraw = true;
     }
   }
+*/
 
   if(CameraX != TargetCameraX || CameraY != TargetCameraY) {
     var DifferenceX = TargetCameraX - CameraX;

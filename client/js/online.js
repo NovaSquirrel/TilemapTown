@@ -1,3 +1,21 @@
+/*
+ * Building game
+ *
+ * Copyright (C) 2017 NovaSquirrel
+ *
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 var OnlineMode = false;
 var OnlineServer = null;
 var OnlineMap = "";
@@ -30,13 +48,6 @@ function SendCmd(commandType, commandArgs) {
     OnlineSocket.send(commandType);
 }
 
-function AtomFromName(str) {
-  if(typeof str === "string") {
-    return Predefined[str];
-  }
-  return str;
-}
-
 function ConnectToServer() {
   OnlineMode = true;
   OnlineSocket = new WebSocket("ws://127.0.0.1:5678/");
@@ -51,6 +62,7 @@ function ConnectToServer() {
   }
 
   OnlineSocket.onmessage = function (event) {
+//    console.log(event.data);
     var msg = event.data;
     if(msg.length < 3)
       return;
@@ -60,6 +72,13 @@ function ConnectToServer() {
       arg = JSON.parse(msg.slice(4));
 
     switch(cmd) {
+      case "MOV":
+        PlayerWho[arg.id].x = arg.to[0];
+        PlayerWho[arg.id].y = arg.to[1];
+
+        if(arg.id != PlayerYou)
+          NeedMapRedraw = true;
+        break;
       case "MAI":
         MapWidth = arg.size[0];
         MapHeight = arg.size[1];
@@ -91,15 +110,25 @@ function ConnectToServer() {
 
         NeedMapRedraw = true;
         break;
+      case "WHO":
+        if(arg.you)
+          PlayerYou = arg.you;
+        if(arg.list)
+          PlayerWho = arg.list;
+        else if(arg.add)
+          PlayerWho[arg.add.id] = arg.add;
+        else if(arg.remove)
+          delete PlayerWho[arg.remove];
+        break;
       case "PIN":
         SendCmd("PIN", null);
         break;
       case "MSG":
-        if(arg.nick) {
+        if(arg.name) {
           if(arg.text.slice(0, 4) == "/me ")
-            logMessage("* <i>"+arg.nick+" "+arg.text+"</i>");
+            logMessage("* <i>"+arg.name+" "+arg.text.slice(4)+"</i>");
           else
-            logMessage("&lt;"+arg.nick+"&gt; "+arg.text);
+            logMessage("&lt;"+arg.name+"&gt; "+arg.text);
         } else
           logMessage("Server message: "+arg.text);
         break;

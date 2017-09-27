@@ -23,13 +23,22 @@ def makeCommand(commandType, commandParams):
 	else:
 		return commandType
 
+userCounter = 1
+
 class Client(object):
 	def __init__(self,websocket):
+		global userCounter
 		self.ws = websocket
-		self.name = ''
+		self.name = 'Guest '+ str(userCounter)
 		self.x = 0
 		self.y = 0
-		self.pingtimer = 300
+		self.pic = [0, 2, 25];
+		self.id = userCounter
+		self.ping_timer = 300
+		userCounter += 1
 
 	def send(self, commandType, commandParams):
 		asyncio.ensure_future(self.ws.send(makeCommand(commandType, commandParams)))
+
+	def who(self):
+		return {'name': self.name, 'pic': self.pic, 'x': self.x, 'y': self.y, 'id': self.id}
