@@ -62,10 +62,12 @@ function useItem(Placed) {
   var PlayerX = PlayerWho[PlayerYou].x;
   var PlayerY = PlayerWho[PlayerYou].y;
 
+  var ActualAtom = AtomFromName(Placed);
+
   // place the item on the ground
-  if(Placed.obj) {
-    if(Placed.type == AtomTypes.SIGN) {
-      Placed = CloneAtom(Placed);
+  if(ActualAtom.obj) {
+    if(ActualAtom.type == AtomTypes.SIGN) {
+      Placed = CloneAtom(ActualAtom);
       Message = prompt("What should the sign say?");
       if(Message == null)
         return;
@@ -271,7 +273,7 @@ function drawSelector() {
   var oneWidth = canvas.width/10;
   for(var i=0; i<10; i++) {
     drawText(ctx, i*oneWidth, 0, ((i+1)%10)+"");
-    var item = Inventory[i];
+    var item = AtomFromName(Inventory[i]);
     if(item) {
       ctx.drawImage(IconSheets[item.pic[0]], item.pic[1]*16, item.pic[2]*16, 16, 16, i*oneWidth+16, 0, 16, 16);
     }
@@ -340,7 +342,7 @@ function selectionDelete() {
       if(x < 0 || x > MapWidth || y < 0 || y > MapHeight)
         continue;
       if(DeleteTurfs)
-        MapTiles[x][y] = Predefined.grass;
+        MapTiles[x][y] = "grass";
       if(DeleteObjs)
         MapObjs[x][y] = [];        
     }
@@ -393,7 +395,7 @@ function initMouse() {
     pos.x = pos.x >> 4;
     pos.y = pos.y >> 4;
     var index = pos.y * ViewWidth + pos.x;
-    useItem(PredefinedArray[index]);
+    useItem(PredefinedArrayNames[index]);
   }, false);
 
   mapCanvas.addEventListener('mousedown', function(evt) {
@@ -462,7 +464,7 @@ function initWorld() {
   chatInput = document.getElementById("chatInput");
   mapCanvas = document.getElementById("map");
 
-  Inventory = [Predefined.grass, Predefined.dirt, Predefined.purplesand, Predefined.stonewall, Predefined.flower3, Predefined.sign, Predefined.icecream];
+  Inventory = ["grass", "dirt", "purplesand", "stonewall", "flower3", "sign", "icecream"];
   viewInit();
 
   panel = document.getElementById("panel");

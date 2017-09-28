@@ -77,7 +77,7 @@ function initMap() {
     MapTiles[i] = [];
     MapObjs[i] = [];
     for(var j=0; j<MapHeight; j++) {
-      MapTiles[i][j] = Predefined.grass;
+      MapTiles[i][j] = "grass";
       MapObjs[i][j] = [];
     }
   }

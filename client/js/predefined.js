@@ -516,8 +516,10 @@ Predefined.treebot = {
 };
 
 var PredefinedArray = [];
+var PredefinedArrayNames = [];
 var i=0;
 for (var key in Predefined) {
+  PredefinedArrayNames[i] = key;
   PredefinedArray[i++] = Predefined[key];
 }
 
