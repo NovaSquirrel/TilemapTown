@@ -401,7 +401,7 @@ Predefined.eggs2 = {
 };
 
 Predefined.candy = {
-  name: "corn",
+  name: "candy",
   pic: [0, 6, 19],
   density: false,
   obj: true,

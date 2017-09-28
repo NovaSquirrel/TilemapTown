@@ -23,6 +23,7 @@ var AtomTypes = {
   CONTAINER : 3,
   ICE       : 4,
   ESCALATOR : 5,
+  WATER     : 6,
 };
 
 var AtomLayers = {
