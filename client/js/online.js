@@ -62,6 +62,10 @@ function ConnectToServer() {
     logMessage("Socket error");
   }
 
+  OnlineSocket.onclose = function (event) {
+    logMessage("Connection closed");
+  }
+
   OnlineSocket.onmessage = function (event) {
 //    console.log(event.data);
     var msg = event.data;
