@@ -30,8 +30,12 @@ counter = 0
 
 # Timer that runs and performs background tasks
 def mainTimer():
-#	for c in AllClients:
-#		asyncio.ensure_future(c.ws.send("Hello"))
+	for c in AllClients:
+		c.ping_timer -= 1
+		if c.ping_timer == 60 or c.ping_timer == 30:
+			c.send("PIN", None)
+		elif c.ping_timer < 0:
+			c.disconnect()
 
 	if ServerShutdown:
 		loop.stop()
@@ -76,6 +80,7 @@ async def clientHandler(websocket, path):
 					arg2 = text[space+1:]
 					if command2 == "nick":
 						client.map.broadcast("MSG", {'text': client.name+" is now known as "+escapeTags(arg2)})
+						client.map.broadcast("WHO", {'add': client.who()}) # update
 						client.name = escapeTags(arg2)
 					else:
 						client.send("ERR", {'text': 'Invalid command?'})

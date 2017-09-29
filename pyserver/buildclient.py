@@ -34,7 +34,7 @@ class Client(object):
 		self.y = 0
 		self.pic = [0, 2, 25];
 		self.id = userCounter
-		self.ping_timer = 300
+		self.ping_timer = 180
 		userCounter += 1
 
 	def send(self, commandType, commandParams):
@@ -42,3 +42,6 @@ class Client(object):
 
 	def who(self):
 		return {'name': self.name, 'pic': self.pic, 'x': self.x, 'y': self.y, 'id': self.id}
+
+	def disconnect(self):
+		asyncio.ensure_future(self.ws.close())
