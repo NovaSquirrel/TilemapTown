@@ -80,8 +80,8 @@ async def clientHandler(websocket, path):
 
 					if command2 == "nick":
 						client.map.broadcast("MSG", {'text': client.name+" is now known as "+escapeTags(arg2)})
-						client.map.broadcast("WHO", {'add': client.who()}) # update
 						client.name = escapeTags(arg2)
+						client.map.broadcast("WHO", {'add': client.who()}) # update
 					elif text == "/savemap":
 						client.map.save('')
 						client.map.broadcast("MSG", {'text': client.name+" saved the map"})
