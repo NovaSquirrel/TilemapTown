@@ -14,14 +14,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import json
+
 DirX = [ 1,  1,  0, -1, -1, -1,  0,  1]
 DirY = [ 0,  1,  1,  1,  0, -1, -1, -1]
 
 class Map(object):
 	def __init__(self,width=100,height=100):
 		# map stuff
-		self.width = width
-		self.height = height
 		self.owner = None
 		self.default_turf = "grass"
 		self.start_pos = [5, 5]
@@ -34,12 +34,53 @@ class Map(object):
 		self.build_whitelist = False
 		self.full_sandbox = True
 
+		self.blank_map(width, height)
+
+	def blank_map(self, width, height):
+		self.width = width
+		self.height = height
+
 		# construct the map
 		self.turfs = []
 		self.objs = []
 		for x in range(0, width):
 			self.turfs.append([None] * height)
 			self.objs.append([None] * height)
+
+	def load(self, name):
+		with open(name, 'r') as f:
+			lines = f.readlines()
+			mai = False
+			map = False
+			for line in lines:
+				if line == "MAI\n":   # Map info signal
+					mai = True
+				elif line == "MAP\n": # Map data signal
+					map = True
+				elif mai:           # Receive map info
+					s = json.loads(line)
+					self.name = s["name"]
+					self.owner = s["owner"]
+					self.id = s["id"]
+					self.default_turf = s["default"]
+					mai = False
+				elif map:           # Receive map data
+					s = json.loads(line)
+					self.blank_map(s["pos"][2]+1, s["pos"][3]+1)
+					for t in s["turf"]:
+						self.turfs[t[0]][t[1]] = t[2]
+					for o in s["obj"]:
+						self.objs[o[0]][o[1]] = o[2]
+					map = False
+
+	def save(self, name):
+		if name == '':
+			name = "maps/"+str(self.id)+".txt";
+		with open(name, 'w') as f:
+			f.write("MAI\n")
+			f.write(json.dumps(self.map_info())+"\n")
+			f.write("MAP\n")
+			f.write(json.dumps(self.map_section(0, 0, self.width-1, self.height-1))+"\n")
 
 	def map_section(self, x1, y1, x2, y2):
 		# clamp down the numbers

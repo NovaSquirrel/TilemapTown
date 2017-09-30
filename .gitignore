@@ -1,6 +1,7 @@
 # Misc
 *.pyc
 *.bat
+pyserver/maps
 
 # Object files
 *.o

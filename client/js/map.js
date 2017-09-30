@@ -64,7 +64,12 @@ function CloneAtom(atom) {
 
 function AtomFromName(str) {
   if(typeof str === "string") {
-    return Predefined[str];
+    if(Predefined[str])
+      return Predefined[str];
+    else {
+      console.log("Unknown atom: "+str);
+      return Predefined.grass;
+    }
   }
   return str;
 }

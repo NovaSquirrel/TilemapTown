@@ -24,9 +24,8 @@ AllMaps = set()
 ServerShutdown = False
 
 MainMap = Map()
-MainMap.name = "Main map"
+MainMap.load("maps/0.txt")
 AllMaps.add(MainMap)
-counter = 0
 
 # Timer that runs and performs background tasks
 def mainTimer():
@@ -78,10 +77,14 @@ async def clientHandler(websocket, path):
 					space = text.find(" ")
 					command2 = text[1:space].lower()
 					arg2 = text[space+1:]
+
 					if command2 == "nick":
 						client.map.broadcast("MSG", {'text': client.name+" is now known as "+escapeTags(arg2)})
 						client.map.broadcast("WHO", {'add': client.who()}) # update
 						client.name = escapeTags(arg2)
+					elif text == "/savemap":
+						client.map.save('')
+						client.map.broadcast("MSG", {'text': client.name+" saved the map"})
 					else:
 						client.send("ERR", {'text': 'Invalid command?'})
 				else:
@@ -111,6 +114,9 @@ async def clientHandler(websocket, path):
 
 	except websockets.ConnectionClosed:
 		print("disconnected")
+	except:
+		print("other error?")
+
 	client.map.users.remove(client)
 	client.map.broadcast("WHO", {'remove': client.id})
 	AllClients.remove(client)

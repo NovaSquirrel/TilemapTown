@@ -162,13 +162,13 @@ function keyHandler(e) {
 
   // go back if the turf is solid
   if(OldPlayerX != PlayerX || OldPlayerY != PlayerY) {
-    if(MapTiles[PlayerX][PlayerY].density) {
+    if(AtomFromName(MapTiles[PlayerX][PlayerY]).density) {
       PlayerX = OldPlayerX;
       PlayerY = OldPlayerY;
     }
     // or if there are any solid objects in the way
     for (var index in MapObjs[PlayerX][PlayerY]) {
-      var Obj = MapObjs[PlayerX][PlayerY][index];
+      var Obj = AtomFromName(MapObjs[PlayerX][PlayerY][index]);
       if(Obj.density) {
         PlayerX = OldPlayerX;
         PlayerY = OldPlayerY;
