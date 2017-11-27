@@ -24,33 +24,72 @@ AllMaps = set()
 ServerShutdown = False
 
 MainMap = Map()
-MainMap.load("maps/0.txt")
+MainMap.load(0)
 AllMaps.add(MainMap)
 
-def filter_username(text):
+def filterUsername(text):
 	return ''.join([i for i in text if (i.isalnum() or i == '_')]).lower()
+
+def getMapById(mapId):
+	for m in AllMaps:
+		if m.id == mapId:
+			return m
+	m = Map()
+	m.load(mapId)
+	AllMaps.add(m)
+	return m
 
 # Timer that runs and performs background tasks
 def mainTimer():
+	# Disconnect pinged-out users
 	for c in AllClients:
 		c.ping_timer -= 1
 		if c.ping_timer == 60 or c.ping_timer == 30:
 			c.send("PIN", None)
 		elif c.ping_timer < 0:
 			c.disconnect()
+	# Unload unused maps
+	unloaded = set()
+	for m in AllMaps:
+		if (m.id != 0) and (len(m.users) < 1):
+			print("Unloading map "+str(m.id))
+			m.save()
+			unloaded.add(m)
+	for m in unloaded:
+		AllMaps.remove(m)
 
 	if ServerShutdown:
 		loop.stop()
 	else:
 		loop.call_later(1, mainTimer)
 
+def switchMap(client, mapId):
+	if client.map.id == mapId:
+		return
+
+	# Remove the user for everyone on the map
+	client.map.users.remove(client)
+	client.map.broadcast("WHO", {'remove': client.id})
+
+	# Get the new map and send it to the client
+	client.map_id = mapId
+	client.map = getMapById(mapId)
+	client.send("MAI", client.map.map_info())
+	client.send("MAP", client.map.map_section(0, 0, client.map.width-1, client.map.height-1))
+	client.map.users.add(client)
+	client.send("WHO", {'list': client.map.who(), 'you': client.id})
+
+	# Tell everyone on the new map the user arrived
+	client.map.broadcast("WHO", {'add': client.who()})
+
+# Filtering chat text
 def escapeTags(text):
 	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 # Websocket connection handler
 async def clientHandler(websocket, path):
 	client = Client(websocket)
-	client.map = MainMap
+	client.map = getMapById(0)
 	client.map.users.add(client)
 	AllClients.add(client)
 
@@ -90,6 +129,11 @@ async def clientHandler(websocket, path):
 						client.map.broadcast("MSG", {'text': client.name+" is now known as "+escapeTags(arg2)})
 						client.name = escapeTags(arg2)
 						client.map.broadcast("WHO", {'add': client.who()}) # update client view
+					elif command2 == "map":
+						try:
+							switchMap(client, int(arg2))
+						except:
+							print("Can't switch to map "+arg2)
 					elif command2 == "saveme":
 						if client.username == None:
 							client.send("ERR", {'text': 'You are not logged in'})
@@ -112,7 +156,7 @@ async def clientHandler(websocket, path):
 							if len(params) != 2:
 								client.send("ERR", {'text': 'Syntax is: /register username password'})
 							else:
-								if client.register(filter_username(params[0]), params[1]):
+								if client.register(filterUsername(params[0]), params[1]):
 									client.map.broadcast("MSG", {'text': client.name+" has now registered"})
 									client.map.broadcast("WHO", {'add': client.who()}) # update client view, probably just for the username
 								else:
@@ -122,8 +166,9 @@ async def clientHandler(websocket, path):
 						if len(params) != 2:
 							client.send("ERR", {'text': 'Syntax is: /login username password'})
 						else:
-							result = client.load(filter_username(params[0]), params[1])
+							result = client.load(filterUsername(params[0]), params[1])
 							if result == True:
+								switchMap(client, client.map_id)
 								client.map.broadcast("MSG", {'text': client.name+" has logged in ("+client.username+")"})
 								client.map.broadcast("WHO", {'add': client.who()}) # update client view
 							elif result == False:
@@ -131,7 +176,7 @@ async def clientHandler(websocket, path):
 							else:
 								client.send("ERR", {'text': 'Login fail, nonexistent account'})
 					elif command2 == "savemap":
-						client.map.save('')
+						client.map.save()
 						client.map.broadcast("MSG", {'text': client.name+" saved the map"})
 					else:
 						client.send("ERR", {'text': 'Invalid command?'})

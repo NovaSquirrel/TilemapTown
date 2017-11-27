@@ -47,7 +47,9 @@ class Map(object):
 			self.turfs.append([None] * height)
 			self.objs.append([None] * height)
 
-	def load(self, name):
+	def load(self, mapId):
+		self.id = mapId
+		name = "maps/"+str(mapId)+".txt";
 		try:
 			with open(name, 'r') as f:
 				lines = f.readlines()
@@ -62,7 +64,7 @@ class Map(object):
 						s = json.loads(line)
 						self.name = s["name"]
 						self.owner = s["owner"]
-						self.id = s["id"]
+						self.id = int(s["id"])
 						self.default_turf = s["default"]
 						mai = False
 					elif map:           # Receive map data
@@ -76,9 +78,8 @@ class Map(object):
 		except:
 			print("Couldn't load map "+name)
 
-	def save(self, name):
-		if name == '':
-			name = "maps/"+str(self.id)+".txt";
+	def save(self):
+		name = "maps/"+str(self.id)+".txt";
 		try:
 			with open(name, 'w') as f:
 				f.write("MAI\n")

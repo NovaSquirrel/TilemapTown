@@ -57,7 +57,9 @@ class Client(object):
 				f.write("PASS\n")
 				f.write(json.dumps({'sha512':self.password})+"\n")
 				f.write("WHO\n")
-				f.write(json.dumps(self.who())+"\n")
+				who = self.who()
+				who["map_id"] = self.map.id
+				f.write(json.dumps(who)+"\n")
 		except:
 			print("Couldn't save user "+name)
 
@@ -93,6 +95,7 @@ class Client(object):
 						self.pic = s["pic"]
 						self.x = s["x"]
 						self.y = s["y"]
+						self.map_id = s["map_id"]
 						iswho = False
 					elif ispass:
 						s = json.loads(line)
