@@ -27,6 +27,9 @@ MainMap = Map()
 MainMap.load("maps/0.txt")
 AllMaps.add(MainMap)
 
+def filter_username(text):
+	return ''.join([i for i in text if (i.isalnum() or i == '_')]).lower()
+
 # Timer that runs and performs background tasks
 def mainTimer():
 	for c in AllClients:
@@ -73,16 +76,61 @@ async def clientHandler(websocket, path):
 				client.y = arg["to"][1]
 			elif command == "MSG":
 				text = arg["text"];
-				if text[0] == '/' and text[0:4].lower() != "/me ":
+
+				if text[0] == '/' and text[0:4].lower() != "/me ": # interpret user commands
+					# separate into command and arguments
 					space = text.find(" ")
-					command2 = text[1:space].lower()
-					arg2 = text[space+1:]
+					command2 = text[1:].lower()
+					arg2 = ""
+					if space >= 0:
+						command2 = text[1:space].lower()
+						arg2 = text[space+1:]
 
 					if command2 == "nick":
 						client.map.broadcast("MSG", {'text': client.name+" is now known as "+escapeTags(arg2)})
 						client.name = escapeTags(arg2)
-						client.map.broadcast("WHO", {'add': client.who()}) # update
-					elif text == "/savemap":
+						client.map.broadcast("WHO", {'add': client.who()}) # update client view
+					elif command2 == "saveme":
+						if client.username == None:
+							client.send("ERR", {'text': 'You are not logged in'})
+						else:
+							client.save()
+							client.send("MSG", {'text': 'Account saved'})
+					elif command2 == "changepass":
+						if client.username == None:
+							client.send("ERR", {'text': 'You are not logged in'})
+						elif len(arg2):
+							client.changepass(arg2)
+							client.send("MSG", {'text': 'Password changed'})
+						else:
+							client.send("ERR", {'text': 'No password given'})
+					elif command2 == "register":
+						if client.username != None:
+							client.send("ERR", {'text': 'Register fail, you already registered'})
+						else:
+							params = arg2.split()
+							if len(params) != 2:
+								client.send("ERR", {'text': 'Syntax is: /register username password'})
+							else:
+								if client.register(filter_username(params[0]), params[1]):
+									client.map.broadcast("MSG", {'text': client.name+" has now registered"})
+									client.map.broadcast("WHO", {'add': client.who()}) # update client view, probably just for the username
+								else:
+									client.send("ERR", {'text': 'Register fail, account already exists'})
+					elif command2 == "login":
+						params = arg2.split()
+						if len(params) != 2:
+							client.send("ERR", {'text': 'Syntax is: /login username password'})
+						else:
+							result = client.load(filter_username(params[0]), params[1])
+							if result == True:
+								client.map.broadcast("MSG", {'text': client.name+" has logged in ("+client.username+")"})
+								client.map.broadcast("WHO", {'add': client.who()}) # update client view
+							elif result == False:
+								client.send("ERR", {'text': 'Login fail, bad password for account'})
+							else:
+								client.send("ERR", {'text': 'Login fail, nonexistent account'})
+					elif command2 == "savemap":
 						client.map.save('')
 						client.map.broadcast("MSG", {'text': client.name+" saved the map"})
 					else:
@@ -117,6 +165,10 @@ async def clientHandler(websocket, path):
 	except:
 		print("other error?")
 
+	if client.username:
+		client.save()
+
+	# remove the user from all clients' views
 	client.map.users.remove(client)
 	client.map.broadcast("WHO", {'remove': client.id})
 	AllClients.remove(client)
