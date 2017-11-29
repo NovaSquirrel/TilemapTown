@@ -1,4 +1,4 @@
-# Building game
+# Tilemap Town
 # Copyright (C) 2017 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or

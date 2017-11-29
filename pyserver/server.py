@@ -1,4 +1,4 @@
-# Building game
+# Tilemap Town
 # Copyright (C) 2017 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
@@ -15,29 +15,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio, datetime, random, websockets, json, sys
+from buildglobal import *
 from buildmap import *
 from buildclient import *
 
 # Global state variables
-AllClients = set()
-AllMaps = set()
-ServerShutdown = False
-
-MainMap = Map()
-MainMap.load(0)
-AllMaps.add(MainMap)
-
-def filterUsername(text):
-	return ''.join([i for i in text if (i.isalnum() or i == '_')]).lower()
-
-def getMapById(mapId):
-	for m in AllMaps:
-		if m.id == mapId:
-			return m
-	m = Map()
-	m.load(mapId)
-	AllMaps.add(m)
-	return m
 
 # Timer that runs and performs background tasks
 def mainTimer():
@@ -70,7 +52,6 @@ def escapeTags(text):
 # Websocket connection handler
 async def clientHandler(websocket, path):
 	client = Client(websocket)
-	client.getMapById = getMapById # pass a reference to this function
 	AllClients.add(client)
 
 	print("connected "+path)

@@ -1,4 +1,4 @@
-# Building game
+# Tilemap Town
 # Copyright (C) 2017 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio, datetime, random, websockets, json, os.path, hashlib
+from buildglobal import *
 
 # Make a command to send
 def makeCommand(commandType, commandParams):
@@ -80,7 +81,7 @@ class Client(object):
 
 		# Get the new map and send it to the client
 		self.map_id = map_id
-		self.map = self.getMapById(map_id)
+		self.map = getMapById(map_id)
 		self.send("MAI", self.map.map_info())
 		self.send("MAP", self.map.map_section(0, 0, self.map.width-1, self.map.height-1))
 		self.map.users.add(self)
