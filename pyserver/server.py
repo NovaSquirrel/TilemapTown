@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio, datetime, random, websockets, json
+import asyncio, datetime, random, websockets, json, sys
 from buildmap import *
 from buildclient import *
 
@@ -63,25 +63,6 @@ def mainTimer():
 	else:
 		loop.call_later(1, mainTimer)
 
-def switchMap(client, mapId):
-	if client.map.id == mapId:
-		return
-
-	# Remove the user for everyone on the map
-	client.map.users.remove(client)
-	client.map.broadcast("WHO", {'remove': client.id})
-
-	# Get the new map and send it to the client
-	client.map_id = mapId
-	client.map = getMapById(mapId)
-	client.send("MAI", client.map.map_info())
-	client.send("MAP", client.map.map_section(0, 0, client.map.width-1, client.map.height-1))
-	client.map.users.add(client)
-	client.send("WHO", {'list': client.map.who(), 'you': client.id})
-
-	# Tell everyone on the new map the user arrived
-	client.map.broadcast("WHO", {'add': client.who()})
-
 # Filtering chat text
 def escapeTags(text):
 	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
@@ -89,15 +70,11 @@ def escapeTags(text):
 # Websocket connection handler
 async def clientHandler(websocket, path):
 	client = Client(websocket)
-	client.map = getMapById(0)
-	client.map.users.add(client)
+	client.getMapById = getMapById # pass a reference to this function
 	AllClients.add(client)
 
 	print("connected "+path)
-	client.send("MAI", client.map.map_info())
-	client.send("MAP", client.map.map_section(0, 0, client.map.width-1, client.map.height-1))
-	client.map.broadcast("WHO", {'add': client.who()})
-	client.send("WHO", {'list': client.map.who(), 'you': client.id})
+
 	try:
 		while True:
 			# Read a message, make sure it's not too short
@@ -109,6 +86,20 @@ async def clientHandler(websocket, path):
 			arg = None
 			if len(message) > 4:
 				arg = json.loads(message[4:])
+
+			# Identify the user and put them on a map
+			if command == "IDN":
+				result = False
+				if arg != None:
+					result = client.login(filterUsername(arg["username"]), arg["password"])
+				if result != True: # default to map 0 if can't log in
+					client.switch_map(0)
+			elif command == "PIN":
+				client.ping_timer = 300
+
+			# Don't allow the user to go any further if they're not on a map
+			if client.map_id == -1:
+				continue
 			if command == "MOV":
 				client.map.broadcast("MOV", {'id': client.id, 'from': arg["from"], 'to': arg["to"]})
 				client.x = arg["to"][0]
@@ -131,7 +122,7 @@ async def clientHandler(websocket, path):
 						client.map.broadcast("WHO", {'add': client.who()}) # update client view
 					elif command2 == "map":
 						try:
-							switchMap(client, int(arg2))
+							client.switch_map(int(arg2))
 						except:
 							print("Can't switch to map "+arg2)
 					elif command2 == "saveme":
@@ -166,15 +157,7 @@ async def clientHandler(websocket, path):
 						if len(params) != 2:
 							client.send("ERR", {'text': 'Syntax is: /login username password'})
 						else:
-							result = client.load(filterUsername(params[0]), params[1])
-							if result == True:
-								switchMap(client, client.map_id)
-								client.map.broadcast("MSG", {'text': client.name+" has logged in ("+client.username+")"})
-								client.map.broadcast("WHO", {'add': client.who()}) # update client view
-							elif result == False:
-								client.send("ERR", {'text': 'Login fail, bad password for account'})
-							else:
-								client.send("ERR", {'text': 'Login fail, nonexistent account'})
+							client.login(filterUsername(params[0]), params[1])
 					elif command2 == "savemap":
 						client.map.save()
 						client.map.broadcast("MSG", {'text': client.name+" saved the map"})
@@ -202,20 +185,20 @@ async def clientHandler(websocket, path):
 				else:
 					client.map.turfs[x][y] = arg["atom"]
 				client.map.broadcast("MAP", client.map.map_section(x, y, x, y))
-			elif command == "PIN":
-				client.ping_timer = 300
 
 	except websockets.ConnectionClosed:
 		print("disconnected")
 	except:
-		print("other error?")
+		print("Unexpected error:", sys.exc_info()[0])
+#		raise
 
 	if client.username:
 		client.save()
 
 	# remove the user from all clients' views
-	client.map.users.remove(client)
-	client.map.broadcast("WHO", {'remove': client.id})
+	if client.map != None:
+		client.map.users.remove(client)
+		client.map.broadcast("WHO", {'remove': client.id})
 	AllClients.remove(client)
 
 start_server = websockets.serve(clientHandler, None, 12550)

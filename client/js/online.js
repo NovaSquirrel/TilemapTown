@@ -39,6 +39,7 @@ function readURLParams() {
       case "unencrypted":
 		OnlineSSL = false;
 		OnlineServer = value;
+		OnlinePort = 12550;
 		break;
       case "port":
 		OnlinePort = value;
@@ -65,6 +66,7 @@ function ConnectToServer() {
 
   OnlineSocket.onopen = function (event) {
     logMessage("Connected!");
+    SendCmd("IDN", null);
   }
 
   OnlineSocket.onerror = function (event) {

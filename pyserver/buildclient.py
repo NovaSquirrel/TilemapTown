@@ -32,6 +32,8 @@ class Client(object):
 		self.name = 'Guest '+ str(userCounter)
 		self.x = 0
 		self.y = 0
+		self.map = None
+		self.map_id = -1
 		self.pic = [0, 2, 25];
 		self.id = userCounter
 		self.ping_timer = 180
@@ -42,15 +44,18 @@ class Client(object):
 		self.password = None # replace with a hash later
 
 	def send(self, commandType, commandParams):
+		""" Send a command to the client """
 		asyncio.ensure_future(self.ws.send(makeCommand(commandType, commandParams)))
 
 	def who(self):
+		""" A dictionary of information for the WHO command """
 		return {'name': self.name, 'pic': self.pic, 'x': self.x, 'y': self.y, 'id': self.id, 'username': self.username}
 
 	def disconnect(self):
 		asyncio.ensure_future(self.ws.close())
 
 	def save(self):
+		""" Save user information to a file """
 		name = "users/"+str(self.username)+".txt";
 		try:
 			with open(name, 'w') as f:
@@ -62,6 +67,41 @@ class Client(object):
 				f.write(json.dumps(who)+"\n")
 		except:
 			print("Couldn't save user "+name)
+
+	def switch_map(self, map_id):
+		""" Teleport the user to another map """
+		if self.map and self.map.id == map_id:
+			return
+
+		if self.map:
+			# Remove the user for everyone on the map
+			self.map.users.remove(self)
+			self.map.broadcast("WHO", {'remove': self.id})
+
+		# Get the new map and send it to the client
+		self.map_id = map_id
+		self.map = self.getMapById(map_id)
+		self.send("MAI", self.map.map_info())
+		self.send("MAP", self.map.map_section(0, 0, self.map.width-1, self.map.height-1))
+		self.map.users.add(self)
+		self.send("WHO", {'list': self.map.who(), 'you': self.id})
+
+		# Tell everyone on the new map the user arrived
+		self.map.broadcast("WHO", {'add': self.who()})
+
+	def login(self, username, password):
+		""" Attempt to log the client into an account """
+		result = self.load(username, password)
+		if result == True:
+			self.switch_map(self.map_id)
+			self.map.broadcast("MSG", {'text': self.name+" has logged in ("+self.username+")"})
+			self.map.broadcast("WHO", {'add': self.who()}) # update client view
+			return True
+		elif result == False:
+			self.send("ERR", {'text': 'Login fail, bad password for account'})
+		else:
+			self.send("ERR", {'text': 'Login fail, nonexistent account'})
+		return False
 
 	def changepass(self, password):
 		self.password = hashlib.sha512(password.encode()).hexdigest()
