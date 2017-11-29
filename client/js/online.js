@@ -20,6 +20,8 @@ var OnlineMode = false;
 var OnlineServer = null;
 var OnlineMap = "";
 var OnlineSocket = null;
+var OnlineSSL = true;
+var OnlinePort = 443;
 
 function readURLParams() {
   var query = window.location.search.substring(1);
@@ -33,6 +35,13 @@ function readURLParams() {
 		break;
       case "map":
 		OnlineMap = value;
+		break;
+      case "unencrypted":
+		OnlineSSL = false;
+		OnlineServer = value;
+		break;
+      case "port":
+		OnlinePort = value;
 		break;
     }
   }
@@ -50,8 +59,8 @@ function SendCmd(commandType, commandArgs) {
 
 function ConnectToServer() {
   OnlineMode = true;
-//  OnlineSocket = new WebSocket("ws://127.0.0.1:5678/");
-  OnlineSocket = new WebSocket("ws://"+OnlineServer+":12550");
+
+  OnlineSocket = new WebSocket((OnlineSSL?"wss://":"ws://")+OnlineServer+":"+OnlinePort);
   logMessage("Attempting to connect");
 
   OnlineSocket.onopen = function (event) {
