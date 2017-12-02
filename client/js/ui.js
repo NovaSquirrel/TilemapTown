@@ -189,7 +189,21 @@ function keyHandler(e) {
         PlayerX = OldPlayerX;
         PlayerY = OldPlayerY;
         if(Obj.type == AtomTypes.SIGN) {
-          logMessage("The sign says: "+Obj.message);
+          // Filter out HTML tag characters to prevent XSS
+          var Escaped = "";
+          for (var i = 0; i < Obj.message.length; i++) {
+            var c =Obj.message.charAt(i);
+            if(c == '&') {
+              Escaped += "&amp;";
+            } else if(c == '<') {
+              Escaped += "&lt;";
+            } else if(c == '>') {
+              Escaped += "&gt;";
+            } else {
+              Escaped += c;
+            }
+          }
+          logMessage("The sign says: "+Escaped);
         }
         break;
       }
