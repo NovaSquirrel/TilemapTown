@@ -32,7 +32,10 @@ var MouseStartX = -1;
 var MouseStartY = -1;
 var MouseEndX   = -1;
 var MouseEndY   = -1;
+var MouseNowX   = -1;
+var MouseNowY   = -1;
 var MouseActive = false; // is there a selection right now?
+var MousedOverPlayers = [];
 
 // document elements
 var mapCanvas = null; // main map view
@@ -56,6 +59,19 @@ function logMessage(Message) {
   chatArea.innerHTML += Message + "<br>";
   if(bottom)
     chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function PlayersAroundTile(FindX, FindY, Radius) {
+  var Found = [];
+  for (var index in PlayerWho) {
+    if(index == PlayerYou)
+      continue;
+    var Mob = PlayerWho[index];
+	var Distance = Math.sqrt(Math.pow(Mob.x - FindX, 2)+Math.pow(Mob.y - FindY, 2));
+	if(Distance <= Radius)
+		Found.push(index);
+  }
+  return Found;
 }
 
 function useItem(Placed) {
@@ -235,9 +251,20 @@ function drawMap() {
 
   // Draw the player
 //  ctx.drawImage(document.getElementById(PlayerIconSheet), PlayerIconX*16, PlayerIconY*16, 16, 16, (PlayerX*16)-PixelCameraX, (PlayerY*16)-PixelCameraY, 16, 16);
+
   for (var index in PlayerWho) {
+    var IsMousedOver = false;
+    for (var look=0; look<MousedOverPlayers.length; look++) {
+      if(MousedOverPlayers[look] == index) {
+        IsMousedOver = true;
+        break;
+      }
+    }
+
     var Mob = PlayerWho[index];
     ctx.drawImage(IconSheets[Mob.pic[0]], Mob.pic[1]*16, Mob.pic[2]*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
+    if(IsMousedOver)
+      drawText(ctx, (Mob.x*16)-PixelCameraX-(Mob.name.length * 8 / 2 - 8), (Mob.y*16)-PixelCameraY-16, Mob.name);
   }
 
   // Draw a mouse selection if there is one
@@ -437,9 +464,18 @@ function initMouse() {
   }, false);
 
   mapCanvas.addEventListener('mousemove', function(evt) {
+    var pos = getTilePos(evt);
+    MouseNowX = pos.x;
+	MouseNowY = pos.y;
+    // record the nearby players
+    var Around = PlayersAroundTile(MouseNowX, MouseNowY, 2);
+    if(MousedOverPlayers.length != Around.length) {
+      NeedMapRedraw = true;
+    }
+    MousedOverPlayers = Around;
+
     if(!MouseDown)
       return;
-    var pos = getTilePos(evt);
     if(pos.x != MouseEndX || pos.y != MouseEndY)
       NeedMapRedraw = true;
     MouseEndX = pos.x;
