@@ -526,6 +526,25 @@ function initWorld() {
   if(OnlineServer) {
     ConnectToServer();
   }
+
+  // Set up the login window
+  // Get the modal
+  var modal = document.getElementById('loginWindow');
+  var btn = document.getElementById("navlogin");
+  var span = document.getElementsByClassName("modalclose")[0];
+  btn.onclick = function() {
+    modal.style.display = "block";
+  }
+
+  span.onclick = function() {
+    modal.style.display = "none";
+  }
+
+  window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+  }
 }
 
 function applyOptions() {
@@ -629,4 +648,16 @@ function downloadCanvas(canvasId, filename) {
   var link = document.getElementById('download');
   link.href = document.getElementById(canvasId).toDataURL();
   link.download = filename;
+}
+
+function loginButton() {
+  OnlineUsername = document.getElementById("loginuser").value;
+  OnlinePassword = document.getElementById("loginpass").value;
+  OnlineServer = document.getElementById("loginserver").value;
+  if(!OnlineIsConnected)
+    ConnectToServer();
+  else
+    SendCmd("MSG", {text: "/login "+OnlineUsername+" "+OnlinePassword});
+
+  document.getElementById('loginWindow').style.display = "none";
 }

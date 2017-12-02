@@ -42,8 +42,10 @@ delete a section of map
 <-- WHO {"remove": id}
 "add" can be used to update too
 
---> IDN {"name": name}
-specify your identity, probably have authentication later
+--> IDN
+--> IDN {"username": username, "password": password}
+log into the server with or without an account
+
 
 === Misellaneous ===
 --> MSG {"text": "[text]"}
@@ -60,9 +62,12 @@ error, maybe include the command that failed?
 <-- PIN
 ping, if you don't respond fast enough you disconnect
 
---> VER {"name": client_name, "version":1.0, "code": "https://github.com/NovaSquirrel/BuildingGame"}
-<-- VER {"name": server_name, "version":1.0, "code": "https://github.com/NovaSquirrel/BuildingGame"}
+--> VER {"name": client_name, "version":1.0, "code": "https://github.com/NovaSquirrel/TilemapTown"}
+<-- VER {"name": server_name, "version":1.0, "code": "https://github.com/NovaSquirrel/TilemapTown"}
 version information for client and server
+
+<-- CFG {"resource": "novasquirrel.com/town/resources"}
+resources link?
 
 === Items ===
 In addition to regular building objects there will be items that can't just be copied endlessly.
@@ -78,3 +83,8 @@ take item and get confirmation
 
 --> USE {"id": id}
 use item
+
+<-- BAG {"list": {item info}}
+<-- BAG {"add": {item info}}
+<-- BAG {"remove": item info}
+update user inventory

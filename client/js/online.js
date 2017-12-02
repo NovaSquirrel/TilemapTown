@@ -22,6 +22,9 @@ var OnlineMap = "";
 var OnlineSocket = null;
 var OnlineSSL = true;
 var OnlinePort = 443;
+var OnlineUsername = "";
+var OnlinePassword = "";
+var OnlineIsConnected = false;
 
 function readURLParams() {
   var query = window.location.search.substring(1);
@@ -65,16 +68,22 @@ function ConnectToServer() {
   logMessage("Attempting to connect");
 
   OnlineSocket.onopen = function (event) {
-    logMessage("Connected!");
-    SendCmd("IDN", null);
+    logMessage("Connected! Waiting for map data.");
+    if(OnlineUsername == "")
+      SendCmd("IDN", null);
+    else
+      SendCmd("IDN", {username: OnlineUsername, password: OnlinePassword});
+    OnlineIsConnected = true;
   }
 
   OnlineSocket.onerror = function (event) {
     logMessage("Socket error");
+    OnlineIsConnected = false;
   }
 
   OnlineSocket.onclose = function (event) {
     logMessage("Connection closed");
+    OnlineIsConnected = false;
   }
 
   OnlineSocket.onmessage = function (event) {
