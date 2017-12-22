@@ -142,10 +142,10 @@ function ConnectToServer() {
           PlayerWho = arg.list;
         else if(arg.add) {
           if(!PlayerWho[arg.add.id]) // if player isn't already in the list
-            logMessage("Connected: "+arg.add.name);
+            logMessage("Joining: "+arg.add.name);
           PlayerWho[arg.add.id] = arg.add;
         } else if(arg.remove) {
-          logMessage("Disconnected: "+PlayerWho[arg.remove].name);
+          logMessage("Leaving: "+PlayerWho[arg.remove].name);
           delete PlayerWho[arg.remove];
         }
         break;

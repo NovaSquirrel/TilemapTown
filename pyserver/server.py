@@ -36,6 +36,7 @@ def mainTimer():
 		if (m.id != 0) and (len(m.users) < 1):
 			print("Unloading map "+str(m.id))
 			m.save()
+			m.clean_up()
 			unloaded.add(m)
 	for m in unloaded:
 		AllMaps.remove(m)
@@ -81,91 +82,8 @@ async def clientHandler(websocket, path):
 			# Don't allow the user to go any further if they're not on a map
 			if client.map_id == -1:
 				continue
-			if command == "MOV":
-				client.map.broadcast("MOV", {'id': client.id, 'from': arg["from"], 'to': arg["to"]})
-				client.x = arg["to"][0]
-				client.y = arg["to"][1]
-			elif command == "MSG":
-				text = arg["text"];
-
-				if text[0] == '/' and text[0:4].lower() != "/me ": # interpret user commands
-					# separate into command and arguments
-					space = text.find(" ")
-					command2 = text[1:].lower()
-					arg2 = ""
-					if space >= 0:
-						command2 = text[1:space].lower()
-						arg2 = text[space+1:]
-
-					if command2 == "nick":
-						client.map.broadcast("MSG", {'text': client.name+" is now known as "+escapeTags(arg2)})
-						client.name = escapeTags(arg2)
-						client.map.broadcast("WHO", {'add': client.who()}) # update client view
-					elif command2 == "map":
-						try:
-							client.switch_map(int(arg2))
-						except:
-							print("Can't switch to map "+arg2)
-					elif command2 == "saveme":
-						if client.username == None:
-							client.send("ERR", {'text': 'You are not logged in'})
-						else:
-							client.save()
-							client.send("MSG", {'text': 'Account saved'})
-					elif command2 == "changepass":
-						if client.username == None:
-							client.send("ERR", {'text': 'You are not logged in'})
-						elif len(arg2):
-							client.changepass(arg2)
-							client.send("MSG", {'text': 'Password changed'})
-						else:
-							client.send("ERR", {'text': 'No password given'})
-					elif command2 == "register":
-						if client.username != None:
-							client.send("ERR", {'text': 'Register fail, you already registered'})
-						else:
-							params = arg2.split()
-							if len(params) != 2:
-								client.send("ERR", {'text': 'Syntax is: /register username password'})
-							else:
-								if client.register(filterUsername(params[0]), params[1]):
-									client.map.broadcast("MSG", {'text': client.name+" has now registered"})
-									client.map.broadcast("WHO", {'add': client.who()}) # update client view, probably just for the username
-								else:
-									client.send("ERR", {'text': 'Register fail, account already exists'})
-					elif command2 == "login":
-						params = arg2.split()
-						if len(params) != 2:
-							client.send("ERR", {'text': 'Syntax is: /login username password'})
-						else:
-							client.login(filterUsername(params[0]), params[1])
-					elif command2 == "savemap":
-						client.map.save()
-						client.map.broadcast("MSG", {'text': client.name+" saved the map"})
-					else:
-						client.send("ERR", {'text': 'Invalid command?'})
-				else:
-					client.map.broadcast("MSG", {'name': client.name, 'text': escapeTags(text)})
-			elif command == "DEL":
-				x1 = arg["pos"][0]
-				y1 = arg["pos"][1]
-				x2 = arg["pos"][2]
-				y2 = arg["pos"][3]
-				for x in range(x1, x2+1):
-					for y in range(y1, y2+1):
-						if arg["turf"]:
-							client.map.turfs[x][y] = None;
-						if arg["obj"]:
-							client.map.objs[x][y] = None;
-				client.map.broadcast("MAP", client.map.map_section(x1, y1, x2, y2))
-			elif command == "PUT":
-				x = arg["pos"][0]
-				y = arg["pos"][1]
-				if arg["obj"]:
-					client.map.objs[x][y] = arg["atom"]
-				else:
-					client.map.turfs[x][y] = arg["atom"]
-				client.map.broadcast("MAP", client.map.map_section(x, y, x, y))
+			# Send the command through to the map
+			client.map.receive_command(client, command, arg)
 
 	except websockets.ConnectionClosed:
 		print("disconnected")
