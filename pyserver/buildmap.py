@@ -35,13 +35,13 @@ class Map(object):
 		self.build_whitelist = False
 		self.full_sandbox = True
 
-		loop = asyncio.get_event_loop()
-		self.command_queue = asyncio.Queue(loop=loop)
-		self.queue = asyncio.Queue(loop=loop)
+		#loop = asyncio.get_event_loop()
+		#self.script_queue = asyncio.Queue(loop=loop)
 
 		self.blank_map(width, height)
 
 	def blank_map(self, width, height):
+		""" Make a blank map of a given size """
 		self.width = width
 		self.height = height
 
@@ -53,6 +53,7 @@ class Map(object):
 			self.objs.append([None] * height)
 
 	def load(self, mapId):
+		""" Load a map from a file """
 		self.id = mapId
 		name = "maps/"+str(mapId)+".txt";
 		try:
@@ -84,6 +85,7 @@ class Map(object):
 			print("Couldn't load map "+name)
 
 	def save(self):
+		""" Save the map to a file """
 		name = "maps/"+str(self.id)+".txt";
 		try:
 			with open(name, 'w') as f:
@@ -95,6 +97,7 @@ class Map(object):
 			print("Couldn't save map "+name)
 
 	def map_section(self, x1, y1, x2, y2):
+		""" Returns a section of map as a list of turfs and objects """
 		# clamp down the numbers
 		x1 = min(self.width, max(0, x1))
 		y1 = min(self.height, max(0, y1))
@@ -113,13 +116,16 @@ class Map(object):
 		return {'pos': [x1, y1, x2, y2], 'default': self.default_turf, 'turf': turfs, 'obj': objs}
 
 	def map_info(self):
+		""" MAI message data """
 		return {'name': self.name, 'id': self.id, 'owner': self.owner, 'default': self.default_turf, 'size': [self.width, self.height]}
 
 	def broadcast(self, commandType, commandParams):
+		""" Send a message to everyone on the map """
 		for client in self.users:
 			client.send(commandType, commandParams)
 
 	def who(self):
+		""" WHO message data """
 		players = dict()
 		for client in self.users:
 			players[str(client.id)] = client.who()
@@ -217,5 +223,6 @@ class Map(object):
 				self.turfs[x][y] = arg["atom"]
 			self.broadcast("MAP", self.map_section(x, y, x, y))
 
-	def clean_up(self): # clean up everything before a map unload
+	def clean_up(self):
+		""" Clean up everything before a map unload """
 		pass
