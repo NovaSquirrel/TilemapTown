@@ -20,6 +20,10 @@ from buildglobal import *
 DirX = [ 1,  1,  0, -1, -1, -1,  0,  1]
 DirY = [ 0,  1,  1,  1,  0, -1, -1, -1]
 
+# Filtering chat text
+def escapeTags(text):
+	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
 class Map(object):
 	def __init__(self,width=100,height=100):
 		# map stuff
@@ -35,6 +39,8 @@ class Map(object):
 		self.build_whitelist = False
 		self.full_sandbox = True
 
+		# map scripting
+		self.has_script = False
 		#loop = asyncio.get_event_loop()
 		#self.script_queue = asyncio.Queue(loop=loop)
 

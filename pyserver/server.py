@@ -19,8 +19,6 @@ from buildglobal import *
 from buildmap import *
 from buildclient import *
 
-# Global state variables
-
 # Timer that runs and performs background tasks
 def mainTimer():
 	# Disconnect pinged-out users
@@ -45,10 +43,6 @@ def mainTimer():
 		loop.stop()
 	else:
 		loop.call_later(1, mainTimer)
-
-# Filtering chat text
-def escapeTags(text):
-	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 # Websocket connection handler
 async def clientHandler(websocket, path):
