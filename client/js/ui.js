@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-var PlayerWho = {me: {name: "Player", pic: [0, 2, 25], x: 5, y: 5}}
-var PlayerYou = "me"
+var PlayerWho = {me: {name: "Player", pic: [0, 2, 25], x: 5, y: 5}};
+var PlayerYou = "me";
 
 // camera settings
 var ViewWidth;
@@ -72,6 +72,11 @@ function PlayersAroundTile(FindX, FindY, Radius) {
 		Found.push(index);
   }
   return Found;
+}
+
+function editItem(index) {
+  var li = document.getElementById('inventory'+index);
+  li.appendChild(document.createTextNode("?"));
 }
 
 function useItem(Placed) {
@@ -587,8 +592,57 @@ function clearInventory() {
 }
 
 function addInventory(item) {
-  Inventory.push(Predefined[item]);
+  Inventory.push(item);
   drawSelector();
+  updateInventoryUL();
+}
+
+function addNewInventoryItem() {
+  var item = {};
+  item.name = "New item";
+  item.pic = [0, 2, 19];
+  item.density = false;
+  item.obj = true;
+  addInventory(item);
+}
+
+function updateInventoryUL() {
+  // Manage the inventory <ul>
+  var ul = document.getElementById('inventoryul');
+  // Empty out the list
+  while(ul.firstChild) {
+    ul.removeChild(ul.firstChild);
+  }
+  // Add each item
+  for(let i = 0; i < Inventory.length; i++) {
+    let item_raw = Inventory[i];
+    let item = AtomFromName(item_raw);
+    let li = document.createElement("li");
+
+    // create a little icon for the item
+    var img = document.createElement("img");
+    img.src = "img/transparent.png";
+    img.style.width = "16px";
+    img.style.height = "16px";
+    var src = IconSheets[item.pic[0]].src;
+    var background = "url("+src+") -"+(item.pic[1]*16)+"px -"+(item.pic[2]*16)+"px";
+    img.style.background = background;
+
+    // build the list item
+    li.appendChild(img);
+    li.appendChild(document.createTextNode(" "+item.name));
+    li.onclick = function (){useItem(item_raw);};
+    li.oncontextmenu = function (){editItem(i); return false;};
+    li.classList.add('inventoryli');
+    li.id = "inventory"+i;
+    ul.appendChild(li);
+  }
+  // Add the "new item" item
+  let newitem = document.createElement("li");
+  newitem.appendChild(document.createTextNode("+"));
+  newitem.classList.add('inventoryli');
+  newitem.onclick = addNewInventoryItem;
+  ul.appendChild(newitem);
 }
 
 function viewInventory() {
@@ -596,6 +650,8 @@ function viewInventory() {
   var Hidden = (options.style.display=='none');
   document.getElementById("navinventory").setAttribute("class", Hidden?"navactive":"");
   options.style.display = Hidden?'block':'none';
+  if(!Hidden)
+    return;
 
 /*
   var Complete = "<input type='button' value='Clear' onclick='clearInventory();'><br>";
@@ -604,6 +660,9 @@ function viewInventory() {
   }
   options.innerHTML = Complete;
 */
+
+  updateInventoryUL();
+
   var canvas = document.getElementById("inventoryCanvas");
   var len = Object.keys(Predefined).length;
   canvas.width = (ViewWidth*16)+"";
@@ -634,10 +693,20 @@ function previewIcon() {
 
   reader.addEventListener("load", function () {
     preview.src = reader.result;
+    alert(reader.result);
+	alert(reader.result.length);
     PlayerIconSheet = "iconPreview";
     PlayerIconX = 0;
     PlayerIconY = 0;
-  }, false);
+
+/*
+	var img = document.getElementById();
+    var img = document.createElement("img");
+	img.src = reader.result;
+    var element = document.getElementById("playerAvatars");
+    element.appendChild(img);
+*/
+ }, false);
 
   if (file) {
     reader.readAsDataURL(file);

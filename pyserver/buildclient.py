@@ -38,6 +38,7 @@ class Client(object):
 		self.pic = [0, 2, 25];
 		self.id = userCounter
 		self.ping_timer = 180
+		self.inventory = []
 		userCounter += 1
 
 		# account stuff

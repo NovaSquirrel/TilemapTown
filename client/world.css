@@ -51,6 +51,9 @@ body {
     color: white;
 }
 
+.inventoryli:hover {
+	background-color: silver;
+}
 
 .modal {
     display: none; /* Hidden by default */
