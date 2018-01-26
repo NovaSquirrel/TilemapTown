@@ -74,9 +74,32 @@ function PlayersAroundTile(FindX, FindY, Radius) {
   return Found;
 }
 
+function editItemUpdatePic() {
+  var edittilesheet = parseInt(document.getElementById('edittilesheet').value);
+  var edittilex = parseInt(document.getElementById('edittilex').value);
+  var edittiley = parseInt(document.getElementById('edittiley').value);
+
+  var src = IconSheets[edittilesheet].src;
+  document.getElementById('edittilepic').style.background = "url("+src+") -"+(edittilex*16)+"px -"+(edittiley*16)+"px";;
+}
+
+editItemIndex = null;
 function editItem(index) {
   var li = document.getElementById('inventory'+index);
   li.appendChild(document.createTextNode("?"));
+  editItemIndex = index;
+
+  var item = AtomFromName(Inventory[index]);
+  document.getElementById('edittilename').value = item.name;
+  document.getElementById('edittilesheet').value = item.pic[0];
+  document.getElementById('edittilex').value = item.pic[1];
+  document.getElementById('edittiley').value = item.pic[2];
+  document.getElementById('edittiletype').selectedIndex = item.type;
+  document.getElementById('edittiledensity').checked = item.density;
+  document.getElementById('edittileobject').checked = item.obj;
+  editItemUpdatePic();
+
+  document.getElementById('editItemWindow').style.display = "block";
 }
 
 function useItem(Placed) {
@@ -532,24 +555,36 @@ function initWorld() {
     ConnectToServer();
   }
 
-  // Set up the login window
-  // Get the modal
-  var modal = document.getElementById('loginWindow');
-  var btn = document.getElementById("navlogin");
-  var span = document.getElementsByClassName("modalclose")[0];
-  btn.onclick = function() {
-    modal.style.display = "block";
-  }
+  {
+    // Set up the login window
+    // Get the modal
+    let modal = document.getElementById('loginWindow');
+    let itemmodal = document.getElementById('editItemWindow');
 
-  span.onclick = function() {
-    modal.style.display = "none";
-  }
+    let btn = document.getElementById("navlogin");
+    let span = document.getElementsByClassName("modalclose");
 
-  window.onclick = function(event) {
-    if (event.target == modal) {
+    btn.onclick = function() {
+      modal.style.display = "block";
+    }
+
+    for(var i=0; i<span.length; i++) {
+      span[i].onclick = function() {
         modal.style.display = "none";
+        itemmodal.style.display = "none";
+      }
+    }
+
+    window.onclick = function(event) {
+      if (event.target == modal) {
+          modal.style.display = "none";
+      }
+      if (event.target == itemmodal) {
+          itemmodal.style.display = "none";
+      }
     }
   }
+
 }
 
 function applyOptions() {
@@ -729,4 +764,52 @@ function loginButton() {
     SendCmd("MSG", {text: "/login "+OnlineUsername+" "+OnlinePassword});
 
   document.getElementById('loginWindow').style.display = "none";
+}
+
+function editItemApply() {
+  // Gather item info
+  var edittilename = document.getElementById('edittilename').value;
+  var edittilesheet = parseInt(document.getElementById('edittilesheet').value);
+  var edittilex = parseInt(document.getElementById('edittilex').value);
+  var edittiley = parseInt(document.getElementById('edittiley').value);
+  var edittiletype = parseInt(document.getElementById('edittiletype').value);
+  var edittiledensity = document.getElementById('edittiledensity').checked;
+  var edittileobject = document.getElementById('edittileobject').checked;
+
+  // Create the new item
+  var item = {};
+  item.name = edittilename;
+  item.pic = [edittilesheet, edittilex, edittiley];
+  item.density = edittiledensity;
+  if(edittileobject)
+    item.obj = true;
+  if(edittiletype)
+    item.type = edittiletype;
+  Inventory[editItemIndex] = item;
+
+  drawSelector();
+  updateInventoryUL();
+
+  editItemCancel();
+}
+
+function editItemClone() {
+  addInventory(Inventory[editItemIndex]);
+  editItemCancel();
+}
+
+function editItemDelete() {
+  if(!confirm("Really delete?"))
+    return;
+  Inventory.splice(editItemIndex, 1);
+
+  drawSelector();
+  updateInventoryUL();
+
+  editItemCancel();
+}
+
+function editItemCancel() {
+  document.getElementById('editItemWindow').style.display = "none";
+  editItemIndex = null;
 }

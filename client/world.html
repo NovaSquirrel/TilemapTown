@@ -41,6 +41,56 @@
   </div>
 </div>
 
+<div id="editItemWindow" class="modal">
+  <div class="modal-content">
+    <span class="modalclose">&times;</span>
+    <p>
+    <h1>Edit tile</h1>
+
+    <p>
+    <label for="edittilename" class="unselectable">Item name</label><br>
+    <input type="text" id="edittilename"/>
+    </p>
+
+    <p>
+    Item picture<br>
+    <img src="img/transparent.png" width="16" height="16" id="edittilepic" style="background: url(img/potluck.png) 0px 0px;">
+    <select id="edittilesheet">
+      <option value="0">Potluck</option>
+      <option value="1">Extras</option>
+      <option value="custom">Custom</option>
+    </select>
+    <input type="number" value="0" id="edittilex" onchange="editItemUpdatePic();" size="4" />
+    <input type="number" value="0" id="edittiley" onchange="editItemUpdatePic();" size="4" />
+    </p>
+
+    <p>
+    Item type<br>
+    <select id="edittiletype">
+      <option value="0">Normal</option>
+      <option value="1">Sign</option>
+      <option value="2">Door</option>
+      <option value="3">Container</option>
+      <option value="4">Ice</option>
+      <option value="5">Escalator</option>
+      <option value="6">Water</option>
+    </select>
+    </p>
+
+    <p>
+    <input type="checkbox" id="edittiledensity"><label for="edittiledensity" class="unselectable">Item is an obstacle (dense)</label></input><br>
+    <input type="checkbox" id="edittileobject"><label for="edittileobject" class="unselectable">Item is an object, not a floor</label></input>
+    </p>
+
+    <br>
+    <input type="button" value="Apply changes" onclick="editItemApply();">
+    <input type="button" value="Clone item" onclick="editItemClone();">
+    <input type="button" value="Delete item" onclick="editItemDelete();">
+    <input type="button" value="Cancel" onclick="editItemCancel();">
+    </p>
+  </div>
+</div>
+
 <!-- interface -->
 <div style="display: flex; flex-direction: row; flex-grow: 1; overflow-y: hidden;">
   <!-- left side, map and other stuff -->
