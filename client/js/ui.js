@@ -464,7 +464,11 @@ function initMouse() {
     pos.x = pos.x >> 4;
     pos.y = pos.y >> 4;
     var index = pos.y * ViewWidth + pos.x;
-    useItem(PredefinedArrayNames[index]);
+
+    if(evt.button == 0)
+      useItem(PredefinedArrayNames[index]);
+    else if(evt.button == 2)
+      addInventory(PredefinedArrayNames[index]);
   }, false);
 
   mapCanvas.addEventListener('mousedown', function(evt) {
@@ -542,7 +546,7 @@ function initWorld() {
   chatInput = document.getElementById("chatInput");
   mapCanvas = document.getElementById("map");
 
-  Inventory = ["grass", "dirt", "purplesand", "stonewall", "flower3", "sign", "icecream"];
+  Inventory = ["grass", "stonewall"];
   viewInit();
 
   panel = document.getElementById("panel");
