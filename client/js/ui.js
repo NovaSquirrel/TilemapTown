@@ -80,11 +80,13 @@ function editItemUpdatePic() {
   var edittiley = parseInt(document.getElementById('edittiley').value);
 
   var src = IconSheets[edittilesheet].src;
-  document.getElementById('edittilepic').style.background = "url("+src+") -"+(edittilex*16)+"px -"+(edittiley*16)+"px";;
+  document.getElementById('edittilepic').style.background = "url("+src+") -"+(edittilex*16)+"px -"+(edittiley*16)+"px";
+  document.getElementById('edittilesheetselect').src = src;
 }
 
 editItemIndex = null;
 function editItem(index) {
+  // open up the item editing screen for a given item
   var li = document.getElementById('inventory'+index);
   li.appendChild(document.createTextNode("?"));
   editItemIndex = index;
@@ -98,6 +100,8 @@ function editItem(index) {
   document.getElementById('edittiledensity').checked = item.density;
   document.getElementById('edittileobject').checked = !item.obj;
   editItemUpdatePic();
+
+  document.getElementById('edittilesheetselect').src = IconSheets[item.pic[0]].src;
 
   document.getElementById('editItemWindow').style.display = "block";
 }
@@ -432,23 +436,51 @@ function selectionInfoVisibility(visibility) {
 // sets up the mouse event listeners
 function initMouse() {
   var inventoryCanvas = document.getElementById("inventoryCanvas");
+  var edittilesheetselect = document.getElementById("edittilesheetselect");
+
+  // helper function to get an element's exact position
+  // from https://www.kirupa.com/html5/getting_mouse_click_position.htm
+  function getExactPosition(el) {
+    var xPosition = 0;
+    var yPosition = 0;
+ 
+    while (el) {
+      if (el.tagName == "BODY") {
+        // deal with browser quirks with body/window/document and page scroll
+        var xScrollPos = el.scrollLeft || document.documentElement.scrollLeft;
+        var yScrollPos = el.scrollTop || document.documentElement.scrollTop;
+ 
+        xPosition += (el.offsetLeft - xScrollPos + el.clientLeft);
+        yPosition += (el.offsetTop - yScrollPos + el.clientTop);
+      } else {
+        xPosition += (el.offsetLeft - el.scrollLeft + el.clientLeft);
+        yPosition += (el.offsetTop - el.scrollTop + el.clientTop);
+      }
+ 
+      el = el.offsetParent;
+    }
+    return {
+      x: xPosition,
+      y: yPosition
+    };
+  }
 
   function getMousePosRaw(canvas, evt) {
-    var rect = canvas.getBoundingClientRect();
+    var rect = getExactPosition(canvas);
     return {
-      x: (evt.clientX - rect.left)|0,
-      y: (evt.clientY - rect.top)|0
+      x: (evt.clientX - rect.x)|0,
+      y: (evt.clientY - rect.y)|0
     };
   }
 
   function getMousePos(canvas, evt) {
-    var rect = canvas.getBoundingClientRect();
+    var rect = getExactPosition(canvas);
     var xratio = canvas.width / parseInt(canvas.style.width);
     var yratio = canvas.height / parseInt(canvas.style.height);
 
     return {
-      x: ((evt.clientX - rect.left)*xratio)|0,
-      y: ((evt.clientY - rect.top)*yratio)|0
+      x: ((evt.clientX - rect.x)*xratio)|0,
+      y: ((evt.clientY - rect.y)*yratio)|0
     };
   }
 
@@ -458,6 +490,18 @@ function initMouse() {
     pos.y = ((pos.y) + (CameraY>>4))>>4;
     return pos;
   }
+
+  edittilesheetselect.addEventListener('mousedown', function(evt) {
+    var pos = getMousePosRaw(edittilesheetselect, evt);
+    var container = document.getElementById('edittilesheetcontainer');
+    pos.x = (container.scrollLeft + pos.x) >> 4;
+    pos.y = (container.scrollTop + pos.y) >> 4;
+
+    // update to choose the selected tile
+    document.getElementById('edittilex').value = pos.x;
+    document.getElementById('edittiley').value = pos.y;
+    editItemUpdatePic();
+  }, false);
 
   inventoryCanvas.addEventListener('mousedown', function(evt) {
     var pos = getMousePosRaw(inventoryCanvas, evt);
