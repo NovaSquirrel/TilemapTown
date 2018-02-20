@@ -96,7 +96,7 @@ function editItem(index) {
   document.getElementById('edittiley').value = item.pic[2];
   document.getElementById('edittiletype').selectedIndex = item.type;
   document.getElementById('edittiledensity').checked = item.density;
-  document.getElementById('edittileobject').checked = item.obj;
+  document.getElementById('edittileobject').checked = !item.obj;
   editItemUpdatePic();
 
   document.getElementById('editItemWindow').style.display = "block";
@@ -778,7 +778,7 @@ function editItemApply() {
   var edittiley = parseInt(document.getElementById('edittiley').value);
   var edittiletype = parseInt(document.getElementById('edittiletype').value);
   var edittiledensity = document.getElementById('edittiledensity').checked;
-  var edittileobject = document.getElementById('edittileobject').checked;
+  var edittileobject = !document.getElementById('edittileobject').checked;
 
   // Create the new item
   var item = {};

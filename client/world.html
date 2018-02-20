@@ -60,8 +60,8 @@
       <option value="1">Extras</option>
       <option value="custom">Custom</option>
     </select>
-    <input type="number" value="0" id="edittilex" onchange="editItemUpdatePic();" size="4" />
-    <input type="number" value="0" id="edittiley" onchange="editItemUpdatePic();" size="4" />
+    <input type="number" value="0" id="edittilex" oninput="editItemUpdatePic();" size="4" />
+    <input type="number" value="0" id="edittiley" oninput="editItemUpdatePic();" size="4" />
     </p>
 
     <p>
@@ -79,7 +79,7 @@
 
     <p>
     <input type="checkbox" id="edittiledensity"><label for="edittiledensity" class="unselectable">Item is an obstacle (dense)</label></input><br>
-    <input type="checkbox" id="edittileobject"><label for="edittileobject" class="unselectable">Item is an object, not a floor</label></input>
+    <input type="checkbox" id="edittileobject"><label for="edittileobject" class="unselectable">Item is a map tile</label></input>
     </p>
 
     <br>
