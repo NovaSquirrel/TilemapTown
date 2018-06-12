@@ -143,8 +143,11 @@ function keyHandler(e) {
   // ignore keys when typing in a textbox
   if(document.activeElement.tagName == "INPUT") {
     if(document.activeElement == chatInput && e.keyCode == 13) {
+      if(chatInput.value.toLowerCase() == "/clear") {
+        chatArea.innerHTML = "";
+      } 
       // commands are CMD while regular room messages are MSG. /me is a room message.
-      if(chatInput.value.slice(0,1) == "/" && chatInput.value.toLowerCase().slice(0,4) != "/me ") {
+      else if(chatInput.value.slice(0,1) == "/" && chatInput.value.toLowerCase().slice(0,4) != "/me ") {
         SendCmd("CMD", {text: chatInput.value.slice(1)}); // remove the /
       } else {
         SendCmd("MSG", {text: chatInput.value});

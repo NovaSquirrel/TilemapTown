@@ -211,7 +211,6 @@ class Map(object):
 					# temporary thing to allow custom avatars
 					elif arg2[0][0:20] == 'https://i.imgur.com/':
 						client.pic = [arg2[0], 0, 0];
-						print(client.pic)
 						success = True
 				elif len(arg2) == 2:
 					if arg2[0].isnumeric() and arg2[1].isnumeric():
