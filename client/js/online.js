@@ -25,6 +25,7 @@ var OnlinePort = 443;
 var OnlineUsername = "";
 var OnlinePassword = "";
 var OnlineIsConnected = false;
+var ShowProtocol = false;
 
 function readURLParams() {
   var query = window.location.search.substring(1);
@@ -53,6 +54,8 @@ function readURLParams() {
 readURLParams();
 
 function SendCmd(commandType, commandArgs) {
+  if(ShowProtocol)
+    console.log(">> "+commandType+" "+JSON.stringify(commandArgs));
   if(!OnlineMode)
     return;
   if(commandArgs)
@@ -91,6 +94,8 @@ function ConnectToServer() {
     var msg = event.data;
     if(msg.length < 3)
       return;
+    if(ShowProtocol)
+      console.log("<< "+msg);
     var cmd = msg.slice(0, 3);
     var arg = null;
     if(msg.length > 4)
