@@ -18,6 +18,9 @@ ServerShutdown = False
 AllClients = set()
 AllMaps = set()
 
+def filterUsername(text):
+	return ''.join([i for i in text if (i.isalnum() or i == '_')]).lower()
+
 from buildmap import *
 
 MainMap = Map()
@@ -32,6 +35,3 @@ def getMapById(mapId):
 	m.load(mapId)
 	AllMaps.add(m)
 	return m
-
-def filterUsername(text):
-	return ''.join([i for i in text if (i.isalnum() or i == '_')]).lower()

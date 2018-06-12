@@ -35,7 +35,7 @@ class Client(object):
 		self.y = 0
 		self.map = None
 		self.map_id = -1
-		self.pic = [0, 2, 25];
+		self.pic = [0, 2, 25]
 		self.id = userCounter
 		self.ping_timer = 180
 		self.inventory = []

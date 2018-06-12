@@ -138,16 +138,45 @@ function ConnectToServer() {
       case "WHO":
         if(arg.you)
           PlayerYou = arg.you;
-        if(arg.list)
+        if(arg.list) {
           PlayerWho = arg.list;
-        else if(arg.add) {
+          PlayerImages = {}; // reset images list
+        } else if(arg.add) {
           if(!PlayerWho[arg.add.id]) // if player isn't already in the list
             logMessage("Joining: "+arg.add.name);
           PlayerWho[arg.add.id] = arg.add;
+          NeedMapRedraw = true;
         } else if(arg.remove) {
           logMessage("Leaving: "+PlayerWho[arg.remove].name);
+          // unload image if needed
+          if (arg.remove in PlayerImages)
+            delete PlayerImages[arg.remove];
+          // remove entry in PlayerWho
           delete PlayerWho[arg.remove];
+
+          NeedMapRedraw = true;
         }
+
+        // has anyone's avatars updated?
+        for (var key in PlayerWho) {
+          var pic = PlayerWho[key].pic;
+          var is_custom = typeof pic[0] == "string";
+
+          // if no longer using a custom pic, delete the one that was used
+          if (key in PlayerImages && !is_custom) {
+            delete PlayerImages[key];
+          }
+          if ((!(key in PlayerImages) && is_custom) ||
+              (key in PlayerImages && PlayerImages[key].src != pic[0] && is_custom)) {
+            var img = new Image();
+            img.onload = function(){
+              NeedMapRedraw = true;
+            };
+            img.src = pic[0];
+            PlayerImages[key] = img;
+          }
+        }
+
         break;
       case "PIN":
         SendCmd("PIN", null);

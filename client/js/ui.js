@@ -18,6 +18,7 @@
  */
 var PlayerWho = {me: {name: "Player", pic: [0, 2, 25], x: 5, y: 5}};
 var PlayerYou = "me";
+var PlayerImages = {}; // dictionary of Image objects
 
 // camera settings
 var ViewWidth;
@@ -312,7 +313,11 @@ function drawMap() {
     }
 
     var Mob = PlayerWho[index];
-    ctx.drawImage(IconSheets[Mob.pic[0]], Mob.pic[1]*16, Mob.pic[2]*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
+    if(index in PlayerImages) {
+      ctx.drawImage(PlayerImages[index], Mob.pic[1]*16, Mob.pic[2]*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
+    } else {
+      ctx.drawImage(IconSheets[Mob.pic[0]], Mob.pic[1]*16, Mob.pic[2]*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
+    }
     if(IsMousedOver)
       drawText(ctx, (Mob.x*16)-PixelCameraX-(Mob.name.length * 8 / 2 - 8), (Mob.y*16)-PixelCameraY-16, Mob.name);
   }
@@ -382,8 +387,18 @@ function tickWorld() {
   if(CameraX != TargetCameraX || CameraY != TargetCameraY) {
     var DifferenceX = TargetCameraX - CameraX;
     var DifferenceY = TargetCameraY - CameraY;
-    CameraX += DifferenceX >> 4;
-    CameraY += DifferenceY >> 4;
+	var OldCameraX = CameraX;
+	var OldCameraY = CameraY;
+
+    var ShiftBy = 4;
+    do {
+      CameraX += DifferenceX >> ShiftBy;
+      CameraY += DifferenceY >> ShiftBy;
+      ShiftBy--;
+      if(ShiftBy == -1)
+        break;
+    } while (CameraX == OldCameraX && CameraY == OldCameraY);
+
     if(!CameraAlwaysCenter) {
       if(MapWidth >= ViewWidth)
         CameraX = Math.min((MapWidth-ViewWidth)<<8, Math.max(CameraX, 0));

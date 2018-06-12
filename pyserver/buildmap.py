@@ -199,6 +199,29 @@ class Map(object):
 					client.send("ERR", {'text': 'Syntax is: /login username password'})
 				else:
 					client.login(filterUsername(params[0]), params[1])
+			elif command2 == "userpic":
+				arg2 = arg2.split(' ')
+				success = False
+
+				if len(arg2) == 1:
+					defaults = {'bunny': [0, 2, 25], 'cat': [0, 2, 26], 'hamster': [0, 8, 25], 'fire': [0, 4,26]}
+					if arg2[0] in defaults:
+						client.pic = defaults[arg2[0]];
+						success = True
+					# temporary thing to allow custom avatars
+					elif arg2[0][0:20] == 'https://i.imgur.com/':
+						client.pic = [arg2[0], 0, 0];
+						print(client.pic)
+						success = True
+				elif len(arg2) == 2:
+					if arg2[0].isnumeric() and arg2[1].isnumeric():
+						client.pic = [0, int(arg2[0]), int(arg2[1])]
+						success = True
+				if success:
+					self.broadcast("WHO", {'add': client.who()}) # update client view
+				else:
+					client.send("ERR", {'text': 'Syntax is: /userpic sheet x y'})
+
 			elif command2 == "gwho":
 				names = ''
 				for u in AllClients:
