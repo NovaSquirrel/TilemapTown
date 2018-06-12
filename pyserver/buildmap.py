@@ -147,67 +147,80 @@ class Map(object):
 			self.broadcast("MOV", {'id': client.id, 'from': arg["from"], 'to': arg["to"]})
 			client.x = arg["to"][0]
 			client.y = arg["to"][1]
-		elif command == "MSG":
-			text = arg["text"];
+		elif command == "CMD":
+			# separate into command and arguments
+			text = arg["text"]
+			space = text.find(" ")
+			command2 = text.lower()
+			arg2 = ""
+			if space >= 0:
+				command2 = text[0:space].lower()
+				arg2 = text[space+1:]
 
-			if text[0] == '/' and text[0:4].lower() != "/me ": # interpret user commands
-				# separate into command and arguments
-				space = text.find(" ")
-				command2 = text[1:].lower()
-				arg2 = ""
-				if space >= 0:
-					command2 = text[1:space].lower()
-					arg2 = text[space+1:]
-
-				if command2 == "nick":
-					self.broadcast("MSG", {'text': client.name+" is now known as "+escapeTags(arg2)})
-					client.name = escapeTags(arg2)
-					self.broadcast("WHO", {'add': client.who()}) # update client view
-				elif command2 == "map":
-					try:
-						client.switch_map(int(arg2))
-					except:
-						print("Can't switch to map "+arg2)
-				elif command2 == "saveme":
-					if client.username == None:
-						client.send("ERR", {'text': 'You are not logged in'})
-					else:
-						client.save()
-						client.send("MSG", {'text': 'Account saved'})
-				elif command2 == "changepass":
-					if client.username == None:
-						client.send("ERR", {'text': 'You are not logged in'})
-					elif len(arg2):
-						client.changepass(arg2)
-						client.send("MSG", {'text': 'Password changed'})
-					else:
-						client.send("ERR", {'text': 'No password given'})
-				elif command2 == "register":
-					if client.username != None:
-						client.send("ERR", {'text': 'Register fail, you already registered'})
-					else:
-						params = arg2.split()
-						if len(params) != 2:
-							client.send("ERR", {'text': 'Syntax is: /register username password'})
-						else:
-							if client.register(filterUsername(params[0]), params[1]):
-								self.broadcast("MSG", {'text': client.name+" has now registered"})
-								self.broadcast("WHO", {'add': client.who()}) # update client view, probably just for the username
-							else:
-								client.send("ERR", {'text': 'Register fail, account already exists'})
-				elif command2 == "login":
+			if command2 == "nick":
+				self.broadcast("MSG", {'text': client.name+" is now known as "+escapeTags(arg2)})
+				client.name = escapeTags(arg2)
+				self.broadcast("WHO", {'add': client.who()}) # update client view
+			elif command2 == "map":
+				try:
+					client.switch_map(int(arg2))
+				except:
+					print("Can't switch to map "+arg2)
+			elif command2 == "saveme":
+				if client.username == None:
+					client.send("ERR", {'text': 'You are not logged in'})
+				else:
+					client.save()
+					client.send("MSG", {'text': 'Account saved'})
+			elif command2 == "changepass":
+				if client.username == None:
+					client.send("ERR", {'text': 'You are not logged in'})
+				elif len(arg2):
+					client.changepass(arg2)
+					client.send("MSG", {'text': 'Password changed'})
+				else:
+					client.send("ERR", {'text': 'No password given'})
+			elif command2 == "register":
+				if client.username != None:
+					client.send("ERR", {'text': 'Register fail, you already registered'})
+				else:
 					params = arg2.split()
 					if len(params) != 2:
-						client.send("ERR", {'text': 'Syntax is: /login username password'})
+						client.send("ERR", {'text': 'Syntax is: /register username password'})
 					else:
-						client.login(filterUsername(params[0]), params[1])
-				elif command2 == "savemap":
-					self.save()
-					self.broadcast("MSG", {'text': client.name+" saved the map"})
+						if client.register(filterUsername(params[0]), params[1]):
+							self.broadcast("MSG", {'text': client.name+" has now registered"})
+							self.broadcast("WHO", {'add': client.who()}) # update client view, probably just for the username
+						else:
+							client.send("ERR", {'text': 'Register fail, account already exists'})
+			elif command2 == "login":
+				params = arg2.split()
+				if len(params) != 2:
+					client.send("ERR", {'text': 'Syntax is: /login username password'})
 				else:
-					client.send("ERR", {'text': 'Invalid command?'})
+					client.login(filterUsername(params[0]), params[1])
+			elif command2 == "gwho":
+				names = ''
+				for u in AllClients:
+					if len(names) > 0:
+						names += ', '
+					names += '%s (%s)' % (u.name, str(u.username or '?'))
+				client.send("MSG", {'text': 'List of users connected: '+names})
+			elif command2 == "who":
+				names = ''
+				for u in self.users:
+					if len(names) > 0:
+						names += ', '
+					names += '%s (%s)' % (u.name, str(u.username or '?'))
+				client.send("MSG", {'text': 'List of users here: '+names})
+			elif command2 == "savemap":
+				self.save()
+				self.broadcast("MSG", {'text': client.name+" saved the map"})
 			else:
-				self.broadcast("MSG", {'name': client.name, 'text': escapeTags(text)})
+				client.send("ERR", {'text': 'Invalid command?'})
+		elif command == "MSG":
+			text = arg["text"]
+			self.broadcast("MSG", {'name': client.name, 'text': escapeTags(text)})
 		elif command == "DEL":
 			x1 = arg["pos"][0]
 			y1 = arg["pos"][1]

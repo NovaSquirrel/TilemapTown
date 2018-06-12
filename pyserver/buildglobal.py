@@ -14,11 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from buildmap import *
-
 ServerShutdown = False
 AllClients = set()
 AllMaps = set()
+
+from buildmap import *
 
 MainMap = Map()
 MainMap.load(0)

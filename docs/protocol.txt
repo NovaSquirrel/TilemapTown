@@ -16,6 +16,7 @@ move a player on the map
 --> TAP {"pos": [x,y]}
 sent by an attempt to move into a dense object.
 can be triggered by clicking too
+(not implemented)
 
 === Map contents ===
 --> PUT {"pos": [x,y], "atom": {atom}}
@@ -26,10 +27,12 @@ can use string instead of atom definition if it's predefined
 --> MAP {"pos":[x1, y1, x2, y2]}
 <-- MAP {"pos":[x1, y1, x2, y2], "default": default_turf, "turf": [turfs], "obj": [objs]}
 get a partial (or complete) copy of the map
+(currently server-->client only)
 
 --> MAI
 <-- MAI {"name": map_name, "id": map_id, "owner": whoever, "default": default_turf, "size": [width, height]}
 map info stuff?
+(currently server-->client only)
 
 --> DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true}
 <-- MAP {updated map}
@@ -41,6 +44,7 @@ delete a section of map
 <-- WHO {"add": {"name": name, "pic": [s, x, y], "x": x, "y": y, "id": id}}
 <-- WHO {"remove": id}
 "add" can be used to update too
+(currently server-->client only)
 
 --> IDN
 --> IDN {"username": username, "password": password}
@@ -49,7 +53,10 @@ log into the server with or without an account
 
 === Misellaneous ===
 --> MSG {"text": "[text]"}
-message, or commands (if starting with /)
+message
+
+--> CMD {"text": "[text]"}
+command
 
 <-- MSG {"text": "[text"], "name": speaker, "class": classname}
 display message in log
@@ -65,9 +72,11 @@ ping, if you don't respond fast enough you disconnect
 --> VER {"name": client_name, "version":1.0, "code": "https://github.com/NovaSquirrel/TilemapTown"}
 <-- VER {"name": server_name, "version":1.0, "code": "https://github.com/NovaSquirrel/TilemapTown"}
 version information for client and server
+(not implemented)
 
 <-- CFG {"resource": "novasquirrel.com/town/resources"}
 resources link?
+(not implemented)
 
 === Items ===
 In addition to regular building objects there will be items that can't just be copied endlessly.
@@ -76,15 +85,19 @@ To be added to the game later.
 --> DRO {"id": id, "pos":[0,0]}
 <-- DRO {"id": id, "pos":[0,0]}
 drop item and get confirmation
+(not implemented)
 
 --> TAK {"id": id, "pos":[0,0]}
 <-- TAK {"id": id, "pos":[0,0]}
 take item and get confirmation
+(not implemented)
 
 --> USE {"id": id}
 use item
+(not implemented)
 
 <-- BAG {"list": {item info}}
 <-- BAG {"add": {item info}}
 <-- BAG {"remove": item info}
 update user inventory
+(not implemented)
