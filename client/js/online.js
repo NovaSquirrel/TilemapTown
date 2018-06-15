@@ -190,12 +190,11 @@ function ConnectToServer() {
         logMessage("Error: "+arg.text);
 		break;
       case "PRI":
+        let respond = '<span onclick="setChatInput(\'/tell '+arg.username+' \')">';
         if(arg.receive)
-          logMessage("&larr;["+arg.name+"("+arg.username+")"+"] "+arg.text+' <span onclick="setChatInput(\'/tell '+arg.username+' \')">(&larrhk;)</a>');
-//          logMessage("&larr;["+arg.name+"("+arg.username+")"+"] "+arg.text+' (<span onclick="setChatInput(\'/tell '+arg.username+' \')">reply</a>)');
-//          logMessage("&larr;["+arg.name+"("+arg.username+")"+"] "+arg.text+' <input type="button" value="reply" onclick="setChatInput(\'/tell '+arg.username+' \')"/>');
+          logMessage(respond+"&larr;["+arg.name+"("+arg.username+")"+"] "+arg.text+'</span>');
         else
-          logMessage("&rarr;["+arg.name+"("+arg.username+")"+"] "+arg.text);
+          logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] "+arg.text+'</span>');
 		break;
       case "MSG":
         if(arg.name) {
