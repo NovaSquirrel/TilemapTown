@@ -62,6 +62,10 @@ command
 display message in log
 "class" is a CSS class to style the image with
 
+<-- PRI {"text": "[text"], "name": display name, "username": username, "receive": true/false}
+private message, displays in the log
+receive is false for sender, true for recipient
+
 <-- ERR {"text": "[text]"}
 error, maybe include the command that failed?
 

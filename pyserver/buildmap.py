@@ -161,6 +161,27 @@ class Map(object):
 				self.broadcast("MSG", {'text': client.name+" is now known as "+escapeTags(arg2)})
 				client.name = escapeTags(arg2)
 				self.broadcast("WHO", {'add': client.who()}) # update client view
+			elif command2 == "tell":
+				space2 = arg2.find(" ")
+				if space2 >= 0:
+					username = arg2[0:space2].lower()
+					privtext = arg2[space2+1:]
+					if privtext.isspace():
+						client.send("ERR", {'text': 'Tell them what?'})
+					else:
+						found = None
+						for u in AllClients:
+							if username == u.username or (username.isnumeric() and int(username) == u.id):
+								found = u
+								break
+						if found:
+							client.send("PRI", {'text': privtext, 'name':u.name, 'username': u.username or u.id, 'receive': False})
+							u.send("PRI", {'text': privtext, 'name':client.name, 'username': client.username or client.id, 'receive': True})
+						else:
+							client.send("ERR", {'text': 'Player '+username+' not found'})
+
+				else:
+					client.send("ERR", {'text': 'Private message who?'})
 			elif command2 == "map":
 				try:
 					client.switch_map(int(arg2))

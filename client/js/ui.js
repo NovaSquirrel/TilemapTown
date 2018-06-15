@@ -62,6 +62,11 @@ function logMessage(Message) {
     chatArea.scrollTop = chatArea.scrollHeight;
 }
 
+function setChatInput(the_text) {
+  chatInput.value = the_text;
+  chatInput.focus();
+}
+
 function PlayersAroundTile(FindX, FindY, Radius) {
   var Found = [];
   for (var index in PlayerWho) {

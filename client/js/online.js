@@ -189,6 +189,14 @@ function ConnectToServer() {
       case "ERR":
         logMessage("Error: "+arg.text);
 		break;
+      case "PRI":
+        if(arg.receive)
+          logMessage("&larr;["+arg.name+"("+arg.username+")"+"] "+arg.text+' <span onclick="setChatInput(\'/tell '+arg.username+' \')">(&larrhk;)</a>');
+//          logMessage("&larr;["+arg.name+"("+arg.username+")"+"] "+arg.text+' (<span onclick="setChatInput(\'/tell '+arg.username+' \')">reply</a>)');
+//          logMessage("&larr;["+arg.name+"("+arg.username+")"+"] "+arg.text+' <input type="button" value="reply" onclick="setChatInput(\'/tell '+arg.username+' \')"/>');
+        else
+          logMessage("&rarr;["+arg.name+"("+arg.username+")"+"] "+arg.text);
+		break;
       case "MSG":
         if(arg.name) {
           if(arg.text.slice(0, 4) == "/me ")

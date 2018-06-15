@@ -1,0 +1,169 @@
+---Chat---
+/clear
+Clear chat area
+
+/tell user message (alias p, or msg)
+Private message
+
+/roll dice sides
+Roll dice
+
+/me text
+Emote
+
+/ignore username
+/unignore username
+/ignorelist
+Manage ignore list
+
+/away (message, optional)
+Set or clear away status
+
+---Account/customization---
+/nick newname
+Change display name
+
+/userdesc text
+Change your description
+
+/userpic bunny, cat, hamster or fire
+/userpic x y (measured in tiles, from https://novasquirrel.com/town/img/potluck.png)
+/userpic imgur link
+Change your icon
+
+/login
+/register
+/changepass
+Manage account
+
+---User information---
+/who
+List all users on the map
+
+/whereare (alias: wa)
+Display a list of public maps that have users
+
+/gwho
+List all users on the server
+
+/look user
+/glook user (global)
+Reads someone's character description
+
+/last user
+Displays someone's last login/logout time
+
+---Movement---
+/map mapnumber
+Switch to a different map
+
+/goback
+Go back to the map you were previously on
+
+/tpa user (alias mjoin)
+Requests a teleport to another user
+
+/tpahere user (alias msummon)
+Request to teleport another user to you
+
+/tpaccept user
+Accept a teleport request
+
+/tpdeny user (alias mdecline)
+Refuse a teleport request
+
+/tppending
+Display teleport requests that haven't been responded to yet.
+
+/tpcancel user (alias mcancel)
+Cancel a request you made
+
+/sethome
+Sets your "home"
+
+/home
+Teleports to your "home"
+
+----Maps---
+/newmap
+Creates a new map and gives you the number for it
+
+/savemap
+Saves any changes made to the map
+
+---Moderation---
+/tp user
+Force teleport to user
+
+/tphere
+Force user to teleport to you
+
+/clearmap
+Clears everything on the map
+
+/kick user
+Sends a user home
+
+/fly
+Toggles the ability to walk through walls
+
+/ban user (takes optional time amount)
+/banlist
+/unban user
+Manage ban list
+
+/op user
+/oplist
+/deop user
+Manage op list
+
+/invite user
+/invitelist
+/uninvite user
+Manage whitelist for private rooms
+
+---Map configuration---
+/mapid
+Get map ID
+
+/mapsize width height
+/mapname name
+/mapowner user
+Change map info
+
+/mapdefaultfloor grass
+Change what tile type is the default
+
+/mapspawn
+Set map starting position to where you're currently standing
+
+/mapprivacy public/unlisted/private
+Change the privacy of the map.
+Public: Map is publicly listed, and anyone may join
+Unlisted: Map isn't listed anywhere, but anyone may join
+Private: Map isnt listed anywhere, and only users on the whitelist may join
+
+/mapbuild on/off
+Change whether people can build.
+On: Yes
+Off: Only admins may build
+
+/mapprotect none/delete
+Change map protection.
+None: Freeform
+Delete: Players can't delete another player's objects
+
+/mapimport
+Provide an input to upload a map
+
+/mapentrytext text
+Set text to display upon entry
+
+/mapexport
+Allow the user to download the map
+
+---Miscellaneous---
+/time
+Display current date and time
+
+
