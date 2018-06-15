@@ -635,18 +635,25 @@ function initWorld() {
     // Get the modal
     let modal = document.getElementById('loginWindow');
     let itemmodal = document.getElementById('editItemWindow');
+    let mapmodal = document.getElementById('mapOptionsWindow');
 
     let btn = document.getElementById("navlogin");
+    let mapbtn = document.getElementById("navmap");
     let span = document.getElementsByClassName("modalclose");
 
     btn.onclick = function() {
       modal.style.display = "block";
     }
 
+    mapbtn.onclick = function() {
+      mapmodal.style.display = "block";
+    }
+
     for(var i=0; i<span.length; i++) {
       span[i].onclick = function() {
         modal.style.display = "none";
         itemmodal.style.display = "none";
+        mapmodal.style.display = "none";
       }
     }
 
@@ -656,6 +663,9 @@ function initWorld() {
       }
       if (event.target == itemmodal) {
           itemmodal.style.display = "none";
+      }
+      if (event.target == mapmodal) {
+          mapmodal.style.display = "none";
       }
     }
   }

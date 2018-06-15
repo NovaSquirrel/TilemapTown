@@ -20,9 +20,10 @@
 
 <!-- menu bar -->
 <div style="width: 100%; height: 32px;" class="topnav unselectable">
-  <a id="navlogin"     href="#" onclick="viewLogin();">Login</a>
+  <a id="navlogin"     href="#">Login</a>
   <a id="navinventory" href="#" onclick="viewInventory();">Inventory</a>
   <a id="navoptions"   href="#" onclick="viewOptions();">Options</a>
+  <a id="navmap"       href="#">Map</a>
   <a id="navhelp"      href="#">Help</a>
   <a id="navcustomize" href="#" onclick="viewCustomize();"><div style="width:16px; height:16px; background: url(img/potluck.png) -32px -400px;"></div></a>
 </div>
@@ -37,6 +38,41 @@
     <input type="password" id="loginpass" placeholder="Password"> Password<br>
     <input type="text" id="loginserver" value="novasquirrel.com/townws/" placeholder="Server"> Server<br>
     <input type="button" value="Connect" onclick="loginButton();"><br>
+    </p>
+  </div>
+</div>
+
+<div id="mapOptionsWindow" class="modal">
+  <div class="modal-content">
+    <span class="modalclose">&times;</span>
+    <p>
+    <h1>Map</h1>
+    On hold until I figure out how to make this better
+<!--
+    <input type="text" id="mapname"  placeholder="Map name">Map name<br>
+    <input type="text" id="mapowner" placeholder="Map owner" disabled>Map owner<br>
+    <input type="text" id="mapid"    placeholder="Map id" disabled>Map id<br>
+    </p>
+
+    <p>
+    <input type="number" value="100" min="10" max="100" id="mapwidth" size="4" />&times;<input type="number" value="100" min="10" max="100" id="mapheight" size="4" />Map height<br>
+    <input type="number" value="3" id="mapstartx" size="4" />&times;<input type="number" value="3" id="mapstarty" size="4" />Start position<br>
+    <input type="text" id="mapdefaultturf" placeholder="grass">Default floor<br>
+    </p>
+
+    <p>
+    <h2>Permissions</h2><br>
+    <select>
+      <option value="public">Public</option>
+      <option value="unlisted">Unlisted</option>
+      <option value="whitelist">Private</option>
+    </select><br>
+    </p>
+
+    <p>
+    <input type="button" value="Export" onclick=";">
+    <input type="button" value="Import" onclick=";"><br>
+-->
     </p>
   </div>
 </div>
