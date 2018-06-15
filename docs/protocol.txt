@@ -59,8 +59,10 @@ message
 command
 
 <-- MSG {"text": "[text"], "name": speaker, "class": classname}
-display message in log
-"class" is a CSS class to style the image with
+<-- MSG {"text": "[text"], "name": speaker, "class": classname, "buttons": ["name 1", "command 1", "name 2", "command 2"]}
+display message in log.
+"class" is a CSS class to style the image with.
+"buttons" provides a list of choices to present that will execute commands.
 
 <-- PRI {"text": "[text"], "name": display name, "username": username, "receive": true/false}
 private message, displays in the log

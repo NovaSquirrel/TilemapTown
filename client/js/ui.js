@@ -67,6 +67,10 @@ function setChatInput(the_text) {
   chatInput.focus();
 }
 
+function sendChatCommand(the_text) {
+  SendCmd("CMD", {text: the_text});
+}
+
 function PlayersAroundTile(FindX, FindY, Radius) {
   var Found = [];
   for (var index in PlayerWho) {

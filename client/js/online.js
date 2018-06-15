@@ -203,7 +203,15 @@ function ConnectToServer() {
           else
             logMessage("&lt;"+arg.name+"&gt; "+arg.text);
         } else
-          logMessage("Server message: "+arg.text);
+          if(arg.buttons) {
+            let buttons = "";
+            for(let i=0; i<arg.buttons.length/2; i++) {
+              buttons += '<input type="button" value="'+arg.buttons[i*2]+'" onclick="sendChatCommand(\''+arg.buttons[i*2+1]+'\');"/>';
+            }
+            logMessage("! "+arg.text+" "+buttons);
+          } else {
+            logMessage("Server message: "+arg.text);
+          }
         break;
     }
   };
