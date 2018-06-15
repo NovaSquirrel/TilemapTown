@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import json, asyncio
+import json, asyncio, random
 from buildglobal import *
 
 DirX = [ 1,  1,  0, -1, -1, -1,  0,  1]
@@ -182,6 +182,26 @@ class Map(object):
 
 				else:
 					client.send("ERR", {'text': 'Private message who?'})
+			elif command2 == "roll":
+				param = arg2.split('d')
+				if len(param) != 2:
+					param = arg2.split(' ')
+				if len(param) != 2 or (not param[0].isnumeric()) or (not param[1].isnumeric()):
+					client.send("ERR", {'text': 'Syntax: /roll dice sides'})
+				else:
+					dice = int(param[0])
+					sides = int(param[1])
+					sum = 0
+					if dice < 1 or dice > 1000:
+						client.send("ERR", {'text': 'Bad number of dice'})
+						return
+					if sides < 1 or sides > 1000000000:
+						client.send("ERR", {'text': 'Bad number of sides'})
+						return
+					for i in range(dice):
+						sum += random.randint(1, sides)				
+					self.broadcast("MSG", {'text': client.name+" rolled %dd%d and got %d"%(dice, sides, sum)})
+
 			elif command2 == "map":
 				try:
 					client.switch_map(int(arg2))
