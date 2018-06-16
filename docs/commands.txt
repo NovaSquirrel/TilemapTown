@@ -72,9 +72,6 @@ Accept a teleport request
 /tpdeny user (alias mdecline)
 Refuse a teleport request
 
-/tppending
-Display teleport requests that haven't been responded to yet.
-
 /tpcancel user (alias mcancel)
 Cancel a request you made
 

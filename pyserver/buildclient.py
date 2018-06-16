@@ -39,6 +39,7 @@ class Client(object):
 		self.id = userCounter
 		self.ping_timer = 180
 		self.inventory = []
+		self.idle_timer = 0
 		userCounter += 1
 
 		# other user info
@@ -63,6 +64,13 @@ class Client(object):
 			self.send("ERR", {'text': 'No username given'})
 		else:
 			self.send("ERR", {'text': 'Player '+username+' not found'})
+
+	def mustBeOwner(self, adminOkay):
+		if self.map.owner == self.username or (adminOkay and self.username in self.map.admins):
+			return True
+		else:
+			self.send("ERR", {'text': 'You don\'t have permission to do that'})
+			return False
 
 	def who(self):
 		""" A dictionary of information for the WHO command """
@@ -107,26 +115,29 @@ class Client(object):
 		except:
 			print("Couldn't save user "+name)
 
-	def switch_map(self, map_id):
+	def switch_map(self, map_id, new_pos=None):
 		""" Teleport the user to another map """
-		if self.map and self.map.id == map_id:
-			return
+		if not self.map or (self.map and self.map.id != map_id):
+			if self.map:
+				# Remove the user for everyone on the map
+				self.map.users.remove(self)
+				self.map.broadcast("WHO", {'remove': self.id})
 
-		if self.map:
-			# Remove the user for everyone on the map
-			self.map.users.remove(self)
-			self.map.broadcast("WHO", {'remove': self.id})
+			# Get the new map and send it to the client
+			self.map_id = map_id
+			self.map = getMapById(map_id)
+			self.send("MAI", self.map.map_info())
+			self.send("MAP", self.map.map_section(0, 0, self.map.width-1, self.map.height-1))
+			self.map.users.add(self)
+			self.send("WHO", {'list': self.map.who(), 'you': self.id})
 
-		# Get the new map and send it to the client
-		self.map_id = map_id
-		self.map = getMapById(map_id)
-		self.send("MAI", self.map.map_info())
-		self.send("MAP", self.map.map_section(0, 0, self.map.width-1, self.map.height-1))
-		self.map.users.add(self)
-		self.send("WHO", {'list': self.map.who(), 'you': self.id})
+			# Tell everyone on the new map the user arrived
+			self.map.broadcast("WHO", {'add': self.who()})
 
-		# Tell everyone on the new map the user arrived
-		self.map.broadcast("WHO", {'add': self.who()})
+		if new_pos != None:
+			self.x = new_pos[0]
+			self.y = new_pos[1]
+			self.map.broadcast("MOV", {'id': self.id, 'to': [self.x, self.y]})
 
 	def login(self, username, password):
 		""" Attempt to log the client into an account """

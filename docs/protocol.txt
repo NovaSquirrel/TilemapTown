@@ -11,7 +11,8 @@ move yourself
 change direction only
 
 <-- MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "id": 0}
-move a player on the map
+move a player on the map.
+"from" may be left out.
 
 --> TAP {"pos": [x,y]}
 sent by an attempt to move into a dense object.

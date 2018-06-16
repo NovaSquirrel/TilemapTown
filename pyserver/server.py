@@ -32,6 +32,8 @@ def mainTimer():
 		for r in remove_requests:
 			del c.requests[r]
 
+		c.idle_timer += 1
+
 		# Remove users that time out
 		c.ping_timer -= 1
 		if c.ping_timer == 60 or c.ping_timer == 30:

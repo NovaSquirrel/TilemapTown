@@ -27,16 +27,22 @@ def escapeTags(text):
 class Map(object):
 	def __init__(self,width=100,height=100):
 		# map stuff
-		self.owner = None
 		self.default_turf = "grass"
 		self.start_pos = [5, 5]
 		self.name = "Map"
 		self.id = 0
 		self.users = set()
 
+		self.tags = {}
+
 		# permissions
-		self.entry_whitelist = False
-		self.build_whitelist = False
+		self.owner = ""
+		self.admins = set()  # List of admins
+		self.public = False  # if True, map shows up in searches and /whereare
+		self.private = False # if True, entry whitelist is used
+		self.entry_whitelist = set()
+		self.entry_banlist = set()
+		self.build_enabled = True
 		self.full_sandbox = True
 
 		# map scripting
@@ -58,6 +64,14 @@ class Map(object):
 			self.turfs.append([None] * height)
 			self.objs.append([None] * height)
 
+	def set_tag(self, name, value):
+		self.tags[name] = value
+
+	def get_tag(self, name, default=None):
+		if name in self.tags:
+			return self.tags[name]
+		return default
+
 	def load(self, mapId):
 		""" Load a map from a file """
 		self.id = mapId
@@ -67,17 +81,35 @@ class Map(object):
 				lines = f.readlines()
 				mai = False
 				map = False
+				tag = False
 				for line in lines:
 					if line == "MAI\n":   # Map info signal
 						mai = True
 					elif line == "MAP\n": # Map data signal
 						map = True
+					elif line == "TAGS\n": # Map tags signal
+						tag = True
 					elif mai:           # Receive map info
 						s = json.loads(line)
+						# add in extra fields added later that may not have been included
+						defaults = {'admins': [], 'public': False, 'private': False,
+							'build_enabled': True, 'full_sandbox': True, 'entry_whitelist': [],
+                            'entry_banlist': [], 'start_pos': [5,5]}
+						for k,v in defaults.items():
+							if k not in s:
+								s[k] = v
 						self.name = s["name"]
 						self.owner = s["owner"]
+						self.admins = set(s["admins"])
 						self.id = int(s["id"])
+						self.build_enabled = s["build_enabled"]
+						self.full_sandbox = s["full_sandbox"]
+						self.private = s["private"]
+						self.public = s["public"]
 						self.default_turf = s["default"]
+						self.entry_whitelist = set(s["entry_whitelist"])
+						self.entry_banlist = set(s["entry_banlist"])
+						self.start_pos = s["start_pos"]
 						mai = False
 					elif map:           # Receive map data
 						s = json.loads(line)
@@ -87,6 +119,9 @@ class Map(object):
 						for o in s["obj"]:
 							self.objs[o[0]][o[1]] = o[2]
 						map = False
+					elif tag:
+						self.tags = json.loads(line)
+						tag = False
 		except:
 			print("Couldn't load map "+name)
 
@@ -96,9 +131,15 @@ class Map(object):
 		try:
 			with open(name, 'w') as f:
 				f.write("MAI\n")
-				f.write(json.dumps(self.map_info())+"\n")
+				i = self.map_info()
+				i['entry_whitelist'] = list(self.entry_whitelist)
+				i['entry_banlist'] = list(self.entry_banlist)
+				i['start_pos'] = self.start_pos
+				f.write(json.dumps(i)+"\n")
 				f.write("MAP\n")
 				f.write(json.dumps(self.map_section(0, 0, self.width-1, self.height-1))+"\n")
+				f.write("TAGS\n")
+				f.write(json.dumps(self.tags)+"\n")
 		except:
 			print("Couldn't save map "+name)
 
@@ -123,7 +164,7 @@ class Map(object):
 
 	def map_info(self):
 		""" MAI message data """
-		return {'name': self.name, 'id': self.id, 'owner': self.owner, 'default': self.default_turf, 'size': [self.width, self.height]}
+		return {'name': self.name, 'id': self.id, 'owner': self.owner, 'admins': list(self.admins), 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.public, 'private': self.private, 'build_enabled': self.build_enabled, 'full_sandbox': self.full_sandbox}
 
 	def broadcast(self, commandType, commandParams):
 		""" Send a message to everyone on the map """
@@ -143,6 +184,7 @@ class Map(object):
 
 	def execute_command(self, client, command, arg):
 		""" Actually run a command from the client after being processed """
+		client.idle_timer = 0
 		if command == "MOV":
 			self.broadcast("MOV", {'id': client.id, 'from': arg["from"], 'to': arg["to"]})
 			client.x = arg["to"][0]
@@ -219,15 +261,9 @@ class Map(object):
 					u.send("MSG", {'text': u.nameAndUsername()+" accepted your request"})
 					request = client.requests[arg2]
 					if request[1] == 'tpa':
-						u.x = client.x
-						u.y = client.y
-						u.switch_map(client.map_id)
-						self.broadcast("MOV", {'id': u.id, 'to': [u.x, u.y]})
+						u.switch_map(u.map_id, new_pos=[client.x, client.y])
 					elif request[1] == 'tpahere':
-						client.x = u.x
-						client.y = u.y
-						client.switch_map(u.map_id)
-						u.map.broadcast("MOV", {'id': client.id, 'to': [client.x, client.y]})
+						client.switch_map(u.map_id, new_pos=[u.x, u.y])
 					del client.requests[arg2]
 
 			elif command2 == "tpdeny" or command2 == "tpdecline":
@@ -256,6 +292,17 @@ class Map(object):
 				else:
 					client.send("ERR", {'text': 'No request to cancel'})
 
+			elif command2 == "time":
+					client.send("MSG", {'text': datetime.today().strftime("Now it's %m/%d/%Y, %I:%M %p")})
+
+			elif command2 == "away":
+				if len(arg2) < 1:
+					client.away = False
+					client.send("MSG", {'text': 'You are no longer marked as away'})
+				else:
+					client.away = arg2
+					client.send("MSG", {'text': 'You are now marked as away ("%s")' % arg2})
+
 			elif command2 == "roll":
 				param = arg2.split('d')
 				if len(param) != 2:
@@ -275,6 +322,97 @@ class Map(object):
 					for i in range(dice):
 						sum += random.randint(1, sides)				
 					self.broadcast("MSG", {'text': client.name+" rolled %dd%d and got %d"%(dice, sides, sum)})
+
+			elif command2 == "mapid":
+				client.send("MSG", {'text': 'Map ID is %d' % self.id})
+
+			elif command2 == "invite":
+				if client.mustBeOwner(True):
+					arg2 = arg2.lower()
+					self.entry_whitelist.add(arg2)
+					self.broadcast("MSG", {'text': '\"%s\" added to whitelist' % arg2})
+			elif command2 == "uninvite":
+				if client.mustBeOwner(True):
+					arg2 = arg2.lower()
+					self.entry_whitelist.remove(arg2)
+					self.broadcast("MSG", {'text': '\"%s\" removed from whitelist' % arg2})
+			elif command2 == "invitelist":
+				if client.mustBeOwner(True):
+					client.send("MSG", {'text': 'Whitelist: '+str(self.entry_whitelist)})
+
+			elif command2 == "ban":
+				if client.mustBeOwner(True):
+					arg2 = arg2.lower()
+					self.entry_banlist.add(arg2)
+					self.broadcast("MSG", {'text': '\"%s\" added to banlist' % arg2})
+			elif command2 == "unban":
+				if client.mustBeOwner(True):
+					arg2 = arg2.lower()
+					self.entry_banlist.remove(arg2)
+					self.broadcast("MSG", {'text': '\"%s\" removed from banlist' % arg2})
+			elif command2 == "banlist":
+				if client.mustBeOwner(True):
+					client.send("MSG", {'text': 'Banlist: '+str(self.entry_banlist)})
+
+			elif command2 == "op":
+				if client.mustBeOwner(False):
+					arg2 = arg2.lower()
+					self.admins.add(arg2)
+					self.broadcast("MSG", {'text': '\"%s\" was promoted' % arg2})
+			elif command2 == "deop":
+				if client.mustBeOwner(False):
+					arg2 = arg2.lower()
+					self.admins.remove(arg2)
+					self.broadcast("MSG", {'text': '\"%s\" was demoted' % arg2})
+			elif command2 == "oplist":
+				if client.mustBeOwner(True):
+					client.send("MSG", {'text': 'Op list: '+str(self.admins)})
+
+			elif command2 == "mapname":
+				if client.mustBeOwner(False):
+					self.name = arg2
+					client.send("MSG", {'text': 'Map name set to \"%s\"' % self.name})
+			elif command2 == "mapowner":
+				if client.mustBeOwner(False):
+					self.owner = arg2
+					client.send("MSG", {'text': 'Map owner set to \"%s\"' % self.owner})
+			elif command2 == "mapprivacy":
+				if client.mustBeOwner(False):
+					if arg2 == "public":
+						self.public = True
+						self.private = False
+					elif arg2 == "private":
+						self.public = False
+						self.private = True
+					elif arg2 == "unlisted":
+						self.public = False
+						self.private = True
+					else:
+						client.send("ERR", {'text': 'Map privacy must be public, private, or unlisted'})
+			elif command2 == "mapprotect":
+				if client.mustBeOwner(False):
+					if arg2 == "off":
+						self.full_sandbox = True
+					elif arg2 == "on":
+						self.full_sandbox = False
+					else:
+						client.send("ERR", {'text': 'Map building must be on or off'})
+			elif command2 == "mapbuild":
+				if client.mustBeOwner(True):
+					if arg2 == "on":
+						self.build_enabled = True
+					elif arg2 == "off":
+						self.build_enabled = False
+					else:
+						client.send("ERR", {'text': 'Map building must be on or off'})
+			elif command2 == "defaultfloor":
+				if client.mustBeOwner(False):
+					self.default_turf = arg2
+					client.send("MSG", {'text': 'Map floor changed to %s' % arg2})
+			elif command2 == "mapspawn":
+				if client.mustBeOwner(False):
+					self.start_pos = [client.x, client.y]
+					client.send("MSG", {'text': 'Map start changed to %d,%d' % (client.x, client.y)})
 
 			elif command2 == "map":
 				try:
