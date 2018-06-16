@@ -23,11 +23,22 @@ from buildclient import *
 def mainTimer():
 	# Disconnect pinged-out users
 	for c in AllClients:
+		# Remove requests that time out
+		remove_requests = set()
+		for k,v in c.requests.items():
+			v[0] -= 1 # remove 1 from timer
+			if v[0] < 0:
+				remove_requests.add(k)
+		for r in remove_requests:
+			del c.requests[r]
+
+		# Remove users that time out
 		c.ping_timer -= 1
 		if c.ping_timer == 60 or c.ping_timer == 30:
 			c.send("PIN", None)
 		elif c.ping_timer < 0:
 			c.disconnect()
+
 	# Unload unused maps
 	unloaded = set()
 	for m in AllMaps:

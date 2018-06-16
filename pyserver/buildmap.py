@@ -169,19 +169,93 @@ class Map(object):
 					if privtext.isspace():
 						client.send("ERR", {'text': 'Tell them what?'})
 					else:
-						found = None
-						for u in AllClients:
-							if username == u.username or (username.isnumeric() and int(username) == u.id):
-								found = u
-								break
-						if found:
-							client.send("PRI", {'text': privtext, 'name':u.name, 'username': u.username or u.id, 'receive': False})
-							u.send("PRI", {'text': privtext, 'name':client.name, 'username': client.username or client.id, 'receive': True})
+						u = findClientByUsername(username)
+						if u:
+							client.send("PRI", {'text': privtext, 'name':u.name, 'username': u.usernameOrId(), 'receive': False})
+							u.send("PRI", {'text': privtext, 'name':client.name, 'username': client.usernameOrId(), 'receive': True})
 						else:
-							client.send("ERR", {'text': 'Player '+username+' not found'})
-
+							client.failedToFind(username)
 				else:
 					client.send("ERR", {'text': 'Private message who?'})
+
+			elif command2 == "tpa":
+				u = findClientByUsername(arg2)
+				if u == None:
+					client.failedToFind(arg2)
+					return
+				my_username = client.usernameOrId()
+				if my_username in u.requests:
+					client.send("ERR", {'text': 'You\'ve already sent them a request'})
+					u.requests[my_username][0] = 600 #renew
+				else:
+					client.send("MSG", {'text': 'You requested a teleport to '+arg2})
+					u.send("MSG", {'text': client.nameAndUsername()+' wants to teleport to you', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
+					u.requests[my_username] = [600, 'tpa']
+
+			elif command2 == "tpahere":
+				u = findClientByUsername(arg2)
+				if u == None:
+					client.failedToFind(arg2)
+					return
+				my_username = client.usernameOrId()
+				if my_username in u.requests:
+					client.send("ERR", {'text': 'You\'ve already sent them a request'})
+					u.requests[my_username][0] = 600 #renew
+				else:
+					client.send("MSG", {'text': 'You requested that '+arg2+' teleport to you'})
+					u.send("MSG", {'text': client.nameAndUsername()+' wants you to teleport to them', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
+					u.requests[my_username] = [600, 'tpahere']
+
+			elif command2 == "tpaccept":
+				arg2 = arg2.lower()
+				u = findClientByUsername(arg2)
+				if u == None:
+					client.failedToFind(arg2)
+					return
+				if arg2 not in client.requests:
+					client.send("ERR", {'text': 'No pending request from '+arg2})
+				else:
+					client.send("MSG", {'text': 'You accepted a teleport request from '+arg2})
+					u.send("MSG", {'text': u.nameAndUsername()+" accepted your request"})
+					request = client.requests[arg2]
+					if request[1] == 'tpa':
+						u.x = client.x
+						u.y = client.y
+						u.switch_map(client.map_id)
+						self.broadcast("MOV", {'id': u.id, 'to': [u.x, u.y]})
+					elif request[1] == 'tpahere':
+						client.x = u.x
+						client.y = u.y
+						client.switch_map(u.map_id)
+						u.map.broadcast("MOV", {'id': client.id, 'to': [client.x, client.y]})
+					del client.requests[arg2]
+
+			elif command2 == "tpdeny" or command2 == "tpdecline":
+				arg2 = arg2.lower()
+				u = findClientByUsername(arg2)
+				if u == None:
+					client.failedToFind(arg2)
+					return
+				if arg2 not in client.requests:
+					client.send("ERR", {'text': 'No pending request from '+arg2})
+				else:
+					client.send("MSG", {'text': 'You rejected a teleport request from '+arg2})
+					u.send("MSG", {'text': u.nameAndUsername()+" rejected your request"})
+					del client.requests[arg2]
+
+			elif command2 == "tpcancel":
+				arg2 = arg2.lower()
+				u = findClientByUsername(arg2)
+				if u == None:
+					client.failedToFind(arg2)
+					return
+				my_username = client.usernameOrId()
+				if my_username in u.requests:
+					client.send("MSG", {'text': 'Canceled request to '+arg2})
+					del u.requests[my_username]
+				else:
+					client.send("ERR", {'text': 'No request to cancel'})
+
 			elif command2 == "roll":
 				param = arg2.split('d')
 				if len(param) != 2:
@@ -267,14 +341,14 @@ class Map(object):
 				for u in AllClients:
 					if len(names) > 0:
 						names += ', '
-					names += '%s (%s)' % (u.name, str(u.username or '?'))
+					names += u.nameAndUsername()
 				client.send("MSG", {'text': 'List of users connected: '+names})
 			elif command2 == "who":
 				names = ''
 				for u in self.users:
 					if len(names) > 0:
 						names += ', '
-					names += '%s (%s)' % (u.name, str(u.username or '?'))
+					names += '%s (%s)' % (u.name, u.usernameOrId())
 				client.send("MSG", {'text': 'List of users here: '+names})
 			elif command2 == "savemap":
 				self.save()

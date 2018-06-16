@@ -41,13 +41,28 @@ class Client(object):
 		self.inventory = []
 		userCounter += 1
 
+		# other user info
+		self.server_admin = False
+		self.ignore_list = []
+		self.watch_list = []
+		self.tags = {}    # description, species, gender and other things
+		self.away = False # true, or a string if person is away
+
+		self.requests = {} # indexed by username, array with [timer, type]
+
 		# account stuff
 		self.username = None
-		self.password = None # replace with a hash later
+		self.password = None # actually the password hash
 
 	def send(self, commandType, commandParams):
 		""" Send a command to the client """
 		asyncio.ensure_future(self.ws.send(makeCommand(commandType, commandParams)))
+
+	def failedToFind(self, username):
+		if username == None or len(username) == 0:
+			self.send("ERR", {'text': 'No username given'})
+		else:
+			self.send("ERR", {'text': 'Player '+username+' not found'})
 
 	def who(self):
 		""" A dictionary of information for the WHO command """
@@ -55,6 +70,20 @@ class Client(object):
 
 	def disconnect(self):
 		asyncio.ensure_future(self.ws.close())
+
+	def usernameOrId(self):
+		return self.username or str(self.id)
+
+	def nameAndUsername(self):
+		return '%s (%s)' % (self.name, self.usernameOrId())
+
+	def set_tag(self, name, value):
+		self.tags[name] = value
+
+	def get_tag(self, name, default=None):
+		if name in self.tags:
+			return self.tags[name]
+		return default
 
 	def save(self):
 		""" Save user information to a file """
@@ -65,8 +94,16 @@ class Client(object):
 				f.write(json.dumps({'sha512':self.password})+"\n")
 				f.write("WHO\n")
 				who = self.who()
-				who["map_id"] = self.map.id
+				who["map_id"] = self.map.id # add the map ID
 				f.write(json.dumps(who)+"\n")
+				f.write("TAGS\n")
+				f.write(json.dumps(self.tags)+"\n")
+				f.write("IGNORE\n")
+				f.write(json.dumps(self.ignore_list)+"\n")
+				f.write("WATCH\n")
+				f.write(json.dumps(self.watch_list)+"\n")
+				if self.server_admin:
+					f.write("ADMIN\n");
 		except:
 			print("Couldn't save user "+name)
 
@@ -125,12 +162,22 @@ class Client(object):
 				lines = f.readlines()
 				iswho = False
 				ispass = False
-
+				istags = False
+				isignore = False
+				iswatch = False
 				for line in lines:
 					if line == "PASS\n":
 						ispass = True
 					elif line == "WHO\n":
 						iswho = True
+					elif line == "TAGS\n":
+						istags = True
+					elif line == "IGNORE\n":
+						isignore = True
+					elif line == "WATCH\n":
+						iswatch = True
+					elif line == "ADMIN\n":
+						self.server_admin = True
 					elif iswho:
 						s = json.loads(line)
 						self.name = s["name"]
@@ -145,6 +192,15 @@ class Client(object):
 							if s["sha512"] != password:
 								return False
 						ispass = False
+					elif istags:
+						self.tags = json.loads(line)
+						istags = False
+					elif isignore:
+						self.ignore_list = json.loads(line)
+						isignore = False
+					elif iswatch:
+						self.watch_list = json.loads(line)
+						iswatch = False
 				self.username = username
 				self.password = password
 				return True

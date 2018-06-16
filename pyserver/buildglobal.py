@@ -18,6 +18,13 @@ ServerShutdown = False
 AllClients = set()
 AllMaps = set()
 
+def findClientByUsername(username):
+	username = username.lower()
+	for u in AllClients:
+		if username == u.username or (username.isnumeric() and int(username) == u.id):
+			return u
+	return None
+
 def filterUsername(text):
 	return ''.join([i for i in text if (i.isalnum() or i == '_')]).lower()
 

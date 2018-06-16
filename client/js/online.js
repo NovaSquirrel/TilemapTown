@@ -103,7 +103,7 @@ function ConnectToServer() {
 
     switch(cmd) {
       case "MOV":
-        if(arg.id != PlayerYou) {
+        if(arg.id != PlayerYou || !arg.from) {
           PlayerWho[arg.id].x = arg.to[0];
           PlayerWho[arg.id].y = arg.to[1];
           NeedMapRedraw = true;
