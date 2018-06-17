@@ -122,8 +122,10 @@ class Map(object):
 					elif tag:
 						self.tags = json.loads(line)
 						tag = False
+			return True
 		except:
 			print("Couldn't load map "+name)
+			return False
 
 	def save(self):
 		""" Save the map to a file """
@@ -326,6 +328,24 @@ class Map(object):
 			elif command2 == "mapid":
 				client.send("MSG", {'text': 'Map ID is %d' % self.id})
 
+			elif command2 == "newmap":
+				if client.username:
+					new_id = 1
+					while mapIdExists(new_id):
+						new_id +=1
+						if new_id > 5000:
+							client.send("ERR", {'text': 'There are too many maps'})
+							return
+					try:
+						client.switch_map(int(new_id))
+						client.map.owner = client.username
+						client.send("MSG", {'text': 'Welcome to your new map (id %d)' % new_id})
+					except:
+						client.send("ERR", {'text': 'Couldn\'t switch to the new map'})
+						raise
+				else:
+					client.send("ERR", {'text': 'You must be registered to make a new map.'})
+
 			elif command2 == "invite":
 				if client.mustBeOwner(True):
 					arg2 = arg2.lower()
@@ -416,9 +436,13 @@ class Map(object):
 
 			elif command2 == "map":
 				try:
-					client.switch_map(int(arg2))
+					if mapIdExists(int(arg2)):
+						client.switch_map(int(arg2))
+						client.send("MSG", {'text': 'Teleported to map %s' % arg2})
+					else:
+						client.send("MSG", {'text': 'Map %s doesn\'t exist' % arg2})
 				except:
-					print("Can't switch to map "+arg2)
+					client.send("ERR", {'text': 'Couldn\'t go to map %s' % arg2})
 			elif command2 == "saveme":
 				if client.username == None:
 					client.send("ERR", {'text': 'You are not logged in'})

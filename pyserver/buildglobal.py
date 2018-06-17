@@ -18,6 +18,10 @@ ServerShutdown = False
 AllClients = set()
 AllMaps = set()
 
+import os.path
+def mapIdExists(id):
+	return os.path.isfile("maps/"+str(id)+".txt")
+
 def findClientByUsername(username):
 	username = username.lower()
 	for u in AllClients:
