@@ -436,6 +436,15 @@ class Map(object):
 					self.start_pos = [client.x, client.y]
 					client.send("MSG", {'text': 'Map start changed to %d,%d' % (client.x, client.y)})
 
+			elif command2 == "sethome":
+				client.home = [client.map_id, client.x, client.y]
+				client.send("MSG", {'text': 'Home set'})
+			elif command2 == "home":
+				if client.home == None:
+					client.send("ERR", {'text': 'You don\'t have a home set'})
+				else:
+					client.send("MSG", {'text': 'Teleported to your home'})
+					client.switch_map(client.home[0], new_pos=[client.home[1], client.home[2]])
 			elif command2 == "map":
 				try:
 					if mapIdExists(int(arg2)):

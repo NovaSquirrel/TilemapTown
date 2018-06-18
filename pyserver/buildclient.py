@@ -48,6 +48,7 @@ class Client(object):
 		self.watch_list = []
 		self.tags = {}    # description, species, gender and other things
 		self.away = False # true, or a string if person is away
+		self.home = None
 
 		self.requests = {} # indexed by username, array with [timer, type]
 
@@ -106,6 +107,8 @@ class Client(object):
 				f.write(json.dumps(who)+"\n")
 				f.write("TAGS\n")
 				f.write(json.dumps(self.tags)+"\n")
+				f.write("HOME\n")
+				f.write(json.dumps(self.home)+"\n")
 				f.write("IGNORE\n")
 				f.write(json.dumps(self.ignore_list)+"\n")
 				f.write("WATCH\n")
@@ -176,6 +179,7 @@ class Client(object):
 				istags = False
 				isignore = False
 				iswatch = False
+				ishome = False
 				for line in lines:
 					if line == "PASS\n":
 						ispass = True
@@ -187,6 +191,8 @@ class Client(object):
 						isignore = True
 					elif line == "WATCH\n":
 						iswatch = True
+					elif line == "HOME\n":
+						ishome = True
 					elif line == "ADMIN\n":
 						self.server_admin = True
 					elif iswho:
@@ -212,6 +218,9 @@ class Client(object):
 					elif iswatch:
 						self.watch_list = json.loads(line)
 						iswatch = False
+					elif ishome:
+						self.home = json.loads(line)
+						ishome = False
 				self.username = username
 				self.password = password
 				return True
