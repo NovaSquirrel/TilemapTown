@@ -133,10 +133,7 @@ class Map(object):
 		try:
 			with open(name, 'w') as f:
 				f.write("MAI\n")
-				i = self.map_info()
-				i['entry_whitelist'] = list(self.entry_whitelist)
-				i['entry_banlist'] = list(self.entry_banlist)
-				i['start_pos'] = self.start_pos
+				i = self.map_info(all_info=True)
 				f.write(json.dumps(i)+"\n")
 				f.write("MAP\n")
 				f.write(json.dumps(self.map_section(0, 0, self.width-1, self.height-1))+"\n")
@@ -164,9 +161,14 @@ class Map(object):
 					objs.append([x, y, self.objs[x][y]])
 		return {'pos': [x1, y1, x2, y2], 'default': self.default_turf, 'turf': turfs, 'obj': objs}
 
-	def map_info(self):
+	def map_info(self, all_info=False):
 		""" MAI message data """
-		return {'name': self.name, 'id': self.id, 'owner': self.owner, 'admins': list(self.admins), 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.public, 'private': self.private, 'build_enabled': self.build_enabled, 'full_sandbox': self.full_sandbox}
+		out = {'name': self.name, 'id': self.id, 'owner': self.owner, 'admins': list(self.admins), 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.public, 'private': self.private, 'build_enabled': self.build_enabled, 'full_sandbox': self.full_sandbox}
+		if all_info:
+			out['entry_whitelist'] = list(self.entry_whitelist)
+			out['entry_banlist'] = list(self.entry_banlist)
+			out['start_pos'] = self.start_pos
+		return out
 
 	def broadcast(self, commandType, commandParams):
 		""" Send a message to everyone on the map """
@@ -520,26 +522,37 @@ class Map(object):
 		elif command == "MSG":
 			text = arg["text"]
 			self.broadcast("MSG", {'name': client.name, 'text': escapeTags(text)})
+		elif command == "MAI":
+			send_all_info = client.mustBeOwner(True, giveError=False)
+			client.send("MAI", self.map.map_info(all_info=send_all_info))
 		elif command == "DEL":
 			x1 = arg["pos"][0]
 			y1 = arg["pos"][1]
 			x2 = arg["pos"][2]
 			y2 = arg["pos"][3]
-			for x in range(x1, x2+1):
-				for y in range(y1, y2+1):
-					if arg["turf"]:
-						self.turfs[x][y] = None;
-					if arg["obj"]:
-						self.objs[x][y] = None;
-			self.broadcast("MAP", self.map_section(x1, y1, x2, y2))
+			if self.build_enabled or client.mustBeOwner(True, giveError=False):
+				for x in range(x1, x2+1):
+					for y in range(y1, y2+1):
+						if arg["turf"]:
+							self.turfs[x][y] = None;
+						if arg["obj"]:
+							self.objs[x][y] = None;
+				self.broadcast("MAP", self.map_section(x1, y1, x2, y2))
+			else:
+				client.send("MAP", self.map_section(x1, y1, x2, y2))
+				client.send("ERR", {'text': 'Deleting is disabled on this map'})
 		elif command == "PUT":
 			x = arg["pos"][0]
 			y = arg["pos"][1]
-			if arg["obj"]:
-				self.objs[x][y] = arg["atom"]
+			if self.build_enabled or client.mustBeOwner(True, giveError=False):
+				if arg["obj"]:
+					self.objs[x][y] = arg["atom"]
+				else:
+					self.turfs[x][y] = arg["atom"]
+				self.broadcast("MAP", self.map_section(x, y, x, y))
 			else:
-				self.turfs[x][y] = arg["atom"]
-			self.broadcast("MAP", self.map_section(x, y, x, y))
+				client.send("MAP", self.map_section(x, y, x, y))
+				client.send("ERR", {'text': 'Building is disabled on this map'})
 
 	def clean_up(self):
 		""" Clean up everything before a map unload """

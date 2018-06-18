@@ -65,12 +65,12 @@ class Client(object):
 		else:
 			self.send("ERR", {'text': 'Player '+username+' not found'})
 
-	def mustBeOwner(self, adminOkay):
+	def mustBeOwner(self, adminOkay, giveError=True):
 		if self.map.owner == self.username or (adminOkay and self.username in self.map.admins):
 			return True
-		else:
+		elif giveError:
 			self.send("ERR", {'text': 'You don\'t have permission to do that'})
-			return False
+		return False
 
 	def who(self):
 		""" A dictionary of information for the WHO command """

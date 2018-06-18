@@ -31,9 +31,9 @@ get a partial (or complete) copy of the map
 (currently server-->client only)
 
 --> MAI
-<-- MAI {"name": map_name, "id": map_id, "owner": whoever, "default": default_turf, "size": [width, height]}
-map info stuff?
-(currently server-->client only)
+<-- MAI {"name": map_name, "id": map_id, "owner": whoever, "admins": list, "default": default_turf, "size": [width, height], "public": true/false, "private": true/false, "build_enabled": true/false, "full_sandbox": true/false}
+map info stuff.
+Optionally also defines "entry_whitelist", "entry_banlist" and "start_pos" for map admins
 
 --> DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true}
 <-- MAP {updated map}

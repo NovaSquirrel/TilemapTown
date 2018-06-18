@@ -1,0 +1,10 @@
+"pic" format: [s, x, y]
+s = sheet number (graphical tileset)
+x = x on sheet, in tiles
+y = y on sheet, in tiles
+
+s may be a picture url or data url
+
+Common tiles: low numbers
+0 - potluck
+1 - extras
