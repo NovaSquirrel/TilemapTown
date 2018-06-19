@@ -27,6 +27,9 @@ var CameraX = 0;
 var CameraY = 0;
 var CameraAlwaysCenter = true;
 
+// other settings
+var AudioNotifications = false;
+
 // mouse stuff
 var MouseDown   = false;
 var MouseStartX = -1;
@@ -60,6 +63,11 @@ function logMessage(Message) {
   chatArea.innerHTML += Message + "<br>";
   if(bottom)
     chatArea.scrollTop = chatArea.scrollHeight;
+
+  if(AudioNotifications) {
+    var audio = new Audio('img/notify.wav');
+    audio.play();
+  }
 }
 
 function setChatInput(the_text) {
@@ -681,10 +689,12 @@ function applyOptions() {
   var vheight = document.getElementById("viewheight");
   var vdouble = document.getElementById("doublezoom");
   var vcenter = document.getElementById("alwayscenter");
+  var vnotify = document.getElementById("audionotify");
 
   ViewWidth = parseInt(vwidth.value);
   ViewHeight = parseInt(vheight.value);
   CameraAlwaysCenter = vcenter.checked;
+  AudioNotifications = vnotify.checked;
 
   mapCanvas.width = ViewWidth*16;
   mapCanvas.height = ViewHeight*16;
