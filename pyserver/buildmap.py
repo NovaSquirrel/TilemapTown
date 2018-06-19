@@ -204,9 +204,10 @@ class Map(object):
 				arg2 = text[space+1:]
 
 			if command2 == "nick":
-				self.broadcast("MSG", {'text': client.name+" is now known as "+escapeTags(arg2)})
-				client.name = escapeTags(arg2)
-				self.broadcast("WHO", {'add': client.who()}) # update client view
+				if len(arg2) > 0 and not arg2.isspace():
+					self.broadcast("MSG", {'text': client.name+" is now known as "+escapeTags(arg2)})
+					client.name = escapeTags(arg2)
+					self.broadcast("WHO", {'add': client.who()}) # update client view
 			elif command2 == "tell" or command2 == "msg" or command2 == "p":
 				space2 = arg2.find(" ")
 				if space2 >= 0:

@@ -162,10 +162,28 @@
         <input type="button" onclick="viewOptions();" value="Close options">
       </div>
       <div id="character" style="display: none;">
-        Character customizer not implemented yet<br>
+        <input type="text" placeholder="New name" id="newnick">
+        <input type="button" value="Rename" onclick="sendChatCommand('nick '+document.getElementById('newnick').value);"><br>
+
+        <p>
+        Preset player graphics<br>
+        <input type="button" value="Bunny" onclick="sendChatCommand('userpic bunny');">
+        <input type="button" value="Cat" onclick="sendChatCommand('userpic cat');"><br>
+        <input type="button" value="Hamster" onclick="sendChatCommand('userpic hamster');");>
+        <input type="button" value="Fire" onclick="sendChatCommand('userpic fire');">
+        </p>
+
+        <p>
+        As a temporary measure,<br>custom pics go on imgur<br>
+        <input type="text" placeholder="https://i.imgur.com/whatever.png" id="newcustompic">
+        <input type="button" value="Custom pic" onclick="sendChatCommand('userpic '+document.getElementById('newcustompic').value);">
+        </p>
+
+<!--
         <input id="iconPicker" type="file" onchange="previewIcon();"><br>
         <img id="iconPreview" src="" width="32" height="32" alt="Image preview"><br>
         <input type="button" value="Use"><br>
+-->
       </div>
     </div>
 
