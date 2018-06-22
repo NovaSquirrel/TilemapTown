@@ -350,6 +350,29 @@ class Map(object):
 				else:
 					client.send("ERR", {'text': 'You must be registered to make a new map.'})
 
+
+			elif command2 == "ignore":
+				arg2 = arg2.lower()
+				client.ignore_list.add(arg2)
+				self.broadcast("MSG", {'text': '\"%s\" added to ignore list' % arg2})
+			elif command2 == "unignore":
+				arg2 = arg2.lower()
+				client.ignore_list.remove(arg2)
+				self.broadcast("MSG", {'text': '\"%s\" removed from ignore list' % arg2})
+			elif command2 == "ignorelist":
+				client.send("MSG", {'text': 'Ignore list: '+str(client.ignore_list)})
+
+			elif command2 == "watch":
+				arg2 = arg2.lower()
+				client.watch_list.add(arg2)
+				self.broadcast("MSG", {'text': '\"%s\" added to watch list' % arg2})
+			elif command2 == "unwatch":
+				arg2 = arg2.lower()
+				client.watch_list.remove(arg2)
+				self.broadcast("MSG", {'text': '\"%s\" removed from watch list' % arg2})
+			elif command2 == "watchlist":
+				client.send("MSG", {'text': 'Watch list: '+str(client.watch_list)})
+
 			elif command2 == "invite":
 				if client.mustBeOwner(True):
 					arg2 = arg2.lower()
@@ -529,10 +552,17 @@ class Map(object):
 				self.save()
 				self.broadcast("MSG", {'text': client.name+" saved the map"})
 
+			# Server admin commands
 			elif command2 == "broadcast":
 				if client.mustBeServerAdmin() and len(arg2) > 0:
 					broadcastToAll("Admin broadcast: "+arg2)
-
+			elif command2 == "kill":
+				if client.mustBeServerAdmin():
+					u = findClientByUsername(arg2)
+					if u != None:
+						client.send("MSG", {'text': 'Killed '+u.nameAndUsername()})
+						u.send("MSG", {'text': 'Killed by '+client.nameAndUsername()})
+						u.disconnect()
 			elif command2 == "shutdown":
 				if client.mustBeServerAdmin():
 					if arg2 == "cancel":

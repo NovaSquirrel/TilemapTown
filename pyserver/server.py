@@ -60,7 +60,7 @@ def mainTimer():
 		if ServerShutdown[0] == 1:
 			broadcastToAll("Server is going down!")
 			for u in AllClients:
-				u.ws.close()
+				u.disconnect()
 			for m in AllMaps:
 				m.save()
 		elif ServerShutdown[0] == 0:

@@ -44,8 +44,8 @@ class Client(object):
 
 		# other user info
 		self.server_admin = False
-		self.ignore_list = []
-		self.watch_list = []
+		self.ignore_list = set()
+		self.watch_list = set()
 		self.tags = {}    # description, species, gender and other things
 		self.away = False # true, or a string if person is away
 		self.home = None
@@ -117,9 +117,9 @@ class Client(object):
 				f.write("HOME\n")
 				f.write(json.dumps(self.home)+"\n")
 				f.write("IGNORE\n")
-				f.write(json.dumps(self.ignore_list)+"\n")
+				f.write(json.dumps(list(self.ignore_list))+"\n")
 				f.write("WATCH\n")
-				f.write(json.dumps(self.watch_list)+"\n")
+				f.write(json.dumps(list(self.watch_list))+"\n")
 				if self.server_admin:
 					f.write("ADMIN\n");
 		except:
@@ -220,10 +220,10 @@ class Client(object):
 						self.tags = json.loads(line)
 						istags = False
 					elif isignore:
-						self.ignore_list = json.loads(line)
+						self.ignore_list = set(json.loads(line))
 						isignore = False
 					elif iswatch:
-						self.watch_list = json.loads(line)
+						self.watch_list = set(json.loads(line))
 						iswatch = False
 					elif ishome:
 						self.home = json.loads(line)
