@@ -66,6 +66,13 @@ class Client(object):
 		else:
 			self.send("ERR", {'text': 'Player '+username+' not found'})
 
+	def mustBeServerAdmin(self, giveError=True):
+		if self.server_admin:
+			return True
+		elif giveError:
+			self.send("ERR", {'text': 'You don\'t have permission to do that'})
+		return False
+
 	def mustBeOwner(self, adminOkay, giveError=True):
 		if self.map.owner == self.username or (adminOkay and self.username in self.map.admins):
 			return True

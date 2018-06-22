@@ -14,13 +14,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-ServerShutdown = False
+ServerShutdown = [-1]
 AllClients = set()
 AllMaps = set()
 
 import os.path
 def mapIdExists(id):
 	return os.path.isfile("maps/"+str(id)+".txt")
+
+def broadcastToAll(text):
+	for u in AllClients:
+		u.send("MSG", {'text': text})
 
 def findClientByUsername(username):
 	username = username.lower()

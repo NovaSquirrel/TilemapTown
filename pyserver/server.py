@@ -21,6 +21,8 @@ from buildclient import *
 
 # Timer that runs and performs background tasks
 def mainTimer():
+	global ServerShutdown
+
 	# Disconnect pinged-out users
 	for c in AllClients:
 		# Remove requests that time out
@@ -52,9 +54,18 @@ def mainTimer():
 	for m in unloaded:
 		AllMaps.remove(m)
 
-	if ServerShutdown:
-		loop.stop()
-	else:
+	# Run server shutdown timer, if it's running
+	if ServerShutdown[0] > 0:
+		ServerShutdown[0] -= 1
+		if ServerShutdown[0] == 1:
+			broadcastToAll("Server is going down!")
+			for u in AllClients:
+				u.ws.close()
+			for m in AllMaps:
+				m.save()
+		elif ServerShutdown[0] == 0:
+			loop.stop()
+	if ServerShutdown[0] != 0:
 		loop.call_later(1, mainTimer)
 
 # Websocket connection handler
@@ -83,6 +94,7 @@ async def clientHandler(websocket, path):
 					result = client.login(filterUsername(arg["username"]), arg["password"])
 				if result != True: # default to map 0 if can't log in
 					client.switch_map(0)
+					client.send("MSG", {'text': 'Welcome guest! Click the bunny button on the top menu to set your name and/or picture.'})
 			elif command == "PIN":
 				client.ping_timer = 300
 
@@ -115,4 +127,3 @@ loop.call_soon(mainTimer)
 loop.run_until_complete(start_server)
 print("Server started!")
 loop.run_forever()
-websockets.close()

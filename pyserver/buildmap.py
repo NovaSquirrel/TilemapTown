@@ -188,6 +188,7 @@ class Map(object):
 
 	def execute_command(self, client, command, arg):
 		""" Actually run a command from the client after being processed """
+		global ServerShutdown
 		client.idle_timer = 0
 		if command == "MOV":
 			self.broadcast("MOV", {'id': client.id, 'from': arg["from"], 'to': arg["to"]})
@@ -527,6 +528,19 @@ class Map(object):
 			elif command2 == "savemap":
 				self.save()
 				self.broadcast("MSG", {'text': client.name+" saved the map"})
+
+			elif command2 == "broadcast":
+				if client.mustBeServerAdmin() and len(arg2) > 0:
+					broadcastToAll("Admin broadcast: "+arg2)
+
+			elif command2 == "shutdown":
+				if client.mustBeServerAdmin():
+					if arg2 == "cancel":
+						ServerShutdown[0] = -1
+						broadcastToAll("Server shutdown canceled")
+					elif arg2.isnumeric():
+						ServerShutdown[0] = int(arg2)
+						broadcastToAll("Server shutdown in %d seconds! (started by %s)" % (ServerShutdown[0], client.name))
 			else:
 				client.send("ERR", {'text': 'Invalid command?'})
 		elif command == "MSG":
