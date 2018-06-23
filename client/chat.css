@@ -1,0 +1,19 @@
+.user_message {
+  color: white;
+}
+
+.server_message {
+  color: pink;
+}
+
+.error_message {
+  color: red;
+}
+
+.broadcast_message {
+  color: cyan;
+}
+
+.private_message {
+  color: lime;
+}

@@ -68,10 +68,10 @@ function ConnectToServer() {
   OnlineMode = true;
 
   OnlineSocket = new WebSocket((OnlineSSL?"wss://":"ws://")+OnlineServer+":"+OnlinePort);
-  logMessage("Attempting to connect");
+  logMessage("Attempting to connect", 'server_message');
 
   OnlineSocket.onopen = function (event) {
-    logMessage("Connected! Waiting for map data.");
+    logMessage("Connected! Waiting for map data.", 'server_message');
     if(OnlineUsername == "")
       SendCmd("IDN", null);
     else
@@ -80,12 +80,12 @@ function ConnectToServer() {
   }
 
   OnlineSocket.onerror = function (event) {
-    logMessage("Socket error");
+    logMessage("Socket error", 'error_message');
     OnlineIsConnected = false;
   }
 
   OnlineSocket.onclose = function (event) {
-    logMessage("Connection closed");
+    logMessage("Connection closed", 'error_message');
     OnlineIsConnected = false;
   }
 
@@ -148,11 +148,11 @@ function ConnectToServer() {
           PlayerImages = {}; // reset images list
         } else if(arg.add) {
           if(!PlayerWho[arg.add.id]) // if player isn't already in the list
-            logMessage("Joining: "+arg.add.name);
+            logMessage("Joining: "+arg.add.name, 'server_message');
           PlayerWho[arg.add.id] = arg.add;
           NeedMapRedraw = true;
         } else if(arg.remove) {
-          logMessage("Leaving: "+PlayerWho[arg.remove].name);
+          logMessage("Leaving: "+PlayerWho[arg.remove].name, 'server_message');
           // unload image if needed
           if (arg.remove in PlayerImages)
             delete PlayerImages[arg.remove];
@@ -187,30 +187,33 @@ function ConnectToServer() {
         SendCmd("PIN", null);
         break;
       case "ERR":
-        logMessage("Error: "+arg.text);
+        logMessage("Error: "+arg.text, 'error_message');
 		break;
       case "PRI":
         let respond = '<span onclick="setChatInput(\'/tell '+arg.username+' \')">';
         if(arg.receive)
-          logMessage(respond+"&larr;["+arg.name+"("+arg.username+")"+"] "+arg.text+'</span>');
+          logMessage(respond+"&larr;["+arg.name+"("+arg.username+")"+"] "+arg.text+'</span>', 'private_message');
         else
-          logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] "+arg.text+'</span>');
+          logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] "+arg.text+'</span>', 'private_message');
 		break;
       case "MSG":
         if(arg.name) {
           if(arg.text.slice(0, 4) == "/me ")
-            logMessage("* <i>"+arg.name+" "+arg.text.slice(4)+"</i>");
+            logMessage("* <i>"+arg.name+" "+arg.text.slice(4)+"</i>", 'user_message');
           else
-            logMessage("&lt;"+arg.name+"&gt; "+arg.text);
+            logMessage("&lt;"+arg.name+"&gt; "+arg.text, 'user_message');
         } else
           if(arg.buttons) {
             let buttons = "";
             for(let i=0; i<arg.buttons.length/2; i++) {
               buttons += '<input type="button" value="'+arg.buttons[i*2]+'" onclick="sendChatCommand(\''+arg.buttons[i*2+1]+'\');"/>';
             }
-            logMessage("! "+arg.text+" "+buttons);
+            logMessage("! "+arg.text+" "+buttons, 'server_message');
           } else {
-            logMessage("Server message: "+arg.text);
+            if(arg["class"])
+              logMessage(arg.text, arg["class"]);
+            else
+              logMessage("Server message: "+arg.text, 'server_message');
           }
         break;
     }

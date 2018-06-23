@@ -24,7 +24,7 @@ def mapIdExists(id):
 
 def broadcastToAll(text):
 	for u in AllClients:
-		u.send("MSG", {'text': text})
+		u.send("MSG", {'text': text, 'class': 'broadcast_message'})
 
 def findClientByUsername(username):
 	username = username.lower()

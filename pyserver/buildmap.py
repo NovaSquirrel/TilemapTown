@@ -206,7 +206,7 @@ class Map(object):
 
 			if command2 == "nick":
 				if len(arg2) > 0 and not arg2.isspace():
-					self.broadcast("MSG", {'text': client.name+" is now known as "+escapeTags(arg2)})
+					self.broadcast("MSG", {'text': "\""+client.name+"\" is now known as \""+escapeTags(arg2)+"\""})
 					client.name = escapeTags(arg2)
 					self.broadcast("WHO", {'add': client.who()}) # update client view
 			elif command2 == "tell" or command2 == "msg" or command2 == "p":
@@ -357,14 +357,16 @@ class Map(object):
 				self.broadcast("MSG", {'text': '\"%s\" added to ignore list' % arg2})
 			elif command2 == "unignore":
 				arg2 = arg2.lower()
-				client.ignore_list.remove(arg2)
+				if arg2 in client.ignore_list:
+					client.ignore_list.remove(arg2)
 				self.broadcast("MSG", {'text': '\"%s\" removed from ignore list' % arg2})
 			elif command2 == "ignorelist":
 				client.send("MSG", {'text': 'Ignore list: '+str(client.ignore_list)})
 
 			elif command2 == "watch":
 				arg2 = arg2.lower()
-				client.watch_list.add(arg2)
+				if arg2 in client.watch_list:
+					client.watch_list.remove(arg2)
 				self.broadcast("MSG", {'text': '\"%s\" added to watch list' % arg2})
 			elif command2 == "unwatch":
 				arg2 = arg2.lower()
@@ -381,7 +383,8 @@ class Map(object):
 			elif command2 == "uninvite":
 				if client.mustBeOwner(True):
 					arg2 = arg2.lower()
-					self.entry_whitelist.remove(arg2)
+					if arg2 in self.entry_whitelist:
+						self.entry_whitelist.remove(arg2)
 					self.broadcast("MSG", {'text': '\"%s\" removed from whitelist' % arg2})
 			elif command2 == "invitelist":
 				if client.mustBeOwner(True):
@@ -395,7 +398,8 @@ class Map(object):
 			elif command2 == "unban":
 				if client.mustBeOwner(True):
 					arg2 = arg2.lower()
-					self.entry_banlist.remove(arg2)
+					if arg2 in self.entry_banlist:
+						self.entry_banlist.remove(arg2)
 					self.broadcast("MSG", {'text': '\"%s\" removed from banlist' % arg2})
 			elif command2 == "banlist":
 				if client.mustBeOwner(True):
@@ -409,7 +413,8 @@ class Map(object):
 			elif command2 == "deop":
 				if client.mustBeOwner(False):
 					arg2 = arg2.lower()
-					self.admins.remove(arg2)
+					if arg2 in self.admins:
+						self.admins.remove(arg2)
 					self.broadcast("MSG", {'text': '\"%s\" was demoted' % arg2})
 			elif command2 == "oplist":
 				if client.mustBeOwner(True):

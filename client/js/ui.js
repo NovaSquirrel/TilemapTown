@@ -57,10 +57,10 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-function logMessage(Message) {
+function logMessage(Message, Class) {
   var chatArea = document.getElementById("chatArea");
   var bottom = chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight < 1;
-  chatArea.innerHTML += Message + "<br>";
+  chatArea.innerHTML += '<span class="'+Class+'">'+ Message + "</span><br>";
   if(bottom)
     chatArea.scrollTop = chatArea.scrollHeight;
 
@@ -260,7 +260,7 @@ function keyHandler(e) {
               Escaped += c;
             }
           }
-          logMessage("The sign says: "+Escaped);
+          logMessage("The sign says: "+Escaped, "server_message");
         }
         break;
       }

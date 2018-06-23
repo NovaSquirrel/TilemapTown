@@ -95,6 +95,7 @@ async def clientHandler(websocket, path):
 				if result != True: # default to map 0 if can't log in
 					client.switch_map(0)
 					client.send("MSG", {'text': 'Welcome guest! Click the bunny button on the top menu to set your name and/or picture.'})
+				client.send("MSG", {'text': 'Users connected: %d' % len(AllClients)})
 			elif command == "PIN":
 				client.ping_timer = 300
 
