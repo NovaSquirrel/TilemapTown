@@ -466,6 +466,22 @@ class Map(object):
 					self.start_pos = [client.x, client.y]
 					client.send("MSG", {'text': 'Map start changed to %d,%d' % (client.x, client.y)})
 
+			elif command2 == "kick" or command2 == "kickban":
+				arg2 = arg2.lower()
+				if client.mustBeOwner(True):
+					u = findClientByUsername(arg2)
+					if u != None:
+						if u.map_id == client.map_id:
+							client.send("MSG", {'text': 'Kicked '+u.nameAndUsername()})
+							u.send("MSG", {'text': 'Kicked by '+client.nameAndUsername()})
+							u.send_home()
+							if command2 == "kickban":
+								self.entry_banlist.add(arg2)
+						else:
+							client.send("ERR", {'text': 'User not on this map'})
+					else:
+						client.send("ERR", {'text': 'User not found'})
+
 			elif command2 == "sethome":
 				client.home = [client.map_id, client.x, client.y]
 				client.send("MSG", {'text': 'Home set'})
@@ -474,7 +490,7 @@ class Map(object):
 					client.send("ERR", {'text': 'You don\'t have a home set'})
 				else:
 					client.send("MSG", {'text': 'Teleported to your home'})
-					client.switch_map(client.home[0], new_pos=[client.home[1], client.home[2]])
+					client.send_home()
 			elif command2 == "map":
 				try:
 					if mapIdExists(int(arg2)):

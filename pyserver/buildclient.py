@@ -125,7 +125,7 @@ class Client(object):
 		except:
 			print("Couldn't save user "+name)
 
-	def switch_map(self, map_id, new_pos=None):
+	def switch_map(self, map_id, new_pos=None, goto_spawn=True):
 		""" Teleport the user to another map """
 		if not self.map or (self.map and self.map.id != map_id):
 			if self.map:
@@ -148,12 +148,23 @@ class Client(object):
 			self.x = new_pos[0]
 			self.y = new_pos[1]
 			self.map.broadcast("MOV", {'id': self.id, 'to': [self.x, self.y]})
+		elif goto_spawn:
+			self.x = self.map.start_pos[0]
+			self.y = self.map.start_pos[1]
+			self.map.broadcast("MOV", {'id': self.id, 'to': [self.x, self.y]})
+
+	def send_home(self):
+		""" If player has a home, send them there. If not, to map zero """
+		if self.home != None:
+			self.switch_map(self.home[0], new_pos=[self.home[1], self.home[2]])
+		else:
+			self.switch_map(0)
 
 	def login(self, username, password):
 		""" Attempt to log the client into an account """
 		result = self.load(username, password)
 		if result == True:
-			self.switch_map(self.map_id)
+			self.switch_map(self.map_id, goto_spawn=False)
 			self.map.broadcast("MSG", {'text': self.name+" has logged in ("+self.username+")"})
 			self.map.broadcast("WHO", {'add': self.who()}) # update client view
 			return True
