@@ -482,6 +482,13 @@ class Map(object):
 					else:
 						client.send("ERR", {'text': 'User not found'})
 
+			elif command2 == "back":
+				if len(client.tp_history) > 0:
+					pos = client.tp_history.pop()
+					client.switch_map(pos[0], new_pos=[pos[1], pos[2]], update_history=False)
+				else:
+					client.send("ERR", {'text': 'Nothing in teleport history'})
+
 			elif command2 == "sethome":
 				client.home = [client.map_id, client.x, client.y]
 				client.send("MSG", {'text': 'Home set'})

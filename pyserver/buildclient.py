@@ -50,7 +50,9 @@ class Client(object):
 		self.away = False # true, or a string if person is away
 		self.home = None
 
+		# temporary information
 		self.requests = {} # indexed by username, array with [timer, type]
+		self.tp_history = []
 
 		# account stuff
 		self.username = None
@@ -125,7 +127,7 @@ class Client(object):
 		except:
 			print("Couldn't save user "+name)
 
-	def switch_map(self, map_id, new_pos=None, goto_spawn=True):
+	def switch_map(self, map_id, new_pos=None, goto_spawn=True, update_history=True):
 		""" Teleport the user to another map """
 		if not self.map or (self.map and self.map.id != map_id):
 			if self.map:
@@ -143,7 +145,13 @@ class Client(object):
 
 			# Tell everyone on the new map the user arrived
 			self.map.broadcast("WHO", {'add': self.who()})
+		
+		if len(self.tp_history) > 0 and update_history:
+			# Update most recent teleport history entry
+			self.tp_history[-1][1] = self.x
+			self.tp_history[-1][2] = self.y
 
+		# Move player's X and Y coordinates if needed
 		if new_pos != None:
 			self.x = new_pos[0]
 			self.y = new_pos[1]
@@ -152,6 +160,13 @@ class Client(object):
 			self.x = self.map.start_pos[0]
 			self.y = self.map.start_pos[1]
 			self.map.broadcast("MOV", {'id': self.id, 'to': [self.x, self.y]})
+
+		if update_history:
+			if len(self.tp_history) == 0 or self.tp_history[-1][0] != map_id:
+				# Add a new teleport history entry if new map
+				self.tp_history.append([map_id, self.x, self.y])
+			if len(self.tp_history) > 20:
+				self.tp_history.pop(0)
 
 	def send_home(self):
 		""" If player has a home, send them there. If not, to map zero """
