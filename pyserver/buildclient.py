@@ -76,6 +76,9 @@ class Client(object):
 			self.send("ERR", {'text': 'Player '+username+' not found'})
 
 	def ride(self, other):
+		# cannot ride yourself
+		if self == other:
+			return
 		# remove the old ride before getting a new one
 		if self.vehicle != None:
 			self.dismount()
