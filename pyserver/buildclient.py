@@ -52,7 +52,12 @@ class Client(object):
 
 		# temporary information
 		self.requests = {} # indexed by username, array with [timer, type]
+		# valid types are "tpa", "tpahere", "carry"
 		self.tp_history = []
+
+		# riding information
+		self.vehicle = None     # user being ridden
+		self.passengers = set() # users being carried
 
 		# account stuff
 		self.username = None
@@ -60,6 +65,8 @@ class Client(object):
 
 	def send(self, commandType, commandParams):
 		""" Send a command to the client """
+		if self.ws == None:
+			return
 		asyncio.ensure_future(self.ws.send(makeCommand(commandType, commandParams)))
 
 	def failedToFind(self, username):
@@ -67,6 +74,32 @@ class Client(object):
 			self.send("ERR", {'text': 'No username given'})
 		else:
 			self.send("ERR", {'text': 'Player '+username+' not found'})
+
+	def ride(self, other):
+		# remove the old ride before getting a new one
+		if self.vehicle != None:
+			self.dismount()
+		# let's not deal with trees of passengers first
+		if len(self.passengers):
+			self.send("MSG", {'text': 'You let out all your passengers first'})
+			temp = set(self.passengers)
+			for u in temp:
+				u.dismount()
+
+		self.send("MSG", {'text': 'You get on %s (/hopoff to get off)' % other.nameAndUsername()})
+		other.send("MSG", {'text': 'You carry %s' % self.nameAndUsername()})
+		self.vehicle = other
+		other.passengers.add(self)
+		self.switch_map(other.map_id, new_pos=[other.x, other.y])
+
+	def dismount(self):
+		if self.vehicle == None:
+			self.send("ERR", {'text': 'You\'re not being carried'})
+		else:
+			self.send("MSG", {'text': 'You get off %s' % self.vehicle.nameAndUsername()})
+			self.vehicle.send("MSG", {'text': '%s gets off of you' % self.nameAndUsername()})
+			self.vehicle.passengers.remove(self)
+			self.vehicle = None
 
 	def mustBeServerAdmin(self, giveError=True):
 		if self.server_admin:
@@ -81,6 +114,13 @@ class Client(object):
 		elif giveError:
 			self.send("ERR", {'text': 'You don\'t have permission to do that'})
 		return False
+
+	def moveTo(self, x, y):
+		self.x = x
+		self.y = y
+		for u in self.passengers:
+			u.moveTo(x, y)
+			u.map.broadcast("MOV", {'id': u.id, 'to': [u.x, u.y]})
 
 	def who(self):
 		""" A dictionary of information for the WHO command """
@@ -155,13 +195,15 @@ class Client(object):
 
 		# Move player's X and Y coordinates if needed
 		if new_pos != None:
-			self.x = new_pos[0]
-			self.y = new_pos[1]
+			self.moveTo(new_pos[0], new_pos[1])
 			self.map.broadcast("MOV", {'id': self.id, 'to': [self.x, self.y]})
 		elif goto_spawn:
-			self.x = self.map.start_pos[0]
-			self.y = self.map.start_pos[1]
+			self.moveTo(self.map.start_pos[0], self.map.start_pos[1])
 			self.map.broadcast("MOV", {'id': self.id, 'to': [self.x, self.y]})
+
+		# Move any passengers too
+		for u in self.passengers:
+			u.switch_map(map_id, new_pos=[self.x, self.y])
 
 	def send_home(self):
 		""" If player has a home, send them there. If not, to map zero """
@@ -169,6 +211,14 @@ class Client(object):
 			self.switch_map(self.home[0], new_pos=[self.home[1], self.home[2]])
 		else:
 			self.switch_map(0)
+
+	def cleanup(self):
+		self.ws = None
+		temp = set(self.passengers)
+		for u in temp:
+			u.dismount()
+		if self.vehicle:
+			self.dismount()
 
 	def login(self, username, password):
 		""" Attempt to log the client into an account """

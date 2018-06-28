@@ -111,6 +111,7 @@ async def clientHandler(websocket, path):
 		print("Unexpected error:", sys.exc_info()[0])
 #		raise
 
+	client.cleanup()
 	if client.username:
 		client.save()
 

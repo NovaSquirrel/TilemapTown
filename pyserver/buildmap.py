@@ -192,8 +192,7 @@ class Map(object):
 		client.idle_timer = 0
 		if command == "MOV":
 			self.broadcast("MOV", {'id': client.id, 'from': arg["from"], 'to': arg["to"]})
-			client.x = arg["to"][0]
-			client.y = arg["to"][1]
+			client.moveTo(arg["to"][0], arg["to"][1])
 		elif command == "CMD":
 			# separate into command and arguments
 			text = arg["text"]
@@ -226,6 +225,48 @@ class Map(object):
 				else:
 					client.send("ERR", {'text': 'Private message who?'})
 
+			# carrying
+			elif command2 == "carry":
+				u = findClientByUsername(arg2)
+				if u == None:
+					client.failedToFind(arg2)
+					return
+				my_username = client.usernameOrId()
+				if my_username in u.requests:
+					client.send("ERR", {'text': 'You\'ve already sent them a request'})
+					u.requests[my_username][0] = 600 #renew
+				else:
+					client.send("MSG", {'text': 'You requested to carry '+arg2})
+					u.send("MSG", {'text': client.nameAndUsername()+' wants to carry you', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
+					u.requests[my_username] = [600, 'carry']
+			elif command2 == "hopoff":
+				client.dismount()
+			elif command2 == "dropoff":
+				u = findClientByUsername(arg2, inside=client.passengers)
+				if u:
+					u.dismount()
+				else:
+					client.send("ERR", {'text': 'You aren\'t carrying %s' % arg2})
+			elif command2 == "carrywho":
+				if len(client.passengers):
+					names = ''
+					for u in client.passengers:
+						if len(names) > 0:
+							names += ', '
+						names += '%s (%s)' % (u.name, u.usernameOrId())
+					client.send("MSG", {'text': "You are carrying %s" % names})
+				else:
+					client.send("MSG", {'text': "You aren\'t carrying anything"})
+			elif command2 == "ridewho":
+				if client.vehicle:
+					client.send("MSG", {'text': "You are riding %s" % client.vehicle.nameAndUsername()})
+				else:
+					client.send("MSG", {'text': "You aren\'t riding anything"})
+			elif command2 == "rideend":
+				temp = set(client.passengers)
+				for u in temp:
+					u.dismount()
+
 			elif command2 == "tpa":
 				u = findClientByUsername(arg2)
 				if u == None:
@@ -254,7 +295,7 @@ class Map(object):
 					u.send("MSG", {'text': client.nameAndUsername()+' wants you to teleport to them', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
 					u.requests[my_username] = [600, 'tpahere']
 
-			elif command2 == "tpaccept":
+			elif command2 == "tpaccept" or command2 == "hopon":
 				arg2 = arg2.lower()
 				u = findClientByUsername(arg2)
 				if u == None:
@@ -270,6 +311,8 @@ class Map(object):
 						u.switch_map(u.map_id, new_pos=[client.x, client.y])
 					elif request[1] == 'tpahere':
 						client.switch_map(u.map_id, new_pos=[u.x, u.y])
+					elif request[1] == 'carry':
+						client.ride(u)
 					del client.requests[arg2]
 
 			elif command2 == "tpdeny" or command2 == "tpdecline":

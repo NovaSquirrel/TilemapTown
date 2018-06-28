@@ -26,9 +26,9 @@ def broadcastToAll(text):
 	for u in AllClients:
 		u.send("MSG", {'text': text, 'class': 'broadcast_message'})
 
-def findClientByUsername(username):
+def findClientByUsername(username, inside=None):
 	username = username.lower()
-	for u in AllClients:
+	for u in inside or AllClients:
 		if username == u.username or (username.isnumeric() and int(username) == u.id):
 			return u
 	return None
