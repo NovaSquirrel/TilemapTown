@@ -20,6 +20,9 @@ AllMaps = set()
 
 import os.path
 def mapIdExists(id):
+	for m in AllMaps:
+		if m.id == id:
+			return True
 	return os.path.isfile("maps/"+str(id)+".txt")
 
 def broadcastToAll(text):

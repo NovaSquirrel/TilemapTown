@@ -75,6 +75,15 @@ class Client(object):
 		else:
 			self.send("ERR", {'text': 'Player '+username+' not found'})
 
+	def inBanList(self, banlist, action):
+		if self.username == None and '!guests' in banlist:
+			self.send("ERR", {'text': 'Guests may not %s here' % action})
+			return True
+		if self.username in banlist:
+			self.send("ERR", {'text': 'You\'re banned from %sing here' % action})
+			return True
+		return False
+
 	def ride(self, other):
 		# cannot ride yourself
 		if self == other:
@@ -180,6 +189,11 @@ class Client(object):
 				self.tp_history.pop(0)
 
 		if not self.map or (self.map and self.map.id != map_id):
+			# First check if you can even go to that map
+			new_map = getMapById(map_id)
+			if self.inBanList(new_map.entry_banlist, 'enter'):
+				return False
+
 			if self.map:
 				# Remove the user for everyone on the map
 				self.map.users.remove(self)
@@ -187,7 +201,8 @@ class Client(object):
 
 			# Get the new map and send it to the client
 			self.map_id = map_id
-			self.map = getMapById(map_id)
+			self.map = new_map
+
 			self.send("MAI", self.map.map_info())
 			self.send("MAP", self.map.map_section(0, 0, self.map.width-1, self.map.height-1))
 			self.map.users.add(self)
@@ -207,6 +222,7 @@ class Client(object):
 		# Move any passengers too
 		for u in self.passengers:
 			u.switch_map(map_id, new_pos=[self.x, self.y])
+		return True
 
 	def send_home(self):
 		""" If player has a home, send them there. If not, to map zero """

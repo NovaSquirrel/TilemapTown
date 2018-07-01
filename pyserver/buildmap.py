@@ -42,6 +42,7 @@ class Map(object):
 		self.private = False # if True, entry whitelist is used
 		self.entry_whitelist = set()
 		self.entry_banlist = set()
+		self.build_banlist = set()
 		self.build_enabled = True
 		self.full_sandbox = True
 
@@ -94,7 +95,7 @@ class Map(object):
 						# add in extra fields added later that may not have been included
 						defaults = {'admins': [], 'public': False, 'private': False,
 							'build_enabled': True, 'full_sandbox': True, 'entry_whitelist': [],
-                            'entry_banlist': [], 'start_pos': [5,5]}
+                            'entry_banlist': [], 'build_banlist': [], 'start_pos': [5,5]}
 						for k,v in defaults.items():
 							if k not in s:
 								s[k] = v
@@ -109,6 +110,7 @@ class Map(object):
 						self.default_turf = s["default"]
 						self.entry_whitelist = set(s["entry_whitelist"])
 						self.entry_banlist = set(s["entry_banlist"])
+						self.build_banlist = set(s["build_banlist"])
 						self.start_pos = s["start_pos"]
 						mai = False
 					elif map:           # Receive map data
@@ -167,6 +169,7 @@ class Map(object):
 		if all_info:
 			out['entry_whitelist'] = list(self.entry_whitelist)
 			out['entry_banlist'] = list(self.entry_banlist)
+			out['build_banlist'] = list(self.build_banlist)
 			out['start_pos'] = self.start_pos
 		return out
 
@@ -393,7 +396,7 @@ class Map(object):
 				else:
 					client.send("ERR", {'text': 'You must be registered to make a new map.'})
 
-
+			# maybe combine the list add/remove/list commands together?
 			elif command2 == "ignore":
 				arg2 = arg2.lower()
 				client.ignore_list.add(arg2)
@@ -432,6 +435,21 @@ class Map(object):
 			elif command2 == "invitelist":
 				if client.mustBeOwner(True):
 					client.send("MSG", {'text': 'Whitelist: '+str(self.entry_whitelist)})
+
+			elif command2 == "buildban":
+				if client.mustBeOwner(True):
+					arg2 = arg2.lower()
+					self.build_banlist.add(arg2)
+					self.broadcast("MSG", {'text': '\"%s\" added to build banlist' % arg2})
+			elif command2 == "buildunban":
+				if client.mustBeOwner(True):
+					arg2 = arg2.lower()
+					if arg2 in self.build_banlist:
+						self.build_banlist.remove(arg2)
+					self.broadcast("MSG", {'text': '\"%s\" removed from build banlist' % arg2})
+			elif command2 == "buildbanlist":
+				if client.mustBeOwner(True):
+					client.send("MSG", {'text': 'Build banlist: '+str(self.build_banlist)})
 
 			elif command2 == "ban":
 				if client.mustBeOwner(True):
@@ -544,8 +562,8 @@ class Map(object):
 			elif command2 == "map":
 				try:
 					if mapIdExists(int(arg2)):
-						client.switch_map(int(arg2))
-						client.send("MSG", {'text': 'Teleported to map %s' % arg2})
+						if client.switch_map(int(arg2)):
+							client.send("MSG", {'text': 'Teleported to map %s' % arg2})
 					else:
 						client.send("MSG", {'text': 'Map %s doesn\'t exist' % arg2})
 				except:
@@ -655,7 +673,9 @@ class Map(object):
 			y1 = arg["pos"][1]
 			x2 = arg["pos"][2]
 			y2 = arg["pos"][3]
-			if self.build_enabled or client.mustBeOwner(True, giveError=False):
+			if client.inBanList(self.build_banlist, 'build'):
+				client.send("MAP", self.map_section(x1, y1, x2, y2))
+			elif self.build_enabled or client.mustBeOwner(True, giveError=False):
 				for x in range(x1, x2+1):
 					for y in range(y1, y2+1):
 						if arg["turf"]:
@@ -665,11 +685,13 @@ class Map(object):
 				self.broadcast("MAP", self.map_section(x1, y1, x2, y2))
 			else:
 				client.send("MAP", self.map_section(x1, y1, x2, y2))
-				client.send("ERR", {'text': 'Deleting is disabled on this map'})
+				client.send("ERR", {'text': 'Building is disabled on this map'})
 		elif command == "PUT":
 			x = arg["pos"][0]
 			y = arg["pos"][1]
-			if self.build_enabled or client.mustBeOwner(True, giveError=False):
+			if client.inBanList(self.build_banlist, 'build'):
+				client.send("MAP", self.map_section(x, y, x, y))
+			elif self.build_enabled or client.mustBeOwner(True, giveError=False):
 				if arg["obj"]:
 					self.objs[x][y] = arg["atom"]
 				else:
