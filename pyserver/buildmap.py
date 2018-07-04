@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import json, asyncio, random
+import json, asyncio, random, datetime
 from buildglobal import *
 
 DirX = [ 1,  1,  0, -1, -1, -1,  0,  1]
@@ -221,8 +221,9 @@ class Map(object):
 					else:
 						u = findClientByUsername(username)
 						if u:
-							client.send("PRI", {'text': privtext, 'name':u.name, 'username': u.usernameOrId(), 'receive': False})
-							u.send("PRI", {'text': privtext, 'name':client.name, 'username': client.usernameOrId(), 'receive': True})
+							if not client.inBanList(u.ignore_list, 'message %s' % u.name):
+								client.send("PRI", {'text': privtext, 'name':u.name, 'username': u.usernameOrId(), 'receive': False})
+								u.send("PRI", {'text': privtext, 'name':client.name, 'username': client.usernameOrId(), 'receive': True})
 						else:
 							client.failedToFind(username)
 				else:
@@ -238,7 +239,7 @@ class Map(object):
 				if my_username in u.requests:
 					client.send("ERR", {'text': 'You\'ve already sent them a request'})
 					u.requests[my_username][0] = 600 #renew
-				else:
+				elif not client.inBanList(u.ignore_list, 'message %s' % u.name):
 					client.send("MSG", {'text': 'You requested to carry '+arg2})
 					u.send("MSG", {'text': client.nameAndUsername()+' wants to carry you', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
 					u.requests[my_username] = [600, 'carry']
@@ -279,7 +280,7 @@ class Map(object):
 				if my_username in u.requests:
 					client.send("ERR", {'text': 'You\'ve already sent them a request'})
 					u.requests[my_username][0] = 600 #renew
-				else:
+				elif not client.inBanList(u.ignore_list, 'message %s' % u.name):
 					client.send("MSG", {'text': 'You requested a teleport to '+arg2})
 					u.send("MSG", {'text': client.nameAndUsername()+' wants to teleport to you', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
 					u.requests[my_username] = [600, 'tpa']
@@ -293,7 +294,7 @@ class Map(object):
 				if my_username in u.requests:
 					client.send("ERR", {'text': 'You\'ve already sent them a request'})
 					u.requests[my_username][0] = 600 #renew
-				else:
+				elif not client.inBanList(u.ignore_list, 'message %s' % u.name):
 					client.send("MSG", {'text': 'You requested that '+arg2+' teleport to you'})
 					u.send("MSG", {'text': client.nameAndUsername()+' wants you to teleport to them', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
 					u.requests[my_username] = [600, 'tpahere']
@@ -345,7 +346,7 @@ class Map(object):
 					client.send("ERR", {'text': 'No request to cancel'})
 
 			elif command2 == "time":
-					client.send("MSG", {'text': datetime.today().strftime("Now it's %m/%d/%Y, %I:%M %p")})
+					client.send("MSG", {'text': datetime.datetime.today().strftime("Now it's %m/%d/%Y, %I:%M %p")})
 
 			elif command2 == "away":
 				if len(arg2) < 1:
@@ -400,12 +401,12 @@ class Map(object):
 			elif command2 == "ignore":
 				arg2 = arg2.lower()
 				client.ignore_list.add(arg2)
-				self.broadcast("MSG", {'text': '\"%s\" added to ignore list' % arg2})
+				client.send("MSG", {'text': '\"%s\" added to ignore list' % arg2})
 			elif command2 == "unignore":
 				arg2 = arg2.lower()
 				if arg2 in client.ignore_list:
 					client.ignore_list.remove(arg2)
-				self.broadcast("MSG", {'text': '\"%s\" removed from ignore list' % arg2})
+				client.send("MSG", {'text': '\"%s\" removed from ignore list' % arg2})
 			elif command2 == "ignorelist":
 				client.send("MSG", {'text': 'Ignore list: '+str(client.ignore_list)})
 
@@ -673,7 +674,7 @@ class Map(object):
 			y1 = arg["pos"][1]
 			x2 = arg["pos"][2]
 			y2 = arg["pos"][3]
-			if client.inBanList(self.build_banlist, 'build'):
+			if client.inBanList(self.build_banlist, 'build here'):
 				client.send("MAP", self.map_section(x1, y1, x2, y2))
 			elif self.build_enabled or client.mustBeOwner(True, giveError=False):
 				for x in range(x1, x2+1):
@@ -689,7 +690,7 @@ class Map(object):
 		elif command == "PUT":
 			x = arg["pos"][0]
 			y = arg["pos"][1]
-			if client.inBanList(self.build_banlist, 'build'):
+			if client.inBanList(self.build_banlist, 'build here'):
 				client.send("MAP", self.map_section(x, y, x, y))
 			elif self.build_enabled or client.mustBeOwner(True, giveError=False):
 				if arg["obj"]:

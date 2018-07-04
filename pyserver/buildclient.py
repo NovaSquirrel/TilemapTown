@@ -77,10 +77,10 @@ class Client(object):
 
 	def inBanList(self, banlist, action):
 		if self.username == None and '!guests' in banlist:
-			self.send("ERR", {'text': 'Guests may not %s here' % action})
+			self.send("ERR", {'text': 'Guests may not %s' % action})
 			return True
 		if self.username in banlist:
-			self.send("ERR", {'text': 'You\'re banned from %sing here' % action})
+			self.send("ERR", {'text': 'You may not %s' % action})
 			return True
 		return False
 
@@ -191,7 +191,7 @@ class Client(object):
 		if not self.map or (self.map and self.map.id != map_id):
 			# First check if you can even go to that map
 			new_map = getMapById(map_id)
-			if self.inBanList(new_map.entry_banlist, 'enter'):
+			if self.inBanList(new_map.entry_banlist, 'go to map %d' % map_id):
 				return False
 
 			if self.map:
