@@ -201,16 +201,16 @@ function keyHandler(e) {
     if(!Inventory[n])
       return;
     useItem(Inventory[n]);
-  } else if (e.keyCode == 38) { // up
+  } else if (e.keyCode == 38 || e.keyCode == 87) { // up/w
     PlayerY--;
     PlayerDir = Directions.NORTH;
-  } else if (e.keyCode == 40) { // down
+  } else if (e.keyCode == 40 || e.keyCode == 83) { // down/s
     PlayerY++;
     PlayerDir = Directions.SOUTH;
-  } else if (e.keyCode == 37) { // left
+  } else if (e.keyCode == 37 || e.keyCode == 65) { // left/a
     PlayerX--;
     PlayerDir = Directions.WEST;
-  } else if (e.keyCode == 39) { // right
+  } else if (e.keyCode == 39 || e.keyCode == 68) { // right/d
     PlayerX++;
     PlayerDir = Directions.EAST;
   } else if (e.keyCode == 35) { // end
