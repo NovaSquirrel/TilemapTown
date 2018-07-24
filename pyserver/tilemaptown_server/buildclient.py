@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio, datetime, random, websockets, json, os.path, hashlib
-from buildglobal import *
+from .buildglobal import *
 
 # Make a command to send
 def makeCommand(commandType, commandParams):

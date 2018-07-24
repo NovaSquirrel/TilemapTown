@@ -39,11 +39,8 @@ def findClientByUsername(username, inside=None):
 def filterUsername(text):
 	return ''.join([i for i in text if (i.isalnum() or i == '_')]).lower()
 
-from buildmap import *
+from .buildmap import Map
 
-MainMap = Map()
-MainMap.load(0)
-AllMaps.add(MainMap)
 
 def getMapById(mapId):
 	for m in AllMaps:
@@ -53,3 +50,7 @@ def getMapById(mapId):
 	m.load(mapId)
 	AllMaps.add(m)
 	return m
+
+MainMap = Map()
+MainMap.load(0)
+AllMaps.add(MainMap)

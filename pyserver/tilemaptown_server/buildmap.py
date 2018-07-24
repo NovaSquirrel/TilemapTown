@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import json, asyncio, random, datetime
-from buildglobal import *
+from .buildglobal import *
 
 DirX = [ 1,  1,  0, -1, -1, -1,  0,  1]
 DirY = [ 0,  1,  1,  1,  0, -1, -1, -1]
