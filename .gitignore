@@ -3,6 +3,12 @@
 *.bat
 pyserver/maps
 pyserver/users
+pyserver/.virtual_env
+pyserver/build
+pyserver/dist
+pyserver/tilemaptown_server
+pyserver/tilemaptown_server.egg-info
+pyserver/__pycache__
 
 # Object files
 *.o
