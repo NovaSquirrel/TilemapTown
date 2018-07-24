@@ -15,13 +15,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import asyncio, datetime, random, websockets, json, sys
-from buildglobal import *
-from buildmap import *
-from buildclient import *
+from .buildglobal import *
+from .buildmap import *
+from .buildclient import *
 
 # Timer that runs and performs background tasks
 def mainTimer():
 	global ServerShutdown
+	global loop
 
 	# Disconnect pinged-out users
 	for c in AllClients:
@@ -121,11 +122,15 @@ async def clientHandler(websocket, path):
 		client.map.broadcast("WHO", {'remove': client.id})
 	AllClients.remove(client)
 
-start_server = websockets.serve(clientHandler, None, 12550)
+global loop
 
-# Start the event loop
-loop = asyncio.get_event_loop()
-loop.call_soon(mainTimer)
-loop.run_until_complete(start_server)
-print("Server started!")
-loop.run_forever()
+def main():
+	global loop
+	start_server = websockets.serve(clientHandler, None, 12550)
+
+	# Start the event loop
+	loop = asyncio.get_event_loop()
+	loop.call_soon(mainTimer)
+	loop.run_until_complete(start_server)
+	print("Server started!")
+	loop.run_forever()
