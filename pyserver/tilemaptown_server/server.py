@@ -134,3 +134,6 @@ def main():
 	loop.run_until_complete(start_server)
 	print("Server started!")
 	loop.run_forever()
+
+if __name__ == "__main__":
+	main()
