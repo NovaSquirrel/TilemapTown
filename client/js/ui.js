@@ -968,5 +968,13 @@ XBBCODE.addTags({
       return '';
     },
     displayContent: false
+  },
+  "spoiler": {
+    openTag: function(params,content) {
+        return '<span class="spoiler">';
+    },
+    closeTag: function(params,content) {
+        return '</span>';
+    }
   }
 });

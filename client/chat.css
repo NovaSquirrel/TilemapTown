@@ -17,3 +17,13 @@
 .private_message {
   color: lime;
 }
+
+.spoiler {
+  color: gray; 
+  background-color: gray;
+}
+
+.spoiler:hover {
+  color: white; 
+  background-color: black;
+}
