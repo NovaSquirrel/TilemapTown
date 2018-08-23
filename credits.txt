@@ -7,3 +7,6 @@ https://opengameart.org/content/16x16-overworld-tiles
 
 Potluck tileset credits:
 https://gist.github.com/eevee/59012b2a3d4dcdb40b5247ecdc2cfb34
+
+BBCode parser:
+https://github.com/patorjk/Extendible-BBCode-Parser

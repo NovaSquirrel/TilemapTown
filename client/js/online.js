@@ -1,7 +1,7 @@
 /*
- * Building game
+ * Tilemap Town
  *
- * Copyright (C) 2017 NovaSquirrel
+ * Copyright (C) 2017-2018 NovaSquirrel
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -187,33 +187,33 @@ function ConnectToServer() {
         SendCmd("PIN", null);
         break;
       case "ERR":
-        logMessage("Error: "+arg.text, 'error_message');
+        logMessage("Error: "+convertBBCode(arg.text), 'error_message');
 		break;
       case "PRI":
         let respond = '<span onclick="setChatInput(\'/tell '+arg.username+' \')">';
         if(arg.receive)
-          logMessage(respond+"&larr;["+arg.name+"("+arg.username+")"+"] "+arg.text+'</span>', 'private_message');
+          logMessage(respond+"&larr;["+arg.name+"("+arg.username+")"+"] "+convertBBCode(arg.text)+'</span>', 'private_message');
         else
-          logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] "+arg.text+'</span>', 'private_message');
+          logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] "+convertBBCode(arg.text)+'</span>', 'private_message');
 		break;
       case "MSG":
         if(arg.name) {
           if(arg.text.slice(0, 4) == "/me ")
-            logMessage("* <i>"+arg.name+" "+arg.text.slice(4)+"</i>", 'user_message');
+            logMessage("* <i>"+arg.name+" "+convertBBCode(arg.text.slice(4))+"</i>", 'user_message');
           else
-            logMessage("&lt;"+arg.name+"&gt; "+arg.text, 'user_message');
+            logMessage("&lt;"+arg.name+"&gt; "+convertBBCode(arg.text), 'user_message');
         } else
           if(arg.buttons) {
             let buttons = "";
             for(let i=0; i<arg.buttons.length/2; i++) {
               buttons += '<input type="button" value="'+arg.buttons[i*2]+'" onclick="sendChatCommand(\''+arg.buttons[i*2+1]+'\');"/>';
             }
-            logMessage("! "+arg.text+" "+buttons, 'server_message');
+            logMessage("! "+convertBBCode(arg.text)+" "+buttons, 'server_message');
           } else {
             if(arg["class"])
               logMessage(arg.text, arg["class"]);
             else
-              logMessage("Server message: "+arg.text, 'server_message');
+              logMessage("Server message: "+convertBBCode(arg.text), 'server_message');
           }
         break;
     }

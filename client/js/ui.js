@@ -1,7 +1,7 @@
 /*
- * Building game
+ * Tilemap Town
  *
- * Copyright (C) 2017 NovaSquirrel
+ * Copyright (C) 2017-2018 NovaSquirrel
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -55,6 +55,15 @@ function getRandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function convertBBCode(t) {
+  var result = XBBCODE.process({
+    text: t,
+    removeMisalignedTags: false,
+    addInLineBreaks: false
+  });
+  return result.html;
 }
 
 function logMessage(Message, Class) {
@@ -247,6 +256,7 @@ function keyHandler(e) {
         PlayerY = OldPlayerY;
         if(Obj.type == AtomTypes.SIGN) {
           // Filter out HTML tag characters to prevent XSS
+/*
           var Escaped = "";
           for (var i = 0; i < Obj.message.length; i++) {
             var c =Obj.message.charAt(i);
@@ -260,7 +270,8 @@ function keyHandler(e) {
               Escaped += c;
             }
           }
-          logMessage("The sign says: "+Escaped, "server_message");
+*/
+          logMessage("The sign says: "+convertBBCode(Obj.message), "server_message");
         }
         break;
       }
@@ -912,3 +923,50 @@ function editItemCancel() {
   document.getElementById('editItemWindow').style.display = "none";
   editItemIndex = null;
 }
+
+/////////////////////////////////////////////////////////////////////
+// customize the bbcode parser
+function offerCommand(t) {
+  if(confirm('Run command "'+t+'"?')) {
+    sendChatCommand(t);
+  }
+}
+
+let emptyTag = {
+  openTag: function(params,content) {
+    return '';
+  },
+  closeTag: function(params,content) {
+    return '';
+  }
+}
+XBBCODE.addTags({
+  "tt": XBBCODE.tags()["code"],
+  "img": emptyTag,
+  "center": emptyTag,
+  "face": emptyTag,
+  "font": emptyTag,
+  "justify": emptyTag,
+  "left": emptyTag,
+  "quote": emptyTag,
+  "php": emptyTag,
+  "right": emptyTag,
+  "table": emptyTag,
+  "tbody": emptyTag,
+  "thead": emptyTag,
+  "tfoot": emptyTag,
+  "td": emptyTag,
+  "th": emptyTag,
+  "tr": emptyTag,
+  "command": {
+    openTag: function(params,content) {
+      let filteredJS = content.replace(/\x22/g, '\\\x22');
+      let filteredHTML = content.replace(/\x22/g, '&quot;');
+      return '<input type="button" value="'+filteredHTML+'" onClick=\'offerCommand("'+filteredJS+'")\'></input>';
+    },
+    closeTag: function(params,content) {
+      return '';
+    },
+    displayContent: false
+  }
+});

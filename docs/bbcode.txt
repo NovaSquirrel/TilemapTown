@@ -1,0 +1,12 @@
+[b]text[/b]             - bold
+[i]text[/i]             - italic
+[u]text[/u]             - underlined
+[s]text[/s]             - strikeout
+[sub]text[/sub]         - subscript
+[sup]text[/sup]         - superscript
+[small]text[/small]     - small text
+[tt]text[/tt]           - monospace
+[url=site]text[/url]    - link
+[color=red]text[/color] - color
+[noparse]text[/noparse] - don't parse bbcode inside the tag
+[command]text[/command] - display a button that displays a confirmation, and then runs a command if confirmed
