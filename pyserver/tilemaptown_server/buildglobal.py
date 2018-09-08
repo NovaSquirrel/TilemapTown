@@ -14,6 +14,35 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import sqlite3, json, sys
+
+# Read configuration information
+Config = {}
+ConfigFile = 'config.json'
+# Override the config filename as a command line argument
+if len(sys.argv) >= 2:
+	ConfigFile = sys.argv[1]
+with open(ConfigFile) as f:
+	Config = json.load(f)
+
+# Initialize in defaults for any undefined values
+def setConfigDefault(group, item, value):
+	if group not in Config:
+		Config[group] = {}
+	if item not in Config[group]:
+		Config[group][item] = value
+
+# Set defaults for config items
+setConfigDefault("Server",   "AlwaysLoadedMaps", [])
+setConfigDefault("Server",   "Port",             12550)
+setConfigDefault("Server",   "Name",             "Tilemap Town")
+setConfigDefault("Server",   "MOTD",             "")
+setConfigDefault("Server",   "Admins",           [])
+setConfigDefault("Server",   "MaxUsers",         200)
+setConfigDefault("Server",   "MaxDBMaps",        5000)
+setConfigDefault("Database", "File",             "town.db")
+
+# Important information shared by each module
 ServerShutdown = [-1]
 AllClients = set()
 AllMaps = set()
@@ -25,6 +54,7 @@ def mapIdExists(id):
 			return True
 	return os.path.isfile("maps/"+str(id)+".txt")
 
+# Important shared functions
 def broadcastToAll(text):
 	for u in AllClients:
 		u.send("MSG", {'text': text, 'class': 'broadcast_message'})
@@ -41,16 +71,12 @@ def filterUsername(text):
 
 from .buildmap import Map
 
-
 def getMapById(mapId):
 	for m in AllMaps:
 		if m.id == mapId:
 			return m
+	# Map not found, so load it
 	m = Map()
 	m.load(mapId)
 	AllMaps.add(m)
 	return m
-
-MainMap = Map()
-MainMap.load(0)
-AllMaps.add(MainMap)

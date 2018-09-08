@@ -47,7 +47,7 @@ def mainTimer():
 	# Unload unused maps
 	unloaded = set()
 	for m in AllMaps:
-		if (m.id != 0) and (len(m.users) < 1):
+		if (m.id not in Config["Server"]["AlwaysLoadedMaps"]) and (len(m.users) < 1):
 			print("Unloading map "+str(m.id))
 			m.save()
 			m.clean_up()
@@ -72,6 +72,7 @@ def mainTimer():
 # Websocket connection handler
 async def clientHandler(websocket, path):
 	client = Client(websocket)
+
 	AllClients.add(client)
 
 	print("connected "+path)
@@ -95,7 +96,8 @@ async def clientHandler(websocket, path):
 					result = client.login(filterUsername(arg["username"]), arg["password"])
 				if result != True: # default to map 0 if can't log in
 					client.switch_map(0)
-					client.send("MSG", {'text': 'Welcome guest! Click the bunny button on the top menu to set your name and/or picture.'})
+					if len(Config["Server"]["MOTD"]):
+						client.send("MSG", {'text': Config["Server"]["MOTD"]})
 				client.send("MSG", {'text': 'Users connected: %d' % len(AllClients)})
 			elif command == "PIN":
 				client.ping_timer = 300
@@ -126,7 +128,7 @@ global loop
 
 def main():
 	global loop
-	start_server = websockets.serve(clientHandler, None, 12550)
+	start_server = websockets.serve(clientHandler, None, Config["Server"]["Port"])
 
 	# Start the event loop
 	loop = asyncio.get_event_loop()

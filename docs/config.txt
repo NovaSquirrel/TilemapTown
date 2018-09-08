@@ -1,0 +1,31 @@
+Server.AlwaysLoadedMaps
+Default: []
+
+Server.Port
+Default: 12550
+Port number the server hosts on.
+
+Server.Name
+Default: "Tilemap Town"
+Name of the server.
+
+Server.MOTD
+Default: ""
+Message displayed to a user upon connecting.
+
+Server.Admins
+Default: []
+List of usernames allowed to perform admin privileges.
+
+Server.MaxUsers
+Default: 200
+Maximum number of connections allowed to the server at once, or -1 to disable the limit.
+(Not yet implemented)
+
+Server.MaxDBMaps
+Default: 5000
+Maximum number of maps allowed in the database, or -1 to disable the limit.
+
+Database.File
+Default: "town.db"
+Filename used for Tilemap Town's database.

@@ -31,9 +31,9 @@ Change your description
 /userpic imgur link
 Change your icon
 
-/login
-/register
-/changepass
+/login username password
+/register username password
+/changepass newpass
 Manage account
 
 ---User information---

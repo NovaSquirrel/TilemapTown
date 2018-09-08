@@ -43,7 +43,6 @@ class Client(object):
 		userCounter += 1
 
 		# other user info
-		self.server_admin = False
 		self.ignore_list = set()
 		self.watch_list = set()
 		self.tags = {}    # description, species, gender and other things
@@ -114,7 +113,7 @@ class Client(object):
 			self.vehicle = None
 
 	def mustBeServerAdmin(self, giveError=True):
-		if self.server_admin:
+		if self.username in Config["Server"]["Admins"]:
 			return True
 		elif giveError:
 			self.send("ERR", {'text': 'You don\'t have permission to do that'})
@@ -174,8 +173,6 @@ class Client(object):
 				f.write(json.dumps(list(self.ignore_list))+"\n")
 				f.write("WATCH\n")
 				f.write(json.dumps(list(self.watch_list))+"\n")
-				if self.server_admin:
-					f.write("ADMIN\n");
 		except:
 			print("Couldn't save user "+name)
 
@@ -241,6 +238,7 @@ class Client(object):
 
 	def login(self, username, password):
 		""" Attempt to log the client into an account """
+		username = filterUsername(username)
 		result = self.load(username, password)
 		if result == True:
 			self.switch_map(self.map_id, goto_spawn=False)
@@ -258,6 +256,7 @@ class Client(object):
 		self.save()
 
 	def register(self, username, password):
+		username = filterUsername(username)
 		if os.path.isfile("users/"+str(username)+".txt"):
 			return False
 		self.username = username
@@ -290,8 +289,6 @@ class Client(object):
 						iswatch = True
 					elif line == "HOME\n":
 						ishome = True
-					elif line == "ADMIN\n":
-						self.server_admin = True
 					elif iswho:
 						s = json.loads(line)
 						self.name = s["name"]

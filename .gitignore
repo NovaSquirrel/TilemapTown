@@ -93,3 +93,4 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+pyserver/config.json

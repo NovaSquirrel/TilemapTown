@@ -384,7 +384,7 @@ class Map(object):
 					new_id = 1
 					while mapIdExists(new_id):
 						new_id +=1
-						if new_id > 5000:
+						if new_id > Config["Server"]["MaxDBMaps"] and Config["Server"]["MaxDBMaps"] > 0:
 							client.send("ERR", {'text': 'There are too many maps'})
 							return
 					try:
