@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sqlite3, json, sys
+import sqlite3, json, sys, os.path
 
 # Read configuration information
 Config = {}
@@ -22,8 +22,12 @@ ConfigFile = 'config.json'
 # Override the config filename as a command line argument
 if len(sys.argv) >= 2:
 	ConfigFile = sys.argv[1]
-with open(ConfigFile) as f:
-	Config = json.load(f)
+
+if os.path.isfile(ConfigFile):
+	with open(ConfigFile) as f:
+		Config = json.load(f)
+else:
+	print("Config file '%s' doesn't exist, using defaults" % ConfigFile)
 
 # Initialize in defaults for any undefined values
 def setConfigDefault(group, item, value):
@@ -47,7 +51,6 @@ ServerShutdown = [-1]
 AllClients = set()
 AllMaps = set()
 
-import os.path
 def mapIdExists(id):
 	for m in AllMaps:
 		if m.id == id:
