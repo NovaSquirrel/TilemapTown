@@ -61,3 +61,6 @@ mid             - integer - map the user is on
 map_x           - integer - user map X
 map_y           - integer - user map Y
 
+client_settings - text    - whatever the client wants to store
+flags           - integer - generic flags field
+tags            - text    - user tags as JSON

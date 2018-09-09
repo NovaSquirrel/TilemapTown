@@ -37,7 +37,7 @@ class Client(object):
 		self.map_id = -1
 		self.pic = [0, 2, 25]
 		self.id = userCounter
-		self.db_id = -1        # database key
+		self.db_id = None        # database key
 		self.ping_timer = 180
 		self.inventory = []
 		self.idle_timer = 0
@@ -49,6 +49,7 @@ class Client(object):
 		self.tags = {}    # description, species, gender and other things
 		self.away = False # true, or a string if person is away
 		self.home = None
+		self.client_settings = ""
 
 		# temporary information
 		self.requests = {} # indexed by username, array with [timer, type]
@@ -156,26 +157,19 @@ class Client(object):
 		return default
 
 	def save(self):
-		""" Save user information to a file """
-		name = "users/"+str(self.username)+".txt";
-		try:
-			with open(name, 'w') as f:
-				f.write("PASS\n")
-				f.write(json.dumps({'sha512':self.password})+"\n")
-				f.write("WHO\n")
-				who = self.who()
-				who["map_id"] = self.map.id # add the map ID
-				f.write(json.dumps(who)+"\n")
-				f.write("TAGS\n")
-				f.write(json.dumps(self.tags)+"\n")
-				f.write("HOME\n")
-				f.write(json.dumps(self.home)+"\n")
-				f.write("IGNORE\n")
-				f.write(json.dumps(list(self.ignore_list))+"\n")
-				f.write("WATCH\n")
-				f.write(json.dumps(list(self.watch_list))+"\n")
-		except:
-			print("Couldn't save user "+name)
+		""" Save user information to the database """
+		c = Database.cursor()
+
+		# Create new user if user doesn't exist
+		if findDBIdByUsername(self.username) == None:
+			c.execute("INSERT INTO User (regtime, username) VALUES (?, ?)", (datetime.datetime.now(), self.username,))
+		# Update database ID in RAM with the possibly newly created row
+		self.db_id = findDBIdByUsername(self.username)
+
+		# Update the user
+		values = (self.password, "sha512", self.name, json.dumps(self.pic), self.map_id, self.x, self.y, json.dumps(self.home), json.dumps(list(self.watch_list)), json.dumps(list(self.ignore_list)), self.client_settings, json.dumps(self.tags), datetime.datetime.now(), self.db_id)
+		c.execute("UPDATE User SET passhash=?, passalgo=?, name=?, pic=?, mid=?, map_x=?, map_y=?, home=?, watch=?, ignore=?, client_settings=?, tags=?, lastseen=? WHERE uid=?", values)
+		Database.commit()
 
 	def switch_map(self, map_id, new_pos=None, goto_spawn=True, update_history=True):
 		""" Teleport the user to another map """
@@ -257,68 +251,39 @@ class Client(object):
 		self.save()
 
 	def register(self, username, password):
-		username = filterUsername(username)
-		if os.path.isfile("users/"+str(username)+".txt"):
+		username = str(filterUsername(username))
+		# User can't already exist
+		if findDBIdByUsername(username) != None:
 			return False
 		self.username = username
 		self.changepass(password)
+		# db_id updated by changepass
 		return True
 
 	def load(self, username, password):
+		""" Load an account from the database """
 		password = hashlib.sha512(password.encode()).hexdigest()
+		self.password = password
 
-		name = "users/"+str(username)+".txt";
-		try:
-			with open(name, 'r') as f:
-				lines = f.readlines()
-				iswho = False
-				ispass = False
-				istags = False
-				isignore = False
-				iswatch = False
-				ishome = False
-				for line in lines:
-					if line == "PASS\n":
-						ispass = True
-					elif line == "WHO\n":
-						iswho = True
-					elif line == "TAGS\n":
-						istags = True
-					elif line == "IGNORE\n":
-						isignore = True
-					elif line == "WATCH\n":
-						iswatch = True
-					elif line == "HOME\n":
-						ishome = True
-					elif iswho:
-						s = json.loads(line)
-						self.name = s["name"]
-						self.pic = s["pic"]
-						self.x = s["x"]
-						self.y = s["y"]
-						self.map_id = s["map_id"]
-						iswho = False
-					elif ispass:
-						s = json.loads(line)
-						if "sha512" in s:
-							if s["sha512"] != password:
-								return False
-						ispass = False
-					elif istags:
-						self.tags = json.loads(line)
-						istags = False
-					elif isignore:
-						self.ignore_list = set(json.loads(line))
-						isignore = False
-					elif iswatch:
-						self.watch_list = set(json.loads(line))
-						iswatch = False
-					elif ishome:
-						self.home = json.loads(line)
-						ishome = False
-				self.username = username
-				self.password = password
-				return True
-		except:
-			print("Couldn't load user "+name)
+		c = Database.cursor()
+		
+		c.execute('SELECT uid, passhash, passalgo, username, name, pic, mid, map_x, map_y, home, watch, ignore, client_settings, tags FROM User WHERE username=?', (username,))
+		result = c.fetchone()
+		if result == None:
 			return None
+		# Refuse to load if incorrect password
+		if result[2] == "sha512" and result[1] != password:
+			return False
+
+		self.username = result[3]
+		self.name = result[4]
+		self.pic = json.loads(result[5])
+		self.map_id = result[6]
+		self.x = result[7]
+		self.y = result[8]
+		self.home = json.loads(result[9] or "null")
+		self.watch_list = set(json.loads(result[10]))
+		self.ignore_list = set(json.loads(result[11]))
+		self.client_settings = result[12]
+		self.tags = json.loads(result[13])
+		return True

@@ -83,6 +83,7 @@ home text,
 watch text,
 ignore text,
 client_settings text,
+flags integer,
 tags text
 )""")
 
