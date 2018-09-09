@@ -211,13 +211,13 @@ for fname in glob.glob("maps/*.txt"):
 
 					mid = int(s["id"])
 					if s["build_enabled"]:
-						allow |= 2
+						allow |= permission['build']
 					if s["full_sandbox"]:
-						allow |= 4
+						allow |= permission['sandbox']
 					if s["private"]:
-						deny |= 1   # deny entry
+						deny |= permission['entry']
 					if s["public"]:
-						flags |= 1
+						flags |= mapflag['public']
 					default_turf = s["default"]
 					start_x = s["start_pos"][0]
 					start_y = s["start_pos"][1]

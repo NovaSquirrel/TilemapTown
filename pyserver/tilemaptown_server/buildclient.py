@@ -122,7 +122,7 @@ class Client(object):
 		return False
 
 	def mustBeOwner(self, adminOkay, giveError=True):
-		if self.map.owner == self.username or (adminOkay and self.username in self.map.admins):
+		if self.map.owner == self.db_id or (adminOkay and self.username in self.map.admins):
 			return True
 		elif giveError:
 			self.send("ERR", {'text': 'You don\'t have permission to do that'})
@@ -160,7 +160,7 @@ class Client(object):
 		""" Save user information to the database """
 		c = Database.cursor()
 
-		# Create new user if user doesn't exist
+		# Create new user if user doesn't already exist
 		if findDBIdByUsername(self.username) == None:
 			c.execute("INSERT INTO User (regtime, username) VALUES (?, ?)", (datetime.datetime.now(), self.username,))
 		# Update database ID in RAM with the possibly newly created row

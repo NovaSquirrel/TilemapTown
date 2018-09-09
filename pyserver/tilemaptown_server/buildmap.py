@@ -30,21 +30,21 @@ class Map(object):
 		self.default_turf = "grass"
 		self.start_pos = [5, 5]
 		self.name = "Map"
+		self.desc = ""
 		self.id = 0
+		self.flags = 0
 		self.users = set()
 
 		self.tags = {}
 
 		# permissions
-		self.owner = ""
-		self.admins = set()  # List of admins
-		self.public = False  # if True, map shows up in searches and /whereare
-		self.private = False # if True, entry whitelist is used
-		self.entry_whitelist = set()
-		self.entry_banlist = set()
-		self.build_banlist = set()
-		self.build_enabled = True
-		self.full_sandbox = True
+		self.owner = -1
+		self.admins = set()  # List of admins. To remove and replace
+		self.entry_whitelist = set() # to remove and replace with map permissions
+		self.entry_banlist = set()   # to remove and replace with map permissions
+		self.build_banlist = set()   # to remove and replace with map permissions
+		self.allow = 0
+		self.deny = 0
 
 		# map scripting
 		self.has_script = False
@@ -65,6 +65,15 @@ class Map(object):
 			self.turfs.append([None] * height)
 			self.objs.append([None] * height)
 
+	def has_permission(self, user, permission, default):
+		has = default
+		if self.allow & permission:
+			has = True
+		if self.deny & permission:
+			has = False
+		# To do: search Map_Permission table
+		return has
+
 	def set_tag(self, name, value):
 		self.tags[name] = value
 
@@ -76,73 +85,51 @@ class Map(object):
 	def load(self, mapId):
 		""" Load a map from a file """
 		self.id = mapId
-		name = "maps/"+str(mapId)+".txt";
-		try:
-			with open(name, 'r') as f:
-				lines = f.readlines()
-				mai = False
-				map = False
-				tag = False
-				for line in lines:
-					if line == "MAI\n":   # Map info signal
-						mai = True
-					elif line == "MAP\n": # Map data signal
-						map = True
-					elif line == "TAGS\n": # Map tags signal
-						tag = True
-					elif mai:           # Receive map info
-						s = json.loads(line)
-						# add in extra fields added later that may not have been included
-						defaults = {'admins': [], 'public': False, 'private': False,
-							'build_enabled': True, 'full_sandbox': True, 'entry_whitelist': [],
-                            'entry_banlist': [], 'build_banlist': [], 'start_pos': [5,5]}
-						for k,v in defaults.items():
-							if k not in s:
-								s[k] = v
-						self.name = s["name"]
-						self.owner = s["owner"]
-						self.admins = set(s["admins"])
-						self.id = int(s["id"])
-						self.build_enabled = s["build_enabled"]
-						self.full_sandbox = s["full_sandbox"]
-						self.private = s["private"]
-						self.public = s["public"]
-						self.default_turf = s["default"]
-						self.entry_whitelist = set(s["entry_whitelist"])
-						self.entry_banlist = set(s["entry_banlist"])
-						self.build_banlist = set(s["build_banlist"])
-						self.start_pos = s["start_pos"]
-						mai = False
-					elif map:           # Receive map data
-						s = json.loads(line)
-						self.blank_map(s["pos"][2]+1, s["pos"][3]+1)
-						for t in s["turf"]:
-							self.turfs[t[0]][t[1]] = t[2]
-						for o in s["obj"]:
-							self.objs[o[0]][o[1]] = o[2]
-						map = False
-					elif tag:
-						self.tags = json.loads(line)
-						tag = False
-			return True
-		except:
-			print("Couldn't load map "+name)
+
+		c = Database.cursor()
+
+		c.execute('SELECT name, desc, owner, flags, start_x, start_y, width, height, default_turf, allow, deny, tags, data FROM Map WHERE mid=?', (mapId,))
+		result = c.fetchone()
+		if result == None:
 			return False
+
+		self.name = result[0]
+		self.desc = result[1]
+		self.owner = result[2]
+		self.flags = result[3]
+		self.start_pos = [result[4], result[5]]
+		self.width = result[6]
+		self.height = result[7]
+		self.default_turf = result[8]
+		self.allow = result[9]
+		self.deny = result[10]
+		self.tags = json.loads(result[11])
+
+		# Parse map data
+		s = json.loads(result[12])
+		self.blank_map(s["pos"][2]+1, s["pos"][3]+1)
+		for t in s["turf"]:
+			self.turfs[t[0]][t[1]] = t[2]
+		for o in s["obj"]:
+			self.objs[o[0]][o[1]] = o[2]
+		map = False
+		return True
 
 	def save(self):
 		""" Save the map to a file """
-		name = "maps/"+str(self.id)+".txt";
-		try:
-			with open(name, 'w') as f:
-				f.write("MAI\n")
-				i = self.map_info(all_info=True)
-				f.write(json.dumps(i)+"\n")
-				f.write("MAP\n")
-				f.write(json.dumps(self.map_section(0, 0, self.width-1, self.height-1))+"\n")
-				f.write("TAGS\n")
-				f.write(json.dumps(self.tags)+"\n")
-		except:
-			print("Couldn't save map "+name)
+
+		c = Database.cursor()
+
+		# Create map if it doesn't already exist
+		c.execute('SELECT mid FROM Map WHERE mid=?', (self.id,))
+		result = c.fetchone()
+		if result == None:
+			c.execute("INSERT INTO Map (regtime, mid) VALUES (?, ?)", (datetime.datetime.now(), self.id,))
+
+		# Update the map
+		values = (self.name, self.desc, self.owner, self.flags, self.start_pos[0], self.start_pos[1], self.width, self.height, self.default_turf, self.allow, self.deny, json.dumps(self.tags), json.dumps(self.map_section(0, 0, self.width-1, self.height-1)), self.id)
+		c.execute("UPDATE Map SET name=?, desc=?, owner=?, flags=?, start_x=?, start_y=?, width=?, height=?, default_turf=?, allow=?, deny=?, tags=?, data=? WHERE mid=?", values)
+		Database.commit()
 
 	def map_section(self, x1, y1, x2, y2):
 		""" Returns a section of map as a list of turfs and objects """
@@ -165,7 +152,7 @@ class Map(object):
 
 	def map_info(self, all_info=False):
 		""" MAI message data """
-		out = {'name': self.name, 'id': self.id, 'owner': self.owner, 'admins': list(self.admins), 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.public, 'private': self.private, 'build_enabled': self.build_enabled, 'full_sandbox': self.full_sandbox}
+		out = {'name': self.name, 'id': self.id, 'owner': self.owner, 'admins': list(self.admins), 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.flags & mapflag['public'] != 0, 'private': self.deny & permission['entry'] != 0, 'build_enabled': self.allow & permission['build'] != 0, 'full_sandbox': self.allow & permission['sandbox'] != 0}
 		if all_info:
 			out['entry_whitelist'] = list(self.entry_whitelist)
 			out['entry_banlist'] = list(self.entry_banlist)
@@ -211,6 +198,8 @@ class Map(object):
 					self.broadcast("MSG", {'text': "\""+client.name+"\" is now known as \""+escapeTags(arg2)+"\""})
 					client.name = escapeTags(arg2)
 					self.broadcast("WHO", {'add': client.who()}) # update client view
+			elif command2 == "client_settings":
+				self.client_settings = arg2
 			elif command2 == "tell" or command2 == "msg" or command2 == "p":
 				space2 = arg2.find(" ")
 				if space2 >= 0:
@@ -381,6 +370,7 @@ class Map(object):
 
 			elif command2 == "newmap":
 				if client.username:
+					# Definitely change this to find the new map ID a better way, like making SQLite decide it
 					new_id = 1
 					while mapIdExists(new_id):
 						new_id +=1
@@ -389,7 +379,7 @@ class Map(object):
 							return
 					try:
 						client.switch_map(int(new_id))
-						client.map.owner = client.username
+						client.map.owner = client.db_id
 						client.send("MSG", {'text': 'Welcome to your new map (id %d)' % new_id})
 					except:
 						client.send("ERR", {'text': 'Couldn\'t switch to the new map'})
@@ -486,37 +476,46 @@ class Map(object):
 				if client.mustBeOwner(False):
 					self.name = arg2
 					client.send("MSG", {'text': 'Map name set to \"%s\"' % self.name})
+			elif command2 == "mapdesc":
+				if client.mustBeOwner(False):
+					self.desc = arg2
+					client.send("MSG", {'text': 'Map description set to \"%s\"' % self.desc})
 			elif command2 == "mapowner":
 				if client.mustBeOwner(False):
-					self.owner = arg2
-					client.send("MSG", {'text': 'Map owner set to \"%s\"' % self.owner})
+					newowner = findDBIdByUsername(arg2)
+					if newowner:
+						self.owner = newowner
+						client.send("MSG", {'text': 'Map owner set to \"%s\"' % self.owner})
+					else:
+						client.send("MSG", {'text': 'Nonexistent account'})
+
 			elif command2 == "mapprivacy":
 				if client.mustBeOwner(False):
 					if arg2 == "public":
-						self.public = True
-						self.private = False
+						self.deny &= ~permission['entry']
+						self.flags |= mapflag['public']
 					elif arg2 == "private":
-						self.public = False
-						self.private = True
+						self.deny |= permission['entry']
+						self.flags &= ~mapflag['public']
 					elif arg2 == "unlisted":
-						self.public = False
-						self.private = True
+						self.deny &= ~permission['entry']
+						self.flags &= ~mapflag['public']
 					else:
 						client.send("ERR", {'text': 'Map privacy must be public, private, or unlisted'})
 			elif command2 == "mapprotect":
 				if client.mustBeOwner(False):
 					if arg2 == "off":
-						self.full_sandbox = True
+						self.allow |= permission['sandbox']
 					elif arg2 == "on":
-						self.full_sandbox = False
+						self.allow &= ~permission['sandbox']
 					else:
 						client.send("ERR", {'text': 'Map building must be on or off'})
 			elif command2 == "mapbuild":
 				if client.mustBeOwner(True):
 					if arg2 == "on":
-						self.build_enabled = True
+						self.allow |= permission['build']
 					elif arg2 == "off":
-						self.build_enabled = False
+						self.allow &= ~permission['build']
 					else:
 						client.send("ERR", {'text': 'Map building must be on or off'})
 			elif command2 == "defaultfloor":
@@ -676,7 +675,7 @@ class Map(object):
 			y2 = arg["pos"][3]
 			if client.inBanList(self.build_banlist, 'build here'):
 				client.send("MAP", self.map_section(x1, y1, x2, y2))
-			elif self.build_enabled or client.mustBeOwner(True, giveError=False):
+			elif self.has_permission(client, permission['build'], True) or client.mustBeOwner(True, giveError=False):
 				for x in range(x1, x2+1):
 					for y in range(y1, y2+1):
 						if arg["turf"]:
@@ -692,7 +691,7 @@ class Map(object):
 			y = arg["pos"][1]
 			if client.inBanList(self.build_banlist, 'build here'):
 				client.send("MAP", self.map_section(x, y, x, y))
-			elif self.build_enabled or client.mustBeOwner(True, giveError=False):
+			elif self.has_permission(client, permission['build'], True) or client.mustBeOwner(True, giveError=False):
 				if arg["obj"]:
 					self.objs[x][y] = arg["atom"]
 				else:

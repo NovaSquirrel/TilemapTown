@@ -55,11 +55,25 @@ ServerShutdown = [-1]
 AllClients = set()
 AllMaps = set()
 
+# Map permissions
+permission = {}
+permission['entry'] = 1
+permission['build'] = 2
+permission['sandbox'] = 4
+permission['admin'] = 8
+
+# Map flags
+mapflag = {}
+mapflag['public'] = 1
+
 def mapIdExists(id):
 	for m in AllMaps:
 		if m.id == id:
 			return True
-	return os.path.isfile("maps/"+str(id)+".txt")
+	c = Database.cursor()
+	c.execute('SELECT mid FROM Map WHERE mid=?', (id,))
+	result = c.fetchone()
+	return result != None
 
 # Important shared functions
 def broadcastToAll(text):
