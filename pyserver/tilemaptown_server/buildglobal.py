@@ -45,6 +45,10 @@ setConfigDefault("Server",   "Admins",           [])
 setConfigDefault("Server",   "MaxUsers",         200)
 setConfigDefault("Server",   "MaxDBMaps",        5000)
 setConfigDefault("Database", "File",             "town.db")
+setConfigDefault("Database", "Setup",            True)
+
+# Open database connection
+Database = sqlite3.connect(Config["Database"]["File"], detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
 
 # Important information shared by each module
 ServerShutdown = [-1]
@@ -68,6 +72,23 @@ def findClientByUsername(username, inside=None):
 		if username == u.username or (username.isnumeric() and int(username) == u.id):
 			return u
 	return None
+
+def findUsernameByDBId(dbid):
+	c = Database.cursor()
+	c.execute('SELECT username FROM User WHERE uid=?', (dbid,))
+	result = c.fetchone()
+	if result == None:
+		return None
+	return result[0]
+
+def findDBIdByUsername(username):
+	c = Database.cursor()
+	username = str(username).lower()
+	c.execute('SELECT uid FROM User WHERE username=?', (username,))
+	result = c.fetchone()
+	if result == None:
+		return None
+	return result[0]
 
 def filterUsername(text):
 	return ''.join([i for i in text if (i.isalnum() or i == '_')]).lower()

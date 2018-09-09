@@ -37,6 +37,7 @@ class Client(object):
 		self.map_id = -1
 		self.pic = [0, 2, 25]
 		self.id = userCounter
+		self.db_id = -1        # database key
 		self.ping_timer = 180
 		self.inventory = []
 		self.idle_timer = 0

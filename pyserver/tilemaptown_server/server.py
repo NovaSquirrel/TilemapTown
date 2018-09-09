@@ -18,6 +18,8 @@ import asyncio, datetime, random, websockets, json, sys
 from .buildglobal import *
 from .buildmap import *
 from .buildclient import *
+if Config["Database"]["Setup"]:
+	from .database_setup import *
 
 # Timer that runs and performs background tasks
 def mainTimer():
@@ -136,6 +138,7 @@ def main():
 	loop.run_until_complete(start_server)
 	print("Server started!")
 	loop.run_forever()
+	Database.close()
 
 if __name__ == "__main__":
 	main()

@@ -1,0 +1,63 @@
+https://www.sqlite.org/datatype3.html
+
+---META---
+item            - text    - what piece of meta information
+value           - text    - the value
+
+current items:
+version
+
+---MAP---
+mid             * integer - map ID
+name            - text    - map name
+desc            - text    - map description
+owner           - integer - owner ID
+flags           - integer - generic flags field
+                          - 1: (public) map shows up in searches
+regtime         - integer - registration time
+start_x         - integer - player starting X
+start_y         - integer - player starting Y
+width           - integer - map width
+height          - integer - map height
+default_turf    - text    - default map tile
+tags            - text    - map tags as JSON
+allow           - integer - default permissions to allow
+deny            - integer - default permissions to deny
+data            - text    - actual map data
+
+Permissions:
+0x0001 entry (deny to ban a user)
+0x0002 build
+0x0004 full sandbox (anyone can delete anything)
+0x0008 map admin
+0x0010
+0x0020
+0x0040
+0x0080
+
+---MAP_PERMISSION---
+mid             * integer - map ID
+uid             * integer - user ID
+allow           - integer - flags that grant permissions
+deny            - integer - flags that deny permissions
+
+---MAP_LOG---
+time            - timestamp - action time
+
+---USER---
+uid             * integer - user ID
+
+passhash        - text    - password hash
+passalgo        - text    - password algorithm name
+
+regtime         - integer - register time
+lastseen        - integer - last seen date
+
+username        - text    - username
+name            - text    - display name
+pic             - text    - picture JSON
+
+mid             - integer - map the user is on
+map_x           - integer - user map X
+map_y           - integer - user map Y
+

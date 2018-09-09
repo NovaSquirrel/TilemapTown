@@ -29,3 +29,7 @@ Maximum number of maps allowed in the database, or -1 to disable the limit.
 Database.File
 Default: "town.db"
 Filename used for Tilemap Town's database.
+
+Database.Setup
+Default: true
+Set up the database if needed. If false, skip this check.
