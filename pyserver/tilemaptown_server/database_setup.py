@@ -45,6 +45,7 @@ height integer,
 default_turf text,
 allow integer,
 deny integer,
+guest_deny integer,
 tags text,
 data text
 )""")
@@ -231,8 +232,8 @@ for fname in glob.glob("maps/*.txt"):
 		# Insert into database if not already in it
 		c.execute('SELECT * FROM Map WHERE mid=?', (mid,))
 		if c.fetchone() == None:
-			values = (mid, name, desc, owner, flags, start_x, start_y, width, height, default_turf, allow, deny, tags, data)
-			c.execute('INSERT INTO Map (mid, name, desc, owner, flags, start_x, start_y, width, height, default_turf, allow, deny, tags, data) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)', values)
+			values = (mid, name, desc, owner, flags, start_x, start_y, width, height, default_turf, allow, deny, deny, tags, data)
+			c.execute('INSERT INTO Map (mid, name, desc, owner, flags, start_x, start_y, width, height, default_turf, allow, deny, guest_deny, tags, data) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', values)
 	except:
 		print("Couldn't load map "+fname)
 		raise

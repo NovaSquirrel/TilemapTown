@@ -70,6 +70,13 @@ class Client(object):
 			return
 		asyncio.ensure_future(self.ws.send(makeCommand(commandType, commandParams)))
 
+	def permissionByName(self, perm):
+		perm = perm.lower()
+		if perm in permission:
+			return permission[perm]
+		self.send("ERR", {'text': 'Permission "%s" doesn\t exist' % perm})
+		return None
+
 	def failedToFind(self, username):
 		if username == None or len(username) == 0:
 			self.send("ERR", {'text': 'No username given'})
@@ -122,7 +129,7 @@ class Client(object):
 		return False
 
 	def mustBeOwner(self, adminOkay, giveError=True):
-		if self.map.owner == self.db_id or (adminOkay and self.username in self.map.admins):
+		if self.map.owner == self.db_id or (adminOkay and self.map.has_permission(self, permission['admin'], False)):
 			return True
 		elif giveError:
 			self.send("ERR", {'text': 'You don\'t have permission to do that'})
@@ -183,7 +190,8 @@ class Client(object):
 		if not self.map or (self.map and self.map.id != map_id):
 			# First check if you can even go to that map
 			new_map = getMapById(map_id)
-			if self.inBanList(new_map.entry_banlist, 'go to map %d' % map_id):
+			if not new_map.has_permission(self, permission['entry'], True):
+				self.send("ERR", {'text': 'You don\'t have permission to go to map %d' % map_id})
 				return False
 
 			if self.map:
@@ -275,6 +283,7 @@ class Client(object):
 		if result[2] == "sha512" and result[1] != password:
 			return False
 
+		self.db_id = result[0]
 		self.username = result[3]
 		self.name = result[4]
 		self.pic = json.loads(result[5])
@@ -286,4 +295,5 @@ class Client(object):
 		self.ignore_list = set(json.loads(result[11]))
 		self.client_settings = result[12]
 		self.tags = json.loads(result[13])
+
 		return True

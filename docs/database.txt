@@ -23,6 +23,7 @@ default_turf    - text    - default map tile
 tags            - text    - map tags as JSON
 allow           - integer - default permissions to allow
 deny            - integer - default permissions to deny
+guest_deny      - integer - default permissions to deny for guests
 data            - text    - actual map data
 
 Permissions:

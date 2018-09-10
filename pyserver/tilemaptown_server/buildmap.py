@@ -39,12 +39,9 @@ class Map(object):
 
 		# permissions
 		self.owner = -1
-		self.admins = set()  # List of admins. To remove and replace
-		self.entry_whitelist = set() # to remove and replace with map permissions
-		self.entry_banlist = set()   # to remove and replace with map permissions
-		self.build_banlist = set()   # to remove and replace with map permissions
 		self.allow = 0
 		self.deny = 0
+		self.guest_deny = 0
 
 		# map scripting
 		self.has_script = False
@@ -65,13 +62,68 @@ class Map(object):
 			self.turfs.append([None] * height)
 			self.objs.append([None] * height)
 
-	def has_permission(self, user, permission, default):
+	def set_permission(self, uid, perm, value):
+		if uid == None:
+			return
+		# Start blank
+		allow = 0
+		deny = 0
+
+		# Get current value
+		c = Database.cursor()
+		c.execute('SELECT allow, deny FROM Map_Permission WHERE mid=? AND uid=?', (self.id, uid,))
+		result = c.fetchone()
+		if result != None:
+			allow = result[0]
+			deny = result[1]
+
+		# Alter the permissions
+		if value == True:
+			allow |= perm
+			deny &= ~perm
+		elif value == False:
+			allow &= ~perm
+			deny |= perm
+		elif value == None:
+			allow &= ~perm
+			deny &= ~perm
+
+		# Delete if permissions were removed
+		if not (allow | deny):
+			c.execute('DELETE FROM Map_Permission WHERE mid=? AND uid=?', (self.id, uid,))
+			return
+
+		# Update or insert depending on needs
+		if result != None:
+			c.execute('UPDATE Map_Permission SET allow=?, deny=? WHERE mid=? AND uid=?', (allow, deny, self.id, uid,))
+		else:
+			c.execute("INSERT INTO Map_Permission (mid, uid, allow, deny) VALUES (?, ?, ?, ?)", (self.id, uid, allow, deny,))
+
+	def has_permission(self, user, perm, default):
 		has = default
-		if self.allow & permission:
+		if self.allow & perm:
 			has = True
-		if self.deny & permission:
+		if self.deny & perm:
 			has = False
-		# To do: search Map_Permission table
+
+		# If guest, apply guest_deny
+		if user.db_id == None:
+			if self.guest_deny & perm:
+				has = False
+			return has
+
+		# Search Map_Permission table
+		c = Database.cursor()
+		c.execute('SELECT allow, deny FROM Map_Permission WHERE mid=? AND uid=?', (self.id, user.db_id,))
+		result = c.fetchone()
+		if result == None:
+			return has
+		# Override the defaults
+		if result[0] & perm:
+			has = True
+		if result[1] & perm:
+			has = False
+
 		return has
 
 	def set_tag(self, name, value):
@@ -88,7 +140,7 @@ class Map(object):
 
 		c = Database.cursor()
 
-		c.execute('SELECT name, desc, owner, flags, start_x, start_y, width, height, default_turf, allow, deny, tags, data FROM Map WHERE mid=?', (mapId,))
+		c.execute('SELECT name, desc, owner, flags, start_x, start_y, width, height, default_turf, allow, deny, guest_deny, tags, data FROM Map WHERE mid=?', (mapId,))
 		result = c.fetchone()
 		if result == None:
 			return False
@@ -103,10 +155,11 @@ class Map(object):
 		self.default_turf = result[8]
 		self.allow = result[9]
 		self.deny = result[10]
-		self.tags = json.loads(result[11])
+		self.guest_deny = result[11]
+		self.tags = json.loads(result[12])
 
 		# Parse map data
-		s = json.loads(result[12])
+		s = json.loads(result[13])
 		self.blank_map(s["pos"][2]+1, s["pos"][3]+1)
 		for t in s["turf"]:
 			self.turfs[t[0]][t[1]] = t[2]
@@ -127,8 +180,8 @@ class Map(object):
 			c.execute("INSERT INTO Map (regtime, mid) VALUES (?, ?)", (datetime.datetime.now(), self.id,))
 
 		# Update the map
-		values = (self.name, self.desc, self.owner, self.flags, self.start_pos[0], self.start_pos[1], self.width, self.height, self.default_turf, self.allow, self.deny, json.dumps(self.tags), json.dumps(self.map_section(0, 0, self.width-1, self.height-1)), self.id)
-		c.execute("UPDATE Map SET name=?, desc=?, owner=?, flags=?, start_x=?, start_y=?, width=?, height=?, default_turf=?, allow=?, deny=?, tags=?, data=? WHERE mid=?", values)
+		values = (self.name, self.desc, self.owner, self.flags, self.start_pos[0], self.start_pos[1], self.width, self.height, self.default_turf, self.allow, self.deny, self.guest_deny, json.dumps(self.tags), json.dumps(self.map_section(0, 0, self.width-1, self.height-1)), self.id)
+		c.execute("UPDATE Map SET name=?, desc=?, owner=?, flags=?, start_x=?, start_y=?, width=?, height=?, default_turf=?, allow=?, deny=?, guest_deny=?, tags=?, data=? WHERE mid=?", values)
 		Database.commit()
 
 	def map_section(self, x1, y1, x2, y2):
@@ -152,11 +205,8 @@ class Map(object):
 
 	def map_info(self, all_info=False):
 		""" MAI message data """
-		out = {'name': self.name, 'id': self.id, 'owner': self.owner, 'admins': list(self.admins), 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.flags & mapflag['public'] != 0, 'private': self.deny & permission['entry'] != 0, 'build_enabled': self.allow & permission['build'] != 0, 'full_sandbox': self.allow & permission['sandbox'] != 0}
+		out = {'name': self.name, 'id': self.id, 'owner': self.owner, 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.flags & mapflag['public'] != 0, 'private': self.deny & permission['entry'] != 0, 'build_enabled': self.allow & permission['build'] != 0, 'full_sandbox': self.allow & permission['sandbox'] != 0}
 		if all_info:
-			out['entry_whitelist'] = list(self.entry_whitelist)
-			out['entry_banlist'] = list(self.entry_banlist)
-			out['build_banlist'] = list(self.build_banlist)
 			out['start_pos'] = self.start_pos
 		return out
 
@@ -404,73 +454,92 @@ class Map(object):
 				arg2 = arg2.lower()
 				if arg2 in client.watch_list:
 					client.watch_list.remove(arg2)
-				self.broadcast("MSG", {'text': '\"%s\" added to watch list' % arg2})
+				client.send("MSG", {'text': '\"%s\" added to watch list' % arg2})
 			elif command2 == "unwatch":
 				arg2 = arg2.lower()
 				client.watch_list.remove(arg2)
-				self.broadcast("MSG", {'text': '\"%s\" removed from watch list' % arg2})
+				client.send("MSG", {'text': '\"%s\" removed from watch list' % arg2})
 			elif command2 == "watchlist":
 				client.send("MSG", {'text': 'Watch list: '+str(client.watch_list)})
 
-			elif command2 == "invite":
-				if client.mustBeOwner(True):
-					arg2 = arg2.lower()
-					self.entry_whitelist.add(arg2)
-					self.broadcast("MSG", {'text': '\"%s\" added to whitelist' % arg2})
-			elif command2 == "uninvite":
-				if client.mustBeOwner(True):
-					arg2 = arg2.lower()
-					if arg2 in self.entry_whitelist:
-						self.entry_whitelist.remove(arg2)
-					self.broadcast("MSG", {'text': '\"%s\" removed from whitelist' % arg2})
-			elif command2 == "invitelist":
-				if client.mustBeOwner(True):
-					client.send("MSG", {'text': 'Whitelist: '+str(self.entry_whitelist)})
 
-			elif command2 == "buildban":
-				if client.mustBeOwner(True):
-					arg2 = arg2.lower()
-					self.build_banlist.add(arg2)
-					self.broadcast("MSG", {'text': '\"%s\" added to build banlist' % arg2})
-			elif command2 == "buildunban":
-				if client.mustBeOwner(True):
-					arg2 = arg2.lower()
-					if arg2 in self.build_banlist:
-						self.build_banlist.remove(arg2)
-					self.broadcast("MSG", {'text': '\"%s\" removed from build banlist' % arg2})
-			elif command2 == "buildbanlist":
-				if client.mustBeOwner(True):
-					client.send("MSG", {'text': 'Build banlist: '+str(self.build_banlist)})
 
-			elif command2 == "ban":
-				if client.mustBeOwner(True):
-					arg2 = arg2.lower()
-					self.entry_banlist.add(arg2)
-					self.broadcast("MSG", {'text': '\"%s\" added to banlist' % arg2})
-			elif command2 == "unban":
-				if client.mustBeOwner(True):
-					arg2 = arg2.lower()
-					if arg2 in self.entry_banlist:
-						self.entry_banlist.remove(arg2)
-					self.broadcast("MSG", {'text': '\"%s\" removed from banlist' % arg2})
-			elif command2 == "banlist":
-				if client.mustBeOwner(True):
-					client.send("MSG", {'text': 'Banlist: '+str(self.entry_banlist)})
 
-			elif command2 == "op":
-				if client.mustBeOwner(False):
-					arg2 = arg2.lower()
-					self.admins.add(arg2)
-					self.broadcast("MSG", {'text': '\"%s\" was promoted' % arg2})
-			elif command2 == "deop":
-				if client.mustBeOwner(False):
-					arg2 = arg2.lower()
-					if arg2 in self.admins:
-						self.admins.remove(arg2)
-					self.broadcast("MSG", {'text': '\"%s\" was demoted' % arg2})
-			elif command2 == "oplist":
+			elif command2 in ["grant", "deny", "revoke"]:
 				if client.mustBeOwner(True):
-					client.send("MSG", {'text': 'Op list: '+str(self.admins)})
+					# Check syntax
+					param = arg2.lower().split(' ')
+					if len(param) < 2:
+						client.send("ERR", {'text': 'Must specify a permission and a username'})
+						return
+					# Has to be a valid permission
+					if param[0] not in permission:
+						client.send("ERR", {'text': '"%s" Not a valid permission' % param[0]})
+						return
+					permission_value = permission[param[0]]
+					
+					# Special usernames for map defaults
+					if param[1] == '!default':
+						if command2 == "grant":
+							self.allow |= permission_value
+							self.deny &= ~permission_value
+						elif command2 == "deny":
+							self.allow &= ~permission_value
+							self.deny |= permission_value
+						elif command2 == "revoke":
+							self.allow &= ~permission_value
+							self.deny &= ~permission_value
+						self.broadcast("MSG", {'text': "%s sets the default \"%s\" permission to [b]%s[/b]" % (client.nameAndUsername(), param[0], command2)})
+						return
+
+					if param[1] == '!guest':
+						if command2 == "deny":
+							self.guest_deny |= permission_value
+						elif command2 == "revoke":
+							self.guest_deny &= ~permission_value
+						self.broadcast("MSG", {'text': "%s sets the guest \"%s\" permission to [b]%s[/b]" % (client.nameAndUsername(), param[0], command2)})
+						return
+
+					# Has to be a user that exists
+					uid = findDBIdByUsername(param[1])
+					if uid == None:
+						client.failedToFind(param[1])
+						return
+
+					# Finally we know it's valid
+					value = None
+					if command2 == "grant":
+						value = True
+					if command2 == "deny":
+						value = False
+					self.set_permission(uid, permission_value, value)
+					self.broadcast("MSG", {'text': "%s sets %s's \"%s\" permission to [b]%s[/b]" % (client.nameAndUsername(), param[1], param[0], command2)})
+
+			elif command2 == "permlist":
+				c = Database.cursor()
+				perms = "Defaults: "
+
+				# List map default permissions
+				for k,v in permission.items():
+					if (self.allow & v) == v:
+						perms += "+"+k+" "
+					if (self.deny & v) == v:
+						perms += "-"+k+" "
+					if (self.guest_deny & v) == v:
+						perms += "-"+k+"(guest) "
+
+				perms += "[ul]"
+				for row in c.execute('SELECT username, allow, deny FROM Map_Permission mp, User u WHERE mp.mid=? AND mp.uid=u.uid', (self.id,)):
+					perms += "[li][b]"+row[0] + "[/b]: "
+					for k,v in permission.items():
+						if (row[1] & v) == v: # allow
+							perms += "+"+k+" "
+						if (row[2] & v) == v: #deny
+							perms += "-"+k+" "
+					perms += "[/li]"
+				perms += "[/ul]"
+				client.send("MSG", {'text': perms})
+
 
 			elif command2 == "mapname":
 				if client.mustBeOwner(False):
@@ -537,7 +606,7 @@ class Map(object):
 							u.send("MSG", {'text': 'Kicked by '+client.nameAndUsername()})
 							u.send_home()
 							if command2 == "kickban":
-								self.entry_banlist.add(arg2)
+								self.set_permission(findDBIdByUsername(arg2), permission['entry'], False)
 						else:
 							client.send("ERR", {'text': 'User not on this map'})
 					else:
@@ -673,9 +742,7 @@ class Map(object):
 			y1 = arg["pos"][1]
 			x2 = arg["pos"][2]
 			y2 = arg["pos"][3]
-			if client.inBanList(self.build_banlist, 'build here'):
-				client.send("MAP", self.map_section(x1, y1, x2, y2))
-			elif self.has_permission(client, permission['build'], True) or client.mustBeOwner(True, giveError=False):
+			if self.has_permission(client, permission['build'], True) or client.mustBeOwner(True, giveError=False):
 				for x in range(x1, x2+1):
 					for y in range(y1, y2+1):
 						if arg["turf"]:
@@ -689,9 +756,7 @@ class Map(object):
 		elif command == "PUT":
 			x = arg["pos"][0]
 			y = arg["pos"][1]
-			if client.inBanList(self.build_banlist, 'build here'):
-				client.send("MAP", self.map_section(x, y, x, y))
-			elif self.has_permission(client, permission['build'], True) or client.mustBeOwner(True, giveError=False):
+			if self.has_permission(client, permission['build'], True) or client.mustBeOwner(True, giveError=False):
 				if arg["obj"]:
 					self.objs[x][y] = arg["atom"]
 				else:
