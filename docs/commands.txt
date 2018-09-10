@@ -113,33 +113,22 @@ Saves any changes made to the map
 ---Moderation---
 /tp user
 Force teleport to user
+(unimplemented)
 
 /tphere
 Force user to teleport to you
+(unimplemented)
 
 /clearmap
 Clears everything on the map
+(unimplemented)
 
 /kick user
 Sends a user home
 
 /fly
 Toggles the ability to walk through walls
-
-/ban user (takes optional time amount)
-/banlist
-/unban user
-Manage ban list
-
-/op user
-/oplist
-/deop user
-Manage op list
-
-/invite user
-/invitelist
-/uninvite user
-Manage whitelist for private rooms
+(unimplemented)
 
 ---Map configuration---
 /mapid
@@ -162,24 +151,35 @@ Public: Map is publicly listed, and anyone may join
 Unlisted: Map isn't listed anywhere, but anyone may join
 Private: Map isnt listed anywhere, and only users on the whitelist may join
 
-/mapbuild on/off
-Change whether people can build.
-On: Yes
-Off: Only admins may build
+/grant permission username
+/deny permission username
+/revoke permission username
+Modify the map permissions for a particular user.
+A permission can be set to allow (with grant), disallow (with deny), or default (with revoke).
+If a permission for the user is the default, the map's setting for that permission is used instead.
+The map's default can be changed by using !default for the username.
+Additionally, for deny and revoke, !guest may be used to apply additional restrictions to guests.
 
-/mapprotect none/delete
-Change map protection.
-None: Freeform
-Delete: Players can't delete another player's objects
+Permissions available:
+entry   : Allowed to teleport to the map
+build   : Allowed to build
+sandbox : Allowed to edit or delete other peoples' objects freely
+admin   : Allowed to use admin commands
+
+/permlist
+List the map's default permissions and the permissions for each user
 
 /mapimport
 Provide an input to upload a map
+(unimplemented)
 
 /mapentrytext text
 Set text to display upon entry
+(unimplemented)
 
 /mapexport
 Allow the user to download the map
+(unimplemented)
 
 ---Miscellaneous---
 /time
