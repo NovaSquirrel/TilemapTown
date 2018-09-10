@@ -7,4 +7,4 @@ The best game in this genre was [Icon Ultima](www.byond.com/games/enigmaster2002
 
 Python server
 -------------
-Just run `server.py` with your Python 3 interpreter, after installing [the websockets library](https://pypi.python.org/pypi/websockets).
+Just run `runserver.py` with your Python 3 interpreter, after installing [the websockets library](https://pypi.python.org/pypi/websockets).
