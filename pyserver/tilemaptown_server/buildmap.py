@@ -540,6 +540,13 @@ class Map(object):
 				perms += "[/ul]"
 				client.send("MSG", {'text': perms})
 
+			elif command2 == "publicmaps":
+				c = Database.cursor()
+				maps = "Public maps: [ul]"
+				for row in c.execute('SELECT m.mid, m.name, u.username FROM Map m, User u WHERE m.owner=u.uid and (m.flags&1)!=0'):
+					maps += "[li][b]%s[/b] (%s) [command]map %d[/command][/li]" % (row[1], row[2], row[0])
+				maps += "[/ul]"
+				client.send("MSG", {'text': maps})
 
 			elif command2 == "mapname":
 				if client.mustBeOwner(False):
