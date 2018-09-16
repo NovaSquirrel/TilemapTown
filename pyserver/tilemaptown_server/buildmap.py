@@ -540,6 +540,16 @@ class Map(object):
 				perms += "[/ul]"
 				client.send("MSG", {'text': perms})
 
+			elif command2 == "mymaps":
+				if client.db_id == None:
+					return
+				c = Database.cursor()
+				maps = "My maps: [ul]"
+				for row in c.execute('SELECT m.mid, m.name FROM Map m WHERE m.owner=?', (client.db_id,)):
+					maps += "[li][b]%s[/b] [command]map %d[/command][/li]" % (row[1], row[0])
+				maps += "[/ul]"
+				client.send("MSG", {'text': maps})
+
 			elif command2 == "publicmaps":
 				c = Database.cursor()
 				maps = "Public maps: [ul]"
@@ -711,8 +721,22 @@ class Map(object):
 				for u in self.users:
 					if len(names) > 0:
 						names += ', '
-					names += '%s (%s)' % (u.name, u.usernameOrId())
+					names += u.nameAndUsername()
 				client.send("MSG", {'text': 'List of users here: '+names})
+
+			elif command2 == "whereare" or command2 == "wa":
+				names = 'Whereare: [ul]'
+				for m in AllMaps:
+					if m.flags & mapflag['public'] == 0:
+						continue
+					names += '[li][b]%s[/b] (%d): ' % (m.name, len(m.users))
+					for u in m.users:
+						names += u.nameAndUsername()+', '
+					names = names.rstrip(', ') + ' [command]map %d[/command][/li]' % m.id
+				names += '[/ul]'
+
+				client.send("MSG", {'text': names})
+
 			elif command2 == "savemap":
 				self.save()
 				self.broadcast("MSG", {'text': client.name+" saved the map"})

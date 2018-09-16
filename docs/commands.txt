@@ -105,10 +105,16 @@ Display who is carrying you
 
 ---Maps---
 /newmap
-Creates a new map and gives you the number for it
+Creates a new map and gives you the number for it (if you are registered)
 
 /savemap
 Saves any changes made to the map
+
+/publicmaps
+List all maps whose privacy setting has been set to "public"
+
+/mymaps
+List all maps that have you set as the owner
 
 ---Moderation---
 /tp user
