@@ -183,6 +183,26 @@ function ConnectToServer() {
         }
 
         break;
+
+      case "IMG":
+        // unload an image
+        if(arg.url == null) {
+          delete IconSheets[arg.id];
+          break;
+        }
+        // load an image
+        var img = new Image();
+        img.onload = function(){
+           NeedMapRedraw = true;
+        };
+        img.src = arg.url;
+        IconSheets[arg.id] = img;
+        break;
+
+      case "TSD":
+        InstallTileset(arg.name, arg.data);
+        break;
+
       case "PIN":
         SendCmd("PIN", null);
         break;

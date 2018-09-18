@@ -39,6 +39,12 @@ Optionally also defines "entry_whitelist", "entry_banlist" and "start_pos" for m
 <-- MAP {updated map}
 delete a section of map
 
+<-- IMG {"id": number, "url": string}
+have the client load an image, for tilesets or avatars or other purposes
+
+<-- TSD {"name": name, "data": [id, info, id, info, id, info, ...]}
+tileset received from the server
+
 === People on the map ===
 --> WHO
 <-- WHO {"list": {"[id]": {"name": name, "pic": [s, x, y], "x": x, "y": y, "id": id}}, "you":id}

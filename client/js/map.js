@@ -44,6 +44,7 @@ var Directions = {
   NORTHEAST : 7,
 }
 
+// for converting direction IDs to actual offsets
 var DirX = [ 1,  1,  0, -1, -1, -1,  0,  1];
 var DirY = [ 0,  1,  1,  1,  0, -1, -1, -1];
 
@@ -52,27 +53,93 @@ var MapTiles  = [];
 var MapWidth  = 60;
 var MapHeight = 60;
 var MapObjs   = [];
-var IconSheets = [];
+var IconSheets = []; // tile sheets, indexed by first element in a 'pic'
+var Tilesets = [];   // extra tilesets past just the Predefined list
 
-var AtomFields = {
+// add a new tileset to the list
+function InstallTileset(name, list) {
+  let new_set = {};
 
-};
+  // unpack each item
+  for(let i=0; i<list.length/2; i++) {
+    new_set[list[i*2]] = AtomCompact2JSON(list[i*2+1]);
+  }
 
+  Tilesets[name] = new_set;
+}
+
+// make a separate copy of an atom's object
 function CloneAtom(atom) {
   return JSON.parse(JSON.stringify(atom));
 }
 
+// get an atom object from a string, or return it if already an object
 function AtomFromName(str) {
   if(typeof str === "string") {
     if(Predefined[str])
       return Predefined[str];
     else {
+      let s = str.split(":");
+      if(s.length == 2) {
+        // Allow a custom tileset
+        if(Tilesets[s[0]] && Tilesets[s[0]][s[1]]) {
+          return Tilesets[s[0]][s[1]];
+        }
+      }
       console.log("Unknown atom: "+str);
       return Predefined.grass;
     }
   }
   return str;
 }
+
+// convert an atom's JSON definition into a lower bandwidth version
+function AtomJSON2Compact(t) {
+  let out = [0, t.name, t.pic];
+
+  // turn on flags and add fields as needed
+  if(t.density)
+    out[0] |= 1;
+  if(t.obj)
+    out[0] |= 2;
+  if(t.type) {
+    out[0] |= 4;
+    out.push(t.type);
+  }
+  if(t.sort) {
+    out[0] |= 8;
+    out.push(t.sort);
+  }
+  if(t.dir) {
+    out[0] |= 16;
+    out.push(t.dir);
+  }
+  return out;
+}
+
+// convert a lower bandwidth atom into a JSON definition
+function AtomCompact2JSON(t) {
+  let flags = t[0];
+  let out = {
+    name: t[1],
+    pic: t[2]
+  };
+
+  // interpret flags
+  if(flags & 16)
+    out.dir  = t.pop();
+  if(flags & 8)
+    out.sort = t.pop();
+  if(flags & 4)
+    out.type = t.pop();
+  if(flags & 2)
+    out.obj = true;
+  if(flags & 1)
+    out.density = true;
+  return out;
+}
+
+
 
 function initMap() {
   IconSheets[0] = document.getElementById("potluck");
