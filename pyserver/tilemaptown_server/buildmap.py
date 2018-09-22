@@ -762,6 +762,63 @@ class Map(object):
 						broadcastToAll("Server shutdown in %d seconds! (started by %s)" % (ServerShutdown[0], client.name))
 			else:
 				client.send("ERR", {'text': 'Invalid command?'})
+
+		elif command == "BAG":
+			if client.db_id != None:
+				c = Database.cursor()
+				if "create" in arg:
+					# restrict type variable
+					if arg['create']['type'] < 0 or arg['create']['type'] > 6:
+						arg['create']['type'] = 0
+					c.execute("INSERT INTO Asset_Info (creator, owner, name, type, regtime, flags) VALUES (?, ?, ?, ?, ?, ?)", (client.db_id, client.db_id, arg['create']['name'], arg['create']['type'], datetime.datetime.now(), 0))
+					c.execute('SELECT last_insert_rowid()')
+					client.send("BAG", {'update': {'id': c.fetchone()[0], 'name': arg['create']['name'], 'type': arg['create']['type']}})
+
+				elif "clone" in arg:
+					c.execute('SELECT name, desc, type, flags, creator, folder, data FROM Asset_Info WHERE owner=? AND aid=?', (client.db_id, arg['clone']))
+					row = c.fetchone()
+					if not len(row):
+						client.send("ERR", {'text': 'Invalid item ID'})
+
+					c.execute("INSERT INTO Asset_Info (name, desc, type, flags, creator, folder, data, owner, regtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", \
+                      (row[0], row[1], row[2], row[3], row[4], row[5], row[6], client.db_id, datetime.datetime.now()))
+					c.execute('SELECT last_insert_rowid()')
+					client.send("BAG", {'update': {'id': c.fetchone()[0], 'name': row[0], 'desc': row[1], 'type': row[2], 'flags': row[3], 'folder': row[5], 'data': row[6]}})
+
+				elif "update" in arg:
+					# get the initial data
+					c.execute('SELECT name, desc, flags, folder, data FROM Asset_Info WHERE owner=? AND aid=?', (client.db_id, arg['update']['id']))
+					result = c.fetchone()
+					if not len(result):
+						client.send("ERR", {'text': 'Invalid item ID'})
+					out = {'name': result[0], 'desc': result[1], 'flags': result[2], 'folder': result[3], 'data': result[4]}
+
+					# overwrite any specified columns
+					for key, value in arg['update'].items():
+						out[key] = value
+						if type(out[key]) == dict:
+							out[key] = json.dumps(out[key]);
+					c.execute('UPDATE Asset_Info SET name=?, desc=?, flags=?, folder=?, data=? WHERE owner=? AND aid=?', (out['name'], out['desc'], out['flags'], out['folder'], out['data'], client.db_id, arg['update']['id']))
+
+					# send back confirmation
+					client.send("BAG", {'update': arg['update']})
+
+				elif "delete" in arg:
+					# move deleted contents of a deleted folder outside the folder
+					c.execute('SELECT folder FROM Asset_Info WHERE owner=? AND aid=?', (client.db_id, arg['delete']))
+					result = c.fetchone()
+					if not len(result):
+						client.send("ERR", {'text': 'Invalid item ID'})
+					# probably better to handle this with a foreign key constraint and cascade?
+					# it's NOT updated client-side but it shouldn't matter
+					c.execute('UPDATE Asset_Info SET folder=? WHERE owner=? AND folder=?', (result[0], client.db_id, arg['delete']))
+
+					# actually delete
+					c.execute('DELETE FROM Asset_Info WHERE owner=? AND aid=?', (client.db_id, arg['delete']))
+					client.send("BAG", {'remove': arg['delete']})
+			else:
+				client.send("ERR", {'text': 'Guests don\'t have an inventory currently. Use [tt]/register username password[/tt]'})
+
 		elif command == "MSG":
 			text = arg["text"]
 			self.broadcast("MSG", {'name': client.name, 'text': escapeTags(text)})

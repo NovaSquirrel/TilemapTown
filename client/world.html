@@ -80,17 +80,54 @@
   </div>
 </div>
 
+<div id="newItemWindow" class="modal">
+  <div class="modal-content">
+    <span class="modalclose">&times;</span>
+    <p>
+    <h1>New item</h1>
+
+    <p>
+    <label for="newtilename" class="unselectable">Item name</label><br>
+    <input type="text" id="newtilename" value="new item"/>
+    </p>
+
+    <input type="button" value="Object" onclick="newItemCreate(3);" />
+    <input type="button" value="Text" onclick="newItemCreate(1);" />
+    <input type="button" value="Image" onclick="newItemCreate(2);" />
+    <input type="button" value="Tileset" onclick="newItemCreate(4);" />
+    <input type="button" value="Folder" onclick="newItemCreate(6);" />
+    </p>
+    <p>
+    <input type="button" value="Cancel" onclick="newItemCancel();" />
+    </p>
+  </div>
+</div>
+
+
 <div id="editItemWindow" class="modal">
   <div class="modal-content">
     <span class="modalclose">&times;</span>
     <p>
-    <h1>Edit tile</h1>
+    <h1>Edit item</h1>
 
     <p>
-    <label for="edittilename" class="unselectable">Item name</label><br>
-    <input type="text" id="edittilename"/>
+    <table border="0">
+    <tr>
+    <td><label for="edittilename" class="unselectable">Item name</label></td>
+    <td><input type="text" id="edittilename"/></td>
+    </tr>
+    <tr>
+    <td><label for="edittiledesc" class="unselectable">Description</label></td>
+    <td><input type="text" id="edittiledesc"/></td>
+    </tr>
+    </table>
     </p>
 
+    <div id="edittiletext">
+    <textarea id="edittiletextarea" cols="60"></textarea>
+    </div>
+
+    <div id="edittileobject">
     <p>
     Item picture<br>
     <img src="img/transparent.png" width="16" height="16" id="edittilepic" style="background: url(img/potluck.png) 0px 0px;">
@@ -122,8 +159,9 @@
 
     <p>
     <input type="checkbox" id="edittiledensity"><label for="edittiledensity" class="unselectable">Item is an obstacle (dense)</label></input><br>
-    <input type="checkbox" id="edittileobject"><label for="edittileobject" class="unselectable">Item is a map tile</label></input>
+    <input type="checkbox" id="edittileisobject"><label for="edittileobject" class="unselectable">Item is a map tile</label></input>
     </p>
+    </div>
 
     <br>
     <input type="button" value="Apply changes" onclick="editItemApply();">

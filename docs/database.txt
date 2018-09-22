@@ -5,7 +5,8 @@ item            - text    - what piece of meta information
 value           - text    - the value
 
 current items:
-version
+version         - version of the database format, "1" while it's being worked out
+
 
 ---MAP---
 mid             * integer - map ID
@@ -36,6 +37,7 @@ Permissions:
 0x0040
 0x0080
 
+
 ---MAP_PERMISSION---
 mid             * integer - map ID
 uid             * integer - user ID
@@ -65,3 +67,32 @@ map_y           - integer - user map Y
 client_settings - text    - whatever the client wants to store
 flags           - integer - generic flags field
 tags            - text    - user tags as JSON
+
+
+---ASSET_INFO---
+(unimplemented)
+aid             - integer - asset ID
+name            - text    - name of asset
+desc            - text    - description
+type            - integer - type of asset
+                            0 dummy     (nothing?)
+                            1 text      (stores text, possibly a script. like notecards)
+                            2 image     (links to a .png)
+                            3 object    (physical world object)
+                            4 tileset   (stores a description of the tiles in a tileset)
+                            5 reference (refer to another asset without taking up extra database space)
+                            6 folder    (for categorization; holds any number of other assets)
+flags           - integer - generic flags
+creator         - integer - creator ID
+regtime         - integer - creation time
+owner           - integer - owner ID (whose inventory it shows up in)
+folder          - integer - folder the asset is being held in, or null
+data            - integer - the data, or NULL if not applicable.
+                            takes advantage of SQLite being able to store text in an integer column
+                            ----
+                            text: the text being stored
+                           image: path to the image, added to the server's base asset url?
+                          object: JSON object repesenting object information?
+                         tileset: JSON array alternating between tile id and compacted tile data
+                       reference: asset number it's a reference to
+                          folder: ?

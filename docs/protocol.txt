@@ -12,7 +12,7 @@ change direction only
 
 <-- MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "id": 0}
 move a player on the map.
-"from" may be left out.
+"from" may be left out, and if so, a client won't ignore MOVs for its own ID.
 
 --> TAP {"pos": [x,y]}
 sent by an attempt to move into a dense object.
@@ -39,8 +39,16 @@ Optionally also defines "entry_whitelist", "entry_banlist" and "start_pos" for m
 <-- MAP {updated map}
 delete a section of map
 
+--> IMG {"id": number}
+request an image asset's URL
+(unimplemented)
+
 <-- IMG {"id": number, "url": string}
 have the client load an image, for tilesets or avatars or other purposes
+
+--> TSD {"name": name}
+request tileset data from the server
+(unimplemented)
 
 <-- TSD {"name": name, "data": [id, info, id, info, id, info, ...]}
 tileset received from the server
@@ -109,8 +117,24 @@ take item and get confirmation
 use item
 (not implemented)
 
-<-- BAG {"list": {item info}}
-<-- BAG {"add": {item info}}
-<-- BAG {"remove": item info}
-update user inventory
-(not implemented)
+
+--> BAG {"create": {"name": name, "type": type}}
+create a new item of a given type
+
+--> BAG {"update": {"id": id, "name": name, "desc": desc, "flags": flags, "folder": folder, "data": data}}
+update one specific item
+
+--> BAG {"delete": id}
+delete an item
+
+--> BAG {"clone": id}
+make an exact clone of an item with a new ID
+
+<-- BAG {"list": [{item info}]}
+receive a list of items from the server
+
+<-- BAG {"update": {item info}}
+update one item with information from the server
+
+<-- BAG {"remove": id}
+remove one item from the inventory

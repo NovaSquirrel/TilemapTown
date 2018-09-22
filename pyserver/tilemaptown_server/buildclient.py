@@ -39,7 +39,6 @@ class Client(object):
 		self.id = userCounter
 		self.db_id = None        # database key
 		self.ping_timer = 180
-		self.inventory = []
 		self.idle_timer = 0
 		userCounter += 1
 
@@ -247,6 +246,14 @@ class Client(object):
 			self.switch_map(self.map_id, goto_spawn=False)
 			self.map.broadcast("MSG", {'text': self.name+" has logged in ("+self.username+")"})
 			self.map.broadcast("WHO", {'add': self.who()}) # update client view
+
+			# send the client their inventory
+			c = Database.cursor()
+			inventory = []
+			for row in c.execute('SELECT aid, name, desc, type, flags, folder, data FROM Asset_Info WHERE owner=?', (self.db_id,)):
+				item = {'id': row[0], 'name': row[1], 'desc': row[2], 'type': row[3], 'flags': row[4], 'folder': row[5], 'data': row[6]}
+				inventory.append(item)
+			self.send("BAG", {'list': inventory})
 			return True
 		elif result == False:
 			self.send("ERR", {'text': 'Login fail, bad password for account'})

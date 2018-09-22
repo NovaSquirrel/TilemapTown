@@ -34,7 +34,8 @@ else:
 
 c.execute("""create table if not exists Map (
 mid integer primary key,
-name text, desc text,
+name text,
+desc text,
 owner integer,
 flags integer,
 regtime timestamp,
@@ -86,6 +87,19 @@ ignore text,
 client_settings text,
 flags integer,
 tags text
+)""")
+
+c.execute("""create table if not exists Asset_Info (
+aid integer primary key,
+name text,
+desc text,
+type integer,
+flags integer,
+creator integer,
+regtime timestamp,
+owner integer,
+folder integer,
+data integer
 )""")
 
 # Migrate users
