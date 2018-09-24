@@ -76,7 +76,7 @@ function SendCmd(commandType, commandArgs) {
         receiveServerMessage({data: "BAG "+JSON.stringify({"update": newitem})});
       }
       if(commandArgs["delete"]) {
-        receiveServerMessage({data: "BAG "+JSON.stringify({"delete": commandArgs["delete"]})});
+        receiveServerMessage({data: "BAG "+JSON.stringify({"remove": commandArgs["delete"]})});
       }
     }
     return;
@@ -201,6 +201,10 @@ function receiveServerMessage(event) {
       }
       if(arg['remove']) {
         delete DBInventory[arg['remove']];
+        for (var key in DBInventory) {
+          if(DBInventory[key].folder == arg['remove'])
+            DBInventory[key].folder = null;
+        }
       }
       NeedInventoryUpdate = true;
       break;

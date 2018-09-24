@@ -160,6 +160,27 @@ function editItem(index) {
       break;
   }
 
+  // Display folder selection
+  var select = document.getElementById("edittilefolder"); 
+  while(select.firstChild) {
+    select.removeChild(select.firstChild);
+  }
+  // "no folder" option
+  var el = document.createElement("option");
+  el.textContent = "-";
+  el.value = "-1";
+  select.appendChild(el);
+  for(var i in DBInventory) {
+    if(DBInventory[i].type == 6) { // folder
+      el = document.createElement("option");
+      el.textContent = DBInventory[i].name;
+      el.value = DBInventory[i].id;
+      select.appendChild(el);
+    }
+  }
+  document.getElementById('edittilefolder').value = item.folder || -1;
+
+  // show the window
   document.getElementById('editItemWindow').style.display = "block";
 }
 
@@ -961,6 +982,10 @@ function loginButton() {
 function editItemApply() {
   var edittilename = document.getElementById('edittilename').value;
   var edittiledesc = document.getElementById('edittiledesc').value;
+  var edittilefolder = parseInt(document.getElementById('edittilefolder').value, 10);
+  if(edittilefolder == -1) {
+    edittilefolder = null;
+  }
 
   switch(editItemType) {
     case 1: // text
@@ -968,6 +993,7 @@ function editItemApply() {
         update: {"id": editItemID,
                  "name": edittilename,
                  "desc": edittiledesc,
+                 "folder": edittilefolder,
                  "data": document.getElementById('edittiletextarea').value
                 }
       });
@@ -997,6 +1023,7 @@ function editItemApply() {
         update: {"id": editItemID,
                  "name": edittilename,
                  "desc": edittiledesc,
+                 "folder": edittilefolder,
                  "data": JSON.stringify(item)
                 }
       });
@@ -1006,7 +1033,8 @@ function editItemApply() {
       SendCmd("BAG", {
         update: {"id": editItemID,
                  "name": edittilename,
-                 "desc": edittiledesc
+                 "desc": edittiledesc,
+                 "folder": edittilefolder
                 }
       });
       break;
