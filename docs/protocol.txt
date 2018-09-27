@@ -46,11 +46,11 @@ request an image asset's URL
 <-- IMG {"id": number, "url": string}
 have the client load an image, for tilesets or avatars or other purposes
 
---> TSD {"name": name}
+--> TSD {"id": number}
 request tileset data from the server
 (unimplemented)
 
-<-- TSD {"name": name, "data": [id, info, id, info, id, info, ...]}
+<-- TSD {"id": number, "data": [id, info, id, info, id, info, ...]}
 tileset received from the server
 
 === People on the map ===

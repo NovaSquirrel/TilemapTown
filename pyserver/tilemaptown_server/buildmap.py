@@ -777,8 +777,9 @@ class Map(object):
 				elif "clone" in arg:
 					c.execute('SELECT name, desc, type, flags, creator, folder, data FROM Asset_Info WHERE owner=? AND aid=?', (client.db_id, arg['clone']))
 					row = c.fetchone()
-					if not len(row):
+					if row == None:
 						client.send("ERR", {'text': 'Invalid item ID'})
+						return
 
 					c.execute("INSERT INTO Asset_Info (name, desc, type, flags, creator, folder, data, owner, regtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", \
                       (row[0], row[1], row[2], row[3], row[4], row[5], row[6], client.db_id, datetime.datetime.now()))
@@ -789,8 +790,9 @@ class Map(object):
 					# get the initial data
 					c.execute('SELECT name, desc, flags, folder, data FROM Asset_Info WHERE owner=? AND aid=?', (client.db_id, arg['update']['id']))
 					result = c.fetchone()
-					if not len(result):
+					if result == None:
 						client.send("ERR", {'text': 'Invalid item ID'})
+						return
 					out = {'name': result[0], 'desc': result[1], 'flags': result[2], 'folder': result[3], 'data': result[4]}
 
 					# overwrite any specified columns
@@ -807,8 +809,9 @@ class Map(object):
 					# move deleted contents of a deleted folder outside the folder
 					c.execute('SELECT folder FROM Asset_Info WHERE owner=? AND aid=?', (client.db_id, arg['delete']))
 					result = c.fetchone()
-					if not len(result):
+					if result == None:
 						client.send("ERR", {'text': 'Invalid item ID'})
+						return
 					# probably better to handle this with a foreign key constraint and cascade?
 					# it's NOT updated client-side but it shouldn't matter
 					c.execute('UPDATE Asset_Info SET folder=? WHERE owner=? AND folder=?', (result[0], client.db_id, arg['delete']))
@@ -822,6 +825,24 @@ class Map(object):
 		elif command == "MSG":
 			text = arg["text"]
 			self.broadcast("MSG", {'name': client.name, 'text': escapeTags(text)})
+
+		elif command == "TSD":
+			c = Database.cursor()
+			c.execute('SELECT data FROM Asset_Info WHERE type=4 AND aid=?', (arg['id'],))
+			result = c.fetchone()
+			if result == None:
+				client.send("ERR", {'text': 'Invalid item ID'})
+			else:
+				client.send("TSD", {'id': arg['id'], 'data': result[0]})
+		elif command == "IMG":
+			c = Database.cursor()
+			c.execute('SELECT data FROM Asset_Info WHERE type=2 AND aid=?', (arg['id'],))
+			result = c.fetchone()
+			if result == None:
+				client.send("ERR", {'text': 'Invalid item ID'})
+			else:
+				client.send("IMG", {'id': arg['id'], 'url': result[0]})
+
 		elif command == "MAI":
 			send_all_info = client.mustBeOwner(True, giveError=False)
 			client.send("MAI", self.map.map_info(all_info=send_all_info))

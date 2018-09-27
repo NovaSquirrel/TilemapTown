@@ -222,10 +222,12 @@ function receiveServerMessage(event) {
       };
       img.src = arg.url;
       IconSheets[arg.id] = img;
+      IconSheetsRequested[arg.id] = false;
       break;
 
     case "TSD":
-      InstallTileset(arg.name, arg.data);
+      InstallTileset(arg.id, JSON.parse(arg.data));
+      TilesetsRequested[arg.id] = false;
       break;
 
     case "PIN":

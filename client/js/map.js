@@ -54,7 +54,17 @@ var MapWidth  = 60;
 var MapHeight = 60;
 var MapObjs   = [];
 var IconSheets = []; // tile sheets, indexed by first element in a 'pic'
+var IconSheetsRequested = [];
 var Tilesets = [];   // extra tilesets past just the Predefined list
+var TilesetsRequested = [];
+
+function RequestImageIfNeeded(id) {
+  if(!IconSheets[id] && !IconSheetsRequested[id]) {
+    // ask for the image
+    IconSheetsRequested[id] = true;
+    SendCmd("IMG", {"id": id});
+  }
+}
 
 // add a new tileset to the list
 function InstallTileset(name, list) {
@@ -84,6 +94,10 @@ function AtomFromName(str) {
         // Allow a custom tileset
         if(Tilesets[s[0]] && Tilesets[s[0]][s[1]]) {
           return Tilesets[s[0]][s[1]];
+        } else if(!TilesetsRequested[s[0]]) {
+          // ask for the tileset
+          TilesetsRequested[s[0]] = true;
+          SendCmd("TSD", {id: s[0]});
         }
       }
       console.log("Unknown atom: "+str);
