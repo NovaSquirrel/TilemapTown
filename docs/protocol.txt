@@ -41,14 +41,12 @@ delete a section of map
 
 --> IMG {"id": number}
 request an image asset's URL
-(unimplemented)
 
 <-- IMG {"id": number, "url": string}
 have the client load an image, for tilesets or avatars or other purposes
 
 --> TSD {"id": number}
 request tileset data from the server
-(unimplemented)
 
 <-- TSD {"id": number, "data": [id, info, id, info, id, info, ...]}
 tileset received from the server

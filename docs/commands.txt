@@ -25,6 +25,7 @@ Change display name
 
 /userdesc text
 Change your description
+(unimplemented)
 
 /userpic bunny, cat, hamster or fire
 /userpic x y (measured in tiles, from https://novasquirrel.com/town/img/potluck.png)
@@ -49,9 +50,11 @@ List all users on the server
 /look user
 /glook user (global)
 Reads someone's character description
+(unimplemented)
 
 /last user
 Displays someone's last login/logout time
+(unimplemented)
 
 ---Movement---
 /map mapnumber
