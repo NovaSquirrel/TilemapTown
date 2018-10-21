@@ -102,6 +102,12 @@ folder integer,
 data integer
 )""")
 
+# Make dummy items to prevent some IDs from being used by user assets
+c.execute("SELECT count(*) FROM Asset_Info")
+if c.fetchone()[0] == 0:
+	for id in range(10):
+		c.execute("INSERT INTO Asset_Info (aid, name, type) VALUES (?, ?, ?)", (id+1, "reserved", 0,))
+
 # Migrate users
 for fname in glob.glob("users/*.txt"):
 	# Set out some defaults
