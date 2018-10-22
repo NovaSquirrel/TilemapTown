@@ -53,10 +53,10 @@ var MapTiles  = [];
 var MapWidth  = 60;
 var MapHeight = 60;
 var MapObjs   = [];
-var IconSheets = []; // tile sheets, indexed by first element in a 'pic'
-var IconSheetsRequested = [];
-var Tilesets = [];   // extra tilesets past just the Predefined list
-var TilesetsRequested = [];
+var IconSheets = {}; // tile sheets, indexed by first element in a 'pic'
+var IconSheetsRequested = {};
+var Tilesets = {};   // extra tilesets past just the Predefined list
+var TilesetsRequested = {};
 
 function RequestImageIfNeeded(id) {
   if(!IconSheets[id] && !IconSheetsRequested[id]) {

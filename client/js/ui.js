@@ -109,7 +109,9 @@ function editItemUpdatePic() {
   var edittilex = parseInt(document.getElementById('edittilex').value);
   var edittiley = parseInt(document.getElementById('edittiley').value);
 
-  var src = IconSheets[edittilesheet].src;
+  var src = "";
+  if(IconSheets[edittilesheet])
+    src = IconSheets[edittilesheet].src;
   document.getElementById('edittilepic').style.background = "url("+src+") -"+(edittilex*16)+"px -"+(edittiley*16)+"px";
   document.getElementById('edittilesheetselect').src = src;
 }
@@ -376,14 +378,20 @@ function drawMap() {
       // Draw the turf
       var Tile = AtomFromName(MapTiles[RX][RY]);
       if(Tile) {
-        ctx.drawImage(IconSheets[Tile.pic[0]], Tile.pic[1]*16, Tile.pic[2]*16, 16, 16, x*16-OffsetX, y*16-OffsetY, 16, 16);
+        if(IconSheets[Tile.pic[0]])
+          ctx.drawImage(IconSheets[Tile.pic[0]], Tile.pic[1]*16, Tile.pic[2]*16, 16, 16, x*16-OffsetX, y*16-OffsetY, 16, 16);
+        else
+          RequestImageIfNeeded(Tile.pic[0]);
       }
       // Draw anything above the turf
       var Objs = MapObjs[RX][RY];
       if(Objs) {
         for (var index in Objs) {
           var Obj = AtomFromName(Objs[index]);
-          ctx.drawImage(IconSheets[Obj.pic[0]], Obj.pic[1]*16, Obj.pic[2]*16, 16, 16, x*16-OffsetX, y*16-OffsetY, 16, 16);
+          if(IconSheets[Obj.pic[0]])
+            ctx.drawImage(IconSheets[Obj.pic[0]], Obj.pic[1]*16, Obj.pic[2]*16, 16, 16, x*16-OffsetX, y*16-OffsetY, 16, 16);
+          else
+            RequestImageIfNeeded(Obj.pic[0]);
         }
       }
     }
@@ -880,7 +888,9 @@ function updateInventoryUL() {
     img.src = "img/transparent.png";
     img.style.width = "16px";
     img.style.height = "16px";
-    var src = IconSheets[item.pic[0]].src;
+    var src = "";
+    if(IconSheets[item.pic[0]])
+      src = IconSheets[item.pic[0]].src;
     var background = "url("+src+") -"+(item.pic[1]*16)+"px -"+(item.pic[2]*16)+"px";
     img.style.background = background;
 
