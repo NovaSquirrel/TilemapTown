@@ -46,6 +46,7 @@ setConfigDefault("Server",   "MaxUsers",         200)
 setConfigDefault("Server",   "MaxDBMaps",        5000)
 setConfigDefault("Database", "File",             "town.db")
 setConfigDefault("Database", "Setup",            True)
+setConfigDefault("Images",   "URLWhitelist",     ["https://i.imgur.com/"])
 
 # Open database connection
 Database = sqlite3.connect(Config["Database"]["File"], detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)

@@ -697,9 +697,16 @@ class Map(object):
 						client.pic = defaults[arg2[0]];
 						success = True
 					# temporary thing to allow custom avatars
-					elif arg2[0][0:20] == 'https://i.imgur.com/':
-						client.pic = [arg2[0], 0, 0];
-						success = True
+					else:
+						if arg2[0].startswith("http"):
+							for w in Config["Images"]["URLWhitelist"]:
+								if arg2[0].startswith(w):
+									client.pic = [arg2[0], 0, 0];
+									success = True
+									break
+							if not success:
+								client.send("ERR", {'text': 'URL doesn\'t match any whitelisted sites'})
+								return
 				elif len(arg2) == 2:
 					if arg2[0].isnumeric() and arg2[1].isnumeric():
 						client.pic = [0, int(arg2[0]), int(arg2[1])]

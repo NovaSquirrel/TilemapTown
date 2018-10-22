@@ -130,7 +130,7 @@ global loop
 
 def main():
 	global loop
-	start_server = websockets.serve(clientHandler, None, Config["Server"]["Port"])
+	start_server = websockets.serve(clientHandler, None, Config["Server"]["Port"], max_size=0x8000)
 
 	# Start the event loop
 	loop = asyncio.get_event_loop()

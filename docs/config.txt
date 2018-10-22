@@ -33,3 +33,7 @@ Filename used for Tilemap Town's database.
 Database.Setup
 Default: true
 Set up the database if needed. If false, skip this check.
+
+Images.URLWhitelist
+Default: ["https://i.imgur.com/"]
+Set a list of URL parts that are considered safe to start user-provided image URLs with.
