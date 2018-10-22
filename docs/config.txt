@@ -26,6 +26,14 @@ Server.MaxDBMaps
 Default: 5000
 Maximum number of maps allowed in the database, or -1 to disable the limit.
 
+Server.WSMaxSize
+Default: 32768
+Maximum number of bytes allowed in incoming websocket messages.
+
+Server.WSMaxQueue
+Default: 32
+Maximum number of incoming websocket messages allowed to queue up before the server stops processing incoming data.
+
 Database.File
 Default: "town.db"
 Filename used for Tilemap Town's database.
