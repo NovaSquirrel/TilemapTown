@@ -204,7 +204,7 @@ function useItem(Placed) {
           Message = prompt("What should the sign say?");
           if(Message == null)
             return;
-          Placed.message = Message;
+          Placed.data.message = Message;
         }
         MapObjs[PlayerX][PlayerY].push(Placed.data);
         SendCmd("PUT", {pos: [PlayerX, PlayerY], obj: true, atom: MapObjs[PlayerX][PlayerY]});

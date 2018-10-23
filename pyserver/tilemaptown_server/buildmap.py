@@ -24,6 +24,28 @@ DirY = [ 0,  1,  1,  1,  0, -1, -1, -1]
 def escapeTags(text):
 	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
+def imageURLIsOkay(url):
+	for w in Config["Images"]["URLWhitelist"]:
+		if url.startswith(w):
+			return True
+	return False
+
+def tileIsOkay(tile):
+	# Strings refer to tiles in tilesets and are
+	# definitely OK as long as they're not excessively long.
+	if type(tile) == str:
+		if len(tile) <= 32:
+			return (True, None)
+		else:
+			return (False, 'Identifier too long')
+	# If it's not a string it must be a dictionary
+	if type(tile) != dict:
+		return (False, 'Invalid type')
+
+		return (False, 'No/invalid picture')
+
+	return (True, None)
+
 class Map(object):
 	def __init__(self,width=100,height=100):
 		# map stuff
@@ -699,12 +721,10 @@ class Map(object):
 					# temporary thing to allow custom avatars
 					else:
 						if arg2[0].startswith("http"):
-							for w in Config["Images"]["URLWhitelist"]:
-								if arg2[0].startswith(w):
-									client.pic = [arg2[0], 0, 0];
-									success = True
-									break
-							if not success:
+							if imageURLIsOkay(arg2[0]):
+								client.pic = [arg2[0], 0, 0];
+								success = True
+							else:
 								client.send("ERR", {'text': 'URL doesn\'t match any whitelisted sites'})
 								return
 				elif len(arg2) == 2:
@@ -795,12 +815,21 @@ class Map(object):
 
 				elif "update" in arg:
 					# get the initial data
-					c.execute('SELECT name, desc, flags, folder, data FROM Asset_Info WHERE owner=? AND aid=?', (client.db_id, arg['update']['id']))
+					c.execute('SELECT name, desc, flags, folder, data, type FROM Asset_Info WHERE owner=? AND aid=?', (client.db_id, arg['update']['id']))
 					result = c.fetchone()
 					if result == None:
 						client.send("ERR", {'text': 'Invalid item ID'})
 						return
 					out = {'name': result[0], 'desc': result[1], 'flags': result[2], 'folder': result[3], 'data': result[4]}
+					asset_type = result[5]
+					if asset_type == 2 and "data" in arg['update'] and not imageURLIsOkay(arg['update']['data']):
+						client.send("ERR", {'text', 'Image asset URL doesn\'t match any whitelisted sites'})
+						return
+					if asset_type == 3 and "data" in arg['update']:
+						tile_test = tileIsOkay(arg['update']['data'])
+						if not tile_test[0]:
+							client.send("ERR", {'text': 'Tile [tt]%s[/tt] rejected (%s)' % (arg['update']['data'], tile_test[1])})
+							return
 
 					# overwrite any specified columns
 					for key, value in arg['update'].items():
@@ -873,11 +902,24 @@ class Map(object):
 			x = arg["pos"][0]
 			y = arg["pos"][1]
 			if self.has_permission(client, permission['build'], True) or client.mustBeOwner(True, giveError=False):
-				if arg["obj"]:
-					self.objs[x][y] = arg["atom"]
-				else:
-					self.turfs[x][y] = arg["atom"]
-				self.broadcast("MAP", self.map_section(x, y, x, y))
+				# verify the the tiles you're attempting to put down are actually good
+				if arg["obj"]: #object
+					tile_test = [tileIsOkay(x) for x in arg["atom"]]
+					if all(x[0] for x in tile_test): # all tiles pass the test
+						self.objs[x][y] = arg["atom"]
+						self.broadcast("MAP", self.map_section(x, y, x, y))
+					else:
+						# todo: give a reason?
+						client.send("MAP", self.map_section(x, y, x, y))
+						client.send("ERR", {'text': 'Placed objects rejected'})
+				else: #turf
+					tile_test = tileIsOkay(arg["atom"])
+					if tile_test[0]:
+						self.turfs[x][y] = arg["atom"]
+						self.broadcast("MAP", self.map_section(x, y, x, y))
+					else:
+						client.send("MAP", self.map_section(x, y, x, y))
+						client.send("ERR", {'text': 'Tile [tt]%s[/tt] rejected (%s)' % (arg["atom"], tile_test[1])})
 			else:
 				client.send("MAP", self.map_section(x, y, x, y))
 				client.send("ERR", {'text': 'Building is disabled on this map'})
