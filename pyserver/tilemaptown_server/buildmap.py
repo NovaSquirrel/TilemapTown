@@ -42,6 +42,7 @@ def tileIsOkay(tile):
 	if type(tile) != dict:
 		return (False, 'Invalid type')
 
+	if "pic" not in tile or len(tile["pic"]) != 3:
 		return (False, 'No/invalid picture')
 
 	return (True, None)
