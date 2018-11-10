@@ -56,6 +56,9 @@ passalgo        - text    - password algorithm name
 regtime         - integer - register time
 lastseen        - integer - last seen date
 
+watch           - text    - JSON array of users to watch for
+ignore          - text    - JSON array of users to ignore messages from
+
 username        - text    - username
 name            - text    - display name
 pic             - text    - picture JSON
