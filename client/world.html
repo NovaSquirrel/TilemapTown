@@ -5,6 +5,7 @@
 <link rel="stylesheet" type="text/css" href="world.css" />
 <link rel="stylesheet" type="text/css" href="chat.css" />
 <link rel="stylesheet" type="text/css" href="xbbcode.css" />
+<script src="js/stretch.js"></script>
 <script src="js/xbbcode.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/map.js"></script>
@@ -25,6 +26,7 @@
 <div style="width: 100%; height: 32px;" class="topnav unselectable">
   <a id="navlogin"     href="#">Login</a>
   <a id="navinventory" href="#" onclick="viewInventory();">Inventory</a>
+  <a id="navbuild"     href="#" onclick="viewBuild();">Build</a>
   <a id="navoptions"   href="#" onclick="viewOptions();">Options</a>
   <a id="navmap"       href="#">Map</a>
   <a id="navhelp"      href="help.html" target="_blank">Help</a>
@@ -196,9 +198,6 @@
       </div>
       <div id="panel"></div>
       <div id="inventory" style="display: none;">
-        <ul id="inventoryul" class="unselectable">
-        </ul>
-        <canvas class="unselectable" id="inventoryCanvas" width="320" height="320" oncontextmenu="return false;" imageSmoothingEnabled="false"></canvas>
       </div>
       <div id="options" style="display: none;">
         <input type="checkbox" id="alwayscenter" checked="true"><label for="alwayscenter" class="unselectable">Always center camera</label></input><br>

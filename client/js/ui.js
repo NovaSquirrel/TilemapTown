@@ -273,31 +273,39 @@ function keyHandler(e) {
   } else if (e.keyCode == 38 || e.keyCode == 87) { // up/w
     PlayerY--;
     PlayerDir = Directions.NORTH;
+    e.preventDefault();
   } else if (e.keyCode == 40 || e.keyCode == 83) { // down/s
     PlayerY++;
     PlayerDir = Directions.SOUTH;
+    e.preventDefault();
   } else if (e.keyCode == 37 || e.keyCode == 65) { // left/a
     PlayerX--;
     PlayerDir = Directions.WEST;
+    e.preventDefault();
   } else if (e.keyCode == 39 || e.keyCode == 68) { // right/d
     PlayerX++;
     PlayerDir = Directions.EAST;
+    e.preventDefault();
   } else if (e.keyCode == 35) { // end
     PlayerX--;
     PlayerY++;
     PlayerDir = Directions.SOUTHWEST;
+    e.preventDefault();
   } else if (e.keyCode == 34) { // pg down
     PlayerX++;
     PlayerY++;
     PlayerDir = Directions.SOUTHEAST;
+    e.preventDefault();
   } else if (e.keyCode == 36) { // home
     PlayerX--;
     PlayerY--;
     PlayerDir = Directions.NORTHWEST;
+    e.preventDefault();
   } else if (e.keyCode == 33) { // pg up
     PlayerX++;
     PlayerY--;
     PlayerDir = Directions.NORTHEAST;
+    e.preventDefault();
   }
 
   ClampPlayerPos();
@@ -606,63 +614,65 @@ function selectionInfoVisibility(visibility) {
     panel.innerHTML = "";
 }
 
-// sets up the mouse event listeners
-function initMouse() {
-  var inventoryCanvas = document.getElementById("inventoryCanvas");
-  var edittilesheetselect = document.getElementById("edittilesheetselect");
+/////////////////////////////////////////////////
+// mouse stuff
+/////////////////////////////////////////////////
 
-  // helper function to get an element's exact position
-  // from https://www.kirupa.com/html5/getting_mouse_click_position.htm
-  function getExactPosition(el) {
-    var xPosition = 0;
-    var yPosition = 0;
+// helper function to get an element's exact position
+// from https://www.kirupa.com/html5/getting_mouse_click_position.htm
+function getExactPosition(el) {
+  var xPosition = 0;
+  var yPosition = 0;
  
-    while (el) {
-      if (el.tagName == "BODY") {
-        // deal with browser quirks with body/window/document and page scroll
-        var xScrollPos = el.scrollLeft || document.documentElement.scrollLeft;
-        var yScrollPos = el.scrollTop || document.documentElement.scrollTop;
+  while (el) {
+    if (el.tagName == "BODY") {
+      // deal with browser quirks with body/window/document and page scroll
+      var xScrollPos = el.scrollLeft || document.documentElement.scrollLeft;
+      var yScrollPos = el.scrollTop || document.documentElement.scrollTop;
  
-        xPosition += (el.offsetLeft - xScrollPos + el.clientLeft);
-        yPosition += (el.offsetTop - yScrollPos + el.clientTop);
-      } else {
-        xPosition += (el.offsetLeft - el.scrollLeft + el.clientLeft);
-        yPosition += (el.offsetTop - el.scrollTop + el.clientTop);
-      }
- 
-      el = el.offsetParent;
+      xPosition += (el.offsetLeft - xScrollPos + el.clientLeft);
+      yPosition += (el.offsetTop - yScrollPos + el.clientTop);
+    } else {
+      xPosition += (el.offsetLeft - el.scrollLeft + el.clientLeft);
+      yPosition += (el.offsetTop - el.scrollTop + el.clientTop);
     }
-    return {
-      x: xPosition,
-      y: yPosition
-    };
+ 
+    el = el.offsetParent;
   }
+  return {
+    x: xPosition,
+    y: yPosition
+  };
+}
 
-  function getMousePosRaw(canvas, evt) {
-    var rect = getExactPosition(canvas);
-    return {
-      x: (evt.clientX - rect.x)|0,
-      y: (evt.clientY - rect.y)|0
-    };
-  }
+function getMousePosRaw(canvas, evt) {
+  var rect = getExactPosition(canvas);
+  return {
+    x: (evt.clientX - rect.x)|0,
+    y: (evt.clientY - rect.y)|0
+  };
+}
 
-  function getMousePos(canvas, evt) {
-    var rect = getExactPosition(canvas);
-    var xratio = canvas.width / parseInt(canvas.style.width);
-    var yratio = canvas.height / parseInt(canvas.style.height);
+function getMousePos(canvas, evt) {
+  var rect = getExactPosition(canvas);
+  var xratio = canvas.width / parseInt(canvas.style.width);
+  var yratio = canvas.height / parseInt(canvas.style.height);
 
-    return {
-      x: ((evt.clientX - rect.x)*xratio)|0,
-      y: ((evt.clientY - rect.y)*yratio)|0
-    };
-  }
+  return {
+    x: ((evt.clientX - rect.x)*xratio)|0,
+    y: ((evt.clientY - rect.y)*yratio)|0
+  };
+}
 
-  function getTilePos(evt) {
-    var pos = getMousePos(mapCanvas, evt);
-    pos.x = ((pos.x) + (CameraX>>4))>>4;
-    pos.y = ((pos.y) + (CameraY>>4))>>4;
-    return pos;
-  }
+function getTilePos(evt) {
+  var pos = getMousePos(mapCanvas, evt);
+  pos.x = ((pos.x) + (CameraX>>4))>>4;
+  pos.y = ((pos.y) + (CameraY>>4))>>4;
+  return pos;
+}
+
+function initMouse() {
+  var edittilesheetselect = document.getElementById("edittilesheetselect");
 
   edittilesheetselect.addEventListener('mousedown', function(evt) {
     var pos = getMousePosRaw(edittilesheetselect, evt);
@@ -674,18 +684,6 @@ function initMouse() {
     document.getElementById('edittilex').value = pos.x;
     document.getElementById('edittiley').value = pos.y;
     editItemUpdatePic();
-  }, false);
-
-  inventoryCanvas.addEventListener('mousedown', function(evt) {
-    var pos = getMousePosRaw(inventoryCanvas, evt);
-    pos.x = pos.x >> 4;
-    pos.y = pos.y >> 4;
-    var index = pos.y * ViewWidth + pos.x;
-
-    if(evt.button == 0)
-      useItem({type: 3, data: PredefinedArrayNames[index]});
-    else if(evt.button == 2)
-      addInventory(PredefinedArrayNames[index]);
   }, false);
 
   mapCanvas.addEventListener('mousedown', function(evt) {
@@ -873,6 +871,9 @@ function addInventory(item) {
 function updateInventoryUL() {
   // Manage the inventory <ul>
   var ul = document.getElementById('inventoryul');
+  if(!ul)
+    return;
+
   // Empty out the list
   while(ul.firstChild) {
     ul.removeChild(ul.firstChild);
@@ -912,37 +913,48 @@ function updateInventoryUL() {
 }
 
 function viewInventory() {
-  var options = document.getElementById("inventory");
-  var Hidden = (options.style.display=='none');
-  document.getElementById("navinventory").setAttribute("class", Hidden?"navactive":"");
-  options.style.display = Hidden?'block':'none';
-  if(!Hidden)
-    return;
-
-/*
-  var Complete = "<input type='button' value='Clear' onclick='clearInventory();'><br>";
-  for(var i in Predefined) {
-     Complete+="<a href='#' onclick='addInventory(\""+i+"\");'>"+Predefined[i].name+"</a><br>"
+  // check if inventory is up or not already
+  var ul = document.getElementById('inventoryul');
+  if(!ul) {
+    newWindow("Inventory", '<ul id="inventoryul" class="unselectable"></ul>', null);
   }
-  options.innerHTML = Complete;
-*/
-
   updateInventoryUL();
+}
 
-  var canvas = document.getElementById("inventoryCanvas");
-  var len = Object.keys(Predefined).length;
-  canvas.width = (ViewWidth*16)+"";
-  canvas.height = (Math.ceil(len/ViewWidth)*16)+"";
-  var ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+function viewBuild() {
+  var canvas = document.getElementById('inventoryCanvas');
+  if(!canvas) {
+    newWindow("Build", '<canvas class="unselectable" id="inventoryCanvas" width="320" height="320" oncontextmenu="return false;" imageSmoothingEnabled="false"></canvas>', {width: 256, height: 96});
 
-  var count = 0;
-  for(var i in Predefined) {
-    var item = Predefined[i];
-    ctx.drawImage(IconSheets[item.pic[0]], item.pic[1]*16, item.pic[2]*16, 16, 16, (count%ViewWidth)*16, Math.floor(count/ViewWidth)*16, 16, 16);
-    count++;
+    // add click action
+    canvas = document.getElementById('inventoryCanvas');
+    var BuildWidth = 16;
+
+    var len = Object.keys(Predefined).length;
+    canvas.width = (BuildWidth*16)+"";
+    canvas.height = (Math.ceil(len/BuildWidth)*16)+"";
+    var ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    var count = 0;
+    for(var i in Predefined) {
+      var item = Predefined[i];
+      ctx.drawImage(IconSheets[item.pic[0]], item.pic[1]*16, item.pic[2]*16, 16, 16, (count%BuildWidth)*16, Math.floor(count/BuildWidth)*16, 16, 16);
+      count++;
+    }
+
+    canvas.addEventListener('mousedown', function(evt) {
+      var pos = getMousePosRaw(inventoryCanvas, evt);
+      pos.x = pos.x >> 4;
+      pos.y = pos.y >> 4;
+      var index = pos.y * BuildWidth + pos.x;
+
+      if(evt.button == 0)
+        useItem({type: 3, data: PredefinedArrayNames[index]});
+      else if(evt.button == 2)
+        addInventory(PredefinedArrayNames[index]);
+    }, false);
   }
-
 }
 
 function viewCustomize() {

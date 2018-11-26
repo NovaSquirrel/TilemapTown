@@ -31,6 +31,10 @@ def imageURLIsOkay(url):
 	return False
 
 def tileIsOkay(tile):
+	# convert to a dictionary to check first if necessary
+	if type(tile) == str and len(tile) and tile[0] == '{':
+		tile = json.loads(tile)
+
 	# Strings refer to tiles in tilesets and are
 	# definitely OK as long as they're not excessively long.
 	if type(tile) == str:

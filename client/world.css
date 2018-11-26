@@ -82,8 +82,6 @@ body {
 .modalclose {
     color: #aaaaaa;
     float: right;
-    font-size: 28px;
-    font-weight: bold;
 }
 
 .modalclose:hover,
@@ -91,4 +89,38 @@ body {
     color: #000;
     text-decoration: none;
     cursor: pointer;
+}
+
+/* stretchable draggable windows */
+.draghandle_inactive {
+    position: absolute;
+
+    padding-top: 10px;
+    padding-bottom: 10px;
+    text-align: center;
+    cursor: move;
+    z-index: 10;
+    background-color: #1010F3;
+    color: #fff;
+}
+
+.draghandle {
+    position: absolute;
+
+    padding-top: 10px;
+    padding-bottom: 10px;
+    text-align: center;
+    cursor: move;
+    z-index: 10;
+    background-color: #2196F3;
+    color: #fff;
+}
+
+.drag {
+    position: absolute;
+	background-color: white;
+
+    border: 2px solid;
+    resize: both;
+    overflow: auto;
 }
