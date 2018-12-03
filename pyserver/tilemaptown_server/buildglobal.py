@@ -60,10 +60,12 @@ AllMaps = set()
 
 # Map permissions
 permission = {}
-permission['entry'] = 1
-permission['build'] = 2
-permission['sandbox'] = 4
-permission['admin'] = 8
+permission['entry'] = 1         # user can visit the map
+permission['build'] = 2         # user can build on the map
+permission['sandbox'] = 4       # users can delete any part of the map freely
+permission['admin'] = 8         # user is an admin on the map
+permission['bulk_build'] = 16   # user can use the builk building protocol commands
+permission['map_bot'] = 32      # user is given bot-related permissions
 
 # Map flags
 mapflag = {}

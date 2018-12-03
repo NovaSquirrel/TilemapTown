@@ -39,6 +39,13 @@ Optionally also defines "entry_whitelist", "entry_banlist" and "start_pos" for m
 <-- MAP {updated map}
 delete a section of map
 
+--> BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...]}
+<-- BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...]}
+bulk building command. width and height may be omitted.
+applies a series of rectangles to the map.
+
+
+=== Resources ===
 --> IMG {"id": number}
 request an image asset's URL
 
@@ -50,6 +57,7 @@ request tileset data from the server
 
 <-- TSD {"id": number, "data": [id, info, id, info, id, info, ...]}
 tileset received from the server
+
 
 === People on the map ===
 --> WHO

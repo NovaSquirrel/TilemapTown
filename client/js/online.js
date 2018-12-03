@@ -138,6 +138,40 @@ function receiveServerMessage(event) {
 
       NeedMapRedraw = true;
       break;
+    case "BLK":
+      for (var key in arg.turf) {
+        // get info
+        var width = 1, height = 1;
+        var turf = arg.turf[key];
+        if(turf.length == 5) {
+          width = turf[3];
+          height = turf[4];
+        }
+        // apply rectangle
+        for(var w = 0; w < width; w++) {
+          for(var h = 0; h < height; h++) {
+            MapTiles[turf[0]+w][turf[1]+h] = turf[2];
+          }
+        }
+      }
+      for (var key in arg.obj) {
+        // get info
+        var width = 1, height = 1;
+        var obj = arg.obj[key];
+        if(obj.length == 5) {
+          width = obj[3];
+          height = obj[4];
+        }
+        // apply rectangle
+        for(var w = 0; w < width; w++) {
+          for(var h = 0; h < height; h++) {
+            MapObjs[obj[0]+w][obj[1]+h] = obj[2];
+          }
+        }
+
+      }
+      NeedMapRedraw = true;
+      break;
     case "WHO":
       if(arg.you)
         PlayerYou = arg.you;

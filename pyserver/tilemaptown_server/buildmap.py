@@ -928,6 +928,48 @@ class Map(object):
 			else:
 				client.send("MAP", self.map_section(x, y, x, y))
 				client.send("ERR", {'text': 'Building is disabled on this map'})
+		elif command == "BLK":
+			if self.has_permission(client, permission['bulk_build'], False) or client.mustBeOwner(True, giveError=False):
+				# verify the tiles
+				for turf in arg["turf"]:
+					if not tileIsOkay(turf[2])[0]:
+						client.send("ERR", {'text': 'Bad turf in bulk build'})
+						return
+				for obj in arg["obj"]:
+					tile_test = [tileIsOkay(x) for x in obj[2]]
+					if any(not x[0] for x in tile_test): # any tiles don't pass the test
+						client.send("ERR", {'text': 'Bad obj in bulk build'})
+						return
+
+				# place the tiles
+				for turf in arg["turf"]:
+					x = turf[0]
+					y = turf[1]
+					a = turf[2]
+					width = 1
+					height = 1
+					if len(turf) == 5:
+						width = turf[3]
+						height = turf[4]
+					for w in range(0, width):
+						for h in range(0, height):
+							self.turfs[x+w][y+h] = a
+				# place the object lists
+				for obj in arg["obj"]:
+					x = obj[0]
+					y = obj[1]
+					a = obj[2]
+					width = 1
+					height = 1
+					if len(turf) == 5:
+						width = turf[3]
+						height = turf[4]
+					for w in range(0, width):
+						for h in range(0, height):
+							self.objs[x+w][y+h] = a
+				self.broadcast("BLK", arg)
+			else:
+				client.send("ERR", {'text': 'Bulk building is disabled on this map'})
 
 	def clean_up(self):
 		""" Clean up everything before a map unload """
