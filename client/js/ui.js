@@ -50,7 +50,7 @@ var panel = null;
 var NeedMapRedraw = false;
 var NeedInventoryUpdate = false;
 var TickCounter = 0;
-var DisplayInventory = [];
+var DisplayInventory = {null: []};
 var DBInventory = {};
 var OpenFolders = {};
 
@@ -116,17 +116,11 @@ function editItemUpdatePic() {
   document.getElementById('edittilesheetselect').src = src;
 }
 
-editItemIndex = null;
 editItemType = null;
 editItemID = null;
-function editItem(index) {
+function editItem(key) {
   // open up the item editing screen for a given item
-//  var li = document.getElementById('inventory'+index);
-//  li.appendChild(document.createTextNode("?"));
-  editItemIndex = index;
-
-  // change to use DBInventory instead
-  var item = DisplayInventory[index];
+  var item = DBInventory[key];
   var itemobj = null;
   editItemType = item.type;
   editItemID = item.id;
@@ -144,7 +138,7 @@ function editItem(index) {
         document.getElementById('edittiletextarea').value = "";
       break;
     case 3: // object
-      itemobj = AtomFromName(DisplayInventory[index].data);
+      itemobj = AtomFromName(item.data);
       if(itemobj == null) {
         itemobj = {pic: [0, 8, 24]};
       }
@@ -157,8 +151,7 @@ function editItem(index) {
       document.getElementById('edittileisobject').checked = !itemobj.obj;
       editItemUpdatePic();
 
-      document.getElementById('edittilesheetselect').src = IconSheets[itemobj.pic[0]].src;
-
+      document.getElementById('edittilesheetselect').src = IconSheets[itemobj.pic[0] || 0].src;
       break;
   }
 
@@ -267,9 +260,9 @@ function keyHandler(e) {
     if(n < 0)
       n = 9;
     // if there's no item, stop
-    if(!DisplayInventory[n])
+    if(!DisplayInventory[null][n])
       return;
-    useItem(DisplayInventory[n]);
+    useItem(DisplayInventory[null][n]);
   } else if (e.keyCode == 38 || e.keyCode == 87) { // up/w
     PlayerY--;
     PlayerDir = Directions.NORTH;
@@ -460,7 +453,7 @@ function drawSelector() {
   var oneWidth = canvas.width/10;
   for(var i=0; i<10; i++) {
     drawText(ctx, i*oneWidth, 0, ((i+1)%10)+"");
-    var item = AtomFromName(DisplayInventory[i]);
+    var item = AtomFromName(DisplayInventory[null][i]);
     if(item) {
       ctx.drawImage(IconSheets[item.pic[0]], item.pic[1]*16, item.pic[2]*16, 16, 16, i*oneWidth+16, 0, 16, 16);
     }
@@ -472,7 +465,8 @@ function tickWorld() {
   var TargetCameraY = (PlayerWho[PlayerYou].y-Math.floor(ViewHeight/2))<<8;
 
   if(NeedInventoryUpdate) {
-    DisplayInventory = [];
+    DisplayInventory = {};
+
     for(var key in DBInventory) {
       if(DBInventory[key].type == 3 || DBInventory[key].type == 4) { // object or tileset
         if(typeof DBInventory[key].data == "string" &&
@@ -481,9 +475,6 @@ function tickWorld() {
       }
 
       let updated = DBInventory[key];
-      if(updated.folder && updated.folder in DBInventory && !(OpenFolders[updated.folder])) {
-        continue; // don't add
-      }
 
       // always reload the picture, for now
       if(true) {
@@ -520,10 +511,23 @@ function tickWorld() {
             break;
         }
       }
-      DisplayInventory.push(updated);
+
+      // add to DisplayInventory
+      var folder = null;
+      if(updated.folder && updated.folder in DBInventory) {
+        folder = updated.folder;
+      }
+      if(folder in DisplayInventory) {
+        DisplayInventory[folder].push(key);
+      } else {
+        DisplayInventory[folder] = [key];
+      }
     }
+  
     // sort by name or date later
-    DisplayInventory.sort(function(a, b){return a.id - b.id});
+    for(var key in DisplayInventory) {
+      DisplayInventory[key].sort(function(a, b){return a - b});
+    }
 
     updateInventoryUL();
     NeedInventoryUpdate = false;
@@ -761,7 +765,6 @@ function initWorld() {
   chatInput = document.getElementById("chatInput");
   mapCanvas = document.getElementById("map");
 
-  DisplayInventory = []; //["grass", "stonewall"];
   viewInit();
 
   panel = document.getElementById("panel");
@@ -857,17 +860,6 @@ function viewOptions() {
   options.style.display = Hidden?'block':'none';
 }
 
-function clearInventory() {
-  DisplayInventory = [];
-  drawSelector();
-}
-
-function addInventory(item) {
-  DisplayInventory.push(item);
-  drawSelector();
-  updateInventoryUL();
-}
-
 function updateInventoryUL() {
   // Manage the inventory <ul>
   var ul = document.getElementById('inventoryul');
@@ -878,32 +870,44 @@ function updateInventoryUL() {
   while(ul.firstChild) {
     ul.removeChild(ul.firstChild);
   }
-  // Add each item
-  for(let i = 0; i < DisplayInventory.length; i++) {
-    let item_raw = DisplayInventory[i];
-    let item = AtomFromName(item_raw);
-    let li = document.createElement("li");
 
-    // create a little icon for the item
-    var img = document.createElement("img");
-    img.src = "img/transparent.png";
-    img.style.width = "16px";
-    img.style.height = "16px";
-    var src = "";
-    if(IconSheets[item.pic[0]])
-      src = IconSheets[item.pic[0]].src;
-    var background = "url("+src+") -"+(item.pic[1]*16)+"px -"+(item.pic[2]*16)+"px";
-    img.style.background = background;
+  // Recursively make the tree with unordered lists
+  function addFolder(list, key) {
+    for(let i = 0; i < DisplayInventory[key].length; i++) {
+      let id = DisplayInventory[key][i];
 
-    // build the list item
-    li.appendChild(img);
-    li.appendChild(document.createTextNode(" "+item.name));
-    li.onclick = function (){useItem(item_raw);};
-    li.oncontextmenu = function (){editItem(i); return false;};
-    li.classList.add('inventoryli');
-    li.id = "inventory"+i;
-    ul.appendChild(li);
+      let item = DBInventory[id];
+      let li = document.createElement("li");
+
+      // create a little icon for the item
+      var img = document.createElement("img");
+      img.src = "img/transparent.png";
+      img.style.width = "16px";
+      img.style.height = "16px";
+      var src = "";
+      if(IconSheets[item.pic[0]])
+        src = IconSheets[item.pic[0]].src;
+      var background = "url("+src+") -"+(item.pic[1]*16)+"px -"+(item.pic[2]*16)+"px";
+      img.style.background = background;
+
+      // build the list item
+      li.appendChild(img);
+      li.appendChild(document.createTextNode(" "+item.name));
+      li.onclick = function (){useItem(item);};
+      li.oncontextmenu = function (){editItem(id); return false;};
+      li.classList.add('inventoryli');
+      li.id = "inventory"+i;
+      list.appendChild(li);
+
+      if(id in DisplayInventory && OpenFolders[id]) {
+        let inner = document.createElement("ul");
+        addFolder(inner, id);
+        list.appendChild(inner);
+      }
+    }
   }
+  addFolder(ul, null);
+
   // Add the "new item" item
   let newitem = document.createElement("li");
   newitem.appendChild(document.createTextNode("+"));
@@ -951,8 +955,8 @@ function viewBuild() {
 
       if(evt.button == 0)
         useItem({type: 3, data: PredefinedArrayNames[index]});
-      else if(evt.button == 2)
-        addInventory(PredefinedArrayNames[index]);
+//      else if(evt.button == 2)
+//        addInventory(PredefinedArrayNames[index]);
     }, false);
   }
 }
@@ -1078,7 +1082,7 @@ function editItemDelete() {
 
 function editItemCancel() {
   document.getElementById('editItemWindow').style.display = "none";
-  editItemIndex = null;
+  editItemID = null;
 }
 
 function newItemCreate(type) {
