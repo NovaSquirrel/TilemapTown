@@ -222,9 +222,14 @@ function keyHandler(e) {
   // ignore keys when typing in a textbox
   if(document.activeElement.tagName == "INPUT" || document.activeElement.tagName == "TEXTAREA") {
     if(document.activeElement == chatInput && e.keyCode == 13) {
+      // commands that are local to the client
       if(chatInput.value.toLowerCase() == "/clear") {
         chatArea.innerHTML = "";
-      } 
+      } else if(chatInput.value.toLowerCase() == "/exportmap") {
+        logMessage('<a href="data:,'+encodeURI(exportMap())+'" download="map.txt">Map download (click here)</a>', 'server_message');
+      }
+
+
       // commands are CMD while regular room messages are MSG. /me is a room message.
       else if(chatInput.value.slice(0,1) == "/" && chatInput.value.toLowerCase().slice(0,4) != "/me ") {
         SendCmd("CMD", {text: chatInput.value.slice(1)}); // remove the /
@@ -600,7 +605,7 @@ function selectionDelete() {
       if(x < 0 || x > MapWidth || y < 0 || y > MapHeight)
         continue;
       if(DeleteTurfs)
-        MapTiles[x][y] = "grass";
+        MapTiles[x][y] = MapInfo['default'];
       if(DeleteObjs)
         MapObjs[x][y] = [];        
     }

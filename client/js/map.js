@@ -50,9 +50,13 @@ var DirY = [ 0,  1,  1,  1,  0, -1, -1, -1];
 
 // world map
 var MapTiles  = [];
-var MapWidth  = 60;
+var MapWidth  = 60; // keep synchronized with the one in MapInfo
 var MapHeight = 60;
 var MapObjs   = [];
+
+// MAI command arguments
+var MapInfo   = {name: "?", 'id': -1, 'owner': -1, 'default': 'grass', 'size': [60, 60], 'public': true, 'private': false, 'build_enabled': true, 'full_sandbox': true};
+
 var IconSheets = {}; // tile sheets, indexed by first element in a 'pic'
 var IconSheetsRequested = {};
 var Tilesets = {};   // extra tilesets past just the Predefined list
@@ -168,4 +172,28 @@ function initMap() {
       MapObjs[i][j] = [];
     }
   }
+}
+
+
+// convert the map to a JSON object
+function exportMap() {
+  let turfs = [];
+  let objs = [];
+  let default_turf_json = JSON.stringify(AtomFromName(MapInfo['default']));
+
+  // make a list of all objects
+  for(let x=0; x<MapWidth; x++) {
+    for(let y=0; y<MapHeight; y++) {
+      if(MapTiles[x][y] && MapTiles[x][y] != MapInfo['default']
+         && JSON.stringify(MapTiles[x][y]) != default_turf_json) {
+        turfs.push([x, y, MapTiles[x][y]]);
+      }
+      if(MapObjs[x][y].length) {
+        objs.push([x, y, MapObjs[x][y]]);
+      }
+    }
+  }
+
+  let Map = {'default': MapInfo['default'], 'obj': objs, 'turf': turfs, 'pos': [0, 0, MapWidth-1, MapHeight-1]};
+  return "MAI\n"+JSON.stringify(MapInfo)+"\nMAP\n"+JSON.stringify(Map)+"\n";
 }

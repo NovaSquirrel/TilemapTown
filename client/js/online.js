@@ -110,6 +110,7 @@ function receiveServerMessage(event) {
     case "MAI":
       MapWidth = arg.size[0];
       MapHeight = arg.size[1];
+      MapInfo = arg;
       initMap();
       break;
     case "MAP":

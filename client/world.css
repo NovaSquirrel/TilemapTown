@@ -51,6 +51,10 @@ body {
     color: white;
 }
 
+.chatarea a {
+    color: #88f;
+}
+
 .inventoryli:hover {
 	background-color: silver;
 }
