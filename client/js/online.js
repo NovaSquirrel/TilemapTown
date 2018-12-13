@@ -209,12 +209,14 @@ function receiveServerMessage(event) {
           var img = new Image();
           img.onload = function(){
             NeedMapRedraw = true;
+            updateUsersUL()
           };
           img.src = pic[0];
           PlayerImages[key] = img;
         }
       }
 
+      updateUsersUL()
       break;
 
     case "BAG":

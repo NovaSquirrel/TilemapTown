@@ -939,6 +939,61 @@ function viewInventory() {
   updateInventoryUL();
 }
 
+function updateUsersUL() {
+  // Manage the users <ul>
+  var ul = document.getElementById('usersul');
+  if(!ul)
+    return;
+
+  // Empty out the list
+  while(ul.firstChild) {
+    ul.removeChild(ul.firstChild);
+  }
+
+  for(var key in PlayerWho) {
+    let li = document.createElement("li");
+    let user = PlayerWho[key];
+
+    // create a little icon for the item
+    var img = document.createElement("img");
+    img.src = "img/transparent.png";
+    img.style.width = "16px";
+    img.style.height = "16px";
+    var src = "";
+    // allow custom avatars
+    if(key in PlayerImages && typeof user.pic[0] == "string")
+      src = PlayerImages[key].src;
+    // as well as built-in ones
+    if(IconSheets[user.pic[0]])
+      src = IconSheets[user.pic[0]].src;
+    var background = "url("+src+") -"+(user.pic[1]*16)+"px -"+(user.pic[2]*16)+"px";
+    img.style.background = background;
+
+    // build the list item
+    li.appendChild(img);
+    var line = " "+user.name;
+    if("username" in user && user.username)
+      line += " ("+user.username+")";
+    else
+      line += " ("+key+")";
+    li.appendChild(document.createTextNode(line));
+//    li.onclick = function (){useItem(item);};
+//    li.oncontextmenu = function (){editItem(id); return false;};
+    li.classList.add('inventoryli');
+    li.id = "userlist"+i;
+    ul.appendChild(li);
+  }
+}
+
+function viewUsers() {
+  // check if user list is up or not already
+  var ul = document.getElementById('usersul');
+  if(!ul) {
+    newWindow("Users", '<ul id="usersul" class="unselectable"></ul>', null);
+  }
+  updateUsersUL();
+}
+
 function viewBuild() {
   var canvas = document.getElementById('inventoryCanvas');
   if(!canvas) {
