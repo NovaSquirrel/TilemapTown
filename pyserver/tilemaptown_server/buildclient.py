@@ -254,6 +254,17 @@ class Client(object):
 				item = {'id': row[0], 'name': row[1], 'desc': row[2], 'type': row[3], 'flags': row[4], 'folder': row[5], 'data': row[6]}
 				inventory.append(item)
 			self.send("BAG", {'list': inventory})
+
+			# send the client their mail
+			mail = []
+			for row in c.execute('SELECT id, sender, recipients, subject, contents, flags FROM Mail WHERE uid=?', (self.db_id,)):
+				item = {'id': row[0], 'from': findUsernameByDBId(row[1]),
+				'recipients': [findUsernameByDBId(int(x)) for x in row[2].split(',')],
+				'subject': row[3], 'contents': row[4], 'flags': row[5]}
+				mail.append(item)
+			if len(mail):
+				self.send("EML", {'list': mail})
+
 			return True
 		elif result == False:
 			self.send("ERR", {'text': 'Login fail, bad password for account'})

@@ -89,6 +89,15 @@ display message in log.
 private message, displays in the log
 receive is false for sender, true for recipient
 
+--> EML {"send": {"subject": subject, "contents": contents, "to": [username, ...]}}
+--> EML {"read": id}
+--> EML {"delete": id}
+send mail or manipulate your inbox
+
+<-- EML {"receive": {"id": id, "subject": subject, "contents": contents, "to": [username, ...], "from": username, "flags": flags}}
+<-- EML {"list": [{"id": id, "subject": subject, "contents": contents, "to": [username, ...], "from": username, "flags": flags}]}
+receive mail from someone, or get a list upon logging in
+
 <-- ERR {"text": "[text]"}
 error, maybe include the command that failed?
 

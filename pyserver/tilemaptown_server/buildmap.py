@@ -257,6 +257,8 @@ class Map(object):
 		""" Actually run a command from the client after being processed """
 		global ServerShutdown
 		client.idle_timer = 0
+
+		# todo: use a dictionary instead of if/else chain
 		if command == "MOV":
 			self.broadcast("MOV", {'id': client.id, 'from': arg["from"], 'to': arg["to"]})
 			client.moveTo(arg["to"][0], arg["to"][1])
@@ -862,6 +864,46 @@ class Map(object):
 					client.send("BAG", {'remove': arg['delete']})
 			else:
 				client.send("ERR", {'text': 'Guests don\'t have an inventory currently. Use [tt]/register username password[/tt]'})
+
+		elif command == "EML": #mail
+			if client.db_id != None:
+				c = Database.cursor()
+				if "send" in arg:
+					# todo: definitely needs some limits in place to prevent abuse!
+
+					# get a list of all the people to mail
+					recipient_id = set([findDBIdByUsername(x) for x in arg['send']['to']])
+					recipient_string = ','.join([str(x) for x in recipient_id])
+
+					if any([x == None for x in recipient_id]):
+						client.send("ERR", {'text': 'Couldn\'t find one or more users you wanted to mail'})
+						return
+
+					# let the client know who sent it, since the 'send' argument will get passed along directly
+					arg['send']['from'] = client.username
+
+					# send everyone their mail
+					for id in recipient_id:
+						if id == None:
+							continue
+						c.execute("INSERT INTO Mail (uid, sender, recipients, subject, contents, time, flags) VALUES (?, ?, ?, ?, ?, ?, ?)", (id, client.db_id, recipient_string, arg['send']['subject'], arg['send']['contents'], datetime.datetime.now(), 0))
+
+						# is that person online? tell them!
+						find = findClientByDBId(id)
+						if find:
+							arg['send']['id'] = c.execute('SELECT last_insert_rowid()').fetchone()[0]
+							find.send("EML", {'receive': arg['send']})
+
+					client.send("EML", {'sent': {'subject': arg['send']['subject']}}) #acknowledge
+					client.send("MSG", {'text': 'Sent mail to %d users' % len(recipient_id)})
+
+				elif "read" in arg:
+					c.execute('UPDATE Mail SET flags=1 WHERE uid=? AND id=?', (client.db_id, arg['read']))
+				elif "delete" in arg:
+					c.execute('DELETE FROM Mail WHERE uid=? AND id=?', (client.db_id, arg['delete']))
+
+			else:
+				client.send("ERR", {'text': 'Guests don\'t have mail. Use [tt]/register username password[/tt]'})
 
 		elif command == "MSG":
 			text = arg["text"]

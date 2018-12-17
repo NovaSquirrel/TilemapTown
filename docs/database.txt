@@ -99,3 +99,13 @@ data            - integer - the data, or NULL if not applicable.
                          tileset: JSON array alternating between tile id and compacted tile data
                        reference: asset number it's a reference to
                           folder: ?
+
+---MAIL---
+id              - integer - mail id
+uid             - integer - ID of the user whose account the mail is sitting in
+sender          - integer - ID of the user who sent the mail (sender ID)
+recipients      - text    - comma separated list of all recipients, including the one for this copy of the mail
+flags           - integer - flags (bit 0 = read)
+time            - timestamp - time the mail was sent
+subject         - text    - subject line of the mail
+contents        - text    - mail text

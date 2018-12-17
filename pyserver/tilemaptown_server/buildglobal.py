@@ -85,6 +85,12 @@ def broadcastToAll(text):
 	for u in AllClients:
 		u.send("MSG", {'text': text, 'class': 'broadcast_message'})
 
+def findClientByDBId(id, inside=None):
+	for u in inside or AllClients:
+		if id == u.db_id:
+			return u
+	return None
+
 def findClientByUsername(username, inside=None):
 	username = username.lower()
 	for u in inside or AllClients:

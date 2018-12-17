@@ -102,6 +102,19 @@ folder integer,
 data integer
 )""")
 
+c.execute("""create table if not exists Mail (
+id integer primary key,
+uid integer,
+sender integer,
+recipients text,
+subject text,
+contents text,
+time timestamp,
+flags integer,
+foreign key(uid) references User(uid) on delete cascade,
+foreign key(sender) references User(uid) on delete set null
+)""")
+
 # Make dummy items to prevent some IDs from being used by user assets
 c.execute("SELECT count(*) FROM Asset_Info")
 if c.fetchone()[0] == 0:
