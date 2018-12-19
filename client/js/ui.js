@@ -1027,7 +1027,7 @@ function updateMailUL() {
       +'<tr><td>From</td><td>'+letter.from+'</td></tr>'
       +'<tr><td>To</td><td>'+letter.to.join(",")+'</td></tr>'
       +'</table><hr>'
-      +convertBBCode(letter.contents), null)
+      +convertBBCode(letter.contents), {identifier: "mail"+letter.id})
     };
     li.oncontextmenu = function (){return false;};
 
@@ -1035,6 +1035,13 @@ function updateMailUL() {
     li.id = "maillist"+i;
     ul.appendChild(li);
   }
+}
+
+function previewMail() {
+  let subject = document.getElementById('mailsendsubject').value;
+  let contents = document.getElementById('mailsendtext').value;
+  let to = document.getElementById('mailsendto').value;
+  newWindow("Mail preview: "+convertBBCode(subject), convertBBCode(contents), null);
 }
 
 function sendMail() {
@@ -1048,12 +1055,12 @@ function viewCompose() {
   if(document.getElementById('mailsendsubject'))
     return;
   newWindow("Compose mail", '<table border="0">'
-  +'<tr><td><input type="submit" onclick="sendMail();" value="Send!" /></td></tr>'
+  +'<tr><td><input type="submit" onclick="sendMail();" value="Send!" /></td><td><button onclick="previewMail();">Preview</button></td></tr>'
   +'<tr><td>To</td><td><input type="text" id="mailsendto" /></td></tr>'
   +'<tr><td>Subject</td><td><input type="text" id="mailsendsubject" /></td></tr>'
   +'</table>'
   +'<textarea id="mailsendtext" cols="30" rows="10"></textarea>'
-  , null);
+  , {identifier: "mailcompose"});
 }
 
 function replyMail(id) {
@@ -1111,6 +1118,7 @@ function deleteMail(id) {
   Mail = newMail;
   updateMailUL();
   SendCmd("EML", {"delete": id});
+  closeWindow("mail"+id);
 }
 
 function viewMail() {

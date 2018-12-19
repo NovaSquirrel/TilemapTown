@@ -280,6 +280,8 @@ function receiveServerMessage(event) {
             }
           }
           logMessage("You've got mail! ("+Mail.length+" messages, "+unread+" unread)", 'server_message');
+      } else if(arg['sent']) {
+        closeWindow("mailcompose");
       }
       updateMailUL();
       break;

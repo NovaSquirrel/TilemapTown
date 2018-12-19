@@ -96,7 +96,8 @@ send mail or manipulate your inbox
 
 <-- EML {"receive": {"id": id, "subject": subject, "contents": contents, "to": [username, ...], "from": username, "flags": flags}}
 <-- EML {"list": [{"id": id, "subject": subject, "contents": contents, "to": [username, ...], "from": username, "flags": flags}]}
-receive mail from someone, or get a list upon logging in
+<-- EML {"sent": {"subject", subject}}
+receive mail from someone, or get a list upon logging in. "sent" acknowledges mail was successfully sent
 
 <-- ERR {"text": "[text]"}
 error, maybe include the command that failed?

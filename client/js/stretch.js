@@ -81,6 +81,9 @@ windowBodyList = [];
 windowHandleList = [];
 windowActive = [];
 windowLayer = [];
+windowIdentifier = [];
+windowIdentifierDictionary = {};
+
 function putWindowOnTop(count) {
 	// update window titles to show the active one
 	for(var i = 0; i < windowCounter; i++) {
@@ -106,12 +109,23 @@ function putWindowOnTop(count) {
 }
 
 function closeWindow(count) {
+	if(typeof count == "string") {
+		count = windowIdentifierDictionary[count];
+		if(count == undefined)
+			return;
+	}
+
 	windowBodyList[count].innerHTML = '';
 	windowHandleList[count].innerHTML = '';
 	windowBodyList[count].style.display = 'none';
 	windowHandleList[count].style.display = 'none';
 
 	windowActive[count] = false;
+	// erase identifier dictionary entry
+	if(windowIdentifier[count]) {
+		delete windowIdentifierDictionary[windowIdentifier[count]];
+		windowIdentifier[count] = null;
+	}
 }
 
 function newWindow(title, contents, options) {
@@ -142,6 +156,8 @@ function newWindow(title, contents, options) {
 
 	div.addEventListener("keydown",
     function(e){
+        if(document.activeElement.tagName == "INPUT" || document.activeElement.tagName == "TEXTAREA")
+          return;
         switch(e.keyCode){
             case 37: case 39: case 38:  case 40: // Arrow keys
             case 32: e.preventDefault(); break; // Space
@@ -162,7 +178,13 @@ false);
 		windowHandleList.push(handle);
 		windowLayer.push(windowCounter);
 		windowActive.push(true);
+		windowIdentifier.push(null);
 	}
+	if(options && "identifier" in options) {
+		windowIdentifier[index] = options.identifier;
+		windowIdentifierDictionary[options.identifier] = index;
+	}
+
 	handle.style.width = div.offsetWidth + "px";
 	handle.setAttribute('class', 'draghandle');
 	handle.innerHTML = title + '<button style="float:right;" onclick="closeWindow('+index+')">&times;</button>';
