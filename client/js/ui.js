@@ -61,6 +61,15 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
+function convertBBCodeMultiline(t) {
+  var result = XBBCODE.process({
+    text: t,
+    removeMisalignedTags: false,
+    addInLineBreaks: true
+  });
+  return result.html;
+}
+
 function convertBBCode(t) {
   var result = XBBCODE.process({
     text: t,
@@ -1027,7 +1036,7 @@ function updateMailUL() {
       +'<tr><td>From</td><td>'+letter.from+'</td></tr>'
       +'<tr><td>To</td><td>'+letter.to.join(",")+'</td></tr>'
       +'</table><hr>'
-      +convertBBCode(letter.contents), {identifier: "mail"+letter.id})
+      +convertBBCodeMultiline(letter.contents), {identifier: "mail"+letter.id})
     };
     li.oncontextmenu = function (){return false;};
 
@@ -1041,7 +1050,7 @@ function previewMail() {
   let subject = document.getElementById('mailsendsubject').value;
   let contents = document.getElementById('mailsendtext').value;
   let to = document.getElementById('mailsendto').value;
-  newWindow("Mail preview: "+convertBBCode(subject), convertBBCode(contents), null);
+  newWindow("Mail preview: "+convertBBCode(subject), convertBBCodeMultiline(contents), null);
 }
 
 function sendMail() {
