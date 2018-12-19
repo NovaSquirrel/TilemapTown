@@ -259,7 +259,7 @@ class Client(object):
 			mail = []
 			for row in c.execute('SELECT id, sender, recipients, subject, contents, flags FROM Mail WHERE uid=?', (self.db_id,)):
 				item = {'id': row[0], 'from': findUsernameByDBId(row[1]),
-				'recipients': [findUsernameByDBId(int(x)) for x in row[2].split(',')],
+				'to': [findUsernameByDBId(int(x)) for x in row[2].split(',')],
 				'subject': row[3], 'contents': row[4], 'flags': row[5]}
 				mail.append(item)
 			if len(mail):

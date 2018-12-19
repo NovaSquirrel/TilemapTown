@@ -25,13 +25,14 @@
 <!-- menu bar -->
 <div style="width: 100%; height: 32px;" class="topnav unselectable">
   <a id="navlogin"     href="#">Login</a>
-  <a id="navinventory" href="#" onclick="viewInventory();">Inventory</a>
+  <a id="navinventory" href="#" onclick="viewInventory();" title="Inventory">Inventory</a> <!--💼-->
   <a id="navbuild"     href="#" onclick="viewBuild();">Build</a>
   <a id="navoptions"   href="#" onclick="viewOptions();">Options</a>
-  <a id="navmap"       href="#">Map</a>
+  <a id="navmap"       href="#" >Map</a>
   <a id="navusers"     href="#" onclick="viewUsers();">Users</a>
-  <a id="navhelp"      href="help.html" target="_blank">Help</a>
-  <a id="navcustomize" href="#" onclick="viewCustomize();"><div style="width:16px; height:16px; background: url(img/potluck.png) -32px -400px;"></div></a>
+  <a id="navmail"      href="#" onclick="viewMail();" title="Mail">📧</a>
+  <a id="navcustomize" href="#" onclick="viewCustomize();" title="Customize"><div style="width:16px; height:16px; background: url(img/potluck.png) -32px -400px;"></div></a>
+  <a id="navhelp"      href="help.html" target="_blank" title="Help">❓Help</a>
 </div>
 
 <div id="loginWindow" class="modal">

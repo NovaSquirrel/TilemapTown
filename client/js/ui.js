@@ -19,6 +19,7 @@
 var PlayerWho = {me: {name: "Player", pic: [0, 2, 25], x: 5, y: 5}};
 var PlayerYou = "me";
 var PlayerImages = {}; // dictionary of Image objects
+var Mail = [];
 
 // camera settings
 var ViewWidth;
@@ -479,7 +480,7 @@ function tickWorld() {
   var TargetCameraY = (PlayerWho[PlayerYou].y-Math.floor(ViewHeight/2))<<8;
 
   if(NeedInventoryUpdate) {
-    DisplayInventory = {};
+    DisplayInventory = {null: []};
 
     for(var key in DBInventory) {
       if(DBInventory[key].type == 3 || DBInventory[key].type == 4) { // object or tileset
@@ -992,6 +993,133 @@ function viewUsers() {
     newWindow("Users", '<ul id="usersul" class="unselectable"></ul>', null);
   }
   updateUsersUL();
+}
+
+function updateMailUL() {
+  // Manage the users <ul>
+  var ul = document.getElementById('mailul');
+  if(!ul)
+    return;
+
+  // Empty out the list
+  while(ul.firstChild) {
+    ul.removeChild(ul.firstChild);
+  }
+
+  for(let i=0; i<Mail.length; i++) {
+    let li = document.createElement("li");
+    let letter = Mail[i];
+
+    li.appendChild(document.createTextNode("\"" + letter.subject + "\" from " + letter.from));
+    if(!(letter.flags & 1)) {
+      li.appendChild(document.createTextNode(" (NEW)"));
+    }
+
+    li.onclick = function (){
+      SendCmd("EML", {read: letter.id});
+      Mail[i].flags |= 1; // mark as read locally
+      updateMailUL(); // show it as read locally
+      newWindow("Mail: "+convertBBCode(letter.subject),
+      '<button onclick="replyMail('+letter.id+')">Reply</button>'
+      +'<button onclick="replyAllMail('+letter.id+')">Reply all</button>'
+      +'<button onclick="deleteMail('+letter.id+')">Delete</button><br>'
+      +'<table border="0">'
+      +'<tr><td>From</td><td>'+letter.from+'</td></tr>'
+      +'<tr><td>To</td><td>'+letter.to.join(",")+'</td></tr>'
+      +'</table><hr>'
+      +convertBBCode(letter.contents), null)
+    };
+    li.oncontextmenu = function (){return false;};
+
+    li.classList.add('inventoryli');
+    li.id = "maillist"+i;
+    ul.appendChild(li);
+  }
+}
+
+function sendMail() {
+  let subject = document.getElementById('mailsendsubject').value;
+  let contents = document.getElementById('mailsendtext').value;
+  let to = document.getElementById('mailsendto').value.split(',');
+  SendCmd("EML", {send: {"subject": subject, "contents": contents, "to": to}});
+}
+
+function viewCompose() {
+  if(document.getElementById('mailsendsubject'))
+    return;
+  newWindow("Compose mail", '<table border="0">'
+  +'<tr><td><input type="submit" onclick="sendMail();" value="Send!" /></td></tr>'
+  +'<tr><td>To</td><td><input type="text" id="mailsendto" /></td></tr>'
+  +'<tr><td>Subject</td><td><input type="text" id="mailsendsubject" /></td></tr>'
+  +'</table>'
+  +'<textarea id="mailsendtext" cols="30" rows="10"></textarea>'
+  , null);
+}
+
+function replyMail(id) {
+  // find mail by ID
+  let index = -1;
+  for(let i=0; i<Mail.length; i++) {
+    if(Mail[i].id == id) {
+      index = i;
+      break;
+    }
+  }
+  if(index == -1)
+    return;
+
+  viewCompose();
+  document.getElementById('mailsendsubject').value = "RE: "+Mail[index].subject;
+  document.getElementById('mailsendtext').value = "";
+  document.getElementById('mailsendto').value = Mail[index]["from"];
+}
+
+function replyAllMail(id) {
+  // find mail by ID
+  let index = -1;
+  for(let i=0; i<Mail.length; i++) {
+    if(Mail[i].id == id) {
+      index = i;
+      break;
+    }
+  }
+  if(index == -1)
+    return;
+
+  viewCompose();
+  document.getElementById('mailsendsubject').value = "RE: "+Mail[index].subject;
+  document.getElementById('mailsendtext').value = "";
+
+  // add everyone to the list except yourself
+  let to_list = [Mail[index]["from"]];
+  for(let i=0; i<Mail[index]["to"].length; i++) {
+    if(Mail[index]["to"][i] != PlayerWho[PlayerYou].username)
+      to_list.push(Mail[index]["to"][i]);
+  }
+  document.getElementById('mailsendto').value = to_list.join(",");
+}
+
+function deleteMail(id) {
+  if(!confirm("Really delete?"))
+    return;
+
+  let newMail = [];
+  for(let i=0; i<Mail.length; i++) {
+    if(Mail[i].id != id)
+      newMail.push(Mail[i]);
+  }
+  Mail = newMail;
+  updateMailUL();
+  SendCmd("EML", {"delete": id});
+}
+
+function viewMail() {
+  // check if user list is up or not already
+  var ul = document.getElementById('mailul');
+  if(!ul) {
+    newWindow("Mail", '<button onclick="viewCompose();">Compose</button><br/><ul id="mailul" class="unselectable"></ul>', null);
+  }
+  updateMailUL();
 }
 
 function viewBuild() {

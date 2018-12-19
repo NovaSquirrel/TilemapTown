@@ -267,6 +267,23 @@ function receiveServerMessage(event) {
       delete TilesetsRequested[arg.id];
       break;
 
+    case "EML":
+      if(arg['receive']) {
+          logMessage("You've got mail! (from "+arg.receive['from']+")", 'server_message');
+          Mail.push(arg['receive']);
+      } else if(arg['list']) {
+          Mail = arg['list'];
+          let unread = 0;
+          for(let i=0; i<Mail.length; i++) {
+            if(!(Mail[i].flags & 1)) {
+              unread++;
+            }
+          }
+          logMessage("You've got mail! ("+Mail.length+" messages, "+unread+" unread)", 'server_message');
+      }
+      updateMailUL();
+      break;
+
     case "PIN":
       SendCmd("PIN", null);
       break;
