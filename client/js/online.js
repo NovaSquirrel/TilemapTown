@@ -25,7 +25,7 @@ var OnlinePort = 443;
 var OnlineUsername = "";
 var OnlinePassword = "";
 var OnlineIsConnected = false;
-var ShowProtocol = false;
+var ShowProtocol = true;
 
 function readURLParams() {
   var query = window.location.search.substring(1);

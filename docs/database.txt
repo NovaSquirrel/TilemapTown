@@ -32,8 +32,8 @@ Permissions:
 0x0002 build
 0x0004 full sandbox (anyone can delete anything)
 0x0008 map admin
-0x0010
-0x0020
+0x0010 bulk build (can use the BLK command)
+0x0020 map bot (can operate on map remotely)
 0x0040
 0x0080
 

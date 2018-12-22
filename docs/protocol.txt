@@ -21,6 +21,8 @@ can be triggered by clicking too
 
 === Map contents ===
 --> PUT {"pos": [x,y], "atom": {atom}}
+<-- PUT {"pos": [x,y], "atom": {atom}, "username": username, "remote_map": map} (for listeners)
+<-- MAP {updated map}
 place a tile on the map
 can use string instead of atom definition if it's predefined
 
@@ -36,11 +38,12 @@ map info stuff.
 Optionally also defines "entry_whitelist", "entry_banlist" and "start_pos" for map admins
 
 --> DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true}
+<-- DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true, "username":username, "remote_map": map} (for listeners)
 <-- MAP {updated map}
 delete a section of map
 
 --> BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...]}
-<-- BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...]}
+<-- BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...], "username": username}
 bulk building command. width and height may be omitted.
 applies a series of rectangles to the map.
 
@@ -79,8 +82,8 @@ message
 --> CMD {"text": "[text]"}
 command
 
-<-- MSG {"text": "[text"], "name": speaker, "class": classname}
-<-- MSG {"text": "[text"], "name": speaker, "class": classname, "buttons": ["name 1", "command 1", "name 2", "command 2"]}
+<-- MSG {"text": "[text]", "name": speaker, "class": classname, "username": username}
+<-- MSG {"text": "[text]", "name": speaker, "class": classname, "buttons": ["name 1", "command 1", "name 2", "command 2"]}
 display message in log.
 "class" is a CSS class to style the image with.
 "buttons" provides a list of choices to present that will execute commands.

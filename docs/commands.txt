@@ -170,10 +170,12 @@ The map's default can be changed by using !default for the username.
 Additionally, for deny and revoke, !guest may be used to apply additional restrictions to guests.
 
 Permissions available:
-entry   : Allowed to teleport to the map
-build   : Allowed to build
-sandbox : Allowed to edit or delete other peoples' objects freely
-admin   : Allowed to use admin commands
+entry     : Allowed to teleport to the map
+build     : Allowed to build
+sandbox   : Allowed to edit or delete other peoples' objects freely
+admin     : Allowed to use admin commands
+map_bot   : Allowed to use /listen
+bulk_build: Allowed to use builk-build protocol commands (BLK)
 
 /permlist
 List the map's default permissions and the permissions for each user
@@ -194,4 +196,21 @@ Allow the user to download the map
 /time
 Display current date and time
 
+---Bot commands---
+/listen category,category,... map_id,map_id,...
+/unlisten category,category,... map_id,map_id,...
+Start or stop listening in on a comma separated list of categories and maps. The client's account must be registered and have the map_bot permission granted for the map being listened in on.
 
+Protocol messages relayed will have a "remote_map" parameter added to them, with the map ID.
+
+Categories available (and protocol messages that get relayed):
+move:  MOV, TAP
+build: PUT, DEL, BLK
+entry: WHO
+chat:  MSG
+
+"build" sends an initial MAI and MAP to the listener 
+"entry" sends an initial WHO to the listener
+
+/listeners
+List all remote clients currently listening in on the map

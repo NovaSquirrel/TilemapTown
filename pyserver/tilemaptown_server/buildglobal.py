@@ -58,6 +58,14 @@ ServerShutdown = [-1]
 AllClients = set()
 AllMaps = set()
 
+# Remote map-watching for bots
+botwatch_type = {}
+botwatch_type['move']  = 0
+botwatch_type['build'] = 1
+botwatch_type['entry'] = 2
+botwatch_type['chat']  = 3
+BotWatch = [{}, {}, {}, {}]
+
 # Map permissions
 permission = {}
 permission['entry'] = 1         # user can visit the map
@@ -118,8 +126,6 @@ def findDBIdByUsername(username):
 def filterUsername(text):
 	return ''.join([i for i in text if (i.isalnum() or i == '_')]).lower()
 
-from .buildmap import Map
-
 def getMapById(mapId):
 	for m in AllMaps:
 		if m.id == mapId:
@@ -129,3 +135,5 @@ def getMapById(mapId):
 	m.load(mapId)
 	AllMaps.add(m)
 	return m
+
+from .buildmap import Map

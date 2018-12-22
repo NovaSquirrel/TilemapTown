@@ -55,6 +55,9 @@ class Client(object):
 		# valid types are "tpa", "tpahere", "carry"
 		self.tp_history = []
 
+		# allow cleaning up BotWatch info
+		self.listening_maps = set() # tuples of (category, map)
+
 		# riding information
 		self.vehicle = None     # user being ridden
 		self.passengers = set() # users being carried
@@ -139,7 +142,7 @@ class Client(object):
 		self.y = y
 		for u in self.passengers:
 			u.moveTo(x, y)
-			u.map.broadcast("MOV", {'id': u.id, 'to': [u.x, u.y]})
+			u.map.broadcast("MOV", {'id': u.id, 'to': [u.x, u.y]}, remote_category=botwatch_type['move'])
 
 	def who(self):
 		""" A dictionary of information for the WHO command """
@@ -196,7 +199,7 @@ class Client(object):
 			if self.map:
 				# Remove the user for everyone on the map
 				self.map.users.remove(self)
-				self.map.broadcast("WHO", {'remove': self.id})
+				self.map.broadcast("WHO", {'remove': self.id}, remote_category=botwatch_type['entry'])
 
 			# Get the new map and send it to the client
 			self.map_id = map_id
@@ -208,15 +211,19 @@ class Client(object):
 			self.send("WHO", {'list': self.map.who(), 'you': self.id})
 
 			# Tell everyone on the new map the user arrived
-			self.map.broadcast("WHO", {'add': self.who()})
+			self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['entry'])
+
+			# Warn about chat listeners, if present
+			if map_id in BotWatch[botwatch_type['chat']]:
+				self.send("MSG", {'text': 'A bot has access to messages sent here ([command]listeners[/command])'})
 
 		# Move player's X and Y coordinates if needed
 		if new_pos != None:
 			self.moveTo(new_pos[0], new_pos[1])
-			self.map.broadcast("MOV", {'id': self.id, 'to': [self.x, self.y]})
+			self.map.broadcast("MOV", {'id': self.id, 'to': [self.x, self.y]}, remote_category=botwatch_type['move'])
 		elif goto_spawn:
 			self.moveTo(self.map.start_pos[0], self.map.start_pos[1])
-			self.map.broadcast("MOV", {'id': self.id, 'to': [self.x, self.y]})
+			self.map.broadcast("MOV", {'id': self.id, 'to': [self.x, self.y]}, remote_category=botwatch_type['move'])
 
 		# Move any passengers too
 		for u in self.passengers:
@@ -237,6 +244,8 @@ class Client(object):
 			u.dismount()
 		if self.vehicle:
 			self.dismount()
+		for p in self.listening_maps:
+			BotWatch[p[0]][p[1]].remove(self)
 
 	def login(self, username, password):
 		""" Attempt to log the client into an account """
@@ -245,7 +254,7 @@ class Client(object):
 		if result == True:
 			self.switch_map(self.map_id, goto_spawn=False)
 			self.map.broadcast("MSG", {'text': self.name+" has logged in ("+self.username+")"})
-			self.map.broadcast("WHO", {'add': self.who()}) # update client view
+			self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['entry']) # update client view
 
 			# send the client their inventory
 			c = Database.cursor()

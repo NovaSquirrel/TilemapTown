@@ -237,10 +237,18 @@ class Map(object):
 			out['start_pos'] = self.start_pos
 		return out
 
-	def broadcast(self, commandType, commandParams):
+	def broadcast(self, commandType, commandParams, remote_category=None, remote_only=False):
 		""" Send a message to everyone on the map """
-		for client in self.users:
-			client.send(commandType, commandParams)
+		if not remote_only:
+			for client in self.users:
+				client.send(commandType, commandParams)
+
+		""" Also send it to any registered listeners """
+		if remote_category != None and self.id in BotWatch[remote_category]:
+			commandParams['remote_map'] = self.id
+			for client in BotWatch[remote_category][self.id]:
+				if (client.map_id != self.id) or remote_only: # don't send twice to people on the map
+					client.send(commandType, commandParams)
 
 	def who(self):
 		""" WHO message data """
@@ -260,7 +268,7 @@ class Map(object):
 
 		# todo: use a dictionary instead of if/else chain
 		if command == "MOV":
-			self.broadcast("MOV", {'id': client.id, 'from': arg["from"], 'to': arg["to"]})
+			self.broadcast("MOV", {'id': client.id, 'from': arg["from"], 'to': arg["to"]}, remote_category=botwatch_type['move'])
 			client.moveTo(arg["to"][0], arg["to"][1])
 		elif command == "CMD":
 			# separate into command and arguments
@@ -276,7 +284,7 @@ class Map(object):
 				if len(arg2) > 0 and not arg2.isspace():
 					self.broadcast("MSG", {'text': "\""+client.name+"\" is now known as \""+escapeTags(arg2)+"\""})
 					client.name = escapeTags(arg2)
-					self.broadcast("WHO", {'add': client.who()}) # update client view
+					self.broadcast("WHO", {'add': client.who()}, remote_category=botwatch_type['entry']) # update client view
 			elif command2 == "client_settings":
 				self.client_settings = arg2
 			elif command2 == "tell" or command2 == "msg" or command2 == "p":
@@ -642,6 +650,77 @@ class Map(object):
 					self.start_pos = [client.x, client.y]
 					client.send("MSG", {'text': 'Map start changed to %d,%d' % (client.x, client.y)})
 
+			elif command2 == "listeners":
+				out = ''
+				for i in botwatch_type.keys():
+					c = botwatch_type[i]
+					if self.id in BotWatch[c]:
+						for u in BotWatch[c][self.id]:
+							out += '%s (%s), ' % (u.username, i)
+				client.send("MSG", {'text': 'Listeners here: ' + out})
+
+			elif command2 == "listen":
+				if client.db_id == None:
+					return
+				params = arg2.split()
+				categories = set(params[0].split(','))
+				maps = set([int(x) for x in params[1].split(',')])
+				for c in categories:
+					# find category number from name
+					if c not in botwatch_type:
+						client.send("ERR", {'text': 'Invalid listen category: %s' % c})
+						return
+					category = botwatch_type[c]
+
+					for m in maps:
+						cursor = Database.cursor()
+						cursor.execute('SELECT allow FROM Map_Permission WHERE mid=? AND uid=?', (m, client.db_id,))
+						result = cursor.fetchone()
+						if (result == None) or (result[0] & permission['map_bot'] == 0):
+							client.send("ERR", {'text': 'Don\'t have permission to listen on map: %d' % m})
+							return
+						if m not in BotWatch[category]:
+							BotWatch[category][m] = set()
+						BotWatch[category][m].add(client)
+						client.listening_maps.add((category, m))
+
+						# Send initial data
+						if c == 'build':
+							map = getMapById(m)
+							data = map.map_info()
+							data['remote_map'] = m
+							client.send("MAI", data)
+
+							data = map.map_section(0, 0, map.width-1, map.height-1)
+							data['remote_map'] = m
+							client.send("MAP", data)
+						elif c == 'entry':
+							client.send("WHO", {'list': getMapById(m).who(), 'remote_map': m})
+
+				client.send("MSG", {'text': 'Listening on maps now: ' + str(client.listening_maps)})
+
+			elif command2 == "unlisten":
+				if client.db_id == None:
+					return
+				params = arg2.split()
+				categories = set(params[0].split(','))
+				maps = [int(x) for x in params[1].split(',')]
+				for c in categories:
+					# find category number from name
+					if c not in botwatch_type:
+						client.send("ERR", {'text': 'Invalid listen category: "%s"' % c})
+						return
+					category = botwatch_type[c]
+
+					for m in maps:
+						if (m in BotWatch[category]) and (client in BotWatch[category][m]):
+							BotWatch[category][m].remove(client)
+							if not len(BotWatch[category][m]):
+								del BotWatch[category][m]
+						if (category, m) in client.listening_maps:
+							client.listening_maps.remove((category, m))
+				client.send("MSG", {'text': 'Stopped listening on maps: ' + str(client.listening_maps)})
+
 			elif command2 == "kick" or command2 == "kickban":
 				arg2 = arg2.lower()
 				if client.mustBeOwner(True):
@@ -907,7 +986,7 @@ class Map(object):
 
 		elif command == "MSG":
 			text = arg["text"]
-			self.broadcast("MSG", {'name': client.name, 'text': escapeTags(text)})
+			self.broadcast("MSG", {'name': client.name, 'username': client.usernameOrId(), 'text': escapeTags(text)}, remote_category=botwatch_type['chat'])
 
 		elif command == "TSD":
 			c = Database.cursor()
@@ -942,6 +1021,10 @@ class Map(object):
 						if arg["obj"]:
 							self.objs[x][y] = None;
 				self.broadcast("MAP", self.map_section(x1, y1, x2, y2))
+
+				# make username available to listeners
+				arg['username'] = client.usernameOrId()
+				self.broadcast("DEL", arg, remote_only=True, remote_category=botwatch_type['build'])
 			else:
 				client.send("MAP", self.map_section(x1, y1, x2, y2))
 				client.send("ERR", {'text': 'Building is disabled on this map'})
@@ -964,6 +1047,10 @@ class Map(object):
 					if tile_test[0]:
 						self.turfs[x][y] = arg["atom"]
 						self.broadcast("MAP", self.map_section(x, y, x, y))
+
+						# make username available to listeners
+						arg['username'] = client.usernameOrId()
+						self.broadcast("PUT", arg, remote_only=True, remote_category=botwatch_type['build'])
 					else:
 						client.send("MAP", self.map_section(x, y, x, y))
 						client.send("ERR", {'text': 'Tile [tt]%s[/tt] rejected (%s)' % (arg["atom"], tile_test[1])})
@@ -982,6 +1069,8 @@ class Map(object):
 					if any(not x[0] for x in tile_test): # any tiles don't pass the test
 						client.send("ERR", {'text': 'Bad obj in bulk build'})
 						return
+				# make username available to other clients
+				arg['username'] = client.usernameOrId()
 
 				# place the tiles
 				for turf in arg["turf"]:
@@ -1009,7 +1098,7 @@ class Map(object):
 					for w in range(0, width):
 						for h in range(0, height):
 							self.objs[x+w][y+h] = a
-				self.broadcast("BLK", arg)
+				self.broadcast("BLK", arg, remote_category=botwatch_type['build'])
 			else:
 				client.send("ERR", {'text': 'Bulk building is disabled on this map'})
 
