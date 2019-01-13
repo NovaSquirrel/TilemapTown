@@ -108,7 +108,8 @@ async def clientHandler(websocket, path):
 			if client.map_id == -1:
 				continue
 			# Send the command through to the map
-			client.map.receive_command(client, command, arg)
+			if command not in ["IDN", "PIN"]:
+				client.map.receive_command(client, command, arg)
 
 	except websockets.ConnectionClosed:
 		print("disconnected")
