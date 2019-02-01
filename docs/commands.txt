@@ -88,6 +88,9 @@ Teleports to your "home"
 /carry user
 Offer to carry a user
 
+/followme user
+Offer to let a user follow behind you
+
 /hopon user
 Accept a user's carry request
 
