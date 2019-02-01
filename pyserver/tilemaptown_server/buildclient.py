@@ -61,6 +61,7 @@ class Client(object):
 		# riding information
 		self.vehicle = None     # user being ridden
 		self.passengers = set() # users being carried
+		self.is_following = False # if true, follow behind instead of being carried
 
 		# account stuff
 		self.username = None
@@ -138,10 +139,17 @@ class Client(object):
 		return False
 
 	def moveTo(self, x, y):
+		# keep the old position, for following
+		oldx = self.x
+		oldy = self.y
+		# set new position
 		self.x = x
 		self.y = y
 		for u in self.passengers:
-			u.moveTo(x, y)
+			if u.is_following:
+				u.moveTo(oldx, oldy)
+			else:
+				u.moveTo(x, y)
 			u.map.broadcast("MOV", {'id': u.id, 'to': [u.x, u.y]}, remote_category=botwatch_type['move'])
 
 	def who(self):

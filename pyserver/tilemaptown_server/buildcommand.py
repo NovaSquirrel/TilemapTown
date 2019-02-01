@@ -79,6 +79,21 @@ def fn_carry(self, client, arg):
 		u.requests[my_username] = [600, 'carry']
 handlers['carry'] = fn_carry
 
+def fn_followme(self, client, arg):
+	u = findClientByUsername(arg)
+	if u == None:
+		client.failedToFind(arg)
+		return
+	my_username = client.usernameOrId()
+	if my_username in u.requests:
+		client.send("ERR", {'text': 'You\'ve already sent them a request'})
+		u.requests[my_username][0] = 600 #renew
+	elif not client.inBanList(u.ignore_list, 'message %s' % u.name):
+		client.send("MSG", {'text': 'You requested to have '+arg+' follow you'})
+		u.send("MSG", {'text': client.nameAndUsername()+' wants you to follow them', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
+		u.requests[my_username] = [600, 'followme']
+handlers['followme'] = fn_followme
+
 def fn_hopoff(self, client, arg):
 	client.dismount()
 handlers['hopoff'] = fn_hopoff
@@ -164,6 +179,10 @@ def fn_tpaccept(self, client, arg):
 			client.switch_map(u.map_id, new_pos=[u.x, u.y])
 		elif request[1] == 'carry':
 			client.ride(u)
+			client.is_following = False
+		elif request[1] == 'followme':
+			client.ride(u)
+			client.is_following = True
 		del client.requests[arg]
 handlers['tpaccept'] = fn_tpaccept
 aliases['hopon'] = 'tpaccept'
