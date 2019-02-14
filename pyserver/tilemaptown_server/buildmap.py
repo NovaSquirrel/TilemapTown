@@ -22,27 +22,6 @@ from .buildprotocol import handle_protocol_command
 DirX = [ 1,  1,  0, -1, -1, -1,  0,  1]
 DirY = [ 0,  1,  1,  1,  0, -1, -1, -1]
 
-def tileIsOkay(tile):
-	# convert to a dictionary to check first if necessary
-	if type(tile) == str and len(tile) and tile[0] == '{':
-		tile = json.loads(tile)
-
-	# Strings refer to tiles in tilesets and are
-	# definitely OK as long as they're not excessively long.
-	if type(tile) == str:
-		if len(tile) <= 32:
-			return (True, None)
-		else:
-			return (False, 'Identifier too long')
-	# If it's not a string it must be a dictionary
-	if type(tile) != dict:
-		return (False, 'Invalid type')
-
-	if "pic" not in tile or len(tile["pic"]) != 3:
-		return (False, 'No/invalid picture')
-
-	return (True, None)
-
 class Map(object):
 	def __init__(self,width=100,height=100):
 		# map stuff
