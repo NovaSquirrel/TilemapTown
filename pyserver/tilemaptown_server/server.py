@@ -74,10 +74,21 @@ def mainTimer():
 # Websocket connection handler
 async def clientHandler(websocket, path):
 	client = Client(websocket)
+	client.ip = websocket.remote_address[0]
 
+	# If the local and remote addresses are the same, it's trusted
+	# and the server should look for the forwarded IP address
+	if websocket.local_address[0] == websocket.remote_address[0]:
+		if 'X-Real-IP' in websocket.request_headers:
+			client.ip = websocket.request_headers['X-Real-IP']
+		else:
+			client.ip = ''
+
+	if client.testServerBanned():
+		return
+
+	print("connected: %s %s" % (path, client.ip))
 	AllClients.add(client)
-
-	print("connected "+path)
 
 	try:
 		while True:
@@ -112,7 +123,7 @@ async def clientHandler(websocket, path):
 				client.map.receive_command(client, command, arg)
 
 	except websockets.ConnectionClosed:
-		print("disconnected")
+		print("disconnected: %s (%s, \"%s\")" % (client.ip, client.username or "?", client.name))
 	except:
 		print("Unexpected error:", sys.exc_info()[0])
 #		raise

@@ -589,6 +589,88 @@ def fn_kickban(self, client, arg):
 	fn_kick_and_ban(self, client, arg, True)
 handlers['kickban'] = fn_kickban
 
+
+
+def fn_ipwho(self, client, arg):
+	if client.mustBeServerAdmin():
+		names = ''
+		for u in AllClients:
+			if len(names) > 0:
+				names += ', '
+			names += "%s [%s]" % (u.nameAndUsername(), u.ip or "?")
+		client.send("MSG", {'text': 'List of users connected: '+names})
+handlers['ipwho'] = fn_ipwho
+
+def fn_ipban(self, client, arg):
+	if client.mustBeServerAdmin():
+		params = arg.split(';')
+		if len(params) == 2: # Default to no expiration
+			params.append('')
+		if len(params) != 3 or len(params[0]) == 0:
+			client.send("ERR", {'text': 'Format is ip;reason;length'})
+			return
+		# Parse the parameters
+		ip = params[0]
+		if ip == '*.*.*.*': # oh no you don't
+			return
+		reason = params[1]
+		now = datetime.datetime.now()
+		expiry = params[2]
+		expiry_value = expiry[:-1]
+		expiry_unit = expiry[-1:]
+
+		if expiry == '':
+			expiry = None
+		elif not expiry_value.isnumeric():
+			client.send("ERR", {'text': 'Invalid time value "%s"' % expiry_value})
+			return
+		elif expiry_unit == 'm':
+			expiry = now + datetime.timedelta(minutes=int(expiry_value))
+		elif expiry_unit == 'h':
+			expiry = now + datetime.timedelta(hours=int(expiry_value))
+		elif expiry_unit == 'd':
+			expiry = now + datetime.timedelta(days=int(expiry_value))
+		elif expiry_unit == 'w':
+			expiry = now + datetime.timedelta(weeks=int(expiry_value))
+		elif expiry_unit == 'y':
+			expiry = now + datetime.timedelta(weeks=52*int(expiry_value))
+		else:
+			client.send("ERR", {'text': 'Invalid time unit "%s"' % expiry_unit})
+			return
+
+		# If IPv4, split into four parts for masking
+		ipsplit = ip.split('.')
+		if len(ipsplit) != 4:
+			ipsplit = (None, None, None, None)
+
+		# Insert the ban
+		c = Database.cursor()
+		c.execute("INSERT INTO Server_Ban (ip, ip1, ip2, ip3, ip4, admin, time, expiry, reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",\
+			(ip, ipsplit[0], ipsplit[1], ipsplit[2], ipsplit[3], client.db_id, now, expiry, reason))
+		client.send("MSG", {'text': 'Banned %s for "%s"; unban at %s' % (ip, reason, expiry or "never")})
+
+handlers['ipban'] = fn_ipban
+
+def fn_ipunban(self, client, arg):
+	if client.mustBeServerAdmin():
+		c = Database.cursor()
+		c.execute('DELETE FROM Server_Ban WHERE ip=?', (arg,))
+		c.execute('SELECT changes()')
+		client.send("MSG", {'text': 'Bans removed: %d' % c.fetchone()[0]})
+
+handlers['ipunban'] = fn_ipunban
+
+def fn_ipbanlist(self, client, arg):
+	if client.mustBeServerAdmin():
+		c = Database.cursor()
+		results = "IP bans: [ul]"
+		for row in c.execute('SELECT b.ip, b.reason, b.time, b.expiry, a.username FROM Server_Ban b, USER a WHERE a.uid = b.admin'):
+			results += "[li][b]%s[/b] banned by [tt]%s[/tt] for \"%s\" at [tt]%s[/tt] until [tt]%s[/tt] [command]ipunban %s[/command][/li]" % (row[0], row[4], row[1], row[2], row[3] or 'never', row[0])
+		results += "[/ul]"
+		client.send("MSG", {'text': results})
+handlers['ipbanlist'] = fn_ipbanlist
+
+
 def fn_goback(self, client, arg):
 	if len(client.tp_history) > 0:
 		pos = client.tp_history.pop()
@@ -739,8 +821,7 @@ def fn_kill(self, client, arg):
 		u = findClientByUsername(arg)
 		if u != None:
 			client.send("MSG", {'text': 'Killed '+u.nameAndUsername()})
-			u.send("MSG", {'text': 'Killed by '+client.nameAndUsername()})
-			u.disconnect()
+			u.disconnect('Killed by '+client.nameAndUsername())
 handlers['kill'] = fn_kill
 
 def fn_shutdown(self, client, arg):

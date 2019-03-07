@@ -109,3 +109,16 @@ flags           - integer - flags (bit 0 = read)
 time            - timestamp - time the mail was sent
 subject         - text    - subject line of the mail
 contents        - text    - mail text
+
+---SERVER_BAN---
+id              - integer - ban ID
+ip              - text    - IP that was banned
+ip1             - text    - first part of IP address
+ip2             - text    - second part of IP address
+ip3             - text    - third part of IP address
+ip4             - text    - fourth part of IP address
+account         - id      - account that was also banned (unused)
+admin           - id      - id of the admin doing the banning
+time            - timestamp - time the ban was applied
+expiry          - timestamp - when ban expires
+reason          - text    - ban reason

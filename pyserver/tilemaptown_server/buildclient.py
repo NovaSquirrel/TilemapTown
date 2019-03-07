@@ -40,6 +40,7 @@ class Client(object):
 		self.db_id = None        # database key
 		self.ping_timer = 180
 		self.idle_timer = 0
+		self.ip = None           # for IP ban purposes
 		userCounter += 1
 
 		# other user info
@@ -72,6 +73,33 @@ class Client(object):
 		if self.ws == None:
 			return
 		asyncio.ensure_future(self.ws.send(makeCommand(commandType, commandParams)))
+
+	def testServerBanned(self):
+		""" Test for and take action on IP bans """
+		# Look for IP bans
+		if self.ip != '':
+			c = Database.cursor()
+			split = self.ip.split('.')
+			if len(split) == 4:
+				c.execute("""SELECT id, expiry, reason FROM Server_Ban WHERE
+                          (ip1=? or ip1='*') and
+                          (ip2=? or ip2='*') and
+                          (ip3=? or ip3='*') and
+                          (ip4=? or ip4='*')""", (split[0], split[1], split[2], split[3]))
+			else:
+				c.execute('SELECT id, expiry, reason FROM Server_Ban WHERE ip=?', (self.ip,))
+
+			# If there is a result, check to see if it's expired or not
+			result = c.fetchone()
+			if result != None:
+				if result[1] != None and datetime.datetime.now() > result[1]:
+					print("ban expired")
+					c.execute('DELETE FROM Server_Ban WHERE id=?', (result[0],))
+				else:
+					print("stopped banned user %s" % self.ip)
+					self.disconnect('Banned from the server until %s (%s)' % (str(result[1]), result[2]))
+					return True
+		return False
 
 	def permissionByName(self, perm):
 		perm = perm.lower()
@@ -156,7 +184,10 @@ class Client(object):
 		""" A dictionary of information for the WHO command """
 		return {'name': self.name, 'pic': self.pic, 'x': self.x, 'y': self.y, 'id': self.id, 'username': self.username}
 
-	def disconnect(self):
+	def disconnect(self, text=None):
+		if text != None:
+			# Does not actually seem to go through, might need some refactoring
+			self.send("ERR", {'text': text})
 		asyncio.ensure_future(self.ws.close())
 
 	def usernameOrId(self):
@@ -260,6 +291,8 @@ class Client(object):
 		username = filterUsername(username)
 		result = self.load(username, password)
 		if result == True:
+			print("login: \"%s\" from %s" % (self.username, self.ip))
+
 			self.switch_map(self.map_id, goto_spawn=False)
 			self.map.broadcast("MSG", {'text': self.name+" has logged in ("+self.username+")"})
 			self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['entry']) # update client view

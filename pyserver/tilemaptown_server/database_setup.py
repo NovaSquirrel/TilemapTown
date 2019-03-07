@@ -115,6 +115,22 @@ foreign key(uid) references User(uid) on delete cascade,
 foreign key(sender) references User(uid) on delete set null
 )""")
 
+c.execute("""create table if not exists Server_Ban (
+id integer primary key,
+ip text,
+ip1 text,
+ip2 text,
+ip3 text,
+ip4 text,
+account integer,
+admin integer,
+time timestamp,
+expiry timestamp,
+reason text,
+foreign key(account) references User(uid) on delete cascade,
+foreign key(admin) references User(uid) on delete set null
+)""")
+
 # Make dummy items to prevent some IDs from being used by user assets
 c.execute("SELECT count(*) FROM Asset_Info")
 if c.fetchone()[0] == 0:
