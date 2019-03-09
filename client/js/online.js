@@ -223,6 +223,9 @@ function receiveServerMessage(event) {
       if(arg.list) {
         for(let item of arg.list) {
           DBInventory[item.id] = item;
+          // Preload all image assets in the initial inventory
+          if(item.type == InventoryTypes.IMAGE) // image
+            RequestImageIfNeeded(item.id);
         }
       }
       if(arg.update) {
@@ -234,6 +237,11 @@ function receiveServerMessage(event) {
         } else {
         // Create a new item
           DBInventory[arg.update.id] = arg.update;
+        }
+
+        // Load the image when an image asset is modified
+        if(DBInventory[arg.update.id].type == InventoryTypes.IMAGE) {
+          SendCmd("IMG", {"id": arg.update.id}); // Unconditionally request the image
         }
       }
       if(arg['remove']) {

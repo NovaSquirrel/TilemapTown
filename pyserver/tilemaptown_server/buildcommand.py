@@ -21,12 +21,6 @@ from .buildglobal import *
 def escapeTags(text):
 	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
-def imageURLIsOkay(url):
-	for w in Config["Images"]["URLWhitelist"]:
-		if url.startswith(w):
-			return True
-	return False
-
 # -------------------------------------
 
 handlers = {}	# dictionary of functions to call for each command

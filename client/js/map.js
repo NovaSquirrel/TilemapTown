@@ -44,6 +44,16 @@ var Directions = {
   NORTHEAST : 7,
 }
 
+var InventoryTypes = {
+  DUMMY     : 0,
+  TEXT      : 1,
+  IMAGE     : 2,
+  OBJECT    : 3,
+  TILESET   : 4,
+  REFERENCE : 5,
+  FOLDER    : 6
+}
+
 // for converting direction IDs to actual offsets
 var DirX = [ 1,  1,  0, -1, -1, -1,  0,  1];
 var DirY = [ 0,  1,  1,  1,  0, -1, -1, -1];

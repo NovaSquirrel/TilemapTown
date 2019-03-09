@@ -136,4 +136,10 @@ def getMapById(mapId):
 	AllMaps.add(m)
 	return m
 
+def imageURLIsOkay(url):
+	for w in Config["Images"]["URLWhitelist"]:
+		if url.startswith(w):
+			return True
+	return False
+
 from .buildmap import Map

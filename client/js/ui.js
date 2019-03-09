@@ -137,6 +137,7 @@ function editItem(key) {
 
   document.getElementById('edittileobject').style.display = "none";
   document.getElementById('edittiletext').style.display = "none";
+  document.getElementById('edittileimage').style.display = "none";
   document.getElementById('edittilename').value = item.name;
   document.getElementById('edittiledesc').value = item.desc;
   switch(item.type) {
@@ -147,11 +148,40 @@ function editItem(key) {
       else
         document.getElementById('edittiletextarea').value = "";
       break;
+    case 2: // image
+      document.getElementById('edittileimage').style.display = "block";
+      document.getElementById('edittileurl').value = item.data;
+      break;
     case 3: // object
       itemobj = AtomFromName(item.data);
       if(itemobj == null) {
         itemobj = {pic: [0, 8, 24]};
       }
+
+      // Display all the available images assets in the user's inventory
+      var sheetselect = document.getElementById("edittilesheet"); 
+      while(sheetselect.firstChild) {
+        sheetselect.removeChild(sheetselect.firstChild);
+      }
+      el = document.createElement("option");
+      el.textContent = "Potluck";
+      el.value = 0;
+      sheetselect.appendChild(el);
+      el = document.createElement("option");
+      el.textContent = "Extras";
+      el.value = 1;
+      sheetselect.appendChild(el);
+      // Now display everything in the inventory
+      for(var i in DBInventory) {
+        if(DBInventory[i].type == InventoryTypes.IMAGE) {
+          el = document.createElement("option");
+          el.textContent = DBInventory[i].name;
+          el.value = DBInventory[i].id;
+          sheetselect.appendChild(el);
+        }
+      }
+      // Probably also allow just typing in something?
+
       document.getElementById('edittileobject').style.display = "block";
       document.getElementById('edittilesheet').value = itemobj.pic[0];
       document.getElementById('edittilex').value = itemobj.pic[1];
@@ -189,6 +219,10 @@ function editItem(key) {
   document.getElementById('editItemWindow').style.display = "block";
 }
 
+function viewTileset(Item) {
+  newWindow("Tileset: "+Item.name, '<canvas class="unselectable" id="tilesetCanvas'+Item.id+'" width="256" height="16" oncontextmenu="return false;" imageSmoothingEnabled="false"></canvas><br><button>Add tile</button>', {width: 256, height: 300});
+}
+
 function useItem(Placed) {
   var PlayerX = PlayerWho[PlayerYou].x;
   var PlayerY = PlayerWho[PlayerYou].y;
@@ -197,6 +231,10 @@ function useItem(Placed) {
     case 6: // folder
       OpenFolders[Placed.id] = !OpenFolders[Placed.id];
       NeedInventoryUpdate = true;
+      break;
+    case 4: // tileset
+      viewTileset(Placed);
+      console.log("Open tileset thing");
       break;
     case 3: // object
       var ActualAtom = AtomFromName(Placed.data);
@@ -1238,6 +1276,17 @@ function editItemApply() {
                 }
       });
 
+      break;
+
+    case 2: // image
+      SendCmd("BAG", {
+        update: {"id": editItemID,
+                 "name": edittilename,
+                 "desc": edittiledesc,
+                 "folder": edittilefolder,
+                 "data": document.getElementById('edittileurl').value
+                }
+      });
       break;
 
     case 3: // object

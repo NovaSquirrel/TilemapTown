@@ -85,7 +85,7 @@ def fn_BAG(self, client, arg):
 			out = {'name': result[0], 'desc': result[1], 'flags': result[2], 'folder': result[3], 'data': result[4]}
 			asset_type = result[5]
 			if asset_type == 2 and "data" in arg['update'] and not imageURLIsOkay(arg['update']['data']):
-				client.send("ERR", {'text', 'Image asset URL doesn\'t match any whitelisted sites'})
+				client.send("ERR", {'text': 'Image asset URL doesn\'t match any whitelisted sites'})
 				return
 			if asset_type == 3 and "data" in arg['update']:
 				tile_test = tileIsOkay(arg['update']['data'])
