@@ -217,3 +217,28 @@ chat:  MSG
 
 /listeners
 List all remote clients currently listening in on the map
+
+---Admin commands---
+/ipwho
+List the IPs of all users currently online
+
+/ipban ip;reason;length
+Add an IP ban.
+
+Length can be blank for bans without an expiration,
+or can consist of a number immediately followed by a unit,
+such as 1d or 30m:
+m=minutes
+h=hour
+d=day
+w=week
+y=year
+
+/ipunban ip
+Remove all bans applying to a given IP
+
+/ipbanlist
+List all IP bans
+
+/broadcast text
+Broadcast text to the whole server
