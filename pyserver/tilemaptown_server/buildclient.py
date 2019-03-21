@@ -43,6 +43,9 @@ class Client(object):
 		self.ip = None           # for IP ban purposes
 		userCounter += 1
 
+		self.map_allow = 0       # Cache map allows and map denys to avoid excessive SQL queries
+		self.map_deny = 0
+
 		# other user info
 		self.ignore_list = set()
 		self.watch_list = set()
@@ -100,6 +103,26 @@ class Client(object):
 					self.disconnect('Banned from the server until %s (%s)' % (str(result[1]), result[2]))
 					return True
 		return False
+
+	def updateMapPermissions(self):
+		""" Update map_allow and map_deny for the current map """
+		self.map_allow = 0
+		self.map_deny = 0
+
+		# If a guest, don't bother looking up any queries
+		if self.db_id == None:
+			return
+		c = Database.cursor()
+		c.execute('SELECT allow, deny FROM Map_Permission WHERE mid=? AND uid=?', (self.map_id, self.db_id,))
+		result = c.fetchone()
+		if result != None:
+			self.map_allow = result[0]
+			self.map_deny = result[1]
+
+		# Turn on all permissions
+		for row in c.execute('SELECT p.allow FROM Group_Map_Permission p, Group_Member m\
+			WHERE m.uid=? AND p.gid=m.gid AND p.mid=?', (self.db_id, self.map_id)):
+			self.map_allow |= row[0]
 
 	def permissionByName(self, perm):
 		perm = perm.lower()
@@ -243,6 +266,7 @@ class Client(object):
 			# Get the new map and send it to the client
 			self.map_id = map_id
 			self.map = new_map
+			self.updateMapPermissions()
 
 			self.send("MAI", self.map.map_info())
 			self.send("MAP", self.map.map_section(0, 0, self.map.width-1, self.map.height-1))

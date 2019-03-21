@@ -353,6 +353,11 @@ def fn_permission_change(self, client, arg, command2):
 		self.set_permission(uid, permission_value, value)
 		self.broadcast("MSG", {'text': "%s sets %s's \"%s\" permission to [b]%s[/b]" % (client.nameAndUsername(), param[1], param[0], command2)})
 
+		# Refresh permissions of users on the map so changes take effect immediately
+		# (probably only need to do it for the affected user, if they're even present)
+		for u in self.users:
+			u.updateMapPermissions()
+
 def fn_grant(self, client, arg):
 	fn_permission_change(self, client, arg, 'grant')
 handlers['grant'] = fn_grant

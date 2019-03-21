@@ -66,7 +66,7 @@ lid integer,
 time timestamp,
 action text,
 info text,
-primary key(mid, uid)
+primary key(lid)
 )""")
 
 c.execute("""create table if not exists User (
@@ -130,6 +130,46 @@ reason text,
 foreign key(account) references User(uid) on delete cascade,
 foreign key(admin) references User(uid) on delete set null
 )""")
+
+# Group related tables
+c.execute("""create table if not exists User_Group (
+gid integer primary key,
+name text,
+desc text,
+regtime timestamp,
+owner integer,
+joinpass text,
+flags integer,
+foreign key(owner) references User(uid) on delete set null
+)""")
+
+c.execute("""create table if not exists Group_Map_Permission (
+gid integer,
+mid integer,
+allow integer,
+primary key(mid, gid),
+foreign key(gid) references User_Group(gid) on delete cascade,
+foreign key(mid) references Map(mid) on delete cascade
+)""")
+
+c.execute("""create table if not exists Group_Member (
+gid integer,
+uid integer,
+flags integer,
+primary key(gid, uid),
+foreign key(gid) references User_Group(mid) on delete cascade,
+foreign key(uid) references User(uid) on delete cascade
+)""")
+
+c.execute("""create table if not exists Group_Invite (
+gid integer,
+uid integer,
+primary key(gid, uid),
+foreign key(gid) references User_Group(mid) on delete cascade,
+foreign key(uid) references User(uid) on delete cascade
+)""")
+
+
 
 # Make dummy items to prevent some IDs from being used by user assets
 c.execute("SELECT count(*) FROM Asset_Info")

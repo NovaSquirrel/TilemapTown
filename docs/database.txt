@@ -45,7 +45,12 @@ allow           - integer - flags that grant permissions
 deny            - integer - flags that deny permissions
 
 ---MAP_LOG---
+lid             * integer - log item ID
 time            - timestamp - action time
+mid             - integer - map ID
+uid             - integer - user ID
+action          - text    - action taken
+info            - text    - additional information?
 
 ---USER---
 uid             * integer - user ID
@@ -74,7 +79,7 @@ tags            - text    - user tags as JSON
 
 ---ASSET_INFO---
 (unimplemented)
-aid             - integer - asset ID
+aid             * integer - asset ID
 name            - text    - name of asset
 desc            - text    - description
 type            - integer - type of asset
@@ -101,7 +106,7 @@ data            - integer - the data, or NULL if not applicable.
                           folder: ?
 
 ---MAIL---
-id              - integer - mail id
+id              * integer - mail id
 uid             - integer - ID of the user whose account the mail is sitting in
 sender          - integer - ID of the user who sent the mail (sender ID)
 recipients      - text    - comma separated list of all recipients, including the one for this copy of the mail
@@ -111,7 +116,7 @@ subject         - text    - subject line of the mail
 contents        - text    - mail text
 
 ---SERVER_BAN---
-id              - integer - ban ID
+id              * integer - ban ID
 ip              - text    - IP that was banned
 ip1             - text    - first part of IP address
 ip2             - text    - second part of IP address
@@ -122,3 +127,32 @@ admin           - id      - id of the admin doing the banning
 time            - timestamp - time the ban was applied
 expiry          - timestamp - when ban expires
 reason          - text    - ban reason
+
+
+
+
+---GROUP_MAP_PERMISSION---
+mid             * integer - map ID
+gid             * integer - group ID
+allow           - integer - flags that grant permissions
+
+---GROUP_INVITE---
+gid             * integer - group ID
+uid             * integer - user ID
+
+---GROUP_MEMBER---
+gid             * integer - group ID
+uid             * integer - user ID
+flags           - integer - bitfield of group permissions
+                            1:  can invite members
+                            2:  can remove members
+---USER_GROUP---
+gid             * integer - group ID
+name            - text    - group name
+desc            - text    - group description
+regtime         - timestamp - date of group founding
+owner           - integer - user ID
+joinpass        - text    - password to join the group, if there is one
+flags           - integer - group flags
+                            1: this group is public
+                            2: anyone can view a list of group's members

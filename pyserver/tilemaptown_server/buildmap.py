@@ -98,7 +98,9 @@ class Map(object):
 			c.execute("INSERT INTO Map_Permission (mid, uid, allow, deny) VALUES (?, ?, ?, ?)", (self.id, uid, allow, deny,))
 
 	def has_permission(self, user, perm, default):
+		# Start with the server default
 		has = default
+		# and let the map override that default
 		if self.allow & perm:
 			has = True
 		if self.deny & perm:
@@ -110,18 +112,37 @@ class Map(object):
 				has = False
 			return has
 
-		# Search Map_Permission table
-		c = Database.cursor()
-		c.execute('SELECT allow, deny FROM Map_Permission WHERE mid=? AND uid=?', (self.id, user.db_id,))
-		result = c.fetchone()
-		if result == None:
-			return has
-		# Override the defaults
-		if result[0] & perm:
-			has = True
-		if result[1] & perm:
-			has = False
+		# If user is on the map, use the cached value
+		if user.map_id == self.id:
+			if user.map_deny & perm:
+				return False
+			if user.map_allow & perm:
+				return True
+		else:
+			# Search Map_Permission table
+			c = Database.cursor()
+			c.execute('SELECT allow, deny FROM Map_Permission WHERE mid=? AND uid=?', (self.id, user.db_id,))
+			result = c.fetchone()
+			# If they have a per-user override, use that
+			if result != None:
+				# Override the defaults
+				if result[1] & perm:
+					return False
+				if result[0] & perm:
+					return True
 
+		# Is there any group the user is a member of, where the map has granted the permission?
+		c = Database.cursor()
+		c.execute('SELECT EXISTS(SELECT p.allow FROM Group_Map_Permission p, Group_Member m WHERE\
+			m.uid=? AND\
+			p.gid=m.gid AND\
+			p.mid=? AND\
+			(p.allow & ?)\
+			!=0)', (user.db_id, self.id, perm))
+		if c.fetchone()[0]:
+			return True
+
+		# Search for groups
 		return has
 
 	def set_tag(self, name, value):
