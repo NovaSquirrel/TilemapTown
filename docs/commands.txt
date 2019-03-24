@@ -170,7 +170,10 @@ Modify the map permissions for a particular user.
 A permission can be set to allow (with grant), disallow (with deny), or default (with revoke).
 If a permission for the user is the default, the map's setting for that permission is used instead.
 The map's default can be changed by using !default for the username.
-Additionally, for deny and revoke, !guest may be used to apply additional restrictions to guests.
+
+For deny and revoke only, !guest may be used to apply additional restrictions to guests.
+For grant and revoke only, group:groupid may be used to apply additional privileges to members of a given group.
+(groupid is the numeric ID of the group)
 
 Permissions available:
 entry     : Allowed to teleport to the map
@@ -217,6 +220,45 @@ chat:  MSG
 
 /listeners
 List all remote clients currently listening in on the map
+
+
+---Group commands---
+/newgroup
+Create a new group
+
+/namegroup id text
+/descgroup id text
+Change the name or description of a group
+
+/changegroupowner id username
+Transfer the group to a new owner
+
+/joinpassgroup id text
+Change the join password of a group, or remove the join password by leaving it blank and make it purely invite-only
+
+/deletegroup id
+Delete a group you own
+
+/invitetogroup id username
+Invite someone to a group
+(unimplemented)
+
+/joingroup id
+/joingroup id password
+Join a group
+
+/leavegroup id
+Leave a group you're in
+
+/kickgroup id username
+Remove someone from a group you're in
+
+/ownedgroups
+Display a list of the groups you own
+
+/mygroups
+List of the groups you're part of
+
 
 ---Admin commands---
 /ipwho

@@ -21,6 +21,37 @@ from .buildglobal import *
 def escapeTags(text):
 	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
+def findGroupName(groupid):
+	c = Database.cursor()
+	c.execute('SELECT name FROM User_Group WHERE gid=?', (groupid,))
+	result = c.fetchone()
+	if result == None:
+		return None
+	return result[0]
+
+def sqlExists(query, data):
+	c = Database.cursor()
+	c.execute('SELECT EXISTS(%s)' % query, data)
+	result = c.fetchone()
+	return bool(result[0])
+
+def isGroupOwner(groupid, client):
+	""" Note that groupid is a string here """
+	if not groupid.isnumeric() or not client.username:
+		return False
+	return sqlExists('SELECT owner FROM User_Group WHERE gid=? AND owner=?', (int(groupid), client.db_id))
+
+def separateFirstWord(text, lowercaseFirst=True):
+	space = text.find(" ")
+	command = text
+	arg = ""
+	if space >= 0:
+		command = text[0:space]
+		arg = text[space+1:]
+	if lowercaseFirst:
+		command = command.lower()
+	return (command, arg)
+
 # -------------------------------------
 
 handlers = {}	# dictionary of functions to call for each command
@@ -38,11 +69,9 @@ def fn_client_settings(self, client, arg):
 handlers['client_settings'] = fn_client_settings
 
 def fn_tell(self, client, arg):
-	space2 = arg.find(" ")
-	if space2 >= 0:
-		username = arg[0:space2].lower()
-		privtext = arg[space2+1:]
-		if privtext.isspace():
+	if arg != "":
+		username, privtext = separateFirstWord(arg)
+		if privtext.isspace() or privtext=="":
 			client.send("ERR", {'text': 'Tell them what?'})
 		else:
 			u = findClientByUsername(username)
@@ -330,6 +359,19 @@ def fn_permission_change(self, client, arg, command2):
 			self.broadcast("MSG", {'text': "%s sets the default \"%s\" permission to [b]%s[/b]" % (client.nameAndUsername(), param[0], command2)})
 			return
 
+		# Group permissions
+		if param[1].startswith("group:"):
+			groupid = param[1][6:]
+			if groupid.isnumeric():
+				groupname = findGroupName(int(groupid))
+				if groupname != None:
+					self.set_group_permission(int(groupid), permission_value, True if command2=="grant" else None)
+					self.broadcast("MSG", {'text': "%s sets group \"%s\"(%s) \"%s\" permission to [b]%s[/b]" % (client.nameAndUsername(), groupname, groupid, param[0], command2)})
+					return
+			client.send("ERR", {'text': '"%s" Not a valid group number' % groupid})
+			return
+
+		# Guest permissions
 		if param[1] == '!guest':
 			if command2 == "deny":
 				self.guest_deny |= permission_value
@@ -384,6 +426,7 @@ def fn_permlist(self, client, arg):
 		if (self.guest_deny & v) == v:
 			perms += "-"+k+"(guest) "
 
+	# User permissions
 	perms += "[ul]"
 	for row in c.execute('SELECT username, allow, deny FROM Map_Permission mp, User u WHERE mp.mid=? AND mp.uid=u.uid', (self.id,)):
 		perms += "[li][b]"+row[0] + "[/b]: "
@@ -393,6 +436,15 @@ def fn_permlist(self, client, arg):
 			if (row[2] & v) == v: #deny
 				perms += "-"+k+" "
 		perms += "[/li]"
+
+	# Group permissions
+	for row in c.execute('SELECT mp.allow, u.name, u.gid FROM Group_Map_Permission mp, User_Group u WHERE mp.mid=? AND mp.gid=u.gid', (self.id,)):
+		perms += "[li][b]Group: %s(%s) [/b]: " % (row[2], row[1])
+		for k,v in permission.items():
+			if (row[0] & v) == v: # allow
+				perms += "+"+k+" "
+		perms += "[/li]"
+
 	perms += "[/ul]"
 	client.send("MSG", {'text': perms})
 handlers['permlist'] = fn_permlist
@@ -436,7 +488,7 @@ def fn_mapowner(self, client, arg):
 			self.owner = newowner
 			client.send("MSG", {'text': 'Map owner set to \"%s\"' % self.owner})
 		else:
-			client.send("MSG", {'text': 'Nonexistent account'})
+			client.send("ERR", {'text': 'Nonexistent account'})
 handlers['mapowner'] = fn_mapowner
 
 def fn_mapprivacy(self, client, arg):
@@ -834,16 +886,133 @@ def fn_shutdown(self, client, arg):
 			broadcastToAll("Server shutdown in %d seconds! (started by %s)" % (ServerShutdown[0], client.name))
 handlers['shutdown'] = fn_shutdown
 
+# Group commands
+def fn_newgroup(self, client, arg):
+	if client.db_id:
+		c = Database.cursor()
+		c.execute("INSERT INTO User_Group (regtime, owner, name, desc, joinpass, flags) VALUES (?, ?, ?, ?, ?, ?)", (datetime.datetime.now(), client.db_id, "Unnamed group", "", "", 0))
+		gid = c.execute('SELECT last_insert_rowid()').fetchone()[0]
+		client.send("MSG", {'text': 'Created group %d' % gid})
+handlers['newgroup'] = fn_newgroup
+
+def fn_namegroup(self, client, arg):
+	groupid, name = separateFirstWord(arg)
+	if not groupid.isnumeric() or not client.username or not len(name):
+		return
+	c = Database.cursor()
+	c.execute('UPDATE User_Group SET name=? WHERE gid=? AND owner=?', (name, int(groupid), client.db_id,))
+	client.send("MSG", {'text': 'Renamed group %s' % groupid})
+handlers['namegroup'] = fn_namegroup
+
+def fn_descgroup(self, client, arg):
+	groupid, desc = separateFirstWord(arg)
+	if not groupid.isnumeric() or not client.username or not len(desc):
+		return
+	c = Database.cursor()
+	c.execute('UPDATE User_Group SET desc=? WHERE gid=? AND owner=?', (desc, int(groupid), client.db_id,))
+	client.send("MSG", {'text': 'Described group %s' % groupid})
+handlers['descgroup'] = fn_descgroup
+
+def fn_changegroupowner(self, client, arg):
+	groupid, owner = separateFirstWord(arg)
+	if not groupid.isnumeric() or not client.username or not len(owner):
+		return
+	newowner = findDBIdByUsername(owner)
+	if newowner:
+		c = Database.cursor()
+		c.execute('UPDATE User_Group SET owner=? WHERE gid=? AND owner=?', (newowner, int(groupid), client.db_id,))
+		client.send("MSG", {'text': 'Group owner set to \"%s\"' % owner})
+	else:
+		client.send("ERR", {'text': 'Nonexistent account'})
+handlers['changegroupowner'] = fn_changegroupowner
+
+def fn_joinpassgroup(self, client, arg):
+	groupid, joinpass = separateFirstWord(arg)
+	if not groupid.isnumeric() or not client.username or not len(joinpass):
+		return
+	c = Database.cursor()
+	c.execute('UPDATE User_Group SET joinpass=? WHERE gid=? AND owner=?', (joinpass, int(groupid), client.db_id,))
+	client.send("MSG", {'text': 'Updated join password for group %s to [tt]%s[/tt]' % (groupid, joinpass)})
+handlers['joinpassgroup'] = fn_joinpassgroup
+
+def fn_deletegroup(self, client, arg):
+	if isGroupOwner(arg, client):
+		c = Database.cursor()
+		c.execute('DELETE FROM User_Group WHERE gid=?',           (int(arg),))
+		c.execute('DELETE FROM Group_Member WHERE gid=?',         (int(arg),))
+		c.execute('DELETE FROM Group_Invite WHERE gid=?',         (int(arg),))
+		c.execute('DELETE FROM Group_Map_Permission WHERE gid=?', (int(arg),))
+		client.send("MSG", {'text': 'Deleted group %s' % arg})
+handlers['deletegroup'] = fn_deletegroup
+
+def fn_invitetogroup(self, client, arg):
+	pass
+handlers['invitetogroup'] = fn_invitetogroup
+
+def fn_joingroup(self, client, arg):
+	groupid, password = separateFirstWord(arg)
+	if password != "" and groupid.isnumeric() and client.db_id and sqlExists('SELECT * FROM User_Group WHERE joinpass=?', (password,)):
+		if not sqlExists('SELECT uid from Group_Member WHERE uid=? AND gid=?', (client.db_id, int(groupid))):
+			c = Database.cursor()
+			c.execute("INSERT INTO Group_Member (gid, uid, flags) VALUES (?, ?, ?)", (int(groupid), client.db_id, 0,))
+			client.send("MSG", {'text': 'Joined group %s' % groupid})
+		else:
+			client.send("ERR", {'text': 'Already in group %s' % groupid})
+	else:
+		client.send("ERR", {'text': 'Nonexistent group or wrong password'})
+
+handlers['joingroup'] = fn_joingroup
+
+def fn_leavegroup(self, client, arg):
+	if not arg.isnumeric() or not client.username:
+		return
+	c.execute('DELETE FROM Group_Member WHERE gid=? AND uid=?', (int(arg), client.db_id,))
+	client.send("MSG", {'text': 'Left group %s' % (arg)})
+handlers['leavegroup'] = fn_leavegroup
+
+def fn_kickgroup(self, client, arg):
+	groupid, person = separateFirstWord(arg)
+	if isGroupOwner(groupid, client):
+		if not len(person):
+			return
+		personid = findDBIdByUsername(person)
+		if personid:
+			c = Database.cursor()
+			c.execute('DELETE FROM Group_Member WHERE gid=? AND uid=?', (int(groupid), personid,))
+			client.send("MSG", {'text': 'Kicked \"%s\" from group %s' % (person, groupid)})
+		else:
+			client.send("ERR", {'text': 'Nonexistent account'})
+handlers['kickgroup'] = fn_kickgroup
+
+# Perhaps merge these two somehow?
+def fn_ownedgroups(self, client, arg):
+	if client.db_id == None:
+		return
+	c = Database.cursor()
+	groups = "Groups you are own: [ul]"
+	for row in c.execute('SELECT g.gid, g.name FROM User_Group g WHERE g.owner=?', (client.db_id,)):
+		groups += "[li][b]%s[/b] (%d)[/li]" % (row[1], row[0])
+	groups += "[/ul]"
+	client.send("MSG", {'text': groups})
+handlers['ownedgroups'] = fn_ownedgroups
+
+def fn_mygroups(self, client, arg):
+	if client.db_id == None:
+		return
+	c = Database.cursor()
+	groups = "Groups you are in: [ul]"
+	for row in c.execute('SELECT g.gid, g.name FROM User_Group g, Group_Member m WHERE g.gid=m.gid AND m.uid=?', (client.db_id,)):
+		groups += "[li][b]%s[/b] (%d)[/li]" % (row[1], row[0])
+	groups += "[/ul]"
+	client.send("MSG", {'text': groups})
+handlers['mygroups'] = fn_mygroups
+
+
 # -------------------------------------
 
 def handle_user_command(self, client, text):
 	# Separate text into command and arguments
-	space = text.find(" ")
-	command = text.lower()
-	arg = ""
-	if space >= 0:
-		command = text[0:space].lower()
-		arg = text[space+1:]
+	command, arg = separateFirstWord(text)
 
 	# Attempt to run the command handler if it exists
 	if command in aliases:

@@ -97,6 +97,36 @@ class Map(object):
 		else:
 			c.execute("INSERT INTO Map_Permission (mid, uid, allow, deny) VALUES (?, ?, ?, ?)", (self.id, uid, allow, deny,))
 
+	def set_group_permission(self, gid, perm, value):
+		if gid == None:
+			return
+		# Start blank
+		allow = 0
+
+		# Get current value
+		c = Database.cursor()
+		c.execute('SELECT allow FROM Group_Map_Permission WHERE mid=? AND gid=?', (self.id, gid,))
+		result = c.fetchone()
+		if result != None:
+			allow = result[0]
+
+		# Alter the permissions
+		if value == True:
+			allow |= perm
+		elif value == None:
+			allow &= ~perm
+
+		# Delete if permissions were removed
+		if not allow:
+			c.execute('DELETE FROM Group_Map_Permission WHERE mid=? AND gid=?', (self.id, gid,))
+			return
+
+		# Update or insert depending on needs
+		if result != None:
+			c.execute('UPDATE Group_Map_Permission SET allow=? WHERE mid=? AND gid=?', (allow, self.id, gid,))
+		else:
+			c.execute("INSERT INTO Group_Map_Permission (mid, gid, allow) VALUES (?, ?, ?)", (self.id, gid, allow,))
+
 	def has_permission(self, user, perm, default):
 		# Start with the server default
 		has = default
