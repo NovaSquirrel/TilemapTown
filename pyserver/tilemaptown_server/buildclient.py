@@ -347,7 +347,10 @@ class Client(object):
 		return False
 
 	def changepass(self, password):
-		self.password = hashlib.sha512(password.encode()).hexdigest()
+		# Generate a random salt and append it to the password
+		salt = str(random.random())
+		combined = password+salt
+		self.password = "%s:%s" % (salt, hashlib.sha512(combined.encode()).hexdigest())
 		self.save()
 
 	def register(self, username, password):
@@ -362,18 +365,31 @@ class Client(object):
 
 	def load(self, username, password):
 		""" Load an account from the database """
-		password = hashlib.sha512(password.encode()).hexdigest()
-		self.password = password
-
 		c = Database.cursor()
 		
 		c.execute('SELECT uid, passhash, passalgo, username, name, pic, mid, map_x, map_y, home, watch, ignore, client_settings, tags FROM User WHERE username=?', (username,))
 		result = c.fetchone()
 		if result == None:
 			return None
-		# Refuse to load if incorrect password
-		if result[2] == "sha512" and result[1] != password:
-			return False
+
+		passalgo = result[2] # Algorithm used, allows more options later
+		passhash = result[1] # Hash that may be formatted "hash" or "salt:hash"
+
+		if passalgo == "sha512":
+			# Start with a default for no salt
+			salt = ""
+			comparewith = passhash
+
+			# Is there a salt?
+			split = passhash.split(':')
+			if len(split) == 2:
+				salt = split[0]
+				comparewith = split[1]
+
+			# Verify the password
+			if hashlib.sha512((password+salt).encode()).hexdigest() != comparewith:
+				return False
+			self.password = passhash
 
 		self.db_id = result[0]
 		self.username = result[3]
