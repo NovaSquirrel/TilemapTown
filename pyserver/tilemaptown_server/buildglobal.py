@@ -56,7 +56,7 @@ Database = sqlite3.connect(Config["Database"]["File"], detect_types=sqlite3.PARS
 # Important information shared by each module
 ServerShutdown = [-1]
 AllClients = set()
-AllMaps = set()
+AllMaps = {}
 
 # Remote map-watching for bots
 botwatch_type = {}
@@ -80,9 +80,8 @@ mapflag = {}
 mapflag['public'] = 1
 
 def mapIdExists(id):
-	for m in AllMaps:
-		if m.id == id:
-			return True
+	if id in AllMaps:
+		return True
 	c = Database.cursor()
 	c.execute('SELECT mid FROM Map WHERE mid=?', (id,))
 	result = c.fetchone()
@@ -127,13 +126,12 @@ def filterUsername(text):
 	return ''.join([i for i in text if (i.isalnum() or i == '_')]).lower()
 
 def getMapById(mapId):
-	for m in AllMaps:
-		if m.id == mapId:
-			return m
+	if mapId in AllMaps:
+		return AllMaps[mapId]
 	# Map not found, so load it
 	m = Map()
 	m.load(mapId)
-	AllMaps.add(m)
+	AllMaps[mapId] = m
 	return m
 
 def imageURLIsOkay(url):

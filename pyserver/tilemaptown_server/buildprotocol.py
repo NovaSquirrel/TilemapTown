@@ -215,6 +215,11 @@ def fn_DEL(self, client, arg):
 handlers['DEL'] = fn_DEL
 
 def fn_PUT(self, client, arg):
+	def notify_listeners():
+		# make username available to listeners
+		arg['username'] = client.usernameOrId()
+		self.broadcast("PUT", arg, remote_only=True, remote_category=botwatch_type['build'])
+
 	x = arg["pos"][0]
 	y = arg["pos"][1]
 	if self.has_permission(client, permission['build'], True) or client.mustBeOwner(True, giveError=False):
@@ -224,6 +229,7 @@ def fn_PUT(self, client, arg):
 			if all(x[0] for x in tile_test): # all tiles pass the test
 				self.objs[x][y] = arg["atom"]
 				self.broadcast("MAP", self.map_section(x, y, x, y))
+				notify_listeners()
 			else:
 				# todo: give a reason?
 				client.send("MAP", self.map_section(x, y, x, y))
@@ -233,10 +239,7 @@ def fn_PUT(self, client, arg):
 			if tile_test[0]:
 				self.turfs[x][y] = arg["atom"]
 				self.broadcast("MAP", self.map_section(x, y, x, y))
-
-				# make username available to listeners
-				arg['username'] = client.usernameOrId()
-				self.broadcast("PUT", arg, remote_only=True, remote_category=botwatch_type['build'])
+				notify_listeners()
 			else:
 				client.send("MAP", self.map_section(x, y, x, y))
 				client.send("ERR", {'text': 'Tile [tt]%s[/tt] rejected (%s)' % (arg["atom"], tile_test[1])})

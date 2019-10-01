@@ -48,14 +48,14 @@ def mainTimer():
 
 	# Unload unused maps
 	unloaded = set()
-	for m in AllMaps:
+	for k,m in AllMaps.items():
 		if (m.id not in Config["Server"]["AlwaysLoadedMaps"]) and (len(m.users) < 1):
-			print("Unloading map "+str(m.id))
+			print("Unloading map "+str(k))
 			m.save()
 			m.clean_up()
-			unloaded.add(m)
+			unloaded.add(k)
 	for m in unloaded:
-		AllMaps.remove(m)
+		del AllMaps[m]
 
 	# Run server shutdown timer, if it's running
 	if ServerShutdown[0] > 0:
@@ -64,7 +64,7 @@ def mainTimer():
 			broadcastToAll("Server is going down!")
 			for u in AllClients:
 				u.disconnect()
-			for m in AllMaps:
+			for k,m in AllMaps.items():
 				m.save()
 		elif ServerShutdown[0] == 0:
 			loop.stop()
@@ -120,7 +120,17 @@ async def clientHandler(websocket, path):
 				continue
 			# Send the command through to the map
 			if command not in ["IDN", "PIN"]:
-				client.map.receive_command(client, command, arg)
+				if "remote_map" in arg:
+					if arg["remote_map"] in AllMaps:
+						map = AllMaps[arg["remote_map"]]
+						if map.has_permission(client, permission['map_bot'], False):
+							map.receive_command(client, command, arg)
+						else:
+							client.send("ERR", {'text': 'You do not have [tt]map_bot[/tt] permission on map %d' % arg["remote_map"]})
+					else:
+						client.send("ERR", {'text': 'Map %d is not loaded' % arg["remote_map"]})
+				else:
+					client.map.receive_command(client, command, arg)
 
 	except websockets.ConnectionClosed:
 		print("disconnected: %s (%s, \"%s\")" % (client.ip, client.username or "?", client.name))
