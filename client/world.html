@@ -1,7 +1,7 @@
 <html>
-<!-- resources -->
 <head>
 <title>Tilemap Town</title>
+<!-- Resources -->
 <link rel="stylesheet" type="text/css" href="world.css" />
 <link rel="stylesheet" type="text/css" href="chat.css" />
 <link rel="stylesheet" type="text/css" href="xbbcode.css" />
@@ -11,21 +11,20 @@
 <script src="js/map.js"></script>
 <script src="js/predefined.js"></script>
 <script src="js/online.js"></script>
-</head>
-<body onLoad="initWorld();" ondragstart="return false;" ondrop="return false;">
-
-<div id="wrapper" style="background-color: white; display: flex; flex-direction:column; height: 100%">
-<!-- image resources -->
+<!-- Image resources -->
 <img src="img/potluck.png" style="display: none;" id="potluck">
 <img src="img/extra.png"   style="display: none;" id="extras">
 <img src="img/chicago.png" style="display: none;" id="chicago">
-<div id="playerAvatars">
-</div>
+</head>
+<body onLoad="initWorld();" ondragstart="return false;" ondrop="return false;">
 
-<!-- menu bar -->
+<!-- Wrapper everything is contained inside; takes up the entire screen -->
+<div id="wrapper" style="background-color: white; display: flex; flex-direction:column; height: 100%">
+
+<!-- Menu bar -->
 <div style="width: 100%; height: 32px;" class="topnav unselectable">
   <a id="navlogin"     href="#">Login</a>
-  <a id="navinventory" href="#" onclick="viewInventory();" title="Inventory">Inventory</a> <!--💼-->
+  <a id="navinventory" href="#" onclick="viewInventory();" title="Inventory">Inventory</a>
   <a id="navbuild"     href="#" onclick="viewBuild();">Build</a>
   <a id="navoptions"   href="#" onclick="viewOptions();">Options</a>
   <a id="navmap"       href="#" >Map</a>
@@ -189,9 +188,9 @@
   </div>
 </div>
 
-<!-- interface -->
+<!-- Game interface with the map and chat -->
 <div style="display: flex; flex-direction: row; flex-grow: 1; overflow-y: hidden;">
-  <!-- left side, map and other stuff -->
+  <!-- Left side, map and other stuff -->
   <div>
     <canvas class="unselectable" id="map" width="320" height="320" style="width:320px; height:320px;" imageSmoothingEnabled="false"></canvas><br>
     <canvas class="unselectable" id="selector" width="320" height="16" style="background-color:white;" imageSmoothingEnabled="false"></canvas><br>
@@ -244,7 +243,7 @@
 
    </div>
 
-   <!-- right side, chat -->
+   <!-- Right side, chat -->
    <div style="display: flex; flex-direction: column; flex-grow: 1">
      <div id="chatArea" class="chatarea" style="display: block; padding: 2px; overflow-y: scroll; flex-grow: 1;">
      </div>
