@@ -14,7 +14,7 @@
 </head>
 <body onLoad="initWorld();" ondragstart="return false;" ondrop="return false;">
 
-<div id="wrapper" style="background-color: white; display: flex; flex-direction:column;">
+<div id="wrapper" style="background-color: white; display: flex; flex-direction:column; height: 100%">
 <!-- image resources -->
 <img src="img/potluck.png" style="display: none;" id="potluck">
 <img src="img/extra.png"   style="display: none;" id="extras">
@@ -245,7 +245,7 @@
    </div>
 
    <!-- right side, chat -->
-   <div style="display: flex; flex-direction: column; flex-grow: 1; max-height: calc(100% - 32px);">
+   <div style="display: flex; flex-direction: column; flex-grow: 1">
      <div id="chatArea" class="chatarea" style="display: block; padding: 2px; overflow-y: scroll; flex-grow: 1;">
      </div>
      <div>
