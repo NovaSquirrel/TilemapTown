@@ -409,7 +409,7 @@ Predefined.chickenleg = {
 
 Predefined.pie = {
   name: "pie",
-  pic: [1, 3, 10],
+  pic: [1, 4, 10],
   density: false,
   obj: true,
 };
