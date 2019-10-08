@@ -1,9 +1,14 @@
 Uses tiles from:
-https://opengameart.org/content/tiny-16-basic
+https://opengameart.org/content/tiny-16-basic ("Lanea Zimmerman")
 https://opengameart.org/content/town-tiles
 https://opengameart.org/content/16x16-town-remix
 https://opengameart.org/content/16x16-indoor-rpg-tileset-the-baseline
 https://opengameart.org/content/16x16-overworld-tiles
+https://opengameart.org/content/tiny-16-basic-add-ons
+https://opengameart.org/content/16x16-rpg-items
+https://opengameart.org/content/food-items-16x16
+https://opengameart.org/content/gold-treasure-icons-16x16
+https://henrysoftware.itch.io/pixel-food
 
 Potluck tileset credits:
 https://gist.github.com/eevee/59012b2a3d4dcdb40b5247ecdc2cfb34

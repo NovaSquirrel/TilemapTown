@@ -1180,7 +1180,7 @@ function viewMail() {
 function viewBuild() {
   var canvas = document.getElementById('inventoryCanvas');
   if(!canvas) {
-    newWindow("Build", '<canvas class="unselectable" id="inventoryCanvas" width="320" height="320" oncontextmenu="return false;" imageSmoothingEnabled="false"></canvas>', {width: 256, height: 96});
+    newWindow("Build", '<canvas class="unselectable" id="inventoryCanvas" width="320" height="320" oncontextmenu="return false;" imageSmoothingEnabled="false"></canvas>', {width: 256, height: 16*10});
 
     // add click action
     canvas = document.getElementById('inventoryCanvas');
