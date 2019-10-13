@@ -843,7 +843,7 @@ handlers['who'] = fn_who
 
 def fn_whereare(self, client, arg):
 	names = 'Whereare: [ul]'
-	for m in AllMaps:
+	for k, m in AllMaps.items():
 		if m.flags & mapflag['public'] == 0:
 			continue
 		names += '[li][b]%s[/b] (%d): ' % (m.name, len(m.users))
