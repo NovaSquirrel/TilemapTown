@@ -48,6 +48,10 @@ body {
     color: white;
 }
 
+#map {
+    image-rendering: pixelated;
+}
+
 .chatarea {
     background-color: #333;
     color: white;
