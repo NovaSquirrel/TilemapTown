@@ -258,6 +258,19 @@ function useItem(Placed) {
 
 }
 
+function movePlayer(id, x, y) {
+  for(var index of PlayerWho[id].passengers){
+    if ( PlayerWho[index].is_following ) {
+      movePlayer(index, PlayerWho[id].x, PlayerWho[id].y);
+    } else {
+      movePlayer(index, x, y);
+    }
+  }
+
+  PlayerWho[id].x = x;
+  PlayerWho[id].y = y;
+}
+
 function keyHandler(e) {
  
   function ClampPlayerPos() {
@@ -402,8 +415,8 @@ function keyHandler(e) {
 
     if(OldPlayerX != PlayerX || OldPlayerY != PlayerY)
       SendCmd("MOV", {from: [OldPlayerX, OldPlayerY], to: [PlayerX, PlayerY], dir: PlayerDir});
-    PlayerWho[PlayerYou].x = PlayerX;
-    PlayerWho[PlayerYou].y = PlayerY;
+
+    movePlayer(PlayerYou, PlayerX, PlayerY);
   }
 
   if(needRedraw)
