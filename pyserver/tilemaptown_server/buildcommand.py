@@ -201,11 +201,11 @@ def fn_tpaccept(self, client, arg):
 		elif request[1] == 'tpahere':
 			client.switch_map(u.map_id, new_pos=[u.x, u.y])
 		elif request[1] == 'carry':
-			client.ride(u)
 			client.is_following = False
-		elif request[1] == 'followme':
 			client.ride(u)
+		elif request[1] == 'followme':
 			client.is_following = True
+			client.ride(u)
 		del client.requests[arg]
 handlers['tpaccept'] = fn_tpaccept
 aliases['hopon'] = 'tpaccept'

@@ -258,6 +258,19 @@ function useItem(Placed) {
 
 }
 
+function movePlayer(id, x, y) {
+  for(var index of PlayerWho[id].passengers){
+    if ( PlayerWho[index].is_following ) {
+      movePlayer(index, PlayerWho[id].x, PlayerWho[id].y);
+    } else {
+      movePlayer(index, x, y);
+    }
+  }
+
+  PlayerWho[id].x = x;
+  PlayerWho[id].y = y;
+}
+
 function keyHandler(e) {
  
   function ClampPlayerPos() {
@@ -402,8 +415,8 @@ function keyHandler(e) {
 
     if(OldPlayerX != PlayerX || OldPlayerY != PlayerY)
       SendCmd("MOV", {from: [OldPlayerX, OldPlayerY], to: [PlayerX, PlayerY], dir: PlayerDir});
-    PlayerWho[PlayerYou].x = PlayerX;
-    PlayerWho[PlayerYou].y = PlayerY;
+
+    movePlayer(PlayerYou, PlayerX, PlayerY);
   }
 
   if(needRedraw)
@@ -478,8 +491,20 @@ function drawMap() {
     } else {
       ctx.drawImage(IconSheets[Mob.pic[0]], Mob.pic[1]*16, Mob.pic[2]*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
     }
-    if(IsMousedOver)
-      drawText(ctx, (Mob.x*16)-PixelCameraX-(Mob.name.length * 8 / 2 - 8), (Mob.y*16)-PixelCameraY-16, Mob.name);
+    if(IsMousedOver && !(!Mob.is_following && Mob.vehicle)) {
+      if(Mob.passengers.length > 0) {
+        drawText(ctx, (Mob.x*16)-PixelCameraX-(Mob.name.length * 8 / 2 - 8), (Mob.y*16)-PixelCameraY-24, Mob.name);
+        var carryNames = [];
+        for(var passenger_index of Mob.passengers) {
+          carryNames.push(PlayerWho[passenger_index].username);
+        }
+        var carryText = "carrying: " + carryNames.join(", ");
+
+        drawText(ctx, (Mob.x*16)-PixelCameraX-(carryText.length * 8 / 2 - 8), (Mob.y*16)-PixelCameraY-16, carryText);
+      } else {
+        drawText(ctx, (Mob.x*16)-PixelCameraX-(Mob.name.length * 8 / 2 - 8), (Mob.y*16)-PixelCameraY-16, Mob.name);
+      }
+    }
   }
 
   // Draw a mouse selection if there is one

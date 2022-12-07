@@ -162,8 +162,13 @@ class Client(object):
 
 		self.send("MSG", {'text': 'You get on %s (/hopoff to get off)' % other.nameAndUsername()})
 		other.send("MSG", {'text': 'You carry %s' % self.nameAndUsername()})
+
 		self.vehicle = other
 		other.passengers.add(self)
+
+		self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['move'])
+		other.map.broadcast("WHO", {'add': other.who()}, remote_category=botwatch_type['move'])
+
 		self.switch_map(other.map_id, new_pos=[other.x, other.y])
 
 	def dismount(self):
@@ -172,8 +177,14 @@ class Client(object):
 		else:
 			self.send("MSG", {'text': 'You get off %s' % self.vehicle.nameAndUsername()})
 			self.vehicle.send("MSG", {'text': '%s gets off of you' % self.nameAndUsername()})
+
+			other = self.vehicle
+
 			self.vehicle.passengers.remove(self)
 			self.vehicle = None
+
+			self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['move'])
+			other.map.broadcast("WHO", {'add': other.who()}, remote_category=botwatch_type['move'])
 
 	def mustBeServerAdmin(self, giveError=True):
 		if self.username in Config["Server"]["Admins"]:
@@ -205,7 +216,17 @@ class Client(object):
 
 	def who(self):
 		""" A dictionary of information for the WHO command """
-		return {'name': self.name, 'pic': self.pic, 'x': self.x, 'y': self.y, 'id': self.id, 'username': self.username}
+		return {
+			'name': self.name,
+			'pic': self.pic,
+			'x': self.x,
+			'y': self.y,
+			'id': self.id,
+			'username': self.username,
+			'passengers': [passenger.id for passenger in self.passengers],
+			'vehicle': self.vehicle.id if self.vehicle else None,
+			'is_following': self.is_following
+		}
 
 	def disconnect(self, text=None):
 		if text != None:
