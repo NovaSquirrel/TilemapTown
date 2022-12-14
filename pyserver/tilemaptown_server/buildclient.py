@@ -45,6 +45,7 @@ class Client(object):
 
 		self.map_allow = 0       # Cache map allows and map denys to avoid excessive SQL queries
 		self.map_deny = 0
+		self.oper_override = False
 
 		# other user info
 		self.ignore_list = set()
@@ -194,7 +195,7 @@ class Client(object):
 		return False
 
 	def mustBeOwner(self, adminOkay, giveError=True):
-		if self.map.owner == self.db_id or (adminOkay and self.map.has_permission(self, permission['admin'], False)):
+		if self.map.owner == self.db_id or self.oper_override or (adminOkay and self.map.has_permission(self, permission['admin'], False)):
 			return True
 		elif giveError:
 			self.send("ERR", {'text': 'You don\'t have permission to do that'})

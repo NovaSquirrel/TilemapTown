@@ -862,6 +862,12 @@ def fn_savemap(self, client, arg):
 handlers['savemap'] = fn_savemap
 
 # Server admin commands
+def fn_operoverride(self, client, arg):
+	if client.mustBeServerAdmin():
+		client.oper_override = not client.oper_override
+		client.send("MSG", {'text': "Oper override enabled" if client.oper_override else "Oper override disabled"})
+handlers['operoverride'] = fn_operoverride
+
 def fn_broadcast(self, client, arg):
 	if client.mustBeServerAdmin() and len(arg) > 0:
 		broadcastToAll("Admin broadcast: "+arg)

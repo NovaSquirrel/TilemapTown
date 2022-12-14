@@ -128,6 +128,13 @@ class Map(object):
 			c.execute("INSERT INTO Group_Map_Permission (mid, gid, allow) VALUES (?, ?, ?)", (self.id, gid, allow,))
 
 	def has_permission(self, user, perm, default):
+		# Oper override bypasses permission checks
+		if user.oper_override:
+			return True
+		# As does being the owner of the map
+		if user.db_id != None and self.owner == user.db_id:
+			return True
+
 		# Start with the server default
 		has = default
 		# and let the map override that default

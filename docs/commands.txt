@@ -284,3 +284,6 @@ List all IP bans
 
 /broadcast text
 Broadcast text to the whole server
+
+/operoverride
+Toggles whether or not you can bypass permission checks
