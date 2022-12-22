@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-var PlayerWho = {me: {name: "Player", pic: [0, 2, 25], x: 5, y: 5}};
+var PlayerWho = {me: {name: "Player", pic: [0, 2, 25], x: 5, y: 5, passengers:[]}};
 var PlayerYou = "me";
 var PlayerImages = {}; // dictionary of Image objects
 var Mail = [];
