@@ -62,7 +62,7 @@ customElements.define(
 			}
 
 			var minimize = shadowRoot.querySelector('#minimize');
-			minimize.onmousedown = function(event) {
+			minimize.onmouseup = function(event) {
 				self.style.display = "none";
 			}
     }
