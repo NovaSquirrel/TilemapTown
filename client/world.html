@@ -18,21 +18,87 @@
 </head>
 <body onLoad="initWorld();" ondragstart="return false;" ondrop="return false;">
 
+<template id="widget-window-template">
+  <style>
+    #container {
+        position: absolute;
+        background-color: white;
+
+        left: 100px;
+        top: 100px;
+
+        min-width: 250px;
+
+        border-radius: 4px;
+        border: 1px solid black;
+    }
+
+    #contents {
+        padding: 2px;
+    }
+
+    .draghandle {
+        cursor: move;
+        width: 100%;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+
+        line-height: 24px;
+        height: 24px;
+
+        user-select: none;
+
+        border-radius: 4px 4px 0 0;
+    }
+
+    .widget-minimize {
+        position: absolute;
+        right: 1px;
+        top: 1px;
+
+        border: 1px solid black;
+        border-radius: 4px;
+
+        width: 16px;
+        height: 16px;
+        line-height: 16px;
+
+        cursor: pointer;
+    }
+
+    .widget-minimize:hover {
+        background-color: lightpink;
+    }
+  </style>
+  <div id="container">
+    <div class="draghandle" id="draghandle">
+      <slot name="title"></slot>
+      <div id="minimize" class="widget-minimize">-</div>
+    </div>
+    <div id="contents">
+      <slot name="contents">Empty widget!</slot>
+    </div>
+  </div>
+</template>
+
+
 <!-- Wrapper everything is contained inside; takes up the entire screen -->
-<div id="wrapper" style="background-color: white; display: flex; flex-direction:column; height: 100%">
+<div id="wrapper">
 
 <!-- Menu bar -->
-<div style="width: 100%; height: 32px;" class="topnav unselectable">
-  <a id="navlogin"     href="#">Login</a>
-  <a id="navinventory" href="#" onclick="viewInventory();" title="Inventory">Inventory</a>
-  <a id="navbuild"     href="#" onclick="viewBuild();">Build</a>
-  <a id="navoptions"   href="#" onclick="viewOptions();">Options</a>
-  <a id="navmap"       href="#" >Map</a>
-  <a id="navusers"     href="#" onclick="viewUsers();">Users</a>
-  <a id="navmail"      href="#" onclick="viewMail();" title="Mail">Mail</a>
-  <a id="navcustomize" href="#" onclick="viewCustomize();" title="Customize"><div style="width:16px; height:16px; background: url(img/potluck.png) -32px -400px;"></div></a>
-  <a id="navhelp"      href="help.html" target="_blank" title="Help">Help</a>
-</div>
+<ul class="topnav unselectable">
+  <li><a id="navlogin"     href="#">Login</a></li>
+  <li><a id="navinventory" href="#" onclick="viewInventory();" title="Inventory">Inventory</a></li>
+  <li><a id="navbuild"     href="#" onclick="viewBuild();">Build</a></li>
+  <li><a id="navoptions"   href="#" onclick="viewOptions();">Options</a></li>
+  <li><a id="navmap"       href="#" >Map</a></li>
+  <li><a id="navusers"     href="#" onclick="viewUsers();">Users</a></li>
+  <li><a id="navmail"      href="#" onclick="viewMail();" title="Mail">Mail</a></li>
+  <li><a id="navchatlog" href="#" onclick="viewChatLog();" title="Chat Log">Chat Log</a></li>
+  <li><a id="navcustomize" href="#" onclick="viewCustomize();" title="Customize"><div style="width:16px; height:16px; background: url(img/potluck.png) -32px -400px;"></div></a></li>
+  <li><a id="navhelp"      href="help.html" target="_blank" title="Help">Help</a></li>
+</ul>
 
 <div id="loginWindow" class="modal">
   <div class="modal-content">
@@ -188,72 +254,143 @@
   </div>
 </div>
 
-<!-- Game interface with the map and chat -->
-<div style="display: flex; flex-direction: row; flex-grow: 1; overflow-y: hidden;">
-  <!-- Left side, map and other stuff -->
-  <div>
-    <canvas class="unselectable" id="map" width="320" height="320" style="width:320px; height:320px;" imageSmoothingEnabled="false"></canvas><br>
-    <canvas class="unselectable" id="selector" width="320" height="16" style="background-color:white;" imageSmoothingEnabled="false"></canvas><br>
+<widget-window id="selectionInfo" style="display: none;">
+  <span slot="title">Selection Info</span>
+  <div slot="contents">
+    <div id="panel"></div>
+    <div>
+      <input type="checkbox" id="turfselect" checked="true"><label for="turfselect">Tiles</label></input>
+      <input type="checkbox" id="objselect" checked="true"><label for="objselect">Objects</label></input>
+      <input type="button" value="Delete" onclick="selectionDelete();">
+    </div>
+  </div>
+</widget-window>
 
-    <div style="overflow: auto; max-height: calc(100% - 16px - 320px - 32px);">
-      <div id="selectionInfo" style="display:none;">
-        <input type="checkbox" id="turfselect" checked="true"><label for="turfselect">Tiles</label></input>
-        <input type="checkbox" id="objselect" checked="true"><label for="objselect">Objects</label></input>
-        <input type="button" value="Delete" onclick="selectionDelete();">
-      </div>
-      <div id="panel"></div>
-      <div id="inventory" style="display: none;">
-      </div>
-      <div id="options" style="display: none;">
-        <input type="checkbox" id="alwayscenter" checked="true"><label for="alwayscenter" class="unselectable">Always center camera</label></input><br>
-        <input type="checkbox" id="doublezoom"><label for="doublezoom" class="unselectable">2x zoom</label></input><br>
-        <input type="number" id="viewwidth" min="1" max="50" size="2" value="20"><label for="viewwidth">View width</label></input><br>
-        <input type="number" id="viewheight" min="1" max="50" size="2" value="20"><label for="viewheight">View height</label></input><br>
-        <input type="checkbox" id="audionotify"><label for="audionotify" class="unselectable">Notify when people talk</label></input><br>
+<widget-window id="users" style="display: none;">
+  <span slot="title">Users</span>
+  <div slot="contents">
+    <ul id="usersul" class="unselectable">
+    </ul>
+  </div>
+</widget-window>
 
-        <input type="button" onclick="applyOptions(); viewOptions();" value="OK">
-        <input type="button" onclick="applyOptions();" value="Apply changes">
-        <input type="button" onclick="viewOptions();" value="Close options">
-      </div>
-      <div id="character" style="display: none;">
-        <input type="text" placeholder="New name" id="newnick">
-        <input type="button" value="Rename" onclick="sendChatCommand('nick '+document.getElementById('newnick').value);"><br>
+<widget-window id="inventory" style="display: none;">
+  <span slot="title">Inventory</span>
+  <div slot="contents" id="inventory-contents">
+    <ul id="inventoryul" class="unselectable">
+    </ul>
+  </div>
+</widget-window>
 
-        <p>
-        Preset player graphics<br>
-        <input type="button" value="Bunny" onclick="sendChatCommand('userpic bunny');">
-        <input type="button" value="Cat" onclick="sendChatCommand('userpic cat');"><br>
-        <input type="button" value="Hamster" onclick="sendChatCommand('userpic hamster');");>
-        <input type="button" value="Fire" onclick="sendChatCommand('userpic fire');">
-        </p>
+<widget-window id="build" style="display: none;">
+  <span slot="title">Build</span>
+  <div slot="contents" id="build-contents">
+    <canvas class="unselectable" id="inventoryCanvas" width="320" height="320" oncontextmenu="return false;" imageSmoothingEnabled="false"></canvas>
+  </div>
+</widget-window>
 
-        <p>
-        As a temporary measure,<br>custom pics go on imgur<br>
-        <input type="text" placeholder="https://i.imgur.com/whatever.png" id="newcustompic">
-        <input type="button" value="Custom pic" onclick="sendChatCommand('userpic '+document.getElementById('newcustompic').value);">
-        </p>
+<widget-window id="options" style="display: none;">
+  <span slot="title">Options</span>
+  <div slot="contents">
+    <input type="checkbox" id="alwayscenter" checked="true"><label for="alwayscenter" class="unselectable">Always center camera</label></input><br>
+    <input type="checkbox" id="audionotify"><label for="audionotify" class="unselectable">Notify when people talk</label></input><br>
+
+    <input type="button" onclick="applyOptions(); viewOptions();" value="OK">
+    <input type="button" onclick="applyOptions();" value="Apply changes">
+    <input type="button" onclick="viewOptions();" value="Close options">
+  </div>
+</widget-window>
+
+<widget-window id="character" style="display: none;">
+  <span slot="title">Character Settings</span>
+  <div slot="contents">
+  <input type="text" placeholder="New name" id="newnick">
+  <input type="button" value="Rename" onclick="sendChatCommand('nick '+document.getElementById('newnick').value);"><br>
+
+  <p>
+    Preset player graphics<br>
+    <input type="button" value="Bunny" onclick="sendChatCommand('userpic bunny');">
+    <input type="button" value="Cat" onclick="sendChatCommand('userpic cat');"><br>
+    <input type="button" value="Hamster" onclick="sendChatCommand('userpic hamster');");>
+    <input type="button" value="Fire" onclick="sendChatCommand('userpic fire');">
+  </p>
+
+  <p>
+    As a temporary measure,<br>custom pics go on imgur<br>
+    <input type="text" placeholder="https://i.imgur.com/whatever.png" id="newcustompic">
+    <input type="button" value="Custom pic" onclick="sendChatCommand('userpic '+document.getElementById('newcustompic').value);">
+  </p>
 
 <!--
         <input id="iconPicker" type="file" onchange="previewIcon();"><br>
         <img id="iconPreview" src="" width="32" height="32" alt="Image preview"><br>
         <input type="button" value="Use"><br>
 -->
-      </div>
-    </div>
+        </div>
+</widget-window>
 
-   </div>
+<widget-window id="tileset" style="display: none;">
+  <span id="tileset-title" slot="title">Tileset</span>
+  <div slot="contents">
+    <canvas class="unselectable" id="tilesetCanvas'+Item.id+'" width="256" height="16" oncontextmenu="return false;" imageSmoothingEnabled="false"></canvas>
+    <br>
+    <button>Add tile</button>
+  </div>
+</widget-window>
 
-   <!-- Right side, chat -->
-   <div style="display: flex; flex-direction: column; flex-grow: 1">
-     <div id="chatArea" class="chatarea" style="display: block; padding: 2px; overflow-y: scroll; flex-grow: 1;">
-     </div>
-     <div>
-       <input type="text" style="width:100%;" id="chatInput" placeholder="chat here...">
-     </div>
-   </div>
+<widget-window id="mail" style="display: none;">
+  <span slot="title">Mail</span>
+  <div slot="contents">
+    <button onclick="viewCompose();">Compose</button>
+    <ul id="mailul" class="unselectable">
+    </ul>
+  </div>
+</widget-window>
 
-<!-- Game interface div -->
+<widget-window id="compose" style="display: none;">
+  <span slot="title">Compose</span>
+  <div slot="contents">
+    <table border="0">
+      <tr><td><input type="submit" onclick="sendMail();" value="Send!" /></td><td><button onclick="previewMail();">Preview</button></td></tr>
+      <tr><td>To</td><td><input type="text" id="mailsendto" /></td></tr>
+      <tr><td>Subject</td><td><input type="text" id="mailsendsubject" /></td></tr>
+    </table>
+    <textarea id="mailsendtext" cols="30" rows="10"></textarea>
+  </div>
+</widget-window>
+
+<widget-window id="mail-view" style="display: none;">
+  <span slot="title" id="mail-view-title">Mail View</span>
+  <div slot="contents" id="mail-view-contents">
+  </div>
+</widget-window>
+
+<widget-window id="mail-preview" style="display: none;">
+  <span slot="title" id="mail-preview-title">Mail Preview</span>
+  <div slot="contents" id="mail-preview-contents">
+  </div>
+</widget-window>
+
+<!-- Game interface with the map and chat -->
+
+<!-- Left side, map and other stuff -->
+<div id="map-container">
+  <canvas class="unselectable" id="map"></canvas>
+
+  <div id="selector-container">
+    <canvas class="unselectable" id="selector" width="320" height="16" imageSmoothingEnabled="false"></canvas>
+  </div>
 </div>
+
+<!-- Right side, chat -->
+<div id="chat-container">
+  <div id="chatArea" class="chatarea">
+  </div>
+  <div>
+    <input type="text" style="width:100%;" id="chatInput" placeholder="chat here... (click or press enter to start!)">
+  </div>
+</div>
+
 <!-- Main wrapper div -->
 </div>
 </body>

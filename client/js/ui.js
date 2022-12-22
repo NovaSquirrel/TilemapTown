@@ -28,6 +28,8 @@ var CameraX = 0;
 var CameraY = 0;
 var CameraAlwaysCenter = true;
 
+var CameraScale = 1;
+
 // other settings
 var AudioNotifications = false;
 
@@ -82,7 +84,12 @@ function convertBBCode(t) {
 function logMessage(Message, Class) {
   var chatArea = document.getElementById("chatArea");
   var bottom = chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight < 1;
-  chatArea.innerHTML += '<span class="'+Class+'">'+ Message + "</span><br>";
+
+  let newMessage = document.createElement("div");
+  newMessage.className = Class;
+  newMessage.innerHTML = Message;
+  chatArea.append(newMessage);
+
   if(bottom)
     chatArea.scrollTop = chatArea.scrollHeight;
 
@@ -219,10 +226,6 @@ function editItem(key) {
   document.getElementById('editItemWindow').style.display = "block";
 }
 
-function viewTileset(Item) {
-  newWindow("Tileset: "+Item.name, '<canvas class="unselectable" id="tilesetCanvas'+Item.id+'" width="256" height="16" oncontextmenu="return false;" imageSmoothingEnabled="false"></canvas><br><button>Add tile</button>', {width: 256, height: 300});
-}
-
 function useItem(Placed) {
   var PlayerX = PlayerWho[PlayerYou].x;
   var PlayerY = PlayerWho[PlayerYou].y;
@@ -290,14 +293,18 @@ function keyHandler(e) {
       // commands are CMD while regular room messages are MSG. /me is a room message.
       else if(chatInput.value.slice(0,1) == "/" && chatInput.value.toLowerCase().slice(0,4) != "/me ") {
         SendCmd("CMD", {text: chatInput.value.slice(1)}); // remove the /
-      } else {
+      } else if(chatInput.value.length > 0) {
         SendCmd("MSG", {text: chatInput.value});
+      } else {
+        chatInput.blur();
       }
       chatInput.value = "";
+    } else if(document.activeElement == chatInput && e.keyCode == 27) {
+      // escape press
+      chatInput.blur();
     }
     return;
   }
-
   var needRedraw = false;
 
   var PlayerX = PlayerWho[PlayerYou].x;
@@ -360,6 +367,9 @@ function keyHandler(e) {
     PlayerX++;
     PlayerY--;
     PlayerDir = Directions.NORTHEAST;
+    e.preventDefault();
+  } else if (e.keyCode == 13) { // enter (carriage return)
+    chatInput.focus();
     e.preventDefault();
   }
 
@@ -509,6 +519,9 @@ function drawText(ctx, x, y, text) {
 function drawSelector() {
   var canvas = document.getElementById("selector");
   var ctx = canvas.getContext("2d");
+
+  canvas.width = 320;
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // Draw ten inventory items
@@ -721,12 +734,10 @@ function getMousePosRaw(canvas, evt) {
 
 function getMousePos(canvas, evt) {
   var rect = getExactPosition(canvas);
-  var xratio = canvas.width / parseInt(canvas.style.width);
-  var yratio = canvas.height / parseInt(canvas.style.height);
 
   return {
-    x: ((evt.clientX - rect.x)*xratio)|0,
-    y: ((evt.clientY - rect.y)*yratio)|0
+    x: ((evt.clientX - rect.x)/CameraScale)|0,
+    y: ((evt.clientY - rect.y)/CameraScale)|0
   };
 }
 
@@ -790,6 +801,19 @@ function initMouse() {
     panel.innerHTML = panelHTML;
   }, false);
 
+
+
+  mapCanvas.addEventListener('wheel', function(event) {
+    event.preventDefault();
+
+    CameraScale += event.deltaY * -0.01;
+
+    // Restrict CameraScale
+    CameraScale = Math.min(Math.max(1, CameraScale), 8);
+
+    resizeCanvas();
+  }, false);
+
   mapCanvas.addEventListener('mousemove', function(evt) {
     var pos = getTilePos(evt);
     MouseNowX = pos.x;
@@ -820,6 +844,38 @@ function viewInit() {
   NeedMapRedraw = true;
 }
 
+function initBuild() {
+  var canvas = document.getElementById('inventoryCanvas');
+    // add click action
+    canvas = document.getElementById('inventoryCanvas');
+    var BuildWidth = 16;
+
+    var len = Object.keys(Predefined).length;
+    canvas.width = (BuildWidth*16)+"";
+    canvas.height = (Math.ceil(len/BuildWidth)*16)+"";
+    var ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    var count = 0;
+    for(var i in Predefined) {
+      var item = Predefined[i];
+      ctx.drawImage(IconSheets[item.pic[0]], item.pic[1]*16, item.pic[2]*16, 16, 16, (count%BuildWidth)*16, Math.floor(count/BuildWidth)*16, 16, 16);
+      count++;
+    }
+
+    canvas.addEventListener('mousedown', function(evt) {
+      var pos = getMousePosRaw(inventoryCanvas, evt);
+      pos.x = pos.x >> 4;
+      pos.y = pos.y >> 4;
+      var index = pos.y * BuildWidth + pos.x;
+
+      if(evt.button == 0)
+        useItem({type: 3, data: PredefinedArrayNames[index]});
+//      else if(evt.button == 2)
+//        addInventory(PredefinedArrayNames[index]);
+    }, false);
+}
+
 function initWorld() {
   // initialize the world map
   initMap();
@@ -833,6 +889,11 @@ function initWorld() {
   panel.innerHTML = "";
 
   initMouse();
+
+  window.onresize = resizeCanvas;
+  resizeCanvas();
+
+  initBuild();
 
   window.setInterval(tickWorld, 20);
   if(OnlineServer) {
@@ -887,27 +948,11 @@ function initWorld() {
 }
 
 function applyOptions() {
-  var vwidth = document.getElementById("viewwidth");
-  var vheight = document.getElementById("viewheight");
-  var vdouble = document.getElementById("doublezoom");
   var vcenter = document.getElementById("alwayscenter");
   var vnotify = document.getElementById("audionotify");
 
-  ViewWidth = parseInt(vwidth.value);
-  ViewHeight = parseInt(vheight.value);
   CameraAlwaysCenter = vcenter.checked;
   AudioNotifications = vnotify.checked;
-
-  mapCanvas.width = ViewWidth*16;
-  mapCanvas.height = ViewHeight*16;
-  if(vdouble.checked) {
-    mapCanvas.style.width = (ViewWidth*32)+"px";
-    mapCanvas.style.height = (ViewHeight*32)+"px";
-  } else {
-    mapCanvas.style.width = (ViewWidth*16)+"px";
-    mapCanvas.style.height = (ViewHeight*16)+"px";
-  }
-  viewInit();
 }
 
 function rightClick(evt) {
@@ -978,13 +1023,44 @@ function updateInventoryUL() {
   ul.appendChild(newitem);
 }
 
+function toggleDisplay(element) {
+  element.style.display = element.style.display == 'block' ? 'none' : 'block';
+
+}
+
+function viewUsers() {
+  var users = document.getElementById('users');
+  toggleDisplay(users);
+
+  var ul = document.getElementById('usersul');
+  updateUsersUL();
+}
+
+function viewChatLog() {
+  var chat = document.getElementById('chat-container');
+  chat.classList.toggle('pinned');
+  resizeCanvas();
+}
+
 function viewInventory() {
-  // check if inventory is up or not already
+  var inventory = document.getElementById('inventory');
+  toggleDisplay(inventory);
+
   var ul = document.getElementById('inventoryul');
-  if(!ul) {
-    newWindow("Inventory", '<ul id="inventoryul" class="unselectable"></ul>', null);
-  }
   updateInventoryUL();
+}
+
+function viewTileset(Item) {
+  var tileset = document.getElementById('tileset');
+  toggleDisplay(tileset);
+
+  var tileset_title = document.getElementById('tileset-title');
+  tileset_title.innerText = "Tileset: "+Item.name;
+}
+
+function viewCompose() {
+  var compose = document.getElementById('compose');
+  compose.style.display = 'block';
 }
 
 function updateUsersUL() {
@@ -1033,15 +1109,6 @@ function updateUsersUL() {
   }
 }
 
-function viewUsers() {
-  // check if user list is up or not already
-  var ul = document.getElementById('usersul');
-  if(!ul) {
-    newWindow("Users", '<ul id="usersul" class="unselectable"></ul>', null);
-  }
-  updateUsersUL();
-}
-
 function updateMailUL() {
   // Manage the users <ul>
   var ul = document.getElementById('mailul');
@@ -1066,15 +1133,17 @@ function updateMailUL() {
       SendCmd("EML", {read: letter.id});
       Mail[i].flags |= 1; // mark as read locally
       updateMailUL(); // show it as read locally
-      newWindow("Mail: "+convertBBCode(letter.subject),
-      '<button onclick="replyMail('+letter.id+')">Reply</button>'
-      +'<button onclick="replyAllMail('+letter.id+')">Reply all</button>'
-      +'<button onclick="deleteMail('+letter.id+')">Delete</button><br>'
-      +'<table border="0">'
-      +'<tr><td>From</td><td>'+letter.from+'</td></tr>'
-      +'<tr><td>To</td><td>'+letter.to.join(",")+'</td></tr>'
-      +'</table><hr>'
-      +convertBBCodeMultiline(letter.contents), {identifier: "mail"+letter.id})
+
+      document.getElementById('mail-view').style.display = 'block';
+      document.getElementById('mail-view-title').innerHTML = `Mail: ${convertBBCode(letter.subject)}`;
+      document.getElementById('mail-view-contents').innerHTML = '<button onclick="replyMail('+letter.id+')">Reply</button>'
+        +'<button onclick="replyAllMail('+letter.id+')">Reply all</button>'
+        +'<button onclick="deleteMail('+letter.id+')">Delete</button><br>'
+        +'<table border="0">'
+        +'<tr><td>From</td><td>'+letter.from+'</td></tr>'
+        +'<tr><td>To</td><td>'+letter.to.join(",")+'</td></tr>'
+        +'</table><hr>'
+        +convertBBCodeMultiline(letter.contents);
     };
     li.oncontextmenu = function (){return false;};
 
@@ -1088,7 +1157,10 @@ function previewMail() {
   let subject = document.getElementById('mailsendsubject').value;
   let contents = document.getElementById('mailsendtext').value;
   let to = document.getElementById('mailsendto').value;
-  newWindow("Mail preview: "+convertBBCode(subject), convertBBCodeMultiline(contents), null);
+
+  document.getElementById('mail-preview').style.display = 'block';
+  document.getElementById('mail-preview-title').innerHTML = `Mail preview: ${convertBBCode(subject)}`;
+  document.getElementById('mail-preview-contents').innerHTML = convertBBCodeMultiline(contents);
 }
 
 function sendMail() {
@@ -1096,18 +1168,6 @@ function sendMail() {
   let contents = document.getElementById('mailsendtext').value;
   let to = document.getElementById('mailsendto').value.split(',');
   SendCmd("EML", {send: {"subject": subject, "contents": contents, "to": to}});
-}
-
-function viewCompose() {
-  if(document.getElementById('mailsendsubject'))
-    return;
-  newWindow("Compose mail", '<table border="0">'
-  +'<tr><td><input type="submit" onclick="sendMail();" value="Send!" /></td><td><button onclick="previewMail();">Preview</button></td></tr>'
-  +'<tr><td>To</td><td><input type="text" id="mailsendto" /></td></tr>'
-  +'<tr><td>Subject</td><td><input type="text" id="mailsendsubject" /></td></tr>'
-  +'</table>'
-  +'<textarea id="mailsendtext" cols="30" rows="10"></textarea>'
-  , {identifier: "mailcompose"});
 }
 
 function replyMail(id) {
@@ -1169,7 +1229,9 @@ function deleteMail(id) {
 }
 
 function viewMail() {
-  // check if user list is up or not already
+  var mail = document.getElementById('mail');
+  toggleDisplay(mail);
+
   var ul = document.getElementById('mailul');
   if(!ul) {
     newWindow("Mail", '<button onclick="viewCompose();">Compose</button><br/><ul id="mailul" class="unselectable"></ul>', null);
@@ -1178,39 +1240,8 @@ function viewMail() {
 }
 
 function viewBuild() {
-  var canvas = document.getElementById('inventoryCanvas');
-  if(!canvas) {
-    newWindow("Build", '<canvas class="unselectable" id="inventoryCanvas" width="320" height="320" oncontextmenu="return false;" imageSmoothingEnabled="false"></canvas>', {width: 256, height: 16*10});
-
-    // add click action
-    canvas = document.getElementById('inventoryCanvas');
-    var BuildWidth = 16;
-
-    var len = Object.keys(Predefined).length;
-    canvas.width = (BuildWidth*16)+"";
-    canvas.height = (Math.ceil(len/BuildWidth)*16)+"";
-    var ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    var count = 0;
-    for(var i in Predefined) {
-      var item = Predefined[i];
-      ctx.drawImage(IconSheets[item.pic[0]], item.pic[1]*16, item.pic[2]*16, 16, 16, (count%BuildWidth)*16, Math.floor(count/BuildWidth)*16, 16, 16);
-      count++;
-    }
-
-    canvas.addEventListener('mousedown', function(evt) {
-      var pos = getMousePosRaw(inventoryCanvas, evt);
-      pos.x = pos.x >> 4;
-      pos.y = pos.y >> 4;
-      var index = pos.y * BuildWidth + pos.x;
-
-      if(evt.button == 0)
-        useItem({type: 3, data: PredefinedArrayNames[index]});
-//      else if(evt.button == 2)
-//        addInventory(PredefinedArrayNames[index]);
-    }, false);
-  }
+  var build = document.getElementById('build');
+  toggleDisplay(build);
 }
 
 function viewCustomize() {
@@ -1411,3 +1442,25 @@ XBBCODE.addTags({
     }
   }
 });
+
+
+function resizeCanvas() {
+  // get camera target
+  var cameraCenterX = CameraX + mapCanvas.width*8;
+  var cameraCenterY = CameraY + mapCanvas.height*8;
+
+  var parent = mapCanvas.parentNode;
+  var r = parent.getBoundingClientRect();
+  mapCanvas.width = r.width / CameraScale;
+  mapCanvas.height = r.height / CameraScale;
+
+  ViewWidth = Math.ceil(mapCanvas.width/16);
+  ViewHeight = Math.ceil(mapCanvas.height/16);
+
+  // move camera to same relative position
+  CameraX = cameraCenterX - mapCanvas.width*8;
+  CameraY = cameraCenterY - mapCanvas.height*8;
+
+  drawMap();
+  drawSelector();
+}

@@ -1,6 +1,8 @@
 html, body {
   height: 100%;
   margin: 0;
+
+  font-family: sans-serif;
 }
 
 .unselectable {
@@ -15,6 +17,30 @@ html, body {
 #wrapper {
   min-height: 100%; 
   height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+#selector-container {
+    width: 100%;
+    position: relative;
+    bottom: 24px;
+}
+
+#selector {
+    margin: auto;
+    width: 320px;
+    display: block;
+    height: 16px;
+    background-color: white;
+    border-radius: 3px;
+    padding: 2px;
+    margin-bottom: 4px;
+}
+
+#map-container {
+    width: 100%;
+    overflow-y: hidden;
 }
 
 body {
@@ -22,20 +48,19 @@ body {
 }
 
 .topnav {
-    background-color: #ddd;
-    overflow: hidden;
     min-height: 32px;
+    position: absolute;
+    padding-left: 1em;
 }
 
 .topnav a {
     height: 100%;
     float: left;
     display: block;
-    color: black;
+    color: white;
     text-align: center;
     padding: 5px 10px;
     text-decoration: none;
-    font-size: 17px;
 }
 
 .navactive {
@@ -44,17 +69,44 @@ body {
 }
 
 .topnav a:hover {
-    background-color: #333;
     color: white;
+}
+
+.topnav li {
+    display: inline-block;
+    color: white;
+    background-color: #333;
+    border-radius: 5px;
+    border: 1px solid #000;
+}
+.topnav li:hover {
+    background-color: lightpink;
 }
 
 #map {
     image-rendering: pixelated;
+    width: 100%;
+    height: 100%;
 }
 
-.chatarea {
+#chat-container {
+    position: absolute;
+    left: 8;
+    bottom: 32;
+    width: 40%;
+}
+
+#chat-container.pinned {
+    position: initial;
+    display: flex;
+    flex-direction: column;
     background-color: #333;
-    color: white;
+    width: 60%;
+}
+
+#chat-container.pinned #chatArea {
+    overflow-y: scroll;
+    flex-grow: 1;
 }
 
 .chatarea a {
@@ -102,18 +154,6 @@ body {
 }
 
 /* stretchable draggable windows */
-.draghandle_inactive {
-    position: absolute;
-
-    padding-top: 10px;
-    padding-bottom: 10px;
-    text-align: center;
-    cursor: move;
-    z-index: 10;
-    background-color: #1010F3;
-    color: #fff;
-}
-
 .draghandle {
     position: absolute;
 
@@ -126,11 +166,32 @@ body {
     color: #fff;
 }
 
-.drag {
-    position: absolute;
-	background-color: white;
+#chat-container:not(.pinned) {
+    pointer-events: none;
+}
 
-    border: 2px solid;
-    resize: both;
-    overflow: auto;
+#chatInput {
+    pointer-events: initial;
+}
+
+#chat-container .chatarea * {
+    padding: 4px;
+}
+
+#chat-container:not(.pinned) .chatarea * {
+    opacity: 0;
+    user-select: none;
+    background-color: #3338;
+}
+
+#chat-container:not(.pinned) .chatarea *:nth-last-child(-n+6) {
+    animation-name: fadeOut;
+    animation-duration: 10s;
+    animation-iteration-count: 1;
+}
+
+@keyframes fadeOut {
+   0% {opacity: 1;}
+   80% {opacity: 1;}
+   100% {opacity: 0;}
 }
