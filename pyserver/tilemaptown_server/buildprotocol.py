@@ -41,6 +41,17 @@ def tileIsOkay(tile):
 
 	return (True, None)
 
+CLIENT_WHO_WHITELIST = {
+	"typing": bool
+}
+
+def validate_client_who(id, data):
+	validated_data = {"id": id}
+	for key, value in data.items():
+		if key in CLIENT_WHO_WHITELIST:
+			validated_data[key] = CLIENT_WHO_WHITELIST[key](value)
+	return validated_data
+
 # -------------------------------------
 
 def fn_MOV(self, client, arg):
@@ -293,6 +304,16 @@ def fn_BLK(self, client, arg):
 	else:
 		client.send("ERR", {'text': 'Bulk building is disabled on this map'})
 handlers['BLK'] = fn_BLK
+
+def fn_WHO(self, client, arg):
+	if arg["update"]:
+		valid_data = validate_client_who(client.id, arg["update"])
+		for key,value in valid_data.items():
+			setattr(client,key,value)
+		client.map.broadcast("WHO", {"update": valid_data})
+	else:
+		client.send("ERR", {'text': 'not implemented'})
+handlers['WHO'] = fn_WHO
 
 # -------------------------------------
 

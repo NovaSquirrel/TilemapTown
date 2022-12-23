@@ -103,10 +103,19 @@ function logMessage(Message, Class) {
 function setChatInput(the_text) {
   chatInput.value = the_text;
   chatInput.focus();
+  sendTyping(true);
 }
 
 function sendChatCommand(the_text) {
   SendCmd("CMD", {text: the_text});
+}
+
+function sendTyping(isTyping) {
+  if(PlayerWho[PlayerYou].typing != isTyping){
+    SendCmd("WHO", {update: {id: PlayerYou, typing: isTyping}});
+    PlayerWho[PlayerYou].typing = isTyping;
+    drawMap();
+  }
 }
 
 function PlayersAroundTile(FindX, FindY, Radius) {
@@ -312,6 +321,9 @@ function keyHandler(e) {
       } else {
         chatInput.blur();
       }
+
+      sendTyping(false);
+
       chatInput.value = "";
     } else if(document.activeElement == chatInput && e.keyCode == 27) {
       // escape press
@@ -504,6 +516,13 @@ function drawMap() {
     } else {
       ctx.drawImage(IconSheets[Mob.pic[0]], Mob.pic[1]*16, Mob.pic[2]*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
     }
+
+    // typing indicators
+    if(Mob.typing) {
+      ctx.drawImage(IconSheets[0], 0, 24*16, 16, 16, (Mob.x*16)-PixelCameraX, ((Mob.y-1)*16)-PixelCameraY, 16, 16);
+    }
+
+    // carry text and nametags
     if(IsMousedOver && !(!Mob.is_following && Mob.vehicle)) {
       if(Mob.passengers.length > 0) {
         drawText(ctx, (Mob.x*16)-PixelCameraX-(Mob.name.length * 8 / 2 - 8), (Mob.y*16)-PixelCameraY-24, Mob.name);
@@ -910,6 +929,16 @@ function initWorld() {
 
   chatInput = document.getElementById("chatInput");
   mapCanvas = document.getElementById("map");
+
+  chatInput.addEventListener('input', function (evt) {
+    if(this.value.length > 0){
+      sendTyping(true);
+    }
+  });
+
+  chatInput.addEventListener('blur', function (evt) {
+    sendTyping(false);
+  });
 
   viewInit();
 

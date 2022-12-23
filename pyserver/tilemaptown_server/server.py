@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio, datetime, random, websockets, json, sys
+import asyncio, datetime, random, websockets, json, sys, traceback
 from .buildglobal import *
 from .buildmap import *
 from .buildclient import *
@@ -136,6 +136,8 @@ async def clientHandler(websocket, path):
 		print("disconnected: %s (%s, \"%s\")" % (client.ip, client.username or "?", client.name))
 	except:
 		print("Unexpected error:", sys.exc_info()[0])
+		print(sys.exc_info()[1])
+		traceback.print_tb(sys.exc_info()[2])
 #		raise
 
 	client.cleanup()
