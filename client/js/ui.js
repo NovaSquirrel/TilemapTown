@@ -27,6 +27,7 @@ var ViewHeight;
 var CameraX = 0;
 var CameraY = 0;
 var CameraAlwaysCenter = true;
+var Fly = false;
 
 var CameraScale = 1;
 
@@ -390,7 +391,7 @@ function keyHandler(e) {
 
   // go back if the turf is solid
   if(OldPlayerX != PlayerX || OldPlayerY != PlayerY) {
-    if(AtomFromName(MapTiles[PlayerX][PlayerY]).density) {
+    if(!Fly && AtomFromName(MapTiles[PlayerX][PlayerY]).density) {
       PlayerX = OldPlayerX;
       PlayerY = OldPlayerY;
     }
@@ -398,8 +399,10 @@ function keyHandler(e) {
     for (var index in MapObjs[PlayerX][PlayerY]) {
       var Obj = AtomFromName(MapObjs[PlayerX][PlayerY][index]);
       if(Obj.density) {
-        PlayerX = OldPlayerX;
-        PlayerY = OldPlayerY;
+        if(!Fly){
+          PlayerX = OldPlayerX;
+          PlayerY = OldPlayerY;
+        }
         if(Obj.type == AtomTypes.SIGN) {
           // Filter out HTML tag characters to prevent XSS
 /*
@@ -918,6 +921,9 @@ function initWorld() {
   window.onresize = resizeCanvas;
   resizeCanvas();
 
+  // applies saved options from browser form fill
+  applyOptions();
+
   initBuild();
 
   window.setInterval(tickWorld, 20);
@@ -975,9 +981,11 @@ function initWorld() {
 function applyOptions() {
   var vcenter = document.getElementById("alwayscenter");
   var vnotify = document.getElementById("audionotify");
+  var vfly = document.getElementById("option-fly");
 
   CameraAlwaysCenter = vcenter.checked;
   AudioNotifications = vnotify.checked;
+  Fly = vfly.checked;
 }
 
 function rightClick(evt) {
