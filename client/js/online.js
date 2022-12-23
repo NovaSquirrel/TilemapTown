@@ -193,6 +193,13 @@ function receiveServerMessage(event) {
         delete PlayerWho[arg.remove];
 
         NeedMapRedraw = true;
+      } else if(arg.update) {
+        PlayerWho[arg.update.id] = Object.assign(
+          PlayerWho[arg.update.id],
+          arg.update
+        );
+
+        NeedMapRedraw = true;
       }
 
       // has anyone's avatars updated?
