@@ -64,11 +64,16 @@ tileset received from the server
 
 === People on the map ===
 --> WHO
+--> WHO {"update": {"id": your_id, other fields}}
 <-- WHO {"list": {"[id]": {"name": name, "pic": [s, x, y], "x": x, "y": y, "id": id}}, "you":id}
 <-- WHO {"add": {"name": name, "pic": [s, x, y], "x": x, "y": y, "id": id}}
+<-- WHO {"update": {"id": id, other fields}}
 <-- WHO {"remove": id}
-"add" can be used to update too
-(currently server-->client only)
+"add" can be used to do an update too, where it will replace a whole entry with new data.
+"update" can be used for partial updates, where only the fields present in the message are updated and other fields are left alone.
+
+Clients can send updates about themselves, but only keys that the servers knows to be OK, such as "typing".
+For client-to-server WHO updates, "id" is currently ignored, but it should be the same value the client received in the "you" field.
 
 --> IDN
 --> IDN {"username": username, "password": password}
