@@ -1,7 +1,7 @@
 /*
  * Tilemap Town
  *
- * Copyright (C) 2017-2018 NovaSquirrel
+ * Copyright (C) 2017-2023 NovaSquirrel
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -512,7 +512,16 @@ function drawMap() {
 
     var Mob = PlayerWho[index];
     if(index in PlayerImages) {
-      ctx.drawImage(PlayerImages[index], Mob.pic[1]*16, Mob.pic[2]*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
+      let tilesetWidth = PlayerImages[index].naturalWidth;
+      let tilesetHeight = PlayerImages[index].naturalHeight;
+      if(tilesetWidth == 32 && tilesetHeight == 32) {
+        ctx.drawImage(PlayerImages[index], 0, 0, 32, 32, (Mob.x*16-8)-PixelCameraX, (Mob.y*16-16)-PixelCameraY, 32, 32);
+      } else if(tilesetWidth == 16 && tilesetHeight == 16) {
+        ctx.drawImage(PlayerImages[index], 0, 0, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
+      } else { // Sheet of 32x32 images
+        ctx.drawImage(PlayerImages[index], Mob.pic[1]*32, Mob.pic[2]*32, 32, 32, (Mob.x*16-8)-PixelCameraX, (Mob.y*16-16)-PixelCameraY, 32, 32);
+      }
+
     } else {
       ctx.drawImage(IconSheets[Mob.pic[0]], Mob.pic[1]*16, Mob.pic[2]*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
     }
