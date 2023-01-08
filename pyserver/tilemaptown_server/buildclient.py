@@ -33,6 +33,7 @@ class Client(object):
 		self.name = 'Guest '+ str(userCounter)
 		self.x = 0
 		self.y = 0
+		self.dir = 2 # South
 		self.map = None
 		self.map_id = -1
 		self.pic = [0, 2, 25]
@@ -201,19 +202,26 @@ class Client(object):
 			self.send("ERR", {'text': 'You don\'t have permission to do that'})
 		return False
 
-	def moveTo(self, x, y):
-		# keep the old position, for following
-		oldx = self.x
-		oldy = self.y
-		# set new position
-		self.x = x
-		self.y = y
-		for u in self.passengers:
-			if u.is_following:
-				u.moveTo(oldx, oldy)
-			else:
-				u.moveTo(x, y)
-			u.map.broadcast("MOV", {'id': u.id, 'to': [u.x, u.y]}, remote_category=botwatch_type['move'])
+	# Apply information from a MOV message to someone
+	def moveTo(self, x, y, newDir=None, isTeleport=False):
+		oldDir = self.dir
+
+		if newDir != None:
+			self.dir = newDir
+		if x != None: # Assume y is good too
+			# Save the old position because following moves to the old position, not the new one
+			oldX = self.x
+			oldY = self.y
+
+			# Set the new position, and update any passengers
+			self.x = x
+			self.y = y
+			for u in self.passengers:
+				if u.is_following and not isTeleport: # If "from" isn't present, it's a teleport, not normal movement
+					u.moveTo(oldX, oldY, oldDir if newDir != None else None)
+				else:
+					u.moveTo(x, y, newDir)
+				u.map.broadcast("MOV", {'id': u.id, 'to': [u.x, u.y], 'dir': u.dir}, remote_category=botwatch_type['move'])
 
 	def who(self):
 		""" A dictionary of information for the WHO command """
@@ -222,6 +230,7 @@ class Client(object):
 			'pic': self.pic,
 			'x': self.x,
 			'y': self.y,
+			'dir': self.dir,
 			'id': self.id,
 			'username': self.username,
 			'passengers': [passenger.id for passenger in self.passengers],
@@ -304,10 +313,10 @@ class Client(object):
 
 		# Move player's X and Y coordinates if needed
 		if new_pos != None:
-			self.moveTo(new_pos[0], new_pos[1])
+			self.moveTo(new_pos[0], new_pos[1], isTeleport=True)
 			self.map.broadcast("MOV", {'id': self.id, 'to': [self.x, self.y]}, remote_category=botwatch_type['move'])
 		elif goto_spawn:
-			self.moveTo(self.map.start_pos[0], self.map.start_pos[1])
+			self.moveTo(self.map.start_pos[0], self.map.start_pos[1], isTeleport=True)
 			self.map.broadcast("MOV", {'id': self.id, 'to': [self.x, self.y]}, remote_category=botwatch_type['move'])
 
 		# Move any passengers too

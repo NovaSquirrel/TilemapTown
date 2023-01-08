@@ -65,8 +65,8 @@ tileset received from the server
 === People on the map ===
 --> WHO
 --> WHO {"update": {"id": your_id, other fields}}
-<-- WHO {"list": {"[id]": {"name": name, "pic": [s, x, y], "x": x, "y": y, "id": id}}, "you":id}
-<-- WHO {"add": {"name": name, "pic": [s, x, y], "x": x, "y": y, "id": id}}
+<-- WHO {"list": {"[id]": {"name": name, "pic": [s, x, y], "x": x, "y": y, "dir": dir, "id": id}, "you":id}
+<-- WHO {"add": {"name": name, "pic": [s, x, y], "x": x, "y": y, "dir", dir, "id": id}}
 <-- WHO {"update": {"id": id, other fields}}
 <-- WHO {"remove": id}
 "add" can be used to do an update too, where it will replace a whole entry with new data.

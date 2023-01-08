@@ -102,8 +102,13 @@ function receiveServerMessage(event) {
   switch(cmd) {
     case "MOV":
       if(arg.id != PlayerYou || !arg.from) {
-        PlayerWho[arg.id].x = arg.to[0];
-        PlayerWho[arg.id].y = arg.to[1];
+        if("to" in arg) {
+          PlayerWho[arg.id].x = arg.to[0];
+          PlayerWho[arg.id].y = arg.to[1];
+        }
+        if("dir" in arg) {
+          PlayerWho[arg.id].dir = arg.dir;
+        }
         NeedMapRedraw = true;
       }
       break;

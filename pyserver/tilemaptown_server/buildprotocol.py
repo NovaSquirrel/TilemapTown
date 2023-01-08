@@ -55,8 +55,17 @@ def validate_client_who(id, data):
 # -------------------------------------
 
 def fn_MOV(self, client, arg):
-	self.broadcast("MOV", {'id': client.id, 'from': arg["from"], 'to': arg["to"]}, remote_category=botwatch_type['move'])
-	client.moveTo(arg["to"][0], arg["to"][1])
+	data = {'id': client.id}
+	for valid_field in ('from', 'to', 'dir'):
+		if valid_field in arg:
+			data[valid_field] = arg[valid_field]
+	self.broadcast("MOV", data, remote_category=botwatch_type['move'])
+
+	newDir = data['dir'] if 'dir' in data else None
+	if 'to' in data:
+		client.moveTo(data['to'][0], data['to'][1], newDir=newDir)
+	else:
+		client.moveTo(None, None, newDir=newDir)		
 handlers['MOV'] = fn_MOV
 
 def fn_CMD(self, client, arg):

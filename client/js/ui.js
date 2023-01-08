@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-var PlayerWho = {me: {name: "Player", pic: [0, 2, 25], x: 5, y: 5, passengers:[]}};
+var PlayerWho = {me: {name: "Player", pic: [0, 2, 25], x: 5, y: 5, dir: 2, passengers:[]}};
 var PlayerYou = "me";
 var PlayerImages = {}; // dictionary of Image objects
 var Mail = [];
@@ -271,17 +271,22 @@ function useItem(Placed) {
 
 }
 
-function movePlayer(id, x, y) {
+function movePlayer(id, x, y, dir) {
   for(var index of PlayerWho[id].passengers){
     if ( PlayerWho[index].is_following ) {
-      movePlayer(index, PlayerWho[id].x, PlayerWho[id].y);
+      movePlayer(index, PlayerWho[id].x, PlayerWho[id].y, dir);
     } else {
-      movePlayer(index, x, y);
+      movePlayer(index, x, y, dir);
     }
   }
 
-  PlayerWho[id].x = x;
-  PlayerWho[id].y = y;
+  if(x != null) {
+    PlayerWho[id].x = x;
+    PlayerWho[id].y = y;
+  }
+  if(dir != null) {
+    PlayerWho[id].dir = dir;
+  }
 }
 
 function keyHandler(e) {
@@ -441,7 +446,7 @@ function keyHandler(e) {
     if(OldPlayerX != PlayerX || OldPlayerY != PlayerY)
       SendCmd("MOV", {from: [OldPlayerX, OldPlayerY], to: [PlayerX, PlayerY], dir: PlayerDir});
 
-    movePlayer(PlayerYou, PlayerX, PlayerY);
+    movePlayer(PlayerYou, PlayerX, PlayerY, PlayerDir);
   }
 
   if(needRedraw)
