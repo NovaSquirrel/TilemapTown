@@ -16,9 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-var PlayerWho = {me: {name: "Player", pic: [0, 2, 25], x: 5, y: 5, dir: 2, passengers:[]}};
 var PlayerYou = "me";
+var PlayerWho = {me: {name: "Player", pic: [0, 2, 25], x: 5, y: 5, dir: 2, passengers:[]}};
 var PlayerImages = {}; // dictionary of Image objects
+var PlayerAnimation = { // dictionary of animation statuses
+  "me": {
+    "walkTimer": 0,// amount of ticks where the player should be animated as walking
+    "lastDirectionLR": 0, //last direction that was set that is left or right
+    "lastDirection4":  0, //last direction that was set that is left, right, up or down
+  }
+}
+
 var Mail = [];
 
 // camera settings
@@ -53,7 +61,8 @@ var panel = null;
 
 var NeedMapRedraw = false;
 var NeedInventoryUpdate = false;
-var TickCounter = 0;
+var TickCounter = 0;   // Goes up every 20ms, wraps at 0x10000 (hex)
+var AnimationTick = 0; // Goes up every 20ms, wraps at 10000 (decimal)
 var DisplayInventory = {null: []};
 var DBInventory = {};
 var OpenFolders = {};
@@ -271,21 +280,40 @@ function useItem(Placed) {
 
 }
 
+function updateDirectionForAnim(id) {
+  let dir = PlayerWho[id].dir;
+  if((dir & 1) == 0) {
+    PlayerAnimation[id].lastDirection4 = dir;
+  }
+  if(dir == Directions.EAST || dir == Directions.WEST) {
+    PlayerAnimation[id].lastDirectionLR = dir;
+  }
+}
+
+function startPlayerWalkAnim(id) {
+  PlayerAnimation[id].walkTimer = 25+1; // 25*(20ms/1000) = 0.5
+  NeedMapRedraw = true;
+}
+
 function movePlayer(id, x, y, dir) {
   for(var index of PlayerWho[id].passengers){
-    if ( PlayerWho[index].is_following ) {
-      movePlayer(index, PlayerWho[id].x, PlayerWho[id].y, dir);
-    } else {
-      movePlayer(index, x, y, dir);
+    if(x != null) {
+      if ( PlayerWho[index].is_following ) {
+        movePlayer(index, PlayerWho[id].x, PlayerWho[id].y, PlarWho[id].dir);
+      } else {
+        movePlayer(index, x, y, dir);
+      }
     }
   }
 
   if(x != null) {
     PlayerWho[id].x = x;
     PlayerWho[id].y = y;
+    startPlayerWalkAnim(id);
   }
   if(dir != null) {
     PlayerWho[id].dir = dir;
+    updateDirectionForAnim(id);
   }
 }
 
@@ -340,8 +368,10 @@ function keyHandler(e) {
 
   var PlayerX = PlayerWho[PlayerYou].x;
   var PlayerY = PlayerWho[PlayerYou].y;
+  var PlayerDir = PlayerWho[PlayerYou].dir;
   var OldPlayerX = PlayerX;
   var OldPlayerY = PlayerY;
+  var OldPlayerDir = PlayerWho[PlayerYou].dir;
 
   if(e.keyCode == 32 || e.keyCode == 12) { // space or clear
 
@@ -421,7 +451,7 @@ function keyHandler(e) {
           PlayerY = OldPlayerY;
         }
         if(Obj.type == AtomTypes.SIGN) {
-          // Filter out HTML tag characters to prevent XSS
+          // Filter out HTML tag characters to prevent XSS (not needed because convertBBCode does this)
 /*
           var Escaped = "";
           for (var i = 0; i < Obj.message.length; i++) {
@@ -443,10 +473,15 @@ function keyHandler(e) {
       }
     }
 
-    if(OldPlayerX != PlayerX || OldPlayerY != PlayerY)
-      SendCmd("MOV", {from: [OldPlayerX, OldPlayerY], to: [PlayerX, PlayerY], dir: PlayerDir});
-
-    movePlayer(PlayerYou, PlayerX, PlayerY, PlayerDir);
+    if(OldPlayerX != PlayerX || OldPlayerY != PlayerY || OldPlayerDir != PlayerDir) {
+      if(e.shiftKey) {
+        SendCmd("MOV", {dir: PlayerDir});
+        movePlayer(PlayerYou, null, null, PlayerDir);
+      } else {
+        SendCmd("MOV", {from: [OldPlayerX, OldPlayerY], to: [PlayerX, PlayerY], dir: PlayerDir});
+        movePlayer(PlayerYou, PlayerX, PlayerY, PlayerDir);
+      }
+    }
   }
 
   if(needRedraw)
@@ -506,6 +541,11 @@ function drawMap() {
   // Draw the player
 //  ctx.drawImage(document.getElementById(PlayerIconSheet), PlayerIconX*16, PlayerIconY*16, 16, 16, (PlayerX*16)-PixelCameraX, (PlayerY*16)-PixelCameraY, 16, 16);
 
+  function draw32x32Player(who, frameX, frameY) {
+    var Mob = PlayerWho[index];
+    ctx.drawImage(PlayerImages[who], frameX*32, frameY*32, 32, 32, (Mob.x*16-8)-PixelCameraX, (Mob.y*16-16)-PixelCameraY, 32, 32);
+  }
+
   for (var index in PlayerWho) {
     var IsMousedOver = false;
     for (var look=0; look<MousedOverPlayers.length; look++) {
@@ -520,11 +560,42 @@ function drawMap() {
       let tilesetWidth = PlayerImages[index].naturalWidth;
       let tilesetHeight = PlayerImages[index].naturalHeight;
       if(tilesetWidth == 32 && tilesetHeight == 32) {
-        ctx.drawImage(PlayerImages[index], 0, 0, 32, 32, (Mob.x*16-8)-PixelCameraX, (Mob.y*16-16)-PixelCameraY, 32, 32);
+        draw32x32Player(index, 0, 0);
       } else if(tilesetWidth == 16 && tilesetHeight == 16) {
         ctx.drawImage(PlayerImages[index], 0, 0, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
-      } else { // Sheet of 32x32 images
-        ctx.drawImage(PlayerImages[index], Mob.pic[1]*32, Mob.pic[2]*32, 32, 32, (Mob.x*16-8)-PixelCameraX, (Mob.y*16-16)-PixelCameraY, 32, 32);
+
+      } else {
+        let frameX = 0, frameY = 0;
+        let frameCountFromAnimationTick = Math.floor(AnimationTick / 5);
+        let isWalking = PlayerAnimation[index].walkTimer != 0;
+
+        switch(tilesetHeight / 32) { // Directions
+          case 2:
+            frameY = Math.floor(PlayerAnimation[index].lastDirectionLR / 4);
+            break;
+          case 4:
+            frameY = Math.floor(PlayerAnimation[index].lastDirection4 / 2);
+            break;
+          case 8:
+            frameY = Mob.dir;
+            break;
+        }
+
+        switch(tilesetWidth / 32) { // Frames per direction
+          case 2:
+            frameX = isWalking * 1;
+            break;
+          case 4:
+            frameX = (isWalking*2) + (frameCountFromAnimationTick&1);
+            break;
+          case 8:
+            frameX = (isWalking*4) + (frameCountFromAnimationTick&3);
+            break;
+        }
+
+        draw32x32Player(index, frameX, frameY);
+//      } else { // Sheet of 32x32 images
+//        ctx.drawImage(PlayerImages[index], Mob.pic[1]*32, Mob.pic[2]*32, 32, 32, (Mob.x*16-8)-PixelCameraX, (Mob.y*16-16)-PixelCameraY, 32, 32);
       }
 
     } else {
@@ -668,6 +739,17 @@ function tickWorld() {
     updateInventoryUL();
     NeedInventoryUpdate = false;
   }
+
+  // Tick each player's animation timer
+  for(var id in PlayerAnimation) {
+    if(PlayerAnimation[id].walkTimer) {
+      PlayerAnimation[id].walkTimer--;
+      if(!PlayerAnimation[id].walkTimer) {
+        needMapRedraw = true;
+      }
+    }
+  }
+
 /*
   var Under = MapTiles[PlayerX][PlayerY];
   if(!(TickCounter & 0x03)) {
@@ -712,11 +794,15 @@ function tickWorld() {
         CameraY = -(Math.floor(ViewHeight/2)-Math.floor(MapHeight/2))<<8;
     }
     drawMap();
+  } else if(AnimationTick % 5 == 0) { // every 0.1 seconds
+    drawMap();
   } else if(NeedMapRedraw) {
     drawMap();
-    NeedMapRedraw = false;
   }
+
+  NeedMapRedraw = false;
   TickCounter = (TickCounter + 1) & 0xffff;
+  AnimationTick = (AnimationTick + 1) % 10000;
 }
 
 function selectionCopy() {

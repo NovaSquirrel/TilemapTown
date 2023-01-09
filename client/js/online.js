@@ -1,7 +1,7 @@
 /*
  * Tilemap Town
  *
- * Copyright (C) 2017-2018 NovaSquirrel
+ * Copyright (C) 2017-2023 NovaSquirrel
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -87,6 +87,16 @@ function SendCmd(commandType, commandArgs) {
     OnlineSocket.send(commandType);
 }
 
+function initPlayerIfNeeded(id) {
+  if(!PlayerAnimation[id]) {
+    PlayerAnimation[id] = {
+      "walkTimer": 0,
+      "lastDirectionLR": 0,
+      "lastDirection4":  0
+    };
+  }
+}
+
 function receiveServerMessage(event) {
 //    console.log(event.data);
   var msg = event.data;
@@ -105,9 +115,13 @@ function receiveServerMessage(event) {
         if("to" in arg) {
           PlayerWho[arg.id].x = arg.to[0];
           PlayerWho[arg.id].y = arg.to[1];
+          if(PlayerWho[arg.id].vehicle != null || PlayerWho[arg.id].is_following) {
+            startPlayerWalkAnim(arg.id);
+          }
         }
         if("dir" in arg) {
           PlayerWho[arg.id].dir = arg.dir;
+          updateDirectionForAnim(arg.id);
         }
         NeedMapRedraw = true;
       }
@@ -184,16 +198,25 @@ function receiveServerMessage(event) {
       if(arg.list) {
         PlayerWho = arg.list;
         PlayerImages = {}; // reset images list
+        PlayerAnimation = {}; // reset animation states
+
+        // Set up all of the animation states for each player present in the list
+        for (var id in arg.list) {
+          initPlayerIfNeeded(id);
+        }
       } else if(arg.add) {
         if(!PlayerWho[arg.add.id]) // if player isn't already in the list
           logMessage("Joining: "+arg.add.name, 'server_message');
         PlayerWho[arg.add.id] = arg.add;
+        initPlayerIfNeeded(arg.add.id);
         NeedMapRedraw = true;
       } else if(arg.remove) {
         logMessage("Leaving: "+PlayerWho[arg.remove].name, 'server_message');
         // unload image if needed
         if (arg.remove in PlayerImages)
           delete PlayerImages[arg.remove];
+        if (arg.remove in PlayerAnimation)
+          delete PlayerAnimation[arg.remove];
         // remove entry in PlayerWho
         delete PlayerWho[arg.remove];
 
