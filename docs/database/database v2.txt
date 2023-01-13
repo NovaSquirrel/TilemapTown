@@ -1,0 +1,148 @@
+https://www.sqlite.org/datatype3.html
+
+---META---
+item            - text    - what piece of meta information
+value           - text    - the value
+
+current items:
+version         - version of the database format, "2" currently
+
+
+---ENTITY--- (generic entity that can exist on a map, which can contain more information in other tables)
+General:
+	id              * integer - entity ID
+	owner           - integer - owner user ID
+    creator         - integer - creator user ID
+	created_at      -timestamp- time the entity was created 
+	acquired_at     -timestamp- time the owner was changed
+	type            - integer - type, also may suggest a table to look in
+		0 none
+		1 user       (USER table)
+		2 map        (MAP table)
+		3 group      (GROUP_MEMBER table)
+		4 text       (stores text, possibly a script. like notecards)
+        5 image      (links to a .png)
+        6 object     (template for a tile that can be placed on a map)
+        7 tileset    (stores a description of the tiles in a tileset)
+        8 reference  (refer to another entity)
+        9 folder     (for categorization; holds any number of other assets)
+        10 landmark  (holds a location and provides the ability to quickly teleport to it)
+
+	name            - text    - name (for display and disambiguation purposes, not to persistently identify a specific entity)
+	desc            - text    - description of the entity
+	pic             - text    - JSON describing the appearance - usually [tileset, x, y] or [url, 0, 0]. If null, a default is used.
+
+	flags           - integer - generic flags field
+		0x0001 don't load this entity when the container loads
+		0x0002 this entity is public, and can be searched for
+		0x0004 owner can't copy this item (unless owner == creator)
+        0x0008 owner can't modify this item (unless owner == creator)
+
+	tags            - text    - metadata tags in JSON format, like species, pronouns, etc.
+
+	data            - integer - data associated with the object, or NULL if not applicable.
+								takes advantage of SQLite being able to store text in an integer column
+								----
+								text: the text being stored
+							   image: path to the image, added to the server's base asset url?
+							  object: JSON object repesenting object information?
+							 tileset: JSON array alternating between tile id and compacted tile data
+						   reference: asset number it's a reference to
+							  folder: ?
+							landmark: map ID, x, y
+
+Position:
+	location        - integer - entity ID of whatever contains this entity - may be a map
+	position        - text    - JSON position within the container. Usually [x,y] or [x,y,dir] but it's flexible
+
+Permissions:
+	allow           - integer - default permissions to allow
+	deny            - integer - default permissions to deny
+	guest_deny      - integer - default permissions to deny for guests
+
+	Values:
+		0x0001 entry (deny to ban a user)
+		0x0002 build (or "modify" for things other than maps)
+		0x0004 full sandbox (anyone can delete anything)
+		0x0008 map admin (can do things that otherwise only map owners can, like kick or ban, but not things that are truly owner only)
+		0x0010 for maps: bulk build (can use the BLK command)
+		       for groups: anyone can get a list of the members
+		0x0020 map bot (can operate on map remotely)
+		0x0040 move this entity within the container
+		0x0080 make copies of this entity
+		0x0100 allowed to bring non-player entities here temporarily
+		0x0200 allowed to bring non-player entities here that can be here without the player's owner
+
+
+---PERMISSION---
+subject_id      * integer - ENTITY that the permissions apply to
+actor_id        * integer - ENTITY that is allowed, or not allowed, to do these things to the entity specified in "subject_id"
+allow           - integer - bit field for what extra permissions to allow
+deny            - integer - bit field for what extra permissions to deny
+
+
+---MAP---
+entity_id       - integer - MAP_ENTITY id corresponding to this map
+flags           - integer - generic flags field
+							  - 1: (public) map shows up in searches
+start_x         - integer - player starting X
+start_y         - integer - player starting Y
+width           - integer - map width
+height          - integer - map height
+default_turf    - text    - default map tile
+
+
+---MAP_LOG--- (unimplemented, but tables are made for it)
+id              * integer - log item ID
+time            - timestamp - action time
+map_id          - integer - map ID
+user_id         - integer - user ID
+action          - text    - action taken
+info            - text    - additional information?
+
+
+---USER--- (a user account)
+entity_id       * integer - ENTITY id corresponding to this user
+last_seen_at    -timestamp- last seen date
+
+username        - text    - username
+passhash        - text    - password hash (may be "hash" or "salt:hash")
+passalgo        - text    - password algorithm name
+
+watch           - text    - JSON array of users to watch for
+ignore          - text    - JSON array of users to ignore messages from
+client_settings - text    - whatever the client wants to store (like settings)
+
+flags           - integer - user-specific flags
+
+---MAIL---
+id              * integer - mail id
+owner_id        - integer - ID of the user whose account the mail is sitting in
+sender_id       - integer - ID of the user who sent the mail (sender ID)
+recipients      - text    - comma separated list of all recipients, including the one for this copy of the mail
+flags           - integer - flags (bit 0 = read)
+created_at      -timestamp- time the mail was sent
+subject         - text    - subject line of the mail
+contents        - text    - mail text
+
+---SERVER_BAN---
+id              * integer - ban ID
+ip              - text    - IP that was banned
+ip1             - text    - first part of IP address
+ip2             - text    - second part of IP address
+ip3             - text    - third part of IP address
+ip4             - text    - fourth part of IP address
+account         - id      - account that was also banned (unused)
+admin           - id      - id of the admin doing the banning
+created_at      -timestamp- time the ban was applied
+expires_at      -timestamp- when ban expires
+reason          - text    - ban reason
+
+---GROUP_MEMBER---
+group_id        * integer - MAP_ENTITY id for the group
+member_id       * integer - entity ID of the player that's in the group
+created_at      -timestamp- when the invite was made, so that it can be deleted if it's been too long
+accepted_at     -timestamp- when the invite was accepted; null if it hasn't been accepted
+flags           - integer - bitfield of group permissions
+                            1:  can invite members
+                            2:  can remove members
