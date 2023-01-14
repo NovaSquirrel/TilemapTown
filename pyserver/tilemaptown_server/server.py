@@ -19,7 +19,7 @@ from .buildglobal import *
 from .buildmap import *
 from .buildclient import *
 if Config["Database"]["Setup"]:
-	from .database_setup import *
+	from .database_setup_v2 import *
 
 # Timer that runs and performs background tasks
 def mainTimer():
@@ -84,7 +84,7 @@ async def clientHandler(websocket, path):
 		else:
 			client.ip = ''
 
-	if client.testServerBanned():
+	if client.test_server_banned():
 		return
 
 	print("connected: %s %s" % (path, client.ip))
@@ -106,7 +106,7 @@ async def clientHandler(websocket, path):
 			if command == "IDN":
 				result = False
 				if arg != None:
-					result = client.login(filterUsername(arg["username"]), arg["password"])
+					result = client.login(filter_username(arg["username"]), arg["password"])
 				if result != True: # default to map 0 if can't log in
 					client.switch_map(0)
 				if len(Config["Server"]["MOTD"]):

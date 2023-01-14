@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2019 NovaSquirrel
+# Copyright (C) 2017-2023 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -16,7 +16,7 @@
 
 import json, datetime
 from .buildglobal import *
-from .buildcommand import handle_user_command, escapeTags
+from .buildcommand import handle_user_command, escape_tags
 
 handlers = {}
 
@@ -61,11 +61,11 @@ def fn_MOV(self, client, arg):
 			data[valid_field] = arg[valid_field]
 	self.broadcast("MOV", data, remote_category=botwatch_type['move'])
 
-	newDir = data['dir'] if 'dir' in data else None
+	new_dir = data['dir'] if 'dir' in data else None
 	if 'to' in data:
-		client.moveTo(data['to'][0], data['to'][1], newDir=newDir)
+		client.move_to(data['to'][0], data['to'][1], new_dir=new_dir)
 	else:
-		client.moveTo(None, None, newDir=newDir)		
+		client.move_to(None, None, new_dir=new_dir)		
 handlers['MOV'] = fn_MOV
 
 def fn_CMD(self, client, arg):
@@ -148,7 +148,7 @@ def fn_EML(self, client, arg):
 			# todo: definitely needs some limits in place to prevent abuse!
 
 			# get a list of all the people to mail
-			recipient_id = set([findDBIdByUsername(x) for x in arg['send']['to']])
+			recipient_id = set([find_db_id_by_username(x) for x in arg['send']['to']])
 			recipient_string = ','.join([str(x) for x in recipient_id])
 
 			if any([x == None for x in recipient_id]):
@@ -165,7 +165,7 @@ def fn_EML(self, client, arg):
 				c.execute("INSERT INTO Mail (uid, sender, recipients, subject, contents, time, flags) VALUES (?, ?, ?, ?, ?, ?, ?)", (id, client.db_id, recipient_string, arg['send']['subject'], arg['send']['contents'], datetime.datetime.now(), 0))
 
 				# is that person online? tell them!
-				find = findClientByDBId(id)
+				find = find_client_by_db_id(id)
 				if find:
 					arg['send']['id'] = c.execute('SELECT last_insert_rowid()').fetchone()[0]
 					find.send("EML", {'receive': arg['send']})
@@ -184,7 +184,7 @@ handlers['EML'] = fn_EML
 
 def fn_MSG(self, client, arg):
 	text = arg["text"]
-	self.broadcast("MSG", {'name': client.name, 'username': client.usernameOrId(), 'text': escapeTags(text)}, remote_category=botwatch_type['chat'])
+	self.broadcast("MSG", {'name': client.name, 'username': client.username_or_id(), 'text': escape_tags(text)}, remote_category=botwatch_type['chat'])
 handlers['MSG'] = fn_MSG
 
 def fn_TSD(self, client, arg):
@@ -208,7 +208,7 @@ def fn_IMG(self, client, arg):
 handlers['IMG'] = fn_IMG
 
 def fn_MAI(self, client, arg):
-	send_all_info = client.mustBeOwner(True, giveError=False)
+	send_all_info = client.must_be_owner(True, give_error=False)
 	client.send("MAI", self.map.map_info(all_info=send_all_info))
 handlers['MAI'] = fn_MAI
 
@@ -217,7 +217,7 @@ def fn_DEL(self, client, arg):
 	y1 = arg["pos"][1]
 	x2 = arg["pos"][2]
 	y2 = arg["pos"][3]
-	if self.has_permission(client, permission['build'], True) or client.mustBeOwner(True, giveError=False):
+	if self.has_permission(client, permission['build'], True) or client.must_be_owner(True, give_error=False):
 		for x in range(x1, x2+1):
 			for y in range(y1, y2+1):
 				if arg["turf"]:
@@ -227,7 +227,7 @@ def fn_DEL(self, client, arg):
 		self.broadcast("MAP", self.map_section(x1, y1, x2, y2))
 
 		# make username available to listeners
-		arg['username'] = client.usernameOrId()
+		arg['username'] = client.username_or_id()
 		self.broadcast("DEL", arg, remote_only=True, remote_category=botwatch_type['build'])
 	else:
 		client.send("MAP", self.map_section(x1, y1, x2, y2))
@@ -237,12 +237,12 @@ handlers['DEL'] = fn_DEL
 def fn_PUT(self, client, arg):
 	def notify_listeners():
 		# make username available to listeners
-		arg['username'] = client.usernameOrId()
+		arg['username'] = client.username_or_id()
 		self.broadcast("PUT", arg, remote_only=True, remote_category=botwatch_type['build'])
 
 	x = arg["pos"][0]
 	y = arg["pos"][1]
-	if self.has_permission(client, permission['build'], True) or client.mustBeOwner(True, giveError=False):
+	if self.has_permission(client, permission['build'], True) or client.must_be_owner(True, give_error=False):
 		# verify the the tiles you're attempting to put down are actually good
 		if arg["obj"]: #object
 			tile_test = [tileIsOkay(x) for x in arg["atom"]]
@@ -269,7 +269,7 @@ def fn_PUT(self, client, arg):
 handlers['PUT'] = fn_PUT
 
 def fn_BLK(self, client, arg):
-	if self.has_permission(client, permission['bulk_build'], False) or client.mustBeOwner(True, giveError=False):
+	if self.has_permission(client, permission['bulk_build'], False) or client.must_be_owner(True, give_error=False):
 		# verify the tiles
 		for turf in arg["turf"]:
 			if not tileIsOkay(turf[2])[0]:
@@ -281,7 +281,7 @@ def fn_BLK(self, client, arg):
 				client.send("ERR", {'text': 'Bad obj in bulk build'})
 				return
 		# make username available to other clients
-		arg['username'] = client.usernameOrId()
+		arg['username'] = client.username_or_id()
 
 		# place the tiles
 		for turf in arg["turf"]:

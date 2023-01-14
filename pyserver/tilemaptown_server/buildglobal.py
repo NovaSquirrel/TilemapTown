@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2019 NovaSquirrel
+# Copyright (C) 2017-2023 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -56,7 +56,8 @@ Database = sqlite3.connect(Config["Database"]["File"], detect_types=sqlite3.PARS
 # Important information shared by each module
 ServerShutdown = [-1]
 AllClients = set()
-AllMaps = {}
+AllMaps = {}     # Maps only
+AllEntities = {} # All entities
 
 # Remote map-watching for bots
 botwatch_type = {}
@@ -79,53 +80,100 @@ permission['map_bot'] = 32      # user is given bot-related permissions
 mapflag = {}
 mapflag['public'] = 1
 
-def mapIdExists(id):
+# Entity types
+entity_type = {}
+entity_type['user'] = 1
+entity_type['map'] = 2
+entity_type['group'] = 3
+entity_type['text'] = 4
+entity_type['image'] = 5
+entity_type['map_tile'] = 6
+entity_type['tileset'] = 7
+entity_type['reference'] = 8
+entity_type['folder'] = 9
+entity_type['landmark'] = 10
+
+def map_id_exists(id): # Used by /map
 	if id in AllMaps:
 		return True
 	c = Database.cursor()
-	c.execute('SELECT mid FROM Map WHERE mid=?', (id,))
+	c.execute('SELECT entity_id FROM Map WHERE entity_id=?', (id,))
 	result = c.fetchone()
 	return result != None
 
 # Important shared functions
-def broadcastToAll(text):
+def broadcast_to_all(text):
 	for u in AllClients:
 		u.send("MSG", {'text': text, 'class': 'broadcast_message'})
 
-def findClientByDBId(id, inside=None):
+def find_client_by_db_id(id, inside=None):
 	for u in inside or AllClients:
 		if id == u.db_id:
 			return u
 	return None
 
-def findClientByUsername(username, inside=None):
+def find_client_by_username(username, inside=None):
 	username = username.lower()
 	for u in inside or AllClients:
 		if username == u.username or (username.isnumeric() and int(username) == u.id):
 			return u
 	return None
 
-def findUsernameByDBId(dbid):
+def find_username_by_db_id(dbid):
 	c = Database.cursor()
-	c.execute('SELECT username FROM User WHERE uid=?', (dbid,))
+	c.execute('SELECT username FROM User WHERE entity_id=?', (dbid,))
 	result = c.fetchone()
 	if result == None:
 		return None
 	return result[0]
 
-def findDBIdByUsername(username):
+def find_db_id_by_username(username):
 	c = Database.cursor()
 	username = str(username).lower()
-	c.execute('SELECT uid FROM User WHERE username=?', (username,))
+	c.execute('SELECT entity_id FROM User WHERE username=?', (username,))
 	result = c.fetchone()
 	if result == None:
 		return None
 	return result[0]
 
-def filterUsername(text):
+def get_entity_type_by_id(id):
+	c = Database.cursor()
+	c.execute('SELECT type FROM Entity WHERE id=?', (id,))
+	result = c.fetchone()
+	if result == None:
+		return None
+	return result[0]
+
+def get_entity_by_id(id):
+	# Already loaded?
+	if id in AllEntities:
+		return AllEntities[id]
+
+	# Try to load it
+
+	entity_type = get_entity_type_by_id(id)
+	if entity_type == None:
+		# Doesn't exist in the database
+		return None
+	if entity_type == entity_type['user']:
+		# Can't load users by ID
+		return None
+	if entity_type == entity_type['map']:
+		e = Map(id=id)
+		if e.db_id != None:
+			return e
+		return None
+
+	# Generic entity
+	e = Entity(entity_type)
+	if e.load(id):
+		return e
+	return None
+
+def filter_username(text):
 	return ''.join([i for i in text if (i.isalnum() or i == '_')]).lower()
 
-def getMapById(mapId):
+def get_map_by_id(mapId):
 	if mapId in AllMaps:
 		return AllMaps[mapId]
 	# Map not found, so load it
@@ -134,10 +182,30 @@ def getMapById(mapId):
 	AllMaps[mapId] = m
 	return m
 
-def imageURLIsOkay(url):
+def image_url_is_okay(url):
 	for w in Config["Images"]["URLWhitelist"]:
 		if url.startswith(w):
 			return True
 	return False
+
+def dumps_if_not_none(dump_me):
+	if dump_me != None:
+		return json.dumps(dump_me)
+	return None
+
+def dumps_if_not_empty(dump_me):
+	if dump_me != None and len(dump_me):
+		return json.dumps(dump_me)
+	return None
+
+def dumps_if_condition(dump_me, condition):
+	if condition:
+		return json.dumps(dump_me)
+	return None
+
+def loads_if_not_none(load_me):
+	if load_me != None:
+		return json.loads(load_me)
+	return None
 
 from .buildmap import Map

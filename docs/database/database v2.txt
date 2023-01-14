@@ -11,8 +11,8 @@ version         - version of the database format, "2" currently
 ---ENTITY--- (generic entity that can exist on a map, which can contain more information in other tables)
 General:
 	id              * integer - entity ID
-	owner           - integer - owner user ID
-    creator         - integer - creator user ID
+	owner_id        - integer - owner user ID
+	creator_id      - integer - creator user ID
 	created_at      -timestamp- time the entity was created 
 	acquired_at     -timestamp- time the owner was changed
 	type            - integer - type, also may suggest a table to look in
@@ -22,7 +22,7 @@ General:
 		3 group      (GROUP_MEMBER table)
 		4 text       (stores text, possibly a script. like notecards)
         5 image      (links to a .png)
-        6 object     (template for a tile that can be placed on a map)
+        6 map_tile   (template for a tile that can be placed on a map)
         7 tileset    (stores a description of the tiles in a tileset)
         8 reference  (refer to another entity)
         9 folder     (for categorization; holds any number of other assets)
@@ -40,7 +40,7 @@ General:
 
 	tags            - text    - metadata tags in JSON format, like species, pronouns, etc.
 
-	data            - integer - data associated with the object, or NULL if not applicable.
+	data            - text    - data associated with the object, or NULL if not applicable.
 								takes advantage of SQLite being able to store text in an integer column
 								----
 								text: the text being stored
@@ -54,6 +54,10 @@ General:
 Position:
 	location        - integer - entity ID of whatever contains this entity - may be a map
 	position        - text    - JSON position within the container. Usually [x,y] or [x,y,dir] but it's flexible
+
+Home position:
+	home_location   - integer - entity ID of whatever is this entity's home location
+	home_position   - text    - JSON position within the container. Usually [x,y] or [x,y,dir] but it's flexible
 
 Permissions:
 	allow           - integer - default permissions to allow
@@ -69,9 +73,10 @@ Permissions:
 		       for groups: anyone can get a list of the members
 		0x0020 map bot (can operate on map remotely)
 		0x0040 move this entity within the container
-		0x0080 make copies of this entity
-		0x0100 allowed to bring non-player entities here temporarily
-		0x0200 allowed to bring non-player entities here that can be here without the player's owner
+		0x0080 move this entity onto another map
+		0x0100 make copies of this entity
+		0x0200 allowed to bring non-player entities here temporarily
+		0x0400 allowed to bring non-player entities here that can be here without the player's owner
 
 
 ---PERMISSION---
