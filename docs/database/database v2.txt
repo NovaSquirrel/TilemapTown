@@ -144,10 +144,16 @@ expires_at      -timestamp- when ban expires
 reason          - text    - ban reason
 
 ---GROUP_MEMBER---
-group_id        * integer - MAP_ENTITY id for the group
+group_id        * integer - ENTITY id for the group
 member_id       * integer - entity ID of the player that's in the group
 created_at      -timestamp- when the invite was made, so that it can be deleted if it's been too long
 accepted_at     -timestamp- when the invite was accepted; null if it hasn't been accepted
 flags           - integer - bitfield of group permissions
                             1:  can invite members
                             2:  can remove members
+
+---GLOBAL_ENTITY_KEY--- (gives an entity a name that it can be referred to from anywhere)
+entity_id       * integer - ENTITY id that's being referred to here
+key             - text    - Name to refer to this entry with
+flags           - integer - Not used yet
+

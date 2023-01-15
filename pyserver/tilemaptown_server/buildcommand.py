@@ -504,13 +504,13 @@ def fn_mapprivacy(self, client, arg):
 	if client.must_be_owner(False):
 		if arg == "public":
 			self.deny &= ~permission['entry']
-			self.flags |= mapflag['public']
+			self.map_flags |= mapflag['public']
 		elif arg == "private":
 			self.deny |= permission['entry']
-			self.flags &= ~mapflag['public']
+			self.map_flags &= ~mapflag['public']
 		elif arg == "unlisted":
 			self.deny &= ~permission['entry']
-			self.flags &= ~mapflag['public']
+			self.map_flags &= ~mapflag['public']
 		else:
 			client.send("ERR", {'text': 'Map privacy must be public, private, or unlisted'})
 handlers['mapprivacy'] = fn_mapprivacy
@@ -556,7 +556,7 @@ def fn_listeners(self, client, arg):
 	for i in botwatch_type.keys():
 		c = botwatch_type[i]
 		if self.id in BotWatch[c]:
-			for u in BotWatch[c][self.id]:
+			for u in BotWatch[c][self.db_id]:
 				out += '%s (%s), ' % (u.username, i)
 	client.send("MSG", {'text': 'Listeners here: ' + out})
 handlers['listeners'] = fn_listeners
@@ -624,6 +624,10 @@ def fn_unlisten(self, client, arg):
 				client.listening_maps.remove((category, m))
 	client.send("MSG", {'text': 'Stopped listening on maps: ' + str(client.listening_maps)})
 handlers['unlisten'] = fn_unlisten
+
+def fn_test(self, client, arg):
+	client.send("MSG", {'text': "%d %d %d" % (int(client.map_id), len(AllEntitiesByDB), len(AllEntitiesByID), )})
+handlers['test'] = fn_test
 
 def fn_kick_and_ban(self, client, arg, ban):
 	arg = arg.lower()

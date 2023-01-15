@@ -47,9 +47,10 @@ class Client(Entity):
 	def __del__(self):
 		self.cleanup()
 		super().__del__()
-		AllClients.pop(self.db_id, None)
 
 	def cleanup(self):
+		AllClients.discard(self)
+
 		self.ws = None
 		for p in self.listening_maps:
 			BotWatch[p[0]][p[1]].remove(self)
@@ -60,7 +61,7 @@ class Client(Entity):
 			return
 		send_me = command_type
 		if command_params != None:
-			send_me += " " + json.dumps(commandParams)
+			send_me += " " + json.dumps(command_params)
 		asyncio.ensure_future(self.ws.send(send_me))
 
 	def test_server_banned(self):

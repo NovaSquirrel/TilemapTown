@@ -17,7 +17,6 @@
 import json, asyncio, random, datetime
 from .buildglobal import *
 from .buildentity import *
-from .buildprotocol import handle_protocol_command
 
 # Unused currently
 DirX = [ 1,  1,  0, -1, -1, -1,  0,  1]
@@ -47,7 +46,6 @@ class Map(Entity):
 	def __del__(self):
 		self.cleanup()
 		super().__del__()
-		AllMaps.pop(self.db_id, None)
 
 	def clean_up(self):
 		""" Clean up everything before a map unload """
@@ -83,12 +81,15 @@ class Map(Entity):
 		entity_loaded = super().load(map_id)
 		if entity_loaded:
 			# Parse map data
-			s = json.loads(self.data)
-			self.blank_map(s["pos"][2]+1, s["pos"][3]+1) # [firstX, firstY, lastX, lastY]
-			for t in s["turf"]:
-				self.turfs[t[0]][t[1]] = t[2]
-			for o in s["obj"]:
-				self.objs[o[0]][o[1]] = o[2]
+			if self.data:
+				s = json.loads(self.data)
+				self.blank_map(s["pos"][2]+1, s["pos"][3]+1) # [firstX, firstY, lastX, lastY]
+				for t in s["turf"]:
+					self.turfs[t[0]][t[1]] = t[2]
+				for o in s["obj"]:
+					self.objs[o[0]][o[1]] = o[2]
+			else:
+				self.blank_map(self.width, self.height)
 		else:
 			return False
 
@@ -111,7 +112,7 @@ class Map(Entity):
 
 		# Update the map
 		values = (self.map_flags, self.start_pos[0], self.start_pos[1], self.width, self.height, self.default_turf, self.db_id)
-		c.execute("UPDATE Map SET flags, start_x=?, start_y=?, width=?, height=?, default_turf=? WHERE entitiy_id=?", values)
+		c.execute("UPDATE Map SET flags=?, start_x=?, start_y=?, width=?, height=?, default_turf=? WHERE entity_id=?", values)
 
 	def map_section(self, x1, y1, x2, y2):
 		""" Returns a section of map as a list of turfs and objects """
@@ -134,7 +135,10 @@ class Map(Entity):
 
 	def map_info(self, all_info=False):
 		""" MAI message data """
-		out = {'name': self.name, 'id': self.id, 'owner': find_username_by_db_id(self.owner_id) or '?', 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.flags & mapflag['public'] != 0, 'private': self.deny & permission['entry'] != 0, 'build_enabled': self.allow & permission['build'] != 0, 'full_sandbox': self.allow & permission['sandbox'] != 0}
+		out = {'name': self.name, 'id': self.id, 'owner': find_username_by_db_id(self.owner_id) or '?', 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.map_flags & mapflag['public'] != 0, 'private': self.deny & permission['entry'] != 0, 'build_enabled': self.allow & permission['build'] != 0, 'full_sandbox': self.allow & permission['sandbox'] != 0}
 		if all_info:
 			out['start_pos'] = self.start_pos
 		return out
+
+	def is_map(self):
+		return True

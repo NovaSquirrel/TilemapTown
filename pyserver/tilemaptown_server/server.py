@@ -20,6 +20,8 @@ from .buildmap import *
 from .buildclient import *
 if Config["Database"]["Setup"]:
 	from .database_setup_v2 import *
+else:
+	reload_database_meta()
 
 # Timer that runs and performs background tasks
 def mainTimer():
@@ -48,14 +50,14 @@ def mainTimer():
 
 	# Unload unused maps
 	unloaded = set()
-	for k,m in AllMaps.items():
-		if (m.id not in Config["Server"]["AlwaysLoadedMaps"]) and (len(m.users) < 1):
+	for k,m in AllMapsByDB.items():
+		if (m.id not in Config["Server"]["AlwaysLoadedMaps"]) and (len(m.contents) < 1):
 			print("Unloading map "+str(k))
 			m.save()
 			m.clean_up()
 			unloaded.add(k)
 	for m in unloaded:
-		del AllMaps[m]
+		del AllMapsByDB[m]
 
 	# Run server shutdown timer, if it's running
 	if ServerShutdown[0] > 0:
@@ -72,8 +74,9 @@ def mainTimer():
 		loop.call_later(1, mainTimer)
 
 # Websocket connection handler
-async def clientHandler(websocket, path):
+async def client_handler(websocket, path):
 	client = Client(websocket)
+
 	client.ip = websocket.remote_address[0]
 
 	# If the local and remote addresses are the same, it's trusted
@@ -96,7 +99,7 @@ async def clientHandler(websocket, path):
 			message = await websocket.recv()
 			if len(message) < 3:
 				continue
-            # Split it into parts
+            # Split the message into parts, to parse it
 			command = message[0:3]
 			arg = None
 			if len(message) > 4:
@@ -107,8 +110,8 @@ async def clientHandler(websocket, path):
 				result = False
 				if arg != None:
 					result = client.login(filter_username(arg["username"]), arg["password"])
-				if result != True: # default to map 0 if can't log in
-					client.switch_map(0)
+				if result != True: # default to default map if can't log in
+					client.switch_map(get_database_meta('default_map'))
 				if len(Config["Server"]["MOTD"]):
 					client.send("MSG", {'text': Config["Server"]["MOTD"]})
 				client.send("MSG", {'text': 'Users connected: %d' % len(AllClients)})
@@ -121,8 +124,8 @@ async def clientHandler(websocket, path):
 			# Send the command through to the map
 			if command not in ["IDN", "PIN"]:
 				if "remote_map" in arg:
-					if arg["remote_map"] in AllMaps:
-						map = AllMaps[arg["remote_map"]]
+					if arg["remote_map"] in AllMapsByDB:
+						map = AllMapsByDB[arg["remote_map"]]
 						if map.has_permission(client, permission['map_bot'], False):
 							map.receive_command(client, command, arg)
 						else:
@@ -138,23 +141,23 @@ async def clientHandler(websocket, path):
 		print("Unexpected error:", sys.exc_info()[0])
 		print(sys.exc_info()[1])
 		traceback.print_tb(sys.exc_info()[2])
-#		raise
+		raise
 
 	client.cleanup()
 	if client.username:
-		client.save()
+		client.save_and_commit()
 
 	# remove the user from all clients' views
 	if client.map != None:
-		client.map.users.remove(client)
+		client.map.contents.remove(client)
 		client.map.broadcast("WHO", {'remove': client.id})
-	AllClients.remove(client)
+	AllClients.discard(client)
 
 global loop
 
 def main():
 	global loop
-	start_server = websockets.serve(clientHandler, None, Config["Server"]["Port"], max_size=Config["Server"]["WSMaxSize"], max_queue=Config["Server"]["WSMaxQueue"])
+	start_server = websockets.serve(client_handler, None, Config["Server"]["Port"], max_size=Config["Server"]["WSMaxSize"], max_queue=Config["Server"]["WSMaxQueue"])
 
 	# Start the event loop
 	loop = asyncio.get_event_loop()

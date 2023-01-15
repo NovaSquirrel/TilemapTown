@@ -16,6 +16,7 @@
 
 import asyncio, datetime, random, websockets, json, os.path, hashlib
 from .buildglobal import *
+from .buildprotocol import handle_protocol_command
 
 entityCounter = 1
 
@@ -30,7 +31,7 @@ class Entity(object):
 		self.dir = 2 # South
 		self.map = None
 
-		self.pic = [0, 8, 24]
+		self.pic = None
 
 		self.map_id = None         # Map the entity is currently on
 		self.x = 0
@@ -50,6 +51,7 @@ class Entity(object):
 		# other info
 		self.tags = {}    # description, species, gender and other things
 		self.data = None
+		self.flags = 0
 		self.contents = set()
 
 		# temporary information
@@ -72,11 +74,16 @@ class Entity(object):
 		self.deny = 0
 		self.guest_deny = 0
 
+		# Make this entity easy to find
+		AllEntitiesByID[self.id] = self
+
 	def __del__(self):
 		self.cleanup()
-		AllEntities.pop(self.db_id, None)
 
 	def cleanup(self):
+		AllEntitiesByDB.pop(self.db_id, None)
+		AllEntitiesByID.pop(self.id,    None)
+
 		temp = set(self.passengers)
 		for u in temp:
 			u.dismount()
@@ -87,18 +94,21 @@ class Entity(object):
 		# Not supported by default
 		return
 
-	def broadcast(self, commandType, commandParams, remote_category=None, remote_only=False):
+	# Send a message to all contents
+	def broadcast(self, command_type, command_params, remote_category=None, remote_only=False):
 		""" Send a message to everyone on the map """
 		if not remote_only:
-			for client in self.users:
-				client.send(commandType, commandParams)
+			for client in self.contents:
+				client.send(command_type, command_params)
 
 		""" Also send it to any registered listeners """
 		if remote_category != None and self.id in BotWatch[remote_category]:
-			commandParams['remote_map'] = self.id
-			for client in BotWatch[remote_category][self.id]:
-				if (client.map_id != self.id) or remote_only: # don't send twice to people on the map
-					client.send(commandType, commandParams)
+			if command_params == None:
+				command_params = {}
+			command_params['remote_map'] = self.db_id
+			for client in BotWatch[remote_category][self.db_id]:
+				if (client.map_id != self.db_id) or remote_only: # don't send twice to people on the map
+					client.send(command_type, command_params)
 
 	# Permission checking
 
@@ -331,7 +341,7 @@ class Entity(object):
 
 	def switch_map(self, map_id, new_pos=None, goto_spawn=True, update_history=True):
 		""" Teleport the user to another map """
-		if update_history and self.map_id >= 0:
+		if update_history and self.map_id != None:
 			# Add a new teleport history entry if new map
 			if self.map_id != map_id:
 				self.tp_history.append([self.map_id, self.x, self.y])
@@ -340,7 +350,7 @@ class Entity(object):
 
 		if self.map_id != map_id:
 			# First check if you can even go to that map
-			map_load = get_entity_by_id(map_id)
+			map_load = get_entity_by_db_id(map_id)
 			if map_load == None:
 				self.send("ERR", {'text': 'Couldn\'t load map %d' % map_id})
 				return False
@@ -359,7 +369,7 @@ class Entity(object):
 			self.update_map_permissions()
 
 			self.map.contents.add(self)
-			if isinstance(self.map, Map):
+			if self.map.is_map():
 				self.send("MAI", self.map.map_info())
 				self.send("MAP", self.map.map_section(0, 0, self.map.width-1, self.map.height-1))
 			self.send("WHO", {'list': self.map.who_contents(), 'you': self.id})
@@ -389,7 +399,7 @@ class Entity(object):
 		if self.home != None:
 			self.switch_map(self.home[0], new_pos=[self.home[1], self.home[2]])
 		else:
-			self.switch_map(0)
+			self.switch_map(get_database_meta('default_map'))
 
 	# Information
 
@@ -409,7 +419,7 @@ class Entity(object):
 
 	def who_contents(self):
 		""" WHO message data """
-		return {str(e.id):e.who() for e in e.contents}
+		return {str(e.id):e.who() for e in self.contents}
 
 	def username_or_id(self):
 		return str(self.id)
@@ -457,6 +467,9 @@ class Entity(object):
 		self.guest_deny = result[12]
 		self.data = loads_if_not_none(result[13])
 		self.creator_id = result[14]
+
+		# Make this entity easy to find
+		AllEntitiesByDB[self.db_id] = self
 		return True
 
 	def save(self):
@@ -469,7 +482,7 @@ class Entity(object):
 			if self.db_id == None:
 				return
 
-		values = (self.entity_type, self.name, self.desc, json.dumps(self.pic), self.map_id, [self.x, self.y] + ([self.dir] if self.dir != 2 else []), self.home_id, dumps_if_not_none(self.home_position), dumps_if_condition(self.tags, self.tags != {}), self.owner_id, self.allow, self.deny, self.guest_deny, dumps_if_not_none(self.data), self.db_id)
+		values = (self.entity_type, self.name, self.desc, dumps_if_not_none(self.pic), self.map_id, json.dumps([self.x, self.y] + ([self.dir] if self.dir != 2 else [])), self.home_id, dumps_if_not_none(self.home_position), dumps_if_condition(self.tags, self.tags != {}), self.owner_id, self.allow, self.deny, self.guest_deny, dumps_if_not_none(self.data), self.db_id)
 		c.execute("UPDATE Entity SET type=?, name=?, desc=?, pic=?, location=?, position=?, home_location=?, home_position=?, tags=?, owner_id=?, allow=?, deny=?, guest_deny=?, data=? WHERE id=?", values)
 
 	def save_and_commit(self):
@@ -484,3 +497,6 @@ class Entity(object):
 		""" Actually run a command from the client after being processed """
 		client.idle_timer = 0
 		handle_protocol_command(self, client, command, arg)
+
+	def is_map(self):
+		return False

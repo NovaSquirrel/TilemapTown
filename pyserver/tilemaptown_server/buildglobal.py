@@ -52,12 +52,14 @@ setConfigDefault("Images",   "URLWhitelist",     ["https://i.imgur.com/"])
 
 # Open database connection
 Database = sqlite3.connect(Config["Database"]["File"], detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+DatabaseMeta = {}
 
 # Important information shared by each module
 ServerShutdown = [-1]
 AllClients = set()
-AllMaps = {}     # Maps only
-AllEntities = {} # All entities
+AllMapsByDB = {}     # Maps only
+AllEntitiesByDB = {} # All entities (indexed by database ID)
+AllEntitiesByID = {} # All entities (indexed by temporary ID)
 
 # Remote map-watching for bots
 botwatch_type = {}
@@ -94,7 +96,7 @@ entity_type['folder'] = 9
 entity_type['landmark'] = 10
 
 def map_id_exists(id): # Used by /map
-	if id in AllMaps:
+	if id in AllMapsByDB:
 		return True
 	c = Database.cursor()
 	c.execute('SELECT entity_id FROM Map WHERE entity_id=?', (id,))
@@ -144,43 +146,34 @@ def get_entity_type_by_id(id):
 		return None
 	return result[0]
 
-def get_entity_by_id(id):
+def get_entity_by_db_id(id):
 	# Already loaded?
-	if id in AllEntities:
-		return AllEntities[id]
+	if id in AllEntitiesByDB:
+		return AllEntitiesByDB[id]
 
 	# Try to load it
 
-	entity_type = get_entity_type_by_id(id)
-	if entity_type == None:
+	t = get_entity_type_by_id(id)
+	if t == None:
 		# Doesn't exist in the database
 		return None
-	if entity_type == entity_type['user']:
+	if t == entity_type['user']:
 		# Can't load users by ID
 		return None
-	if entity_type == entity_type['map']:
+	if t == entity_type['map']:
 		e = Map(id=id)
 		if e.db_id != None:
 			return e
 		return None
 
 	# Generic entity
-	e = Entity(entity_type)
+	e = Entity(t)
 	if e.load(id):
 		return e
 	return None
 
 def filter_username(text):
 	return ''.join([i for i in text if (i.isalnum() or i == '_')]).lower()
-
-def get_map_by_id(mapId):
-	if mapId in AllMaps:
-		return AllMaps[mapId]
-	# Map not found, so load it
-	m = Map()
-	m.load(mapId)
-	AllMaps[mapId] = m
-	return m
 
 def image_url_is_okay(url):
 	for w in Config["Images"]["URLWhitelist"]:
@@ -207,5 +200,33 @@ def loads_if_not_none(load_me):
 	if load_me != None:
 		return json.loads(load_me)
 	return None
+
+def get_database_meta(key, default=None):
+	if key in DatabaseMeta:
+		return DatabaseMeta[key]
+	return default
+
+def set_database_meta(key, value):
+	c = Database.cursor()
+	# Use the "flags" variable to indicate that it's an integer, not text
+	flags = int(isinstance(value, int))
+
+	if key not in DatabaseMeta:
+		c.execute("INSERT INTO Meta (item, value, flags) VALUES (?, ?, ?)", (key, value, flags))
+	elif DatabaseMeta[key] == value: # Already correct
+		return
+	else:
+		c.execute("UPDATE Meta SET value=?, flags=? WHERE item=?", (value, flags, key,))
+	DatabaseMeta[key] = value
+	Database.commit()
+
+def reload_database_meta():
+	c = Database.cursor()
+	for row in c.execute('SELECT item, value, flags FROM Meta'):
+		v = row[1]
+		# If the flag is set, it's an integer, not text
+		if row[2] & 1:
+			v = int(v)
+		DatabaseMeta[row[0]] = v
 
 from .buildmap import Map

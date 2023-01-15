@@ -20,7 +20,7 @@ from .buildcommand import handle_user_command, escape_tags
 
 handlers = {}
 
-def tileIsOkay(tile):
+def tile_is_okay(tile):
 	# convert to a dictionary to check first if necessary
 	if type(tile) == str and len(tile) and tile[0] == '{':
 		tile = json.loads(tile)
@@ -108,7 +108,7 @@ def fn_BAG(self, client, arg):
 				client.send("ERR", {'text': 'Image asset URL doesn\'t match any whitelisted sites'})
 				return
 			if asset_type == 3 and "data" in arg['update']:
-				tile_test = tileIsOkay(arg['update']['data'])
+				tile_test = tile_is_okay(arg['update']['data'])
 				if not tile_test[0]:
 					client.send("ERR", {'text': 'Tile [tt]%s[/tt] rejected (%s)' % (arg['update']['data'], tile_test[1])})
 					return
@@ -245,7 +245,7 @@ def fn_PUT(self, client, arg):
 	if self.has_permission(client, permission['build'], True) or client.must_be_owner(True, give_error=False):
 		# verify the the tiles you're attempting to put down are actually good
 		if arg["obj"]: #object
-			tile_test = [tileIsOkay(x) for x in arg["atom"]]
+			tile_test = [tile_is_okay(x) for x in arg["atom"]]
 			if all(x[0] for x in tile_test): # all tiles pass the test
 				self.objs[x][y] = arg["atom"]
 				self.broadcast("MAP", self.map_section(x, y, x, y))
@@ -255,7 +255,7 @@ def fn_PUT(self, client, arg):
 				client.send("MAP", self.map_section(x, y, x, y))
 				client.send("ERR", {'text': 'Placed objects rejected'})
 		else: #turf
-			tile_test = tileIsOkay(arg["atom"])
+			tile_test = tile_is_okay(arg["atom"])
 			if tile_test[0]:
 				self.turfs[x][y] = arg["atom"]
 				self.broadcast("MAP", self.map_section(x, y, x, y))
@@ -272,11 +272,11 @@ def fn_BLK(self, client, arg):
 	if self.has_permission(client, permission['bulk_build'], False) or client.must_be_owner(True, give_error=False):
 		# verify the tiles
 		for turf in arg["turf"]:
-			if not tileIsOkay(turf[2])[0]:
+			if not tile_is_okay(turf[2])[0]:
 				client.send("ERR", {'text': 'Bad turf in bulk build'})
 				return
 		for obj in arg["obj"]:
-			tile_test = [tileIsOkay(x) for x in obj[2]]
+			tile_test = [tile_is_okay(x) for x in obj[2]]
 			if any(not x[0] for x in tile_test): # any tiles don't pass the test
 				client.send("ERR", {'text': 'Bad obj in bulk build'})
 				return
