@@ -18,6 +18,7 @@ import asyncio, datetime, random, websockets, json, sys, traceback
 from .buildglobal import *
 from .buildmap import *
 from .buildclient import *
+from .buildprotocol import handle_protocol_command
 if Config["Database"]["Setup"]:
 	from .database_setup_v2 import *
 else:
@@ -114,26 +115,28 @@ async def client_handler(websocket, path):
 					client.switch_map(get_database_meta('default_map'))
 				if len(Config["Server"]["MOTD"]):
 					client.send("MSG", {'text': Config["Server"]["MOTD"]})
+				client.identified = True
 				client.send("MSG", {'text': 'Users connected: %d' % len(AllClients)})
 			elif command == "PIN":
 				client.ping_timer = 300
 
 			# Don't allow the user to go any further if they're not on a map
-			if client.map_id == -1:
+			if client.identified == False:
 				continue
 			# Send the command through to the map
 			if command not in ["IDN", "PIN"]:
+				client.idle_timer = 0
 				if "remote_map" in arg:
 					if arg["remote_map"] in AllMapsByDB:
 						map = AllMapsByDB[arg["remote_map"]]
 						if map.has_permission(client, permission['map_bot'], False):
-							map.receive_command(client, command, arg)
+							handle_protocol_command(map, client, command, arg)
 						else:
 							client.send("ERR", {'text': 'You do not have [tt]map_bot[/tt] permission on map %d' % arg["remote_map"]})
 					else:
 						client.send("ERR", {'text': 'Map %d is not loaded' % arg["remote_map"]})
 				else:
-					client.map.receive_command(client, command, arg)
+					handle_protocol_command(client.map, client, command, arg) # client.map may be None
 
 	except websockets.ConnectionClosed:
 		print("disconnected: %s (%s, \"%s\")" % (client.ip, client.username or "?", client.name))

@@ -44,6 +44,8 @@ class Client(Entity):
 		self.watch_list = set()
 		self.user_flags = 0
 
+		self.identified = False
+
 	def __del__(self):
 		self.cleanup()
 		super().__del__()
@@ -63,6 +65,14 @@ class Client(Entity):
 		if command_params != None:
 			send_me += " " + json.dumps(command_params)
 		asyncio.ensure_future(self.ws.send(send_me))
+
+	def add_to_contents(self, item):
+		super().add_to_contents(item)
+		# TODO
+
+	def remove_from_contents(self, item):
+		super().remove_from_contents(item)
+		# TODO
 
 	def test_server_banned(self):
 		""" Test for and take action on IP bans """
@@ -173,6 +183,12 @@ class Client(Entity):
 		return super().load(self.db_id)
 
 	def login(self, username, password):
+		inventory = []
+		def recursively_get_inventory(container):
+			for row in c.execute('SELECT id, name, desc, type, flags, location, data, pic, tags FROM Entity WHERE owner_id=? AND location=?', (self.db_id, container)):
+				item = {'id': row[0], 'name': row[1], 'desc': row[2], 'type': entity_type_name[row[3]], 'flags': row[4], 'folder': row[5], 'data': row[6], 'tags': row[7]}
+				inventory.append(item)
+
 		""" Attempt to log the client into an account """
 		username = filter_username(username)
 		result = self.load(username, password)
@@ -180,20 +196,21 @@ class Client(Entity):
 			print("login: \"%s\" from %s" % (self.username, self.ip))
 
 			self.switch_map(self.map_id, goto_spawn=False)
-			self.map.broadcast("MSG", {'text': self.name+" has logged in ("+self.username+")"})
-			self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['entry']) # update client view
+			if self.map:
+				self.map.broadcast("MSG", {'text': self.name+" has logged in ("+self.username+")"})
+				self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['entry']) # update client view
+			else:
+				self.send("MSG", {'text': "You've logged in but you're not on a map. Try [command]map %d[/command]" % get_database_meta('default_map')})
 
 			# send the client their inventory
 			c = Database.cursor()
 			inventory = []
-			for row in c.execute('SELECT aid, name, desc, type, flags, folder, data FROM Asset_Info WHERE owner=?', (self.db_id,)):
-				item = {'id': row[0], 'name': row[1], 'desc': row[2], 'type': row[3], 'flags': row[4], 'folder': row[5], 'data': row[6]}
-				inventory.append(item)
+			recursively_get_inventory(self.db_id)
 			self.send("BAG", {'list': inventory})
 
 			# send the client their mail
 			mail = []
-			for row in c.execute('SELECT id, sender, recipients, subject, contents, flags FROM Mail WHERE uid=?', (self.db_id,)):
+			for row in c.execute('SELECT id, sender_id, recipients, subject, contents, flags FROM Mail WHERE owner_id=?', (self.db_id,)):
 				item = {'id': row[0], 'from': find_username_by_db_id(row[1]),
 				'to': [find_username_by_db_id(int(x)) for x in row[2].split(',')],
 				'subject': row[3], 'contents': row[4], 'flags': row[5]}
@@ -223,4 +240,7 @@ class Client(Entity):
 		self.username = username
 		self.changepass(password)
 		# db_id will be set because changepass calls save_and_commit()
+		return True
+
+	def is_client(self):
 		return True

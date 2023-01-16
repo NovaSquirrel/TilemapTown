@@ -16,7 +16,6 @@
 
 import asyncio, datetime, random, websockets, json, os.path, hashlib
 from .buildglobal import *
-from .buildprotocol import handle_protocol_command
 
 entityCounter = 1
 
@@ -110,57 +109,143 @@ class Entity(object):
 				if (client.map_id != self.db_id) or remote_only: # don't send twice to people on the map
 					client.send(command_type, command_params)
 
+	# Allow other classes to respond to having things added to them
+
+	def add_to_contents(self, item):
+		self.contents.add(item)
+
+	def remove_from_contents(self, item):
+		self.contents.discard(item)
+
 	# Permission checking
 
-	def update_map_permissions(self):
-		""" Update map_allow and map_deny for the current map """
-		self.map_allow = 0
-		self.map_deny = 0
-
+	def get_allow_deny_for_other_entity(self, other_id):
+		allow = 0
+		deny = 0
 		# If a guest, don't bother looking up any queries
 		if self.db_id == None:
-			return
+			return (0, 0)
+
 		c = Database.cursor()
-		c.execute('SELECT allow, deny FROM Map_Permission WHERE mid=? AND uid=?', (self.map_id, self.db_id,))
+		c.execute('SELECT allow, deny FROM Permission WHERE subject_id=? AND actor_id=?', (other_id, self.db_id,))
 		result = c.fetchone()
 		if result != None:
-			self.map_allow = result[0]
-			self.map_deny = result[1]
+			allow = result[0]
+			deny = result[1]
 
-		# Turn on all permissions
-		for row in c.execute('SELECT p.allow FROM Group_Map_Permission p, Group_Member m\
-			WHERE m.uid=? AND p.gid=m.gid AND p.mid=?', (self.db_id, self.map_id)):
-			self.map_allow |= row[0]
+		# Turn on permissions granted by groups too
+		for row in c.execute('SELECT p.allow, FROM Permission p, Group_Member m\
+			WHERE m.member_id=? AND p.actor_id=m.group_id AND p.subject_id=? AND m.accepted_at != NULL', (self.db_id, other_id)):
+			allow |= row[0]
+		return (allow, deny)
 
-	def in_ban_list(self, banlist, action):
-		if self.username == None and '!guests' in banlist:
-			self.send("ERR", {'text': 'Guests may not %s' % action})
+	def update_map_permissions(self):
+		""" Searches PERMISSION table and update map_allow and map_deny for the entity, so SQL queries can be skipped for the map they're on """
+		self.map_allow, self.map_deny = self.get_allow_deny_for_other_entity(self.map_id)
+
+	# Entity has permission to act on some other entity
+	def has_permission(self, other, perm, default):
+		# Oper override bypasses permission checks
+		if self.oper_override:
 			return True
-		if self.username in banlist:
-			self.send("ERR", {'text': 'You may not %s' % action})
-			return True
-		return False
 
+		# If you pass in an ID, see if the entity with that ID is already loaded
+		if isinstance(other, int) and other in AllEntitiesByDB:
+			other = AllEntitiesByDB[other]
+
+		# Is it loaded?
+		if isinstance(other, Entity):
+			# If you're the owner, you automatically have permission
+			if self.db_id == other.owner_id:
+				return True
+
+			# Start with the server default
+			map_value = default
+			# and let the map override that default
+			if other.allow & perm:
+				map_value = True
+			if other.deny & perm:
+				map_value = False
+
+			# If guest, apply guest_deny
+			if self.db_id == None:
+				if other.guest_deny & perm:
+					has = False
+				return map_value
+
+			# If user is on the map, use the user's cached value
+			if self.map_id == other.db_id:
+				if self.map_deny & perm:
+					return False
+				if self.map_allow & perm:
+					return True
+			else:
+				user_allow, user_deny = self.get_allow_deny_for_other_entity(self, other)
+				if user_deny & perm:
+					return False
+				if user_allow & perm:
+					return True
+			return map_value # Return default for the map
+
+		#############################################################
+		# If it's not loaded, a query is unavoidable
+		other_id = other
+		if isinstance(other_id, Entity):
+			other_id = other.db_id
+
+		# Get the basic allow/deny/guest_deny
+		result = c.execute('SELECT allow, deny, guest_deny FROM Entity WHERE id=?', (other_id, self.db_id,))
+		if result == None: # Oops, entity doen't even exist
+			return False
+		allow = result[0]
+		deny = result[1]
+		guest_deny = result[2]
+
+		# Start with the server default
+		map_value = default
+		# and let the map override that default
+		if allow & perm:
+			map_value = True
+		if deny & perm:
+			map_value = False
+
+		# If guest, apply guest_deny
+		if self.db_id == None:
+			if guest_deny & perm:
+				has = False
+			return has
+
+		user_allow, user_deny = self.get_allow_deny_for_other_entity(self, other_id)
+		if user_deny & perm:
+			return False
+		if user_allow & perm:
+			return True
+		return has
+
+	# Will be used by protocol message handlers
 	def must_be_server_admin(self, give_error=True):
 		return False
 
+	# Used by protocol message handlers
 	def must_be_owner(self, admin_okay, give_error=True):
-		if self.map.owner_id == self.db_id or self.oper_override or (admin_okay and self.map.has_permission(self, permission['admin'], False)):
+		if self.map == None:
+			return False
+		if self.map.owner_id == self.db_id or self.oper_override or (admin_okay and self.has_permission(self, permission['admin'], False)):
 			return True
 		elif give_error:
 			self.send("ERR", {'text': 'You don\'t have permission to do that'})
 		return False
 
-	def set_permission(self, uid, perm, value):
-		if uid == None:
+	def change_permission_for_entity(self, actor_id, perm, value):
+		if actor_id == None:
 			return
 		# Start blank
 		allow = 0
 		deny = 0
 
-		# Get current value
+		# Let the current database value override the that
 		c = Database.cursor()
-		c.execute('SELECT allow, deny FROM Map_Permission WHERE mid=? AND uid=?', (self.id, uid,))
+		c.execute('SELECT allow, deny FROM Permission WHERE subject_id=? AND actor_id=?', (self.db_id, actor_id,))
 		result = c.fetchone()
 		if result != None:
 			allow = result[0]
@@ -177,101 +262,16 @@ class Entity(object):
 			allow &= ~perm
 			deny &= ~perm
 
-		# Delete if permissions were removed
+		# Delete if all permissions were removed
 		if not (allow | deny):
-			c.execute('DELETE FROM Map_Permission WHERE mid=? AND uid=?', (self.id, uid,))
+			c.execute('DELETE FROM Permission WHERE subject_id=? AND actor_id=?', (self.db_id, actor_id,))
 			return
 
 		# Update or insert depending on needs
 		if result != None:
-			c.execute('UPDATE Map_Permission SET allow=?, deny=? WHERE mid=? AND uid=?', (allow, deny, self.id, uid,))
+			c.execute('UPDATE Permission SET allow=?, deny=? WHERE subject_id=? AND actor_id=?', (allow, deny, self.db_id, actor_id,))
 		else:
-			c.execute("INSERT INTO Map_Permission (mid, uid, allow, deny) VALUES (?, ?, ?, ?)", (self.id, uid, allow, deny,))
-
-	def set_group_permission(self, gid, perm, value):
-		if gid == None:
-			return
-		# Start blank
-		allow = 0
-
-		# Get current value
-		c = Database.cursor()
-		c.execute('SELECT allow FROM Group_Map_Permission WHERE mid=? AND gid=?', (self.id, gid,))
-		result = c.fetchone()
-		if result != None:
-			allow = result[0]
-
-		# Alter the permissions
-		if value == True:
-			allow |= perm
-		elif value == None:
-			allow &= ~perm
-
-		# Delete if permissions were removed
-		if not allow:
-			c.execute('DELETE FROM Group_Map_Permission WHERE mid=? AND gid=?', (self.id, gid,))
-			return
-
-		# Update or insert depending on needs
-		if result != None:
-			c.execute('UPDATE Group_Map_Permission SET allow=? WHERE mid=? AND gid=?', (allow, self.id, gid,))
-		else:
-			c.execute("INSERT INTO Group_Map_Permission (mid, gid, allow) VALUES (?, ?, ?)", (self.id, gid, allow,))
-
-	def has_permission(self, user, perm, default):
-		# Oper override bypasses permission checks
-		if user.oper_override:
-			return True
-		# As does being the owner of the map
-		if user.db_id != None and self.owner == user.db_id:
-			return True
-
-		# Start with the server default
-		has = default
-		# and let the map override that default
-		if self.allow & perm:
-			has = True
-		if self.deny & perm:
-			has = False
-
-		# If guest, apply guest_deny
-		if user.db_id == None:
-			if self.guest_deny & perm:
-				has = False
-			return has
-
-		# If user is on the map, use the cached value
-		if user.map_id == self.id:
-			if user.map_deny & perm:
-				return False
-			if user.map_allow & perm:
-				return True
-		else:
-			# Search Map_Permission table
-			c = Database.cursor()
-			c.execute('SELECT allow, deny FROM Map_Permission WHERE mid=? AND uid=?', (self.id, user.db_id,))
-			result = c.fetchone()
-			# If they have a per-user override, use that
-			if result != None:
-				# Override the defaults
-				if result[1] & perm:
-					return False
-				if result[0] & perm:
-					return True
-
-		# Is there any group the user is a member of, where the map has granted the permission?
-		c = Database.cursor()
-		c.execute('SELECT EXISTS(SELECT p.allow FROM Group_Map_Permission p, Group_Member m WHERE\
-			m.uid=? AND\
-			p.gid=m.gid AND\
-			p.mid=? AND\
-			(p.allow & ?)\
-			!=0)', (user.db_id, self.id, perm))
-		if c.fetchone()[0]:
-			return True
-
-		# Search for groups
-		return has
+			c.execute("INSERT INTO Permission (subject_id, actor_id, allow, deny) VALUES (?, ?, ?, ?)", (self.db_id, actor_id, allow, deny,))
 
 	# Riding
 
@@ -309,7 +309,7 @@ class Entity(object):
 
 			other = self.vehicle
 
-			self.vehicle.passengers.remove(self)
+			self.vehicle.passengers.discard(self)
 			self.vehicle = None
 
 			self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['move'])
@@ -360,7 +360,7 @@ class Entity(object):
 
 			if self.map:
 				# Remove the user for everyone on the map
-				self.map.contents.remove(self)
+				self.map.remove_from_contents(self)
 				self.map.broadcast("WHO", {'remove': self.id}, remote_category=botwatch_type['entry'])
 
 			# Get the new map and send it to the client
@@ -368,7 +368,7 @@ class Entity(object):
 			self.map = map_load
 			self.update_map_permissions()
 
-			self.map.contents.add(self)
+			self.map.add_to_contents(self)
 			if self.map.is_map():
 				self.send("MAI", self.map.map_info())
 				self.send("MAP", self.map.map_section(0, 0, self.map.width-1, self.map.height-1))
@@ -485,18 +485,15 @@ class Entity(object):
 		values = (self.entity_type, self.name, self.desc, dumps_if_not_none(self.pic), self.map_id, json.dumps([self.x, self.y] + ([self.dir] if self.dir != 2 else [])), self.home_id, dumps_if_not_none(self.home_position), dumps_if_condition(self.tags, self.tags != {}), self.owner_id, self.allow, self.deny, self.guest_deny, dumps_if_not_none(self.data), self.db_id)
 		c.execute("UPDATE Entity SET type=?, name=?, desc=?, pic=?, location=?, position=?, home_location=?, home_position=?, tags=?, owner_id=?, allow=?, deny=?, guest_deny=?, data=? WHERE id=?", values)
 
+		# Make this entity easy to find
+		AllEntitiesByDB[self.db_id] = self
+
 	def save_and_commit(self):
 		self.save()
 		Database.commit()
 
-	def receive_command(self, client, command, arg):
-		""" Add a command from the client to a queue, or just execute it """
-		self.execute_command(client, command, arg)
-
-	def execute_command(self, client, command, arg):
-		""" Actually run a command from the client after being processed """
-		client.idle_timer = 0
-		handle_protocol_command(self, client, command, arg)
+	def is_client(self):
+		return False
 
 	def is_map(self):
 		return False

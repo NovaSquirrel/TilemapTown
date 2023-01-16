@@ -17,13 +17,44 @@
 import json, random, datetime
 from .buildglobal import *
 
+
+handlers = {}	# dictionary of functions to call for each command
+aliases = {}	# dictionary of commands to change to other commands
+command_categories = {}	# categories
+command_about = {}		# help text (description of the command)
+command_syntax = {}     # help text (syntax only)
+command_privilege_level = {} # minimum required privilege level required for the command; see user_privilege in buildglobal.py
+map_only_commands = set()
+
+# Adds a command handler
+def cmd_command(alias=[], category="Miscellaneous", hidden=False, about=None, syntax=None, privilege_level='guest', map_only=False):
+	def decorator(f):
+		command_name = f.__name__[3:]
+		handlers[command_name] = f
+		if not hidden and privilege_level != 'admin':
+			if category not in command_categories:
+				command_categories[category] = set()
+			command_categories[category].add(command_name)
+		if about:
+			command_about[command_name] = about
+		if syntax:
+			command_syntax[command_name] = syntax
+		for a in alias:
+			aliases[a] = command_name
+		if map_only:
+			map_only_commands.add(command_name)
+		command_privilege_level[command_name] = privilege_level
+	return decorator
+
+# -------------------------------------
+
 # Filtering chat text
 def escape_tags(text):
 	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
-def find_group_name(groupid):
+def find_entity_name(id):
 	c = Database.cursor()
-	c.execute('SELECT name FROM User_Group WHERE gid=?', (groupid,))
+	c.execute('SELECT name FROM Entity WHERE id=?', (id,))
 	result = c.fetchone()
 	if result == None:
 		return None
@@ -35,11 +66,11 @@ def sql_exists(query, data):
 	result = c.fetchone()
 	return bool(result[0])
 
-def is_group_owner(groupid, client):
-	""" Note that groupid is a string here """
-	if not groupid.isnumeric() or not client.username:
+def is_entity_owner(id, client):
+	""" Note that id is a string here """
+	if not id.isnumeric() or not client.username:
 		return False
-	return sql_exists('SELECT owner FROM User_Group WHERE gid=? AND owner=?', (int(groupid), client.db_id))
+	return sql_exists('SELECT owner_id FROM Entity WHERE id=? AND owner_id=?', (int(id), client.db_id))
 
 def separate_first_word(text, lowercaseFirst=True):
 	space = text.find(" ")
@@ -58,23 +89,32 @@ def failed_to_find(user, username):
 	else:
 		user.send("ERR", {'text': 'Player '+username+' not found'})
 
+def in_blocked_username_list(client, banlist, action):
+	if client.username == None and '!guests' in banlist:
+		client.send("ERR", {'text': 'Guests may not %s' % action})
+		return True
+	if client.username in banlist:
+		client.send("ERR", {'text': 'You may not %s' % action})
+		return True
+	return False
+
 # -------------------------------------
 
-handlers = {}	# dictionary of functions to call for each command
-aliases = {}	# dictionary of commands to change to other commands
-
-def fn_nick(self, client, arg):
+@cmd_command(category="Settings", syntax="newname")
+def fn_nick(map, client, arg):
 	if len(arg) > 0 and not arg.isspace():
-		self.broadcast("MSG", {'text': "\""+client.name+"\" is now known as \""+escape_tags(arg)+"\""})
+		map.broadcast("MSG", {'text': "\""+client.name+"\" is now known as \""+escape_tags(arg)+"\""})
 		client.name = escape_tags(arg)
-		self.broadcast("WHO", {'add': client.who()}, remote_category=botwatch_type['entry']) # update client view
+		map.broadcast("WHO", {'add': client.who()}, remote_category=botwatch_type['entry']) # update client view
 handlers['nick'] = fn_nick
 
-def fn_client_settings(self, client, arg):
+@cmd_command(category="Settings", syntax="text")
+def fn_client_settings(map, client, arg):
 	client.client_settings = arg
 handlers['client_settings'] = fn_client_settings
 
-def fn_tell(self, client, arg):
+@cmd_command(category="Communication", alias=['msg', 'p'], syntax="username message")
+def fn_tell(map, client, arg):
 	if arg != "":
 		username, privtext = separate_first_word(arg)
 		if privtext.isspace() or privtext=="":
@@ -82,18 +122,16 @@ def fn_tell(self, client, arg):
 		else:
 			u = find_client_by_username(username)
 			if u:
-				if not client.in_ban_list(u.ignore_list, 'message %s' % u.name):
+				if not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
 					client.send("PRI", {'text': privtext, 'name':u.name, 'username': u.username_or_id(), 'receive': False})
 					u.send("PRI", {'text': privtext, 'name':client.name, 'username': client.username_or_id(), 'receive': True})
 			else:
 				failed_to_find(client, username)
 	else:
 		client.send("ERR", {'text': 'Private message who?'})
-handlers['tell'] = fn_tell
-aliases['msg'] = 'tell'
-aliases['p'] = 'tell'
 
-def fn_carry(self, client, arg):
+@cmd_command(category="Follow", syntax="username")
+def fn_carry(map, client, arg):
 	u = find_client_by_username(arg)
 	if u == None:
 		failed_to_find(client, arg)
@@ -102,13 +140,13 @@ def fn_carry(self, client, arg):
 	if my_username in u.requests:
 		client.send("ERR", {'text': 'You\'ve already sent them a request'})
 		u.requests[my_username][0] = 600 #renew
-	elif not client.in_ban_list(u.ignore_list, 'message %s' % u.name):
+	elif not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
 		client.send("MSG", {'text': 'You requested to carry '+arg})
 		u.send("MSG", {'text': client.name_and_username()+' wants to carry you', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
 		u.requests[my_username] = [600, 'carry']
-handlers['carry'] = fn_carry
 
-def fn_followme(self, client, arg):
+@cmd_command(category="Follow", syntax="username")
+def fn_followme(map, client, arg):
 	u = find_client_by_username(arg)
 	if u == None:
 		failed_to_find(client, arg)
@@ -117,25 +155,25 @@ def fn_followme(self, client, arg):
 	if my_username in u.requests:
 		client.send("ERR", {'text': 'You\'ve already sent them a request'})
 		u.requests[my_username][0] = 600 #renew
-	elif not client.in_ban_list(u.ignore_list, 'message %s' % u.name):
+	elif not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
 		client.send("MSG", {'text': 'You requested to have '+arg+' follow you'})
 		u.send("MSG", {'text': client.name_and_username()+' wants you to follow them', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
 		u.requests[my_username] = [600, 'followme']
-handlers['followme'] = fn_followme
 
-def fn_hopoff(self, client, arg):
+@cmd_command(category="Follow")
+def fn_hopoff(map, client, arg):
 	client.dismount()
-handlers['hopoff'] = fn_hopoff
 
-def fn_dropoff(self, client, arg):
+@cmd_command(category="Follow")
+def fn_dropoff(map, client, arg):
 	u = find_client_by_username(arg, inside=client.passengers)
 	if u:
 		u.dismount()
 	else:
 		client.send("ERR", {'text': 'You aren\'t carrying %s' % arg})
-handlers['dropoff'] = fn_dropoff
 
-def fn_carrywho(self, client, arg):
+@cmd_command(category="Follow")
+def fn_carrywho(map, client, arg):
 	if len(client.passengers):
 		names = ''
 		for u in client.passengers:
@@ -145,22 +183,22 @@ def fn_carrywho(self, client, arg):
 		client.send("MSG", {'text': "You are carrying %s" % names})
 	else:
 		client.send("MSG", {'text': "You aren\'t carrying anything"})
-handlers['carrywho'] = fn_carrywho
 
-def fn_ridewho(self, client, arg):
+@cmd_command(category="Follow")
+def fn_ridewho(map, client, arg):
 	if client.vehicle:
 		client.send("MSG", {'text': "You are riding %s" % client.vehicle.name_and_username()})
 	else:
 		client.send("MSG", {'text': "You aren\'t riding anything"})
-handlers['ridewho'] = fn_ridewho
 
-def fn_rideend(self, client, arg):
+@cmd_command(category="Follow")
+def fn_rideend(map, client, arg):
 	temp = set(client.passengers)
 	for u in temp:
 		u.dismount()
-handlers['rideend'] = fn_rideend
 
-def fn_tpa(self, client, arg):
+@cmd_command(category="Teleport", syntax="username")
+def fn_tpa(map, client, arg):
 	u = find_client_by_username(arg)
 	if u == None:
 		failed_to_find(client, arg)
@@ -169,13 +207,13 @@ def fn_tpa(self, client, arg):
 	if my_username in u.requests:
 		client.send("ERR", {'text': 'You\'ve already sent them a request'})
 		u.requests[my_username][0] = 600 #renew
-	elif not client.in_ban_list(u.ignore_list, 'message %s' % u.name):
+	elif not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
 		client.send("MSG", {'text': 'You requested a teleport to '+arg})
 		u.send("MSG", {'text': client.name_and_username()+' wants to teleport to you', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
 		u.requests[my_username] = [600, 'tpa']
-handlers['tpa'] = fn_tpa
 
-def fn_tpahere(self, client, arg):
+@cmd_command(category="Teleport", syntax="username")
+def fn_tpahere(map, client, arg):
 	u = find_client_by_username(arg)
 	if u == None:
 		failed_to_find(client, arg)
@@ -184,13 +222,13 @@ def fn_tpahere(self, client, arg):
 	if my_username in u.requests:
 		client.send("ERR", {'text': 'You\'ve already sent them a request'})
 		u.requests[my_username][0] = 600 #renew
-	elif not client.in_ban_list(u.ignore_list, 'message %s' % u.name):
+	elif not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
 		client.send("MSG", {'text': 'You requested that '+arg+' teleport to you'})
 		u.send("MSG", {'text': client.name_and_username()+' wants you to teleport to them', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
 		u.requests[my_username] = [600, 'tpahere']
-handlers['tpahere'] = fn_tpahere
 
-def fn_tpaccept(self, client, arg):
+@cmd_command(category="Teleport", alias=['hopon'], syntax="username")
+def fn_tpaccept(map, client, arg):
 	arg = arg.lower()
 	u = find_client_by_username(arg)
 	if u == None:
@@ -213,10 +251,9 @@ def fn_tpaccept(self, client, arg):
 			client.is_following = True
 			client.ride(u)
 		del client.requests[arg]
-handlers['tpaccept'] = fn_tpaccept
-aliases['hopon'] = 'tpaccept'
 
-def fn_tpdeny(self, client, arg):
+@cmd_command(category="Teleport", alias=['tpdecline'], syntax="username")
+def fn_tpdeny(map, client, arg):
 	arg = arg.lower()
 	u = find_client_by_username(arg)
 	if u == None:
@@ -228,10 +265,9 @@ def fn_tpdeny(self, client, arg):
 		client.send("MSG", {'text': 'You rejected a teleport request from '+arg})
 		u.send("MSG", {'text': u.name_and_username()+" rejected your request"})
 		del client.requests[arg]
-handlers['tpdeny'] = fn_tpdeny
-aliases['tpdecline'] = 'tpdeny'
 
-def fn_tpcancel(self, client, arg):
+@cmd_command(category="Teleport", syntax="username")
+def fn_tpcancel(map, client, arg):
 	arg = arg.lower()
 	u = find_client_by_username(arg)
 	if u == None:
@@ -243,22 +279,22 @@ def fn_tpcancel(self, client, arg):
 		del u.requests[my_username]
 	else:
 		client.send("ERR", {'text': 'No request to cancel'})
-handlers['tpcancel'] = fn_tpcancel
 
-def fn_time(self, client, arg):
+@cmd_command
+def fn_time(map, client, arg):
 	client.send("MSG", {'text': datetime.datetime.today().strftime("Now it's %m/%d/%Y, %I:%M %p")})
-handlers['time'] = fn_time
 
-def fn_away(self, client, arg):
+@cmd_command(syntax="message")
+def fn_away(map, client, arg):
 	if len(arg) < 1:
 		client.away = False
 		client.send("MSG", {'text': 'You are no longer marked as away'})
 	else:
 		client.away = arg
 		client.send("MSG", {'text': 'You are now marked as away ("%s")' % arg})
-handlers['away'] = fn_away
 
-def fn_roll(self, client, arg):
+@cmd_command(syntax="dice sides")
+def fn_roll(map, client, arg):
 	param = arg.split('d')
 	if len(param) != 2:
 		param = arg.split(' ')
@@ -276,168 +312,163 @@ def fn_roll(self, client, arg):
 			return
 		for i in range(dice):
 			sum += random.randint(1, sides)				
-		self.broadcast("MSG", {'text': client.name+" rolled %dd%d and got %d"%(dice, sides, sum)})
-handlers['roll'] = fn_roll
+		map.broadcast("MSG", {'text': client.name+" rolled %dd%d and got %d"%(dice, sides, sum)})
 
-def fn_mapid(self, client, arg):
-	client.send("MSG", {'text': 'Map ID is %d' % self.id})
-handlers['mapid'] = fn_mapid
+@cmd_command(category="Map")
+def fn_mapid(map, client, arg):
+	client.send("MSG", {'text': 'Map ID is %d' % map.db_id})
 
-def fn_newmap(self, client, arg):
-	if client.username:
-		cursor.execute('SELECT COUNT(*) from Map')
-		result = cursor.fetchone()
-		if result == None:
-			return
-		if result[0] > Config["Server"]["MaxDBMaps"] and Config["Server"]["MaxDBMaps"] > 0:
-			client.send("ERR", {'text': 'There are too many maps'})
-			return
+@cmd_command(category="Map", privilege_level="registered")
+def fn_newmap(map, client, arg):
+	cursor.execute('SELECT COUNT(*) from Map')
+	result = cursor.fetchone()
+	if result == None:
+		return
+	if result[0] > Config["Server"]["MaxDBMaps"] and Config["Server"]["MaxDBMaps"] > 0:
+		client.send("ERR", {'text': 'There are too many maps'})
+		return
 
-		new_map = Map(creator_id = client.db_id)
-		new_map.save_and_commit()
+	new_map = Map(creator_id = client.db_id)
+	new_map.save_and_commit()
 
-		try:
-			client.switch_map(new_map.db_id)
-			client.send("MSG", {'text': 'Welcome to your new map (id %d)' % new_map.db_id})
-		except: # Is it even possible for switch_map to throw an exception?
-			client.send("ERR", {'text': 'Couldn\'t switch to the new map'})
-			raise
-	else:
-		client.send("ERR", {'text': 'You must be registered to make a new map.'})
-handlers['newmap'] = fn_newmap
+	try:
+		client.switch_map(new_map.db_id)
+		client.send("MSG", {'text': 'Welcome to your new map (id %d)' % new_map.db_id})
+	except: # Is it even possible for switch_map to throw an exception?
+		client.send("ERR", {'text': 'Couldn\'t switch to the new map'})
+		raise
 
 # maybe combine the list add/remove/list commands together?
-def fn_ignore(self, client, arg):
+@cmd_command(category="Settings", syntax="username")
+def fn_ignore(map, client, arg):
 	arg = arg.lower()
 	client.ignore_list.add(arg)
 	client.send("MSG", {'text': '\"%s\" added to ignore list' % arg})
-handlers['ignore'] = fn_ignore
 
-def fn_unignore(self, client, arg):
+@cmd_command(category="Settings", syntax="username")
+def fn_unignore(map, client, arg):
 	arg = arg.lower()
 	if arg in client.ignore_list:
 		client.ignore_list.remove(arg)
 	client.send("MSG", {'text': '\"%s\" removed from ignore list' % arg})
-handlers['unignore'] = fn_unignore
 
-def fn_ignorelist(self, client, arg):
+@cmd_command(category="Settings")
+def fn_ignorelist(map, client, arg):
 	client.send("MSG", {'text': 'Ignore list: '+str(client.ignore_list)})
-handlers['ignorelist'] = fn_ignorelist
 
-def fn_watch(self, client, arg):
+@cmd_command(category="Settings", syntax="username")
+def fn_watch(map, client, arg):
 	arg = arg.lower()
 	if arg in client.watch_list:
 		client.watch_list.remove(arg)
 	client.send("MSG", {'text': '\"%s\" added to watch list' % arg})
-handlers['watch'] = fn_watch
 
-def fn_unwatch(self, client, arg):
+@cmd_command(category="Settings", syntax="username")
+def fn_unwatch(map, client, arg):
 	arg = arg.lower()
 	client.watch_list.remove(arg)
 	client.send("MSG", {'text': '\"%s\" removed from watch list' % arg})
-handlers['unwatch'] = fn_unwatch
 
-def fn_watchlist(self, client, arg):
+@cmd_command(category="Settings")
+def fn_watchlist(map, client, arg):
 	client.send("MSG", {'text': 'Watch list: '+str(client.watch_list)})
-handlers['watchlist'] = fn_watchlist
 
-def fn_permission_change(self, client, arg, command2):
-	if client.must_be_owner(True):
-		# Check syntax
-		param = arg.lower().split(' ')
-		if len(param) < 2:
-			client.send("ERR", {'text': 'Must specify a permission and a username'})
-			return
-		# Has to be a valid permission
-		if param[0] not in permission:
-			client.send("ERR", {'text': '"%s" Not a valid permission' % param[0]})
-			return
-		permission_value = permission[param[0]]
-		
-		# Special usernames for map defaults
-		if param[1] == '!default':
-			if command2 == "grant":
-				self.allow |= permission_value
-				self.deny &= ~permission_value
-			elif command2 == "deny":
-				self.allow &= ~permission_value
-				self.deny |= permission_value
-			elif command2 == "revoke":
-				self.allow &= ~permission_value
-				self.deny &= ~permission_value
-			self.broadcast("MSG", {'text': "%s sets the default \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[0], command2)})
-			return
-
-		# Group permissions
-		if param[1].startswith("group:"):
-			groupid = param[1][6:]
-			if groupid.isnumeric():
-				groupname = find_group_name(int(groupid))
-				if groupname != None:
-					self.set_group_permission(int(groupid), permission_value, True if command2=="grant" else None)
-					self.broadcast("MSG", {'text': "%s sets group \"%s\"(%s) \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), groupname, groupid, param[0], command2)})
-					return
-			client.send("ERR", {'text': '"%s" Not a valid group number' % groupid})
-			return
-
-		# Guest permissions
-		if param[1] == '!guest':
-			if command2 == "deny":
-				self.guest_deny |= permission_value
-			elif command2 == "revoke":
-				self.guest_deny &= ~permission_value
-			self.broadcast("MSG", {'text': "%s sets the guest \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[0], command2)})
-			return
-
-		# Has to be a user that exists
-		uid = find_db_id_by_username(param[1])
-		if uid == None:
-			client.failed_to_find(param[1])
-			return
-
-		# Finally we know it's valid
-		value = None
+def permission_change(map, client, arg, command2):
+	# Check syntax
+	param = arg.lower().split(' ')
+	if len(param) < 2:
+		client.send("ERR", {'text': 'Must specify a permission and a username'})
+		return
+	# Has to be a valid permission
+	if param[0] not in permission:
+		client.send("ERR", {'text': '"%s" Not a valid permission' % param[0]})
+		return
+	permission_value = permission[param[0]]
+	
+	# Special usernames for map defaults
+	if param[1] == '!default':
 		if command2 == "grant":
-			value = True
+			map.allow |= permission_value
+			map.deny &= ~permission_value
+		elif command2 == "deny":
+			map.allow &= ~permission_value
+			map.deny |= permission_value
+		elif command2 == "revoke":
+			map.allow &= ~permission_value
+			map.deny &= ~permission_value
+		map.broadcast("MSG", {'text': "%s sets the default \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[0], command2)})
+		return
+
+	# Group permissions
+	if param[1].startswith("group:"):
+		groupid = param[1][6:]
+		if groupid.isnumeric():
+			groupname = find_entity_name(int(groupid))
+			if groupname != None:
+				map.change_permission_for_entity(int(groupid), permission_value, True if command2=="grant" else None)
+				map.broadcast("MSG", {'text': "%s sets group \"%s\"(%s) \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), groupname, groupid, param[0], command2)})
+				return
+		client.send("ERR", {'text': '"%s" Not a valid group number' % groupid})
+		return
+
+	# Guest permissions
+	if param[1] == '!guest':
 		if command2 == "deny":
-			value = False
-		self.set_permission(uid, permission_value, value)
-		self.broadcast("MSG", {'text': "%s sets %s's \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[1], param[0], command2)})
+			map.guest_deny |= permission_value
+		elif command2 == "revoke":
+			map.guest_deny &= ~permission_value
+		map.broadcast("MSG", {'text': "%s sets the guest \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[0], command2)})
+		return
 
-		# Refresh permissions of users on the map so changes take effect immediately
-		# (probably only need to do it for the affected user, if they're even present)
-		for u in self.users:
-			u.updateMapPermissions()
+	# Has to be a user that exists
+	uid = find_db_id_by_username(param[1])
+	if uid == None:
+		client.failed_to_find(param[1])
+		return
 
-def fn_grant(self, client, arg):
-	fn_permission_change(self, client, arg, 'grant')
-handlers['grant'] = fn_grant
+	# Finally we know it's valid
+	value = None
+	if command2 == "grant":
+		value = True
+	if command2 == "deny":
+		value = False
+	map.change_permission_for_entity(uid, permission_value, value)
+	map.broadcast("MSG", {'text': "%s sets %s's \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[1], param[0], command2)})
 
-def fn_deny(self, client, arg):
-	fn_permission_change(self, client, arg, 'deny')
-handlers['deny'] = fn_deny
+	# Refresh permissions of users on the map so changes take effect immediately
+	# (probably only need to do it for the affected user, if they're even present)
+	for u in map.contents:
+		u.updateMapPermissions()
 
-def fn_revoke(self, client, arg):
-	fn_permission_change(self, client, arg, 'revoke')
-handlers['revoke'] = fn_revoke
+@cmd_command(category="Map", privilege_level="map_admin", syntax="permission user/!default", map_only=True)
+def fn_grant(map, client, arg):
+	permission_change(map, client, arg, 'grant')
 
+@cmd_command(category="Map", privilege_level="map_admin", syntax="permission user/!default/!guest", map_only=True)
+def fn_deny(map, client, arg):
+	permission_change(map, client, arg, 'deny')
 
-def fn_permlist(self, client, arg):
+@cmd_command(category="Map", privilege_level="map_admin", syntax="permission user/!default/!guest", map_only=True)
+def fn_revoke(map, client, arg):
+	permission_change(map, client, arg, 'revoke')
+
+@cmd_command(category="Map", map_only=True)
+def fn_permlist(map, client, arg):
 	c = Database.cursor()
 	perms = "Defaults: "
 
 	# List map default permissions
 	for k,v in permission.items():
-		if (self.allow & v) == v:
+		if (map.allow & v) == v:
 			perms += "+"+k+" "
-		if (self.deny & v) == v:
+		if (map.deny & v) == v:
 			perms += "-"+k+" "
-		if (self.guest_deny & v) == v:
+		if (map.guest_deny & v) == v:
 			perms += "-"+k+"(guest) "
 
 	# User permissions
 	perms += "[ul]"
-	for row in c.execute('SELECT username, allow, deny FROM Map_Permission mp, User u WHERE mp.mid=? AND mp.uid=u.uid', (self.id,)):
+	for row in c.execute('SELECT username, allow, deny FROM Permission mp, User u WHERE mp.subject_id=? AND mp.actor_id=u.entity_id', (map.db_id,)):
 		perms += "[li][b]"+row[0] + "[/b]: "
 		for k,v in permission.items():
 			if (row[1] & v) == v: # allow
@@ -447,123 +478,117 @@ def fn_permlist(self, client, arg):
 		perms += "[/li]"
 
 	# Group permissions
-	for row in c.execute('SELECT mp.allow, u.name, u.gid FROM Group_Map_Permission mp, User_Group u WHERE mp.mid=? AND mp.gid=u.gid', (self.id,)):
-		perms += "[li][b]Group: %s(%s) [/b]: " % (row[2], row[1])
+	for row in c.execute('SELECT u.name, u.type, mp.allow, mp.deny, u.id FROM Permission mp, Entity u WHERE mp.subject_id=? AND mp.actor_id=u.id AND u.type != ?', (map.db_id, entity_type['user'])):
+		perms += "[li][b]Group: %s(%s) [/b]: " % (row[4], row[0])
 		for k,v in permission.items():
-			if (row[0] & v) == v: # allow
+			if (row[2] & v) == v: # allow
 				perms += "+"+k+" "
+			if (row[3] & v) == v: # deny
+				perms += "-"+k+" "
 		perms += "[/li]"
 
 	perms += "[/ul]"
 	client.send("MSG", {'text': perms})
 handlers['permlist'] = fn_permlist
 
-def fn_mymaps(self, client, arg):
-	if client.db_id == None:
-		return
+@cmd_command(category="Map", privilege_level="registered")
+def fn_mymaps(map, client, arg):
 	c = Database.cursor()
 	maps = "My maps: [ul]"
-	for row in c.execute('SELECT m.mid, m.name FROM Map m WHERE m.owner=?', (client.db_id,)):
+	for row in c.execute('SELECT m.id, m.name FROM Entity m WHERE m.owner_id=? AND m.type == ?', (client.db_id, entity_type['map'])):
 		maps += "[li][b]%s[/b] [command]map %d[/command][/li]" % (row[1], row[0])
 	maps += "[/ul]"
 	client.send("MSG", {'text': maps})
-handlers['mymaps'] = fn_mymaps
 
-def fn_publicmaps(self, client, arg):
+@cmd_command(category="Map")
+def fn_publicmaps(map, client, arg):
 	c = Database.cursor()
 	maps = "Public maps: [ul]"
-	for row in c.execute('SELECT m.mid, m.name, u.username FROM Map m, User u WHERE m.owner=u.uid and (m.flags&1)!=0'):
+	for row in c.execute('SELECT e.id, e.name, u.username FROM Entity e, Map m, User u WHERE e.owner_id=u.entity_id AND e.id=m.entity_id AND (m.flags&1)!=0'):
 		maps += "[li][b]%s[/b] (%s) [command]map %d[/command][/li]" % (row[1], row[2], row[0])
 	maps += "[/ul]"
 	client.send("MSG", {'text': maps})
-handlers['publicmaps'] = fn_publicmaps
 
-def fn_mapname(self, client, arg):
-	if client.must_be_owner(False):
-		self.name = arg
-		client.send("MSG", {'text': 'Map name set to \"%s\"' % self.name})
-handlers['mapname'] = fn_mapname
+@cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="newname")
+def fn_mapname(map, client, arg):
+	map.name = arg
+	client.send("MSG", {'text': 'Map name set to \"%s\"' % map.name})
 
-def fn_mapdesc(self, client, arg):
-	if client.must_be_owner(False):
-		self.desc = arg
-		client.send("MSG", {'text': 'Map description set to \"%s\"' % self.desc})
-handlers['mapdesc'] = fn_mapdesc
+@cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="text")
+def fn_mapdesc(map, client, arg):
+	map.desc = arg
+	client.send("MSG", {'text': 'Map description set to \"%s\"' % map.desc})
 
-def fn_mapowner(self, client, arg):
-	if client.must_be_owner(False):
-		newowner = find_db_id_by_username(arg)
-		if newowner:
-			self.owner = newowner
-			client.send("MSG", {'text': 'Map owner set to \"%s\"' % self.owner})
-		else:
-			client.send("ERR", {'text': 'Nonexistent account'})
-handlers['mapowner'] = fn_mapowner
+@cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="username")
+def fn_mapowner(map, client, arg):
+	newowner = find_db_id_by_username(arg)
+	if newowner:
+		map.owner = newowner
+		client.send("MSG", {'text': 'Map owner set to \"%s\"' % map.owner})
+	else:
+		client.send("ERR", {'text': 'Nonexistent account'})
 
-def fn_mapprivacy(self, client, arg):
-	if client.must_be_owner(False):
-		if arg == "public":
-			self.deny &= ~permission['entry']
-			self.map_flags |= mapflag['public']
-		elif arg == "private":
-			self.deny |= permission['entry']
-			self.map_flags &= ~mapflag['public']
-		elif arg == "unlisted":
-			self.deny &= ~permission['entry']
-			self.map_flags &= ~mapflag['public']
-		else:
-			client.send("ERR", {'text': 'Map privacy must be public, private, or unlisted'})
-handlers['mapprivacy'] = fn_mapprivacy
+@cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="public/private/unlisted")
+def fn_mapprivacy(map, client, arg):
+	if arg == "public":
+		map.deny &= ~permission['entry']
+		map.map_flags |= mapflag['public']
+	elif arg == "private":
+		map.deny |= permission['entry']
+		map.map_flags &= ~mapflag['public']
+	elif arg == "unlisted":
+		map.deny &= ~permission['entry']
+		map.map_flags &= ~mapflag['public']
+	else:
+		client.send("ERR", {'text': 'Map privacy must be public, private, or unlisted'})
 
-def fn_mapprotect(self, client, arg):
-	if client.must_be_owner(False):
-		if arg == "off":
-			self.allow |= permission['sandbox']
-		elif arg == "on":
-			self.allow &= ~permission['sandbox']
-		else:
-			client.send("ERR", {'text': 'Map building must be on or off'})
-handlers['mapprotect'] = fn_mapprotect
+@cmd_command(category="Map", privilege_level="map_admin", map_only=True, syntax="on/off")
+def fn_mapprotect(map, client, arg):
+	if arg == "off":
+		map.allow |= permission['sandbox']
+	elif arg == "on":
+		map.allow &= ~permission['sandbox']
+	else:
+		client.send("ERR", {'text': 'Map sandbox must be on or off'})
 
-def fn_mapbuild(self, client, arg):
-	if client.must_be_owner(True):
-		if arg == "on":
-			self.allow |= permission['build']
-		elif arg == "off":
-			self.allow &= ~permission['build']
-		else:
-			client.send("ERR", {'text': 'Map building must be on or off'})
-handlers['mapbuild'] = fn_mapbuild
+@cmd_command(category="Map", privilege_level="map_admin", map_only=True, syntax="on/off")
+def fn_mapbuild(map, client, arg):
+	if arg == "on":
+		map.allow |= permission['build']
+	elif arg == "off":
+		map.allow &= ~permission['build']
+	else:
+		client.send("ERR", {'text': 'Map building must be on or off'})
 
-def fn_defaultfloor(self, client, arg):
-	if client.must_be_owner(False):
-		self.default_turf = arg
-		client.send("MSG", {'text': 'Map floor changed to %s' % arg})
-handlers['defaultfloor'] = fn_defaultfloor
+@cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="text")
+def fn_defaultfloor(map, client, arg):
+	map.default_turf = arg
+	client.send("MSG", {'text': 'Map floor changed to %s' % arg})
 
-def fn_mapspawn(self, client, arg):
-	if client.must_be_owner(False):
-		self.start_pos = [client.x, client.y]
-		client.send("MSG", {'text': 'Map start changed to %d,%d' % (client.x, client.y)})
-handlers['mapspawn'] = fn_mapspawn
+@cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="text")
+def fn_mapspawn(map, client, arg):
+	map.start_pos = [client.x, client.y]
+	client.send("MSG", {'text': 'Map start changed to %d,%d' % (client.x, client.y)})
 
-def fn_coords(self, client, arg):
+@cmd_command
+def fn_coords(map, client, arg):
 	client.send("MSG", {'text': 'You\'re standing on %d,%d' % (client.x, client.y)})
-handlers['coords'] = fn_coords
 
-def fn_listeners(self, client, arg):
+@cmd_command
+def fn_listeners(map, client, arg):
+	if map == None:
+		return
 	out = ''
 	for i in botwatch_type.keys():
 		c = botwatch_type[i]
-		if self.id in BotWatch[c]:
-			for u in BotWatch[c][self.db_id]:
+		if map.id in BotWatch[c]:
+			for u in BotWatch[c][map.db_id]:
 				out += '%s (%s), ' % (u.username, i)
 	client.send("MSG", {'text': 'Listeners here: ' + out})
 handlers['listeners'] = fn_listeners
 
-def fn_listen(self, client, arg):
-	if client.db_id == None:
-		return
+@cmd_command(privilege_level="registered", syntax="category,category,category... id,id,id...")
+def fn_listen(map, client, arg):
 	params = arg.split()
 	categories = set(params[0].split(','))
 	maps = set([int(x) for x in params[1].split(',')])
@@ -600,11 +625,9 @@ def fn_listen(self, client, arg):
 				client.send("WHO", {'list': get_map_by_id(m).who(), 'remote_map': m})
 
 	client.send("MSG", {'text': 'Listening on maps now: ' + str(client.listening_maps)})
-handlers['listen'] = fn_listen
 
-def fn_unlisten(self, client, arg):
-	if client.db_id == None:
-		return
+@cmd_command(privilege_level="registered", syntax="category,category,category... id,id,id...")
+def fn_unlisten(map, client, arg):
 	params = arg.split()
 	categories = set(params[0].split(','))
 	maps = [int(x) for x in params[1].split(',')]
@@ -623,140 +646,129 @@ def fn_unlisten(self, client, arg):
 			if (category, m) in client.listening_maps:
 				client.listening_maps.remove((category, m))
 	client.send("MSG", {'text': 'Stopped listening on maps: ' + str(client.listening_maps)})
-handlers['unlisten'] = fn_unlisten
 
-def fn_test(self, client, arg):
-	client.send("MSG", {'text': "%d %d %d" % (int(client.map_id), len(AllEntitiesByDB), len(AllEntitiesByID), )})
-handlers['test'] = fn_test
-
-def fn_kick_and_ban(self, client, arg, ban):
+def kick_and_ban(map, client, arg, ban):
 	arg = arg.lower()
-	if client.must_be_owner(True):
-		u = find_client_by_username(arg)
-		if u != None:
-			if u.map_id == client.map_id:
-				client.send("MSG", {'text': 'Kicked '+u.name_and_username()})
-				u.send("MSG", {'text': 'Kicked by '+client.name_and_username()})
-				u.send_home()
-				if ban:
-					self.set_permission(find_db_id_by_username(arg), permission['entry'], False)
-			else:
-				client.send("ERR", {'text': 'User not on this map'})
+	u = find_client_by_username(arg)
+	if u != None:
+		if u.map_id == client.map_id:
+			client.send("MSG", {'text': 'Kicked '+u.name_and_username()})
+			u.send("MSG", {'text': 'Kicked by '+client.name_and_username()})
+			u.send_home()
+			if ban:
+				map.change_permission_for_entity(find_db_id_by_username(arg), permission['entry'], False)
 		else:
-			client.send("ERR", {'text': 'User not found'})
+			client.send("ERR", {'text': 'User not on this map'})
+	else:
+		client.send("ERR", {'text': 'User not found'})
 
-def fn_kick(self, client, arg):
-	fn_kick_and_ban(self, client, arg, False)
-handlers['kick'] = fn_kick
+@cmd_command(category="Map", privilege_level="map_admin", syntax="username")
+def fn_kick(map, client, arg):
+	kick_and_ban(map, client, arg, False)
 
-def fn_kickban(self, client, arg):
-	fn_kick_and_ban(self, client, arg, True)
-handlers['kickban'] = fn_kickban
-
-
-
-def fn_ipwho(self, client, arg):
-	if client.must_be_server_admin():
-		names = ''
-		for u in AllClients:
-			if len(names) > 0:
-				names += ', '
-			names += "%s [%s]" % (u.name_and_username(), u.ip or "?")
-		client.send("MSG", {'text': 'List of users connected: '+names})
-handlers['ipwho'] = fn_ipwho
-
-def fn_ipban(self, client, arg):
-	if client.must_be_server_admin():
-		params = arg.split(';')
-		if len(params) == 2: # Default to no expiration
-			params.append('')
-		if len(params) != 3 or len(params[0]) == 0:
-			client.send("ERR", {'text': 'Format is ip;reason;length'})
-			return
-		# Parse the parameters
-		ip = params[0]
-		if ip == '*.*.*.*': # oh no you don't
-			return
-		reason = params[1]
-		now = datetime.datetime.now()
-		expiry = params[2]
-		expiry_value = expiry[:-1]
-		expiry_unit = expiry[-1:]
-
-		if expiry == '':
-			expiry = None
-		elif not expiry_value.isnumeric():
-			client.send("ERR", {'text': 'Invalid time value "%s"' % expiry_value})
-			return
-		elif expiry_unit == 'm':
-			expiry = now + datetime.timedelta(minutes=int(expiry_value))
-		elif expiry_unit == 'h':
-			expiry = now + datetime.timedelta(hours=int(expiry_value))
-		elif expiry_unit == 'd':
-			expiry = now + datetime.timedelta(days=int(expiry_value))
-		elif expiry_unit == 'w':
-			expiry = now + datetime.timedelta(weeks=int(expiry_value))
-		elif expiry_unit == 'y':
-			expiry = now + datetime.timedelta(weeks=52*int(expiry_value))
-		else:
-			client.send("ERR", {'text': 'Invalid time unit "%s"' % expiry_unit})
-			return
-
-		# If IPv4, split into four parts for masking
-		ipsplit = ip.split('.')
-		if len(ipsplit) != 4:
-			ipsplit = (None, None, None, None)
-
-		# Insert the ban
-		c = Database.cursor()
-		c.execute("INSERT INTO Server_Ban (ip, ip1, ip2, ip3, ip4, admin, time, expiry, reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",\
-			(ip, ipsplit[0], ipsplit[1], ipsplit[2], ipsplit[3], client.db_id, now, expiry, reason))
-		client.send("MSG", {'text': 'Banned %s for "%s"; unban at %s' % (ip, reason, expiry or "never")})
-
-handlers['ipban'] = fn_ipban
-
-def fn_ipunban(self, client, arg):
-	if client.must_be_server_admin():
-		c = Database.cursor()
-		c.execute('DELETE FROM Server_Ban WHERE ip=?', (arg,))
-		c.execute('SELECT changes()')
-		client.send("MSG", {'text': 'Bans removed: %d' % c.fetchone()[0]})
-
-handlers['ipunban'] = fn_ipunban
-
-def fn_ipbanlist(self, client, arg):
-	if client.must_be_server_admin():
-		c = Database.cursor()
-		results = "IP bans: [ul]"
-		for row in c.execute('SELECT b.ip, b.reason, b.time, b.expiry, a.username FROM Server_Ban b, USER a WHERE a.uid = b.admin'):
-			results += "[li][b]%s[/b] banned by [tt]%s[/tt] for \"%s\" at [tt]%s[/tt] until [tt]%s[/tt] [command]ipunban %s[/command][/li]" % (row[0], row[4], row[1], row[2], row[3] or 'never', row[0])
-		results += "[/ul]"
-		client.send("MSG", {'text': results})
-handlers['ipbanlist'] = fn_ipbanlist
+@cmd_command(category="Map", privilege_level="map_admin", syntax="username")
+def fn_kickban(map, client, arg):
+	kick_and_ban(map, client, arg, True)
 
 
-def fn_goback(self, client, arg):
+@cmd_command(category="Server Admin", privilege_level="server_admin")
+def fn_ipwho(map, client, arg):
+	names = ''
+	for u in AllClients:
+		if len(names) > 0:
+			names += ', '
+		names += "%s [%s]" % (u.name_and_username(), u.ip or "?")
+	client.send("MSG", {'text': 'List of users connected: '+names})
+
+@cmd_command(category="Server Admin", privilege_level="server_admin", syntax="ip;reason;length")
+def fn_ipban(map, client, arg):
+	params = arg.split(';')
+	if len(params) == 2: # Default to no expiration
+		params.append('')
+	if len(params) != 3 or len(params[0]) == 0:
+		client.send("ERR", {'text': 'Format is ip;reason;length'})
+		return
+	# Parse the parameters
+	ip = params[0]
+	if ip == '*.*.*.*': # oh no you don't
+		return
+	reason = params[1]
+	now = datetime.datetime.now()
+	expiry = params[2]
+	expiry_value = expiry[:-1]
+	expiry_unit = expiry[-1:]
+
+	if expiry == '':
+		expiry = None
+	elif not expiry_value.isnumeric():
+		client.send("ERR", {'text': 'Invalid time value "%s"' % expiry_value})
+		return
+	elif expiry_unit == 'm':
+		expiry = now + datetime.timedelta(minutes=int(expiry_value))
+	elif expiry_unit == 'h':
+		expiry = now + datetime.timedelta(hours=int(expiry_value))
+	elif expiry_unit == 'd':
+		expiry = now + datetime.timedelta(days=int(expiry_value))
+	elif expiry_unit == 'w':
+		expiry = now + datetime.timedelta(weeks=int(expiry_value))
+	elif expiry_unit == 'y':
+		expiry = now + datetime.timedelta(weeks=52*int(expiry_value))
+	else:
+		client.send("ERR", {'text': 'Invalid time unit "%s"' % expiry_unit})
+		return
+
+	# If IPv4, split into four parts for masking
+	ipsplit = ip.split('.')
+	if len(ipsplit) != 4:
+		ipsplit = (None, None, None, None)
+
+	# Insert the ban
+	c = Database.cursor()
+	c.execute("INSERT INTO Server_Ban (ip, ip1, ip2, ip3, ip4, admin_id, created_at, expires_at, reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",\
+		(ip, ipsplit[0], ipsplit[1], ipsplit[2], ipsplit[3], client.db_id, now, expiry, reason))
+	Database.commit()
+	client.send("MSG", {'text': 'Banned %s for "%s"; unban at %s' % (ip, reason, expiry or "never")})
+
+@cmd_command(category="Server Admin", privilege_level="server_admin", syntax="ip")
+def fn_ipunban(map, client, arg):
+	c = Database.cursor()
+	c.execute('DELETE FROM Server_Ban WHERE ip=?', (arg,))
+	c.execute('SELECT changes()')
+	client.send("MSG", {'text': 'Bans removed: %d' % c.fetchone()[0]})
+	Database.commit()
+
+@cmd_command(category="Server Admin", privilege_level="server_admin")
+def fn_ipbanlist(map, client, arg):
+	c = Database.cursor()
+	results = "IP bans: [ul]"
+	for row in c.execute('SELECT b.ip, b.reason, b.time, b.expiry, a.username FROM Server_Ban b, USER a WHERE a.uid = b.admin'):
+		results += "[li][b]%s[/b] banned by [tt]%s[/tt] for \"%s\" at [tt]%s[/tt] until [tt]%s[/tt] [command]ipunban %s[/command][/li]" % (row[0], row[4], row[1], row[2], row[3] or 'never', row[0])
+	results += "[/ul]"
+	client.send("MSG", {'text': results})
+
+@cmd_command(category="Teleport")
+def fn_goback(map, client, arg):
 	if len(client.tp_history) > 0:
 		pos = client.tp_history.pop()
 		client.switch_map(pos[0], new_pos=[pos[1], pos[2]], update_history=False)
 	else:
 		client.send("ERR", {'text': 'Nothing in teleport history'})
-handlers['goback'] = fn_goback
 
-def fn_sethome(self, client, arg):
+@cmd_command(category="Teleport")
+def fn_sethome(map, client, arg):
 	client.home = [client.map_id, client.x, client.y]
 	client.send("MSG", {'text': 'Home set'})
-handlers['sethome'] = fn_sethome
 
-def fn_home(self, client, arg):
+@cmd_command(category="Teleport")
+def fn_home(map, client, arg):
 	if client.home == None:
 		client.send("ERR", {'text': 'You don\'t have a home set'})
 	else:
 		client.send("MSG", {'text': 'Teleported to your home'})
 		client.send_home()
-handlers['home'] = fn_home
 
-def fn_map(self, client, arg):
+@cmd_command(category="Teleport", syntax="map")
+def fn_map(map, client, arg):
 	try:
 		if map_id_exists(int(arg)):
 			if client.switch_map(int(arg)):
@@ -765,28 +777,23 @@ def fn_map(self, client, arg):
 			client.send("MSG", {'text': 'Map %s doesn\'t exist' % arg})
 	except:
 		client.send("ERR", {'text': 'Couldn\'t go to map %s' % arg})
-handlers['map'] = fn_map
 
-def fn_saveme(self, client, arg):
-	if client.username == None:
-		client.send("ERR", {'text': 'You are not logged in'})
-	else:
-		client.save()
-		client.send("MSG", {'text': 'Account saved'})
-handlers['saveme'] = fn_saveme
+@cmd_command(category="Account", privilege_level="registered")
+def fn_saveme(map, client, arg):
+	client.save_and_commit()
+	client.send("MSG", {'text': 'Account saved'})
 
-def fn_changepass(self, client, arg):
-	if client.username == None:
-		client.send("ERR", {'text': 'You are not logged in'})
-	elif len(arg):
+@cmd_command(category="Account", privilege_level="registered", syntax="password")
+def fn_changepass(map, client, arg):
+	if len(arg):
 		client.changepass(arg)
 		client.send("MSG", {'text': 'Password changed'})
 	else:
 		client.send("ERR", {'text': 'No password given'})
-handlers['changepass'] = fn_changepass
 
-def fn_register(self, client, arg):
-	if client.username != None:
+@cmd_command(category="Account", syntax="username password")
+def fn_register(map, client, arg):
+	if client.db_id != None:
 		client.send("ERR", {'text': 'Register fail, you already registered'})
 	else:
 		params = arg.split()
@@ -794,13 +801,13 @@ def fn_register(self, client, arg):
 			client.send("ERR", {'text': 'Syntax is: /register username password'})
 		else:
 			if client.register(filter_username(params[0]), params[1]):
-				self.broadcast("MSG", {'text': client.name+" has now registered"})
-				self.broadcast("WHO", {'add': client.who()}) # update client view, probably just for the username
+				map.broadcast("MSG", {'text': client.name+" has now registered"})
+				map.broadcast("WHO", {'add': client.who()}) # update client view, probably just for the username
 			else:
 				client.send("ERR", {'text': 'Register fail, account already exists'})
-handlers['register'] = fn_register
 
-def fn_login(self, client, arg):
+@cmd_command(category="Account", syntax="username password")
+def fn_login(map, client, arg):
 	params = arg.split()
 	if len(params) != 2:
 		client.send("ERR", {'text': 'Syntax is: /login username password'})
@@ -808,7 +815,8 @@ def fn_login(self, client, arg):
 		client.login(filter_username(params[0]), params[1])
 handlers['login'] = fn_login
 
-def fn_userpic(self, client, arg):
+@cmd_command(category="Settings", syntax='"x y" OR "url" OR "bunny/cat/hamster/fire"')
+def fn_userpic(map, client, arg):
 	arg = arg.split(' ')
 	success = False
 
@@ -831,30 +839,31 @@ def fn_userpic(self, client, arg):
 			client.pic = [0, int(arg[0]), int(arg[1])]
 			success = True
 	if success:
-		self.broadcast("WHO", {'add': client.who()}) # update client view
+		if map:
+			map.broadcast("WHO", {'add': client.who()}) # update client view
 	else:
 		client.send("ERR", {'text': 'Syntax is: /userpic sheet x y'})
-handlers['userpic'] = fn_userpic
 
-def fn_gwho(self, client, arg):
+@cmd_command(category="Who")
+def fn_gwho(map, client, arg):
 	names = ''
 	for u in AllClients:
 		if len(names) > 0:
 			names += ', '
 		names += u.name_and_username()
 	client.send("MSG", {'text': 'List of users connected: '+names})
-handlers['gwho'] = fn_gwho
 
-def fn_who(self, client, arg):
+@cmd_command(category="Who")
+def fn_who(map, client, arg):
 	names = ''
-	for u in self.users:
+	for u in map.users:
 		if len(names) > 0:
 			names += ', '
 		names += u.name_and_username()
 	client.send("MSG", {'text': 'List of users here: '+names})
-handlers['who'] = fn_who
 
-def fn_whereare(self, client, arg):
+@cmd_command(category="Who", alias=['wa'])
+def fn_whereare(map, client, arg):
 	names = 'Whereare: [ul]'
 	for k, m in AllMaps.items():
 		if m.flags & mapflag['public'] == 0:
@@ -866,161 +875,157 @@ def fn_whereare(self, client, arg):
 	names += '[/ul]'
 
 	client.send("MSG", {'text': names})
-handlers['whereare'] = fn_whereare
-aliases['wa'] = 'whereare'
 
-def fn_savemap(self, client, arg):
-	self.save()
-	self.broadcast("MSG", {'text': client.name+" saved the map"})
-handlers['savemap'] = fn_savemap
+@cmd_command(category="Map")
+def fn_savemap(map, client, arg):
+	map.save()
+	map.broadcast("MSG", {'text': client.name+" saved the map"})
 
 # Server admin commands
-def fn_operoverride(self, client, arg):
-	if client.must_be_server_admin():
-		client.oper_override = not client.oper_override
-		client.send("MSG", {'text': "Oper override enabled" if client.oper_override else "Oper override disabled"})
-handlers['operoverride'] = fn_operoverride
+@cmd_command(category="Server Admin", privilege_level="server_admin")
+def fn_operoverride(map, client, arg):
+	client.oper_override = not client.oper_override
+	client.send("MSG", {'text': "Oper override enabled" if client.oper_override else "Oper override disabled"})
 
-def fn_broadcast(self, client, arg):
-	if client.must_be_server_admin() and len(arg) > 0:
+@cmd_command(category="Server Admin", privilege_level="server_admin")
+def fn_broadcast(map, client, arg):
+	if len(arg) > 0:
 		broadcast_to_all("Admin broadcast: "+arg)
-handlers['broadcast'] = fn_broadcast
 
-def fn_kill(self, client, arg):
-	if client.must_be_server_admin():
-		u = find_client_by_username(arg)
-		if u != None:
-			client.send("MSG", {'text': 'Killed '+u.name_and_username()})
-			u.disconnect('Killed by '+client.name_and_username())
-handlers['kill'] = fn_kill
+@cmd_command(category="Server Admin", privilege_level="server_admin")
+def fn_kill(map, client, arg):
+	u = find_client_by_username(arg)
+	if u != None:
+		client.send("MSG", {'text': 'Killed '+u.name_and_username()})
+		u.disconnect('Killed by '+client.name_and_username())
 
-def fn_shutdown(self, client, arg):
+@cmd_command(category="Server Admin", privilege_level="server_admin", syntax="cancel/seconds")
+def fn_shutdown(map, client, arg):
 	global ServerShutdown
-	if client.must_be_server_admin():
-		if arg == "cancel":
-			ServerShutdown[0] = -1
-			broadcast_to_all("Server shutdown canceled")
-		elif arg.isnumeric():
-			ServerShutdown[0] = int(arg)
-			broadcast_to_all("Server shutdown in %d seconds! (started by %s)" % (ServerShutdown[0], client.name))
-handlers['shutdown'] = fn_shutdown
+	if arg == "cancel":
+		ServerShutdown[0] = -1
+		broadcast_to_all("Server shutdown canceled")
+	elif arg.isnumeric():
+		ServerShutdown[0] = int(arg)
+		broadcast_to_all("Server shutdown in %d seconds! (started by %s)" % (ServerShutdown[0], client.name))
 
 # Group commands
-def fn_newgroup(self, client, arg):
-	if client.db_id:
-		c = Database.cursor()
-		c.execute("INSERT INTO User_Group (regtime, owner, name, desc, joinpass, flags) VALUES (?, ?, ?, ?, ?, ?)", (datetime.datetime.now(), client.db_id, "Unnamed group", "", "", 0))
-		gid = c.execute('SELECT last_insert_rowid()').fetchone()[0]
-		client.send("MSG", {'text': 'Created group %d' % gid})
-handlers['newgroup'] = fn_newgroup
+@cmd_command(category="Group", privilege_level="registered")
+def fn_newgroup(map, client, arg):
+	group = Entity(entity_type['group'], creator_id = client.db_id)
+	group.name = "Unnamed group"
+	group.save_and_commit()
+	group.cleanup()
+	client.send("MSG", {'text': 'Created group %d' % group.db_id})
 
-def fn_namegroup(self, client, arg):
+@cmd_command(category="Group", privilege_level="registered", syntax="group_id text")
+def fn_namegroup(map, client, arg):
 	groupid, name = separate_first_word(arg)
-	if not groupid.isnumeric() or not client.username or not len(name):
+	if not groupid.isnumeric() or not client.db_id or not len(name):
 		return
 	c = Database.cursor()
-	c.execute('UPDATE User_Group SET name=? WHERE gid=? AND owner=?', (name, int(groupid), client.db_id,))
+	c.execute('UPDATE Entity SET name=? WHERE id=? AND owner_id=? AND type=?', (name, int(groupid), client.db_id, entity_type['group']))
 	client.send("MSG", {'text': 'Renamed group %s' % groupid})
-handlers['namegroup'] = fn_namegroup
 
-def fn_descgroup(self, client, arg):
+@cmd_command(category="Group", privilege_level="registered", syntax="group_id text")
+def fn_descgroup(map, client, arg):
 	groupid, desc = separate_first_word(arg)
 	if not groupid.isnumeric() or not client.username or not len(desc):
 		return
 	c = Database.cursor()
-	c.execute('UPDATE User_Group SET desc=? WHERE gid=? AND owner=?', (desc, int(groupid), client.db_id,))
+	c.execute('UPDATE Entity SET desc=? WHERE id=? AND owner_id=? AND type=?', (desc, int(groupid), client.db_id, entity_type['group']))
 	client.send("MSG", {'text': 'Described group %s' % groupid})
-handlers['descgroup'] = fn_descgroup
 
-def fn_changegroupowner(self, client, arg):
+@cmd_command(category="Group", privilege_level="registered", syntax="group_id new_owner")
+def fn_changegroupowner(map, client, arg):
 	groupid, owner = separate_first_word(arg)
 	if not groupid.isnumeric() or not client.username or not len(owner):
 		return
 	newowner = find_db_id_by_username(owner)
 	if newowner:
 		c = Database.cursor()
-		c.execute('UPDATE User_Group SET owner=? WHERE gid=? AND owner=?', (newowner, int(groupid), client.db_id,))
+		c.execute('UPDATE Entity SET owner_id=? WHERE id=? AND owner_id=? AND type=?', (newowner, int(groupid), client.db_id, entity_type['group']))
 		client.send("MSG", {'text': 'Group owner set to \"%s\"' % owner})
 	else:
 		client.send("ERR", {'text': 'Nonexistent account'})
-handlers['changegroupowner'] = fn_changegroupowner
 
-def fn_joinpassgroup(self, client, arg):
+@cmd_command(category="Group", privilege_level="registered", syntax="group_id password")
+def fn_joinpassgroup(map, client, arg):
 	groupid, joinpass = separate_first_word(arg)
 	if not groupid.isnumeric() or not client.username or not len(joinpass):
 		return
 	c = Database.cursor()
-	c.execute('UPDATE User_Group SET joinpass=? WHERE gid=? AND owner=?', (joinpass, int(groupid), client.db_id,))
+	c.execute('UPDATE Entity SET data=? WHERE id=? AND owner_id=? AND type=?', (joinpass, int(groupid), client.db_id, entity_type['group']))
 	client.send("MSG", {'text': 'Updated join password for group %s to [tt]%s[/tt]' % (groupid, joinpass)})
 handlers['joinpassgroup'] = fn_joinpassgroup
 
-def fn_deletegroup(self, client, arg):
-	if is_group_owner(arg, client):
+@cmd_command(category="Group", privilege_level="registered", syntax="group_id")
+def fn_deletegroup(map, client, arg):
+	if is_entity_owner(arg, client):
 		c = Database.cursor()
-		c.execute('DELETE FROM User_Group WHERE gid=?',           (int(arg),))
-		c.execute('DELETE FROM Group_Member WHERE gid=?',         (int(arg),))
-		c.execute('DELETE FROM Group_Invite WHERE gid=?',         (int(arg),))
-		c.execute('DELETE FROM Group_Map_Permission WHERE gid=?', (int(arg),))
+		c.execute('DELETE FROM Entity WHERE id=?',        (int(arg),))
+		c.execute('DELETE FROM Group_Member WHERE group_id=?', (int(arg),))
+		c.execute('DELETE FROM Permission WHERE gid=?',   (int(arg),))
 		client.send("MSG", {'text': 'Deleted group %s' % arg})
-handlers['deletegroup'] = fn_deletegroup
 
-def fn_invitetogroup(self, client, arg):
+@cmd_command(category="Group", privilege_level="registered")
+def fn_invitetogroup(map, client, arg):
 	pass
-handlers['invitetogroup'] = fn_invitetogroup
 
-def fn_joingroup(self, client, arg):
+@cmd_command(category="Group", privilege_level="registered", syntax="group_id [password]")
+def fn_joingroup(map, client, arg):
 	groupid, password = separate_first_word(arg)
-	if password != "" and groupid.isnumeric() and client.db_id and sql_exists('SELECT * FROM User_Group WHERE joinpass=?', (password,)):
-		if not sql_exists('SELECT uid from Group_Member WHERE uid=? AND gid=?', (client.db_id, int(groupid))):
+	if password != "" and groupid.isnumeric() and client.db_id and sql_exists('SELECT * FROM Entity WHERE data=? AND type=?', (password, entity_type['group'])):
+		if not sql_exists('SELECT member_id from Group_Member WHERE member_id=? AND group_id=?', (client.db_id, int(groupid))):
 			c = Database.cursor()
-			c.execute("INSERT INTO Group_Member (gid, uid, flags) VALUES (?, ?, ?)", (int(groupid), client.db_id, 0,))
+			c.execute("INSERT INTO Group_Member (group_id, user_id, flags) VALUES (?, ?, ?)", (int(groupid), client.db_id, 0,))
 			client.send("MSG", {'text': 'Joined group %s' % groupid})
 		else:
 			client.send("ERR", {'text': 'Already in group %s' % groupid})
 	else:
 		client.send("ERR", {'text': 'Nonexistent group or wrong password'})
 
-handlers['joingroup'] = fn_joingroup
-
-def fn_leavegroup(self, client, arg):
+@cmd_command(category="Group", privilege_level="registered", syntax="group_id")
+def fn_leavegroup(map, client, arg):
 	if not arg.isnumeric() or not client.username:
 		return
-	c.execute('DELETE FROM Group_Member WHERE gid=? AND uid=?', (int(arg), client.db_id,))
+	c.execute('DELETE FROM Group_Member WHERE group_id=? AND uid=?', (int(arg), client.db_id,))
 	client.send("MSG", {'text': 'Left group %s' % (arg)})
-handlers['leavegroup'] = fn_leavegroup
 
-def fn_kickgroup(self, client, arg):
+@cmd_command(category="Group", privilege_level="registered")
+def fn_kickgroup(map, client, arg):
 	groupid, person = separate_first_word(arg)
-	if is_group_owner(groupid, client):
+	if is_entity_owner(groupid, client):
 		if not len(person):
 			return
 		personid = find_db_id_by_username(person)
 		if personid:
 			c = Database.cursor()
-			c.execute('DELETE FROM Group_Member WHERE gid=? AND uid=?', (int(groupid), personid,))
+			c.execute('DELETE FROM Group_Member WHERE group_id=? AND user_id=?', (int(groupid), personid,))
 			client.send("MSG", {'text': 'Kicked \"%s\" from group %s' % (person, groupid)})
 		else:
 			client.send("ERR", {'text': 'Nonexistent account'})
-handlers['kickgroup'] = fn_kickgroup
 
 # Perhaps merge these two somehow?
-def fn_ownedgroups(self, client, arg):
+@cmd_command(category="Group", privilege_level="registered")
+def fn_ownedgroups(map, client, arg):
 	if client.db_id == None:
 		return
 	c = Database.cursor()
 	groups = "Groups you are own: [ul]"
-	for row in c.execute('SELECT g.gid, g.name FROM User_Group g WHERE g.owner=?', (client.db_id,)):
+	for row in c.execute('SELECT g.id, g.name FROM Entity g WHERE g.owner=? AND type=?', (client.db_id, entity_type['group'])):
 		groups += "[li][b]%s[/b] (%d)[/li]" % (row[1], row[0])
 	groups += "[/ul]"
 	client.send("MSG", {'text': groups})
 handlers['ownedgroups'] = fn_ownedgroups
 
-def fn_mygroups(self, client, arg):
+@cmd_command(category="Group", privilege_level="registered")
+def fn_mygroups(map, client, arg):
 	if client.db_id == None:
 		return
 	c = Database.cursor()
 	groups = "Groups you are in: [ul]"
-	for row in c.execute('SELECT g.gid, g.name FROM User_Group g, Group_Member m WHERE g.gid=m.gid AND m.uid=?', (client.db_id,)):
+	for row in c.execute('SELECT g.id, g.name FROM Entity g, Group_Member m WHERE g.id=m.group_id AND m.user_id=? AND m.accepted_at != NULL', (client.db_id,)):
 		groups += "[li][b]%s[/b] (%d)[/li]" % (row[1], row[0])
 	groups += "[/ul]"
 	client.send("MSG", {'text': groups})
@@ -1029,14 +1034,34 @@ handlers['mygroups'] = fn_mygroups
 
 # -------------------------------------
 
-def handle_user_command(self, client, text):
+def handle_user_command(map, client, text):
 	# Separate text into command and arguments
 	command, arg = separate_first_word(text)
 
 	# Attempt to run the command handler if it exists
+
+	# Check aliases first
 	if command in aliases:
 		command = aliases[command]
+
 	if command in handlers:
-		return handlers[command](self, client, arg)
+		# Restrict some commands to maps
+		if command in map_only_commands and client.map == None or not client.map.is_map():
+			client.send("ERR", {'text': 'Command can only be run while on a map'})
+			return
+
+		# Check permissions
+		privilege_needed = command_privilege_level[command] # See user_privilege in buildglobal.py
+
+		if privilege_needed == 1 and client.db_id == None: # Registered
+			client.send("ERR", {'text': 'Only registered accounts can use "%s"' % command})
+		elif privilege_needed == 2 and client.db_id != map.owner_id and (not client.is_client() or not client.oper_override) and not client.has_permission(map, permission['admin'], False): # Map admin
+			client.send("ERR", {'text': 'Only the map owner or map admins can use "%s"' % command})
+		elif privilege_needed == 3 and client.db_id != map.owner_id and (not client.is_client() or not client.oper_override): # Map owner
+			client.send("ERR", {'text': 'Only the map owner can use "%s"' % command})
+		elif privilege_needed == 4 and (not client.is_client() or client.username not in Config["Server"]["Admins"]):
+			client.send("ERR", {'text': 'Only server admins can use "%s"' % command})
+		else:
+			return handlers[command](map, client, arg)
 	else:
 		client.send("ERR", {'text': 'Invalid command?'})

@@ -95,6 +95,19 @@ entity_type['reference'] = 8
 entity_type['folder'] = 9
 entity_type['landmark'] = 10
 
+# Make the reverse - put in the value, get the name
+entity_type_name = {}
+for k,v in entity_type.items():
+	entity_type_name[v] = k
+
+# User privilege levels, for commands and protocol messages
+user_privilege = {}
+user_privilege['guest'] = 0
+user_privilege['registered'] = 1
+user_privilege['map_admin'] = 2
+user_privilege['map_owner'] = 3
+user_privilege['server_admin'] = 4
+
 def map_id_exists(id): # Used by /map
 	if id in AllMapsByDB:
 		return True

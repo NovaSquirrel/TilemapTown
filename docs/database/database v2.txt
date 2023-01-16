@@ -138,7 +138,7 @@ ip2             - text    - second part of IP address
 ip3             - text    - third part of IP address
 ip4             - text    - fourth part of IP address
 account         - id      - account that was also banned (unused)
-admin           - id      - id of the admin doing the banning
+admin_id        - id      - id of the admin doing the banning
 created_at      -timestamp- time the ban was applied
 expires_at      -timestamp- when ban expires
 reason          - text    - ban reason

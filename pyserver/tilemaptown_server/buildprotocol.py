@@ -19,6 +19,20 @@ from .buildglobal import *
 from .buildcommand import handle_user_command, escape_tags
 
 handlers = {}
+command_privilege_level = {} # minimum required privilege level required for the command; see user_privilege in buildglobal.py
+map_only_commands = set()
+
+# Adds a command handler
+def protocol_command(privilege_level='guest', map_only=False):
+	def decorator(f):
+		command_name = f.__name__[3:]
+		handlers[command_name] = f
+		if map_only:
+			map_only_commands.add(command_name)
+		command_privilege_level[command_name] = privilege_level
+	return decorator
+
+# -------------------------------------
 
 def tile_is_okay(tile):
 	# convert to a dictionary to check first if necessary
@@ -54,25 +68,26 @@ def validate_client_who(id, data):
 
 # -------------------------------------
 
-def fn_MOV(self, client, arg):
+@protocol_command(map_only=True)
+def fn_MOV(map, client, arg):
 	data = {'id': client.id}
 	for valid_field in ('from', 'to', 'dir'):
 		if valid_field in arg:
 			data[valid_field] = arg[valid_field]
-	self.broadcast("MOV", data, remote_category=botwatch_type['move'])
+	map.broadcast("MOV", data, remote_category=botwatch_type['move'])
 
 	new_dir = data['dir'] if 'dir' in data else None
 	if 'to' in data:
 		client.move_to(data['to'][0], data['to'][1], new_dir=new_dir)
 	else:
 		client.move_to(None, None, new_dir=new_dir)		
-handlers['MOV'] = fn_MOV
 
-def fn_CMD(self, client, arg):
-	handle_user_command(self, client, arg["text"])
-handlers['CMD'] = fn_CMD
+@protocol_command
+def fn_CMD(map, client, arg):
+	handle_user_command(map, client, arg["text"])
 
-def fn_BAG(self, client, arg):
+@protocol_command
+def fn_BAG(map, client, arg):
 	if client.db_id != None:
 		c = Database.cursor()
 		if "create" in arg:
@@ -97,14 +112,14 @@ def fn_BAG(self, client, arg):
 
 		elif "update" in arg:
 			# get the initial data
-			c.execute('SELECT name, desc, flags, folder, data, type FROM Asset_Info WHERE owner=? AND aid=?', (client.db_id, arg['update']['id']))
+			c.execute('SELECT name, desc, flags, folder, data, type FROM Entity WHERE owner=? AND aid=?', (client.db_id, arg['update']['id']))
 			result = c.fetchone()
 			if result == None:
 				client.send("ERR", {'text': 'Invalid item ID'})
 				return
 			out = {'name': result[0], 'desc': result[1], 'flags': result[2], 'folder': result[3], 'data': result[4]}
 			asset_type = result[5]
-			if asset_type == 2 and "data" in arg['update'] and not imageURLIsOkay(arg['update']['data']):
+			if asset_type == 2 and "data" in arg['update'] and not image_url_is_okay(arg['update']['data']):
 				client.send("ERR", {'text': 'Image asset URL doesn\'t match any whitelisted sites'})
 				return
 			if asset_type == 3 and "data" in arg['update']:
@@ -118,7 +133,7 @@ def fn_BAG(self, client, arg):
 				out[key] = value
 				if type(out[key]) == dict:
 					out[key] = json.dumps(out[key]);
-			c.execute('UPDATE Asset_Info SET name=?, desc=?, flags=?, folder=?, data=? WHERE owner=? AND aid=?', (out['name'], out['desc'], out['flags'], out['folder'], out['data'], client.db_id, arg['update']['id']))
+			c.execute('UPDATE Entity SET name=?, desc=?, flags=?, location=?, data=? WHERE owner_id=? AND id=?', (out['name'], out['desc'], out['flags'], out['folder'], out['data'], client.db_id, arg['update']['id'])
 
 			# send back confirmation
 			client.send("BAG", {'update': arg['update']})
@@ -139,9 +154,9 @@ def fn_BAG(self, client, arg):
 			client.send("BAG", {'remove': arg['delete']})
 	else:
 		client.send("ERR", {'text': 'Guests don\'t have an inventory currently. Use [tt]/register username password[/tt]'})
-handlers['BAG'] = fn_BAG
 
-def fn_EML(self, client, arg):
+@protocol_command
+def fn_EML(map, client, arg):
 	if client.db_id != None:
 		c = Database.cursor()
 		if "send" in arg:
@@ -162,7 +177,7 @@ def fn_EML(self, client, arg):
 			for id in recipient_id:
 				if id == None:
 					continue
-				c.execute("INSERT INTO Mail (uid, sender, recipients, subject, contents, time, flags) VALUES (?, ?, ?, ?, ?, ?, ?)", (id, client.db_id, recipient_string, arg['send']['subject'], arg['send']['contents'], datetime.datetime.now(), 0))
+				c.execute("INSERT INTO Mail (owner_id, sender_id, recipients, subject, contents, created_at, flags) VALUES (?, ?, ?, ?, ?, ?, ?)", (id, client.db_id, recipient_string, arg['send']['subject'], arg['send']['contents'], datetime.datetime.now(), 0))
 
 				# is that person online? tell them!
 				find = find_client_by_db_id(id)
@@ -174,20 +189,21 @@ def fn_EML(self, client, arg):
 			client.send("MSG", {'text': 'Sent mail to %d users' % len(recipient_id)})
 
 		elif "read" in arg:
-			c.execute('UPDATE Mail SET flags=1 WHERE uid=? AND id=?', (client.db_id, arg['read']))
+			c.execute('UPDATE Mail SET flags=1 WHERE owner_id=? AND id=?', (client.db_id, arg['read']))
 		elif "delete" in arg:
-			c.execute('DELETE FROM Mail WHERE uid=? AND id=?', (client.db_id, arg['delete']))
+			c.execute('DELETE FROM Mail WHERE owner_id=? AND id=?', (client.db_id, arg['delete']))
 
 	else:
 		client.send("ERR", {'text': 'Guests don\'t have mail. Use [tt]/register username password[/tt]'})
-handlers['EML'] = fn_EML
 
-def fn_MSG(self, client, arg):
-	text = arg["text"]
-	self.broadcast("MSG", {'name': client.name, 'username': client.username_or_id(), 'text': escape_tags(text)}, remote_category=botwatch_type['chat'])
-handlers['MSG'] = fn_MSG
+@protocol_command
+def fn_MSG(map, client, arg):
+	if map:
+		text = arg["text"]
+		map.broadcast("MSG", {'name': client.name, 'username': client.username_or_id(), 'text': escape_tags(text)}, remote_category=botwatch_type['chat'])
 
-def fn_TSD(self, client, arg):
+@protocol_command
+def fn_TSD(map, client, arg):
 	c = Database.cursor()
 	c.execute('SELECT data FROM Asset_Info WHERE type=4 AND aid=?', (arg['id'],))
 	result = c.fetchone()
@@ -195,9 +211,9 @@ def fn_TSD(self, client, arg):
 		client.send("ERR", {'text': 'Invalid item ID'})
 	else:
 		client.send("TSD", {'id': arg['id'], 'data': result[0]})
-handlers['TSD'] = fn_TSD
 
-def fn_IMG(self, client, arg):
+@protocol_command
+def fn_IMG(map, client, arg):
 	c = Database.cursor()
 	c.execute('SELECT data FROM Asset_Info WHERE type=2 AND aid=?', (arg['id'],))
 	result = c.fetchone()
@@ -205,71 +221,71 @@ def fn_IMG(self, client, arg):
 		client.send("ERR", {'text': 'Invalid item ID'})
 	else:
 		client.send("IMG", {'id': arg['id'], 'url': result[0]})
-handlers['IMG'] = fn_IMG
 
-def fn_MAI(self, client, arg):
+@protocol_command(map_only=True)
+def fn_MAI(map, client, arg):
 	send_all_info = client.must_be_owner(True, give_error=False)
-	client.send("MAI", self.map.map_info(all_info=send_all_info))
-handlers['MAI'] = fn_MAI
+	client.send("MAI", map.map_info(all_info=send_all_info))
 
-def fn_DEL(self, client, arg):
+@protocol_command(map_only=True)
+def fn_DEL(map, client, arg):
 	x1 = arg["pos"][0]
 	y1 = arg["pos"][1]
 	x2 = arg["pos"][2]
 	y2 = arg["pos"][3]
-	if self.has_permission(client, permission['build'], True) or client.must_be_owner(True, give_error=False):
+	if client.has_permission(map, permission['build'], True) or client.must_be_owner(True, give_error=False):
 		for x in range(x1, x2+1):
 			for y in range(y1, y2+1):
 				if arg["turf"]:
-					self.turfs[x][y] = None;
+					map.turfs[x][y] = None;
 				if arg["obj"]:
-					self.objs[x][y] = None;
-		self.broadcast("MAP", self.map_section(x1, y1, x2, y2))
+					map.objs[x][y] = None;
+		map.broadcast("MAP", map.map_section(x1, y1, x2, y2))
 
 		# make username available to listeners
 		arg['username'] = client.username_or_id()
-		self.broadcast("DEL", arg, remote_only=True, remote_category=botwatch_type['build'])
+		map.broadcast("DEL", arg, remote_only=True, remote_category=botwatch_type['build'])
 	else:
-		client.send("MAP", self.map_section(x1, y1, x2, y2))
+		client.send("MAP", map.map_section(x1, y1, x2, y2))
 		client.send("ERR", {'text': 'Building is disabled on this map'})
-handlers['DEL'] = fn_DEL
 
-def fn_PUT(self, client, arg):
+@protocol_command(map_only=True)
+def fn_PUT(map, client, arg):
 	def notify_listeners():
 		# make username available to listeners
 		arg['username'] = client.username_or_id()
-		self.broadcast("PUT", arg, remote_only=True, remote_category=botwatch_type['build'])
+		map.broadcast("PUT", arg, remote_only=True, remote_category=botwatch_type['build'])
 
 	x = arg["pos"][0]
 	y = arg["pos"][1]
-	if self.has_permission(client, permission['build'], True) or client.must_be_owner(True, give_error=False):
+	if client.has_permission(map, permission['build'], True) or client.must_be_owner(True, give_error=False):
 		# verify the the tiles you're attempting to put down are actually good
 		if arg["obj"]: #object
 			tile_test = [tile_is_okay(x) for x in arg["atom"]]
 			if all(x[0] for x in tile_test): # all tiles pass the test
-				self.objs[x][y] = arg["atom"]
-				self.broadcast("MAP", self.map_section(x, y, x, y))
+				map.objs[x][y] = arg["atom"]
+				map.broadcast("MAP", map.map_section(x, y, x, y))
 				notify_listeners()
 			else:
 				# todo: give a reason?
-				client.send("MAP", self.map_section(x, y, x, y))
+				client.send("MAP", map.map_section(x, y, x, y))
 				client.send("ERR", {'text': 'Placed objects rejected'})
 		else: #turf
 			tile_test = tile_is_okay(arg["atom"])
 			if tile_test[0]:
-				self.turfs[x][y] = arg["atom"]
-				self.broadcast("MAP", self.map_section(x, y, x, y))
+				map.turfs[x][y] = arg["atom"]
+				map.broadcast("MAP", map.map_section(x, y, x, y))
 				notify_listeners()
 			else:
-				client.send("MAP", self.map_section(x, y, x, y))
+				client.send("MAP", map.map_section(x, y, x, y))
 				client.send("ERR", {'text': 'Tile [tt]%s[/tt] rejected (%s)' % (arg["atom"], tile_test[1])})
 	else:
-		client.send("MAP", self.map_section(x, y, x, y))
+		client.send("MAP", map.map_section(x, y, x, y))
 		client.send("ERR", {'text': 'Building is disabled on this map'})
-handlers['PUT'] = fn_PUT
 
-def fn_BLK(self, client, arg):
-	if self.has_permission(client, permission['bulk_build'], False) or client.must_be_owner(True, give_error=False):
+@protocol_command(map_only=True)
+def fn_BLK(map, client, arg):
+	if client.has_permission(map, permission['bulk_build'], False) or client.must_be_owner(True, give_error=False):
 		# verify the tiles
 		for turf in arg["turf"]:
 			if not tile_is_okay(turf[2])[0]:
@@ -295,7 +311,7 @@ def fn_BLK(self, client, arg):
 				height = turf[4]
 			for w in range(0, width):
 				for h in range(0, height):
-					self.turfs[x+w][y+h] = a
+					map.turfs[x+w][y+h] = a
 		# place the object lists
 		for obj in arg["obj"]:
 			x = obj[0]
@@ -308,27 +324,29 @@ def fn_BLK(self, client, arg):
 				height = turf[4]
 			for w in range(0, width):
 				for h in range(0, height):
-					self.objs[x+w][y+h] = a
-		self.broadcast("BLK", arg, remote_category=botwatch_type['build'])
+					map.objs[x+w][y+h] = a
+		map.broadcast("BLK", arg, remote_category=botwatch_type['build'])
 	else:
 		client.send("ERR", {'text': 'Bulk building is disabled on this map'})
-handlers['BLK'] = fn_BLK
 
-def fn_WHO(self, client, arg):
+@protocol_command
+def fn_WHO(map, client, arg):
 	if arg["update"]:
 		valid_data = validate_client_who(client.id, arg["update"])
 		for key,value in valid_data.items():
 			setattr(client,key,value)
-		client.map.broadcast("WHO", {"update": valid_data})
+		map.broadcast("WHO", {"update": valid_data})
 	else:
 		client.send("ERR", {'text': 'not implemented'})
-handlers['WHO'] = fn_WHO
 
 # -------------------------------------
 
-def handle_protocol_command(self, client, command, arg):
+def handle_protocol_command(map, client, command, arg):
 	# Attempt to run the command handler if it exists
 	if command in handlers:
-		return handlers[command](self, client, arg)
+		if command in map_only_commands and (client.map == None or not client.map.is_map()):
+			client.send("ERR", {'text': 'Protocol command must be done on a map: %s' % command})
+		else:
+			return handlers[command](map, client, arg)
 	else:
 		client.send("ERR", {'text': 'Bad protocol command: %s' % command})
