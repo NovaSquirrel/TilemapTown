@@ -66,11 +66,29 @@ def validate_client_who(id, data):
 			validated_data[key] = CLIENT_WHO_WHITELIST[key](value)
 	return validated_data
 
+def must_be_map_owner(client, admin_okay, give_error=True):
+	if client.map == None:
+		return False
+	if client.map.owner_id == self.db_id or self.oper_override or (admin_okay and self.has_permission(self, permission['admin'], False)):
+		return True
+	elif give_error:
+		client.send("ERR", {'text': 'You don\'t have permission to do that'})
+	return False
+
+def must_be_server_admin(client, give_error=True):
+	if not client.is_client():
+		return False
+	if client.username in Config["Server"]["Admins"]:
+		return True
+	elif give_error:
+		client.send("ERR", {'text': 'You don\'t have permission to do that'})
+	return False
+
 # -------------------------------------
 
 @protocol_command(map_only=True)
 def fn_MOV(map, client, arg):
-	data = {'id': client.id}
+	data = {'id': client.protocol_id()}
 	for valid_field in ('from', 'to', 'dir'):
 		if valid_field in arg:
 			data[valid_field] = arg[valid_field]
@@ -82,33 +100,46 @@ def fn_MOV(map, client, arg):
 	else:
 		client.move_to(None, None, new_dir=new_dir)		
 
-@protocol_command
+@protocol_command()
 def fn_CMD(map, client, arg):
 	handle_user_command(map, client, arg["text"])
 
-@protocol_command
+@protocol_command()
 def fn_BAG(map, client, arg):
 	if client.db_id != None:
 		c = Database.cursor()
 		if "create" in arg:
 			# restrict type variable
-			if arg['create']['type'] < 0 or arg['create']['type'] > 6:
-				arg['create']['type'] = 0
-			c.execute("INSERT INTO Asset_Info (creator, owner, name, type, regtime, flags) VALUES (?, ?, ?, ?, ?, ?)", (client.db_id, client.db_id, arg['create']['name'], arg['create']['type'], datetime.datetime.now(), 0))
-			c.execute('SELECT last_insert_rowid()')
-			client.send("BAG", {'update': {'id': c.fetchone()[0], 'name': arg['create']['name'], 'type': arg['create']['type']}})
+			if arg['create']['type'] not in ('text', 'image', 'map_tile', 'tileset', 'reference', 'folder', 'landmark'):
+				client.send("ERR", {'text': 'Invalid type of item to create (%s)' % arg['create']['type']})
+				return
+			e = Entity(entity_type[arg['create']['type']], creator_id=client.db_id)
+			client.add_to_contents(e)
+			e.save()
 
 		elif "clone" in arg:
-			c.execute('SELECT name, desc, type, flags, creator, folder, data FROM Asset_Info WHERE owner=? AND aid=?', (client.db_id, arg['clone']))
-			row = c.fetchone()
-			if row == None:
-				client.send("ERR", {'text': 'Invalid item ID'})
+			if arg['clone'] not in AllEntitiesByDB:
+				client.send("ERR", {'text': 'Can\'t clone %s - not already loaded' % arg['clone']})
+				return
+			clone_me = AllEntitiesByDB[arg['clone']]
+			if clone_me.owner_id != client.db_id and not client.has_permission(clone_me, permission['copy'], False):
+				client.send("ERR", {'text': 'You don\'t have permission to clone %s' % arg['clone']})
 				return
 
-			c.execute("INSERT INTO Asset_Info (name, desc, type, flags, creator, folder, data, owner, regtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", \
-			  (row[0], row[1], row[2], row[3], row[4], row[5], row[6], client.db_id, datetime.datetime.now()))
-			c.execute('SELECT last_insert_rowid()')
-			client.send("BAG", {'update': {'id': c.fetchone()[0], 'name': row[0], 'desc': row[1], 'type': row[2], 'flags': row[3], 'folder': row[5], 'data': row[6]}})
+			e = Entity(clone_me.entity_type)
+			e.name = clone_me.name
+			e.desc = clone_me.desc
+			e.pic = clone_me.pic
+			e.tags = clone_me.tags.copy() # TODO: deep copy
+			e.owner_id = client.db_id
+			e.allow = clone_me.allow
+			e.deny = clone_me.deny
+			e.guest_deny = clone_me.guest_deny
+			e.data = clone_me.data
+			e.creator_id = clone_me.creator_id
+			# created_at will be wrong, but that's ok
+			client.add_to_contents(e)
+			e.save()
 
 		elif "update" in arg:
 			# get the initial data
@@ -133,14 +164,14 @@ def fn_BAG(map, client, arg):
 				out[key] = value
 				if type(out[key]) == dict:
 					out[key] = json.dumps(out[key]);
-			c.execute('UPDATE Entity SET name=?, desc=?, flags=?, location=?, data=? WHERE owner_id=? AND id=?', (out['name'], out['desc'], out['flags'], out['folder'], out['data'], client.db_id, arg['update']['id'])
+			c.execute('UPDATE Entity SET name=?, desc=?, flags=?, location=?, data=? WHERE owner_id=? AND id=?', (out['name'], out['desc'], out['flags'], out['folder'], out['data'], client.db_id, arg['update']['id']))
 
 			# send back confirmation
 			client.send("BAG", {'update': arg['update']})
 
 		elif "delete" in arg:
 			# move deleted contents of a deleted folder outside the folder
-			c.execute('SELECT folder FROM Asset_Info WHERE owner=? AND aid=?', (client.db_id, arg['delete']))
+			c.execute('SELECT location FROM Asset_Info WHERE owner=? AND aid=?', (client.db_id, arg['delete']))
 			result = c.fetchone()
 			if result == None:
 				client.send("ERR", {'text': 'Invalid item ID'})
@@ -150,12 +181,12 @@ def fn_BAG(map, client, arg):
 			c.execute('UPDATE Asset_Info SET folder=? WHERE owner=? AND folder=?', (result[0], client.db_id, arg['delete']))
 
 			# actually delete
-			c.execute('DELETE FROM Asset_Info WHERE owner=? AND aid=?', (client.db_id, arg['delete']))
+			c.execute('DELETE FROM Entity WHERE owner_id=? AND id=?', (client.db_id, arg['delete']))
 			client.send("BAG", {'remove': arg['delete']})
 	else:
 		client.send("ERR", {'text': 'Guests don\'t have an inventory currently. Use [tt]/register username password[/tt]'})
 
-@protocol_command
+@protocol_command()
 def fn_EML(map, client, arg):
 	if client.db_id != None:
 		c = Database.cursor()
@@ -196,13 +227,13 @@ def fn_EML(map, client, arg):
 	else:
 		client.send("ERR", {'text': 'Guests don\'t have mail. Use [tt]/register username password[/tt]'})
 
-@protocol_command
+@protocol_command()
 def fn_MSG(map, client, arg):
 	if map:
 		text = arg["text"]
 		map.broadcast("MSG", {'name': client.name, 'username': client.username_or_id(), 'text': escape_tags(text)}, remote_category=botwatch_type['chat'])
 
-@protocol_command
+@protocol_command()
 def fn_TSD(map, client, arg):
 	c = Database.cursor()
 	c.execute('SELECT data FROM Asset_Info WHERE type=4 AND aid=?', (arg['id'],))
@@ -212,7 +243,7 @@ def fn_TSD(map, client, arg):
 	else:
 		client.send("TSD", {'id': arg['id'], 'data': result[0]})
 
-@protocol_command
+@protocol_command()
 def fn_IMG(map, client, arg):
 	c = Database.cursor()
 	c.execute('SELECT data FROM Asset_Info WHERE type=2 AND aid=?', (arg['id'],))
@@ -224,7 +255,7 @@ def fn_IMG(map, client, arg):
 
 @protocol_command(map_only=True)
 def fn_MAI(map, client, arg):
-	send_all_info = client.must_be_owner(True, give_error=False)
+	send_all_info = must_be_map_owner(client, True, give_error=False)
 	client.send("MAI", map.map_info(all_info=send_all_info))
 
 @protocol_command(map_only=True)
@@ -233,7 +264,7 @@ def fn_DEL(map, client, arg):
 	y1 = arg["pos"][1]
 	x2 = arg["pos"][2]
 	y2 = arg["pos"][3]
-	if client.has_permission(map, permission['build'], True) or client.must_be_owner(True, give_error=False):
+	if client.has_permission(map, permission['build'], True) or must_be_map_owner(client, True, give_error=False):
 		for x in range(x1, x2+1):
 			for y in range(y1, y2+1):
 				if arg["turf"]:
@@ -258,7 +289,7 @@ def fn_PUT(map, client, arg):
 
 	x = arg["pos"][0]
 	y = arg["pos"][1]
-	if client.has_permission(map, permission['build'], True) or client.must_be_owner(True, give_error=False):
+	if client.has_permission(map, permission['build'], True) or must_be_map_owner(client, True, give_error=False):
 		# verify the the tiles you're attempting to put down are actually good
 		if arg["obj"]: #object
 			tile_test = [tile_is_okay(x) for x in arg["atom"]]
@@ -285,7 +316,7 @@ def fn_PUT(map, client, arg):
 
 @protocol_command(map_only=True)
 def fn_BLK(map, client, arg):
-	if client.has_permission(map, permission['bulk_build'], False) or client.must_be_owner(True, give_error=False):
+	if client.has_permission(map, permission['bulk_build'], False) or must_be_map_owner(client, True, give_error=False):
 		# verify the tiles
 		for turf in arg["turf"]:
 			if not tile_is_okay(turf[2])[0]:
@@ -329,10 +360,10 @@ def fn_BLK(map, client, arg):
 	else:
 		client.send("ERR", {'text': 'Bulk building is disabled on this map'})
 
-@protocol_command
+@protocol_command()
 def fn_WHO(map, client, arg):
 	if arg["update"]:
-		valid_data = validate_client_who(client.id, arg["update"])
+		valid_data = validate_client_who(client.protocol_id(), arg["update"])
 		for key,value in valid_data.items():
 			setattr(client,key,value)
 		map.broadcast("WHO", {"update": valid_data})

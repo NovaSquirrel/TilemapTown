@@ -228,6 +228,10 @@ function receiveServerMessage(event) {
         );
 
         NeedMapRedraw = true;
+      } else if(arg.new_id) {
+		PlayerWho[arg.new_id.new_id] = PlayerWho[arg.new_id.id];
+		// TODO
+        delete PlayerWho[arg.new_id.id];
       }
 
       // has anyone's avatars updated?

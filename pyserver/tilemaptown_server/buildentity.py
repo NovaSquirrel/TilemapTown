@@ -73,6 +73,9 @@ class Entity(object):
 		self.deny = 0
 		self.guest_deny = 0
 
+		# Save when cleanup() is called
+		self.save_on_cleanup = False
+
 		# Make this entity easy to find
 		AllEntitiesByID[self.id] = self
 
@@ -89,6 +92,10 @@ class Entity(object):
 		if self.vehicle:
 			self.dismount()
 
+		if self.save_on_cleanup:
+			self.save_and_commit()
+			self.save_on_cleanup = False # Just to be safe
+
 	def send(self, commandType, commandParams):
 		# Not supported by default
 		return
@@ -101,7 +108,7 @@ class Entity(object):
 				client.send(command_type, command_params)
 
 		""" Also send it to any registered listeners """
-		if remote_category != None and self.id in BotWatch[remote_category]:
+		if remote_category != None and self.db_id in BotWatch[remote_category]:
 			if command_params == None:
 				command_params = {}
 			command_params['remote_map'] = self.db_id
@@ -113,9 +120,28 @@ class Entity(object):
 
 	def add_to_contents(self, item):
 		self.contents.add(item)
+		item.map_id = self.db_id
+		item.map = self
+		item.update_map_permissions()
+
+		# Give the item a list of the other stuff in the container it was put in
+		if item.is_client():
+			item.send("WHO", {'list': self.who_contents(), 'you': item.protocol_id()})
+
+		# Tell everyone in the container that the new item was added
+		self.broadcast("WHO", {'add': item.who()}, remote_category=botwatch_type['entry'])
+
+		# Warn about chat listeners, if present
+		if item.is_client() and self.db_id in BotWatch[botwatch_type['chat']]:
+			item.send("MSG", {'text': 'A bot has access to messages sent here ([command]listeners[/command])'})
 
 	def remove_from_contents(self, item):
 		self.contents.discard(item)
+		item.map_id = None
+		item.map = None
+
+		# Tell everyone in the container that the item was removed
+		self.broadcast("WHO", {'remove': item.id}, remote_category=botwatch_type['entry'])
 
 	# Permission checking
 
@@ -222,20 +248,6 @@ class Entity(object):
 			return True
 		return has
 
-	# Will be used by protocol message handlers
-	def must_be_server_admin(self, give_error=True):
-		return False
-
-	# Used by protocol message handlers
-	def must_be_owner(self, admin_okay, give_error=True):
-		if self.map == None:
-			return False
-		if self.map.owner_id == self.db_id or self.oper_override or (admin_okay and self.has_permission(self, permission['admin'], False)):
-			return True
-		elif give_error:
-			self.send("ERR", {'text': 'You don\'t have permission to do that'})
-		return False
-
 	def change_permission_for_entity(self, actor_id, perm, value):
 		if actor_id == None:
 			return
@@ -289,8 +301,8 @@ class Entity(object):
 			for u in temp:
 				u.dismount()
 
-		self.send("MSG", {'text': 'You get on %s (/hopoff to get off)' % other.nameAndUsername()})
-		other.send("MSG", {'text': 'You carry %s' % self.nameAndUsername()})
+		self.send("MSG", {'text': 'You get on %s (/hopoff to get off)' % other.name_and_username()})
+		other.send("MSG", {'text': 'You carry %s' % self.name_and_username()})
 
 		self.vehicle = other
 		other.passengers.add(self)
@@ -304,8 +316,8 @@ class Entity(object):
 		if self.vehicle == None:
 			self.send("ERR", {'text': 'You\'re not being carried'})
 		else:
-			self.send("MSG", {'text': 'You get off %s' % self.vehicle.nameAndUsername()})
-			self.vehicle.send("MSG", {'text': '%s gets off of you' % self.nameAndUsername()})
+			self.send("MSG", {'text': 'You get off %s' % self.vehicle.name_and_username()})
+			self.vehicle.send("MSG", {'text': '%s gets off of you' % self.name_and_username()})
 
 			other = self.vehicle
 
@@ -335,7 +347,7 @@ class Entity(object):
 					u.moveTo(old_y, old_x, old_dir if new_dir != None else None)
 				else:
 					u.moveTo(x, y, newDir)
-				u.map.broadcast("MOV", {'id': u.id, 'to': [u.x, u.y], 'dir': u.dir}, remote_category=botwatch_type['move'])
+				u.map.broadcast("MOV", {'id': u.protocol_id(), 'to': [u.x, u.y], 'dir': u.dir}, remote_category=botwatch_type['move'])
 
 	# Other movement
 
@@ -350,44 +362,35 @@ class Entity(object):
 
 		if self.map_id != map_id:
 			# First check if you can even go to that map
-			map_load = get_entity_by_db_id(map_id)
+			map_load = get_entity_by_id(map_id)
 			if map_load == None:
 				self.send("ERR", {'text': 'Couldn\'t load map %d' % map_id})
+				self.tp_history.pop()
 				return False
 			if not map_load.has_permission(self, permission['entry'], True):
 				self.send("ERR", {'text': 'You don\'t have permission to go to map %d' % map_id})
+				self.tp_history.pop()
 				return False
 
+			# Remove first, so the container can tell everyone
 			if self.map:
-				# Remove the user for everyone on the map
 				self.map.remove_from_contents(self)
-				self.map.broadcast("WHO", {'remove': self.id}, remote_category=botwatch_type['entry'])
 
-			# Get the new map and send it to the client
-			self.map_id = map_id
-			self.map = map_load
-			self.update_map_permissions()
+			# Add the entity to the map, which will tell the clients there that the entity arrived,
+			# and give the entity the status for the other entities that are already there.
+			map_load.add_to_contents(self)
 
-			self.map.add_to_contents(self)
-			if self.map.is_map():
+			if map_load.is_map():
 				self.send("MAI", self.map.map_info())
 				self.send("MAP", self.map.map_section(0, 0, self.map.width-1, self.map.height-1))
-			self.send("WHO", {'list': self.map.who_contents(), 'you': self.id})
-
-			# Tell everyone on the new map the user arrived
-			self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['entry'])
-
-			# Warn about chat listeners, if present
-			if map_id in BotWatch[botwatch_type['chat']]:
-				self.send("MSG", {'text': 'A bot has access to messages sent here ([command]listeners[/command])'})
 
 		# Move player's X and Y coordinates if needed
 		if new_pos != None:
 			self.move_to(new_pos[0], new_pos[1], is_teleport=True)
-			self.map.broadcast("MOV", {'id': self.id, 'to': [self.x, self.y]}, remote_category=botwatch_type['move'])
+			self.map.broadcast("MOV", {'id': self.protocol_id(), 'to': [self.x, self.y]}, remote_category=botwatch_type['move'])
 		elif goto_spawn:
 			self.move_to(self.map.start_pos[0], self.map.start_pos[1], is_teleport=True)
-			self.map.broadcast("MOV", {'id': self.id, 'to': [self.x, self.y]}, remote_category=botwatch_type['move'])
+			self.map.broadcast("MOV", {'id': self.protocol_id(), 'to': [self.x, self.y]}, remote_category=botwatch_type['move'])
 
 		# Move any passengers too
 		for u in self.passengers:
@@ -395,13 +398,33 @@ class Entity(object):
 		return True
 
 	def send_home(self):
-		""" If player has a home, send them there. If not, to map zero """
-		if self.home != None:
-			self.switch_map(self.home[0], new_pos=[self.home[1], self.home[2]])
-		else:
-			self.switch_map(get_database_meta('default_map'))
+		""" If entity has a home, send it there. If not, find somewhere else suitable. """
+		if self.home != None and self.switch_map(self.home[0], new_pos=[self.home[1], self.home[2]]):
+			return
+		if self.is_client() and self.switch_map(get_database_meta('default_map')):
+			return
+		if self.owner_id:
+			# Try to put it into the owner's inventory, if they're online
+			if self.switch_map(self.owner_id):
+				return
+			if self.db_id:
+				# Move it to the owner's inventory
+				if self.map:
+					self.map.remove_from_contents(self)
+				self.map_id = self.owner_id
+				self.save_and_commit()
+				self.cleanup()
+				return
+		if self.db_id:
+			print("Entity %d was sent home, but there wasn't a suitable place to go" % self.db_id)
+		self.cleanup()
 
 	# Information
+
+	def protocol_id(self):
+		""" Returns database ID if it exists, or temp ID (with a marker to say that it's a temp ID) if it doesn't.
+		Used to identify the entity in protocol messages. """
+		return self.db_id if (self.db_id != None) else ("~"+str(self.id))
 
 	def who(self):
 		""" A dictionary of information for the WHO command """
@@ -411,18 +434,32 @@ class Entity(object):
 			'x': self.x,
 			'y': self.y,
 			'dir': self.dir,
-			'id': self.id,
-			'passengers': [passenger.id for passenger in self.passengers],
-			'vehicle': self.vehicle.id if self.vehicle else None,
+			'id': self.protocol_id(),
+			'passengers': [passenger.protocol_id() for passenger in self.passengers],
+			'vehicle': self.vehicle.protocol_id() if self.vehicle else None,
 			'is_following': self.is_following
+		}
+
+	def bag_info(self):
+		""" Dictionary used to describe an object for a BAG protocol message """		
+		return {
+			'id': self.db_id,
+			'name': self.name,
+			'desc': self.desc,
+			'pic': self.pic,
+			'type': entity_type_name[self.entity_type],
+			'flags': self.flags,
+			'folder': self.map_id,
+			'data': self.data,
+			'tags': self.tags
 		}
 
 	def who_contents(self):
 		""" WHO message data """
-		return {str(e.id):e.who() for e in self.contents}
+		return {str(e.protocol_id()):e.who() for e in self.contents}
 
 	def username_or_id(self):
-		return str(self.id)
+		return self.protocol_id()
 
 	def name_and_username(self):
 		return '%s (%s)' % (self.name, self.username_or_id())

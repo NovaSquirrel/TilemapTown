@@ -250,15 +250,15 @@ function useItem(Placed) {
   var PlayerY = PlayerWho[PlayerYou].y;
 
   switch(Placed.type) {
-    case 6: // folder
+    case "folder": // folder
       OpenFolders[Placed.id] = !OpenFolders[Placed.id];
       NeedInventoryUpdate = true;
       break;
-    case 4: // tileset
+    case "tileset": // tileset
       viewTileset(Placed);
       console.log("Open tileset thing");
       break;
-    case 3: // object
+    case "map_tile": // object
       var ActualAtom = AtomFromName(Placed.data);
       // place the item on the ground
       if(ActualAtom.obj) {
@@ -686,10 +686,10 @@ function tickWorld() {
       // always reload the picture, for now
       if(true) {
         switch(updated.type) {
-          case 0: // dummy
+          default: // dummy
             updated.pic = [0, 8, 24];
             break;
-          case 3: // object
+          case "map_tile": // object
             // allow for string data like "grass"
             var temp = AtomFromName(updated.data);
             if(temp && temp.pic) {
@@ -698,19 +698,19 @@ function tickWorld() {
               updated.pic = [0, 8, 24];
             }
             break;
-          case 1: // text
+          case "text":
             updated.pic = [0, 0, 24];
             break;
-          case 2: // image
+          case "image":
             updated.pic = [0, 11, 20];
             break;
-          case 4: // tileset
+          case "tileset":
             updated.pic = [0, 19, 18];
             break;
-          case 5: // reference
+          case "reference":
             updated.pic = [0, 9, 22];
             break;
-          case 6: // folder
+          case "folder":
             if(OpenFolders[updated.id])
               updated.pic = [0, 2, 20];
             else
@@ -1017,7 +1017,7 @@ function initBuild() {
       var index = pos.y * BuildWidth + pos.x;
 
       if(evt.button == 0)
-        useItem({type: 3, data: PredefinedArrayNames[index]});
+        useItem({type: 'map_tile', data: PredefinedArrayNames[index]});
 //      else if(evt.button == 2)
 //        addInventory(PredefinedArrayNames[index]);
     }, false);
@@ -1187,7 +1187,6 @@ function updateInventoryUL() {
 
 function toggleDisplay(element) {
   element.style.display = element.style.display == 'block' ? 'none' : 'block';
-
 }
 
 function viewUsers() {
@@ -1459,7 +1458,7 @@ function editItemApply() {
   }
 
   switch(editItemType) {
-    case 1: // text
+    case "text":
       SendCmd("BAG", {
         update: {"id": editItemID,
                  "name": edittilename,
@@ -1471,7 +1470,7 @@ function editItemApply() {
 
       break;
 
-    case 2: // image
+    case "image":
       SendCmd("BAG", {
         update: {"id": editItemID,
                  "name": edittilename,
@@ -1482,7 +1481,7 @@ function editItemApply() {
       });
       break;
 
-    case 3: // object
+    case "map_tile":
       // Gather item info
       var edittilesheet = parseInt(document.getElementById('edittilesheet').value);
       var edittilex = parseInt(document.getElementById('edittilex').value);

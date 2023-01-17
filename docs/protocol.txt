@@ -69,8 +69,11 @@ tileset received from the server
 <-- WHO {"add": {"name": name, "pic": [s, x, y], "x": x, "y": y, "dir", dir, "id": id}}
 <-- WHO {"update": {"id": id, other fields}}
 <-- WHO {"remove": id}
+<-- WHO {"new_id": {"id": old_id, "new_id", id}}
 "add" can be used to do an update too, where it will replace a whole entry with new data.
 "update" can be used for partial updates, where only the fields present in the message are updated and other fields are left alone.
+"remove" requests that a specific item be removed.
+"new_id" is mostly used when a temporary object gets saved to the database, 
 
 Clients can send updates about themselves, but only keys that the servers knows to be OK, such as "typing".
 For client-to-server WHO updates, "id" is currently ignored, but it should be the same value the client received in the "you" field.
@@ -127,15 +130,24 @@ resources link?
 In addition to regular building objects there will be items that can't just be copied endlessly.
 To be added to the game later.
 
---> DRO {"id": id, "pos":[0,0]}
-<-- DRO {"id": id, "pos":[0,0]}
-drop item and get confirmation
-(not implemented)
-
---> TAK {"id": id, "pos":[0,0]}
-<-- TAK {"id": id, "pos":[0,0]}
+--> DRO {"id": id}
+<-- DRO {"id": id}
+--> TAK {"id": id}
+<-- TAK {"id": id}
 take item and get confirmation
 (not implemented)
+
+Fields for DRO:
+"pos": Position to put the item, if [DRO]pping it onto the map. If not specified, it defaults to the client's position.
+"into": Container to [DRO]p the item into. If not specified, it defaults to the map the client is in.
+
+Fields for DRO and TAK:
+"copy": If true, make a copy of the item and put into the container.
+"temp": If copy is true, make a temporary copy instead of a database copy.
+
+--> MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "id": 0}
+<-- MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "id": 0}
+Move something else within the same container as you, if you are allowed to
 
 --> USE {"id": id}
 use item
@@ -143,22 +155,35 @@ use item
 
 
 --> BAG {"create": {"name": name, "type": type}}
-create a new item of a given type
+Create a new item of a given type
 
 --> BAG {"update": {"id": id, "name": name, "desc": desc, "flags": flags, "folder": folder, "data": data}}
-update one specific item
+Update one specific item
 
 --> BAG {"delete": id}
-delete an item
+Delete an item
 
 --> BAG {"clone": id}
-make an exact clone of an item with a new ID
+Make an exact clone of an item with a new ID
 
 <-- BAG {"list": [{item info}]}
-receive a list of items from the server
+Receive a list of items from the server.
+
+Item info fields:
+	id
+	name
+	desc
+	type
+	flags
+	folder
+	data
+	tags
 
 <-- BAG {"update": {item info}}
-update one item with information from the server
+Update one item with information from the server (which can add a new item)
+
+<-- BAG {"new_id": {"id": old_id, "new_id": id}}
+Update the ID of one item in the player's inventory
 
 <-- BAG {"remove": id}
-remove one item from the inventory
+Remove one item from the inventory

@@ -67,16 +67,21 @@ botwatch_type['move']  = 0
 botwatch_type['build'] = 1
 botwatch_type['entry'] = 2
 botwatch_type['chat']  = 3
-BotWatch = [{}, {}, {}, {}]
+BotWatch = [{}, {}, {}, {}] # Indexed by client.db_id
 
 # Map permissions
 permission = {}
-permission['entry'] = 1         # user can visit the map
-permission['build'] = 2         # user can build on the map
-permission['sandbox'] = 4       # users can delete any part of the map freely
-permission['admin'] = 8         # user is an admin on the map
-permission['bulk_build'] = 16   # user can use the builk building protocol commands
-permission['map_bot'] = 32      # user is given bot-related permissions
+permission['entry'] = 0x01         # user can visit the map
+permission['build'] = 0x02         # user can build on the map
+permission['sandbox'] = 0x04       # users can delete any part of the map freely
+permission['admin'] = 0x08         # user is an admin on the map
+permission['bulk_build'] = 0x10    # user can use the builk building protocol commands
+permission['map_bot'] = 0x20       # user is given bot-related permissions
+permission['move'] = 0x40          # user can move this object around within the same container
+permission['move_new_map'] = 0x80  # user can move this object to a new map
+permission['copy'] = 0x0100        # user can make copies of this object
+permission['object_entry'] = 0x0200            # user can bring objects here temporarily
+permission['persistent_object_entry'] = 0x0400 # user can bring objects here persistently
 
 # Map flags
 mapflag = {}
@@ -107,6 +112,11 @@ user_privilege['registered'] = 1
 user_privilege['map_admin'] = 2
 user_privilege['map_owner'] = 3
 user_privilege['server_admin'] = 4
+
+# Used to mark IDs as being temporary, rather than being in the database
+temporary_id_marker = "~"
+# Used to mark IDs that belong to server-defined global entities (GLOBAL_ENTITY_KEY table)
+global_entity_marker = "!"
 
 def map_id_exists(id): # Used by /map
 	if id in AllMapsByDB:
@@ -151,7 +161,7 @@ def find_db_id_by_username(username):
 		return None
 	return result[0]
 
-def get_entity_type_by_id(id):
+def get_entity_type_by_db_id(id):
 	c = Database.cursor()
 	c.execute('SELECT type FROM Entity WHERE id=?', (id,))
 	result = c.fetchone()
@@ -159,14 +169,24 @@ def get_entity_type_by_id(id):
 		return None
 	return result[0]
 
-def get_entity_by_db_id(id):
-	# Already loaded?
+def get_entity_by_id(id, load_from_db=True):
+	# If it's temporary, get it if it still exists
+	if isinstance(id, str) and id[0] == temporary_id_marker:
+		id = id[1:]
+		if id in AllEntitiesByID:
+			return AllEntitiesByID[id]
+		return None
+
+	# Fetch it from RAM if it's already loaded from the database
 	if id in AllEntitiesByDB:
 		return AllEntitiesByDB[id]
 
-	# Try to load it
+	if not load_from_db:
+		return None
 
-	t = get_entity_type_by_id(id)
+	# If it's not already loaded, attempt to load it from the database
+
+	t = get_entity_type_by_db_id(id)
 	if t == None:
 		# Doesn't exist in the database
 		return None

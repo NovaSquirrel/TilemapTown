@@ -46,11 +46,14 @@ class Client(Entity):
 
 		self.identified = False
 
+		AllClients.add(self)
+
 	def __del__(self):
 		self.cleanup()
 		super().__del__()
 
 	def cleanup(self):
+		super().cleanup()
 		AllClients.discard(self)
 
 		self.ws = None
@@ -68,11 +71,11 @@ class Client(Entity):
 
 	def add_to_contents(self, item):
 		super().add_to_contents(item)
-		# TODO
+		self.send("BAG", {'update': item.bag_info()})
 
 	def remove_from_contents(self, item):
 		super().remove_from_contents(item)
-		# TODO
+		self.send("BAG", {'remove': item.db_id})
 
 	def test_server_banned(self):
 		""" Test for and take action on IP bans """
@@ -81,31 +84,25 @@ class Client(Entity):
 			c = Database.cursor()
 			split = self.ip.split('.')
 			if len(split) == 4:
-				c.execute("""SELECT id, expiry, reason FROM Server_Ban WHERE
+				c.execute("""SELECT id, expires_at, reason FROM Server_Ban WHERE
+                          (ip=?) or (
                           (ip1=? or ip1='*') and
                           (ip2=? or ip2='*') and
                           (ip3=? or ip3='*') and
-                          (ip4=? or ip4='*')""", (split[0], split[1], split[2], split[3]))
+                          (ip4=? or ip4='*'))""", (self.ip, split[0], split[1], split[2], split[3]))
 			else:
-				c.execute('SELECT id, expiry, reason FROM Server_Ban WHERE ip=?', (self.ip,))
+				c.execute('SELECT id, expires_at, reason FROM Server_Ban WHERE ip=?', (self.ip,))
 
 			# If there is a result, check to see if it's expired or not
 			result = c.fetchone()
 			if result != None:
 				if result[1] != None and datetime.datetime.now() > result[1]:
-					print("ban expired")
+					print("Ban expired for user %s" % self.ip)
 					c.execute('DELETE FROM Server_Ban WHERE id=?', (result[0],))
 				else:
-					print("stopped banned user %s" % self.ip)
+					print("Denied access to banned user %s" % self.ip)
 					self.disconnect('Banned from the server until %s (%s)' % (str(result[1]), result[2]))
 					return True
-		return False
-
-	def must_be_server_admin(self, give_error=True):
-		if self.username in Config["Server"]["Admins"]:
-			return True
-		elif give_error:
-			self.send("ERR", {'text': 'You don\'t have permission to do that'})
 		return False
 
 	def disconnect(self, text=None):
@@ -115,8 +112,7 @@ class Client(Entity):
 		asyncio.ensure_future(self.ws.close())
 
 	def username_or_id(self):
-		return str(self.id)
-		return self.username or str(self.id)
+		return self.username or self.protocol_id()
 
 	def who(self):
 		w = super().who()

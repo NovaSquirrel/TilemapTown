@@ -581,7 +581,7 @@ def fn_listeners(map, client, arg):
 	out = ''
 	for i in botwatch_type.keys():
 		c = botwatch_type[i]
-		if map.id in BotWatch[c]:
+		if map.db_id in BotWatch[c]:
 			for u in BotWatch[c][map.db_id]:
 				out += '%s (%s), ' % (u.username, i)
 	client.send("MSG", {'text': 'Listeners here: ' + out})
@@ -600,10 +600,7 @@ def fn_listen(map, client, arg):
 		category = botwatch_type[c]
 
 		for m in maps:
-			cursor = Database.cursor()
-			cursor.execute('SELECT allow FROM Map_Permission WHERE mid=? AND uid=?', (m, client.db_id,))
-			result = cursor.fetchone()
-			if (result == None) or (result[0] & permission['map_bot'] == 0):
+			if not client.has_permission(m, permission['map_bot'], False):
 				client.send("ERR", {'text': 'Don\'t have permission to listen on map: %d' % m})
 				return
 			if m not in BotWatch[category]:
@@ -613,16 +610,20 @@ def fn_listen(map, client, arg):
 
 			# Send initial data
 			if c == 'build':
-				map = get_map_by_id(m)
-				data = map.map_info()
-				data['remote_map'] = m
-				client.send("MAI", data)
+				if get_entity_type_by_db_id(m) == entity_type['map']:
+					map = get_entity_by_id(m)
+					data = map.map_info()
+					data['remote_map'] = m
+					client.send("MAI", data)
 
-				data = map.map_section(0, 0, map.width-1, map.height-1)
-				data['remote_map'] = m
-				client.send("MAP", data)
+					data = map.map_section(0, 0, map.width-1, map.height-1)
+					data['remote_map'] = mh
+					client.send("MAP", data)
 			elif c == 'entry':
-				client.send("WHO", {'list': get_map_by_id(m).who(), 'remote_map': m})
+				if m in AllEntitiesByDB:
+					client.send("WHO", {'list': AllEntitiesByDB[m].who_contents(), 'remote_map': m})
+				else:
+					client.send("WHO", {'list': [], 'remote_map': m})
 
 	client.send("MSG", {'text': 'Listening on maps now: ' + str(client.listening_maps)})
 
@@ -856,7 +857,7 @@ def fn_gwho(map, client, arg):
 @cmd_command(category="Who")
 def fn_who(map, client, arg):
 	names = ''
-	for u in map.users:
+	for u in map.contents:
 		if len(names) > 0:
 			names += ', '
 		names += u.name_and_username()

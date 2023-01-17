@@ -49,7 +49,7 @@ class Map(Entity):
 
 	def clean_up(self):
 		""" Clean up everything before a map unload """
-		pass
+		super().cleanup()
 
 	def blank_map(self, width, height):
 		""" Make a blank map of a given size """

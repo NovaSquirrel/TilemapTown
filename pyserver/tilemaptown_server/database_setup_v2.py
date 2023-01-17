@@ -39,7 +39,7 @@ set_database_meta('version', 2)
 # Table creation time!
 
 c.execute("""create table if not exists Entity (
-id integer primary key autoincrement,
+id integer primary key,
 owner_id integer,
 creator_id integer,
 created_at timestamp,
@@ -97,7 +97,7 @@ foreign key(user_id) references Entity(id) on delete cascade
 )""")
 
 c.execute("""create table if not exists User (
-entity_id integer primary key autoincrement,
+entity_id integer primary key,
 passhash text,
 passalgo text,
 last_seen_at timestamp,

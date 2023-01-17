@@ -25,7 +25,7 @@ else:
 	reload_database_meta()
 
 # Timer that runs and performs background tasks
-def mainTimer():
+def main_timer():
 	global ServerShutdown
 	global loop
 
@@ -72,7 +72,7 @@ def mainTimer():
 		elif ServerShutdown[0] == 0:
 			loop.stop()
 	if ServerShutdown[0] != 0:
-		loop.call_later(1, mainTimer)
+		loop.call_later(1, main_timer)
 
 # Websocket connection handler
 async def client_handler(websocket, path):
@@ -92,7 +92,6 @@ async def client_handler(websocket, path):
 		return
 
 	print("connected: %s %s" % (path, client.ip))
-	AllClients.add(client)
 
 	try:
 		while True:
@@ -120,11 +119,9 @@ async def client_handler(websocket, path):
 			elif command == "PIN":
 				client.ping_timer = 300
 
-			# Don't allow the user to go any further if they're not on a map
-			if client.identified == False:
-				continue
-			# Send the command through to the map
-			if command not in ["IDN", "PIN"]:
+			# Don't allow the user to do anything but IDN and PIN unless they've identified
+			# Process the command
+			elif client.identified:
 				client.idle_timer = 0
 				if "remote_map" in arg:
 					if arg["remote_map"] in AllMapsByDB:
@@ -144,17 +141,15 @@ async def client_handler(websocket, path):
 		print("Unexpected error:", sys.exc_info()[0])
 		print(sys.exc_info()[1])
 		traceback.print_tb(sys.exc_info()[2])
-		raise
+	#	raise
 
 	client.cleanup()
-	if client.username:
+	if client.db_id:
 		client.save_and_commit()
 
 	# remove the user from all clients' views
 	if client.map != None:
-		client.map.contents.remove(client)
-		client.map.broadcast("WHO", {'remove': client.id})
-	AllClients.discard(client)
+		client.map.remove_from_contents(client)
 
 global loop
 
@@ -164,11 +159,22 @@ def main():
 
 	# Start the event loop
 	loop = asyncio.get_event_loop()
-	loop.call_soon(mainTimer)
+	loop.call_soon(main_timer)
 	loop.run_until_complete(start_server)
 	print("Server started!")
-	loop.run_forever()
-	Database.close()
+
+	try:
+		loop.run_forever()
+	except KeyboardInterrupt:
+		print("Shutting the server down...")
+		ServerShutdown = [1]
+	finally:
+		loop.close()
+
+		main_timer()
+		Database.commit()
+		print("Closing the database")
+		Database.close()
 
 if __name__ == "__main__":
 	main()
