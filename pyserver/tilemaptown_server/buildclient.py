@@ -48,17 +48,11 @@ class Client(Entity):
 
 		AllClients.add(self)
 
-	def __del__(self):
-		self.cleanup()
-		super().__del__()
-
-	def cleanup(self):
-		super().cleanup()
+	def clean_up(self):
 		AllClients.discard(self)
-
-		self.ws = None
 		for p in self.listening_maps:
 			BotWatch[p[0]][p[1]].remove(self)
+		super().clean_up()
 
 	def send(self, command_type, command_params):
 		""" Send a command to the client """

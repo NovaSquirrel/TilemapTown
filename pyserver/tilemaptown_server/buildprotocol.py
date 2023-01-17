@@ -194,10 +194,10 @@ def fn_EML(map, client, arg):
 			# todo: definitely needs some limits in place to prevent abuse!
 
 			# get a list of all the people to mail
-			recipient_id = set([find_db_id_by_username(x) for x in arg['send']['to']])
+			recipient_id = set(find_db_id_by_username(x) for x in arg['send']['to'])
 			recipient_string = ','.join([str(x) for x in recipient_id])
 
-			if any([x == None for x in recipient_id]):
+			if any(x == None for x in recipient_id):
 				client.send("ERR", {'text': 'Couldn\'t find one or more users you wanted to mail'})
 				return
 
@@ -265,6 +265,8 @@ def fn_DEL(map, client, arg):
 	x2 = arg["pos"][2]
 	y2 = arg["pos"][3]
 	if client.has_permission(map, permission['build'], True) or must_be_map_owner(client, True, give_error=False):
+		map.save_on_clean_up = True
+
 		for x in range(x1, x2+1):
 			for y in range(y1, y2+1):
 				if arg["turf"]:
@@ -290,6 +292,8 @@ def fn_PUT(map, client, arg):
 	x = arg["pos"][0]
 	y = arg["pos"][1]
 	if client.has_permission(map, permission['build'], True) or must_be_map_owner(client, True, give_error=False):
+		map.save_on_clean_up = True
+
 		# verify the the tiles you're attempting to put down are actually good
 		if arg["obj"]: #object
 			tile_test = [tile_is_okay(x) for x in arg["atom"]]
@@ -317,6 +321,8 @@ def fn_PUT(map, client, arg):
 @protocol_command(map_only=True)
 def fn_BLK(map, client, arg):
 	if client.has_permission(map, permission['bulk_build'], False) or must_be_map_owner(client, True, give_error=False):
+		map.save_on_clean_up = True
+
 		# verify the tiles
 		for turf in arg["turf"]:
 			if not tile_is_okay(turf[2])[0]:

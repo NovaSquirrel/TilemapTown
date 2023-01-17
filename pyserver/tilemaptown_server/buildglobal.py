@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sqlite3, json, sys, os.path
+import sqlite3, json, sys, os.path, weakref
 
 # Read configuration information
 Config = {}
@@ -56,10 +56,10 @@ DatabaseMeta = {}
 
 # Important information shared by each module
 ServerShutdown = [-1]
-AllClients = set()
-AllMapsByDB = {}     # Maps only
-AllEntitiesByDB = {} # All entities (indexed by database ID)
-AllEntitiesByID = {} # All entities (indexed by temporary ID)
+AllClients      = set()
+AllMaps         = weakref.WeakSet()             # Maps only; used by /whereare
+AllEntitiesByDB = weakref.WeakValueDictionary() # All entities (indexed by database ID)
+AllEntitiesByID = weakref.WeakValueDictionary() # All entities (indexed by temporary ID)
 
 # Remote map-watching for bots
 botwatch_type = {}
@@ -117,14 +117,6 @@ user_privilege['server_admin'] = 4
 temporary_id_marker = "~"
 # Used to mark IDs that belong to server-defined global entities (GLOBAL_ENTITY_KEY table)
 global_entity_marker = "!"
-
-def map_id_exists(id): # Used by /map
-	if id in AllMapsByDB:
-		return True
-	c = Database.cursor()
-	c.execute('SELECT entity_id FROM Map WHERE entity_id=?', (id,))
-	result = c.fetchone()
-	return result != None
 
 # Important shared functions
 def broadcast_to_all(text):

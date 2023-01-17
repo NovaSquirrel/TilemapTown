@@ -60,6 +60,14 @@ def find_entity_name(id):
 		return None
 	return result[0]
 
+def map_id_exists(id): # Used by /map
+	if id in AllEntitiesByDB:
+		return AllEntitiesByDB[id].entity_type == entity_type['map']
+	c = Database.cursor()
+	c.execute('SELECT entity_id FROM Map WHERE entity_id=?', (id,))
+	result = c.fetchone()
+	return result != None
+
 def sql_exists(query, data):
 	c = Database.cursor()
 	c.execute('SELECT EXISTS(%s)' % query, data)
@@ -591,7 +599,7 @@ handlers['listeners'] = fn_listeners
 def fn_listen(map, client, arg):
 	params = arg.split()
 	categories = set(params[0].split(','))
-	maps = set([int(x) for x in params[1].split(',')])
+	maps = set(int(x) for x in params[1].split(','))
 	for c in categories:
 		# find category number from name
 		if c not in botwatch_type:

@@ -32,7 +32,11 @@ class Map(Entity):
 		self.name = "Map"
 		self.id = 0
 		self.map_flags = 0
- 
+
+		# See also:
+		# self.turfs[y][x]
+		# self.objs[y][x]
+
 		# map scripting
 		self.has_script = False
 		#loop = asyncio.get_event_loop()
@@ -43,13 +47,11 @@ class Map(Entity):
 		elif not self.load(id):
 			self.db_id = None
 
-	def __del__(self):
-		self.cleanup()
-		super().__del__()
+		AllMaps.add(self)
 
 	def clean_up(self):
 		""" Clean up everything before a map unload """
-		super().cleanup()
+		super().clean_up()
 
 	def blank_map(self, width, height):
 		""" Make a blank map of a given size """
@@ -78,22 +80,21 @@ class Map(Entity):
 		self.height = result[4]
 		self.default_turf = result[5]
 
-		entity_loaded = super().load(map_id)
-		if entity_loaded:
-			# Parse map data
-			if self.data:
-				s = json.loads(self.data)
-				self.blank_map(s["pos"][2]+1, s["pos"][3]+1) # [firstX, firstY, lastX, lastY]
-				for t in s["turf"]:
-					self.turfs[t[0]][t[1]] = t[2]
-				for o in s["obj"]:
-					self.objs[o[0]][o[1]] = o[2]
-			else:
-				self.blank_map(self.width, self.height)
-		else:
-			return False
-
 		return super().load(map_id)
+
+	def load_data(self):
+		d = loads_if_not_none(self.load_data_as_text())
+
+		# Parse map data
+		if d:
+			self.blank_map(d["pos"][2]+1, d["pos"][3]+1) # pos is [firstX, firstY, lastX, lastY]
+			for t in d["turf"]:
+				self.turfs[t[0]][t[1]] = t[2]
+			for o in d["obj"]:
+				self.objs[o[0]][o[1]] = o[2]
+		else:
+			self.blank_map(self.width, self.height)
+		return True
 
 	def save(self):
 		""" Save the map to the database """
@@ -113,6 +114,9 @@ class Map(Entity):
 		# Update the map
 		values = (self.map_flags, self.start_pos[0], self.start_pos[1], self.width, self.height, self.default_turf, self.db_id)
 		c.execute("UPDATE Map SET flags=?, start_x=?, start_y=?, width=?, height=?, default_turf=? WHERE entity_id=?", values)
+
+	def save_data(self):
+		self.save_data_as_text(json.dumps(self.map_section(0, 0, self.width-1, self.height-1)))
 
 	def map_section(self, x1, y1, x2, y2):
 		""" Returns a section of map as a list of turfs and objects """

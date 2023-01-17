@@ -16,6 +16,7 @@
 
 import asyncio, datetime, random, websockets, json, os.path, hashlib
 from .buildglobal import *
+from collections import deque
 
 entityCounter = 1
 
@@ -39,32 +40,33 @@ class Entity(object):
 		self.home_id = None        # Map that is the entity's "home"
 		self.home_position = None
 
-		self.id = entityCounter  # temporary ID for referring to different objects in RAM
-		self.db_id = None        # more persistent ID: the database key
+		self.id = entityCounter  # Temporary ID for referring to different objects in RAM
+		self.db_id = None        # More persistent ID: the database key
 		entityCounter += 1
 
-		self.map_allow = 0       # Cache map allows and map denys to avoid excessive SQL queries
+		self.map_allow = 0       # Used to cache the map allows and map denys to avoid excessive SQL queries
 		self.map_deny = 0
 		self.oper_override = False
 
 		# other info
-		self.tags = {}    # description, species, gender and other things
-		self.data = None
+		self.tags = {}    # Description, species, gender and other things
+		self.data = None  # Data that gets stored in the database
+
 		self.flags = 0
 		self.contents = set()
 
 		# temporary information
-		self.requests = {} # indexed by username, array with [timer, type]
+		self.requests = {} # Indexed by username, array with [timer, type]
 		# valid types are "tpa", "tpahere", "carry"
-		self.tp_history = []
+		self.tp_history = deque(maxlen=20)
 
 		# allow cleaning up BotWatch info
 		self.listening_maps = set() # tuples of (category, map)
 
 		# riding information
-		self.vehicle = None     # user being ridden
-		self.passengers = set() # users being carried
-		self.is_following = False # if true, follow behind instead of being carried
+		self.vehicle = None     # User being ridden
+		self.passengers = set() # Users being carried
+		self.is_following = False # If true, follow behind instead of being carried
 
 		# permissions
 		self.creator_id = creator_id
@@ -73,28 +75,35 @@ class Entity(object):
 		self.deny = 0
 		self.guest_deny = 0
 
-		# Save when cleanup() is called
-		self.save_on_cleanup = False
+		# Save when clean_up() is called
+		self.save_on_clean_up = False
+		self.cleaned_up_already = False
 
 		# Make this entity easy to find
 		AllEntitiesByID[self.id] = self
 
 	def __del__(self):
-		self.cleanup()
+		self.clean_up()
 
-	def cleanup(self):
+	def clean_up(self):
+		# May not be needed because of the weak references
 		AllEntitiesByDB.pop(self.db_id, None)
 		AllEntitiesByID.pop(self.id,    None)
 
+		# Remove from the container
+		if self.map != None:
+			self.map.remove_from_contents(self)
+
+		# Let go of all passengers
 		temp = set(self.passengers)
 		for u in temp:
 			u.dismount()
 		if self.vehicle:
 			self.dismount()
 
-		if self.save_on_cleanup:
+		if self.save_on_clean_up:
 			self.save_and_commit()
-			self.save_on_cleanup = False # Just to be safe
+			self.save_on_clean_up = False
 
 	def send(self, commandType, commandParams):
 		# Not supported by default
@@ -357,8 +366,6 @@ class Entity(object):
 			# Add a new teleport history entry if new map
 			if self.map_id != map_id:
 				self.tp_history.append([self.map_id, self.x, self.y])
-			if len(self.tp_history) > 20: # Only keep 20 most recent entries
-				self.tp_history.pop(0)
 
 		if self.map_id != map_id:
 			# First check if you can even go to that map
@@ -474,15 +481,23 @@ class Entity(object):
 
 	# Database access
 
-	def load(self, id):
-		""" Load an account from the database """
+	def assign_db_id(self, id):
+		if self.db_id:
+			return
+		if self.map:
+			self.map.broadcast("WHO", {'new_id': {'id': self.id, 'new_id': id}}, remote_category=botwatch_type['move'])
 		self.db_id = id
+		AllEntitiesByDB[self.db_id] = self
 
+	def load(self, id):
+		""" Load an entity from the database """
 		c = Database.cursor()
-		c.execute('SELECT type, name, desc, pic, location, position, home_location, home_position, tags, owner_id, allow, deny, guest_deny, data, creator_id FROM Entity WHERE id=?', (self.db_id,))
+		c.execute('SELECT type, name, desc, pic, location, position, home_location, home_position, tags, owner_id, allow, deny, guest_deny, creator_id FROM Entity WHERE id=?', (id,))
 		result = c.fetchone()
 		if result == None:
 			return False
+
+		self.assign_db_id(id)
 
 		self.entity_type = result[0]
 		self.name = result[1]
@@ -502,11 +517,21 @@ class Entity(object):
 		self.allow = result[10]
 		self.deny = result[11]
 		self.guest_deny = result[12]
-		self.data = loads_if_not_none(result[13])
-		self.creator_id = result[14]
+		self.creator_id = result[13]
+		return self.load_data()
 
-		# Make this entity easy to find
-		AllEntitiesByDB[self.db_id] = self
+	def load_data_as_text(self):
+		""" Get the data and return it as a string """
+		c = Database.cursor()
+		c.execute('SELECT data FROM Entity WHERE id=?', (self.db_id,))
+		result = c.fetchone()
+		if result != None:
+			return result[0]
+		return None
+
+	def load_data(self):
+		""" Load the entity's data to the database, using JSON unless overridden """
+		self.data = loads_if_not_none(self.load_data_as_text())
 		return True
 
 	def save(self):
@@ -515,15 +540,23 @@ class Entity(object):
 
 		if self.db_id == None:
 			c.execute("INSERT INTO Entity (created_at, creator_id) VALUES (?, ?)", (datetime.datetime.now(), self.creator_id))
-			self.db_id = c.lastrowid
+			self.assign_db_id(c.lastrowid)
 			if self.db_id == None:
 				return
 
-		values = (self.entity_type, self.name, self.desc, dumps_if_not_none(self.pic), self.map_id, json.dumps([self.x, self.y] + ([self.dir] if self.dir != 2 else [])), self.home_id, dumps_if_not_none(self.home_position), dumps_if_condition(self.tags, self.tags != {}), self.owner_id, self.allow, self.deny, self.guest_deny, dumps_if_not_none(self.data), self.db_id)
-		c.execute("UPDATE Entity SET type=?, name=?, desc=?, pic=?, location=?, position=?, home_location=?, home_position=?, tags=?, owner_id=?, allow=?, deny=?, guest_deny=?, data=? WHERE id=?", values)
+		values = (self.entity_type, self.name, self.desc, dumps_if_not_none(self.pic), self.map_id, json.dumps([self.x, self.y] + ([self.dir] if self.dir != 2 else [])), self.home_id, dumps_if_not_none(self.home_position), dumps_if_condition(self.tags, self.tags != {}), self.owner_id, self.allow, self.deny, self.guest_deny, self.db_id)
+		c.execute("UPDATE Entity SET type=?, name=?, desc=?, pic=?, location=?, position=?, home_location=?, home_position=?, tags=?, owner_id=?, allow=?, deny=?, guest_deny=? WHERE id=?", values)
 
-		# Make this entity easy to find
-		AllEntitiesByDB[self.db_id] = self
+		self.save_data()
+
+	def save_data_as_text(self, text):
+		""" Save the data to the database, provided as a string """
+		c = Database.cursor()
+		c.execute("UPDATE Entity SET data=? WHERE id=?", (text, self.db_id))
+
+	def save_data(self):
+		""" Save the entity's data to the database, using JSON unless overridden """
+		self.save_data_as_text(dumps_if_not_none(self.data))
 
 	def save_and_commit(self):
 		self.save()

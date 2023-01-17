@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2019 NovaSquirrel
+# Copyright (C) 2017-2023 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio, datetime, random, websockets, json, sys, traceback
+import asyncio, datetime, random, websockets, json, sys, traceback, weakref
 from .buildglobal import *
 from .buildmap import *
 from .buildclient import *
@@ -35,7 +35,7 @@ def main_timer():
 		remove_requests = set()
 		for k,v in c.requests.items():
 			v[0] -= 1 # remove 1 from timer
-			if v[0] < 0:
+			if v[0] < 0: 
 				remove_requests.add(k)
 		for r in remove_requests:
 			del c.requests[r]
@@ -49,35 +49,26 @@ def main_timer():
 		elif c.ping_timer < 0:
 			c.disconnect()
 
-	# Unload unused maps
-	unloaded = set()
-	for k,m in AllMapsByDB.items():
-		if (m.id not in Config["Server"]["AlwaysLoadedMaps"]) and (len(m.contents) < 1):
-			print("Unloading map "+str(k))
-			m.save()
-			m.clean_up()
-			unloaded.add(k)
-	for m in unloaded:
-		del AllMapsByDB[m]
-
 	# Run server shutdown timer, if it's running
 	if ServerShutdown[0] > 0:
 		ServerShutdown[0] -= 1
 		if ServerShutdown[0] == 1:
-			broadcastToAll("Server is going down!")
+			broadcast_to_all("Server is going down!")
 			for u in AllClients:
 				u.disconnect()
-			for k,m in AllMaps.items():
-				m.save()
+			save_everything()
 		elif ServerShutdown[0] == 0:
 			loop.stop()
 	if ServerShutdown[0] != 0:
 		loop.call_later(1, main_timer)
 
+def save_everything():
+	for e in AllEntitiesByDB.values():
+		e.save()
+
 # Websocket connection handler
 async def client_handler(websocket, path):
 	client = Client(websocket)
-
 	client.ip = websocket.remote_address[0]
 
 	# If the local and remote addresses are the same, it's trusted
@@ -124,8 +115,8 @@ async def client_handler(websocket, path):
 			elif client.identified:
 				client.idle_timer = 0
 				if "remote_map" in arg:
-					if arg["remote_map"] in AllMapsByDB:
-						map = AllMapsByDB[arg["remote_map"]]
+					if arg["remote_map"] in AllEntitiesByDB:
+						map = AllEntitiesByDB[arg["remote_map"]]
 						if map.has_permission(client, permission['map_bot'], False):
 							handle_protocol_command(map, client, command, arg)
 						else:
@@ -137,19 +128,16 @@ async def client_handler(websocket, path):
 
 	except websockets.ConnectionClosed:
 		print("disconnected: %s (%s, \"%s\")" % (client.ip, client.username or "?", client.name))
+		client.ws = None
 	except:
 		print("Unexpected error:", sys.exc_info()[0])
 		print(sys.exc_info()[1])
 		traceback.print_tb(sys.exc_info()[2])
 	#	raise
 
-	client.cleanup()
 	if client.db_id:
-		client.save_and_commit()
-
-	# remove the user from all clients' views
-	if client.map != None:
-		client.map.remove_from_contents(client)
+		client.save_on_clean_up = True
+	client.clean_up()
 
 global loop
 
@@ -167,11 +155,8 @@ def main():
 		loop.run_forever()
 	except KeyboardInterrupt:
 		print("Shutting the server down...")
-		ServerShutdown = [1]
+		save_everything()
 	finally:
-		loop.close()
-
-		main_timer()
 		Database.commit()
 		print("Closing the database")
 		Database.close()
