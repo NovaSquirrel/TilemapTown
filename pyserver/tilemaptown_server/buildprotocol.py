@@ -168,7 +168,7 @@ def fn_BAG(map, client, arg):
 				update_me.data = update['data']
 			if 'folder' in update:
 				if client.has_permission(update['folder'], permission['persistent_object_entry'], False):
-					update_me.map_id = update['folder']
+					update_me.switch_map(update['folder'])
 			if 'name' in update:
 				update_me.name = update['name']
 			if 'desc' in update:

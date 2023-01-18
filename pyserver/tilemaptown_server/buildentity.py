@@ -86,24 +86,27 @@ class Entity(object):
 		self.clean_up()
 
 	def clean_up(self):
-		# May not be needed because of the weak references
-		AllEntitiesByDB.pop(self.db_id, None)
-		AllEntitiesByID.pop(self.id,    None)
+		if not self.cleaned_up_already:
+			# May not be needed because of the weak references
+			AllEntitiesByDB.pop(self.db_id, None)
+			AllEntitiesByID.pop(self.id,    None)
 
-		# Remove from the container
-		if self.map != None:
-			self.map.remove_from_contents(self)
+			if self.save_on_clean_up:
+				self.save_and_commit()
+				self.save_on_clean_up = False
 
-		# Let go of all passengers
-		temp = set(self.passengers)
-		for u in temp:
-			u.dismount()
-		if self.vehicle:
-			self.dismount()
+			# Remove from the container
+			if self.map != None:
+				self.map.remove_from_contents(self)
 
-		if self.save_on_clean_up:
-			self.save_and_commit()
-			self.save_on_clean_up = False
+			# Let go of all passengers
+			temp = set(self.passengers)
+			for u in temp:
+				u.dismount()
+			if self.vehicle:
+				self.dismount()
+
+			cleaned_up_already = True
 
 	def send(self, commandType, commandParams):
 		# Not supported by default
@@ -397,7 +400,7 @@ class Entity(object):
 		if new_pos != None:
 			self.move_to(new_pos[0], new_pos[1], is_teleport=True)
 			self.map.broadcast("MOV", {'id': self.protocol_id(), 'to': [self.x, self.y]}, remote_category=botwatch_type['move'])
-		elif goto_spawn:
+		elif goto_spawn and self.map.is_map():
 			self.move_to(self.map.start_pos[0], self.map.start_pos[1], is_teleport=True)
 			self.map.broadcast("MOV", {'id': self.protocol_id(), 'to': [self.x, self.y]}, remote_category=botwatch_type['move'])
 
