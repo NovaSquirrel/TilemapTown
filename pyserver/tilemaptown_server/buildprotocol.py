@@ -17,6 +17,7 @@
 import json, datetime
 from .buildglobal import *
 from .buildcommand import handle_user_command, escape_tags
+from .buildentity import Entity
 
 handlers = {}
 command_privilege_level = {} # minimum required privilege level required for the command; see user_privilege in buildglobal.py
@@ -114,8 +115,10 @@ def fn_BAG(map, client, arg):
 				client.send("ERR", {'text': 'Invalid type of item to create (%s)' % arg['create']['type']})
 				return
 			e = Entity(entity_type[arg['create']['type']], creator_id=client.db_id)
-			client.add_to_contents(e)
+			e.name = arg['create']['name']
+			e.map_id = client.db_id
 			e.save()
+			client.add_to_contents(e)
 
 		elif "clone" in arg:
 			if arg['clone'] not in AllEntitiesByDB:
@@ -126,62 +129,75 @@ def fn_BAG(map, client, arg):
 				client.send("ERR", {'text': 'You don\'t have permission to clone %s' % arg['clone']})
 				return
 
-			e = Entity(clone_me.entity_type)
-			e.name = clone_me.name
-			e.desc = clone_me.desc
-			e.pic = clone_me.pic
-			e.tags = clone_me.tags.copy() # TODO: deep copy
-			e.owner_id = client.db_id
-			e.allow = clone_me.allow
-			e.deny = clone_me.deny
-			e.guest_deny = clone_me.guest_deny
-			e.data = clone_me.data
-			e.creator_id = clone_me.creator_id
-			# created_at will be wrong, but that's ok
-			client.add_to_contents(e)
-			e.save()
+			# Create a new entity and copy over the properties
+			new_item = Entity(clone_me.entity_type)
+			clone_me.copy_onto(new_item)
+			new_item.owner_id = client.db_id
+
+			# Put it in the player's inventory now
+			new_item.map_id = client.db_id
+			new_item.save()
+			client.add_to_contents(new_item)
+
+			# Update created_at and acquired_at
+			if new_item.db_id:
+				c.execute('SELECT created_at FROM Entity WHERE id=?', (arg['clone'],))
+				result = c.fetchone()
+				if result != None:
+					c.execute('UPDATE Entity SET created_at=?, acquired_at=? WHERE id=?', (result[0], datetime.datetime.now(), new_item.db_id))
 
 		elif "update" in arg:
-			# get the initial data
-			c.execute('SELECT name, desc, flags, folder, data, type FROM Entity WHERE owner=? AND aid=?', (client.db_id, arg['update']['id']))
-			result = c.fetchone()
-			if result == None:
-				client.send("ERR", {'text': 'Invalid item ID'})
+			update = arg['update']
+			if update['id'] not in AllEntitiesByDB:
+				client.send("ERR", {'text': 'Can\'t update %s - not already loaded' % update['id']})
 				return
-			out = {'name': result[0], 'desc': result[1], 'flags': result[2], 'folder': result[3], 'data': result[4]}
-			asset_type = result[5]
-			if asset_type == 2 and "data" in arg['update'] and not image_url_is_okay(arg['update']['data']):
-				client.send("ERR", {'text': 'Image asset URL doesn\'t match any whitelisted sites'})
+			update_me = AllEntitiesByDB[update['id']]
+			if update_me.owner_id != client.db_id and not client.has_permission(update_me, permission['modify_properties'], False):
+				client.send("ERR", {'text': 'You don\'t have permission to update %s' % update['id']})
 				return
-			if asset_type == 3 and "data" in arg['update']:
-				tile_test = tile_is_okay(arg['update']['data'])
-				if not tile_test[0]:
-					client.send("ERR", {'text': 'Tile [tt]%s[/tt] rejected (%s)' % (arg['update']['data'], tile_test[1])})
-					return
 
-			# overwrite any specified columns
-			for key, value in arg['update'].items():
-				out[key] = value
-				if type(out[key]) == dict:
-					out[key] = json.dumps(out[key]);
-			c.execute('UPDATE Entity SET name=?, desc=?, flags=?, location=?, data=? WHERE owner_id=? AND id=?', (out['name'], out['desc'], out['flags'], out['folder'], out['data'], client.db_id, arg['update']['id']))
+			if 'data' in update:
+				if update_me.entity_type == entity_type['image'] and not image_url_is_okay(update['data']):
+					client.send("ERR", {'text': 'Image asset URL doesn\'t match any whitelisted sites'})
+					return
+				if update_me.entity_type == entity_type['map_tile']:
+					tile_ok, tile_reason = tile_is_okay(update['data'])
+					if not tile_ok:
+						client.send("ERR", {'text': 'Tile [tt]%s[/tt] rejected (%s)' % (arg['update']['data'], tile_reason)})
+						return
+				update_me.data = update['data']
+			if 'folder' in update:
+				if client.has_permission(update['folder'], permission['persistent_object_entry'], False):
+					update_me.map_id = update['folder']
+			if 'name' in update:
+				update_me.name = update['name']
+			if 'desc' in update:
+				update_me.desc = update['desc']
+			if 'pic' in update:
+				update_me.pic = update['pic']
+			if 'tags' in update:
+				update_me.tags = update['tags']
+			update_me.save()
 
 			# send back confirmation
-			client.send("BAG", {'update': arg['update']})
+			client.send("BAG", {'update': update})
 
 		elif "delete" in arg:
-			# move deleted contents of a deleted folder outside the folder
-			c.execute('SELECT location FROM Asset_Info WHERE owner=? AND aid=?', (client.db_id, arg['delete']))
-			result = c.fetchone()
-			if result == None:
-				client.send("ERR", {'text': 'Invalid item ID'})
+			delete = arg['delete']
+			if delete not in AllEntitiesByDB:
+				client.send("ERR", {'text': 'Can\'t delete %s - not already loaded' % delete})
 				return
-			# probably better to handle this with a foreign key constraint and cascade?
-			# it's NOT updated client-side but it shouldn't matter
-			c.execute('UPDATE Asset_Info SET folder=? WHERE owner=? AND folder=?', (result[0], client.db_id, arg['delete']))
+			delete_entity = AllEntitiesByDB[delete]
+			if delete_entity.owner_id != client.db_id:
+				client.send("ERR", {'text': 'You don\'t have permission to delete %s' % delete})
+				return
 
-			# actually delete
-			c.execute('DELETE FROM Entity WHERE owner_id=? AND id=?', (client.db_id, arg['delete']))
+			# Move things that were in this object to the object's parent
+			c.execute('UPDATE Entity SET location=? WHERE location=?', (delete_entity.map_id, delete))
+			# Actually delete it now
+			c.execute('DELETE FROM Entity WHERE owner_id=? AND id=?', (client.db_id, delete))
+			if delete_entity.map:
+				delete_entity.map.remove_from_contents(delete_entity)
 			client.send("BAG", {'remove': arg['delete']})
 	else:
 		client.send("ERR", {'text': 'Guests don\'t have an inventory currently. Use [tt]/register username password[/tt]'})
@@ -246,12 +262,12 @@ def fn_TSD(map, client, arg):
 @protocol_command()
 def fn_IMG(map, client, arg):
 	c = Database.cursor()
-	c.execute('SELECT data FROM Asset_Info WHERE type=2 AND aid=?', (arg['id'],))
+	c.execute('SELECT data FROM Entity WHERE type=? AND id=?', (entity_type['image'], arg['id'],))
 	result = c.fetchone()
 	if result == None:
 		client.send("ERR", {'text': 'Invalid item ID'})
 	else:
-		client.send("IMG", {'id': arg['id'], 'url': result[0]})
+		client.send("IMG", {'id': arg['id'], 'url': loads_if_not_none(result[0])})
 
 @protocol_command(map_only=True)
 def fn_MAI(map, client, arg):
@@ -371,7 +387,8 @@ def fn_WHO(map, client, arg):
 	if arg["update"]:
 		valid_data = validate_client_who(client.protocol_id(), arg["update"])
 		for key,value in valid_data.items():
-			setattr(client,key,value)
+			if key != 'id':
+				setattr(client,key,value)
 		map.broadcast("WHO", {"update": valid_data})
 	else:
 		client.send("ERR", {'text': 'not implemented'})

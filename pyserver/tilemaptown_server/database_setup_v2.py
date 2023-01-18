@@ -164,6 +164,7 @@ Database.commit()
 if get_database_meta('default_map') == None:
 	map = Map()
 	map.name = "Default map"
+	map.map_flags = mapflag['public']
 	map.save()
 	set_database_meta('default_map', map.db_id)
 	# gets committed by the above call

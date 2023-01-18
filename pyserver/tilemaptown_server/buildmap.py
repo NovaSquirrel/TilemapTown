@@ -16,7 +16,7 @@
 
 import json, asyncio, random, datetime
 from .buildglobal import *
-from .buildentity import *
+from .buildentity import Entity
 
 # Unused currently
 DirX = [ 1,  1,  0, -1, -1, -1,  0,  1]
@@ -143,6 +143,16 @@ class Map(Entity):
 		if all_info:
 			out['start_pos'] = self.start_pos
 		return out
+
+	def count_users_inside(self):
+		def search(inside):
+			n = 0
+			for e in inside.contents:
+				if e.entity_type == entity_type['user']:
+					n += 1
+				n += search(e)
+			return n
+		return search(self)
 
 	def is_map(self):
 		return True

@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio, datetime, random, websockets, json, os.path, hashlib
+import asyncio, datetime, random, websockets, json, hashlib
 from .buildglobal import *
 from .buildentity import *
 
@@ -132,8 +132,8 @@ class Client(Entity):
 				return
 
 		# Update the user
-		values = (self.password, "sha512", dumps_if_not_empty(list(self.watch_list)), dumps_if_not_empty(list(self.ignore_list)), self.client_settings, datetime.datetime.now(), self.user_flags, self.db_id)
-		c.execute("UPDATE User SET passhash=?, passalgo=?, watch=?, ignore=?, client_settings=?, last_seen_at=?, flags=? WHERE id=?", values)
+		values = (self.username, self.password, "sha512", dumps_if_not_empty(list(self.watch_list)), dumps_if_not_empty(list(self.ignore_list)), self.client_settings, datetime.datetime.now(), self.user_flags, self.db_id)
+		c.execute("UPDATE User SET username=?, passhash=?, passalgo=?, watch=?, ignore=?, client_settings=?, last_seen_at=?, flags=? WHERE entity_id=?", values)
 
 	def load(self, username, password):
 		""" Load an account from the database """
@@ -164,20 +164,25 @@ class Client(Entity):
 			self.password = passhash
 
 		# If the password is good, copy the other stuff over
-		self.db_id = result[0]
-		self.watch_list = set(json.loads(result[2]))
-		self.ignore_list = set(json.loads(result[3]))
-		self.client_settings = result[4]
-		self.user_flags = result[5]
+		self.username = username
+		self.assign_db_id(result[0])
+		self.watch_list = set(json.loads(result[3] or "[]"))
+		self.ignore_list = set(json.loads(result[4] or "[]"))
+		self.client_settings = result[5]
+		self.user_flags = result[6]
 		# And copy over the base entity stuff
 		return super().load(self.db_id)
 
 	def login(self, username, password):
 		inventory = []
 		def recursively_get_inventory(container):
-			for row in c.execute('SELECT id, name, desc, type, flags, location, data, pic, tags FROM Entity WHERE owner_id=? AND location=?', (self.db_id, container)):
-				item = {'id': row[0], 'name': row[1], 'desc': row[2], 'type': entity_type_name[row[3]], 'flags': row[4], 'folder': row[5], 'data': row[6], 'tags': row[7]}
-				inventory.append(item)
+			c.execute('SELECT id FROM Entity WHERE location=?', (container.db_id,))
+			results = c.fetchall()
+			for row in results:
+				item = get_entity_by_id(row[0])
+				inventory.append(item.bag_info())
+				container.contents.add(item)
+				recursively_get_inventory(item)
 
 		""" Attempt to log the client into an account """
 		username = filter_username(username)
@@ -195,7 +200,7 @@ class Client(Entity):
 			# send the client their inventory
 			c = Database.cursor()
 			inventory = []
-			recursively_get_inventory(self.db_id)
+			recursively_get_inventory(self)
 			self.send("BAG", {'list': inventory})
 
 			# send the client their mail

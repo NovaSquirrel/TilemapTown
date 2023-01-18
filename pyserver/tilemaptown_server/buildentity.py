@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio, datetime, random, websockets, json, os.path, hashlib
+import asyncio, datetime, json, copy
 from .buildglobal import *
 from collections import deque
 
@@ -169,7 +169,7 @@ class Entity(object):
 			deny = result[1]
 
 		# Turn on permissions granted by groups too
-		for row in c.execute('SELECT p.allow, FROM Permission p, Group_Member m\
+		for row in c.execute('SELECT p.allow FROM Permission p, Group_Member m\
 			WHERE m.member_id=? AND p.actor_id=m.group_id AND p.subject_id=? AND m.accepted_at != NULL', (self.db_id, other_id)):
 			allow |= row[0]
 		return (allow, deny)
@@ -191,7 +191,7 @@ class Entity(object):
 		# Is it loaded?
 		if isinstance(other, Entity):
 			# If you're the owner, you automatically have permission
-			if self.db_id == other.owner_id:
+			if self.db_id and self.db_id == other.owner_id:
 				return True
 
 			# Start with the server default
@@ -215,7 +215,7 @@ class Entity(object):
 				if self.map_allow & perm:
 					return True
 			else:
-				user_allow, user_deny = self.get_allow_deny_for_other_entity(self, other)
+				user_allow, user_deny = self.get_allow_deny_for_other_entity(other.db_id)
 				if user_deny & perm:
 					return False
 				if user_allow & perm:
@@ -229,7 +229,9 @@ class Entity(object):
 			other_id = other.db_id
 
 		# Get the basic allow/deny/guest_deny
-		result = c.execute('SELECT allow, deny, guest_deny FROM Entity WHERE id=?', (other_id, self.db_id,))
+		c = Database.cursor()
+		c.execute('SELECT allow, deny, guest_deny FROM Entity WHERE id=?', (other_id,))
+		result = c.fetchone()
 		if result == None: # Oops, entity doen't even exist
 			return False
 		allow = result[0]
@@ -455,7 +457,6 @@ class Entity(object):
 			'desc': self.desc,
 			'pic': self.pic,
 			'type': entity_type_name[self.entity_type],
-			'flags': self.flags,
 			'folder': self.map_id,
 			'data': self.data,
 			'tags': self.tags
@@ -485,7 +486,7 @@ class Entity(object):
 		if self.db_id:
 			return
 		if self.map:
-			self.map.broadcast("WHO", {'new_id': {'id': self.id, 'new_id': id}}, remote_category=botwatch_type['move'])
+			self.map.broadcast("WHO", {'new_id': {'id': self.protocol_id(), 'new_id': id}}, remote_category=botwatch_type['move'])
 		self.db_id = id
 		AllEntitiesByDB[self.db_id] = self
 
@@ -503,13 +504,15 @@ class Entity(object):
 		self.name = result[1]
 		self.desc = result[2]
 		self.pic = loads_if_not_none(result[3])
-		self.map_id = result[4]
-		position = loads_if_not_none(result[5])
-		if position != None:
-			self.x = position[0]
-			self.y = position[1]
-			if len(position) == 3:
-				self.dir = position[2]
+		map_id = result[4]
+		if map_id:
+			self.map_id = result[4]
+			position = loads_if_not_none(result[5])
+			if position != None:
+				self.x = position[0]
+				self.y = position[1]
+				if len(position) == 3:
+					self.dir = position[2]
 		self.home_id = result[6]
 		self.home_position = loads_if_not_none(result[7])
 		self.tags = loads_if_not_none(result[8])
@@ -567,3 +570,14 @@ class Entity(object):
 
 	def is_map(self):
 		return False
+
+	def copy_onto(self, other):
+		other.name = self.name
+		other.desc = self.desc
+		other.pic = self.pic
+		other.tags = copy.deepcopy(self.tags) # TODO: deep copy
+		other.allow = self.allow
+		other.deny = self.deny
+		other.guest_deny = self.guest_deny
+		other.data = self.data
+		other.creator_id = self.creator_id

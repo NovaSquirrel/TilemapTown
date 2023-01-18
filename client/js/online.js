@@ -229,8 +229,10 @@ function receiveServerMessage(event) {
 
         NeedMapRedraw = true;
       } else if(arg.new_id) {
-		PlayerWho[arg.new_id.new_id] = PlayerWho[arg.new_id.id];
-		// TODO
+        PlayerWho[arg.new_id.new_id] = PlayerWho[arg.new_id.id];
+        if(arg.new_id.id == PlayerYou)
+          PlayerYou = arg.new_id.new_id;
+        // TODO: Search for the old ID and update it anywhere else it might appear, like your inventory?
         delete PlayerWho[arg.new_id.id];
       }
 
@@ -263,7 +265,7 @@ function receiveServerMessage(event) {
         for(let item of arg.list) {
           DBInventory[item.id] = item;
           // Preload all image assets in the initial inventory
-          if(item.type == InventoryTypes.IMAGE) // image
+          if(item.type == 'image') // image
             RequestImageIfNeeded(item.id);
         }
       }
@@ -279,7 +281,7 @@ function receiveServerMessage(event) {
         }
 
         // Load the image when an image asset is modified
-        if(DBInventory[arg.update.id].type == InventoryTypes.IMAGE) {
+        if(DBInventory[arg.update.id].type == 'image') {
           SendCmd("IMG", {"id": arg.update.id}); // Unconditionally request the image
         }
       }

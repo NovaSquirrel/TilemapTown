@@ -114,12 +114,10 @@ def fn_nick(map, client, arg):
 		map.broadcast("MSG", {'text': "\""+client.name+"\" is now known as \""+escape_tags(arg)+"\""})
 		client.name = escape_tags(arg)
 		map.broadcast("WHO", {'add': client.who()}, remote_category=botwatch_type['entry']) # update client view
-handlers['nick'] = fn_nick
 
 @cmd_command(category="Settings", syntax="text")
 def fn_client_settings(map, client, arg):
 	client.client_settings = arg
-handlers['client_settings'] = fn_client_settings
 
 @cmd_command(category="Communication", alias=['msg', 'p'], syntax="username message")
 def fn_tell(map, client, arg):
@@ -822,7 +820,6 @@ def fn_login(map, client, arg):
 		client.send("ERR", {'text': 'Syntax is: /login username password'})
 	else:
 		client.login(filter_username(params[0]), params[1])
-handlers['login'] = fn_login
 
 @cmd_command(category="Settings", syntax='"x y" OR "url" OR "bunny/cat/hamster/fire"')
 def fn_userpic(map, client, arg):
@@ -874,12 +871,13 @@ def fn_who(map, client, arg):
 @cmd_command(category="Who", alias=['wa'])
 def fn_whereare(map, client, arg):
 	names = 'Whereare: [ul]'
-	for k, m in AllMaps.items():
-		if m.flags & mapflag['public'] == 0:
+	for m in AllMaps:
+		if m.map_flags & mapflag['public'] == 0:
 			continue
-		names += '[li][b]%s[/b] (%d): ' % (m.name, len(m.users))
-		for u in m.users:
-			names += u.name_and_username()+', '
+		names += '[li][b]%s[/b] (%d): ' % (m.name, m.count_users_inside())
+		for u in m.contents:
+			if u.is_client():
+				names += u.name_and_username()+', '
 		names = names.rstrip(', ') + ' [command]map %d[/command][/li]' % m.id
 	names += '[/ul]'
 
@@ -966,7 +964,6 @@ def fn_joinpassgroup(map, client, arg):
 	c = Database.cursor()
 	c.execute('UPDATE Entity SET data=? WHERE id=? AND owner_id=? AND type=?', (joinpass, int(groupid), client.db_id, entity_type['group']))
 	client.send("MSG", {'text': 'Updated join password for group %s to [tt]%s[/tt]' % (groupid, joinpass)})
-handlers['joinpassgroup'] = fn_joinpassgroup
 
 @cmd_command(category="Group", privilege_level="registered", syntax="group_id")
 def fn_deletegroup(map, client, arg):
@@ -1026,7 +1023,6 @@ def fn_ownedgroups(map, client, arg):
 		groups += "[li][b]%s[/b] (%d)[/li]" % (row[1], row[0])
 	groups += "[/ul]"
 	client.send("MSG", {'text': groups})
-handlers['ownedgroups'] = fn_ownedgroups
 
 @cmd_command(category="Group", privilege_level="registered")
 def fn_mygroups(map, client, arg):
@@ -1038,7 +1034,6 @@ def fn_mygroups(map, client, arg):
 		groups += "[li][b]%s[/b] (%d)[/li]" % (row[1], row[0])
 	groups += "[/ul]"
 	client.send("MSG", {'text': groups})
-handlers['mygroups'] = fn_mygroups
 
 
 # -------------------------------------

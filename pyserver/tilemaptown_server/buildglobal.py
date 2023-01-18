@@ -71,17 +71,18 @@ BotWatch = [{}, {}, {}, {}] # Indexed by client.db_id
 
 # Map permissions
 permission = {}
-permission['entry'] = 0x01         # user can visit the map
-permission['build'] = 0x02         # user can build on the map
-permission['sandbox'] = 0x04       # users can delete any part of the map freely
-permission['admin'] = 0x08         # user is an admin on the map
-permission['bulk_build'] = 0x10    # user can use the builk building protocol commands
-permission['map_bot'] = 0x20       # user is given bot-related permissions
-permission['move'] = 0x40          # user can move this object around within the same container
-permission['move_new_map'] = 0x80  # user can move this object to a new map
-permission['copy'] = 0x0100        # user can make copies of this object
-permission['object_entry'] = 0x0200            # user can bring objects here temporarily
+permission['entry']                   = 0x0001 # user can visit the map
+permission['build']                   = 0x0002 # user can build on the map
+permission['sandbox']                 = 0x0004 # users can delete any part of the map freely
+permission['admin']                   = 0x0008 # user is an admin on the map
+permission['copy']                    = 0x0010 # user can make copies of this object
+permission['map_bot']                 = 0x0020 # user is given bot-related permissions
+permission['move']                    = 0x0040 # user can move this object around within the same container
+permission['move_new_map']            = 0x0080 # user can move this object to a new map
+permission['bulk_build']              = 0x0100 # user can use the builk building protocol commands
+permission['object_entry']            = 0x0200 # user can bring objects here temporarily
 permission['persistent_object_entry'] = 0x0400 # user can bring objects here persistently
+permission['modify_properties']       = 0x0800 # user can modify the properties of this entity
 
 # Map flags
 mapflag = {}
@@ -254,4 +255,5 @@ def reload_database_meta():
 			v = int(v)
 		DatabaseMeta[row[0]] = v
 
+from .buildentity import Entity
 from .buildmap import Map

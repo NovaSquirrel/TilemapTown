@@ -167,18 +167,18 @@ function editItem(key) {
   document.getElementById('edittilename').value = item.name;
   document.getElementById('edittiledesc').value = item.desc;
   switch(item.type) {
-    case 1: // text
+    case "text":
       document.getElementById('edittiletext').style.display = "block";
       if(item.data)
         document.getElementById('edittiletextarea').value = item.data;
       else
         document.getElementById('edittiletextarea').value = "";
       break;
-    case 2: // image
+    case "image":
       document.getElementById('edittileimage').style.display = "block";
       document.getElementById('edittileurl').value = item.data;
       break;
-    case 3: // object
+    case "map_tile":
       itemobj = AtomFromName(item.data);
       if(itemobj == null) {
         itemobj = {pic: [0, 8, 24]};
@@ -199,7 +199,7 @@ function editItem(key) {
       sheetselect.appendChild(el);
       // Now display everything in the inventory
       for(var i in DBInventory) {
-        if(DBInventory[i].type == InventoryTypes.IMAGE) {
+        if(DBInventory[i].type == "image") {
           el = document.createElement("option");
           el.textContent = DBInventory[i].name;
           el.value = DBInventory[i].id;
@@ -217,7 +217,8 @@ function editItem(key) {
       document.getElementById('edittileisobject').checked = !itemobj.obj;
       editItemUpdatePic();
 
-      document.getElementById('edittilesheetselect').src = IconSheets[itemobj.pic[0] || 0].src;
+      if(IconSheets[itemobj.pic[0] || 0] != undefined)
+        document.getElementById('edittilesheetselect').src = IconSheets[itemobj.pic[0] || 0].src;
       break;
   }
 
@@ -232,7 +233,7 @@ function editItem(key) {
   el.value = "-1";
   select.appendChild(el);
   for(var i in DBInventory) {
-    if(DBInventory[i].type == 6) { // folder
+    if(DBInventory[i].type == "folder") { // folder
       el = document.createElement("option");
       el.textContent = DBInventory[i].name;
       el.value = DBInventory[i].id;
@@ -675,7 +676,7 @@ function tickWorld() {
     DisplayInventory = {null: []};
 
     for(var key in DBInventory) {
-      if(DBInventory[key].type == 3 || DBInventory[key].type == 4) { // object or tileset
+      if(DBInventory[key].type == "map_tile" || DBInventory[key].type == "tileset") { // object or tileset
         if(typeof DBInventory[key].data == "string" &&
           (DBInventory[key].data[0] == '[' || DBInventory[key].data[0] == '{')) // convert from JSON if needed
           DBInventory[key].data = JSON.parse(DBInventory[key].data);
