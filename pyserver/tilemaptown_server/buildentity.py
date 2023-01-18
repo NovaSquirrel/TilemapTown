@@ -150,7 +150,7 @@ class Entity(object):
 		item.map = None
 
 		# Tell everyone in the container that the item was removed
-		self.broadcast("WHO", {'remove': item.id}, remote_category=botwatch_type['entry'])
+		self.broadcast("WHO", {'remove': item.protocol_id()}, remote_category=botwatch_type['entry'])
 
 	# Permission checking
 
