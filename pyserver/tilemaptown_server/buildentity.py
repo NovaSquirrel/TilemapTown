@@ -192,9 +192,32 @@ class Entity(object):
 		if self.oper_override:
 			return True
 
+		map_value = default
+
 		# If you pass in an ID, see if the entity with that ID is already loaded
-		if isinstance(other, str) and other.isnumeric():
-			other = int(str)
+		if isinstance(other, str):
+			if other.isnumeric():
+				other = int(str)
+			# You can use a temporary ID too, which will have its own code path
+			if other.startswith(id.startswith(temporary_id_marker)) and id[1:].isnumeric():
+				temp_id = int(id[1:])
+				if temp_id not in AllEntitiesByID:
+					return False
+				other = AllEntitiesByID[temp_id]
+				if other.owner_id == self.db_id:
+					return True
+
+				# Let the entity override the default
+				if other.allow & perm:
+					map_value = True
+				if other.deny & perm:
+					map_value = False
+
+				# If guest, apply guest_deny
+				if self.db_id == None and other.guest_deny & perm:
+					has = False
+				return map_value
+
 		if isinstance(other, int) and other in AllEntitiesByDB:
 			other = AllEntitiesByDB[other]
 
@@ -207,9 +230,7 @@ class Entity(object):
 			if self.db_id == other.db_id:
 				return True
 
-			# Start with the server default
-			map_value = default
-			# and let the map override that default
+			# Let the entity override the default
 			if other.allow & perm:
 				map_value = True
 			if other.deny & perm:
@@ -251,9 +272,7 @@ class Entity(object):
 		deny = result[1]
 		guest_deny = result[2]
 
-		# Start with the server default
-		map_value = default
-		# and let the map override that default
+		# Let the entity override the default
 		if allow & perm:
 			map_value = True
 		if deny & perm:

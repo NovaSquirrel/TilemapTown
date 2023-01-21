@@ -72,12 +72,6 @@ class Map(Entity):
 				self.objs = None
 				self.map_data_loaded = False
 
-	def load_or_unload_map_data():
-		if self.user_count == 0 and self.map_data_loaded:
-			return
-		if self.user_count > 0 and not self.map_data_loaded:
-			self.map_data_loaded
-
 	def blank_map(self, width, height):
 		""" Make a blank map of a given size """
 		self.width = width

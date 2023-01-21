@@ -68,6 +68,26 @@ def must_be_server_admin(client, give_error=True):
 
 @protocol_command(map_only=True)
 def fn_MOV(map, client, arg):
+	# Can control a different entity if you have permission
+	if 'id' in arg:
+		id = arg['id']
+		if not client.has_permission(id, permission['move'], False):
+			client.send("ERR", {'text': 'You don\'t have permission to move entity %s' % id})
+			return
+		entity = get_entity_by_id(id, load_from_db=False)
+		if entity is not client: # Make sure it's not actually just the client supplying their own ID
+			if entity == None:
+				client.send("ERR", {'text': 'Can\'t move entity %s because it\'s not loaded' % id})
+				return
+			if entity.map == None:
+				client.send("ERR", {'text': 'Can\'t move entity %s because it\'s not on a map' % id})
+				return
+
+			del arg['id']
+			fn_MOV(entity.map, entity, arg)
+			return
+
+	# Controlling this entity
 	data = {'id': client.protocol_id()}
 	for valid_field in ('from', 'to', 'dir'):
 		if valid_field in arg:
