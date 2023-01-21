@@ -1525,14 +1525,14 @@ function editItemApply() {
 }
 
 function editItemClone() {
-  SendCmd("BAG", { clone: editItemID });
+  SendCmd("BAG", {"clone": {"id": editItemID} });
   editItemCancel();
 }
 
 function editItemDelete() {
   if(!confirm("Really delete?"))
     return;
-  SendCmd("BAG", {"delete": editItemID});
+  SendCmd("BAG", {"delete": {"id": editItemID} });
   editItemCancel();
 }
 

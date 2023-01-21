@@ -41,6 +41,9 @@ Manage account
 /who
 List all users on the map
 
+/entitywho
+List all entities on the map, not just users
+
 /whereare (alias: wa)
 Display a list of public maps that have users
 
@@ -138,9 +141,13 @@ Clears everything on the map
 /kick user
 Sends a user home
 
-/fly
-Toggles the ability to walk through walls
-(unimplemented)
+/kickallusers
+Sends all users home that aren't admins of the current map
+
+/returnall
+/returnall username
+Sends all entities home that are in the same container, aren't players, aren't following players or being carried by them, and aren't owned by the map owner.
+If you specify a username, it will remove all of that user's entities, and will ignore the above.
 
 ---Map configuration---
 /mapid
@@ -259,6 +266,54 @@ Display a list of the groups you own
 /mygroups
 List of the groups you're part of
 
+---Entity command---
+
+/entity id
+/entity id info
+Get information about the entity, such as properties and contents.
+
+/entity id move x y
+/entity id tags
+/entity id tags add tag value 
+/entity id tags del tag
+Get tags or change them.
+
+/entity id perms
+/entity id permsfor id
+Get permissions on an entity, or test permissions for a specific other entity acting on this entity.
+
+/entity id grant id/username permission
+/entity id deny id/username permission
+/entity id revoke id/username permission
+Change permissions.
+
+/entity id take
+Move entity to your inventory.
+
+/entity id summon
+Move entity to your position within the map you're on.
+
+/entity id clone
+Make a copy in your inventory
+
+/entity id delete
+Delete the entity.
+
+/entity id home
+/kick id
+Moves the entity to its home.
+Can do this to entities you don't own, if they are in a container you do own.
+
+/entity id sethome
+Sets the entity's home to its current location.
+
+/entity id unsethome
+Sets the entity's home to null.
+
+/entity id do command_here
+Same as sending a CMD protocol message with the "rc" field set.
+
+/e is an alias for /entity
 
 ---Admin commands---
 /ipwho

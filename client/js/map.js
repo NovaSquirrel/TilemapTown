@@ -17,13 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 var AtomTypes = {
-  NONE      : 0, // no special behavior
-  SIGN      : 1, // display a message upon being bumped into
-  DOOR      : 2,
-  CONTAINER : 3,
-  ICE       : 4,
-  ESCALATOR : 5,
-  WATER     : 6,
+  NONE      : "", // no special behavior
+  SIGN      : "sign", // display a message upon being bumped into
+  DOOR      : "door",
+  CONTAINER : "container",
+  ICE       : "ice",
+  ESCALATOR : "escalator",
+  WATER     : "water",
 };
 
 var AtomLayers = {
@@ -161,7 +161,7 @@ function AtomCompact2JSON(t) {
 
 function initMap() {
   IconSheets[0] = document.getElementById("potluck");
-  IconSheets[1] = document.getElementById("extras");
+  IconSheets[-1] = document.getElementById("extras");
 
   // Initialize the map
   for(var i=0; i<MapWidth; i++) {

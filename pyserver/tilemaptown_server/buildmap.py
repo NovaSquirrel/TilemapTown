@@ -30,8 +30,11 @@ class Map(Entity):
 		self.default_turf = "grass"
 		self.start_pos = [5, 5]
 		self.name = "Map"
-		self.id = 0
 		self.map_flags = 0
+
+		self.user_count = 0
+		self.map_data_loaded = False
+		self.map_data_modified = False
 
 		# See also:
 		# self.turfs[y][x]
@@ -42,16 +45,38 @@ class Map(Entity):
 		#loop = asyncio.get_event_loop()
 		#self.script_queue = asyncio.Queue(loop=loop)
 
-		if id == None:
-			self.blank_map(width, height)
-		elif not self.load(id):
-			self.db_id = None
-
 		AllMaps.add(self)
 
 	def clean_up(self):
 		""" Clean up everything before a map unload """
 		super().clean_up()
+
+	def add_to_contents(self, item):
+		super().add_to_contents(item)
+		if item.is_client():
+			self.user_count += 1
+			if self.user_count and not self.map_data_loaded:
+				self.load_data()
+			item.send("MAI", self.map_info())
+			item.send("MAP", self.map_section(0, 0, self.width-1, self.height-1))
+
+	def remove_from_contents(self, item):
+		super().remove_from_contents(item)
+		if item.is_client():
+			self.user_count -= 1
+			if self.user_count == 0 and self.map_data_loaded:
+				# Save if the map was modified
+				self.save_data()
+				# Unload
+				self.turfs = None
+				self.objs = None
+				self.map_data_loaded = False
+
+	def load_or_unload_map_data():
+		if self.user_count == 0 and self.map_data_loaded:
+			return
+		if self.user_count > 0 and not self.map_data_loaded:
+			self.map_data_loaded
 
 	def blank_map(self, width, height):
 		""" Make a blank map of a given size """
@@ -83,17 +108,19 @@ class Map(Entity):
 		return super().load(map_id)
 
 	def load_data(self):
-		d = loads_if_not_none(self.load_data_as_text())
+		if self.user_count:
+			d = loads_if_not_none(self.load_data_as_text())
 
-		# Parse map data
-		if d:
-			self.blank_map(d["pos"][2]+1, d["pos"][3]+1) # pos is [firstX, firstY, lastX, lastY]
-			for t in d["turf"]:
-				self.turfs[t[0]][t[1]] = t[2]
-			for o in d["obj"]:
-				self.objs[o[0]][o[1]] = o[2]
-		else:
-			self.blank_map(self.width, self.height)
+			# Parse map data
+			if d:
+				self.blank_map(d["pos"][2]+1, d["pos"][3]+1) # pos is [firstX, firstY, lastX, lastY]
+				for t in d["turf"]:
+					self.turfs[t[0]][t[1]] = t[2]
+				for o in d["obj"]:
+					self.objs[o[0]][o[1]] = o[2]
+			else:
+				self.blank_map(self.width, self.height)
+			self.map_data_loaded = True
 		return True
 
 	def save(self):
@@ -116,7 +143,9 @@ class Map(Entity):
 		c.execute("UPDATE Map SET flags=?, start_x=?, start_y=?, width=?, height=?, default_turf=? WHERE entity_id=?", values)
 
 	def save_data(self):
-		self.save_data_as_text(json.dumps(self.map_section(0, 0, self.width-1, self.height-1)))
+		if self.map_data_modified and self.map_data_loaded:
+			self.save_data_as_text(json.dumps(self.map_section(0, 0, self.width-1, self.height-1)))
+			self.map_data_modified = False
 
 	def map_section(self, x1, y1, x2, y2):
 		""" Returns a section of map as a list of turfs and objects """
@@ -144,13 +173,14 @@ class Map(Entity):
 			out['start_pos'] = self.start_pos
 		return out
 
-	def count_users_inside(self):
+	def count_users_inside(self, recursive=True):
 		def search(inside):
 			n = 0
 			for e in inside.contents:
-				if e.entity_type == entity_type['user']:
+				if e.is_user():
 					n += 1
-				n += search(e)
+				if recursive:
+					n += search(e)
 			return n
 		return search(self)
 

@@ -71,12 +71,12 @@ function SendCmd(commandType, commandArgs) {
         receiveServerMessage({data: "BAG "+JSON.stringify({"update": commandArgs["update"]})});
       }
       if(commandArgs.clone) {
-        newitem = CloneAtom(DBInventory[commandArgs.clone]);
+        newitem = CloneAtom(DBInventory[commandArgs.clone]["id"]);
         newitem.id = TickCounter; // pick new ID
         receiveServerMessage({data: "BAG "+JSON.stringify({"update": newitem})});
       }
       if(commandArgs["delete"]) {
-        receiveServerMessage({data: "BAG "+JSON.stringify({"remove": commandArgs["delete"]})});
+        receiveServerMessage({data: "BAG "+JSON.stringify({"remove": commandArgs["delete"]["id"]})});
       }
     }
     return;
@@ -159,6 +159,44 @@ function receiveServerMessage(event) {
       NeedMapRedraw = true;
       break;
     case "BLK":
+      for (var key in arg.copy) {
+        var copy_params = arg.copy[key];
+        var copy_turf = true, copy_obj = true;
+        if("turf" in copy_params) copy_turf = copy_params.turf;
+        if("obj" in copy_params) copy_obj = copy_params.obj;
+        if("src" in copy_params && "dst" in copy_params) {
+          var src = copy_params.src;
+          var dst = copy_params.dst;
+          var x1     = src[0];
+          var y1     = src[1];
+          var width  = src[2];
+          var height = src[3];
+          var x2 = dst[0];
+          var y2 = dst[1];
+
+          // Make a copy first in case the source and destination overlap
+          var copiedTurf = [];
+          var copiedObjs = [];
+          for(var w=0; w<width; w++) {
+            copiedTurf[w] = [];
+            copiedObjs[w] = [];
+            for(var h=0; h<height; h++) {
+              copiedTurf[w][h] = MapTiles[x1+w][y1+h];
+              copiedObjs[w][h] = MapObjs[x1+w][y1+h];
+            }
+          }
+
+          // Copy from the temporary buffer into the destination
+          for(var w = 0; w < width; w++) {
+            for(var h = 0; h < height; h++) {
+              if(copy_turf == true)
+                MapTiles[x2+w][x2+h] = copiedTurfs[w][h];
+              if(copy_obj == true)
+                MapObjs[x2+w][x2+h] = copiedObjs[w][h];
+            }
+          }
+        }
+      }
       for (var key in arg.turf) {
         // get info
         var width = 1, height = 1;
@@ -348,6 +386,7 @@ function receiveServerMessage(event) {
       else
         logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] "+convertBBCode(arg.text)+'</span>', 'private_message');
         break;
+    case "CMD":
     case "MSG":
       if(arg.name) {
         if(arg.text.slice(0, 4) == "/me ")

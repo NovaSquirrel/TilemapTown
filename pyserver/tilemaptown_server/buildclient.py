@@ -44,6 +44,8 @@ class Client(Entity):
 		self.watch_list = set()
 		self.user_flags = 0
 
+		self.no_inventory_messages = False # don't send BAG updates when adding or removing items
+
 		self.identified = False
 
 		AllClients.add(self)
@@ -65,11 +67,13 @@ class Client(Entity):
 
 	def add_to_contents(self, item):
 		super().add_to_contents(item)
-		self.send("BAG", {'update': item.bag_info()})
+		if not self.no_inventory_messages:
+			self.send("BAG", {'update': item.bag_info()})
 
 	def remove_from_contents(self, item):
 		super().remove_from_contents(item)
-		self.send("BAG", {'remove': item.db_id})
+		if not self.no_inventory_messages:
+			self.send("BAG", {'remove': item.db_id})
 
 	def test_server_banned(self):
 		""" Test for and take action on IP bans """
@@ -176,21 +180,19 @@ class Client(Entity):
 	def login(self, username, password):
 		inventory = []
 		def recursively_get_inventory(container):
-			c.execute('SELECT id FROM Entity WHERE location=?', (container.db_id,))
-			results = c.fetchall()
-			for row in results:
-				item = get_entity_by_id(row[0])
+			for item in container.contents:
 				inventory.append(item.bag_info())
-				container.contents.add(item)
 				recursively_get_inventory(item)
 
 		""" Attempt to log the client into an account """
 		username = filter_username(username)
+		self.no_inventory_messages = True      # because load() will load in objects contained by this one
 		result = self.load(username, password)
+		self.no_inventory_messages = False
 		if result == True:
 			print("login: \"%s\" from %s" % (self.username, self.ip))
 
-			self.switch_map(self.map_id, goto_spawn=False)
+			#self.switch_map(self.map_id, goto_spawn=False)
 			if self.map:
 				self.map.broadcast("MSG", {'text': self.name+" has logged in ("+self.username+")"})
 				self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['entry']) # update client view
@@ -199,7 +201,6 @@ class Client(Entity):
 
 			# send the client their inventory
 			c = Database.cursor()
-			inventory = []
 			recursively_get_inventory(self)
 			self.send("BAG", {'list': inventory})
 

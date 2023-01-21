@@ -16,7 +16,7 @@
 
 import json, datetime
 from .buildglobal import *
-from .buildcommand import handle_user_command, escape_tags
+from .buildcommand import handle_user_command, escape_tags, tile_is_okay, data_disallowed_for_entity_type
 from .buildentity import Entity
 
 handlers = {}
@@ -34,27 +34,6 @@ def protocol_command(privilege_level='guest', map_only=False):
 	return decorator
 
 # -------------------------------------
-
-def tile_is_okay(tile):
-	# convert to a dictionary to check first if necessary
-	if type(tile) == str and len(tile) and tile[0] == '{':
-		tile = json.loads(tile)
-
-	# Strings refer to tiles in tilesets and are
-	# definitely OK as long as they're not excessively long.
-	if type(tile) == str:
-		if len(tile) <= 32:
-			return (True, None)
-		else:
-			return (False, 'Identifier too long')
-	# If it's not a string it must be a dictionary
-	if type(tile) != dict:
-		return (False, 'Invalid type')
-
-	if "pic" not in tile or len(tile["pic"]) != 3:
-		return (False, 'No/invalid picture')
-
-	return (True, None)
 
 CLIENT_WHO_WHITELIST = {
 	"typing": bool
@@ -103,28 +82,58 @@ def fn_MOV(map, client, arg):
 
 @protocol_command()
 def fn_CMD(map, client, arg):
-	handle_user_command(map, client, arg["text"])
+	actor = client
+	echo = arg['echo'] if ('echo' in arg) else None
+
+	if 'rc' in arg:
+		if client.has_permission(arg['rc'], permission['remote_command'], False):
+			actor = get_entity_by_id(arg['rc'], load_from_db=False)
+			if actor == None:
+				client.send("ERR", {'text': 'Entity %s not loaded' % arg['rc']})
+		else:
+			client.send("ERR", {'text': 'You don\'t have permission to remote control %s' % arg['rc']})
+
+	handle_user_command(map, actor, client, echo, arg["text"])
+
+@protocol_command()
+def fn_TAK(map, client, arg):
+	pass
+
+@protocol_command()
+def fn_DRO(map, client, arg):
+	pass
 
 @protocol_command()
 def fn_BAG(map, client, arg):
+	def allow_special_ids(text):
+		if text == 'here':
+			return map.db_id
+		if text == 'me':
+			return client.db_id
+		return text
+
 	if client.db_id != None:
 		c = Database.cursor()
 		if "create" in arg:
 			# restrict type variable
-			if arg['create']['type'] not in ('text', 'image', 'map_tile', 'tileset', 'reference', 'folder', 'landmark'):
+			if arg['create']['type'] not in creatable_entity_types:
 				client.send("ERR", {'text': 'Invalid type of item to create (%s)' % arg['create']['type']})
 				return
 			e = Entity(entity_type[arg['create']['type']], creator_id=client.db_id)
 			e.name = arg['create']['name']
 			e.map_id = client.db_id
-			e.save()
+			if 'temp' in arg['create'] and arg['create']['temp']:
+				e.temporary = True
+			else:
+				e.save()
 			client.add_to_contents(e)
 
 		elif "clone" in arg:
-			if arg['clone'] not in AllEntitiesByDB:
-				client.send("ERR", {'text': 'Can\'t clone %s - not already loaded' % arg['clone']})
+			clone_me = get_entity_by_id(allow_special_ids(arg['clone']))
+			if clone_me == None:
+				client.send("ERR", {'text': 'Can\'t clone %s' % arg['clone']})
 				return
-			clone_me = AllEntitiesByDB[arg['clone']]
+
 			if clone_me.owner_id != client.db_id and not client.has_permission(clone_me, permission['copy'], False):
 				client.send("ERR", {'text': 'You don\'t have permission to clone %s' % arg['clone']})
 				return
@@ -148,24 +157,21 @@ def fn_BAG(map, client, arg):
 
 		elif "update" in arg:
 			update = arg['update']
-			if update['id'] not in AllEntitiesByDB:
-				client.send("ERR", {'text': 'Can\'t update %s - not already loaded' % update['id']})
+			update_me = get_entity_by_id(allow_special_ids(update['id']))
+			if update_me == None:
+				client.send("ERR", {'text': 'Can\'t update %s' % update['id']})
 				return
-			update_me = AllEntitiesByDB[update['id']]
 			if update_me.owner_id != client.db_id and not client.has_permission(update_me, permission['modify_properties'], False):
 				client.send("ERR", {'text': 'You don\'t have permission to update %s' % update['id']})
 				return
 
 			if 'data' in update:
-				if update_me.entity_type == entity_type['image'] and not image_url_is_okay(update['data']):
-					client.send("ERR", {'text': 'Image asset URL doesn\'t match any whitelisted sites'})
+				bad = data_disallowed_for_entity_type(updateme.entity_type, update['data'])
+				if bad != None:
+					client.send("ERR", {'text': bad})
 					return
-				if update_me.entity_type == entity_type['map_tile']:
-					tile_ok, tile_reason = tile_is_okay(update['data'])
-					if not tile_ok:
-						client.send("ERR", {'text': 'Tile [tt]%s[/tt] rejected (%s)' % (arg['update']['data'], tile_reason)})
-						return
-				update_me.data = update['data']
+				else:
+					update_me.data = update['data']
 			if 'folder' in update:
 				if client.has_permission(update['folder'], permission['persistent_object_entry'], False):
 					update_me.switch_map(update['folder'])
@@ -184,21 +190,38 @@ def fn_BAG(map, client, arg):
 
 		elif "delete" in arg:
 			delete = arg['delete']
-			if delete not in AllEntitiesByDB:
-				client.send("ERR", {'text': 'Can\'t delete %s - not already loaded' % delete})
+
+			delete_entity = get_entity_by_id(delete['id'])
+			if delete_entity == None:
+				client.send("ERR", {'text': 'Can\'t delete %s' % delete['id']})
 				return
-			delete_entity = AllEntitiesByDB[delete]
 			if delete_entity.owner_id != client.db_id:
-				client.send("ERR", {'text': 'You don\'t have permission to delete %s' % delete})
+				client.send("ERR", {'text': 'You don\'t have permission to delete %s' % delete['id']})
 				return
 
-			# Move things that were in this object to the object's parent
-			c.execute('UPDATE Entity SET location=? WHERE location=?', (delete_entity.map_id, delete))
-			# Actually delete it now
-			c.execute('DELETE FROM Entity WHERE owner_id=? AND id=?', (client.db_id, delete))
+			# Move everything inside to the parent
+			for c in delete_entity.contents.copy():
+				delete_entity.remove_from_contents(c)
+				delete_entity.map.add_to_contents(c)
+
+			# Delete from the database too
+			if delete_entity.db_id:
+				c.execute('DELETE FROM Entity WHERE owner_id=? AND id=?', (client.db_id, delete['id']))
 			if delete_entity.map:
 				delete_entity.map.remove_from_contents(delete_entity)
-			client.send("BAG", {'remove': arg['delete']})
+			client.send("BAG", {'remove': delete['id']})
+
+		elif "info" in arg:
+			info = arg['info']
+			info_me = get_entity_by_id(info['id'])
+			if info_me == None:
+				client.send("ERR", {'text': 'Can\'t get info for %s' % info['id']})
+				return
+
+			bag_info = info_me.bag_info()
+			if info_me.is_client(): # No spying
+				del bag_info['folder']
+			client.send("BAG", {'info': bag_info})
 	else:
 		client.send("ERR", {'text': 'Guests don\'t have an inventory currently. Use [tt]/register username password[/tt]'})
 
@@ -281,7 +304,10 @@ def fn_DEL(map, client, arg):
 	x2 = arg["pos"][2]
 	y2 = arg["pos"][3]
 	if client.has_permission(map, permission['build'], True) or must_be_map_owner(client, True, give_error=False):
-		map.save_on_clean_up = True
+		if not map.map_data_loaded:
+			client.send("ERR", {'text': 'Map isn\'t loaded, so it can\'t be modified'})
+			return
+		map.map_data_modified = True
 
 		for x in range(x1, x2+1):
 			for y in range(y1, y2+1):
@@ -308,7 +334,10 @@ def fn_PUT(map, client, arg):
 	x = arg["pos"][0]
 	y = arg["pos"][1]
 	if client.has_permission(map, permission['build'], True) or must_be_map_owner(client, True, give_error=False):
-		map.save_on_clean_up = True
+		if not map.map_data_loaded:
+			client.send("ERR", {'text': 'Map isn\'t loaded, so it can\'t be modified'})
+			return
+		map.map_data_modified = True
 
 		# verify the the tiles you're attempting to put down are actually good
 		if arg["obj"]: #object
@@ -337,7 +366,10 @@ def fn_PUT(map, client, arg):
 @protocol_command(map_only=True)
 def fn_BLK(map, client, arg):
 	if client.has_permission(map, permission['bulk_build'], False) or must_be_map_owner(client, True, give_error=False):
-		map.save_on_clean_up = True
+		if not map.map_data_loaded:
+			client.send("ERR", {'text': 'Map isn\'t loaded, so it can\'t be modified'})
+			return
+		map.map_data_modified = True
 
 		# verify the tiles
 		for turf in arg["turf"]:
@@ -351,6 +383,38 @@ def fn_BLK(map, client, arg):
 				return
 		# make username available to other clients
 		arg['username'] = client.username_or_id()
+
+		# do copies
+		for copy in arg["copy"]:
+			do_turf = ("turf" not in copy) or copy["turf"]
+			do_obj = ("obj" not in copy) or copy["obj"]
+			x1, y1, width, height = copy["src"]
+			x2, y2                = copy["dst"]
+
+			# turf
+			if do_turf:
+				copied = []
+				for w in range(width):
+					row = []
+					for h in range(height):
+						row.append(map.turfs[x1+w][y1+h])
+					copied.append(row)
+
+				for w in range(width):
+					for h in range(height):
+						map.turfs[x2+w][y2+h] = copied[w][h]
+			# obj
+			if do_obj:
+				copied = []
+				for w in range(width):
+					row = []
+					for h in range(height):
+						row.append(map.objs[x1+w][y1+h])
+					copied.append(row)
+
+				for w in range(width):
+					for h in range(height):
+						map.objs[x2+w][y2+h] = copied[w][h]
 
 		# place the tiles
 		for turf in arg["turf"]:
@@ -392,6 +456,15 @@ def fn_WHO(map, client, arg):
 		map.broadcast("WHO", {"update": valid_data})
 	else:
 		client.send("ERR", {'text': 'not implemented'})
+
+@protocol_command()
+def fn_VER(map, client, arg):
+	# Receives version info from the client, but ignore it for now
+	server_software_name = "Tilemap Town server"
+	server_software_version = "0.2.0"
+	server_software_code = "https://github.com/NovaSquirrel/TilemapTown"
+
+	client.send("VER", {'name': server_software_name, 'version': server_software_version, 'code': server_software_code})
 
 # -------------------------------------
 

@@ -40,20 +40,18 @@ class Entity(object):
 		self.home_id = None        # Map that is the entity's "home"
 		self.home_position = None
 
+		# Identification
 		self.id = entityCounter  # Temporary ID for referring to different objects in RAM
-		self.db_id = None        # More persistent ID: the database key
 		entityCounter += 1
+		self.db_id = None        # More persistent ID: the database key
 
-		self.map_allow = 0       # Used to cache the map allows and map denys to avoid excessive SQL queries
-		self.map_deny = 0
-		self.oper_override = False
+		self.temporary = False   # If true, don't save the entity to the database
 
-		# other info
+		# Other info
 		self.tags = {}    # Description, species, gender and other things
 		self.data = None  # Data that gets stored in the database
-
-		self.flags = 0
 		self.contents = set()
+		self.flags = 0
 
 		# temporary information
 		self.requests = {} # Indexed by username, array with [timer, type]
@@ -75,6 +73,10 @@ class Entity(object):
 		self.deny = 0
 		self.guest_deny = 0
 
+		self.map_allow = 0       # Used to cache the map allows and map denys to avoid excessive SQL queries
+		self.map_deny = 0
+		self.oper_override = False
+
 		# Save when clean_up() is called
 		self.save_on_clean_up = False
 		self.cleaned_up_already = False
@@ -83,6 +85,7 @@ class Entity(object):
 		AllEntitiesByID[self.id] = self
 
 	def __del__(self):
+		print("Unloading %d: %s" % (self.db_id or -1, self.name))
 		self.clean_up()
 
 	def clean_up(self):
@@ -131,6 +134,8 @@ class Entity(object):
 	# Allow other classes to respond to having things added to them
 
 	def add_to_contents(self, item):
+		if item.map and item.map is not self:
+			item.map.remove_from_contents(item)
 		self.contents.add(item)
 		item.map_id = self.db_id
 		item.map = self
@@ -188,6 +193,8 @@ class Entity(object):
 			return True
 
 		# If you pass in an ID, see if the entity with that ID is already loaded
+		if isinstance(other, str) and other.isnumeric():
+			other = int(str)
 		if isinstance(other, int) and other in AllEntitiesByDB:
 			other = AllEntitiesByDB[other]
 
@@ -195,6 +202,9 @@ class Entity(object):
 		if isinstance(other, Entity):
 			# If you're the owner, you automatically have permission
 			if self.db_id and self.db_id == other.owner_id:
+				return True
+			# You also have permission if the object is you
+			if self.db_id == other.db_id:
 				return True
 
 			# Start with the server default
@@ -379,12 +389,13 @@ class Entity(object):
 				self.send("ERR", {'text': 'Couldn\'t load map %d' % map_id})
 				self.tp_history.pop()
 				return False
-			if not map_load.has_permission(self, permission['entry'], True):
+			if not self.has_permission(map_load, permission['entry'], True):
 				self.send("ERR", {'text': 'You don\'t have permission to go to map %d' % map_id})
 				self.tp_history.pop()
 				return False
 
 			# Remove first, so the container can tell everyone
+			# (though add_to_contents() should do this too)
 			if self.map:
 				self.map.remove_from_contents(self)
 
@@ -392,15 +403,11 @@ class Entity(object):
 			# and give the entity the status for the other entities that are already there.
 			map_load.add_to_contents(self)
 
-			if map_load.is_map():
-				self.send("MAI", self.map.map_info())
-				self.send("MAP", self.map.map_section(0, 0, self.map.width-1, self.map.height-1))
-
 		# Move player's X and Y coordinates if needed
 		if new_pos != None:
 			self.move_to(new_pos[0], new_pos[1], is_teleport=True)
 			self.map.broadcast("MOV", {'id': self.protocol_id(), 'to': [self.x, self.y]}, remote_category=botwatch_type['move'])
-		elif goto_spawn and self.map.is_map():
+		elif new_pos == None and goto_spawn and self.map.is_map():
 			self.move_to(self.map.start_pos[0], self.map.start_pos[1], is_teleport=True)
 			self.map.broadcast("MOV", {'id': self.protocol_id(), 'to': [self.x, self.y]}, remote_category=botwatch_type['move'])
 
@@ -508,14 +515,17 @@ class Entity(object):
 		self.desc = result[2]
 		self.pic = loads_if_not_none(result[3])
 		map_id = result[4]
-		if map_id:
-			self.map_id = result[4]
+		if map_id:	
 			position = loads_if_not_none(result[5])
 			if position != None:
 				self.x = position[0]
 				self.y = position[1]
 				if len(position) == 3:
-					self.dir = position[2]
+					self.dir = position[2]			
+			if not self.switch_map(result[4], goto_spawn=False):
+				self.map_id = result[4]
+		print("Loading %d: %s" % (self.db_id or -1, self.name))
+
 		self.home_id = result[6]
 		self.home_position = loads_if_not_none(result[7])
 		self.tags = loads_if_not_none(result[8])
@@ -524,7 +534,19 @@ class Entity(object):
 		self.deny = result[11]
 		self.guest_deny = result[12]
 		self.creator_id = result[13]
-		return self.load_data()
+
+		if not self.load_data():
+			return False
+
+		# Load the contents too
+		c.execute('SELECT id FROM Entity WHERE location=?', (self.db_id,))
+		result = c.fetchall()
+		for child in result:
+			load_child = get_entity_by_id(child[0])
+			if load_child:
+				self.add_to_contents(load_child)
+
+		return True
 
 	def load_data_as_text(self):
 		""" Get the data and return it as a string """
@@ -542,6 +564,8 @@ class Entity(object):
 
 	def save(self):
 		""" Save entity information to the database """
+		if self.temporary:
+			return
 		c = Database.cursor()
 
 		if self.db_id == None:
@@ -578,7 +602,7 @@ class Entity(object):
 		other.name = self.name
 		other.desc = self.desc
 		other.pic = self.pic
-		other.tags = copy.deepcopy(self.tags) # TODO: deep copy
+		other.tags = copy.deepcopy(self.tags)
 		other.allow = self.allow
 		other.deny = self.deny
 		other.guest_deny = self.guest_deny

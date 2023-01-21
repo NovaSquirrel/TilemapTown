@@ -87,8 +87,14 @@ log into the server with or without an account
 --> MSG {"text": "[text]"}
 message
 
---> CMD {"text": "[text]"}
-command
+--> CMD {"text": "[text]", "echo": value, "rc": id}
+<-- CMD {"text": "[text]", "echo": value, "data": {}}
+Do a command.
+"echo" is optional, and will be returned in the response, if there is one.
+Command may have a machine-readable response if "echo" is provided, provided in "data".
+
+If "rc" is supplied, the server will act as if the entity specified in the ID did the command instead, returning the command results to you instead.
+For "rc", you need to either be the owner or have "remote_command" permissions on the object.
 
 <-- MSG {"text": "[text]", "name": speaker, "class": classname, "username": username}
 <-- MSG {"text": "[text]", "name": speaker, "class": classname, "buttons": ["name 1", "command 1", "name 2", "command 2"]}
@@ -155,16 +161,21 @@ use item
 
 
 --> BAG {"create": {"name": name, "type": type}}
+--> BAG {"create": {"name": name, "type": type, "temp": true/false}}
 Create a new item of a given type
 
 --> BAG {"update": {"id": id, "name": name, "desc": desc, "flags": flags, "folder": folder, "data": data}}
 Update one specific item
 
---> BAG {"delete": id}
+--> BAG {"delete": {"id": id}}
 Delete an item
 
---> BAG {"clone": id}
+--> BAG {"clone": {"id": id}}
+--> BAG {"clone": {"id": id}, "temp": true/false}
 Make an exact clone of an item with a new ID
+
+--> BAG {"info": {"id": id}}
+Request information on an item, whether or not it's in your inventory
 
 <-- BAG {"list": [{item info}]}
 Receive a list of items from the server.

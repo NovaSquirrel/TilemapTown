@@ -83,6 +83,7 @@ permission['bulk_build']              = 0x0100 # user can use the builk building
 permission['object_entry']            = 0x0200 # user can bring objects here temporarily
 permission['persistent_object_entry'] = 0x0400 # user can bring objects here persistently
 permission['modify_properties']       = 0x0800 # user can modify the properties of this entity
+permission['remote_command']          = 0x1000 # user can make this entity do arbitrary commands
 
 # Map flags
 mapflag = {}
@@ -100,6 +101,7 @@ entity_type['tileset'] = 7
 entity_type['reference'] = 8
 entity_type['folder'] = 9
 entity_type['landmark'] = 10
+entity_type['generic'] = 11
 
 # Make the reverse - put in the value, get the name
 entity_type_name = {}
@@ -118,6 +120,8 @@ user_privilege['server_admin'] = 4
 temporary_id_marker = "~"
 # Used to mark IDs that belong to server-defined global entities (GLOBAL_ENTITY_KEY table)
 global_entity_marker = "!"
+
+creatable_entity_types = ('text', 'image', 'map_tile', 'tileset', 'reference', 'folder', 'landmark', 'generic')
 
 # Important shared functions
 def broadcast_to_all(text):
@@ -187,8 +191,8 @@ def get_entity_by_id(id, load_from_db=True):
 		# Can't load users by ID
 		return None
 	if t == entity_type['map']:
-		e = Map(id=id)
-		if e.db_id != None:
+		e = Map()
+		if e.load(id):
 			return e
 		return None
 
@@ -206,6 +210,18 @@ def image_url_is_okay(url):
 		if url.startswith(w):
 			return True
 	return False
+
+def pic_is_okay(pic):
+	if not isinstance(pic, list) and not isinstance(pic, tuple):
+		return False
+	if len(pic) != 3:
+		return False
+	if isinstance(pic[0], str):
+		return image_url_is_okay(pic[0])
+	return True
+
+def valid_id_format(id):
+	return id.isnumeric() or ((id.startswith(temporary_id_marker) or id.startswith(global_entity_marker)) and id[1:].isnumeric())
 
 def dumps_if_not_none(dump_me):
 	if dump_me != None:
