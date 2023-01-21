@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio, datetime, json, copy
+import asyncio, datetime, json, copy, zlib
 from .buildglobal import *
 from collections import deque
 
@@ -570,10 +570,13 @@ class Entity(object):
 	def load_data_as_text(self):
 		""" Get the data and return it as a string """
 		c = Database.cursor()
-		c.execute('SELECT data FROM Entity WHERE id=?', (self.db_id,))
+		c.execute('SELECT data, compressed_data FROM Entity WHERE id=?', (self.db_id,))
 		result = c.fetchone()
 		if result != None:
-			return result[0]
+			if result[1] == None:
+				return result[0]
+			elif result[0] == 'zlib':
+				return zlib.decompress(result[1]).decode()
 		return None
 
 	def load_data(self):
@@ -601,7 +604,12 @@ class Entity(object):
 	def save_data_as_text(self, text):
 		""" Save the data to the database, provided as a string """
 		c = Database.cursor()
-		c.execute("UPDATE Entity SET data=? WHERE id=?", (text, self.db_id))
+		if text == None:
+			c.execute("UPDATE Entity SET data=NULL, compressed_data=NULL WHERE id=?", (self.db_id,))
+		elif len(text) >= 4096:
+			c.execute("UPDATE Entity SET data='zlib', compressed_data=? WHERE id=?", (zlib.compress(text.encode(), level = 5), self.db_id,))
+		else:
+			c.execute("UPDATE Entity SET data=?, compressed_data=NULL WHERE id=?", (text, self.db_id,))
 
 	def save_data(self):
 		""" Save the entity's data to the database, using JSON unless overridden """

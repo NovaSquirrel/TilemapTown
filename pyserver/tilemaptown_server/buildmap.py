@@ -32,6 +32,10 @@ class Map(Entity):
 		self.name = "Map"
 		self.map_flags = 0
 
+		# defaults that will get used if blank_map is used
+		self.width = width
+		self.height = height
+
 		self.user_count = 0
 		self.map_data_loaded = False
 		self.map_data_modified = False

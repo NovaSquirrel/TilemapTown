@@ -983,7 +983,7 @@ def fn_entitywho(map, client, context, arg):
 
 @cmd_command(category="Map")
 def fn_savemap(map, client, context, arg):
-	map.save()
+	map.save_and_commit()
 	map.broadcast("MSG", {'text': client.name+" saved the map"})
 
 # Server admin commands

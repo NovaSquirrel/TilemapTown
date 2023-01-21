@@ -21,12 +21,12 @@ General:
 		2 map        (MAP table)
 		3 group      (GROUP_MEMBER table)
 		4 text       (stores text, possibly a script. like notecards)
-        5 image      (links to a .png)
-        6 map_tile   (template for a tile that can be placed on a map)
-        7 tileset    (stores a description of the tiles in a tileset)
-        8 reference  (refer to another entity)
-        9 folder     (for categorization; holds any number of other assets)
-        10 landmark  (holds a location and provides the ability to quickly teleport to it)
+		5 image      (links to a .png)
+		6 map_tile   (template for a tile that can be placed on a map)
+		7 tileset    (stores a description of the tiles in a tileset)
+		8 reference  (refer to another entity)
+		9 folder     (for categorization; holds any number of other assets)
+		10 landmark  (holds a location and provides the ability to quickly teleport to it)
 
 	name            - text    - name (for display and disambiguation purposes, not to persistently identify a specific entity)
 	desc            - text    - description of the entity
@@ -50,6 +50,8 @@ General:
 						   reference: asset number it's a reference to
 							  folder: ?
 							landmark: map ID, x, y
+	compressed_data - blob    - data that has been compressed, where the original "data" field now specifies what compression algorithm is used.
+							Currently the only compression algorithm available is "zlib"
 
 Position:
 	location        - integer - entity ID of whatever contains this entity - may be a map
@@ -95,7 +97,6 @@ start_y         - integer - player starting Y
 width           - integer - map width
 height          - integer - map height
 default_turf    - text    - default map tile
-
 
 ---MAP_LOG--- (unimplemented, but tables are made for it)
 id              * integer - log item ID
