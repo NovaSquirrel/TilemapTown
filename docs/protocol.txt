@@ -151,8 +151,8 @@ Fields for DRO and TAK:
 "copy": If true, make a copy of the item and put into the container.
 "temp": If copy is true, make a temporary copy instead of a database copy.
 
---> MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "id": 0}
-<-- MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "id": 0}
+--> MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "rc": 0}
+<-- MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "rc": 0}
 Move something else within the same container as you, if you are allowed to
 
 --> USE {"id": id}
