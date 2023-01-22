@@ -653,6 +653,7 @@ function drawText(ctx, x, y, text) {
 }
 
 function drawSelector() {
+  // This draws the hotbar on the bottom
   var canvas = document.getElementById("selector");
   var ctx = canvas.getContext("2d");
 
@@ -664,10 +665,11 @@ function drawSelector() {
   var oneWidth = canvas.width/10;
   for(var i=0; i<10; i++) {
     drawText(ctx, i*oneWidth, 0, ((i+1)%10)+"");
-    var item = AtomFromName(DisplayInventory[null][i]);
-    if(item) {
-      ctx.drawImage(IconSheets[item.pic[0]], item.pic[1]*16, item.pic[2]*16, 16, 16, i*oneWidth+16, 0, 16, 16);
-    }
+// TODO: figure out what to display down here later?
+//    var item = AtomFromName(DisplayInventory[null][i]);
+//    if(item) {
+//      ctx.drawImage(IconSheets[item.pic[0]], item.pic[1]*16, item.pic[2]*16, 16, 16, i*oneWidth+16, 0, 16, 16);
+//    }
   }
 }
 
