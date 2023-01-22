@@ -56,13 +56,15 @@ class Map(Entity):
 		super().clean_up()
 
 	def add_to_contents(self, item):
-		super().add_to_contents(item)
 		if item.is_client():
 			self.user_count += 1
-			if self.user_count and not self.map_data_loaded:
-				self.load_data()
-			item.send("MAI", self.map_info())
-			item.send("MAP", self.map_section(0, 0, self.width-1, self.height-1))
+		super().add_to_contents(item)
+
+	def send_map_info(self, item):
+		if not self.map_data_loaded:
+			self.load_data()
+		item.send("MAI", self.map_info())
+		item.send("MAP", self.map_section(0, 0, self.width-1, self.height-1))
 
 	def remove_from_contents(self, item):
 		super().remove_from_contents(item)
@@ -166,7 +168,7 @@ class Map(Entity):
 
 	def map_info(self, all_info=False):
 		""" MAI message data """
-		out = {'name': self.name, 'id': self.id, 'owner': find_username_by_db_id(self.owner_id) or '?', 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.map_flags & mapflag['public'] != 0, 'private': self.deny & permission['entry'] != 0, 'build_enabled': self.allow & permission['build'] != 0, 'full_sandbox': self.allow & permission['sandbox'] != 0}
+		out = {'name': self.name, 'id': self.db_id, 'owner_id': self.owner_id, 'owner_username': find_username_by_db_id(self.owner_id) or '?', 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.map_flags & mapflag['public'] != 0, 'private': self.deny & permission['entry'] != 0, 'build_enabled': self.allow & permission['build'] != 0, 'full_sandbox': self.allow & permission['sandbox'] != 0}
 		if all_info:
 			out['start_pos'] = self.start_pos
 		return out

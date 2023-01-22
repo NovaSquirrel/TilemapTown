@@ -25,7 +25,6 @@ Change display name
 
 /userdesc text
 Change your description
-(unimplemented)
 
 /userpic bunny, cat, hamster or fire
 /userpic x y (measured in tiles, from https://novasquirrel.com/town/img/potluck.png)
@@ -51,13 +50,10 @@ Display a list of public maps that have users
 List all users on the server
 
 /look user
-/glook user (global)
-Reads someone's character description
-(unimplemented)
+Reads the character description of someone (or something) on the same map
 
 /last user
 Displays someone's last login/logout time
-(unimplemented)
 
 ---Movement---
 /map mapnumber
@@ -274,41 +270,21 @@ Get information about the entity, such as properties and contents.
 
 /entity id move x y
 /entity id tags
-/entity id tags add tag value 
-/entity id tags del tag
+/entity id addtag tag value 
+/entity id deltag tag
 Get tags or change them.
 
 /entity id perms
 /entity id permsfor id
-Get permissions on an entity, or test permissions for a specific other entity acting on this entity.
+Get permissions on an entity, or test permissions for this entity acting on a different entity.
 
 /entity id grant id/username permission
 /entity id deny id/username permission
 /entity id revoke id/username permission
 Change permissions.
 
-/entity id take
-Move entity to your inventory.
-
 /entity id summon
 Move entity to your position within the map you're on.
-
-/entity id clone
-Make a copy in your inventory
-
-/entity id delete
-Delete the entity.
-
-/entity id home
-/kick id
-Moves the entity to its home.
-Can do this to entities you don't own, if they are in a container you do own.
-
-/entity id sethome
-Sets the entity's home to its current location.
-
-/entity id unsethome
-Sets the entity's home to null.
 
 /entity id do command_here
 Same as sending a CMD protocol message with the "rc" field set.

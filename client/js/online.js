@@ -277,7 +277,7 @@ function receiveServerMessage(event) {
       // has anyone's avatars updated?
       for (var key in PlayerWho) {
         var pic = PlayerWho[key].pic;
-        var is_custom = typeof pic[0] == "string";
+        var is_custom = pic != null && typeof pic[0] == "string";
 
         // if no longer using a custom pic, delete the one that was used
         if (key in PlayerImages && !is_custom) {
@@ -299,7 +299,12 @@ function receiveServerMessage(event) {
       break;
 
     case "BAG":
+      if("container" in arg && arg.container != PlayerYou) { // Ignore BAG messages for other containers currently
+        break;
+      }
       if(arg.list) {
+        if(arg.clear == true)
+          DBInventory = [];
         for(let item of arg.list) {
           DBInventory[item.id] = item;
           // Preload all image assets in the initial inventory
@@ -314,7 +319,7 @@ function receiveServerMessage(event) {
             DBInventory[arg.update.id][key] = arg.update[key];
           }
         } else {
-        // Create a new item
+          // Create a new item
           DBInventory[arg.update.id] = arg.update;
         }
 
@@ -324,10 +329,19 @@ function receiveServerMessage(event) {
         }
       }
       if(arg['remove']) {
-        delete DBInventory[arg['remove']];
+        var containing_folder = DBInventory[arg['remove'].id].folder;
+        delete DBInventory[arg['remove'].id];
         for (var key in DBInventory) {
-          if(DBInventory[key].folder == arg['remove'])
-            DBInventory[key].folder = null;
+          if(DBInventory[key].folder == arg['remove'].id)
+            DBInventory[key].folder = containing_folder;
+        }
+      }
+      if(arg['new_id']) {
+        DBInventory[arg['new_id']['new_id']] = DBInventory[arg['new_id']['id']];
+        delete DBInventory[arg['new_id']['id']];
+        for (var key in DBInventory) {
+          if(DBInventory[key].folder == arg['new_id']['id'])
+            DBInventory[key].folder = arg['new_id']['new_id'];
         }
       }
       NeedInventoryUpdate = true;

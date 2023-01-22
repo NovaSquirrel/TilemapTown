@@ -73,7 +73,7 @@ class Client(Entity):
 	def remove_from_contents(self, item):
 		super().remove_from_contents(item)
 		if not self.no_inventory_messages:
-			self.send("BAG", {'remove': item.db_id})
+			self.send("BAG", {'remove': {'id': item.db_id}})
 
 	def test_server_banned(self):
 		""" Test for and take action on IP bans """
@@ -179,10 +179,13 @@ class Client(Entity):
 
 	def login(self, username, password):
 		inventory = []
+		inventory_already = set()
 		def recursively_get_inventory(container):
 			for item in container.contents:
 				inventory.append(item.bag_info())
-				recursively_get_inventory(item)
+				if item.id not in inventory_already:
+					inventory_already.add(item.id)
+					recursively_get_inventory(item)
 
 		""" Attempt to log the client into an account """
 		username = filter_username(username)

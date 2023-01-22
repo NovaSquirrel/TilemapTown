@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio, datetime, json, copy, zlib
+import asyncio, datetime, json, copy, zlib, random
 from .buildglobal import *
 from collections import deque
 
@@ -85,7 +85,7 @@ class Entity(object):
 		AllEntitiesByID[self.id] = self
 
 	def __del__(self):
-		print("Unloading %d: %s" % (self.db_id or -1, self.name))
+		#print("Unloading %d: %s" % (self.db_id or -1, self.name))
 		self.clean_up()
 
 	def clean_up(self):
@@ -149,8 +149,28 @@ class Entity(object):
 		self.broadcast("WHO", {'add': item.who()}, remote_category=botwatch_type['entry'])
 
 		# Warn about chat listeners, if present
-		if item.is_client() and self.db_id in BotWatch[botwatch_type['chat']]:
-			item.send("MSG", {'text': 'A bot has access to messages sent here ([command]listeners[/command])'})
+		if item.is_client():
+			if self.db_id in BotWatch[botwatch_type['chat']]:
+				item.send("MSG", {'text': 'A bot has access to messages sent here ([command]listeners[/command])'})
+			self.send_map_info(item)
+
+	def send_map_info(self, item):
+		item.send("MAI", {
+			'name': self.name,
+			'id': self.protocol_id(),
+			'owner_id': self.owner_id,
+			'owner_username': find_username_by_db_id(self.owner_id) or '?',
+			'default': 'colorfloor13',
+			'size': [10,10],
+			'build_enabled': False
+		})
+		item.send("MAP", {
+			'pos': [0, 0, 9, 9],
+			'default': 'colorfloor13',
+			'turf': [],
+			'obj': []
+		})
+		self.broadcast("MOV", {'id': item.protocol_id(), 'to': [random.randint(0, 9), random.randint(0, 9)]})
 
 	def remove_from_contents(self, item):
 		self.contents.discard(item)
@@ -188,6 +208,9 @@ class Entity(object):
 
 	# Entity has permission to act on some other entity
 	def has_permission(self, other, perm, default):
+		if isinstance(perm, tuple):
+			return any(self.has_permission(other, x, default) for x in perm)
+
 		# Oper override bypasses permission checks
 		if self.oper_override:
 			return True
@@ -386,7 +409,7 @@ class Entity(object):
 			self.x = x
 			self.y = y
 			for u in self.passengers:
-				if u.is_following and not isTeleport: # If "from" isn't present, it's a teleport, not normal movement
+				if u.is_following and not is_teleport: # If "from" isn't present, it's a teleport, not normal movement
 					u.moveTo(old_y, old_x, old_dir if new_dir != None else None)
 				else:
 					u.moveTo(x, y, newDir)
@@ -396,21 +419,27 @@ class Entity(object):
 
 	def switch_map(self, map_id, new_pos=None, goto_spawn=True, update_history=True):
 		""" Teleport the user to another map """
+		added_new_history = False
 		if update_history and self.map_id != None:
 			# Add a new teleport history entry if new map
 			if self.map_id != map_id:
 				self.tp_history.append([self.map_id, self.x, self.y])
+				added_new_history = True
 
 		if self.map_id != map_id:
 			# First check if you can even go to that map
 			map_load = get_entity_by_id(map_id)
 			if map_load == None:
 				self.send("ERR", {'text': 'Couldn\'t load map %d' % map_id})
-				self.tp_history.pop()
+				if added_new_history:
+					self.tp_history.pop()
 				return False
-			if not self.has_permission(map_load, permission['entry'], True):
+			if not self.has_permission(map_load,
+				permission['entry'] if self.is_client() else (permission['object_entry'], permission['persistent_object_entry']),
+				True):
 				self.send("ERR", {'text': 'You don\'t have permission to go to map %d' % map_id})
-				self.tp_history.pop()
+				if added_new_history:
+					self.tp_history.pop()
 				return False
 
 			# Remove first, so the container can tell everyone
@@ -437,7 +466,9 @@ class Entity(object):
 
 	def send_home(self):
 		""" If entity has a home, send it there. If not, find somewhere else suitable. """
-		if self.home != None and self.switch_map(self.home[0], new_pos=[self.home[1], self.home[2]]):
+		if self.home != None and self.switch_map(self.home[0],
+			new_pos=[self.home_position[0], self.home_position[1]] if (self.home_position and len(self.home_position) == 2) else None
+		):
 			return
 		if self.is_client() and self.switch_map(get_database_meta('default_map')):
 			return
@@ -464,6 +495,10 @@ class Entity(object):
 		Used to identify the entity in protocol messages. """
 		return self.db_id if (self.db_id != None) else ("~"+str(self.id))
 
+	def broadcast_who(self):
+		if self.map:
+			self.map.broadcast("WHO", {'add': self.who()})
+
 	def who(self):
 		""" A dictionary of information for the WHO command """
 		return {
@@ -480,7 +515,7 @@ class Entity(object):
 
 	def bag_info(self):
 		""" Dictionary used to describe an object for a BAG protocol message """		
-		return {
+		out = {
 			'id': self.db_id,
 			'name': self.name,
 			'desc': self.desc,
@@ -488,8 +523,17 @@ class Entity(object):
 			'type': entity_type_name[self.entity_type],
 			'folder': self.map_id,
 			'data': self.data,
-			'tags': self.tags
+			'tags': self.tags,
+			'allow': permission_list_from_bitfield(self.allow),
+			'deny': permission_list_from_bitfield(self.deny),
+			'guest_deny': permission_list_from_bitfield(self.guest_deny),
+			'owner_id': self.owner_id
 		}
+		if self.owner_id:
+			owner_username = find_username_by_db_id(self.owner_id)
+			if owner_username:
+				out['owner_username'] = owner_username
+		return out
 
 	def who_contents(self):
 		""" WHO message data """
@@ -502,12 +546,21 @@ class Entity(object):
 		return '%s (%s)' % (self.name, self.username_or_id())
 
 	def set_tag(self, name, value):
+		if e.tags == None:
+			e.tags = {}
 		self.tags[name] = value
 
 	def get_tag(self, name, default=None):
+		if e.tags == None:
+			return default
 		if name in self.tags:
 			return self.tags[name]
 		return default
+
+	def del_tag(self, name):
+		if e.tags == None:
+			return
+		e.tags.pop(name, None)
 
 	# Database access
 
@@ -543,7 +596,7 @@ class Entity(object):
 					self.dir = position[2]			
 			if not self.switch_map(result[4], goto_spawn=False):
 				self.map_id = result[4]
-		print("Loading %d: %s" % (self.db_id or -1, self.name))
+		#print("Loading %d: %s" % (self.db_id or -1, self.name))
 
 		self.home_id = result[6]
 		self.home_position = loads_if_not_none(result[7])
@@ -635,3 +688,5 @@ class Entity(object):
 		other.guest_deny = self.guest_deny
 		other.data = self.data
 		other.creator_id = self.creator_id
+		other.temporary = self.temporary
+

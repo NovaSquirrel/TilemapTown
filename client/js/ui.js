@@ -600,7 +600,10 @@ function drawMap() {
       }
 
     } else {
-      ctx.drawImage(IconSheets[Mob.pic[0]], Mob.pic[1]*16, Mob.pic[2]*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
+      pic = Mob.pic;
+      if(pic == null)
+        pic = [0, 8, 24];
+      ctx.drawImage(IconSheets[pic[0]], pic[1]*16, pic[2]*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
     }
 
     // typing indicators
@@ -1247,12 +1250,15 @@ function updateUsersUL() {
     img.style.height = "16px";
     var src = "";
     // allow custom avatars
-    if(key in PlayerImages && typeof user.pic[0] == "string")
+    if(key in PlayerImages && user.pic != null && typeof user.pic[0] == "string")
       src = PlayerImages[key].src;
     // as well as built-in ones
-    if(IconSheets[user.pic[0]])
-      src = IconSheets[user.pic[0]].src;
-    var background = "url("+src+") -"+(user.pic[1]*16)+"px -"+(user.pic[2]*16)+"px";
+    pic = [0, 8, 24];
+    if(user.pic != null)
+      pic = user.pic;
+    if(IconSheets[pic[0]])
+      src = IconSheets[pic[0]].src;
+    var background = "url("+src+") -"+(pic[1]*16)+"px -"+(pic[2]*16)+"px";
     img.style.background = background;
 
     // build the list item

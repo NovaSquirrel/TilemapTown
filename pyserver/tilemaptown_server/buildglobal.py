@@ -84,6 +84,17 @@ permission['object_entry']            = 0x0200 # user can bring objects here tem
 permission['persistent_object_entry'] = 0x0400 # user can bring objects here persistently
 permission['modify_properties']       = 0x0800 # user can modify the properties of this entity
 permission['remote_command']          = 0x1000 # user can make this entity do arbitrary commands
+permission['modify_appearance']       = 0x2000 # user can modify visual properties, like picture or description
+
+def permission_list_from_bitfield(bitfield):
+	return [key for key in permission if (permission[key] & bitfield)]
+
+def bitfield_from_permission_list(permission_list):
+	out = 0
+	for p in permission_list:
+		if p in permission:
+			out |= permission_list[p]
+	return out
 
 # Map flags
 mapflag = {}
@@ -168,11 +179,29 @@ def get_entity_type_by_db_id(id):
 
 def get_entity_by_id(id, load_from_db=True):
 	# If it's temporary, get it if it still exists
-	if isinstance(id, str) and id[0] == temporary_id_marker:
-		id = id[1:]
-		if id in AllEntitiesByID:
-			return AllEntitiesByID[id]
-		return None
+	if isinstance(id, str):
+		if isinstance(id, str) and id[0] == temporary_id_marker:
+			id = id[1:]
+			if id in AllEntitiesByID:
+				return AllEntitiesByID[id]
+			return None
+
+		# Can use a global entity ID; look up what the actual entity ID is
+		elif id[0] == global_entity_marker:
+			global_key = id[1:]
+
+			c = Database.cursor()
+			c.execute('SELECT entity_id FROM Global_Entity_Key WHERE key=?', (global_key,))
+			result = c.fetchone()
+			if result == None:
+				return None
+			id = result[0]
+
+		elif id.startswith('user:'):
+			id = find_db_id_by_username(id[5:])
+
+		elif isinstance(id, str) and id.isnumeric():
+			id = int(id)
 
 	# Fetch it from RAM if it's already loaded from the database
 	if id in AllEntitiesByDB:
@@ -200,6 +229,7 @@ def get_entity_by_id(id, load_from_db=True):
 	e = Entity(t)
 	if e.load(id):
 		return e
+
 	return None
 
 def filter_username(text):
@@ -221,7 +251,7 @@ def pic_is_okay(pic):
 	return True
 
 def valid_id_format(id):
-	return id.isnumeric() or ((id.startswith(temporary_id_marker) or id.startswith(global_entity_marker)) and id[1:].isnumeric())
+	return isinstance(id, int) or id.isnumeric() or ((id.startswith(temporary_id_marker) or id.startswith(global_entity_marker)) and id[1:].isnumeric() or id.startswith('user:'))
 
 def dumps_if_not_none(dump_me):
 	if dump_me != None:

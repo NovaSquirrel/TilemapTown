@@ -133,54 +133,57 @@ resources link?
 (not implemented)
 
 === Items ===
-In addition to regular building objects there will be items that can't just be copied endlessly.
-To be added to the game later.
-
---> DRO {"id": id}
-<-- DRO {"id": id}
---> TAK {"id": id}
-<-- TAK {"id": id}
-take item and get confirmation
-(not implemented)
-
-Fields for DRO:
-"pos": Position to put the item, if [DRO]pping it onto the map. If not specified, it defaults to the client's position.
-"into": Container to [DRO]p the item into. If not specified, it defaults to the map the client is in.
-
-Fields for DRO and TAK:
-"copy": If true, make a copy of the item and put into the container.
-"temp": If copy is true, make a temporary copy instead of a database copy.
-
 --> MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "rc": 0}
 <-- MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "rc": 0}
 Move something else within the same container as you, if you are allowed to
 
 --> USE {"id": id}
-use item
+Use item
 (not implemented)
 
 
 --> BAG {"create": {"name": name, "type": type}}
 --> BAG {"create": {"name": name, "type": type, "temp": true/false}}
 Create a new item of a given type
+Can create a temporary object instead if you like
 
---> BAG {"update": {"id": id, "name": name, "desc": desc, "flags": flags, "folder": folder, "data": data}}
+--> BAG {"update": {"id": id, "name": name, "desc": desc, "flags": flags, "folder": folder, "data": data, "allow": allow, "deny": deny, "guest_deny": deny, "tags": tags, ...}}
 Update one specific item
+
+--> BAG {"move": {"id": id, "folder": map, "pos": [x,y]}}
+Moves an entity to another position. "pos" is optional.
 
 --> BAG {"delete": {"id": id}}
 Delete an item
 
+--> BAG {"kick": {"id": id}}
+Send an entity to its home
+
 --> BAG {"clone": {"id": id}}
 --> BAG {"clone": {"id": id}, "temp": true/false}
-Make an exact clone of an item with a new ID
+Make an exact clone of an item with a new ID.
+Can make the new object temporary or non-temporary regardless of if the original object was.
 
 --> BAG {"info": {"id": id}}
-Request information on an item, whether or not it's in your inventory
+Request information on an item, whether or not it's in your inventory.
 
-<-- BAG {"list": [{item info}]}
-Receive a list of items from the server.
+<-- BAG {"info": {"id": id, ...}}
+Information about an item somewhere. Message doesn't add the item to a container client-side.
+
+<-- BAG {"update": {item info}}
+<-- BAG {"list": [{item info}], "container": id, "clear": false}
+Receive an item or list of items from the server. Lists don't replace the client-side list, unless "clear" is specified.
+"container" specifies that the items are for a specific ID; otherwise it's assume it's the player than the player.
+"clear" specifies that the client-side inventory list for this container should be cleared before adding these.
+
+<-- BAG {"new_id": {"id": old_id, "new_id": id}}
+Update the ID of one item in the player's inventory
+
+<-- BAG {"remove": {"id": id}}
+Remove one item from the inventory
 
 Item info fields:
+(Used for "update", "list", and "info")
 	id
 	name
 	desc
@@ -189,12 +192,3 @@ Item info fields:
 	folder
 	data
 	tags
-
-<-- BAG {"update": {item info}}
-Update one item with information from the server (which can add a new item)
-
-<-- BAG {"new_id": {"id": old_id, "new_id": id}}
-Update the ID of one item in the player's inventory
-
-<-- BAG {"remove": id}
-Remove one item from the inventory

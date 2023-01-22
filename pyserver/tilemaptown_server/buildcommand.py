@@ -153,6 +153,27 @@ def tile_is_okay(tile):
 
 	return (True, None)
 
+def load_json_if_valid(j):
+	try:
+		return json.loads(jsonData)
+	except ValueError as err:
+		pass
+	return None
+
+def find_local_entity_by_name(map, name):
+	if map == None:
+		return None
+	name = name.lower()
+	for e in client.map.contents:
+		if str(e.protocol_id()) == name:
+			return e
+	for e in client.map.contents:
+		if e.name.strip().lower() == name:
+			return e
+	for e in client.map.contents:
+		if e.name.strip().lower().startswith(name):
+			return e
+	return None
 
 # -------------------------------------
 
@@ -162,6 +183,10 @@ def fn_nick(map, client, context, arg):
 		map.broadcast("MSG", {'text': "\""+client.name+"\" is now known as \""+escape_tags(arg)+"\""})
 		client.name = escape_tags(arg)
 		map.broadcast("WHO", {'add': client.who()}, remote_category=botwatch_type['entry']) # update client view
+
+@cmd_command(category="Settings", syntax="description")
+def fn_userdesc(map, client, context, arg):
+	self.desc = arg
 
 @cmd_command(category="Settings", syntax="text")
 def fn_client_settings(map, client, context, arg):
@@ -453,7 +478,7 @@ def permission_change(map, client, arg, command2):
 		map.broadcast("MSG", {'text': "%s sets the default \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[0], command2)})
 		return
 
-	# Group permissions
+	# Group permissions (also works for entities)
 	if param[1].startswith("group:"):
 		groupid = param[1][6:]
 		if groupid.isnumeric():
@@ -492,7 +517,7 @@ def permission_change(map, client, arg, command2):
 	# Refresh permissions of users on the map so changes take effect immediately
 	# (probably only need to do it for the affected user, if they're even present)
 	for u in map.contents:
-		u.updateMapPermissions()
+		u.update_map_permissions()
 
 @cmd_command(category="Map", privilege_level="map_admin", syntax="permission user/!default", map_only=True)
 def fn_grant(map, client, context, arg):
@@ -862,15 +887,28 @@ def fn_home(map, client, context, arg):
 		client.send_home()
 
 @cmd_command(category="Teleport", syntax="map")
+def fn_defaultmap(map, client, context, arg):
+	client.switch_map(get_database_meta('default_map'))
+
+@cmd_command(category="Teleport", syntax="map")
 def fn_map(map, client, context, arg):
 	try:
 		if map_id_exists(int(arg)):
 			if client.switch_map(int(arg)):
 				respond(context, 'Teleported to map %s' % arg)
+			else:
+				respond(context, 'Couldn\t go to map %s' % arg, error=True)
 		else:
 			respond(context, 'Map %s doesn\'t exist' % arg, error=True)
 	except:
 		respond(context, 'Couldn\t go to map %s' % arg, error=True)
+
+@cmd_command(category="Teleport", syntax="map")
+def fn_tpinto(map, client, context, arg):
+	if client.switch_map(int(arg)):
+		respond(context, 'Teleported into entity %s' % arg)
+	else:
+		respond(context, 'Couldn\'t teleport into entity %s' % arg, error=True)
 
 @cmd_command(category="Account", privilege_level="registered")
 def fn_saveme(map, client, context, arg):
@@ -879,6 +917,8 @@ def fn_saveme(map, client, context, arg):
 
 @cmd_command(category="Account", privilege_level="registered", syntax="password")
 def fn_changepass(map, client, context, arg):
+	if not client.is_client() or context[0] != client:
+		return
 	if len(arg):
 		client.changepass(arg)
 		respond(context, 'Password changed')
@@ -887,6 +927,8 @@ def fn_changepass(map, client, context, arg):
 
 @cmd_command(category="Account", syntax="username password")
 def fn_register(map, client, context, arg):
+	if not client.is_client():
+		return
 	if client.db_id != None:
 		respond(context, 'Register fail, you already registered', error=True)
 	else:
@@ -902,6 +944,8 @@ def fn_register(map, client, context, arg):
 
 @cmd_command(category="Account", syntax="username password")
 def fn_login(map, client, context, arg):
+	if not client.is_client():
+		return
 	params = arg.split()
 	if len(params) != 2:
 		respond(context, 'Syntax is /login username password', error=True)
@@ -932,8 +976,7 @@ def fn_userpic(map, client, context, arg):
 			client.pic = [0, int(arg[0]), int(arg[1])]
 			success = True
 	if success:
-		if map:
-			map.broadcast("WHO", {'add': client.who()}) # update client view
+		client.broadcast_who()
 	else:
 		respond(context, 'Syntax is: /userpic sheet x y', error=True)
 
@@ -957,6 +1000,31 @@ def fn_who(map, client, context, arg):
 		names += u.name_and_username()
 	respond(context, 'List of users here: '+names)
 
+@cmd_command(category="Who", syntax="name")
+def fn_look(map, client, context, arg):
+	if not len(arg):
+		return
+	e = find_local_entity_by_name(arg)
+	if e == None:
+		respond(context, 'Description of [b]%s[/b]: %s' % (e.name, e.desc))
+
+@cmd_command(category="Who", syntax="name")
+def fn_last(map, client, context, arg):
+	if len(arg):
+		id = find_db_id_by_username(arg)
+		if id == None:
+			failed_to_find(context, arg)
+			return
+		if id in AllEntitiesByDB:
+			respond(context, '%s is online right now!' % arg)
+		else:
+			c = Database.cursor()
+			c.execute('SELECT last_seen_at FROM User WHERE entity_id=?', (id,))
+			result = c.fetchone()
+			if result == None:
+				return
+			respond(context, '%s last seen at %s' % (arg, result[0].strftime("%m/%d/%Y, %I:%M %p") ))
+
 @cmd_command(category="Who", alias=['wa'])
 def fn_whereare(map, client, context, arg):
 	names = 'Whereare: [ul]'
@@ -972,7 +1040,7 @@ def fn_whereare(map, client, context, arg):
 
 	respond(context, names)
 
-@cmd_command(category="Who")
+@cmd_command(alias=['ewho'], category="Who")
 def fn_entitywho(map, client, context, arg):
 	names = ''
 	for u in map.contents:
@@ -1133,12 +1201,40 @@ def fn_mygroups(map, client, context, arg):
 	groups += "[/ul]"
 	respond(context, groups)
 
+@cmd_command(privilege_level="registered", hidden=True)
+def fn_selfown(map, client, context, arg):
+	if client.is_client():
+		if len(arg):
+			id = find_db_id_by_username(arg)
+			if id == None:
+				failed_to_find(context, arg)
+			else:
+				client.owner_id = id
+				respond(context, "Changed your ownership to %s" % arg)
+			return
+		elif client.db_id:
+			client.owner_id = client.db_id
+			respond(context, "Reset your ownership to yourself")
+		else:
+			client.owner_id = None
+			respond(context, "Reset your ownership to none")	
+
+@cmd_command(alias=['myid', 'userid'], privilege_level="registered")
+def fn_whoami(map, client, context, arg):
+	if client.username == None:
+		respond(context, "Your ID is [b]%s[/b] and you have not registered" % (client.protocol_id()))
+	else:
+		respond(context, "Your ID is [b]%s[/b] and your username is [b]%s[/b]" % (client.protocol_id(), client.username))
+
 @cmd_command(alias=['e'], privilege_level="registered")
 def fn_entity(map, client, context, arg):
-	provided_id, subcommand = separate_first_word(text)
+	# Parse
+	provided_id, subcommand = separate_first_word(arg)
 	subcommand, subarg = separate_first_word(subcommand)
-	print([provided_id, subcommand, subarg])
+	if subcommand == '':
+		subcommand = 'info'
 
+	# Can use "me" and "here" as special IDs
 	e = None
 	if provided_id == 'me':
 		e = client
@@ -1152,6 +1248,15 @@ def fn_entity(map, client, context, arg):
 		return
 	subcommand = subcommand.lower()
 
+	# ---------------------------------
+
+	def permission_check(perm):
+		if client.has_permission(e, perm, False):
+			return True
+		else:
+			respond(context, "Don\'t have permission to use \"/entity %s\" on %s" % (subcommand, provided_id), error=True)
+			return False
+
 	if subcommand == 'info':
 		info = '[b]%s (%s)[/b] - %s' % (e.name, e.protocol_id(), entity_type_name[e.entity_type])
 		if e.desc:
@@ -1159,44 +1264,45 @@ def fn_entity(map, client, context, arg):
 		if len(e.contents):
 			info += '\n[b]Contents:[/b] %s' % ', '.join(c.name_and_username() for c in e.contents)
 		respond(context, info)
+	elif subcommand == 'name' and permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
+		e.name = subarg
+		e.broadcast_who()
+	elif subcommand == 'desc' and permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
+		e.desc = subarg
+	elif subcommand == 'pic' and permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
+		pic = load_json_if_valid(subarg)
+		if pic and pic_is_okay(subarg):
+			e.pic = pic
+			e.broadcast_who()
+		else:
+			respond(context, "Invalid picture", error=True)
 
-	if subcommand == 'name':
-		pass
-	elif subcommand == 'desc':
-		pass
-	elif subcommand == 'perms':
-		pass
-	elif subcommand == 'addtag':
-		pass
-	elif subcommand == 'deltag':
-		pass
 	elif subcommand == 'tags':
-		pass
-	elif subcommand == 'take':
-		pass
-	elif subcommand == 'summon':
-		pass
-	elif subcommand == 'clone':
-		pass
-	elif subcommand == 'home':
-		pass
-	elif subcommand == 'sethome':
-		pass
-	elif subcommand == 'move':
-		pass
-	elif subcommand == 'do':
-		pass
-	elif subcommand == 'delete':
-		pass
-	elif subcommand == 'grant':
-		pass
-	elif subcommand == 'revoke':
-		pass
-	elif subcommand == 'deny':
-		pass
-	else:
-		pass
+		respond(context, "Tags: %s" % dumps_if_not_empty(e.tags))
+	elif subcommand == 'addtag' and permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
+		key, value = separate_first_word(subarg)
+		e.add_tag(key, value)
+	elif subcommand == 'deltag' and permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
+		e.del_tag(subarg)
 
+	elif subcommand == 'do' and permission_check(permission['remote_command']):
+		handle_user_command(e.map, e, client, echo, subarg)
+
+	elif subcommand == 'perms':
+		fn_permlist(e, client, context, subarg)
+	elif subcommand == 'permsfor':
+		if subarg.isnumeric():
+			allow, deny = get_allow_deny_for_other_entity(self, other_id)
+			response(context, 'Allow: %s\nDeny: %s' % (permission_list_from_bitfield(allow), permission_list_from_bitfield(deny)))
+	elif subcommand == 'grant' and permission_check(permission['admin']):
+		permission_change(e, client, subarg, 'grant')
+	elif subcommand == 'revoke' and permission_check(permission['admin']):
+		permission_change(e, client, subarg, 'deny')
+	elif subcommand == 'deny' and permission_check(permission['admin']):
+		permission_change(e, client, subarg, 'revoke')
+
+	else:
+		respond(context, 'Unrecognized subcommand "%s"' % subcommand, error=True)
 
 # -------------------------------------
 
@@ -1213,7 +1319,7 @@ def handle_user_command(map, client, respond_to, echo, text):
 
 	if command in handlers:
 		# Restrict some commands to maps
-		if command in map_only_commands and client.map == None or not client.map.is_map():
+		if command in map_only_commands and (client.map == None or not client.map.is_map()):
 			respond(context, 'Command can only be run while on a map', error=True)
 			return
 

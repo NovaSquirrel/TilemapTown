@@ -92,14 +92,14 @@ async def client_handler(websocket, path):
 				continue
             # Split the message into parts, to parse it
 			command = message[0:3]
-			arg = None
+			arg = {}
 			if len(message) > 4:
 				arg = json.loads(message[4:])
 
 			# Identify the user and put them on a map
 			if command == "IDN":
 				result = False
-				if arg != None:
+				if arg != {}:
 					result = client.login(filter_username(arg["username"]), arg["password"])
 				if result != True: # default to default map if can't log in
 					client.switch_map(get_database_meta('default_map'))
