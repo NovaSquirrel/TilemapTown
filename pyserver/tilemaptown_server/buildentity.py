@@ -151,6 +151,49 @@ class Entity(object):
 				item.send("MSG", {'text': 'A bot has access to messages sent here ([command]listeners[/command])'})
 			self.send_map_info(item)
 
+		# Notify parents
+		for parent in self.all_parents():
+			parent.added_to_child_contents(item)
+
+	def remove_from_contents(self, item):
+		self.contents.discard(item)
+		item.map_id = None
+		item.map = None
+
+		# Tell everyone in the container that the item was removed
+		self.broadcast("WHO", {'remove': item.protocol_id()}, remote_category=botwatch_type['entry'])
+
+		# Notify parents
+		for parent in self.all_parents():
+			parent.removed_from_child_contents(item)
+
+	def added_to_child_contents(self, item):
+		""" Called on parents when add_to_contents is called here """
+		pass
+
+	def removed_from_child_contents(self, item):
+		""" Called on parents when remove_from_contents is called here """
+		pass
+
+	def all_parents(self):
+		already_found = set()
+		current = self.map
+		while current:
+			yield current
+			already_found.add(current)
+			if current.map in already_found:
+				return
+
+	def all_children(self):
+		already_found = set()
+		def search(container):
+			for item in container.contents:
+				yield item
+				if item.id not in already_found:
+					already_found.add(item.id)
+					search(item)
+		search(self)
+
 	def send_map_info(self, item):
 		item.send("MAI", {
 			'name': self.name,
@@ -168,14 +211,6 @@ class Entity(object):
 			'obj': []
 		})
 		self.broadcast("MOV", {'id': item.protocol_id(), 'to': [random.randint(0, 9), random.randint(0, 9)]})
-
-	def remove_from_contents(self, item):
-		self.contents.discard(item)
-		item.map_id = None
-		item.map = None
-
-		# Tell everyone in the container that the item was removed
-		self.broadcast("WHO", {'remove': item.protocol_id()}, remote_category=botwatch_type['entry'])
 
 	# Permission checking
 

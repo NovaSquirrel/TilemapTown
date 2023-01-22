@@ -63,7 +63,7 @@ class Map(Entity):
 	def send_map_info(self, item):
 		if not self.map_data_loaded:
 			self.load_data()
-		item.send("MAI", self.map_info())
+		item.send("MAI", self.map_info(user=item))
 		item.send("MAP", self.map_section(0, 0, self.width-1, self.height-1))
 
 	def remove_from_contents(self, item):
@@ -166,11 +166,14 @@ class Map(Entity):
 					objs.append([x, y, self.objs[x][y]])
 		return {'pos': [x1, y1, x2, y2], 'default': self.default_turf, 'turf': turfs, 'obj': objs}
 
-	def map_info(self, all_info=False):
+	def map_info(self, user=None, all_info=False):
 		""" MAI message data """
 		out = {'name': self.name, 'id': self.db_id, 'owner_id': self.owner_id, 'owner_username': find_username_by_db_id(self.owner_id) or '?', 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.map_flags & mapflag['public'] != 0, 'private': self.deny & permission['entry'] != 0, 'build_enabled': self.allow & permission['build'] != 0, 'full_sandbox': self.allow & permission['sandbox'] != 0}
 		if all_info:
 			out['start_pos'] = self.start_pos
+		if user:
+			out['you_allow'] = permission_list_from_bitfield(self.map_allow)
+			out['you_deny'] = permission_list_from_bitfield(self.map_deny)
 		return out
 
 	def count_users_inside(self, recursive=True):

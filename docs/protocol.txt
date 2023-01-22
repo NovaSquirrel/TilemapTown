@@ -33,7 +33,7 @@ get a partial (or complete) copy of the map
 (currently server-->client only)
 
 --> MAI
-<-- MAI {"name": map_name, "id": map_id, "owner": whoever, "admins": list, "default": default_turf, "size": [width, height], "public": true/false, "private": true/false, "build_enabled": true/false, "full_sandbox": true/false}
+<-- MAI {"name": map_name, "id": map_id, "owner": whoever, "admins": list, "default": default_turf, "size": [width, height], "public": true/false, "private": true/false, "build_enabled": true/false, "full_sandbox": true/false, "you_allow": list, "you_deny": list}
 map info stuff.
 Optionally also defines "entry_whitelist", "entry_banlist" and "start_pos" for map admins
 

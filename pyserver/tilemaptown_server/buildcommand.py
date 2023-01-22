@@ -640,8 +640,16 @@ def fn_mapbuild(map, client, context, arg):
 
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="text")
 def fn_defaultfloor(map, client, context, arg):
-	map.default_turf = arg
-	respond(context, 'Map floor changed to %s' % arg)
+	as_json = load_json_if_valid(arg)
+	if as_json != None:
+		if tile_is_okay(as_json):
+			map.default_turf = as_json
+			respond(context, 'Map floor changed to custom tile %s' % arg)
+		else:
+			respond(context, 'Map floor not changed, custom tile not ok: %s' % arg)
+	else:
+		map.default_turf = arg
+		respond(context, 'Map floor changed to %s' % arg)
 
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="text")
 def fn_mapspawn(map, client, context, arg):
@@ -733,8 +741,8 @@ def kick_and_ban(map, client, context, arg, ban):
 			respond(context, 'Kicked '+u.name_and_username())
 			u.send("MSG", {'text': 'Kicked by '+client.name_and_username()})
 			u.send_home()
-			if ban:
-				map.change_permission_for_entity(find_db_id_by_username(arg), permission['entry'], False)
+			if ban and u.db_id:
+				map.change_permission_for_entity(u.db_id, permission['entry'], False)
 		else:
 			respond(context, 'User not on this map', error=True)
 	else:
@@ -1261,6 +1269,12 @@ def fn_entity(map, client, context, arg):
 		info = '[b]%s (%s)[/b] - %s' % (e.name, e.protocol_id(), entity_type_name[e.entity_type])
 		if e.desc:
 			info += '\n[b]Description:[/b] %s' % e.desc
+		if e.owner_id:
+			owner_username = find_username_by_db_id(e.owner_id)
+			info += '\n[b]Owner:[/b] %s' % owner_username
+		if e.creator_id:
+			creator_username = find_username_by_db_id(e.creator_id)
+			info += '\n[b]Creator:[/b] %s' % creator_username
 		if len(e.contents):
 			info += '\n[b]Contents:[/b] %s' % ', '.join(c.name_and_username() for c in e.contents)
 		respond(context, info)

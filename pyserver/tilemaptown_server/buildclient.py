@@ -67,11 +67,19 @@ class Client(Entity):
 
 	def add_to_contents(self, item):
 		super().add_to_contents(item)
-		if not self.no_inventory_messages:
-			self.send("BAG", {'update': item.bag_info()})
+		added_to_child_contents(item) # Reuse since it's the same code
 
 	def remove_from_contents(self, item):
 		super().remove_from_contents(item)
+		removed_from_child_contents(item) # Reuse since it's the same code
+
+	def added_to_child_contents(self, item):
+		""" Called on parents when add_to_contents is called here """
+		if not self.no_inventory_messages:
+			self.send("BAG", {'update': item.bag_info()})
+
+	def removed_from_child_contents(self, item):
+		""" Called on parents when remove_from_contents is called here """
 		if not self.no_inventory_messages:
 			self.send("BAG", {'remove': {'id': item.db_id}})
 
@@ -177,16 +185,10 @@ class Client(Entity):
 		# And copy over the base entity stuff
 		return super().load(self.db_id)
 
-	def login(self, username, password):
-		inventory = []
-		inventory_already = set()
-		def recursively_get_inventory(container):
-			for item in container.contents:
-				inventory.append(item.bag_info())
-				if item.id not in inventory_already:
-					inventory_already.add(item.id)
-					recursively_get_inventory(item)
+	def refresh_client_inventory(self):
+		self.send("BAG", {'list': [child.bag_info() for child in self.all_children()], 'clear': True})
 
+	def login(self, username, password):
 		""" Attempt to log the client into an account """
 		username = filter_username(username)
 		self.no_inventory_messages = True      # because load() will load in objects contained by this one
@@ -203,10 +205,9 @@ class Client(Entity):
 				self.send("MSG", {'text': "You've logged in but you're not on a map. Try [command]map %d[/command]" % get_database_meta('default_map')})
 
 			# send the client their inventory
-			c = Database.cursor()
-			recursively_get_inventory(self)
-			self.send("BAG", {'list': inventory})
+			self.refresh_client_inventory()
 
+			c = Database.cursor()
 			# send the client their mail
 			mail = []
 			for row in c.execute('SELECT id, sender_id, recipients, subject, contents, flags FROM Mail WHERE owner_id=?', (self.db_id,)):

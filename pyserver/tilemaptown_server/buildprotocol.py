@@ -226,8 +226,11 @@ def fn_BAG(map, client, arg):
 					del update['owner_username']
 
 			if 'folder' in update:
-				if client.has_permission(update['folder'], (permission['object_entry'], permission['persistent_object_entry']), False):
-					update_me.switch_map(update['folder'])
+				if client.has_permission(update['folder'], (permission['entry']), False) \
+				and client.has_permission(update['folder'], (permission['object_entry'], permission['persistent_object_entry']), False):
+					if not update_me.switch_map(update['folder']):
+						client.send("ERR", {'text': 'Entity doesn\'t have permission to move there'})
+						del update['folder']
 				else:
 					client.send("ERR", {'text': 'Don\'t have permission to move entity there'})
 					del update['folder']
@@ -296,7 +299,7 @@ def fn_BAG(map, client, arg):
 		elif "kick" in arg:
 			kick = arg['kick']
 			kick_me = get_entity_by_id(kick['id'])
-			if kick.map_id == client.db_id or client.has_permission(kick.map_id, permission['admin'], False):
+			if kick.map_id == client.db_id or client.has_permission(kick.map_id, (permission['admin'], permission['sandbox']), False):
 				kick.send_home()
 				client.send("BAG", {'kick': kick})
 
