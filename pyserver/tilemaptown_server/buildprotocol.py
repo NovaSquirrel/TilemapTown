@@ -201,7 +201,7 @@ def fn_BAG(map, client, arg):
 					return
 
 			if 'data' in update:
-				bad = data_disallowed_for_entity_type(updateme.entity_type, update['data'])
+				bad = data_disallowed_for_entity_type(update_me.entity_type, update['data'])
 				if bad != None:
 					client.send("ERR", {'text': bad})
 					del update['data']
@@ -228,6 +228,10 @@ def fn_BAG(map, client, arg):
 			if 'folder' in update:
 				if client.has_permission(update['folder'], (permission['object_entry'], permission['persistent_object_entry']), False):
 					update_me.switch_map(update['folder'])
+				else:
+					client.send("ERR", {'text': 'Don\'t have permission to move entity there'})
+					del update['folder']
+
 			if 'home' in update:
 				if update['home'] == True and client.has_permission(update_me.map_id, permission['persistent_object_entry'], False):
 					update_me.home_id = update_me.map_id
@@ -256,11 +260,11 @@ def fn_BAG(map, client, arg):
 					del update['pic']
 			if 'tags' in update:
 				update_me.tags = update['tags']
-			if 'allow':
+			if 'allow' in update:
 				update_me.allow = bitfield_from_permission_list(update['allow'])
-			if 'deny':
+			if 'deny' in update:
 				update_me.deny = bitfield_from_permission_list(update['deny'])
-			if 'guest_deny':
+			if 'guest_deny' in update:
 				update_me.guest_deny = bitfield_from_permission_list(update['guest_deny'])
 
 			if not update_me.temporary:

@@ -63,8 +63,8 @@ var NeedMapRedraw = false;
 var NeedInventoryUpdate = false;
 var TickCounter = 0;   // Goes up every 20ms, wraps at 0x10000 (hex)
 var AnimationTick = 0; // Goes up every 20ms, wraps at 10000 (decimal)
-var DisplayInventory = {null: []};
-var DBInventory = {};
+var DisplayInventory = {null: []}; // Indexed by folder
+var DBInventory = {}; // Indexed by ID
 var OpenFolders = {};
 
 function getRandomInt(min, max) {
@@ -178,10 +178,19 @@ function editItem(key) {
       document.getElementById('edittileimage').style.display = "block";
       document.getElementById('edittileurl').value = item.data;
       break;
+
+    case "generic":
     case "map_tile":
-      itemobj = AtomFromName(item.data);
-      if(itemobj == null) {
-        itemobj = {pic: [0, 8, 24]};
+      if(item.type == "map_tile") {
+        itemobj = AtomFromName(item.data);
+        if(itemobj == null) {
+          itemobj = {pic: [0, 8, 24]};
+        }
+      } else {
+        if("pic" in item)
+          itemobj = {pic: item.pic};
+        else
+          itemobj = {pic: [0, 8, 24]};
       }
 
       // Display all the available images assets in the user's inventory
@@ -208,11 +217,18 @@ function editItem(key) {
       }
       // Probably also allow just typing in something?
 
+      document.getElementById('edittilemaptile').style.display = item.type == "map_tile" ? "block" : "none";
       document.getElementById('edittileobject').style.display = "block";
       document.getElementById('edittilesheet').value = itemobj.pic[0];
       document.getElementById('edittilex').value = itemobj.pic[1];
       document.getElementById('edittiley').value = itemobj.pic[2];
-      document.getElementById('edittiletype').selectedIndex = itemobj.type;
+      var index_for_type = 0;
+      switch(itemobj.type) {
+        case "sign":
+          index_for_type = 1;
+          break;
+      }
+      document.getElementById('edittiletype').selectedIndex = index_for_type;
       document.getElementById('edittiledensity').checked = itemobj.density;
       document.getElementById('edittileisobject').checked = !itemobj.obj;
       editItemUpdatePic();
@@ -240,7 +256,7 @@ function editItem(key) {
       select.appendChild(el);
     }
   }
-  document.getElementById('edittilefolder').value = item.folder || -1;
+  document.getElementById('edittilefolder').value = (item.folder != PlayerYou ? item.folder : -1) || -1;
 
   // show the window
   document.getElementById('editItemWindow').style.display = "block";
@@ -688,12 +704,18 @@ function tickWorld() {
       }
 
       let updated = DBInventory[key];
+      if(updated.folder == PlayerYou)
+        updated.folder = null;
 
       // always reload the picture, for now
       if(true) {
         switch(updated.type) {
           default: // dummy
             updated.pic = [0, 8, 24];
+            break;
+          case "generic":
+            if(updated.pic == null)
+              updated.pic = [0, 8, 24];
             break;
           case "map_tile": // object
             // allow for string data like "grass"
@@ -1461,9 +1483,11 @@ function loginButton() {
 function editItemApply() {
   var edittilename = document.getElementById('edittilename').value;
   var edittiledesc = document.getElementById('edittiledesc').value;
+  if(edittiledesc == "")
+    edittiledesc = null;
   var edittilefolder = parseInt(document.getElementById('edittilefolder').value, 10);
   if(edittilefolder == -1) {
-    edittilefolder = null;
+    edittilefolder = PlayerYou;
   }
 
   switch(editItemType) {
@@ -1491,11 +1515,12 @@ function editItemApply() {
       break;
 
     case "map_tile":
+    case "generic":
       // Gather item info
       var edittilesheet = parseInt(document.getElementById('edittilesheet').value);
       var edittilex = parseInt(document.getElementById('edittilex').value);
       var edittiley = parseInt(document.getElementById('edittiley').value);
-      var edittiletype = parseInt(document.getElementById('edittiletype').value);
+      var edittiletype = document.getElementById('edittiletype').value;
       var edittiledensity = document.getElementById('edittiledensity').checked;
       var edittileobject = !document.getElementById('edittileisobject').checked;
 
@@ -1509,14 +1534,25 @@ function editItemApply() {
       if(edittiletype)
         item.type = edittiletype;
 
-      SendCmd("BAG", {
-        update: {"id": editItemID,
-                 "name": edittilename,
-                 "desc": edittiledesc,
-                 "folder": edittilefolder,
-                 "data": JSON.stringify(item)
-                }
-      });
+      if(editItemType == "map_tile") {
+        SendCmd("BAG", {
+          update: {"id": editItemID,
+                   "name": edittilename,
+                   "desc": edittiledesc,
+                   "folder": edittilefolder,
+                   "data": JSON.stringify(item)
+                  }
+        });
+      } else if(editItemType == "generic") {
+        SendCmd("BAG", {
+          update: {"id": editItemID,
+                   "name": edittilename,
+                   "desc": edittiledesc,
+                   "folder": edittilefolder,
+                   "pic": item.pic
+                  }
+        });
+      }
       break;
 
     default: // just update name then

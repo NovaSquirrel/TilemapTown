@@ -90,9 +90,6 @@ class Entity(object):
 
 	def clean_up(self):
 		if not self.cleaned_up_already:
-			# May not be needed because of the weak references
-			AllEntitiesByDB.pop(self.db_id, None)
-			AllEntitiesByID.pop(self.id,    None)
 
 			if self.save_on_clean_up:
 				self.save_and_commit()
@@ -304,15 +301,15 @@ class Entity(object):
 		# If guest, apply guest_deny
 		if self.db_id == None:
 			if guest_deny & perm:
-				has = False
-			return has
+				map_value = False
+			return map_value
 
-		user_allow, user_deny = self.get_allow_deny_for_other_entity(self, other_id)
+		user_allow, user_deny = self.get_allow_deny_for_other_entity(other_id)
 		if user_deny & perm:
 			return False
 		if user_allow & perm:
 			return True
-		return has
+		return map_value
 
 	def change_permission_for_entity(self, actor_id, perm, value):
 		if actor_id == None:
@@ -546,12 +543,12 @@ class Entity(object):
 		return '%s (%s)' % (self.name, self.username_or_id())
 
 	def set_tag(self, name, value):
-		if e.tags == None:
-			e.tags = {}
+		if self.tags == None:
+			self.tags = {}
 		self.tags[name] = value
 
 	def get_tag(self, name, default=None):
-		if e.tags == None:
+		if self.tags == None:
 			return default
 		if name in self.tags:
 			return self.tags[name]
@@ -572,15 +569,15 @@ class Entity(object):
 		self.db_id = id
 		AllEntitiesByDB[self.db_id] = self
 
-	def load(self, id):
+	def load(self, load_id):
 		""" Load an entity from the database """
 		c = Database.cursor()
-		c.execute('SELECT type, name, desc, pic, location, position, home_location, home_position, tags, owner_id, allow, deny, guest_deny, creator_id FROM Entity WHERE id=?', (id,))
+		c.execute('SELECT type, name, desc, pic, location, position, home_location, home_position, tags, owner_id, allow, deny, guest_deny, creator_id FROM Entity WHERE id=?', (load_id,))
 		result = c.fetchone()
 		if result == None:
 			return False
 
-		self.assign_db_id(id)
+		self.assign_db_id(load_id)
 
 		self.entity_type = result[0]
 		self.name = result[1]
@@ -615,7 +612,7 @@ class Entity(object):
 		result = c.fetchall()
 		for child in result:
 			load_child = get_entity_by_id(child[0])
-			if load_child:
+			if load_child and load_child.map_id == self.db_id:
 				self.add_to_contents(load_child)
 
 		return True

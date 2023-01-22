@@ -903,7 +903,7 @@ def fn_map(map, client, context, arg):
 	except:
 		respond(context, 'Couldn\t go to map %s' % arg, error=True)
 
-@cmd_command(category="Teleport", syntax="map")
+@cmd_command(alias=['tp_into', 'tpi'], category="Teleport", syntax="map")
 def fn_tpinto(map, client, context, arg):
 	if client.switch_map(int(arg)):
 		respond(context, 'Teleported into entity %s' % arg)
@@ -1222,9 +1222,9 @@ def fn_selfown(map, client, context, arg):
 @cmd_command(alias=['myid', 'userid'], privilege_level="registered")
 def fn_whoami(map, client, context, arg):
 	if client.username == None:
-		respond(context, "Your ID is [b]%s[/b] and you have not registered" % (client.protocol_id()))
+		respond(context, "Your [b]%s[/b]! Your ID is [b]%s[/b] and you have not registered" % (client.name, client.protocol_id()))
 	else:
-		respond(context, "Your ID is [b]%s[/b] and your username is [b]%s[/b]" % (client.protocol_id(), client.username))
+		respond(context, "Your [b]%s[/b]! Your ID is [b]%s[/b] and your username is [b]%s[/b]" % (client.name, client.protocol_id(), client.username))
 
 @cmd_command(alias=['e'], privilege_level="registered")
 def fn_entity(map, client, context, arg):
@@ -1250,10 +1250,10 @@ def fn_entity(map, client, context, arg):
 
 	# ---------------------------------
 
-	def permission_check(perm):
+	def permission_check(perm, error=True):
 		if client.has_permission(e, perm, False):
 			return True
-		else:
+		elif error:
 			respond(context, "Don\'t have permission to use \"/entity %s\" on %s" % (subcommand, provided_id), error=True)
 			return False
 
@@ -1277,11 +1277,17 @@ def fn_entity(map, client, context, arg):
 		else:
 			respond(context, "Invalid picture", error=True)
 
+	elif subcommand == 'take' and permission_check(permission['move_new_map']):
+		e.switch_map(client.db_id)
+	elif subcommand in ('drop', 'summon') and permission_check( (permission['move'], permission['move_new_map']) ):
+		if e.map_id is client.map_id or permission_check(permission['move_new_map']):
+			e.switch_map(client.map_id, new_pos=[client.x, client.y])
+
 	elif subcommand == 'tags':
 		respond(context, "Tags: %s" % dumps_if_not_empty(e.tags))
-	elif subcommand == 'addtag' and permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
+	elif subcommand in ('addtag', 'settag') and permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
 		key, value = separate_first_word(subarg)
-		e.add_tag(key, value)
+		e.set_tag(key, value)
 	elif subcommand == 'deltag' and permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
 		e.del_tag(subarg)
 

@@ -160,7 +160,8 @@
     <input type="text" id="newtilename" value="new item"/>
     </p>
 
-    <input type="button" value="Object" onclick="newItemCreate('map_tile');" />
+    <input type="button" value="Generic" onclick="newItemCreate('generic');" />
+    <input type="button" value="Map tile" onclick="newItemCreate('map_tile');" />
     <input type="button" value="Text" onclick="newItemCreate('text');" />
     <input type="button" value="Image" onclick="newItemCreate('image');" />
     <input type="button" value="Tileset" onclick="newItemCreate('tileset');" />
@@ -226,23 +227,24 @@
     </div>
     </p>
 
+    <div id="edittilemaptile">
     <p>
     Item type<br>
     <select id="edittiletype">
-      <option value="0">Normal</option>
-      <option value="1">Sign</option>
-      <option value="2">Door</option>
-      <option value="3">Container</option>
-      <option value="4">Ice</option>
-      <option value="5">Escalator</option>
-      <option value="6">Water</option>
+      <option value="">Normal</option>
+      <option value="sign">Sign</option>
+<!--      <option value="door">Door</option>
+      <option value="ice">Ice</option>
+      <option value="escalator">Escalator</option>
+      <option value="water">Water</option> -->
     </select>
     </p>
 
     <p>
     <input type="checkbox" id="edittiledensity"><label for="edittiledensity" class="unselectable">Item is an obstacle (dense)</label></input><br>
-    <input type="checkbox" id="edittileisobject"><label for="edittileobject" class="unselectable">Item is a map tile</label></input>
+    <input type="checkbox" id="edittileisobject"><label for="edittileisobject" class="unselectable">Item is a map tile</label></input>
     </p>
+    </div>
     </div>
 
     <br>

@@ -57,6 +57,7 @@ Displays someone's last login/logout time
 
 ---Movement---
 /map mapnumber
+/defaultmap
 Switch to a different map
 
 /goback
