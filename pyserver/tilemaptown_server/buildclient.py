@@ -90,7 +90,7 @@ class Client(Entity):
 			c = Database.cursor()
 			ip = ipaddress.ip_address(self.ip)
 			if ip.version == 4:
-				split = ip.exploded.split()
+				split = ip.exploded.split('.')
 				c.execute("""SELECT id, expires_at, reason FROM Server_Ban WHERE
                           (ip=?) or (
                           (ip4_1=? or ip4_1='*') and
@@ -98,7 +98,7 @@ class Client(Entity):
                           (ip4_3=? or ip4_3='*') and
                           (ip4_4=? or ip4_4='*'))""", (self.ip, split[0], split[1], split[2], split[3]))
 			elif ip.version == 6:
-				split = ip.exploded.split()
+				split = ip.exploded.split(':')
 				c.execute("""SELECT id, expires_at, reason FROM Server_Ban WHERE
                           (ip=?) or (
                           (ip6_1=? or ip6_1='*') and
