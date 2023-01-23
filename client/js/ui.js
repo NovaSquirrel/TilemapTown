@@ -484,7 +484,7 @@ function keyHandler(e) {
             }
           }
 */
-          logMessage("The sign says: "+convertBBCode(Obj.message), "server_message");
+          logMessage(((Obj.name != "sign" && Obj.name != "") ? Obj.name + " says: " : "The sign says: ") +convertBBCode(Obj.message), "server_message");
         }
         break;
       }
