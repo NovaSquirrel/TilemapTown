@@ -451,7 +451,7 @@ def fn_unwatch(map, client, context, arg):
 def fn_watchlist(map, client, context, arg):
 	respond(context, 'Watch list: '+str(client.watch_list))
 
-def permission_change(map, client, arg, command2):
+def permission_change(map, client, context, arg, command2):
 	# Check syntax
 	param = arg.lower().split(' ')
 	if len(param) < 2:
@@ -520,15 +520,15 @@ def permission_change(map, client, arg, command2):
 
 @cmd_command(category="Map", privilege_level="map_admin", syntax="permission user/!default", map_only=True)
 def fn_grant(map, client, context, arg):
-	permission_change(map, client, arg, 'grant')
+	permission_change(map, client, context, arg, 'grant')
 
 @cmd_command(category="Map", privilege_level="map_admin", syntax="permission user/!default/!guest", map_only=True)
 def fn_deny(map, client, context, arg):
-	permission_change(map, client, arg, 'deny')
+	permission_change(map, client, context, arg, 'deny')
 
 @cmd_command(category="Map", privilege_level="map_admin", syntax="permission user/!default/!guest", map_only=True)
 def fn_revoke(map, client, context, arg):
-	permission_change(map, client, arg, 'revoke')
+	permission_change(map, client, context, arg, 'revoke')
 
 @cmd_command(category="Map", map_only=True)
 def fn_permlist(map, client, context, arg):
@@ -1338,20 +1338,23 @@ def fn_entity(map, client, context, arg):
 		e.del_tag(subarg)
 
 	elif subcommand == 'do' and permission_check(permission['remote_command']):
-		handle_user_command(e.map, e, client, echo, subarg)
-
+		handle_user_command(e.map, e, client, context[1], subarg)
+	elif subcommand == 'move' and permission_check(permission['move']):
+		coords = subarg.split()
+		if len(coords) == 2 and coords[0].isnumeric() and coords[1].isnumeric():
+			e.move_to(int(coords[0]), int(coords[1]))
 	elif subcommand == 'perms':
-		fn_permlist(e, client, context, subarg)
+		handlers['permlist'](e, client, context, subarg)
 	elif subcommand == 'permsfor':
 		if subarg.isnumeric():
 			allow, deny = get_allow_deny_for_other_entity(self, other_id)
 			response(context, 'Allow: %s\nDeny: %s' % (permission_list_from_bitfield(allow), permission_list_from_bitfield(deny)))
 	elif subcommand == 'grant' and permission_check(permission['admin']):
-		permission_change(e, client, subarg, 'grant')
+		permission_change(e, client, context, subarg, 'grant')
 	elif subcommand == 'revoke' and permission_check(permission['admin']):
-		permission_change(e, client, subarg, 'deny')
+		permission_change(e, client, context, subarg, 'deny')
 	elif subcommand == 'deny' and permission_check(permission['admin']):
-		permission_change(e, client, subarg, 'revoke')
+		permission_change(e, client, context, subarg, 'revoke')
 
 	else:
 		respond(context, 'Unrecognized subcommand "%s"' % subcommand, error=True)

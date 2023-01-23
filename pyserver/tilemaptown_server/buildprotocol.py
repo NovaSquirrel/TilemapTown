@@ -83,7 +83,7 @@ def fn_MOV(map, client, arg):
 				client.send("ERR", {'text': 'Can\'t move entity %s because it\'s not on a map' % id})
 				return
 
-			del arg['id']
+			del arg['rc']
 			fn_MOV(entity.map, entity, arg)
 			return
 
@@ -299,7 +299,7 @@ def fn_BAG(map, client, arg):
 		elif "kick" in arg:
 			kick = arg['kick']
 			kick_me = get_entity_by_id(kick['id'])
-			if kick.map_id == client.db_id or client.has_permission(kick.map_id, (permission['admin'], permission['sandbox']), False):
+			if kick.map_id == client.db_id or client.has_permission(kick_me.map_id, (permission['admin'], permission['sandbox']), False):
 				kick.send_home()
 				client.send("BAG", {'kick': kick})
 

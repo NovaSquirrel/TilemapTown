@@ -594,9 +594,9 @@ class Entity(object):
 		return default
 
 	def del_tag(self, name):
-		if e.tags == None:
+		if self.tags == None:
 			return
-		e.tags.pop(name, None)
+		self.tags.pop(name, None)
 
 	# Database access
 
