@@ -110,7 +110,7 @@ class Entity(object):
 			if self.db_id != get_database_meta('default_map'):
 				temp = set(self.contents)
 				for u in temp:
-					if u.home_id != self.db_id and not u.has_permission(self, permission['persistent_object_entry'], False):
+					if not u.is_client() and u.home_id != self.db_id and not u.has_permission(self, permission['persistent_object_entry'], False):
 						u.send_home()
 
 			cleaned_up_already = True
@@ -507,7 +507,7 @@ class Entity(object):
 
 	def send_home(self):
 		""" If entity has a home, send it there. If not, find somewhere else suitable. """
-		if self.home != None and self.switch_map(self.home[0],
+		if self.home_id != None and self.switch_map(self.home_id,
 			new_pos=[self.home_position[0], self.home_position[1]] if (self.home_position and len(self.home_position) == 2) else None
 		):
 			return
