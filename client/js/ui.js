@@ -204,7 +204,7 @@ function editItem(key) {
       sheetselect.appendChild(el);
       el = document.createElement("option");
       el.textContent = "Extras";
-      el.value = 1;
+      el.value = -1;
       sheetselect.appendChild(el);
       // Now display everything in the inventory
       for(var i in DBInventory) {

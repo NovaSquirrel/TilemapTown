@@ -14,9 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import json, random, datetime
+import json, random, datetime, ipaddress
 from .buildglobal import *
-
 
 handlers = {}	# dictionary of functions to call for each command
 aliases = {}	# dictionary of commands to change to other commands
@@ -43,7 +42,7 @@ def cmd_command(alias=[], category="Miscellaneous", hidden=False, about=None, sy
 			aliases[a] = command_name
 		if map_only:
 			map_only_commands.add(command_name)
-		command_privilege_level[command_name] = privilege_level
+		command_privilege_level[command_name] = user_privilege[privilege_level]
 	return decorator
 
 # -------------------------------------
@@ -578,6 +577,15 @@ def fn_mymaps(map, client, context, arg):
 	maps += "[/ul]"
 	respond(context, maps)
 
+@cmd_command(category="Map", hidden=True, privilege_level="server_admin")
+def fn_allmaps(map, client, context, arg):
+	c = Database.cursor()
+	maps = "All maps: [ul]"
+	for row in c.execute('SELECT e.id, e.name, u.username FROM Entity e, Map m, User u WHERE e.owner_id=u.entity_id AND e.id=m.entity_id'):
+		maps += "[li][b]%s[/b] (%s) [command]map %d[/command][/li]" % (row[1], row[2], row[0])
+	maps += "[/ul]"
+	respond(context, maps)
+
 @cmd_command(category="Map")
 def fn_publicmaps(map, client, context, arg):
 	c = Database.cursor()
@@ -804,7 +812,7 @@ def fn_ipwho(map, client, context, arg):
 	for u in AllClients:
 		if len(names) > 0:
 			names += ', '
-		names += "%s [%s]" % (u.name_and_username(), u.ip or "?")
+		names += "%s [%s]" % (u.name_and_username(), ipaddress.ip_address(u.ip).exploded or "?")
 	respond(context, 'List of users connected: '+names)
 
 @cmd_command(category="Server Admin", privilege_level="server_admin", syntax="ip;reason;length")
@@ -819,6 +827,7 @@ def fn_ipban(map, client, context, arg):
 	ip = params[0]
 	if ip == '*.*.*.*': # oh no you don't
 		return
+
 	reason = params[1]
 	now = datetime.datetime.now()
 	expiry = params[2]
@@ -845,14 +854,27 @@ def fn_ipban(map, client, context, arg):
 		return
 
 	# If IPv4, split into four parts for masking
-	ipsplit = ip.split('.')
-	if len(ipsplit) != 4:
-		ipsplit = (None, None, None, None)
+	ipv4 = ip.split('.')
+	ipv6 = ip.split(':')
+	if len(ipv4) == 4:
+		ipsplit = parsed_ip.exploded.split('.')
+		if len(ipsplit) != 4:
+			ipsplit = (None, None, None, None)
 
-	# Insert the ban
-	c = Database.cursor()
-	c.execute("INSERT INTO Server_Ban (ip, ip1, ip2, ip3, ip4, admin_id, created_at, expires_at, reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",\
-		(ip, ipsplit[0], ipsplit[1], ipsplit[2], ipsplit[3], client.db_id, now, expiry, reason))
+		# Insert the ban
+		c = Database.cursor()
+		c.execute("INSERT INTO Server_Ban (ip, ip4_1, ip4_2, ip4_3, ip4_4, admin_id, created_at, expires_at, reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",\
+			(ip, ipv4[0], ipv4[1], ipv4[2], ipv4[3], client.db_id, now, expiry, reason))
+
+	elif len(ipv6) == 6:
+		# Insert the ban
+		c = Database.cursor()
+		c.execute("INSERT INTO Server_Ban (ip, ip6_1, ip6_2, ip6_3, ip6_4, ip6_5, ip6_6, ip6_7, ip6_7, admin_id, created_at, expires_at, reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",\
+			(ip, ipv6[0], ipv6[1], ipv6[2], ipv6[3], ipv6[4], ipv6[5], ipv6[6], ipv6[7], client.db_id, now, expiry, reason))
+	else:
+		respond(context, 'Invalid IP format "%s"' % ip, error=True)
+		return
+
 	Database.commit()
 	respond(context, 'Banned %s for "%s"; unban at %s' % (ip, reason, expiry or "never"))
 
@@ -900,6 +922,9 @@ def fn_defaultmap(map, client, context, arg):
 
 @cmd_command(category="Teleport", syntax="map")
 def fn_map(map, client, context, arg):
+	if arg == '0':
+		fn_defaultmap(map, client, context, None)
+		return
 	try:
 		if map_id_exists(int(arg)):
 			if client.switch_map(int(arg)):
@@ -953,6 +978,10 @@ def fn_register(map, client, context, arg):
 @cmd_command(category="Account", syntax="username password")
 def fn_login(map, client, context, arg):
 	if not client.is_client():
+		respond(context, 'Not a client', error=True)
+		return
+	if client.db_id:
+		respond(context, 'You are already logged in', error=True)
 		return
 	params = arg.split()
 	if len(params) != 2:
@@ -1212,7 +1241,10 @@ def fn_mygroups(map, client, context, arg):
 @cmd_command(privilege_level="registered", hidden=True)
 def fn_selfown(map, client, context, arg):
 	if client.is_client():
-		if len(arg):
+		if arg == '!':
+			client.owner_id = None
+			respond(context, "Reset your ownership to none")
+		elif len(arg):
 			id = find_db_id_by_username(arg)
 			if id == None:
 				failed_to_find(context, arg)

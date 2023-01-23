@@ -134,9 +134,6 @@ class Map(Entity):
 		c.execute('SELECT entity_id FROM Map WHERE entity_id=?', (self.db_id,))
 		if c.fetchone() == None:
 			c.execute("INSERT INTO Map (entity_id) VALUES (?)", (self.db_id,))
-			self.db_id = c.lastrowid
-			if self.db_id == None:
-				return
 
 		# Update the map
 		values = (self.map_flags, self.start_pos[0], self.start_pos[1], self.width, self.height, self.default_turf, self.db_id)

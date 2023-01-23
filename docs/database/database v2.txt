@@ -125,7 +125,7 @@ flags           - integer - user-specific flags
 id              * integer - mail id
 owner_id        - integer - ID of the user whose account the mail is sitting in
 sender_id       - integer - ID of the user who sent the mail (sender ID)
-recipients      - text    - comma separated list of all recipients, including the one for this copy of the mail
+recipients      - text    - comma separated list of all recipients' user IDs, including the one for this copy of the mail
 flags           - integer - flags (bit 0 = read)
 created_at      -timestamp- time the mail was sent
 subject         - text    - subject line of the mail

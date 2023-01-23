@@ -183,16 +183,20 @@ class Entity(object):
 			already_found.add(current)
 			if current.map in already_found:
 				return
+			current = current.map
 
 	def all_children(self):
 		already_found = set()
-		def search(container):
-			for item in container.contents:
-				yield item
-				if item.id not in already_found:
-					already_found.add(item.id)
-					search(item)
-		search(self)
+		queue = deque()
+		queue.append(self)
+		while queue:
+			item = queue.popleft()
+			for child in item.contents:
+				yield child
+				if child.id not in already_found:
+					already_found.add(child.id)
+					if len(child.contents):
+						queue.append(child)
 
 	def send_map_info(self, item):
 		item.send("MAI", {

@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio, datetime, random, websockets, json, hashlib
+import asyncio, datetime, random, websockets, json, hashlib, ipaddress
 from .buildglobal import *
 from .buildentity import *
 
@@ -67,11 +67,11 @@ class Client(Entity):
 
 	def add_to_contents(self, item):
 		super().add_to_contents(item)
-		added_to_child_contents(item) # Reuse since it's the same code
+		self.added_to_child_contents(item) # Reuse since it's the same code
 
 	def remove_from_contents(self, item):
 		super().remove_from_contents(item)
-		removed_from_child_contents(item) # Reuse since it's the same code
+		self.removed_from_child_contents(item) # Reuse since it's the same code
 
 	def added_to_child_contents(self, item):
 		""" Called on parents when add_to_contents is called here """
@@ -88,14 +88,26 @@ class Client(Entity):
 		# Look for IP bans
 		if self.ip != '':
 			c = Database.cursor()
-			split = self.ip.split('.')
-			if len(split) == 4:
+			if ip.version == 4:
+				split = ip.exploded.split()
 				c.execute("""SELECT id, expires_at, reason FROM Server_Ban WHERE
                           (ip=?) or (
-                          (ip1=? or ip1='*') and
-                          (ip2=? or ip2='*') and
-                          (ip3=? or ip3='*') and
-                          (ip4=? or ip4='*'))""", (self.ip, split[0], split[1], split[2], split[3]))
+                          (ip4_1=? or ip4_1='*') and
+                          (ip4_2=? or ip4_2='*') and
+                          (ip4_3=? or ip4_3='*') and
+                          (ip4_4=? or ip4_4='*'))""", (self.ip, split[0], split[1], split[2], split[3]))
+			elif ip.version == 6:
+				split = ip.exploded.split()
+				c.execute("""SELECT id, expires_at, reason FROM Server_Ban WHERE
+                          (ip=?) or (
+                          (ip6_1=? or ip6_1='*') and
+                          (ip6_2=? or ip6_2='*') and
+                          (ip6_3=? or ip6_3='*') and
+                          (ip6_4=? or ip6_4='*') and
+                          (ip6_5=? or ip6_5='*') and
+                          (ip6_6=? or ip6_6='*') and
+                          (ip6_7=? or ip6_7='*') and
+                          (ip6_8=? or ip6_8='*'))""", (self.ip, split[0], split[1], split[2], split[3], split[4], split[5], split[6], split[7]))
 			else:
 				c.execute('SELECT id, expires_at, reason FROM Server_Ban WHERE ip=?', (self.ip,))
 
