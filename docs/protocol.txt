@@ -33,7 +33,7 @@ get a partial (or complete) copy of the map
 (currently server-->client only)
 
 --> MAI
-<-- MAI {"name": map_name, "id": map_id, "owner": whoever, "admins": list, "default": default_turf, "size": [width, height], "public": true/false, "private": true/false, "build_enabled": true/false, "full_sandbox": true/false}
+<-- MAI {"name": map_name, "id": map_id, "owner": whoever, "admins": list, "default": default_turf, "size": [width, height], "public": true/false, "private": true/false, "build_enabled": true/false, "full_sandbox": true/false, "you_allow": list, "you_deny": list}
 map info stuff.
 Optionally also defines "entry_whitelist", "entry_banlist" and "start_pos" for map admins
 
@@ -69,8 +69,11 @@ tileset received from the server
 <-- WHO {"add": {"name": name, "pic": [s, x, y], "x": x, "y": y, "dir", dir, "id": id}}
 <-- WHO {"update": {"id": id, other fields}}
 <-- WHO {"remove": id}
+<-- WHO {"new_id": {"id": old_id, "new_id", id}}
 "add" can be used to do an update too, where it will replace a whole entry with new data.
 "update" can be used for partial updates, where only the fields present in the message are updated and other fields are left alone.
+"remove" requests that a specific item be removed.
+"new_id" is mostly used when a temporary object gets saved to the database, 
 
 Clients can send updates about themselves, but only keys that the servers knows to be OK, such as "typing".
 For client-to-server WHO updates, "id" is currently ignored, but it should be the same value the client received in the "you" field.
@@ -84,8 +87,14 @@ log into the server with or without an account
 --> MSG {"text": "[text]"}
 message
 
---> CMD {"text": "[text]"}
-command
+--> CMD {"text": "[text]", "echo": value, "rc": id}
+<-- CMD {"text": "[text]", "echo": value, "data": {}}
+Do a command.
+"echo" is optional, and will be returned in the response, if there is one.
+Command may have a machine-readable response if "echo" is provided, provided in "data".
+
+If "rc" is supplied, the server will act as if the entity specified in the ID did the command instead, returning the command results to you instead.
+For "rc", you need to either be the owner or have "remote_command" permissions on the object.
 
 <-- MSG {"text": "[text]", "name": speaker, "class": classname, "username": username}
 <-- MSG {"text": "[text]", "name": speaker, "class": classname, "buttons": ["name 1", "command 1", "name 2", "command 2"]}
@@ -124,41 +133,62 @@ resources link?
 (not implemented)
 
 === Items ===
-In addition to regular building objects there will be items that can't just be copied endlessly.
-To be added to the game later.
-
---> DRO {"id": id, "pos":[0,0]}
-<-- DRO {"id": id, "pos":[0,0]}
-drop item and get confirmation
-(not implemented)
-
---> TAK {"id": id, "pos":[0,0]}
-<-- TAK {"id": id, "pos":[0,0]}
-take item and get confirmation
-(not implemented)
+--> MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "rc": 0}
+<-- MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "rc": 0}
+Move something else within the same container as you, if you are allowed to
 
 --> USE {"id": id}
-use item
+Use item
 (not implemented)
 
 
 --> BAG {"create": {"name": name, "type": type}}
-create a new item of a given type
+--> BAG {"create": {"name": name, "type": type, "temp": true/false}}
+Create a new item of a given type
+Can create a temporary object instead if you like
 
---> BAG {"update": {"id": id, "name": name, "desc": desc, "flags": flags, "folder": folder, "data": data}}
-update one specific item
+--> BAG {"update": {"id": id, "name": name, "desc": desc, "flags": flags, "folder": folder, "data": data, "allow": allow, "deny": deny, "guest_deny": deny, "tags": tags, ...}}
+Update one specific item
 
---> BAG {"delete": id}
-delete an item
+--> BAG {"move": {"id": id, "folder": map, "pos": [x,y]}}
+Moves an entity to another position. "pos" is optional.
 
---> BAG {"clone": id}
-make an exact clone of an item with a new ID
+--> BAG {"delete": {"id": id}}
+Delete an item
 
-<-- BAG {"list": [{item info}]}
-receive a list of items from the server
+--> BAG {"kick": {"id": id}}
+Send an entity to its home
+
+--> BAG {"clone": {"id": id}}
+--> BAG {"clone": {"id": id}, "temp": true/false}
+Make an exact clone of an item with a new ID.
+Can make the new object temporary or non-temporary regardless of if the original object was.
+
+--> BAG {"info": {"id": id}}
+Request information on an item, whether or not it's in your inventory.
+
+<-- BAG {"info": {"id": id, ...}}
+Information about an item somewhere. Message doesn't add the item to a container client-side.
 
 <-- BAG {"update": {item info}}
-update one item with information from the server
+<-- BAG {"list": [{item info}], "container": id, "clear": false}
+Receive an item or list of items from the server. Lists don't replace the client-side list, unless "clear" is specified.
+"container" specifies that the items are for a specific ID; otherwise it's assume it's the player than the player.
+"clear" specifies that the client-side inventory list for this container should be cleared before adding these.
 
-<-- BAG {"remove": id}
-remove one item from the inventory
+<-- BAG {"new_id": {"id": old_id, "new_id": id}}
+Update the ID of one item in the player's inventory
+
+<-- BAG {"remove": {"id": id}}
+Remove one item from the inventory
+
+Item info fields:
+(Used for "update", "list", and "info")
+	id
+	name
+	desc
+	type
+	flags
+	folder
+	data
+	tags

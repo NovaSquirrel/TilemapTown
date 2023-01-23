@@ -78,7 +78,6 @@ tags            - text    - user tags as JSON
 
 
 ---ASSET_INFO---
-(unimplemented)
 aid             * integer - asset ID
 name            - text    - name of asset
 desc            - text    - description

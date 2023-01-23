@@ -63,8 +63,8 @@ var NeedMapRedraw = false;
 var NeedInventoryUpdate = false;
 var TickCounter = 0;   // Goes up every 20ms, wraps at 0x10000 (hex)
 var AnimationTick = 0; // Goes up every 20ms, wraps at 10000 (decimal)
-var DisplayInventory = {null: []};
-var DBInventory = {};
+var DisplayInventory = {null: []}; // Indexed by folder
+var DBInventory = {}; // Indexed by ID
 var OpenFolders = {};
 
 function getRandomInt(min, max) {
@@ -167,21 +167,30 @@ function editItem(key) {
   document.getElementById('edittilename').value = item.name;
   document.getElementById('edittiledesc').value = item.desc;
   switch(item.type) {
-    case 1: // text
+    case "text":
       document.getElementById('edittiletext').style.display = "block";
       if(item.data)
         document.getElementById('edittiletextarea').value = item.data;
       else
         document.getElementById('edittiletextarea').value = "";
       break;
-    case 2: // image
+    case "image":
       document.getElementById('edittileimage').style.display = "block";
       document.getElementById('edittileurl').value = item.data;
       break;
-    case 3: // object
-      itemobj = AtomFromName(item.data);
-      if(itemobj == null) {
-        itemobj = {pic: [0, 8, 24]};
+
+    case "generic":
+    case "map_tile":
+      if(item.type == "map_tile") {
+        itemobj = AtomFromName(item.data);
+        if(itemobj == null) {
+          itemobj = {pic: [0, 8, 24]};
+        }
+      } else {
+        if("pic" in item)
+          itemobj = {pic: item.pic};
+        else
+          itemobj = {pic: [0, 8, 24]};
       }
 
       // Display all the available images assets in the user's inventory
@@ -195,11 +204,11 @@ function editItem(key) {
       sheetselect.appendChild(el);
       el = document.createElement("option");
       el.textContent = "Extras";
-      el.value = 1;
+      el.value = -1;
       sheetselect.appendChild(el);
       // Now display everything in the inventory
       for(var i in DBInventory) {
-        if(DBInventory[i].type == InventoryTypes.IMAGE) {
+        if(DBInventory[i].type == "image") {
           el = document.createElement("option");
           el.textContent = DBInventory[i].name;
           el.value = DBInventory[i].id;
@@ -208,16 +217,24 @@ function editItem(key) {
       }
       // Probably also allow just typing in something?
 
+      document.getElementById('edittilemaptile').style.display = item.type == "map_tile" ? "block" : "none";
       document.getElementById('edittileobject').style.display = "block";
       document.getElementById('edittilesheet').value = itemobj.pic[0];
       document.getElementById('edittilex').value = itemobj.pic[1];
       document.getElementById('edittiley').value = itemobj.pic[2];
-      document.getElementById('edittiletype').selectedIndex = itemobj.type;
+      var index_for_type = 0;
+      switch(itemobj.type) {
+        case "sign":
+          index_for_type = 1;
+          break;
+      }
+      document.getElementById('edittiletype').selectedIndex = index_for_type;
       document.getElementById('edittiledensity').checked = itemobj.density;
       document.getElementById('edittileisobject').checked = !itemobj.obj;
       editItemUpdatePic();
 
-      document.getElementById('edittilesheetselect').src = IconSheets[itemobj.pic[0] || 0].src;
+      if(IconSheets[itemobj.pic[0] || 0] != undefined)
+        document.getElementById('edittilesheetselect').src = IconSheets[itemobj.pic[0] || 0].src;
       break;
   }
 
@@ -232,14 +249,14 @@ function editItem(key) {
   el.value = "-1";
   select.appendChild(el);
   for(var i in DBInventory) {
-    if(DBInventory[i].type == 6) { // folder
+    if(DBInventory[i].type == "folder") { // folder
       el = document.createElement("option");
       el.textContent = DBInventory[i].name;
       el.value = DBInventory[i].id;
       select.appendChild(el);
     }
   }
-  document.getElementById('edittilefolder').value = item.folder || -1;
+  document.getElementById('edittilefolder').value = (item.folder != PlayerYou ? item.folder : -1) || -1;
 
   // show the window
   document.getElementById('editItemWindow').style.display = "block";
@@ -250,15 +267,15 @@ function useItem(Placed) {
   var PlayerY = PlayerWho[PlayerYou].y;
 
   switch(Placed.type) {
-    case 6: // folder
+    case "folder": // folder
       OpenFolders[Placed.id] = !OpenFolders[Placed.id];
       NeedInventoryUpdate = true;
       break;
-    case 4: // tileset
+    case "tileset": // tileset
       viewTileset(Placed);
       console.log("Open tileset thing");
       break;
-    case 3: // object
+    case "map_tile": // object
       var ActualAtom = AtomFromName(Placed.data);
       // place the item on the ground
       if(ActualAtom.obj) {
@@ -599,7 +616,10 @@ function drawMap() {
       }
 
     } else {
-      ctx.drawImage(IconSheets[Mob.pic[0]], Mob.pic[1]*16, Mob.pic[2]*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
+      pic = Mob.pic;
+      if(pic == null)
+        pic = [0, 8, 24];
+      ctx.drawImage(IconSheets[pic[0]], pic[1]*16, pic[2]*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
     }
 
     // typing indicators
@@ -649,6 +669,7 @@ function drawText(ctx, x, y, text) {
 }
 
 function drawSelector() {
+  // This draws the hotbar on the bottom
   var canvas = document.getElementById("selector");
   var ctx = canvas.getContext("2d");
 
@@ -660,10 +681,11 @@ function drawSelector() {
   var oneWidth = canvas.width/10;
   for(var i=0; i<10; i++) {
     drawText(ctx, i*oneWidth, 0, ((i+1)%10)+"");
-    var item = AtomFromName(DisplayInventory[null][i]);
-    if(item) {
-      ctx.drawImage(IconSheets[item.pic[0]], item.pic[1]*16, item.pic[2]*16, 16, 16, i*oneWidth+16, 0, 16, 16);
-    }
+// TODO: figure out what to display down here later?
+//    var item = AtomFromName(DisplayInventory[null][i]);
+//    if(item) {
+//      ctx.drawImage(IconSheets[item.pic[0]], item.pic[1]*16, item.pic[2]*16, 16, 16, i*oneWidth+16, 0, 16, 16);
+//    }
   }
 }
 
@@ -675,21 +697,27 @@ function tickWorld() {
     DisplayInventory = {null: []};
 
     for(var key in DBInventory) {
-      if(DBInventory[key].type == 3 || DBInventory[key].type == 4) { // object or tileset
+      if(DBInventory[key].type == "map_tile" || DBInventory[key].type == "tileset") { // object or tileset
         if(typeof DBInventory[key].data == "string" &&
           (DBInventory[key].data[0] == '[' || DBInventory[key].data[0] == '{')) // convert from JSON if needed
           DBInventory[key].data = JSON.parse(DBInventory[key].data);
       }
 
       let updated = DBInventory[key];
+      if(updated.folder == PlayerYou)
+        updated.folder = null;
 
       // always reload the picture, for now
       if(true) {
         switch(updated.type) {
-          case 0: // dummy
+          default: // dummy
             updated.pic = [0, 8, 24];
             break;
-          case 3: // object
+          case "generic":
+            if(updated.pic == null)
+              updated.pic = [0, 8, 24];
+            break;
+          case "map_tile": // object
             // allow for string data like "grass"
             var temp = AtomFromName(updated.data);
             if(temp && temp.pic) {
@@ -698,19 +726,19 @@ function tickWorld() {
               updated.pic = [0, 8, 24];
             }
             break;
-          case 1: // text
+          case "text":
             updated.pic = [0, 0, 24];
             break;
-          case 2: // image
+          case "image":
             updated.pic = [0, 11, 20];
             break;
-          case 4: // tileset
+          case "tileset":
             updated.pic = [0, 19, 18];
             break;
-          case 5: // reference
+          case "reference":
             updated.pic = [0, 9, 22];
             break;
-          case 6: // folder
+          case "folder":
             if(OpenFolders[updated.id])
               updated.pic = [0, 2, 20];
             else
@@ -1017,7 +1045,7 @@ function initBuild() {
       var index = pos.y * BuildWidth + pos.x;
 
       if(evt.button == 0)
-        useItem({type: 3, data: PredefinedArrayNames[index]});
+        useItem({type: 'map_tile', data: PredefinedArrayNames[index]});
 //      else if(evt.button == 2)
 //        addInventory(PredefinedArrayNames[index]);
     }, false);
@@ -1187,7 +1215,6 @@ function updateInventoryUL() {
 
 function toggleDisplay(element) {
   element.style.display = element.style.display == 'block' ? 'none' : 'block';
-
 }
 
 function viewUsers() {
@@ -1247,12 +1274,15 @@ function updateUsersUL() {
     img.style.height = "16px";
     var src = "";
     // allow custom avatars
-    if(key in PlayerImages && typeof user.pic[0] == "string")
+    if(key in PlayerImages && user.pic != null && typeof user.pic[0] == "string")
       src = PlayerImages[key].src;
     // as well as built-in ones
-    if(IconSheets[user.pic[0]])
-      src = IconSheets[user.pic[0]].src;
-    var background = "url("+src+") -"+(user.pic[1]*16)+"px -"+(user.pic[2]*16)+"px";
+    pic = [0, 8, 24];
+    if(user.pic != null)
+      pic = user.pic;
+    if(IconSheets[pic[0]])
+      src = IconSheets[pic[0]].src;
+    var background = "url("+src+") -"+(pic[1]*16)+"px -"+(pic[2]*16)+"px";
     img.style.background = background;
 
     // build the list item
@@ -1453,13 +1483,15 @@ function loginButton() {
 function editItemApply() {
   var edittilename = document.getElementById('edittilename').value;
   var edittiledesc = document.getElementById('edittiledesc').value;
+  if(edittiledesc == "")
+    edittiledesc = null;
   var edittilefolder = parseInt(document.getElementById('edittilefolder').value, 10);
   if(edittilefolder == -1) {
-    edittilefolder = null;
+    edittilefolder = PlayerYou;
   }
 
   switch(editItemType) {
-    case 1: // text
+    case "text":
       SendCmd("BAG", {
         update: {"id": editItemID,
                  "name": edittilename,
@@ -1471,7 +1503,7 @@ function editItemApply() {
 
       break;
 
-    case 2: // image
+    case "image":
       SendCmd("BAG", {
         update: {"id": editItemID,
                  "name": edittilename,
@@ -1482,12 +1514,13 @@ function editItemApply() {
       });
       break;
 
-    case 3: // object
+    case "map_tile":
+    case "generic":
       // Gather item info
       var edittilesheet = parseInt(document.getElementById('edittilesheet').value);
       var edittilex = parseInt(document.getElementById('edittilex').value);
       var edittiley = parseInt(document.getElementById('edittiley').value);
-      var edittiletype = parseInt(document.getElementById('edittiletype').value);
+      var edittiletype = document.getElementById('edittiletype').value;
       var edittiledensity = document.getElementById('edittiledensity').checked;
       var edittileobject = !document.getElementById('edittileisobject').checked;
 
@@ -1501,14 +1534,25 @@ function editItemApply() {
       if(edittiletype)
         item.type = edittiletype;
 
-      SendCmd("BAG", {
-        update: {"id": editItemID,
-                 "name": edittilename,
-                 "desc": edittiledesc,
-                 "folder": edittilefolder,
-                 "data": JSON.stringify(item)
-                }
-      });
+      if(editItemType == "map_tile") {
+        SendCmd("BAG", {
+          update: {"id": editItemID,
+                   "name": edittilename,
+                   "desc": edittiledesc,
+                   "folder": edittilefolder,
+                   "data": JSON.stringify(item)
+                  }
+        });
+      } else if(editItemType == "generic") {
+        SendCmd("BAG", {
+          update: {"id": editItemID,
+                   "name": edittilename,
+                   "desc": edittiledesc,
+                   "folder": edittilefolder,
+                   "pic": item.pic
+                  }
+        });
+      }
       break;
 
     default: // just update name then
@@ -1525,14 +1569,14 @@ function editItemApply() {
 }
 
 function editItemClone() {
-  SendCmd("BAG", { clone: editItemID });
+  SendCmd("BAG", {"clone": {"id": editItemID} });
   editItemCancel();
 }
 
 function editItemDelete() {
   if(!confirm("Really delete?"))
     return;
-  SendCmd("BAG", {"delete": editItemID});
+  SendCmd("BAG", {"delete": {"id": editItemID} });
   editItemCancel();
 }
 
