@@ -167,6 +167,9 @@ Can make the new object temporary or non-temporary regardless of if the original
 --> BAG {"info": {"id": id}}
 Request information on an item, whether or not it's in your inventory.
 
+--> BAG {"list_contents": {"id": id}}
+Get a BAG "list" in return for the container you picked, if you have permission.
+
 <-- BAG {"info": {"id": id, ...}}
 Information about an item somewhere. Message doesn't add the item to a container client-side.
 

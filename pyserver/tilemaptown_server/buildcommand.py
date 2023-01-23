@@ -1304,8 +1304,8 @@ def fn_entity(map, client, context, arg):
 
 	# ---------------------------------
 
-	def permission_check(perm, error=True):
-		if client.has_permission(e, perm, False):
+	def permission_check(perm, default=False, error=True):
+		if client.has_permission(e, perm, default):
 			return True
 		elif error:
 			respond(context, "Don\'t have permission to use \"/entity %s\" on %s" % (subcommand, provided_id), error=True)
@@ -1341,7 +1341,8 @@ def fn_entity(map, client, context, arg):
 		e.switch_map(client.db_id)
 	elif subcommand in ('drop', 'summon') and permission_check( (permission['move'], permission['move_new_map']) ):
 		if e.map_id is client.map_id or permission_check(permission['move_new_map']):
-			e.switch_map(client.map_id, new_pos=[client.x, client.y])
+			if not e.switch_map(client.map_id, new_pos=[client.x, client.y]):
+				respond(context, "Entity \"%s\" doesn't have permission to go to this map" % provided_id, error=True)
 
 	elif subcommand == 'tags':
 		respond(context, "Tags: %s" % dumps_if_not_empty(e.tags))

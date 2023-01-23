@@ -80,20 +80,22 @@ permission['map_bot']                 = 0x0020 # user is given bot-related permi
 permission['move']                    = 0x0040 # user can move this object around within the same container
 permission['move_new_map']            = 0x0080 # user can move this object to a new map
 permission['bulk_build']              = 0x0100 # user can use the builk building protocol commands
-permission['object_entry']            = 0x0200 # user can bring objects here temporarily
-permission['persistent_object_entry'] = 0x0400 # user can bring objects here persistently
+permission['object_entry']            = 0x0200 # user can bring non-client entities here
+permission['persistent_object_entry'] = 0x0400 # user can bring non-client entities here persistently (will kick clients out when unloading if not true)
 permission['modify_properties']       = 0x0800 # user can modify the properties of this entity
 permission['remote_command']          = 0x1000 # user can make this entity do arbitrary commands
 permission['modify_appearance']       = 0x2000 # user can modify visual properties, like picture or description
+permission['list_contents']           = 0x4000 # user can look at the contents of this entity
+permission['all']                     = 0xffffffff # future proofing!
 
 def permission_list_from_bitfield(bitfield):
-	return [key for key in permission if (permission[key] & bitfield)]
+	return [key for key in permission if ((permission[key] & bitfield) and (permission[key].bit_count() == 1))]
 
 def bitfield_from_permission_list(permission_list):
 	out = 0
 	for p in permission_list:
 		if p in permission:
-			out |= permission_list[p]
+			out |= permission[p]
 	return out
 
 # Map flags

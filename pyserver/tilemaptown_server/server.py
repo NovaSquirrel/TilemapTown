@@ -84,13 +84,13 @@ async def client_handler(websocket, path):
 
 	print("connected: %s %s" % (path, client.ip))
 
-	try:
-		while True:
+	while client.ws != None:
+		try:
 			# Read a message, make sure it's not too short
 			message = await websocket.recv()
 			if len(message) < 3:
 				continue
-            # Split the message into parts, to parse it
+			# Split the message into parts, to parse it
 			command = message[0:3]
 			arg = {}
 			if len(message) > 4:
@@ -126,14 +126,15 @@ async def client_handler(websocket, path):
 				else:
 					handle_protocol_command(client.map, client, command, arg) # client.map may be None
 
-	except websockets.ConnectionClosed:
-		print("disconnected: %s (%s, \"%s\")" % (client.ip, client.username or "?", client.name))
-		client.ws = None
-	except:
-		print("Unexpected error:", sys.exc_info()[0])
-		print(sys.exc_info()[1])
-		traceback.print_tb(sys.exc_info()[2])
-	#	raise
+		except websockets.ConnectionClosed:
+			print("disconnected: %s (%s, \"%s\")" % (client.ip, client.username or "?", client.name))
+			client.ws = None
+		except:
+			client.send("ERR", {'text': 'An exception was thrown: %s' % sys.exc_info()[0]})
+			print("Unexpected error:", sys.exc_info()[0])
+			print(sys.exc_info()[1])
+			traceback.print_tb(sys.exc_info()[2])
+		#	raise
 
 	if client.db_id:
 		client.save_on_clean_up = True

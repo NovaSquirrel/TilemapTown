@@ -149,13 +149,13 @@ def fn_BAG(map, client, arg):
 			client.add_to_contents(e)
 
 		elif "clone" in arg:
-			clone_me = get_entity_by_id(allow_special_ids(arg['clone']))
+			clone_me = get_entity_by_id(allow_special_ids(arg['clone']['id']))
 			if clone_me == None:
-				client.send("ERR", {'text': 'Can\'t clone %s' % arg['clone']})
+				client.send("ERR", {'text': 'Can\'t clone %s' % arg['clone']['id']})
 				return
 
 			if clone_me.owner_id != client.db_id and not client.has_permission(clone_me, permission['copy'], False):
-				client.send("ERR", {'text': 'You don\'t have permission to clone %s' % arg['clone']})
+				client.send("ERR", {'text': 'You don\'t have permission to clone %s' % arg['clone']['id']})
 				return
 
 			# Create a new entity and copy over the properties
@@ -164,21 +164,21 @@ def fn_BAG(map, client, arg):
 			if 'temp' in arg['clone']: # Can change the temporary status
 				if arg['clone']['temp'] == True:
 					clone_me.temporary = True
-				else:
+				elif arg['clone']['temp'] == False:
 					clone_me.temporary = False
 			new_item.owner_id = client.db_id
 
 			if not new_item.temporary:
 				new_item.save()
 			# Put it in the player's inventory now, or wherever else they put it
-			if 'folder' in args['clone']:
-				new_item.switch_map(args['clone']['folder'], new_pos=args['clone']['pos'] if 'pos' in args['clone'] else None)
+			if 'folder' in arg['clone']:
+				new_item.switch_map(args['clone']['folder'], new_pos=arg['clone']['pos'] if 'pos' in arg['clone'] else None)
 			else:
 				client.add_to_contents(new_item)
 
 			# Update created_at and acquired_at
 			if new_item.db_id:
-				c.execute('SELECT created_at FROM Entity WHERE id=?', (arg['clone'],))
+				c.execute('SELECT created_at FROM Entity WHERE id=?', (clone_me.db_id,))
 				result = c.fetchone()
 				if result != None:
 					c.execute('UPDATE Entity SET created_at=?, acquired_at=? WHERE id=?', (result[0], datetime.datetime.now(), new_item.db_id))
@@ -281,7 +281,7 @@ def fn_BAG(map, client, arg):
 			move = arg['move']
 			move_me = get_entity_by_id(move['id'])
 			if 'folder' not in move and client.has_permission(move['move']):
-				move_to(self, x, y)
+				move_me.move_to(x, y)
 			elif 'folder' in move and client.has_permission(move['folder'], (permission['object_entry'], permission['persistent_object_entry']), False):
 				if 'pos' in move:
 					if client.has_permission(move_me, permission['move_new_map'], False):
@@ -339,6 +339,17 @@ def fn_BAG(map, client, arg):
 			if info_me.is_client(): # No spying
 				del bag_info['folder']
 			client.send("BAG", {'info': bag_info})
+
+		elif "list_contents" in arg:
+			list_contents = arg['list_contents']
+			list_me = get_entity_by_id(list_contents['id'])
+			if list_me == None:
+				client.send("ERR", {'text': 'Can\'t list contents for %s' % list_contents['id']})
+				return
+			if list_me.owner_id != client.db_id and not client.has_permission(list_me, permission['list_contents'], False):
+				client.send("ERR", {'text': 'Don\'t have permission to list contents for %s' % list_contents['id']})
+				return
+			client.send("BAG", {'list': [child.bag_info() for child in self.all_children()], 'container': list_me.protocol_id(), 'clear': True})
 
 	else:
 		client.send("ERR", {'text': 'Guests don\'t have an inventory currently. Use [tt]/register username password[/tt]'})

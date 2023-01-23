@@ -106,6 +106,13 @@ class Entity(object):
 			if self.vehicle:
 				self.dismount()
 
+			# Get rid of any contents that don't have persistent_object_entry permission
+			if self.db_id != get_database_meta('default_map'):
+				temp = set(self.contents)
+				for u in temp:
+					if u.home_id != self.db_id and not u.has_permission(self, permission['persistent_object_entry'], False):
+						u.send_home()
+
 			cleaned_up_already = True
 
 	def send(self, commandType, commandParams):
@@ -470,9 +477,7 @@ class Entity(object):
 				if added_new_history:
 					self.tp_history.pop()
 				return False
-			if not self.has_permission(map_load,
-				permission['entry'] if self.is_client() else (permission['object_entry'], permission['persistent_object_entry']),
-				True):
+			if not self.has_permission(map_load, permission['entry'] if self.is_client() else permission['object_entry'], True): # probably don't need to check persistent_object_entry
 				self.send("ERR", {'text': 'You don\'t have permission to go to map %d' % map_id})
 				if added_new_history:
 					self.tp_history.pop()
