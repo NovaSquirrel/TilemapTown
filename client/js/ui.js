@@ -573,6 +573,7 @@ function drawMap() {
     }
 
     var Mob = PlayerWho[index];
+    var playerIs16x16 = false;
     if(index in PlayerImages) {
       let tilesetWidth = PlayerImages[index].naturalWidth;
       let tilesetHeight = PlayerImages[index].naturalHeight;
@@ -580,7 +581,7 @@ function drawMap() {
         draw32x32Player(index, 0, 0);
       } else if(tilesetWidth == 16 && tilesetHeight == 16) {
         ctx.drawImage(PlayerImages[index], 0, 0, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
-
+        playerIs16x16 = true;
       } else {
         let frameX = 0, frameY = 0;
         let frameCountFromAnimationTick = Math.floor(AnimationTick / 5);
@@ -620,26 +621,29 @@ function drawMap() {
       if(pic == null)
         pic = [0, 8, 24];
       ctx.drawImage(IconSheets[pic[0]], pic[1]*16, pic[2]*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
+      playerIs16x16 = true;
     }
+
+    var heightForPlayerStatus = (playerIs16x16 ? 16 : 28);
 
     // typing indicators
     if(Mob.typing) {
-      ctx.drawImage(IconSheets[0], 0, 24*16, 16, 16, (Mob.x*16)-PixelCameraX, ((Mob.y-1)*16)-PixelCameraY, 16, 16);
+      ctx.drawImage(IconSheets[0], 0, 24*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY-heightForPlayerStatus, 16, 16);
     }
 
     // carry text and nametags
     if(IsMousedOver && !(!Mob.is_following && Mob.vehicle)) {
       if(Mob.passengers.length > 0) {
-        drawText(ctx, (Mob.x*16)-PixelCameraX-(Mob.name.length * 8 / 2 - 8), (Mob.y*16)-PixelCameraY-24, Mob.name);
+        drawText(ctx, (Mob.x*16)-PixelCameraX-(Mob.name.length * 8 / 2 - 8), (Mob.y*16)-PixelCameraY-heightForPlayerStatus-8, Mob.name);
         var carryNames = [];
         for(var passenger_index of Mob.passengers) {
           carryNames.push(PlayerWho[passenger_index].username);
         }
         var carryText = "carrying: " + carryNames.join(", ");
 
-        drawText(ctx, (Mob.x*16)-PixelCameraX-(carryText.length * 8 / 2 - 8), (Mob.y*16)-PixelCameraY-16, carryText);
+        drawText(ctx, (Mob.x*16)-PixelCameraX-(carryText.length * 8 / 2 - 8), (Mob.y*16)-PixelCameraY-heightForPlayerStatus, carryText);
       } else {
-        drawText(ctx, (Mob.x*16)-PixelCameraX-(Mob.name.length * 8 / 2 - 8), (Mob.y*16)-PixelCameraY-16, Mob.name);
+        drawText(ctx, (Mob.x*16)-PixelCameraX-(Mob.name.length * 8 / 2 - 8), (Mob.y*16)-PixelCameraY-heightForPlayerStatus, Mob.name);
       }
     }
   }
