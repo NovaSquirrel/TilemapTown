@@ -280,7 +280,9 @@ def fn_BAG(map, client, arg):
 		elif "move" in arg:
 			move = arg['move']
 			move_me = get_entity_by_id(move['id'])
-			if client.has_permission(move['folder'], (permission['object_entry'], permission['persistent_object_entry']), False):
+			if 'folder' not in move and client.has_permission(move['move']):
+				move_to(self, x, y)
+			elif 'folder' in move and client.has_permission(move['folder'], (permission['object_entry'], permission['persistent_object_entry']), False):
 				if 'pos' in move:
 					if client.has_permission(move_me, permission['move_new_map'], False):
 						move_me.switch_map(move['folder'], new_pos=move['pos'])

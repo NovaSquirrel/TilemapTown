@@ -478,6 +478,17 @@ def permission_change(map, client, context, arg, command2):
 		return
 
 	# Group permissions (also works for entities)
+	if param[1].isnumeric():
+		as_int = int(param[1])
+		test = get_entity_type_by_db_id(as_int)
+		if test == None:
+			respond(context, 'Entity not found: "%s"' % param[1], error=True)
+			return
+		else:
+			map.change_permission_for_entity(as_int, permission_value, True if command2=="grant" else None)
+			map.broadcast("MSG", {'text': "%s sets group \"%s\"(%s) \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), groupname, groupid, param[0], command2)})
+			return
+
 	if param[1].startswith("group:"):
 		groupid = param[1][6:]
 		if groupid.isnumeric():
@@ -969,7 +980,10 @@ def fn_register(map, client, context, arg):
 		if len(params) != 2:
 			respond(context, 'Syntax is: /register username password', error=True)
 		else:
-			if client.register(filter_username(params[0]), params[1]):
+			filtered = filter_username(params[0])
+			if valid_id_format(filtered):
+				respond(context, 'Can\'t register a username that\'s just a number', error=True)
+			elif client.register(filtered, params[1]):
 				map.broadcast("MSG", {'text': client.name+" has now registered"})
 				map.broadcast("WHO", {'add': client.who()}) # update client view, probably just for the username
 			else:
@@ -1041,7 +1055,7 @@ def fn_who(map, client, context, arg):
 def fn_look(map, client, context, arg):
 	if not len(arg):
 		return
-	e = find_local_entity_by_name(arg)
+	e = find_local_entity_by_name(map, arg)
 	if e == None:
 		respond(context, 'Description of [b]%s[/b]: %s' % (e.name, e.desc))
 
@@ -1125,7 +1139,7 @@ def fn_newgroup(map, client, context, arg):
 	group = Entity(entity_type['group'], creator_id = client.db_id)
 	group.name = "Unnamed group"
 	group.save_and_commit()
-	group.cleanup()
+	group.clean_up()
 	respond(context, 'Created group %d' % group.db_id)
 
 @cmd_command(category="Group", privilege_level="registered", syntax="group_id text")
