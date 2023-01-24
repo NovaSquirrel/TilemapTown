@@ -3,6 +3,37 @@ Uses websockets and JSON. WIP.
 --> send to server
 <-- receive from server
 
+List of entity types:
+	user        An entity controlled by a client.
+	map         A map.
+	group       A user group.
+	text        Holds any amount of text, like Second Life's notecards.
+	image       Currently just holds a URL to an image, which can be used as a tileset for map tiles and entities.
+	map_tile    A template for a tile that can be placed on a map.
+	tileset		Holds a series of map tiles. Stored as a JSON array that alternates between names and map tile definitions.
+	            Map tiles can reference this tileset with tileset_id:name_of_tile.
+	reference   A reference to another entity. Interacting with it should redirect to the entity it points at.
+	folder      Holds other entities. Any entity can hold other entities, so this is more of a UI hint.
+	landmark    Holds a location, allowing a user to teleport to it easily.
+	generic     No special behavior.
+
+List of permissions:
+	build                       user can build on the map
+	sandbox                     users can delete any part of the map freely (or kick any item from a container)
+	admin                       user is an admin on the map
+	copy                        user can make copies of this object
+	map_bot                     user is given bot-related permissions (like the ability to use /listen)
+	move                        user can move this object around within the same container
+	move_new_map                user can move this object to a new map
+	bulk_build                  user can use the builk building protocol commands
+	object_entry                user can bring non-client entities here
+	persistent_object_entry     user can bring non-client entities here persistently (will kick clients out when unloading if not true)
+	modify_properties           user can modify the properties of this entity
+	remote_command              user can make this entity do arbitrary commands
+	modify_appearance           user can modify visual properties, like picture or description
+	list_contents               user can look at the contents of this entity
+	all							shorthand for assigning all permissions
+
 === Movement on the map ===
 --> MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0}
 move yourself
@@ -44,9 +75,14 @@ delete a section of map
 
 --> BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...]}
 <-- BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...], "username": username}
-bulk building command. width and height may be omitted.
-applies a series of rectangles to the map.
+Bulk building command. Requires the "bulk_build" permission.
+Applies a series of rectangles to the map.
+Width and height may be omitted, in order to just do a single tile.
 
+--> BLK {"copy": [{"turf": true/false, "obj": true/false, "src":[x,y,w,h], "dst":[x,y]}, ...]]}
+Copies from one portion of the map to another, with overlapped rectangles allowed and supported.
+If "turf" and "obj" are also provided in the same BLK message, "copy" is applied first, then "turf" and finally "obj".
+This makes it easy to move something by copying it somewhere else and erasing the tile where it was.
 
 === Resources ===
 --> IMG {"id": number}
@@ -58,9 +94,9 @@ have the client load an image, for tilesets or avatars or other purposes
 --> TSD {"id": number}
 request tileset data from the server
 
-<-- TSD {"id": number, "data": [id, info, id, info, id, info, ...]}
-tileset received from the server
-
+<-- TSD {"id": number, "data": "[id, info, id, info, id, info, ...]"}
+Tileset received from the server
+Received data is in string format, and must be parsed as JSON!
 
 === People on the map ===
 --> WHO
@@ -148,7 +184,8 @@ Create a new item of a given type
 Can create a temporary object instead if you like
 
 --> BAG {"update": {"id": id, "name": name, "desc": desc, "flags": flags, "folder": folder, "data": data, "allow": allow, "deny": deny, "guest_deny": deny, "tags": tags, ...}}
-Update one specific item
+Update one specific item.
+Allow, deny, and guest_deny are sent as a list of strings, using the permission names earlier in this file.
 
 --> BAG {"move": {"id": id, "folder": map, "pos": [x,y]}}
 Moves an entity to another position. "pos" is optional.
