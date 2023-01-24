@@ -317,9 +317,9 @@ def fn_BAG(map, client, arg):
 				return
 
 			# Move everything inside to the parent
-			for c in delete_me.contents.copy():
-				delete_me.remove_from_contents(c)
-				delete_me.map.add_to_contents(c)
+			for child in delete_me.contents.copy():
+				delete_me.remove_from_contents(child)
+				delete_me.map.add_to_contents(child)
 
 			# Delete from the database too
 			if delete_me.db_id:
