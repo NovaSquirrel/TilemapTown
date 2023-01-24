@@ -154,7 +154,7 @@ def tile_is_okay(tile):
 
 def load_json_if_valid(j):
 	try:
-		return json.loads(jsonData)
+		return json.loads(j)
 	except ValueError as err:
 		pass
 	return None
@@ -398,8 +398,9 @@ def fn_mapid(map, client, context, arg):
 
 @cmd_command(category="Map", privilege_level="registered")
 def fn_newmap(map, client, context, arg):
-	cursor.execute('SELECT COUNT(*) from Map')
-	result = cursor.fetchone()
+	c = Database.cursor()
+	c.execute('SELECT COUNT(*) from Map')
+	result = c.fetchone()
 	if result == None:
 		return
 	if result[0] > Config["Server"]["MaxDBMaps"] and Config["Server"]["MaxDBMaps"] > 0:
@@ -934,7 +935,7 @@ def fn_defaultmap(map, client, context, arg):
 @cmd_command(category="Teleport", syntax="map")
 def fn_map(map, client, context, arg):
 	if arg == '0':
-		fn_defaultmap(map, client, context, None)
+		client.switch_map(get_database_meta('default_map'))
 		return
 	try:
 		if map_id_exists(int(arg)):
