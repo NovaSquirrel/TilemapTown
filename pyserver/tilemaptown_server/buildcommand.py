@@ -479,7 +479,7 @@ def permission_change(map, client, context, arg, command2):
 		return
 
 	# Group permissions and entity permissions are the same thing
-	if param[1].isnumeric()
+	if param[1].isnumeric():
 		as_int = int(param[1])
 		if groupid.isnumeric():
 			ename = find_entity_name(as_int)
