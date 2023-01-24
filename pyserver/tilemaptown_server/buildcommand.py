@@ -478,17 +478,17 @@ def permission_change(map, client, context, arg, command2):
 		map.broadcast("MSG", {'text': "%s sets the default \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[0], command2)})
 		return
 
-	# Group permissions (also works for entities)
-	if param[1].isnumeric():
+	# Group permissions and entity permissions are the same thing
+	if param[1].isnumeric()
 		as_int = int(param[1])
-		test = get_entity_type_by_db_id(as_int)
-		if test == None:
-			respond(context, 'Entity not found: "%s"' % param[1], error=True)
-			return
-		else:
-			map.change_permission_for_entity(as_int, permission_value, True if command2=="grant" else None)
-			map.broadcast("MSG", {'text': "%s sets group \"%s\"(%s) \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), groupname, groupid, param[0], command2)})
-			return
+		if groupid.isnumeric():
+			ename = find_entity_name(as_int)
+			if ename != None:
+				map.change_permission_for_entity(as_int, permission_value, True if command2=="grant" else None)
+				map.broadcast("MSG", {'text': "%s sets entity \"%s\"(%d) \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), ename, as_int, param[0], command2)})
+				return
+		respond(context, '"%d" Not a valid entity ID' % as_int, error=True)
+		return
 
 	if param[1].startswith("group:"):
 		groupid = param[1][6:]
