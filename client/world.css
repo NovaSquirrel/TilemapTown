@@ -234,6 +234,7 @@ widget-contextmenu li:hover {
     border-radius: 3px;
     display: flex;
     align-items: center;
+    padding: 2px;
 }
 
 .inventoryli:hover {
@@ -252,4 +253,11 @@ widget-contextmenu li:hover {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.inventory-info-detail {
+    color: grey;
+    font-size: 0.8em;
+    margin-left: 0.1em;
+    font-style: italic;
 }

@@ -1200,6 +1200,43 @@ function viewOptions() {
   options.style.display = Hidden?'block':'none';
 }
 
+function itemCard(id) {
+  var item = DBInventory[id] || PlayerWho[id];
+
+  let li = document.createElement("li");
+  li.classList.add('inventoryli');
+  li.appendChild(itemIcon(id));
+
+  let info_div = document.createElement("div");
+
+  let info_name = document.createElement("div");
+  info_name.classList.add('inventory-info-name');
+  info_name.innerText = item.name;
+
+  let info_detail = document.createElement("div");
+  info_detail.classList.add('inventory-info-detail');
+
+  var info = '';
+
+  if (item.temporary) {
+    info += "temporary ";
+  }
+
+  info += `id: ${item.id}`;
+
+  if (item.username) {
+    info += `, username: ${item.username}`;
+  }
+
+  info_detail.innerText = `(${info})`;
+
+  info_div.appendChild(info_name);
+  info_div.appendChild(info_detail);
+
+  li.appendChild(info_div);
+  return li;
+}
+
 function itemIcon(key) {
   var img_container = document.createElement("div");
   img_container.classList.add('item_icon');
@@ -1277,14 +1314,10 @@ function updateInventoryUL() {
       let id = DisplayInventory[key][i];
 
       let item = DBInventory[id];
-      let li = document.createElement("li");
+      let li = itemCard(id);
 
-      li.appendChild(itemIcon(id));
-
-      li.appendChild(document.createTextNode(" "+item.name));
       li.onclick = function (){useItem(item);};
       li.oncontextmenu = function(e){openItemContextMenu(id, e.clientX, e.clientY); return false;};
-      li.classList.add('inventoryli');
       li.id = "inventory"+i;
       list.appendChild(li);
 
@@ -1371,20 +1404,12 @@ function updateSelectedObjectsUL() {
     obj_count++;
 
     // build the list item
-    let li = document.createElement("li");
-    li.appendChild(itemIcon(user.id));
+    let li = itemCard(user.id);
 
-    var line = " "+user.name;
-    if("username" in user && user.username)
-      line += " ("+user.username+")";
-    else
-      line += " ("+key+")";
-    li.appendChild(document.createTextNode(line));
 //    li.onclick = function (){useItem(item);};
 //    li.oncontextmenu = function (){editItem(id); return false;};
 //
     li.oncontextmenu = function(e){openItemContextMenu(user.id, e.clientX, e.clientY); return false;};
-    li.classList.add('inventoryli');
     li.id = "userlist"+i;
     ul.appendChild(li);
   }
@@ -1408,22 +1433,13 @@ function updateUsersUL() {
   }
 
   for(var key in PlayerWho) {
-    let li = document.createElement("li");
     let user = PlayerWho[key];
+    let li = itemCard(key);
 
     // build the list item
-    li.appendChild(itemIcon(user.id));
-
-    var line = " "+user.name;
-    if("username" in user && user.username)
-      line += " ("+user.username+")";
-    else
-      line += " ("+key+")";
-    li.appendChild(document.createTextNode(line));
 //    li.onclick = function (){useItem(item);};
 //    li.oncontextmenu = function (){editItem(id); return false;};
     li.oncontextmenu = function(e){openItemContextMenu(user.id, e.clientX, e.clientY); return false;};
-    li.classList.add('inventoryli');
     li.id = "userlist"+i;
     ul.appendChild(li);
   }
