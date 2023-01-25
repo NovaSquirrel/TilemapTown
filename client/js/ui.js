@@ -156,7 +156,7 @@ editItemType = null;
 editItemID = null;
 function editItem(key) {
   // open up the item editing screen for a given item
-  var item = DBInventory[key];
+  var item = DBInventory[key] || PlayerWho[key];
   var itemobj = null;
   editItemType = item.type;
   editItemID = item.id;
@@ -295,6 +295,33 @@ function useItem(Placed) {
       drawMap();
   }
 
+}
+
+function dropTakeItem(id) {
+  if ( id in DBInventory ) {
+    sendChatCommand(`e ${id} drop`);
+  } else {
+    sendChatCommand(`e ${id} take`);
+  }
+}
+
+function cloneItem(id, temporary=false) {
+  SendCmd("BAG", {clone: {id: id, temp: temporary}});
+}
+
+function deleteItem(id) {
+  var item = DBInventory[id] || PlayerWho[id];
+
+  if (
+    confirm(`Really delete ${item.name} with ID ${item.id}?`)
+  ) {
+    SendCmd("BAG", {delete: {id: id}});
+  }
+}
+
+function referenceItem(id) {
+  var item = DBInventory[id] || PlayerWho[id];
+  SendCmd("BAG", {create: {name: `${item.name} (reference)`, type: "reference", data: `${id}`}});
 }
 
 function updateDirectionForAnim(id) {
@@ -717,6 +744,17 @@ function tickWorld() {
           default: // dummy
             updated.pic = [0, 8, 24];
             break;
+          case "user":
+            // make sure a custom pic is in PlayerImages
+            // (it won't be for players in other maps)
+            var is_custom = updated.pic != null && typeof updated.pic[0] == "string";
+            if ((!(updated.id in PlayerImages) && is_custom) ||
+                (updated.id in PlayerImages && PlayerImages[updated.id].src != updated.pic[0] && is_custom)) {
+              var img = new Image();
+              img.src = pic[0];
+              PlayerImages[key] = img;
+            }
+            break;
           case "generic":
             if(updated.pic == null)
               updated.pic = [0, 8, 24];
@@ -974,6 +1012,7 @@ function initMouse() {
     MouseEndY = BY;
 
     var panelHTML = (BX-AX+1)+"x"+(BY-AY+1)+"<br>";
+    updateSelectedObjectsUL();
 
     selectionInfoVisibility(true);
 
@@ -1161,6 +1200,66 @@ function viewOptions() {
   options.style.display = Hidden?'block':'none';
 }
 
+function itemIcon(key) {
+  var img_container = document.createElement("div");
+  img_container.classList.add('item_icon');
+
+  // create a little icon for the item
+  var img = document.createElement("img");
+  img.src = "img/transparent.png";
+  img.style.width = "16px";
+  img.style.height = "16px";
+  var src = "";
+
+  var item = DBInventory[key] || PlayerWho[key];
+
+  // allow custom avatars
+  // as well as built-in ones
+  pic = [0, 8, 24];
+
+  let user = PlayerWho[key];
+  if(key in PlayerImages) {
+    if(PlayerImages[key].naturalWidth != 16 || PlayerImages[key].naturalHeight != 16) {
+      img.style.width = "32px";
+      img.style.height = "32px";
+    }
+
+    src = PlayerImages[key].src;
+  }
+
+  if(item.pic != null)
+    pic = item.pic;
+
+  if(IconSheets[pic[0]])
+    src = IconSheets[pic[0]].src;
+  else
+    src = pic[0];
+
+  var background = "url("+src+") -"+(pic[1]*16)+"px -"+(pic[2]*16)+"px";
+  img.style.background = background;
+
+  img_container.appendChild(img);
+  return img_container;
+}
+
+contextMenuItem = 0;
+function openItemContextMenu(id, x, y) {
+  var drop = document.querySelector('#droptakeitem');
+
+  if ( id in DBInventory ) {
+    drop.innerText = "Drop";
+  } else {
+    drop.innerText = "Take";
+  }
+  var menu = document.querySelector('#item-contextmenu');
+  menu.style.left = (x) + "px";
+  menu.style.top = (y) + "px";
+
+  menu.style.display = "block";
+
+  contextMenuItem = id;
+}
+
 function updateInventoryUL() {
   // Manage the inventory <ul>
   var ul = document.getElementById('inventoryul');
@@ -1180,22 +1279,11 @@ function updateInventoryUL() {
       let item = DBInventory[id];
       let li = document.createElement("li");
 
-      // create a little icon for the item
-      var img = document.createElement("img");
-      img.src = "img/transparent.png";
-      img.style.width = "16px";
-      img.style.height = "16px";
-      var src = "";
-      if(IconSheets[item.pic[0]])
-        src = IconSheets[item.pic[0]].src;
-      var background = "url("+src+") -"+(item.pic[1]*16)+"px -"+(item.pic[2]*16)+"px";
-      img.style.background = background;
+      li.appendChild(itemIcon(id));
 
-      // build the list item
-      li.appendChild(img);
       li.appendChild(document.createTextNode(" "+item.name));
       li.onclick = function (){useItem(item);};
-      li.oncontextmenu = function (){editItem(id); return false;};
+      li.oncontextmenu = function(e){openItemContextMenu(id, e.clientX, e.clientY); return false;};
       li.classList.add('inventoryli');
       li.id = "inventory"+i;
       list.appendChild(li);
@@ -1213,6 +1301,7 @@ function updateInventoryUL() {
   let newitem = document.createElement("li");
   newitem.appendChild(document.createTextNode("+"));
   newitem.classList.add('inventoryli');
+  newitem.id = "inventoryadd"
   newitem.onclick = function(){document.getElementById('newItemWindow').style.display = "block";};
   ul.appendChild(newitem);
 }
@@ -1256,6 +1345,57 @@ function viewCompose() {
   compose.style.display = 'block';
 }
 
+function inSelection( x, y ) {
+  return x >= MouseStartX && x <= MouseEndX && y >= MouseStartY && y <= MouseEndY;
+}
+
+function updateSelectedObjectsUL() {
+  // Manage the users <ul>
+  var ul = document.getElementById('selectedobjectsul');
+  if(!ul)
+    return;
+
+  // Empty out the list
+  while(ul.firstChild) {
+    ul.removeChild(ul.firstChild);
+  }
+
+  let obj_count = 0;
+
+  for(var key in PlayerWho) {
+    let user = PlayerWho[key];
+    if ( !inSelection( user.x, user.y ) ) {
+      continue;
+    }
+
+    obj_count++;
+
+    // build the list item
+    let li = document.createElement("li");
+    li.appendChild(itemIcon(user.id));
+
+    var line = " "+user.name;
+    if("username" in user && user.username)
+      line += " ("+user.username+")";
+    else
+      line += " ("+key+")";
+    li.appendChild(document.createTextNode(line));
+//    li.onclick = function (){useItem(item);};
+//    li.oncontextmenu = function (){editItem(id); return false;};
+//
+    li.oncontextmenu = function(e){openItemContextMenu(user.id, e.clientX, e.clientY); return false;};
+    li.classList.add('inventoryli');
+    li.id = "userlist"+i;
+    ul.appendChild(li);
+  }
+
+  if (obj_count < 1) {
+    let li = document.createElement("li");
+    li.appendChild(document.createTextNode("None"));
+    ul.appendChild(li);
+  }
+}
+
 function updateUsersUL() {
   // Manage the users <ul>
   var ul = document.getElementById('usersul');
@@ -1271,26 +1411,9 @@ function updateUsersUL() {
     let li = document.createElement("li");
     let user = PlayerWho[key];
 
-    // create a little icon for the item
-    var img = document.createElement("img");
-    img.src = "img/transparent.png";
-    img.style.width = "16px";
-    img.style.height = "16px";
-    var src = "";
-    // allow custom avatars
-    if(key in PlayerImages && user.pic != null && typeof user.pic[0] == "string")
-      src = PlayerImages[key].src;
-    // as well as built-in ones
-    pic = [0, 8, 24];
-    if(user.pic != null)
-      pic = user.pic;
-    if(IconSheets[pic[0]])
-      src = IconSheets[pic[0]].src;
-    var background = "url("+src+") -"+(pic[1]*16)+"px -"+(pic[2]*16)+"px";
-    img.style.background = background;
-
     // build the list item
-    li.appendChild(img);
+    li.appendChild(itemIcon(user.id));
+
     var line = " "+user.name;
     if("username" in user && user.username)
       line += " ("+user.username+")";
@@ -1299,6 +1422,7 @@ function updateUsersUL() {
     li.appendChild(document.createTextNode(line));
 //    li.onclick = function (){useItem(item);};
 //    li.oncontextmenu = function (){editItem(id); return false;};
+    li.oncontextmenu = function(e){openItemContextMenu(user.id, e.clientX, e.clientY); return false;};
     li.classList.add('inventoryli');
     li.id = "userlist"+i;
     ul.appendChild(li);

@@ -29,24 +29,24 @@ customElements.define(
       let template = document.getElementById("widget-window-template");
       let templateContent = template.content;
 
-			let self = this;
+      let self = this;
 
       const shadowRoot = this.attachShadow({ mode: "open" });
       shadowRoot.appendChild(templateContent.cloneNode(true));
 
-			var container = shadowRoot.querySelector('#container');
-			var handle = shadowRoot.querySelector('#draghandle');
+      var container = shadowRoot.querySelector('#container');
+      var handle = shadowRoot.querySelector('#draghandle');
 
-			container.style.left = cascadeX + "px";
-			container.style.top = cascadeY + "px";
+      container.style.left = cascadeX + "px";
+      container.style.top = cascadeY + "px";
 
-			cascadeX += 16;
-			cascadeY += 8;
+      cascadeX += 16;
+      cascadeY += 8;
 
-			var dx = 0;
-			var dy = 0;
+      var dx = 0;
+      var dy = 0;
 
-			handle.onmousedown = function(event) {
+      handle.onmousedown = function(event) {
         dx = event.clientX - container.offsetLeft;
         dy = event.clientY - container.offsetTop;
 
@@ -59,12 +59,40 @@ customElements.define(
           document.onmousemove = null;
           document.onmouseup = null;
         }
-			}
+      }
 
-			var minimize = shadowRoot.querySelector('#minimize');
-			minimize.onmouseup = function(event) {
-				self.style.display = "none";
-			}
+      var minimize = shadowRoot.querySelector('#minimize');
+      minimize.onmouseup = function(event) {
+        self.style.display = "none";
+      }
+    }
+  }
+);
+
+customElements.define(
+  "widget-contextmenu",
+  class extends HTMLElement {
+    constructor() {
+      super();
+      let template = document.getElementById("widget-contextmenu-template");
+      let templateContent = template.content;
+
+      let self = this;
+
+      const shadowRoot = this.attachShadow({ mode: "open" });
+      shadowRoot.appendChild(templateContent.cloneNode(true));
+
+      var container = shadowRoot.querySelector('#container');
+
+      container.onmouseleave = function(event) {
+        self.style.display = "none";
+      }
+
+      container.onmouseup = function(event) {
+        if ( event.button == 0 ) {
+          self.style.display = "none";
+        }
+      }
     }
   }
 );
