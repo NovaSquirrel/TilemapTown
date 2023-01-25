@@ -163,9 +163,9 @@ def fn_BAG(map, client, arg):
 			clone_me.copy_onto(new_item)
 			if 'temp' in arg['clone']: # Can change the temporary status
 				if arg['clone']['temp'] == True:
-					clone_me.temporary = True
+					new_item.temporary = True
 				elif arg['clone']['temp'] == False:
-					clone_me.temporary = False
+					new_item.temporary = False
 			new_item.owner_id = client.db_id
 
 			if not new_item.temporary:
