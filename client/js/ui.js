@@ -316,7 +316,7 @@ function movePlayer(id, x, y, dir) {
   for(var index of PlayerWho[id].passengers){
     if(x != null) {
       if ( PlayerWho[index].is_following ) {
-        movePlayer(index, PlayerWho[id].x, PlayerWho[id].y, PlarWho[id].dir);
+        movePlayer(index, PlayerWho[id].x, PlayerWho[id].y, PlayerWho[id].dir);
       } else {
         movePlayer(index, x, y, dir);
       }
