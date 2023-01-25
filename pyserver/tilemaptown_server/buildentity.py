@@ -568,7 +568,8 @@ class Entity(object):
 			'allow': permission_list_from_bitfield(self.allow),
 			'deny': permission_list_from_bitfield(self.deny),
 			'guest_deny': permission_list_from_bitfield(self.guest_deny),
-			'owner_id': self.owner_id
+			'owner_id': self.owner_id,
+			'temporary': self.temporary
 		}
 		if self.owner_id:
 			owner_username = find_username_by_db_id(self.owner_id)
