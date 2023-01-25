@@ -182,8 +182,8 @@ def get_entity_type_by_db_id(id):
 def get_entity_by_id(id, load_from_db=True):
 	# If it's temporary, get it if it still exists
 	if isinstance(id, str):
-		if isinstance(id, str) and id[0] == temporary_id_marker:
-			id = id[1:]
+		if isinstance(id, str) and id[0] == temporary_id_marker and id[1:].isnumeric():
+			id = int(id[1:])
 			if id in AllEntitiesByID:
 				return AllEntitiesByID[id]
 			return None

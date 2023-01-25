@@ -82,6 +82,22 @@
   </div>
 </template>
 
+<template id="widget-contextmenu-template">
+  <style>
+    #container {
+        background-color: white;
+
+        border: 1px solid black;
+    }
+
+    #contents {
+        padding: 2px;
+    }
+  </style>
+  <div id="container">
+    <slot id="menu" name="menu">Empty context menu!</slot>
+  </div>
+</template>
 
 <!-- Wrapper everything is contained inside; takes up the entire screen -->
 <div id="wrapper">
@@ -265,13 +281,16 @@
       <input type="checkbox" id="objselect" checked="true"><label for="objselect">Objects</label></input>
       <input type="button" value="Delete" onclick="selectionDelete();">
     </div>
+    Selected Entities:
+    <ul id="selectedobjectsul" class="itemsul unselectable">
+    </ul>
   </div>
 </widget-window>
 
 <widget-window id="users" style="display: none;">
   <span slot="title">Users</span>
   <div slot="contents">
-    <ul id="usersul" class="unselectable">
+    <ul id="usersul" class="itemsul unselectable">
     </ul>
   </div>
 </widget-window>
@@ -279,7 +298,7 @@
 <widget-window id="inventory" style="display: none;">
   <span slot="title">Inventory</span>
   <div slot="contents" id="inventory-contents">
-    <ul id="inventoryul" class="unselectable">
+    <ul id="inventoryul" class="itemsul unselectable">
     </ul>
   </div>
 </widget-window>
@@ -373,6 +392,18 @@
   <div slot="contents" id="mail-preview-contents">
   </div>
 </widget-window>
+
+<!-- context menus -->
+<widget-contextmenu id="item-contextmenu" style="display: none;">
+  <ul slot="menu" id="item-contextmenu-menu">
+    <li onclick="editItem(contextMenuItem)">Edit</li>
+    <li id="droptakeitem" onclick="dropTakeItem(contextMenuItem)">Drop</li>
+    <li onclick="cloneItem(contextMenuItem)">Clone</li>
+    <li onclick="cloneItem(contextMenuItem, true)">Clone (Temporary)</li>
+    <li onclick="deleteItem(contextMenuItem)">Delete</li>
+    <!-- <li onclick="referenceItem(contextMenuItem)">Create Reference</li> -->
+  </ul>
+</widget-contextmenu>
 
 <!-- Game interface with the map and chat -->
 

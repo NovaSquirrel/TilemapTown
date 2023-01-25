@@ -557,7 +557,7 @@ class Entity(object):
 	def bag_info(self):
 		""" Dictionary used to describe an object for a BAG protocol message """		
 		out = {
-			'id': self.db_id,
+			'id': self.protocol_id(),
 			'name': self.name,
 			'desc': self.desc,
 			'pic': self.pic,

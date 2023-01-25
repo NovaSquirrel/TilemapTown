@@ -195,3 +195,61 @@ body {
    80% {opacity: 1;}
    100% {opacity: 0;}
 }
+
+widget-contextmenu {
+    position: absolute;
+}
+
+
+widget-contextmenu ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+widget-contextmenu li {
+    padding: 3px;
+    display: flex;
+    align-items: center;
+}
+
+widget-contextmenu li:not(:last-child) {
+    border-bottom: 1px solid black;
+}
+
+widget-contextmenu li:hover {
+    background-color: #fee;
+    cursor: pointer;
+}
+
+.itemsul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.inventoryli {
+    border: 1px solid black;
+    margin: 3px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+}
+
+.inventoryli:hover {
+    background-color: #fee;
+}
+
+.item_icon {
+    display: flex;
+    width: 32px;
+    height: 32px;
+    align-items: center;
+    justify-content: center;
+}
+
+#inventoryadd {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
