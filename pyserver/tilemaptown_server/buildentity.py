@@ -571,6 +571,8 @@ class Entity(object):
 			'owner_id': self.owner_id,
 			'temporary': self.temporary
 		}
+		if self.is_client():
+			out['username'] = self.username
 		if self.owner_id:
 			owner_username = find_username_by_db_id(self.owner_id)
 			if owner_username:

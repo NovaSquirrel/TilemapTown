@@ -232,3 +232,10 @@ Item info fields:
 	folder
 	data
 	tags
+	allow (list of strings, using the permission names at the start of the file)
+	deny
+	guest_deny
+	owner_id
+	owner_username (if applicable)
+	username (if applicable)
+	temporary
