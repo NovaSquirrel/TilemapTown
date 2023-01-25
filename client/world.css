@@ -91,8 +91,8 @@ body {
 
 #chat-container {
     position: absolute;
-    left: 8;
-    bottom: 32;
+    left: 8px;
+    bottom: 32px;
     width: 40%;
 }
 
