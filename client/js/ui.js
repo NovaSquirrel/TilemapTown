@@ -93,7 +93,7 @@ function convertBBCode(t) {
 
 function logMessage(Message, Class) {
   var chatArea = document.getElementById("chatArea");
-  var bottom = chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight < 1;
+  var bottom = chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight <3;
 
   let newMessage = document.createElement("div");
   newMessage.className = Class;
@@ -1354,6 +1354,7 @@ function viewUsers() {
 function viewChatLog() {
   var chat = document.getElementById('chat-container');
   chat.classList.toggle('pinned');
+  chatArea.scrollTop = chatArea.scrollHeight;
   resizeCanvas();
 }
 
