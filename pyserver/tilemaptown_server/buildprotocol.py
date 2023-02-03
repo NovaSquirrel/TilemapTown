@@ -284,7 +284,7 @@ def fn_BAG(map, client, arg):
 			update_me.deny = bitfield_from_permission_list(update['deny'])
 		if 'guest_deny' in update:
 			update_me.guest_deny = bitfield_from_permission_list(update['guest_deny'])
-		if 'temporary' in update:
+		if 'temporary' in update and client.db_id:
 			update_me.temporary = update['temporary']
 
 		if not update_me.temporary:
