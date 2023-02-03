@@ -81,7 +81,7 @@ class Client(Entity):
 	def removed_from_child_contents(self, item):
 		""" Called on parents when remove_from_contents is called here """
 		if not self.no_inventory_messages:
-			self.send("BAG", {'remove': {'id': item.db_id}})
+			self.send("BAG", {'remove': {'id': item.protocol_id()}})
 
 	def test_server_banned(self):
 		""" Test for and take action on IP bans """

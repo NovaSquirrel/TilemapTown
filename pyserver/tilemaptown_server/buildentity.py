@@ -69,6 +69,7 @@ class Entity(object):
 		# permissions
 		self.creator_id = creator_id
 		self.owner_id = creator_id
+		self.creator_temp_id = None # Temporary ID of the creator of the object, for guests. Not saved to the database.
 		self.allow = 0
 		self.deny = 0
 		self.guest_deny = 0
@@ -265,12 +266,14 @@ class Entity(object):
 			if other.isnumeric():
 				other = int(str)
 			# You can use a temporary ID too, which will have its own code path
-			if other.startswith(id.startswith(temporary_id_marker)) and id[1:].isnumeric():
-				temp_id = int(id[1:])
+			elif other.startswith(temporary_id_marker) and other[1:].isnumeric():
+				temp_id = int(other[1:])
 				if temp_id not in AllEntitiesByID:
 					return False
 				other = AllEntitiesByID[temp_id]
-				if other.owner_id == self.db_id:
+				if self is other or self.id == other.creator_temp_id:
+					return True
+				if other.owner_id == self.db_id and self.db_id != None:
 					return True
 
 				# Let the entity override the default
@@ -289,12 +292,16 @@ class Entity(object):
 
 		# Is it loaded?
 		if isinstance(other, Entity):
-			# If you're the owner, you automatically have permission
-			if self.db_id and self.db_id == other.owner_id:
+			# You have permission if the object is you
+			if self is other:
 				return True
-			# You also have permission if the object is you
-			if self.db_id == other.db_id:
-				return True
+			if self.db_id:
+				# If you're the owner, you automatically have permission
+				if self.db_id == other.owner_id or self.id == other.creator_temp_id:
+					return True
+				# Also if it's you, you have permission
+				if self.db_id == other.db_id:
+					return True
 
 			# Let the entity override the default
 			if other.allow & perm:
@@ -473,7 +480,7 @@ class Entity(object):
 			# First check if you can even go to that map
 			map_load = get_entity_by_id(map_id)
 			if map_load == None:
-				self.send("ERR", {'text': 'Couldn\'t load map %d' % map_id})
+				self.send("ERR", {'text': 'Couldn\'t load map %s' % map_id})
 				if added_new_history:
 					self.tp_history.pop()
 				return False

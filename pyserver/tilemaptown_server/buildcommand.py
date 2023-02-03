@@ -1281,7 +1281,7 @@ def fn_whoami(map, client, context, arg):
 	else:
 		respond(context, "Your [b]%s[/b]! Your ID is [b]%s[/b] and your username is [b]%s[/b]" % (client.name, client.protocol_id(), client.username))
 
-@cmd_command(alias=['e'], privilege_level="registered")
+@cmd_command(alias=['e'])
 def fn_entity(map, client, context, arg):
 	# Parse
 	provided_id, subcommand = separate_first_word(arg)
@@ -1325,52 +1325,64 @@ def fn_entity(map, client, context, arg):
 		if len(e.contents):
 			info += '\n[b]Contents:[/b] %s' % ', '.join(c.name_and_username() for c in e.contents)
 		respond(context, info)
-	elif subcommand == 'name' and permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
-		e.name = subarg
-		e.broadcast_who()
-	elif subcommand == 'desc' and permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
-		e.desc = subarg
-	elif subcommand == 'pic' and permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
-		pic = load_json_if_valid(subarg)
-		if pic and pic_is_okay(subarg):
-			e.pic = pic
+	elif subcommand == 'name':
+		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
+			e.name = subarg
 			e.broadcast_who()
-		else:
-			respond(context, "Invalid picture", error=True)
+	elif subcommand == 'desc':
+		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
+			e.desc = subarg
+	elif subcommand == 'pic':
+		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
+			pic = load_json_if_valid(subarg)
+			if pic and pic_is_okay(subarg):
+				e.pic = pic
+				e.broadcast_who()
+			else:
+				respond(context, "Invalid picture", error=True)
 
-	elif subcommand == 'take' and permission_check(permission['move_new_map']):
-		e.switch_map(client.db_id)
-	elif subcommand in ('drop', 'summon') and permission_check( (permission['move'], permission['move_new_map']) ):
-		if e.map_id is client.map_id or permission_check(permission['move_new_map']):
-			if not e.switch_map(client.map_id, new_pos=[client.x, client.y]):
-				respond(context, "Entity \"%s\" doesn't have permission to go to this map" % provided_id, error=True)
+	elif subcommand == 'take':
+		if permission_check(permission['move_new_map']):
+			e.switch_map(client.db_id or client.protocol_id())
+	elif subcommand in ('drop', 'summon'):
+		if permission_check( (permission['move'], permission['move_new_map']) ):
+			if e.map_id is client.map_id or permission_check(permission['move_new_map']):
+				if not e.switch_map(client.map_id, new_pos=[client.x, client.y]):
+					respond(context, "Entity \"%s\" doesn't have permission to go to this map" % provided_id, error=True)
 
 	elif subcommand == 'tags':
 		respond(context, "Tags: %s" % dumps_if_not_empty(e.tags))
-	elif subcommand in ('addtag', 'settag') and permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
-		key, value = separate_first_word(subarg)
-		e.set_tag(key, value)
-	elif subcommand == 'deltag' and permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
-		e.del_tag(subarg)
+	elif subcommand in ('addtag', 'settag'):
+		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
+			key, value = separate_first_word(subarg)
+			e.set_tag(key, value)
+	elif subcommand == 'deltag':
+		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
+			e.del_tag(subarg)
 
-	elif subcommand == 'do' and permission_check(permission['remote_command']):
-		handle_user_command(e.map, e, client, context[1], subarg)
-	elif subcommand == 'move' and permission_check(permission['move']):
-		coords = subarg.split()
-		if len(coords) == 2 and coords[0].isnumeric() and coords[1].isnumeric():
-			e.move_to(int(coords[0]), int(coords[1]))
+	elif subcommand == 'do':
+		if permission_check(permission['remote_command']):
+			handle_user_command(e.map, e, client, context[1], subarg)
+	elif subcommand == 'move':
+		if permission_check(permission['move']):
+			coords = subarg.split()
+			if len(coords) == 2 and coords[0].isnumeric() and coords[1].isnumeric():
+				e.move_to(int(coords[0]), int(coords[1]))
 	elif subcommand == 'perms':
 		handlers['permlist'](e, client, context, subarg)
 	elif subcommand == 'permsfor':
 		if subarg.isnumeric():
 			allow, deny = get_allow_deny_for_other_entity(self, other_id)
 			response(context, 'Allow: %s\nDeny: %s' % (permission_list_from_bitfield(allow), permission_list_from_bitfield(deny)))
-	elif subcommand == 'grant' and permission_check(permission['admin']):
-		permission_change(e, client, context, subarg, 'grant')
-	elif subcommand == 'revoke' and permission_check(permission['admin']):
-		permission_change(e, client, context, subarg, 'deny')
-	elif subcommand == 'deny' and permission_check(permission['admin']):
-		permission_change(e, client, context, subarg, 'revoke')
+	elif subcommand == 'grant':
+		if permission_check(permission['admin']):
+			permission_change(e, client, context, subarg, 'grant')
+	elif subcommand == 'revoke':
+		if permission_check(permission['admin']):
+			permission_change(e, client, context, subarg, 'deny')
+	elif subcommand == 'deny':
+		if permission_check(permission['admin']):
+			permission_change(e, client, context, subarg, 'revoke')
 
 	else:
 		respond(context, 'Unrecognized subcommand "%s"' % subcommand, error=True)

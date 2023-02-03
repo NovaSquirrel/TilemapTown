@@ -132,229 +132,243 @@ def fn_BAG(map, client, arg):
 			return client.db_id
 		return text
 
-	if client.db_id != None:
-		c = Database.cursor()
-		if "create" in arg:
-			# restrict type variable
-			if arg['create']['type'] not in creatable_entity_types:
-				client.send("ERR", {'text': 'Invalid type of item to create (%s)' % arg['create']['type']})
+	c = Database.cursor()
+	if "create" in arg:
+		# restrict type variable
+		if arg['create']['type'] not in creatable_entity_types:
+			client.send("ERR", {'text': 'Invalid type of item to create (%s)' % arg['create']['type']})
+			return
+		e = Entity(entity_type[arg['create']['type']], creator_id=client.db_id)
+		e.name = arg['create']['name']
+		e.map_id = client.db_id
+		e.creator_temp_id = client.id
+
+		if client.db_id == None:
+			e.temporary = True
+			# By default, let guests do whatever with it
+			e.allow = permission['all']
+			e.deny = 0
+			e.guest_deny = 0
+		elif 'temp' in arg['create'] and arg['create']['temp'] == True:
+			e.temporary = True
+		else:
+			e.save()
+		client.add_to_contents(e)
+
+	elif "clone" in arg:
+		clone_me = get_entity_by_id(allow_special_ids(arg['clone']['id']))
+		if clone_me == None:
+			client.send("ERR", {'text': 'Can\'t clone %s' % arg['clone']['id']})
+			return
+
+		if clone_me.creator_temp_id != client.id and clone_me.owner_id != client.db_id and \
+		not client.has_permission(clone_me, permission['copy'], False):
+			client.send("ERR", {'text': 'You don\'t have permission to clone %s' % arg['clone']['id']})
+			return
+
+		# Create a new entity and copy over the properties
+		new_item = Entity(clone_me.entity_type)
+		clone_me.copy_onto(new_item)
+		if client.db_id == None:
+			new_item.temporary = True
+			new_item.allow = permission['all']
+			new_item.deny = 0
+			new_item.guest_deny = 0
+		elif 'temp' in arg['clone']: # Can change the temporary status
+			if arg['clone']['temp'] == True:
+				new_item.temporary = True
+			elif arg['clone']['temp'] == False:
+				new_item.temporary = False
+		new_item.owner_id = client.db_id
+		new_item.creator_temp_id = client.id
+
+		if not new_item.temporary:
+			new_item.save()
+		# Put it in the player's inventory now, or wherever else they put it
+		if 'folder' in arg['clone']:
+			new_item.switch_map(args['clone']['folder'], new_pos=arg['clone']['pos'] if 'pos' in arg['clone'] else None)
+		else:
+			client.add_to_contents(new_item)
+
+		# Update created_at and acquired_at
+		if new_item.db_id:
+			c.execute('SELECT created_at FROM Entity WHERE id=?', (clone_me.db_id,))
+			result = c.fetchone()
+			if result != None:
+				c.execute('UPDATE Entity SET created_at=?, acquired_at=? WHERE id=?', (result[0], datetime.datetime.now(), new_item.db_id))
+
+		arg["clone"]["new_id"] = new_item.protocol_id()
+		client.send("BAG", {'clone': arg['clone']}) # Acknowledge
+
+	elif "update" in arg:
+		update = arg['update']
+		update_me = get_entity_by_id(allow_special_ids(update['id']))
+		if update_me == None:
+			client.send("ERR", {'text': 'Can\'t update %s' % update['id']})
+			return
+		if update_me.creator_temp_id != client.id and update_me.owner_id != client.db_id and \
+		not client.has_permission(update_me, permission['modify_properties'], False):
+			# If you don't have permission for modify_properties you may still be able to do the update if you're only changing specific properties
+			appearance_change_props = {'id', 'name', 'desc', 'pic', 'tags'}
+
+			if any(key not in appearance_change_props for key in update) or not client.has_permission(update_me, permission['modify_appearance'], False):
+				client.send("ERR", {'text': 'You don\'t have permission to update %s' % update['id']})
 				return
-			e = Entity(entity_type[arg['create']['type']], creator_id=client.db_id)
-			e.name = arg['create']['name']
-			e.map_id = client.db_id
-			if 'temp' in arg['create'] and arg['create']['temp'] == True:
-				e.temporary = True
+
+		if 'data' in update:
+			bad = data_disallowed_for_entity_type(update_me.entity_type, update['data'])
+			if bad != None:
+				client.send("ERR", {'text': bad})
+				del update['data']
 			else:
-				e.save()
-			client.add_to_contents(e)
+				update_me.data = update['data']
 
-		elif "clone" in arg:
-			clone_me = get_entity_by_id(allow_special_ids(arg['clone']['id']))
-			if clone_me == None:
-				client.send("ERR", {'text': 'Can\'t clone %s' % arg['clone']['id']})
-				return
+		if 'owner_id' in update:
+			if update_me.owner_id != client.db_id:
+				client.send("ERR", {'text': 'Can only reassign ownership on entities you own'})
+				del update['owner_id']
+			update_me.owner_id = update['owner_id']
 
-			if clone_me.owner_id != client.db_id and not client.has_permission(clone_me, permission['copy'], False):
-				client.send("ERR", {'text': 'You don\'t have permission to clone %s' % arg['clone']['id']})
-				return
-
-			# Create a new entity and copy over the properties
-			new_item = Entity(clone_me.entity_type)
-			clone_me.copy_onto(new_item)
-			if 'temp' in arg['clone']: # Can change the temporary status
-				if arg['clone']['temp'] == True:
-					new_item.temporary = True
-				elif arg['clone']['temp'] == False:
-					new_item.temporary = False
-			new_item.owner_id = client.db_id
-
-			if not new_item.temporary:
-				new_item.save()
-			# Put it in the player's inventory now, or wherever else they put it
-			if 'folder' in arg['clone']:
-				new_item.switch_map(args['clone']['folder'], new_pos=arg['clone']['pos'] if 'pos' in arg['clone'] else None)
+		if 'owner_username' in update:
+			if update_me.owner_id != client.db_id:
+				client.send("ERR", {'text': 'Can only reassign ownership on entities you own'})
+				del update['owner_username']
+			new_owner = find_db_id_by_username(update['owner_username'])
+			if new_owner:
+				update_me.owner_id = update['owner']
 			else:
-				client.add_to_contents(new_item)
+				client.send("ERR", {'text': 'Username \"%s\" not found' % update['owner_username']})
+				del update['owner_username']
 
-			# Update created_at and acquired_at
-			if new_item.db_id:
-				c.execute('SELECT created_at FROM Entity WHERE id=?', (clone_me.db_id,))
-				result = c.fetchone()
-				if result != None:
-					c.execute('UPDATE Entity SET created_at=?, acquired_at=? WHERE id=?', (result[0], datetime.datetime.now(), new_item.db_id))
-
-			arg["clone"]["new_id"] = new_item.protocol_id()
-			client.send("BAG", {'clone': arg['clone']}) # Acknowledge
-
-		elif "update" in arg:
-			update = arg['update']
-			update_me = get_entity_by_id(allow_special_ids(update['id']))
-			if update_me == None:
-				client.send("ERR", {'text': 'Can\'t update %s' % update['id']})
-				return
-			if update_me.owner_id != client.db_id and not client.has_permission(update_me, permission['modify_properties'], False):
-				# If you don't have permission for modify_properties you may still be able to do the update if you're only changing specific properties
-				appearance_change_props = {'id', 'name', 'desc', 'pic', 'tags'}
-
-				if any(key not in appearance_change_props for key in update) or not client.has_permission(update_me, permission['modify_appearance'], False):
-					client.send("ERR", {'text': 'You don\'t have permission to update %s' % update['id']})
-					return
-
-			if 'data' in update:
-				bad = data_disallowed_for_entity_type(update_me.entity_type, update['data'])
-				if bad != None:
-					client.send("ERR", {'text': bad})
-					del update['data']
-				else:
-					update_me.data = update['data']
-
-			if 'owner_id' in update:
-				if update_me.owner_id != client.db_id:
-					client.send("ERR", {'text': 'Can only reassign ownership on entities you own'})
-					del update['owner_id']
-				update_me.owner_id = update['owner_id']
-
-			if 'owner_username' in update:
-				if update_me.owner_id != client.db_id:
-					client.send("ERR", {'text': 'Can only reassign ownership on entities you own'})
-					del update['owner_username']
-				new_owner = find_db_id_by_username(update['owner_username'])
-				if new_owner:
-					update_me.owner_id = update['owner']
-				else:
-					client.send("ERR", {'text': 'Username \"%s\" not found' % update['owner_username']})
-					del update['owner_username']
-
-			if 'folder' in update:
-				if client.has_permission(update['folder'], (permission['entry']), False) \
-				and client.has_permission(update['folder'], (permission['object_entry'], permission['persistent_object_entry']), False):
-					if not update_me.switch_map(update['folder']):
-						client.send("ERR", {'text': 'Entity doesn\'t have permission to move there'})
-						del update['folder']
-				else:
-					client.send("ERR", {'text': 'Don\'t have permission to move entity there'})
+		if 'folder' in update:
+			if client.has_permission(update['folder'], (permission['entry']), False) \
+			and client.has_permission(update['folder'], (permission['object_entry'], permission['persistent_object_entry']), False):
+				if not update_me.switch_map(update['folder']):
+					client.send("ERR", {'text': 'Entity doesn\'t have permission to move there'})
 					del update['folder']
-
-			if 'home' in update:
-				if update['home'] == True and client.has_permission(update_me.map_id, permission['persistent_object_entry'], False):
-					update_me.home_id = update_me.map_id
-					update_me.home_position = [update_me.x, update_me.y]
-				elif update['home'] == None:
-					update_me.home_id = None
-					update_me.home_position = None
-				elif client.has_permission(update['home'], permission['persistent_object_entry'], False):
-					update_me.home_id = update['home']
-					update_me.home_position = None
-				else:
-					client.send("ERR", {'text': 'Don\'t have permission to set entity\'s home there'})
-					del update['home']
-
-			if 'home_position' in update and len(update['home_position']) == 2:
-				update_me.home_position = update['home_position']
-			if 'name' in update:
-				update_me.name = update['name']
-			if 'desc' in update:
-				update_me.desc = update['desc']
-			if 'pic' in update:
-				if pic_is_okay(update['pic']):
-					update_me.pic = update['pic']
-				else:
-					client.send("ERR", {'text': 'Invalid picture: %s' % update_me.pic})
-					del update['pic']
-			if 'tags' in update:
-				update_me.tags = update['tags']
-			if 'allow' in update:
-				update_me.allow = bitfield_from_permission_list(update['allow'])
-			if 'deny' in update:
-				update_me.deny = bitfield_from_permission_list(update['deny'])
-			if 'guest_deny' in update:
-				update_me.guest_deny = bitfield_from_permission_list(update['guest_deny'])
-			if 'temporary' in update:
-				update_me.temporary = update['temporary']
-
-			if not update_me.temporary:
-				update_me.save()
-			update_me.broadcast_who()
-
-			# send back confirmation
-			client.send("BAG", {'update': update})
-
-		elif "move" in arg:
-			move = arg['move']
-			move_me = get_entity_by_id(move['id'])
-			if 'folder' not in move and client.has_permission(move['move']):
-				move_me.move_to(x, y)
-			elif 'folder' in move and client.has_permission(move['folder'], (permission['object_entry'], permission['persistent_object_entry']), False):
-				if 'pos' in move:
-					if client.has_permission(move_me, permission['move_new_map'], False):
-						move_me.switch_map(move['folder'], new_pos=move['pos'])
-						client.send('BAG', {'move': move})
-					else:
-						client.send("ERR", {'text': 'Don\'t have permission to move entity'})
-				else:
-					if client.has_permission(move_me, (permission['move'], permission['move_new_map']), False):
-						move_me.switch_map(move['folder'])
-						client.send('BAG', {'move': move})
-					else:
-						client.send("ERR", {'text': 'Don\'t have permission to move entity'})
 			else:
 				client.send("ERR", {'text': 'Don\'t have permission to move entity there'})
+				del update['folder']
 
-		elif "kick" in arg:
-			kick = arg['kick']
-			kick_me = get_entity_by_id(kick['id'])
-			if kick.map_id == client.db_id or client.has_permission(kick_me.map_id, (permission['admin'], permission['sandbox']), False):
-				kick.send_home()
-				client.send("BAG", {'kick': kick})
+		if 'home' in update:
+			if update['home'] == True and client.has_permission(update_me.map_id, permission['persistent_object_entry'], False):
+				update_me.home_id = update_me.map_id
+				update_me.home_position = [update_me.x, update_me.y]
+			elif update['home'] == None:
+				update_me.home_id = None
+				update_me.home_position = None
+			elif client.has_permission(update['home'], permission['persistent_object_entry'], False):
+				update_me.home_id = update['home']
+				update_me.home_position = None
+			else:
+				client.send("ERR", {'text': 'Don\'t have permission to set entity\'s home there'})
+				del update['home']
 
-		elif "delete" in arg:
-			delete = arg['delete']
+		if 'home_position' in update and len(update['home_position']) == 2:
+			update_me.home_position = update['home_position']
+		if 'name' in update:
+			update_me.name = update['name']
+		if 'desc' in update:
+			update_me.desc = update['desc']
+		if 'pic' in update:
+			if pic_is_okay(update['pic']):
+				update_me.pic = update['pic']
+			else:
+				client.send("ERR", {'text': 'Invalid picture: %s' % update_me.pic})
+				del update['pic']
+		if 'tags' in update:
+			update_me.tags = update['tags']
+		if 'allow' in update:
+			update_me.allow = bitfield_from_permission_list(update['allow'])
+		if 'deny' in update:
+			update_me.deny = bitfield_from_permission_list(update['deny'])
+		if 'guest_deny' in update:
+			update_me.guest_deny = bitfield_from_permission_list(update['guest_deny'])
+		if 'temporary' in update:
+			update_me.temporary = update['temporary']
 
-			delete_me = get_entity_by_id(delete['id'])
-			if delete_me == None or delete_me.is_client():
-				client.send("ERR", {'text': 'Can\'t delete %s' % delete['id']})
-				return
-			if delete_me.owner_id != client.db_id:
-				client.send("ERR", {'text': 'You don\'t have permission to delete %s' % delete['id']})
-				return
+		if not update_me.temporary:
+			update_me.save()
+		update_me.broadcast_who()
 
-			# Move everything inside to the parent
-			for child in delete_me.contents.copy():
-				delete_me.remove_from_contents(child)
-				delete_me.map.add_to_contents(child)
+		# send back confirmation
+		client.send("BAG", {'update': update})
 
-			# Delete from the database too
-			if delete_me.db_id:
-				c.execute('DELETE FROM Entity WHERE owner_id=? AND id=?', (client.db_id, delete['id']))
-			if delete_me.map:
-				delete_me.map.remove_from_contents(delete_me)
-			client.send("BAG", {'remove': {'id': delete['id']}})
+	elif "move" in arg:
+		move = arg['move']
+		move_me = get_entity_by_id(move['id'])
+		if 'folder' not in move and client.has_permission(move['move']):
+			move_me.move_to(x, y)
+		elif 'folder' in move and client.has_permission(move['folder'], (permission['object_entry'], permission['persistent_object_entry']), False):
+			if 'pos' in move:
+				if client.has_permission(move_me, permission['move_new_map'], False):
+					move_me.switch_map(move['folder'], new_pos=move['pos'])
+					client.send('BAG', {'move': move})
+				else:
+					client.send("ERR", {'text': 'Don\'t have permission to move entity'})
+			else:
+				if client.has_permission(move_me, (permission['move'], permission['move_new_map']), False):
+					move_me.switch_map(move['folder'])
+					client.send('BAG', {'move': move})
+				else:
+					client.send("ERR", {'text': 'Don\'t have permission to move entity'})
+		else:
+			client.send("ERR", {'text': 'Don\'t have permission to move entity there'})
 
-		elif "info" in arg:
-			info = arg['info']
-			info_me = get_entity_by_id(info['id'])
-			if info_me == None:
-				client.send("ERR", {'text': 'Can\'t get info for %s' % info['id']})
-				return
+	elif "kick" in arg:
+		kick = arg['kick']
+		kick_me = get_entity_by_id(kick['id'])
+		if kick.map_id == client.db_id or client.has_permission(kick_me.map_id, (permission['admin'], permission['sandbox']), False):
+			kick.send_home()
+			client.send("BAG", {'kick': kick})
 
-			bag_info = info_me.bag_info()
-			if info_me.is_client(): # No spying
-				del bag_info['folder']
-			client.send("BAG", {'info': bag_info})
+	elif "delete" in arg:
+		delete = arg['delete']
 
-		elif "list_contents" in arg:
-			list_contents = arg['list_contents']
-			list_me = get_entity_by_id(list_contents['id'])
-			if list_me == None:
-				client.send("ERR", {'text': 'Can\'t list contents for %s' % list_contents['id']})
-				return
-			if list_me.owner_id != client.db_id and not client.has_permission(list_me, permission['list_contents'], False):
-				client.send("ERR", {'text': 'Don\'t have permission to list contents for %s' % list_contents['id']})
-				return
-			client.send("BAG", {'list': [child.bag_info() for child in self.all_children()], 'container': list_me.protocol_id(), 'clear': True})
+		delete_me = get_entity_by_id(delete['id'])
+		if delete_me == None or delete_me.is_client():
+			client.send("ERR", {'text': 'Can\'t delete %s' % delete['id']})
+			return
+		elif delete_me.creator_temp_id == client.id:
+			pass
+		elif delete_me.owner_id == None or delete_me.owner_id != client.db_id:
+			client.send("ERR", {'text': 'You don\'t have permission to delete %s' % delete['id']})
+			return
 
-	else:
-		client.send("ERR", {'text': 'Guests don\'t have an inventory currently. Use [tt]/register username password[/tt]'})
+		# Move everything inside to the parent
+		for child in delete_me.contents.copy():
+			delete_me.remove_from_contents(child)
+			delete_me.map.add_to_contents(child)
+
+		# Delete from the database too
+		if delete_me.db_id:
+			c.execute('DELETE FROM Entity WHERE owner_id=? AND id=?', (client.db_id, delete['id']))
+		if delete_me.map:
+			delete_me.map.remove_from_contents(delete_me)
+		client.send("BAG", {'remove': {'id': delete['id']}})
+
+	elif "info" in arg:
+		info = arg['info']
+		info_me = get_entity_by_id(info['id'])
+		if info_me == None:
+			client.send("ERR", {'text': 'Can\'t get info for %s' % info['id']})
+			return
+
+		bag_info = info_me.bag_info()
+		if info_me.is_client(): # No spying
+			del bag_info['folder']
+		client.send("BAG", {'info': bag_info})
+
+	elif "list_contents" in arg:
+		list_contents = arg['list_contents']
+		list_me = get_entity_by_id(list_contents['id'])
+		if list_me == None:
+			client.send("ERR", {'text': 'Can\'t list contents for %s' % list_contents['id']})
+			return
+		if list_me.owner_id != client.db_id and not client.has_permission(list_me, permission['list_contents'], False):
+			client.send("ERR", {'text': 'Don\'t have permission to list contents for %s' % list_contents['id']})
+			return
+		client.send("BAG", {'list': [child.bag_info() for child in self.all_children()], 'container': list_me.protocol_id(), 'clear': True})
 
 @protocol_command()
 def fn_EML(map, client, arg):
