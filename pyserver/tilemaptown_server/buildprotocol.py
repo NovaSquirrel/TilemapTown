@@ -593,6 +593,8 @@ def fn_BLK(map, client, arg):
 
 @protocol_command()
 def fn_WHO(map, client, arg):
+	if map == None:
+		return
 	if arg["update"]:
 		valid_data = validate_client_who(client.protocol_id(), arg["update"])
 		for key,value in valid_data.items():
