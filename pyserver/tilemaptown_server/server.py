@@ -98,6 +98,10 @@ async def client_handler(websocket, path):
 
 			# Identify the user and put them on a map
 			if command == "IDN":
+				# Send in resources first, if the server specifies any
+				if LoadedAnyServerResources:
+					client.send("RSC", ServerResources)
+
 				result = False
 				if arg != {}:
 					result = client.login(filter_username(arg["username"]), arg["password"])

@@ -70,13 +70,35 @@ function RequestImageIfNeeded(id) {
   }
 }
 
+function FetchTilesetImage(id, url) {
+  // unload an image
+  if(url == null) {
+    delete IconSheets[id];
+    return;
+  }
+  // load an image
+  var img = new Image();
+  img.onload = function(){
+    NeedMapRedraw = true;
+    if(id <= 0)
+      redrawBuildCanvas();
+  };
+  img.src = url;
+  IconSheets[id] = img;
+  delete IconSheetsRequested[id];
+}
+
 // add a new tileset to the list
 function InstallTileset(name, list) {
   let new_set = {};
 
   // unpack each item
   for(let i=0; i<list.length/2; i++) {
-    new_set[list[i*2]] = AtomCompact2JSON(list[i*2+1]);
+    let tile = list[i*2+1];
+    if(Array.isArray(tile))
+      new_set[list[i*2]] = AtomCompact2JSON(tile);
+    else
+      new_set[list[i*2]] = tile;
   }
 
   Tilesets[name] = new_set;
@@ -160,8 +182,10 @@ function AtomCompact2JSON(t) {
 
 
 function initMap() {
-  IconSheets[0] = document.getElementById("potluck");
-  IconSheets[-1] = document.getElementById("extras");
+  if(Object.keys(IconSheets).length === 0) {
+    IconSheets[0] = document.getElementById("potluck");
+    IconSheets[-1] = document.getElementById("extras");
+  }
 
   // Initialize the map
   for(var i=0; i<MapWidth; i++) {

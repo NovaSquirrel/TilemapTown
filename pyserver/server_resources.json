@@ -1,0 +1,888 @@
+{
+	"images": {
+		"0": "potluck.png",
+		"-1": "extra.png"
+	},
+	"tilesets": {
+		"": {
+			"grass": {
+				"name": "grass",
+				"pic": [0, 0, 4],
+				"density": false
+			},
+			"grass2": {
+				"name": "grass",
+				"pic": [-1, 3, 0],
+				"density": false
+			},
+			"grass3": {
+				"name": "grass",
+				"pic": [-1, 3, 1],
+				"density": false
+			},
+			"grass4": {
+				"name": "grass",
+				"pic": [-1, 0, 3],
+				"density": false
+			},
+			"dirt": {
+				"name": "dirt",
+				"pic": [0, 6, 4],
+				"density": false
+			},
+			"dirt2": {
+				"name": "dirt",
+				"pic": [-1, 2, 0],
+				"density": false
+			},
+			"dirt3": {
+				"name": "dirt",
+				"pic": [-1, 7, 2],
+				"density": false
+			},
+			"water": {
+				"name": "water",
+				"pic": [-1, 1, 1],
+				"density": true
+			},
+			"water2": {
+				"name": "water",
+				"pic": [-1, 10, 3],
+				"density": true
+			},
+			"waterfall": {
+				"name": "waterfall",
+				"pic": [-1, 1, 0],
+				"density": false,
+				"type": "escalator",
+				"dir": 2
+			},
+			"brownsand": {
+				"name": "brown sand",
+				"pic": [0, 10, 3],
+				"density": false
+			},
+			"purplesand": {
+				"name": "purple sand",
+				"pic": [0, 10, 4],
+				"density": false
+			},
+			"redbrickfloor": {
+				"name": "red brick floor",
+				"pic": [0, 10, 8],
+				"density": false
+			},
+			"graybrickfloor": {
+				"name": "gray brick floor",
+				"pic": [0, 11, 8],
+				"density": false
+			},
+			"stonewall": {
+				"name": "stone wall",
+				"pic": [0, 9, 1],
+				"density": true
+			},
+			"xblock": {
+				"name": "x block",
+				"pic": [0, 15, 0],
+				"density": true
+			},
+			"ice": {
+				"name": "ice",
+				"pic": [0, 15, 10],
+				"density": false,
+				"type": "ice"
+			},
+			"brownbricks": {
+				"name": "brown bricks",
+				"pic": [0, 7, 6],
+				"density": true
+			},
+			"woodfloor2": {
+				"name": "wood floor",
+				"pic": [-1, 10, 2],
+				"density": false
+			},
+			"woodfloor": {
+				"name": "wood floor",
+				"pic": [0, 1, 6],
+				"density": false
+			},
+			"woodwall": {
+				"name": "wood wall",
+				"pic": [0, 3, 8],
+				"density": true
+			},
+			"floor1": {
+				"name": "floor",
+				"pic": [0, 6, 15],
+				"density": false
+			},
+			"floor2": {
+				"name": "floor",
+				"pic": [0, 7, 15],
+				"density": false
+			},
+			"floor3": {
+				"name": "floor",
+				"pic": [0, 7, 14],
+				"density": false
+			},
+			"floor4": {
+				"name": "floor",
+				"pic": [0, 7, 13],
+				"density": false
+			},
+			"floor5": {
+				"name": "floor",
+				"pic": [0, 6, 17],
+				"density": false
+			},
+			"forcedown": {
+				"name": "force",
+				"pic": [0, 12, 19],
+				"density": false,
+				"type": "escalator",
+				"dir": 2
+			},
+			"forceup": {
+				"name": "force",
+				"pic": [0, 13, 19],
+				"density": false,
+				"type": "escalator",
+				"dir": 6
+			},
+			"forceleft": {
+				"name": "force",
+				"pic": [0, 14, 19],
+				"density": false,
+				"type": "escalator",
+				"dir": 4
+			},
+			"forceright": {
+				"name": "force",
+				"pic": [0, 15, 19],
+				"density": false,
+				"type": "escalator",
+				"dir": 0
+			},
+			"bluewall": {
+				"name": "blue wall",
+				"pic": [0, 16, 27],
+				"density": true
+			},
+			"pinkwall": {
+				"name": "pink wall",
+				"pic": [0, 17, 27],
+				"density": true
+			},
+			"greenwall": {
+				"name": "green wall",
+				"pic": [0, 18, 27],
+				"density": true
+			},
+			"orangewall": {
+				"name": "orange wall",
+				"pic": [0, 19, 27],
+				"density": true
+			},
+
+
+			"skull": {
+				"name": "skull",
+				"pic": [0, 11, 10],
+				"density": true,
+				"obj": true
+			},
+			"bush1": {
+				"name": "bush",
+				"pic": [0, 13, 16],
+				"density": true,
+				"obj": true
+			},
+			"bush2": {
+				"name": "bush",
+				"pic": [0, 14, 16],
+				"density": true,
+				"obj": true
+			},
+			"bush3": {
+				"name": "bush",
+				"pic": [-1, 8, 3],
+				"density": true,
+				"obj": true
+			},
+			"rocks1": {
+				"name": "rocks",
+				"pic": [0, 15, 16],
+				"density": true,
+				"obj": true
+			},
+			"rocks2": {
+				"name": "rocks",
+				"pic": [0, 16, 16],
+				"density": true,
+				"obj": true
+			},
+			"rocks3": {
+				"name": "rocks",
+				"pic": [0, 17, 16],
+				"density": true,
+				"obj": true
+			},
+			"flower1": {
+				"name": "flowers",
+				"pic": [0, 15, 15],
+				"density": false,
+				"obj": true
+			},
+			"flower2": {
+				"name": "flowers",
+				"pic": [0, 16, 15],
+				"density": false,
+				"obj": true
+			},
+			"flower3": {
+				"name": "flower",
+				"pic": [0, 17, 15],
+				"density": false,
+				"obj": true
+			},
+			"flower4": {
+				"name": "flowers",
+				"pic": [0, 18, 15],
+				"density": false,
+				"obj": true
+			},
+			"sign": {
+				"name": "sign",
+				"pic": [0, 16, 17],
+				"density": true,
+				"obj": true,
+				"type": "sign"
+			},
+			"redwhitesign": {
+				"name": "sign",
+				"pic": [0, 17, 17],
+				"density": true,
+				"obj": true
+			},
+			"pot1": {
+				"name": "pot",
+				"pic": [0, 16, 18],
+				"density": true,
+				"obj": true
+			},
+			"pot2": {
+				"name": "pot",
+				"pic": [0, 17, 18],
+				"density": true,
+				"obj": true
+			},
+			"barrel": {
+				"name": "barrel",
+				"pic": [0, 18, 18],
+				"density": true,
+				"obj": true
+			},
+			"barrel2": {
+				"name": "barrel",
+				"pic": [-1, 2, 3],
+				"density": true,
+				"obj": true
+			},
+			"books": {
+				"name": "bookshelves",
+				"pic": [0, 19, 18],
+				"density": true,
+				"obj": true
+			},
+			"tv1": {
+				"name": "television",
+				"pic": [0, 21, 18],
+				"density": true,
+				"obj": true
+			},
+			"tv2": {
+				"name": "television",
+				"pic": [0, 22, 18],
+				"density": true,
+				"obj": true
+			},
+			"cherry": {
+				"name": "cherry",
+				"pic": [0, 0, 19],
+				"density": false,
+				"obj": true
+			},
+			"corn": {
+				"name": "corn",
+				"pic": [0, 1, 19],
+				"density": false,
+				"obj": true
+			},
+			"eggplant": {
+				"name": "eggplant",
+				"pic": [0, 2, 19],
+				"density": false,
+				"obj": true
+			},
+			"eggplant2": {
+				"name": "eggplant",
+				"pic": [-1, 3, 10],
+				"density": false,
+				"obj": true
+			},
+			"watermelon": {
+				"name": "watermelon",
+				"pic": [-1, 0, 10],
+				"density": false,
+				"obj": true
+			},
+			"cookie": {
+				"name": "cookie",
+				"pic": [-1, 1, 10],
+				"density": false,
+				"obj": true
+			},
+			"chickenleg": {
+				"name": "chicken leg",
+				"pic": [-1, 2, 10],
+				"density": false,
+				"obj": true
+			},
+			"pie": {
+				"name": "pie",
+				"pic": [-1, 4, 10],
+				"density": false,
+				"obj": true
+			},
+			"pickle": {
+				"name": "pickle",
+				"pic": [-1, 7, 10],
+				"density": false,
+				"obj": true
+			},
+			"potato": {
+				"name": "potato",
+				"pic": [-1, 8, 10],
+				"density": false,
+				"obj": true
+			},
+			"cheese": {
+				"name": "cheese",
+				"pic": [-1, 10, 10],
+				"density": false,
+				"obj": true
+			},
+			"pretzel": {
+				"name": "pretzel",
+				"pic": [-1, 13, 10],
+				"density": false,
+				"obj": true
+			},
+			"turnip": {
+				"name": "turnip",
+				"pic": [-1, 15, 10],
+				"density": false,
+				"obj": true
+			},
+			"bread": {
+				"name": "bread",
+				"pic": [0, 3, 19],
+				"density": false,
+				"obj": true
+			},
+			"bread2": {
+				"name": "bread",
+				"pic": [-1, 7, 6],
+				"density": false,
+				"obj": true
+			},
+			"eggs": {
+				"name": "bacon and eggs",
+				"pic": [0, 4, 19],
+				"density": false,
+				"obj": true
+			},
+			"eggs2": {
+				"name": "egg",
+				"pic": [0, 5, 19],
+				"density": false,
+				"obj": true
+			},
+			"candy": {
+				"name": "candy",
+				"pic": [0, 6, 19],
+				"density": false,
+				"obj": true
+			},
+			"cake": {
+				"name": "cake",
+				"pic": [0, 8, 19],
+				"density": false,
+				"obj": true
+			},
+			"icecream": {
+				"name": "icecream",
+				"pic": [0, 9, 19],
+				"density": false,
+				"obj": true
+			},
+			"icecream2": {
+				"name": "icecream",
+				"pic": [-1, 6, 6],
+				"density": false,
+				"obj": true
+			},
+			"pizza": {
+				"name": "pizza",
+				"pic": [-1, 5, 6],
+				"density": false,
+				"obj": true
+			},
+			"soda": {
+				"name": "soda",
+				"pic": [-1, 4, 6],
+				"density": false,
+				"obj": true
+			},
+			"apple": {
+				"name": "apple",
+				"pic": [-1, 3, 6],
+				"density": false,
+				"obj": true
+			},
+			"apple2": {
+				"name": "apple",
+				"pic": [-1, 9, 10],
+				"density": false,
+				"obj": true
+			},
+			"box": {
+				"name": "box",
+				"pic": [0, 0, 20],
+				"density": true,
+				"obj": true
+			},
+			"chest": {
+				"name": "chest",
+				"pic": [0, 1, 20],
+				"closedpic": [0, 1, 20],
+				"openpic": [0, 2, 20],
+				"density": true,
+				"obj": true
+			},
+			"chest2": {
+				"name": "chest",
+				"pic": [-1, 3, 3],
+				"density": true,
+				"obj": true
+			},
+			"chest3": {
+				"name": "chest",
+				"pic": [-1, 11, 6],
+				"density": true,
+				"obj": true
+			},
+			"coin": {
+				"name": "coin",
+				"pic": [0, 3, 20],
+				"density": false,
+				"obj": true
+			},
+			"diamond": {
+				"name": "diamond",
+				"pic": [0, 4, 20],
+				"density": false,
+				"obj": true
+			},
+			"diamond2": {
+				"name": "diamond",
+				"pic": [-1, 8, 6],
+				"density": false,
+				"obj": true
+			},
+			"diamond3": {
+				"name": "diamond",
+				"pic": [-1, 9, 6],
+				"density": false,
+				"obj": true
+			},
+			"diamond4": {
+				"name": "diamond",
+				"pic": [-1, 10, 6],
+				"density": false,
+				"obj": true
+			},
+			"stopwatch": {
+				"name": "stopwatch",
+				"pic": [0, 5, 20],
+				"density": false,
+				"obj": true
+			},
+			"potion1": {
+				"name": "potion",
+				"pic": [0, 6, 20],
+				"density": false,
+				"obj": true
+			},
+			"potion2": {
+				"name": "potion",
+				"pic": [0, 7, 20],
+				"density": false,
+				"obj": true
+			},
+			"potion3": {
+				"name": "potion",
+				"pic": [0, 8, 20],
+				"density": false,
+				"obj": true
+			},
+			"tree": {
+				"name": "tree",
+				"pic": [-1, 0, 0],
+				"density": true,
+				"obj": true
+			},
+			"tree2": {
+				"name": "tree",
+				"pic": [-1, 0, 1],
+				"density": true,
+				"obj": true
+			},
+			"treefall": {
+				"name": "tree",
+				"pic": [-1, 9, 5],
+				"density": true,
+				"obj": true
+			},
+			"treefall2": {
+				"name": "tree",
+				"pic": [-1, 7, 5],
+				"density": true,
+				"obj": true
+			},
+			"treewinter": {
+				"name": "tree",
+				"pic": [-1, 10, 5],
+				"density": true,
+				"obj": true
+			},
+			"treewinter2": {
+				"name": "tree",
+				"pic": [-1, 8, 5],
+				"density": true,
+				"obj": true
+			},
+			"treetop": {
+				"name": "tree",
+				"pic": [-1, 6, 3],
+				"density": false,
+				"obj": true,
+				"over": true
+			},
+			"treebot": {
+				"name": "tree",
+				"pic": [-1, 7, 3],
+				"density": true,
+				"obj": true
+			},
+			"well": {
+				"name": "well",
+				"pic": [-1, 15, 1],
+				"density": true,
+				"obj": true
+			},
+			"table": {
+				"name": "table",
+				"pic": [-1, 13, 3],
+				"density": true,
+				"obj": true
+			},
+			"table2": {
+				"name": "table",
+				"pic": [-1, 11, 4],
+				"density": true,
+				"obj": true
+			},
+			"table3": {
+				"name": "table",
+				"pic": [-1, 12, 4],
+				"density": true,
+				"obj": true
+			},
+			"table4": {
+				"name": "table",
+				"pic": [-1, 15, 5],
+				"density": true,
+				"obj": true
+			},
+			"cabinet": {
+				"name": "cabinet",
+				"pic": [-1, 13, 5],
+				"density": true,
+				"obj": true
+			},
+			"cabinet2": {
+				"name": "cabinet",
+				"pic": [-1, 14, 5],
+				"density": true,
+				"obj": true
+			},
+			"throne": {
+				"name": "throne",
+				"pic": [-1, 8, 4],
+				"density": true,
+				"obj": true
+			},
+			"stool": {
+				"name": "stool",
+				"pic": [-1, 10, 4],
+				"density": false,
+				"obj": true
+			},
+			"rockwall": {
+				"name": "rock wall",
+				"pic": [-1, 6, 4],
+				"density": true
+			},
+			"statue": {
+				"name": "statue",
+				"pic": [-1, 7, 4],
+				"density": true,
+				"obj": true
+			},
+			"stump": {
+				"name": "stump",
+				"pic": [-1, 5, 5],
+				"obj": true
+			},
+			"window": {
+				"name": "window",
+				"pic": [-1, 6, 5],
+				"obj": true
+			},
+			"pillar": {
+				"name": "pillar",
+				"pic": [-1, 9, 4],
+				"density": true,
+				"obj": true
+			},
+			"drawers": {
+				"name": "drawers",
+				"pic": [-1, 14, 3],
+				"density": true,
+				"obj": true
+			},
+			"drawers2": {
+				"name": "drawers",
+				"pic": [-1, 13, 4],
+				"density": true,
+				"obj": true
+			},
+			"glasswall": {
+				"name": "glass wall",
+				"pic": [-1, 1, 5],
+				"density": true,
+				"obj": true
+			},
+			"tombstone": {
+				"name": "tombstone",
+				"pic": [-1, 12, 5],
+				"density": true,
+				"obj": true
+			},
+			"mossrock": {
+				"name": "mossrock",
+				"pic": [-1, 11, 5],
+				"density": true,
+				"obj": true
+			},
+			"grasstuft": {
+				"name": "grasstuft",
+				"pic": [-1, 5, 4],
+				"density": false,
+				"obj": true
+			},
+			"lava": {
+				"name": "lava",
+				"pic": [-1, 11, 2],
+				"density": true,
+				"obj": false
+			},
+			"door": {
+				"name": "door",
+				"pic": [-1, 15, 0],
+				"density": false,
+				"obj": true
+			},
+			"goldchalice": {
+				"name": "gold chalice",
+				"pic": [-1, 5, 11],
+				"density": false,
+				"obj": true
+			},
+			"goldbars": {
+				"name": "gold bars",
+				"pic": [-1, 6, 11],
+				"density": false,
+				"obj": true
+			},
+			"book": {
+				"name": "book",
+				"pic": [-1, 0, 9],
+				"density": false,
+				"obj": true
+			},
+			"bottle": {
+				"name": "bottle",
+				"pic": [-1, 1, 9],
+				"density": false,
+				"obj": true
+			},
+			"orb": {
+				"name": "orb",
+				"pic": [-1, 2, 9],
+				"density": false,
+				"obj": true
+			},
+			"mushroom": {
+				"name": "mushroom",
+				"pic": [-1, 3, 9],
+				"density": false,
+				"obj": true
+			},
+			"scroll": {
+				"name": "scroll",
+				"pic": [-1, 6, 9],
+				"density": false,
+				"obj": true
+			},
+			"sword": {
+				"name": "sword",
+				"pic": [-1, 7, 9],
+				"density": false,
+				"obj": true
+			},
+			"colorwall1": {
+				"name": "colored wall",
+				"pic": [-1, 0, 7],
+				"density": true
+			},
+			"colorwall2": {
+				"name": "colored wall",
+				"pic": [-1, 1, 7],
+				"density": true
+			},
+			"colorwall3": {
+				"name": "colored wall",
+				"pic": [-1, 2, 7],
+				"density": true
+			},
+			"colorwall4": {
+				"name": "colored wall",
+				"pic": [-1, 3, 7],
+				"density": true
+			},
+			"colorwall5": {
+				"name": "colored wall",
+				"pic": [-1, 4, 7],
+				"density": true
+			},
+			"colorwall6": {
+				"name": "colored wall",
+				"pic": [-1, 5, 7],
+				"density": true
+			},
+			"colorwall7": {
+				"name": "colored wall",
+				"pic": [-1, 6, 7],
+				"density": true
+			},
+			"colorwall8": {
+				"name": "colored wall",
+				"pic": [-1, 7, 7],
+				"density": true
+			},
+			"colorwall9": {
+				"name": "colored wall",
+				"pic": [-1, 8, 7],
+				"density": true
+			},
+			"colorwall10": {
+				"name": "colored wall",
+				"pic": [-1, 9, 7],
+				"density": true
+			},
+			"colorwall11": {
+				"name": "colored wall",
+				"pic": [-1, 10, 7],
+				"density": true
+			},
+			"colorwall12": {
+				"name": "colored wall",
+				"pic": [-1, 11, 7],
+				"density": true
+			},
+			"colorwall13": {
+				"name": "colored wall",
+				"pic": [-1, 12, 7],
+				"density": true
+			},
+			"colorfloor1": {
+				"name": "colored floor",
+				"pic": [-1, 0, 8]
+			},
+			"colorfloor2": {
+				"name": "colored floor",
+				"pic": [-1, 1, 8]
+			},
+			"colorfloor3": {
+				"name": "colored floor",
+				"pic": [-1, 2, 8]
+			},
+			"colorfloor4": {
+				"name": "colored floor",
+				"pic": [-1, 3, 8]
+			},
+			"colorfloor5": {
+				"name": "colored floor",
+				"pic": [-1, 4, 8]
+			},
+			"colorfloor6": {
+				"name": "colored floor",
+				"pic": [-1, 5, 8]
+			},
+			"colorfloor7": {
+				"name": "colored floor",
+				"pic": [-1, 6, 8]
+			},
+			"colorfloor8": {
+				"name": "colored floor",
+				"pic": [-1, 7, 8]
+			},
+			"colorfloor9": {
+				"name": "colored floor",
+				"pic": [-1, 8, 8]
+			},
+			"colorfloor10": {
+				"name": "colored floor",
+				"pic": [-1, 9, 8]
+			},
+
+			"colorfloor11": {
+				"name": "colored floor",
+				"pic": [-1, 10, 8]
+			},
+			"colorfloor12": {
+				"name": "colored floor",
+				"pic": [-1, 11, 8]
+			},
+			"colorfloor13": {
+				"name": "colored floor",
+				"pic": [-1, 12, 8]
+			}
+		}
+	}
+}

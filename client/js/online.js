@@ -97,6 +97,13 @@ function initPlayerIfNeeded(id) {
   }
 }
 
+function asIntIfPossible(i) {
+  var asInt = parseInt(i);
+  if(asInt != NaN)
+    return asInt;
+  return i;
+}
+
 function receiveServerMessage(event) {
 //    console.log(event.data);
   var msg = event.data;
@@ -347,20 +354,35 @@ function receiveServerMessage(event) {
       NeedInventoryUpdate = true;
       break;
 
-    case "IMG":
-      // unload an image
-      if(arg.url == null) {
-        delete IconSheets[arg.id];
-        break;
+    case "RSC":
+      if('images' in arg) {
+        for(var key in arg['images']) {
+          FetchTilesetImage(asIntIfPossible(key), arg['images'][key]);
+        }
       }
-      // load an image
-      var img = new Image();
-      img.onload = function(){
-         NeedMapRedraw = true;
-      };
-      img.src = arg.url;
-      IconSheets[arg.id] = img;
-      delete IconSheetsRequested[arg.id];
+      if('tilesets' in arg) {
+        for(var key in arg['tilesets']) {
+          var tileset = arg['tilesets'][key];
+          if(key == '') {
+            Predefined = tileset;
+            PredefinedArray = [];
+            PredefinedArrayNames = [];
+            for(var tileKey in tileset) {
+              var i=0;
+              for (var key in Predefined) {
+                PredefinedArrayNames[i] = key;
+                PredefinedArray[i++] = Predefined[key];
+              }
+            }
+          } else {
+            Tilesets[key] = tileset;
+          }
+        }
+      }
+      break;
+
+    case "IMG":
+      FetchTilesetImage(arg.id, arg.url);
       break;
 
     case "TSD":

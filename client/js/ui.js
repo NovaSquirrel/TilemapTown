@@ -647,7 +647,8 @@ function drawMap() {
       pic = Mob.pic;
       if(pic == null)
         pic = [0, 8, 24];
-      ctx.drawImage(IconSheets[pic[0]], pic[1]*16, pic[2]*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
+      if(pic[0] in IconSheets)
+        ctx.drawImage(IconSheets[pic[0]], pic[1]*16, pic[2]*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
       playerIs16x16 = true;
     }
 
@@ -1062,36 +1063,44 @@ function viewInit() {
   NeedMapRedraw = true;
 }
 
-function initBuild() {
+function redrawBuildCanvas() {
   var canvas = document.getElementById('inventoryCanvas');
-    // add click action
-    canvas = document.getElementById('inventoryCanvas');
-    var BuildWidth = 16;
+  // add click action
+  canvas = document.getElementById('inventoryCanvas');
+  var BuildWidth = 16;
 
-    var len = Object.keys(Predefined).length;
-    canvas.width = (BuildWidth*16)+"";
-    canvas.height = (Math.ceil(len/BuildWidth)*16)+"";
-    var ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  var len = Object.keys(PredefinedArray).length;
+  canvas.width = (BuildWidth*16)+"";
+  canvas.height = (Math.ceil(len/BuildWidth)*16)+"";
+  var ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    var count = 0;
-    for(var i in Predefined) {
-      var item = Predefined[i];
+  var count = 0;
+  for(var i in PredefinedArray) {
+    var item = PredefinedArray[i];
+    if(item.pic[0] in IconSheets)
       ctx.drawImage(IconSheets[item.pic[0]], item.pic[1]*16, item.pic[2]*16, 16, 16, (count%BuildWidth)*16, Math.floor(count/BuildWidth)*16, 16, 16);
-      count++;
-    }
+    count++;
+  }
+}
 
-    canvas.addEventListener('mousedown', function(evt) {
-      var pos = getMousePosRaw(inventoryCanvas, evt);
-      pos.x = pos.x >> 4;
-      pos.y = pos.y >> 4;
-      var index = pos.y * BuildWidth + pos.x;
+function initBuild() {
+  redrawBuildCanvas();
 
-      if(evt.button == 0)
-        useItem({type: 'map_tile', data: PredefinedArrayNames[index]});
+  var canvas = document.getElementById('inventoryCanvas');
+  var BuildWidth = 16;
+
+  canvas.addEventListener('mousedown', function(evt) {
+    var pos = getMousePosRaw(inventoryCanvas, evt);
+    pos.x = pos.x >> 4;
+    pos.y = pos.y >> 4;
+    var index = pos.y * BuildWidth + pos.x;
+
+    if(evt.button == 0)
+      useItem({type: 'map_tile', data: PredefinedArrayNames[index]});
 //      else if(evt.button == 2)
 //        addInventory(PredefinedArrayNames[index]);
-    }, false);
+  }, false);
 }
 
 function initWorld() {

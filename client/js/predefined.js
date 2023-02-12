@@ -7,12 +7,6 @@ Predefined.grass = {
 
 Predefined.grass2 = {
   name: "grass",
-  pic: [-1, 0, 3],
-  density: false,
-};
-
-Predefined.grass2 = {
-  name: "grass",
   pic: [-1, 3, 0],
   density: false,
 };
@@ -20,6 +14,12 @@ Predefined.grass2 = {
 Predefined.grass3 = {
   name: "grass",
   pic: [-1, 3, 1],
+  density: false,
+};
+
+Predefined.grass4 = {
+  name: "grass",
+  pic: [-1, 0, 3],
   density: false,
 };
 

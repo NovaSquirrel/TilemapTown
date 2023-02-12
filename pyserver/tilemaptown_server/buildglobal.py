@@ -50,6 +50,30 @@ setConfigDefault("Database", "File",             "town.db")
 setConfigDefault("Database", "Setup",            True)
 setConfigDefault("Images",   "URLWhitelist",     ["https://i.imgur.com/"])
 
+# Read server resource file
+ServerResources = {}
+LoadedAnyServerResources = False
+
+if "ResourceFiles" in Config["Server"]:
+	for fn in Config["Server"]["ResourceFiles"]:
+		if os.path.isfile(fn):
+			with open(fn) as f:
+				LoadedAnyServerResources = True
+				for key,value in json.load(f).items():
+					if key not in ServerResources:
+						ServerResources[key] = {}
+					ServerResources[key].update(value)
+		else:
+			print("Server resources file '%s' doesn't exist" % fn)
+
+	# Fix up images to have the image base, if it's provided
+	if "ResourceIMGBase" in Config["Server"] and "images" in ServerResources:
+		base = Config["Server"]["ResourceIMGBase"]
+		for i in ServerResources["images"]:
+			url = ServerResources["images"][i]
+			if not url.startswith("http://") and not url.startswith("https://"):
+				ServerResources["images"][i] = base + url
+
 # Open database connection
 Database = sqlite3.connect(Config["Database"]["File"], detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
 DatabaseMeta = {}

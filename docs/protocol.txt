@@ -164,9 +164,9 @@ ping, if you don't respond fast enough you disconnect
 version information for client and server
 (not implemented)
 
-<-- CFG {"resource": "novasquirrel.com/town/resources"}
-resources link?
-(not implemented)
+<-- RSC {"images": {"id": "url", ...}, "tilesets": {"id": {}, ...}}
+Resources for the client to preload.
+Allows servers to explicitly provide tilesets, both to allow for custom ones and to make it so that clients don't need to include a copy of the default tilesets.
 
 === Items ===
 --> MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "rc": 0}
