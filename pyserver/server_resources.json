@@ -491,6 +491,16 @@
 				"density": false,
 				"obj": true
 			},
+			"goldpile": {
+				"name": "gold pile",
+				"pic": [-1, 3, 4],
+				"obj": true
+			},
+			"gempile": {
+				"name": "gem pile",
+				"pic": [-1, 4, 4],
+				"obj": true
+			},
 			"diamond": {
 				"name": "diamond",
 				"pic": [0, 4, 20],
@@ -870,7 +880,6 @@
 				"name": "colored floor",
 				"pic": [-1, 9, 8]
 			},
-
 			"colorfloor11": {
 				"name": "colored floor",
 				"pic": [-1, 10, 8]
@@ -882,6 +891,16 @@
 			"colorfloor13": {
 				"name": "colored floor",
 				"pic": [-1, 12, 8]
+			},
+
+			"upstairs": {
+				"name": "stairs (up)",
+				"pic": [-1, 13, 2],
+				"obj": true
+			},
+			"downstairs": {
+				"name": "stairs (down)",
+				"pic": [-1, 14, 2]
 			}
 		}
 	}

@@ -62,7 +62,15 @@ if "ResourceFiles" in Config["Server"]:
 				for key,value in json.load(f).items():
 					if key not in ServerResources:
 						ServerResources[key] = {}
-					ServerResources[key].update(value)
+
+					if key == 'tilesets':
+						print("Tilesets")
+						for tileset in value:
+							if tileset not in ServerResources['tilesets']:
+								ServerResources['tilesets'][tileset] = {}
+							ServerResources['tilesets'][tileset].update(value[tileset])
+					else:
+						ServerResources[key].update(value)
 		else:
 			print("Server resources file '%s' doesn't exist" % fn)
 
