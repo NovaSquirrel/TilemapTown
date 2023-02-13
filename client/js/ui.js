@@ -1432,6 +1432,8 @@ function updateSelectedObjectsUL() {
 }
 
 function updateUsersUL() {
+  var include_all_entities = document.getElementById('userlist_all_entities').checked;
+
   // Manage the users <ul>
   var ul = document.getElementById('usersul');
   if(!ul)
@@ -1444,6 +1446,8 @@ function updateUsersUL() {
 
   for(var key in PlayerWho) {
     let user = PlayerWho[key];
+    if(!PlayerWho[key].in_user_list && !include_all_entities)
+      continue;
     let li = itemCard(key);
 
     // build the list item
