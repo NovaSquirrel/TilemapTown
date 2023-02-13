@@ -386,7 +386,10 @@ function receiveServerMessage(event) {
       break;
 
     case "TSD":
-      InstallTileset(arg.id, JSON.parse(arg.data));
+      if(typeof(arg.data) == 'string')
+        InstallTileset(arg.id, JSON.parse(arg.data));
+      else
+        InstallTileset(arg.id, arg.data);
       delete TilesetsRequested[arg.id];
       break;
 

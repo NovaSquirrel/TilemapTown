@@ -80,6 +80,7 @@ Applies a series of rectangles to the map.
 Width and height may be omitted, in order to just do a single tile.
 
 --> BLK {"copy": [{"turf": true/false, "obj": true/false, "src":[x,y,w,h], "dst":[x,y]}, ...]]}
+<-- BLK {"copy": [{"turf": true/false, "obj": true/false, "src":[x,y,w,h], "dst":[x,y]}, ...]], "username": username}
 Copies from one portion of the map to another, with overlapped rectangles allowed and supported.
 If "turf" and "obj" are also provided in the same BLK message, "copy" is applied first, then "turf" and finally "obj".
 This makes it easy to move something by copying it somewhere else and erasing the tile where it was.
@@ -96,7 +97,7 @@ request tileset data from the server
 
 <-- TSD {"id": number, "data": "[id, info, id, info, id, info, ...]"}
 Tileset received from the server
-Received data is in string format, and must be parsed as JSON!
+Received data may be in string format, which would need parsing into JSON.
 
 === People on the map ===
 --> WHO
