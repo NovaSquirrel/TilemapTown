@@ -64,7 +64,6 @@ if "ResourceFiles" in Config["Server"]:
 						ServerResources[key] = {}
 
 					if key == 'tilesets':
-						print("Tilesets")
 						for tileset in value:
 							if tileset not in ServerResources['tilesets']:
 								ServerResources['tilesets'][tileset] = {}
