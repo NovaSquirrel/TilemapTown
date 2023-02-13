@@ -558,7 +558,9 @@ class Entity(object):
 			'id': self.protocol_id(),
 			'passengers': [passenger.protocol_id() for passenger in self.passengers],
 			'vehicle': self.vehicle.protocol_id() if self.vehicle else None,
-			'is_following': self.is_following
+			'is_following': self.is_following,
+			'type': entity_type_name[self.entity_type],
+			'in_user_list': self.is_client()
 		}
 
 	def bag_info(self):
