@@ -177,7 +177,7 @@ class Map(Entity):
 		def search(inside):
 			n = 0
 			for e in inside.contents:
-				if e.is_user():
+				if e.is_client():
 					n += 1
 				if recursive:
 					n += search(e)
