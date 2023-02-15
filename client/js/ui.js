@@ -480,13 +480,9 @@ function keyHandler(e) {
 
   ClampPlayerPos();
 
-  // go back if the turf is solid
+  // Go back if the turf is solid, or if there's objects in the way
   if(OldPlayerX != PlayerX || OldPlayerY != PlayerY) {
-    if(!Fly && AtomFromName(MapTiles[PlayerX][PlayerY]).density) {
-      PlayerX = OldPlayerX;
-      PlayerY = OldPlayerY;
-    }
-    // or if there are any solid objects in the way
+    // Check for solid objects in the way first
     for (var index in MapObjs[PlayerX][PlayerY]) {
       var Obj = AtomFromName(MapObjs[PlayerX][PlayerY][index]);
       if(Obj.density) {
@@ -515,6 +511,11 @@ function keyHandler(e) {
         }
         break;
       }
+    }
+	// Then check for turfs
+    if(!Fly && AtomFromName(MapTiles[PlayerX][PlayerY]).density) {
+      PlayerX = OldPlayerX;
+      PlayerY = OldPlayerY;
     }
 
     if(OldPlayerX != PlayerX || OldPlayerY != PlayerY || OldPlayerDir != PlayerDir) {
