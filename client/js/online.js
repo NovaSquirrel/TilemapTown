@@ -122,7 +122,7 @@ function receiveServerMessage(event) {
         if("to" in arg) {
           PlayerWho[arg.id].x = arg.to[0];
           PlayerWho[arg.id].y = arg.to[1];
-          if(PlayerWho[arg.id].vehicle != null || PlayerWho[arg.id].is_following) {
+          if(PlayerWho[arg.id].vehicle == null || PlayerWho[arg.id].is_following) {
             startPlayerWalkAnim(arg.id);
           }
         }
