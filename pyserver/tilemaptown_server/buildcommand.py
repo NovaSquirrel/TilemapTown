@@ -358,7 +358,7 @@ def fn_tpcancel(map, client, context, arg):
 	else:
 		respond(Context, 'No request to cancel', error=True)
 
-@cmd_command
+@cmd_command()
 def fn_time(map, client, context, arg):
 	respond(context, datetime.datetime.today().strftime("Now it's %m/%d/%Y, %I:%M %p"))
 
@@ -685,11 +685,44 @@ def fn_mapspawn(map, client, context, arg):
 	map.start_pos = [client.x, client.y]
 	respond(context, 'Map start changed to %d,%d' % (client.x, client.y))
 
-@cmd_command
+@cmd_command()
 def fn_coords(map, client, context, arg):
 	respond(context, 'You\'re standing on %d,%d' % (client.x, client.y))
 
-@cmd_command
+
+def clone_tile_into_inventory(client, tile):
+	e = Entity(entity_type['map_tile'], creator_id=client.db_id)
+	if isinstance(tile, dict):
+		e.name = tile['name']
+	elif isinstance(tile, str):
+		e.name = tile
+	else:
+		e.name = "copied"
+	e.map_id = client.db_id
+	e.creator_temp_id = client.id
+	e.temporary = True
+	e.allow = permission['all']
+	e.data = tile
+	client.add_to_contents(e)
+
+@cmd_command(category="Map", map_only=True)
+def fn_getturf(map, client, context, arg):
+	turf = map.turfs[client.x][client.y]
+	if turf == None:
+		respond(context, 'You\'re not standing on a non-default turf', error=True)
+		return
+	clone_tile_into_inventory(client, turf)
+
+@cmd_command(category="Map", map_only=True)
+def fn_getobj(map, client, context, arg):
+	objs = map.objs[client.x][client.y]
+	if objs == None:
+		respond(context, 'You\'re not standing on any objs', error=True)
+		return
+	for obj in objs:
+		clone_tile_into_inventory(client, obj)
+
+@cmd_command()
 def fn_listeners(map, client, context, arg):
 	if map == None:
 		return

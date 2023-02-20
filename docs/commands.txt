@@ -19,6 +19,13 @@ Manage ignore list
 /away (message, optional)
 Set or clear away status
 
+---Utility---
+/getturf
+Makes a map tile object that would recreate the turf you're standing on, and puts it into your inventory.
+
+/getobj
+Makes map tile objects that would recreate every map object you're standing on, and puts it into your inventory.
+
 ---Account/customization---
 /nick newname
 Change display name
