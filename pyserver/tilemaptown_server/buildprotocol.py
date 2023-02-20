@@ -343,9 +343,10 @@ def fn_BAG(map, client, arg):
 		# Delete from the database too
 		if delete_me.db_id:
 			c.execute('DELETE FROM Entity WHERE owner_id=? AND id=?', (client.db_id, delete['id']))
+		if delete_me.map and delete_me.map != client:
+			client.send("BAG", {'remove': {'id': delete['id']}})
 		if delete_me.map:
 			delete_me.map.remove_from_contents(delete_me)
-		client.send("BAG", {'remove': {'id': delete['id']}})
 
 	elif "info" in arg:
 		info = arg['info']
