@@ -658,6 +658,15 @@ def fn_mapbuild(map, client, context, arg):
 	else:
 		respond(context, 'Map building must be on or off', error=True)
 
+@cmd_command(category="Map", privilege_level="map_admin", map_only=True, syntax="on/off")
+def fn_mapdisablesave(map, client, context, arg):
+	if arg == "on":
+		map.temporary = True
+	elif arg == "off":
+		map.temporary = False
+	else:
+		respond(context, 'Map save disabling must be on or off', error=True)
+
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="text")
 def fn_defaultfloor(map, client, context, arg):
 	as_json = load_json_if_valid(arg)
@@ -1103,8 +1112,11 @@ def fn_entitywho(map, client, context, arg):
 
 @cmd_command(category="Map")
 def fn_savemap(map, client, context, arg):
-	map.save_and_commit()
-	map.broadcast("MSG", {'text': client.name+" saved the map"})
+	if not map.temporary:
+		map.save_and_commit()
+		map.broadcast("MSG", {'text': client.name+" saved the map"})
+	else:
+		respond(context, 'This map has map saving turned off')
 
 # Server admin commands
 @cmd_command(category="Server Admin", privilege_level="server_admin")

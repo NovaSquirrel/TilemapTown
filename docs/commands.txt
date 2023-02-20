@@ -202,6 +202,12 @@ Set text to display upon entry
 Allow the user to download the map
 (unimplemented)
 
+/mapbuild on/off
+Enable or disable building on the map
+
+/mapdisablesave on/off
+Enable or disable saving the map (temporarily)
+
 ---Miscellaneous---
 /time
 Display current date and time

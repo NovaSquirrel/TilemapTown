@@ -179,9 +179,11 @@ def find_client_by_db_id(id, inside=None):
 	return None
 
 def find_client_by_username(username, inside=None):
+	if valid_id_format(username):
+		return get_entity_by_id(username, load_from_db=False)
 	username = username.lower()
 	for u in inside or AllClients:
-		if username == u.username or (username.isnumeric() and int(username) == u.id):
+		if username == u.username:
 			return u
 	return None
 
