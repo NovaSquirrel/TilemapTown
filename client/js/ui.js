@@ -141,19 +141,26 @@ function PlayersAroundTile(FindX, FindY, Radius) {
 }
 
 function editItemUpdatePic() {
-  var edittilesheet = parseInt(document.getElementById('edittilesheet').value);
+  var edittilesheet = document.getElementById('edittilesheet').value;
   var edittilex = parseInt(document.getElementById('edittilex').value);
   var edittiley = parseInt(document.getElementById('edittiley').value);
 
   var src = "";
-  if(IconSheets[edittilesheet])
-    src = IconSheets[edittilesheet].src;
+  if(edittilesheet == "keep") {
+    if(IconSheets[editItemOriginalSheet])
+      src = IconSheets[editItemOriginalSheet].src;
+  } else {
+    edittilesheet = parseInt(edittilesheet);
+    if(IconSheets[edittilesheet])
+      src = IconSheets[edittilesheet].src;
+  }
   document.getElementById('edittilepic').style.background = "url("+src+") -"+(edittilex*16)+"px -"+(edittiley*16)+"px";
   document.getElementById('edittilesheetselect').src = src;
 }
 
 editItemType = null;
 editItemID = null;
+editItemOriginalSheet = null; // Original tileset image that the tile's pic was set to before the edit
 function editItem(key) {
   // open up the item editing screen for a given item
   var item = DBInventory[key] || PlayerWho[key];
@@ -192,12 +199,17 @@ function editItem(key) {
         else
           itemobj = {pic: [0, 8, 24]};
       }
+      editItemOriginalSheet = itemobj.pic[0];
 
       // Display all the available images assets in the user's inventory
       var sheetselect = document.getElementById("edittilesheet"); 
       while(sheetselect.firstChild) {
         sheetselect.removeChild(sheetselect.firstChild);
       }
+      el = document.createElement("option");
+      el.textContent = "Don't change";
+      el.value = "keep";
+      sheetselect.appendChild(el);
       el = document.createElement("option");
       el.textContent = "Potluck";
       el.value = 0;
@@ -206,6 +218,7 @@ function editItem(key) {
       el.textContent = "Extras";
       el.value = -1;
       sheetselect.appendChild(el);
+
       // Now display everything in the inventory
       for(var i in DBInventory) {
         if(DBInventory[i].type == "image") {
@@ -219,7 +232,7 @@ function editItem(key) {
 
       document.getElementById('edittilemaptile').style.display = item.type == "map_tile" ? "block" : "none";
       document.getElementById('edittileobject').style.display = "block";
-      document.getElementById('edittilesheet').value = itemobj.pic[0];
+      document.getElementById('edittilesheet').value = "keep";
       document.getElementById('edittilex').value = itemobj.pic[1];
       document.getElementById('edittiley').value = itemobj.pic[2];
       var index_for_type = 0;
@@ -1676,7 +1689,13 @@ function editItemApply() {
     case "map_tile":
     case "generic":
       // Gather item info
-      var edittilesheet = parseInt(document.getElementById('edittilesheet').value);
+      var sheet = document.getElementById('edittilesheet').value;
+      if(sheet == "keep") {
+        sheet = editItemOriginalSheet;
+      } else {
+        sheet = parseInt(sheet);
+      }
+      var edittilesheet = parseInt(sheet);
       var edittilex = parseInt(document.getElementById('edittilex').value);
       var edittiley = parseInt(document.getElementById('edittiley').value);
       var edittiletype = document.getElementById('edittiletype').value;
