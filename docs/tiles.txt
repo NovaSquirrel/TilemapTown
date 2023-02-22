@@ -1,7 +1,7 @@
 Tiles are defined with a JSON object, which can have the following fields:
 
 "name"
-	Friendly name for the tile. Not currently used for anything, but could be 
+	Friendly name for the tile. Not currently used for anything, but could be displayed in a client.
 
 "pic":
 	Graphic to use for the tile.
