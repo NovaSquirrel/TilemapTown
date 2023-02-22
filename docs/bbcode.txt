@@ -4,8 +4,11 @@
 [s]text[/s]             - strikeout
 [sub]text[/sub]         - subscript
 [sup]text[/sup]         - superscript
+[large]text[/large]     - large text
 [small]text[/small]     - small text
+[size=s]text[/size]     - change size. needs to be between 4 and 40, inclusive.
 [tt]text[/tt]           - monospace
+[code]text[/code]       - monospace (alternative)
 [url=site]text[/url]    - link
 [color=red]text[/color] - color
 [noparse]text[/noparse] - don't parse bbcode inside the tag

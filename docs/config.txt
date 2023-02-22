@@ -34,6 +34,17 @@ Server.WSMaxQueue
 Default: 32
 Maximum number of incoming websocket messages allowed to queue up before the server stops processing incoming data.
 
+Server.ResourceFiles
+Default: []
+Array of strings, containing the names of JSON files to read, in order.
+These files define images and tilesets to give to clients upon connecting, which can override the default ones the client has.
+Format for these resource files is defined later in this document.
+
+Server.ResourceIMGBase
+Default: ""
+Prefix to add to images specified in resource files, if they do not start with http:// or https://
+The official server uses "https://novasquirrel.com/town/img/" for this, for example.
+
 Database.File
 Default: "town.db"
 Filename used for Tilemap Town's database.
@@ -45,3 +56,41 @@ Set up the database if needed. If false, skip this check.
 Images.URLWhitelist
 Default: ["https://i.imgur.com/"]
 Set a list of URL parts that are considered safe to start user-provided image URLs with.
+
+---------------------------------------------------------------------------------------------------
+Resource files:
+
+These are JSON formatted files, which can contain images and tilesets.
+The client is given all of these upon connecting, with a "RSC" protocol message.
+
+Example:
+
+{
+	"images": {
+		"0": "potluck.png",
+		"-1": "extra.png"
+	},
+	"tilesets": {
+		"": {
+			"grass": {
+				"name": "grass",
+				"pic": [0, 0, 4],
+				"density": false
+			},
+		},
+		"food": {
+			"pizza": {
+				"name": "pizza",
+				"pic": [-1, 5, 6],
+				"density": false,
+				"obj": true
+			}
+		}
+	}
+}
+
+This tells the client to preload two tileset images (with IDs 0 and -1), and provides filenames for them. The server will prefix these names with the ResourceIMGBase string from the config file before sending them to the client.
+
+The resource file also defines two tilesets, named "" and "food", and defines one tile each in them. If the client already has built-in tilesets with these names, they are overwritten with the server-provided ones.
+
+The special tileset name "" corresponds to the set of predefined tiles that show up in the build menu. This means that this resource file will overwrite the default predefined tile list the client has and replace it with this list that just contains a tile with ID "grass".

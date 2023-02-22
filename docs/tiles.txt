@@ -1,0 +1,35 @@
+Tiles are defined with a JSON object, which can have the following fields:
+
+"name"
+	Friendly name for the tile. Not currently used for anything, but could be 
+
+"pic":
+	Graphic to use for the tile.
+	Format is [sheet, x, y] where sheet may be an image URL directly, or it may be an ID that points to a tileset image indirectly.
+
+"density":
+	Defaults to false. If true, users will be stopped when attempting to walk onto this tile.
+
+"obj":
+	Defaults to false. If true, tile goes on the map's object layer instead of the turf layer.
+
+"type":
+	Tile type. Only "sign" does anything currently, in which case the user will see the "message" field when the tile is bumped into.
+	Other tile types that are used in the default tileset (but not supported by the client) are "escalator" (automatically move in a given direction), "ice" (keep moving until you hit a non-ice tile).
+
+"message":
+	Message to display if user bumps into this tile and it's type is "sign".
+
+"dir":
+	Tile direction. Not used for anything currently. Directions available:
+	0 = East
+	1 = South east
+	2 = South
+	3 = South west
+	4 = West
+	5 = North west
+	6 = North
+	7 = North east
+
+"over":
+	Display over entities. Not implemented.
