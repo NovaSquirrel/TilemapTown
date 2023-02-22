@@ -499,7 +499,7 @@ var XBBCODE = (function() {
                     myUrl = "#";
                 }
 
-                return '<a href="' + myUrl + '">';
+                return '<a href="' + myUrl + '" target="_blank">'; // Edit by NovaSquirrel
             },
             closeTag: function(params,content) {
                 return '</a>';
