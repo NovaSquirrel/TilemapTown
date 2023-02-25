@@ -604,7 +604,15 @@ function drawMap() {
     ctx.drawImage(PlayerImages[who], frameX*32, frameY*32, 32, 32, (Mob.x*16-8)-PixelCameraX, (Mob.y*16-16)-PixelCameraY, 32, 32);
   }
 
-  for (var index in PlayerWho) {
+
+  var sortedPlayers = [];
+  for (var index in PlayerWho)
+    sortedPlayers.push(index);
+  sortedPlayers.sort((a, b) => (PlayerWho[a].y > PlayerWho[b].y) ? 1 : -1);
+
+  for (var sort_n in sortedPlayers) {
+    var index = sortedPlayers[sort_n];
+
     var IsMousedOver = false;
     for (var look=0; look<MousedOverPlayers.length; look++) {
       if(MousedOverPlayers[look] == index) {
@@ -646,6 +654,9 @@ function drawMap() {
             break;
           case 4:
             frameX = (isWalking*2) + (frameCountFromAnimationTick&1);
+            break;
+          case 6:
+            frameX = (isWalking*3) + (frameCountFromAnimationTick%3);
             break;
           case 8:
             frameX = (isWalking*4) + (frameCountFromAnimationTick&3);
