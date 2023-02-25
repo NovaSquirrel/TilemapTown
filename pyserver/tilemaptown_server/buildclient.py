@@ -216,7 +216,8 @@ class Client(Entity):
 				self.map.broadcast("MSG", {'text': self.name+" has logged in ("+self.username+")"})
 				self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['entry']) # update client view
 			else:
-				self.send("MSG", {'text': "You've logged in but you're not on a map. Try [command]map %d[/command]" % get_database_meta('default_map')})
+				self.send("MSG", {'text': "Your last map wasn't saved correctly. Sending you to the default one..."})
+				client.switch_map(get_database_meta('default_map'))
 
 			# send the client their inventory
 			self.refresh_client_inventory()

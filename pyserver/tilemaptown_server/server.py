@@ -64,7 +64,9 @@ def main_timer():
 
 def save_everything():
 	for e in AllEntitiesByDB.values():
-		e.save()
+		if e.save_on_clean_up:
+			e.save()
+			e.save_on_clean_up = False
 
 # Websocket connection handler
 async def client_handler(websocket, path):
