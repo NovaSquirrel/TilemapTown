@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import json, random, datetime, ipaddress
+import json, random, datetime, ipaddress, hashlib
 from .buildglobal import *
 
 handlers = {}	# dictionary of functions to call for each command
@@ -1001,6 +1001,23 @@ def fn_tpinto(map, client, context, arg):
 def fn_saveme(map, client, context, arg):
 	client.save_and_commit()
 	respond(context, 'Account saved')
+
+@cmd_command(category="Account", privilege_level="server_admin", syntax="password", hidden=True)
+def fn_resetpassfor(map, client, context, arg):
+	if len(arg):
+		id = find_db_id_by_username(arg)
+		if id == None:
+			failed_to_find(context, arg)
+			return
+		c = Database.cursor()
+
+		salt = str(random.random())
+		randpass = "password"+str(random.random())
+		combined = randpass+salt
+		hash = "%s:%s" % (salt, hashlib.sha512(combined.encode()).hexdigest())
+
+		c.execute('UPDATE User SET passhash=?, passalgo=? WHERE username=?', (hash, "sha512", arg,))
+		respond(context, 'Password for %s reset to [tt]%s[/tt]' % (arg, randpass))
 
 @cmd_command(category="Account", privilege_level="registered", syntax="password")
 def fn_changepass(map, client, context, arg):
