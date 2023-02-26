@@ -567,6 +567,7 @@ function drawMap() {
   // Render the map
   for(x=0;x<(ViewWidth+1);x++) {
     for(y=0;y<(ViewHeight+1);y++) {
+     try {
       var RX = x+TileX;
       var RY = y+TileY;
 
@@ -593,6 +594,8 @@ function drawMap() {
             RequestImageIfNeeded(Obj.pic[0]);
         }
       }
+     } catch(error) {
+     }
     }
   }
 
@@ -611,6 +614,7 @@ function drawMap() {
   sortedPlayers.sort((a, b) => (PlayerWho[a].y > PlayerWho[b].y) ? 1 : -1);
 
   for (var sort_n in sortedPlayers) {
+   try {
     var index = sortedPlayers[sort_n];
 
     var IsMousedOver = false;
@@ -699,6 +703,8 @@ function drawMap() {
         drawText(ctx, (Mob.x*16)-PixelCameraX-(Mob.name.length * 8 / 2 - 8), (Mob.y*16)-PixelCameraY-heightForPlayerStatus, Mob.name);
       }
     }
+   } catch (error) {
+   }
   }
 
   // Draw a mouse selection if there is one
