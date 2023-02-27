@@ -264,7 +264,7 @@ class Entity(object):
 		# If you pass in an ID, see if the entity with that ID is already loaded
 		if isinstance(other, str):
 			if other.isnumeric():
-				other = int(str)
+				other = int(other)
 			# You can use a temporary ID too, which will have its own code path
 			elif other.startswith(temporary_id_marker) and other[1:].isnumeric():
 				temp_id = int(other[1:])
