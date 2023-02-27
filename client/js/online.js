@@ -176,8 +176,11 @@ function receiveServerMessage(event) {
           var dst = copy_params.dst;
           var x1     = src[0];
           var y1     = src[1];
-          var width  = src[2];
-          var height = src[3];
+          var width = 1, height = 1;
+          if(src.length == 4) {
+			  width  = src[2];
+			  height = src[3];
+          }
           var x2 = dst[0];
           var y2 = dst[1];
 
@@ -197,9 +200,9 @@ function receiveServerMessage(event) {
           for(var w = 0; w < width; w++) {
             for(var h = 0; h < height; h++) {
               if(copy_turf == true)
-                MapTiles[x2+w][x2+h] = copiedTurfs[w][h];
+                MapTiles[x2+w][y2+h] = copiedTurf[w][h];
               if(copy_obj == true)
-                MapObjs[x2+w][x2+h] = copiedObjs[w][h];
+                MapObjs[x2+w][y2+h] = copiedObjs[w][h];
             }
           }
         }

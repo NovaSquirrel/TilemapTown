@@ -49,7 +49,7 @@ def validate_client_who(id, data):
 def must_be_map_owner(client, admin_okay, give_error=True):
 	if client.map == None:
 		return False
-	if client.map.owner_id == self.db_id or self.oper_override or (admin_okay and self.has_permission(self, permission['admin'], False)):
+	if (client.db_id != None and client.map.owner_id == client.db_id) or client.oper_override or (admin_okay and client.has_permission(client.map, permission['admin'], False)):
 		return True
 	elif give_error:
 		client.send("ERR", {'text': 'You don\'t have permission to do that'})
@@ -518,11 +518,11 @@ def fn_BLK(map, client, arg):
 		map.map_data_modified = True
 
 		# verify the tiles
-		for turf in arg["turf"]:
+		for turf in arg.get("turf", []):
 			if not tile_is_okay(turf[2])[0]:
 				client.send("ERR", {'text': 'Bad turf in bulk build'})
 				return
-		for obj in arg["obj"]:
+		for obj in arg.get("obj", []):
 			tile_test = [tile_is_okay(x) for x in obj[2]]
 			if any(not x[0] for x in tile_test): # any tiles don't pass the test
 				client.send("ERR", {'text': 'Bad obj in bulk build'})
@@ -531,7 +531,7 @@ def fn_BLK(map, client, arg):
 		arg['username'] = client.username_or_id()
 
 		# do copies
-		for copy in arg["copy"]:
+		for copy in arg.get("copy", []):
 			do_turf = ("turf" not in copy) or copy["turf"]
 			do_obj = ("obj" not in copy) or copy["obj"]
 			x1, y1, width, height = copy["src"]
@@ -563,7 +563,7 @@ def fn_BLK(map, client, arg):
 						map.objs[x2+w][y2+h] = copied[w][h]
 
 		# place the tiles
-		for turf in arg["turf"]:
+		for turf in arg.get("turf", []):
 			x = turf[0]
 			y = turf[1]
 			a = turf[2]
@@ -572,11 +572,11 @@ def fn_BLK(map, client, arg):
 			if len(turf) == 5:
 				width = turf[3]
 				height = turf[4]
-			for w in range(0, width):
-				for h in range(0, height):
+			for w in range(width):
+				for h in range(height):
 					map.turfs[x+w][y+h] = a
 		# place the object lists
-		for obj in arg["obj"]:
+		for obj in arg.get("obj", []):
 			x = obj[0]
 			y = obj[1]
 			a = obj[2]
@@ -585,8 +585,8 @@ def fn_BLK(map, client, arg):
 			if len(turf) == 5:
 				width = turf[3]
 				height = turf[4]
-			for w in range(0, width):
-				for h in range(0, height):
+			for w in range(width):
+				for h in range(height):
 					map.objs[x+w][y+h] = a
 		map.broadcast("BLK", arg, remote_category=botwatch_type['build'])
 	else:
