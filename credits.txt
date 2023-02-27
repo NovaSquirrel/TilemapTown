@@ -1,14 +1,41 @@
 Uses tiles from:
-https://opengameart.org/content/tiny-16-basic ("Lanea Zimmerman")
+https://opengameart.org/content/tiny-16-basic
+	Art by Lanea Zimmerman
+
 https://opengameart.org/content/town-tiles
+	Art by surt
+
 https://opengameart.org/content/16x16-town-remix
+	Art by Lanea "Sharm" Zimmerman, Stephen "Redshrike" Challener, Carl "Surt" Olsson, and Jetrel, for OpenGameArt.org (http://opengameart.org)
+
 https://opengameart.org/content/16x16-indoor-rpg-tileset-the-baseline
+	Art by Stephen Challener (Redshrike). Commissioned by OpenGameArt.org (http://opengameart.org)
+
 https://opengameart.org/content/16x16-overworld-tiles
+	Art by Sharm
+
 https://opengameart.org/content/tiny-16-basic-add-ons
+	Art by Lanea Zimmerman and R.Ferreira
+
 https://opengameart.org/content/16x16-rpg-items
+	Art by Jetrel
+
 https://opengameart.org/content/food-items-16x16
+	Art by Red_Voxel
+
 https://opengameart.org/content/gold-treasure-icons-16x16
+	Art by Bonsaiheldin
+
 https://henrysoftware.itch.io/pixel-food
+
+https://opengameart.org/content/roguelike-dungeonworld-tiles
+	https://twitter.com/JoeCreates
+
+https://opengameart.org/content/16x16-indoor-rpg-tileset
+	Art by armisius - https://tilation.itch.io/
+
+https://opengameart.org/content/1616-block-textures
+	Art by ARoachIFoundOnMyPillow
 
 Potluck tileset credits:
 https://gist.github.com/eevee/59012b2a3d4dcdb40b5247ecdc2cfb34
