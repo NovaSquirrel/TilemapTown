@@ -530,11 +530,11 @@ class Entity(object):
 					self.map.remove_from_contents(self)
 				self.map_id = self.owner_id
 				self.save_and_commit()
-				self.cleanup()
+				self.clean_up() # Owner isn't online so item should be unloaded
 				return
 		if self.db_id:
 			print("Entity %d was sent home, but there wasn't a suitable place to go" % self.db_id)
-		self.cleanup()
+		self.clean_up()
 
 	# Information
 
