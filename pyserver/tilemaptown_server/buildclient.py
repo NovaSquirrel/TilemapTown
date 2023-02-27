@@ -77,7 +77,10 @@ class Client(Entity):
 	def added_to_child_contents(self, item):
 		""" Called on parents when add_to_contents is called here """
 		if not self.no_inventory_messages:
-			self.send("BAG", {'update': item.bag_info()})
+			if self.has_permission(item, permission['list_contents'], False):
+				self.send("BAG", {'list': [item.bag_info()] + [child.bag_info() for child in item.all_children()]})
+			else:
+				self.send("BAG", {'update': item.bag_info()})
 
 	def removed_from_child_contents(self, item):
 		""" Called on parents when remove_from_contents is called here """
