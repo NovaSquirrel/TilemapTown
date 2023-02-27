@@ -37,7 +37,7 @@
     #contents {
         padding: 2px;
 
-        max-height: 500px;
+        max-height: 400px;
         overflow: scroll;
     }
 
@@ -196,89 +196,6 @@
   </div>
 </div>
 
-
-<div id="editItemWindow" class="modal">
-  <div class="modal-content">
-    <span class="modalclose">&times;</span>
-    <p>
-    <h1>Edit item</h1>
-
-    <p>
-    <table border="0">
-    <tr>
-    <td><label for="edittilename" class="unselectable">Item name</label></td>
-    <td><input type="text" id="edittilename"/></td>
-    </tr>
-    <tr>
-    <td><label for="edittiledesc" class="unselectable">Description</label></td>
-    <td><input type="text" id="edittiledesc"/></td>
-    </tr>
-
-    <tr>
-    <td><label for="edittilefolder" class="unselectable">Folder</label></td>
-    <td>
-      <select id="edittilefolder">
-      </select>
-    </td>
-    </tr>
-    
-    </table>
-    </p>
-
-    <div id="edittileimage">
-    Image URL: <input type="text" id="edittileurl" />
-    </div>
-
-    <div id="edittiletext">
-    <textarea id="edittiletextarea" cols="60"></textarea>
-    </div>
-
-    <div id="edittileobject">
-    <p>
-    Item picture<br>
-    <img src="img/transparent.png" width="16" height="16" id="edittilepic" style="background: url(img/potluck.png) 0px 0px;">
-    <select id="edittilesheet" onchange="editItemUpdatePic();">
-      <option value="0">Potluck</option>
-      <option value="-1">Extras</option>
-      <option value="custom">Custom</option>
-    </select>
-    <input type="number" value="0" id="edittilex" oninput="editItemUpdatePic();" size="4" />
-    <input type="number" value="0" id="edittiley" oninput="editItemUpdatePic();" size="4" />
-    <br/>
-    <div style="overflow:scroll; width:512px; height:128px;" id="edittilesheetcontainer">
-    <img src="" id="edittilesheetselect">
-    </div>
-    </p>
-
-    <div id="edittilemaptile">
-    <p>
-    Item type<br>
-    <select id="edittiletype">
-      <option value="">Normal</option>
-      <option value="sign">Sign</option>
-<!--      <option value="door">Door</option>
-      <option value="ice">Ice</option>
-      <option value="escalator">Escalator</option>
-      <option value="water">Water</option> -->
-    </select>
-    </p>
-
-    <p>
-    <input type="checkbox" id="edittiledensity"><label for="edittiledensity" class="unselectable">Item is an obstacle (dense)</label></input><br>
-    <input type="checkbox" id="edittileisobject"><label for="edittileisobject" class="unselectable">Item is a map tile (uncheck if it should go on top of the ground, instead of replacing it)</label></input>
-    </p>
-    </div>
-    </div>
-
-    <br>
-    <input type="button" value="Apply changes" onclick="editItemApply();">
-    <input type="button" value="Clone item" onclick="editItemClone();">
-    <input type="button" value="Delete item" onclick="editItemDelete();">
-    <input type="button" value="Cancel" onclick="editItemCancel();">
-    </p>
-  </div>
-</div>
-
 <widget-window id="selectionInfo" style="display: none;">
   <span slot="title">Selection Info</span>
   <div slot="contents">
@@ -401,11 +318,92 @@
   </div>
 </widget-window>
 
+<widget-window id="moveItem" style="display: none;">
+  <span slot="title">Move Item</span>
+  <div slot="contents" id="inventory-contents">
+    Moving item:
+    <ul id="movesourceul" class="itemsul unselectable">
+    </ul>
+
+    Please select a folder to move it into!
+    <ul id="movetargetul" class="itemsul unselectable">
+    </ul>
+  </div>
+</widget-window>
+
+<widget-window id="editItemWindow" style="display: none;">
+  <span slot="title">Edit Item</span>
+  <div slot="contents">
+    <table border="0">
+    <tr>
+    <td><label for="edittilename" class="unselectable">Item name</label></td>
+    <td><input type="text" id="edittilename"/></td>
+    </tr>
+    <tr>
+    <td><label for="edittiledesc" class="unselectable">Description</label></td>
+    <td><textarea id="edittiledesc"></textarea></td>
+    </tr>
+
+    </table>
+
+    <div id="edittileimage">
+    Image URL: <input type="text" id="edittileurl" />
+    </div>
+
+    <div id="edittiletext">
+    <textarea id="edittiletextarea" cols="60"></textarea>
+    </div>
+
+    <div id="edittileobject">
+    <p>
+    Item picture<br>
+    <img src="img/transparent.png" width="16" height="16" id="edittilepic" style="background: url(img/potluck.png) 0px 0px;">
+    <select id="edittilesheet" onchange="editItemUpdatePic();">
+      <option value="0">Potluck</option>
+      <option value="-1">Extras</option>
+      <option value="custom">Custom</option>
+    </select>
+    <input type="number" value="0" id="edittilex" oninput="editItemUpdatePic();" size="4" />
+    <input type="number" value="0" id="edittiley" oninput="editItemUpdatePic();" size="4" />
+    <br/>
+    <div style="overflow:scroll; width:512px; height:128px;" id="edittilesheetcontainer">
+    <img src="" id="edittilesheetselect">
+    </div>
+    </p>
+
+    <div id="edittilemaptile">
+    <p>
+    Item type<br>
+    <select id="edittiletype">
+      <option value="">Normal</option>
+      <option value="sign">Sign</option>
+<!--      <option value="door">Door</option>
+      <option value="ice">Ice</option>
+      <option value="escalator">Escalator</option>
+      <option value="water">Water</option> -->
+    </select>
+    </p>
+
+    <p>
+    <input type="checkbox" id="edittiledensity"><label for="edittiledensity" class="unselectable">Item is an obstacle (dense)</label></input><br>
+    <input type="checkbox" id="edittileisobject"><label for="edittileisobject" class="unselectable">Item is a map tile (uncheck if it should go on top of the ground, instead of replacing it)</label></input>
+    </p>
+    </div>
+    </div>
+
+    <br>
+    <input type="button" value="Apply changes" onclick="editItemApply();">
+    <input type="button" value="Cancel" onclick="editItemCancel();">
+    </p>
+  </div>
+</widget-window>
+
 <!-- context menus -->
 <widget-contextmenu id="item-contextmenu" style="display: none;">
   <ul slot="menu" id="item-contextmenu-menu">
     <li onclick="editItem(contextMenuItem)">Edit</li>
     <li id="droptakeitem" onclick="dropTakeItem(contextMenuItem)">Drop</li>
+    <li onclick="moveItem(contextMenuItem)">Move to...</li>
     <li onclick="cloneItem(contextMenuItem)">Clone</li>
     <li onclick="cloneItem(contextMenuItem, true)">Clone (Temporary)</li>
     <li onclick="deleteItem(contextMenuItem)">Delete</li>

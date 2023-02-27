@@ -251,26 +251,6 @@ function editItem(key) {
       break;
   }
 
-  // Display folder selection
-  var select = document.getElementById("edittilefolder"); 
-  while(select.firstChild) {
-    select.removeChild(select.firstChild);
-  }
-  // "no folder" option
-  var el = document.createElement("option");
-  el.textContent = "-";
-  el.value = "-1";
-  select.appendChild(el);
-  for(var i in DBInventory) {
-    if(DBInventory[i].type == "folder") { // folder
-      el = document.createElement("option");
-      el.textContent = DBInventory[i].name;
-      el.value = DBInventory[i].id;
-      select.appendChild(el);
-    }
-  }
-  document.getElementById('edittilefolder').value = (item.folder != PlayerYou ? item.folder : -1) || -1;
-
   // show the window
   document.getElementById('editItemWindow').style.display = "block";
 }
@@ -308,6 +288,38 @@ function useItem(Placed) {
       drawMap();
   }
 
+}
+
+function moveItem(id) {
+  var window = document.getElementById('moveItem');
+  toggleDisplay(window);
+
+  var source = document.getElementById('movesourceul');
+  var target = document.getElementById('movetargetul');
+
+  while(source.firstChild) {
+    source.removeChild(source.firstChild);
+  }
+  source.appendChild(itemCard(id));
+
+  itemCardList(
+    target,
+    [PlayerYou],
+    {
+      eventlisteners: {
+        'click': function(e, dest_id) {
+          moveItemTo(id, dest_id);
+          toggleDisplay(window);
+        }
+      },
+      hidden_ids: [id],
+      expanded: true
+    }
+  );
+}
+
+function moveItemTo(id, dest_id) {
+  SendCmd("BAG", {move: {id: id, folder: dest_id}});
 }
 
 function dropTakeItem(id) {
@@ -822,14 +834,10 @@ function tickWorld() {
       }
 
       // add to DisplayInventory
-      var folder = null;
-      if(updated.folder && updated.folder in DBInventory) {
-        folder = updated.folder;
-      }
-      if(folder in DisplayInventory) {
-        DisplayInventory[folder].push(key);
+      if(updated.folder in DisplayInventory) {
+        DisplayInventory[updated.folder].push(key);
       } else {
-        DisplayInventory[folder] = [key];
+        DisplayInventory[updated.folder] = [key];
       }
     }
   
@@ -1204,9 +1212,6 @@ function initWorld() {
       if (event.target == modal) {
           modal.style.display = "none";
       }
-      if (event.target == itemmodal) {
-          itemmodal.style.display = "none";
-      }
       if (event.target == newitemmodal) {
           newitemmodal.style.display = "none";
       }
@@ -1238,6 +1243,93 @@ function viewOptions() {
   var Hidden = (options.style.display=='none');
   document.getElementById("navoptions").setAttribute("class", Hidden?"navactive":"");
   options.style.display = Hidden?'block':'none';
+}
+
+// options!
+// eventlisteners: an object of listener name => function. added to each card
+// hidden_ids: hides any item with this id from the list
+// expanded: if true, subfolders are expanded by default
+// top_level: if true, doesn't show expansion options or sublists
+function itemCardList(ul, ids, options = {}) {
+  var lis = [];
+  var openFolders = [];
+
+  // Empty out the list
+  while(ul.firstChild) {
+    ul.removeChild(ul.firstChild);
+  }
+
+  function expandFolder(list, id) {
+    openFolders[id] = true;
+
+    // Empty out the list
+    while(list.firstChild) {
+      list.removeChild(list.firstChild);
+    }
+
+    // Add its sub-items
+    addItems(list, DisplayInventory[id]);
+
+    // Add the "collapse folder" item
+    let newitem = document.createElement("li");
+    newitem.appendChild(document.createTextNode("hide contents"));
+    newitem.classList.add('inventoryli', 'inventorymeta');
+    newitem.onclick = function(){
+      collapseFolder(list, id);
+    };
+    list.appendChild(newitem);
+  }
+
+  function collapseFolder(list, id) {
+    openFolders[id] = false;
+
+    // Empty out the list
+    while(list.firstChild) {
+      list.removeChild(list.firstChild);
+    }
+
+    // Add the "expand folder" item
+    let newitem = document.createElement("li");
+    newitem.appendChild(document.createTextNode("show contents"));
+    newitem.classList.add('inventoryli', 'inventorymeta');
+    newitem.onclick = function(){
+      expandFolder(list, id);
+    };
+    list.appendChild(newitem);
+  }
+
+  // Recursively make the tree with unordered lists
+  function addItems(list, ids) {
+    for(let id of ids) {
+      if (options?.hidden_ids?.includes(id)) { continue; }
+
+      let item = DBInventory[id];
+      let li = itemCard(id);
+
+      for(let type in options?.eventlisteners){
+        li.addEventListener(type, function(e){
+          return options?.eventlisteners[type](e, id);
+        });
+      }
+
+      list.appendChild(li);
+
+      // If the item itself has sub-items
+      const display_id = id == PlayerYou ? null : id;
+      if (display_id in DisplayInventory && !options?.top_level) {
+        let inner = document.createElement("ul");
+        list.appendChild(inner);
+
+        if (options?.expanded) {
+          expandFolder(inner, display_id);
+        } else {
+          collapseFolder(inner, display_id);
+        }
+      }
+    }
+  }
+
+  addItems(ul, ids);
 }
 
 function itemCard(id) {
@@ -1343,32 +1435,17 @@ function updateInventoryUL() {
   if(!ul)
     return;
 
-  // Empty out the list
-  while(ul.firstChild) {
-    ul.removeChild(ul.firstChild);
-  }
-
-  // Recursively make the tree with unordered lists
-  function addFolder(list, key) {
-    for(let i = 0; i < DisplayInventory[key].length; i++) {
-      let id = DisplayInventory[key][i];
-
-      let item = DBInventory[id];
-      let li = itemCard(id);
-
-      li.onclick = function (){useItem(item);};
-      li.oncontextmenu = function(e){openItemContextMenu(id, e.clientX, e.clientY); return false;};
-      li.id = "inventory"+i;
-      list.appendChild(li);
-
-      if(id in DisplayInventory && OpenFolders[id]) {
-        let inner = document.createElement("ul");
-        addFolder(inner, id);
-        list.appendChild(inner);
+  itemCardList(ul, DisplayInventory[null], {
+    eventlisteners: {
+      'click': function(e, id){
+        useItem(id)
+      },
+      'contextmenu': function(e, id){
+        openItemContextMenu(id, e.clientX, e.clientY);
+        e.preventDefault();
       }
     }
-  }
-  addFolder(ul, null);
+  });
 
   // Add the "new item" item
   let newitem = document.createElement("li");
@@ -1429,33 +1506,25 @@ function updateSelectedObjectsUL() {
   if(!ul)
     return;
 
-  // Empty out the list
-  while(ul.firstChild) {
-    ul.removeChild(ul.firstChild);
-  }
+  const selected_ids = Object.values(PlayerWho).filter(
+    item => inSelection( item.x, item.y )
+  ).map(
+    item => item.id
+  )
 
-  let obj_count = 0;
-
-  for(var key in PlayerWho) {
-    let user = PlayerWho[key];
-    if ( !inSelection( user.x, user.y ) ) {
-      continue;
+  itemCardList(ul, selected_ids, {
+    eventlisteners: {
+      'click': function(e, id){
+        useItem(id)
+      },
+      'contextmenu': function(e, id){
+        openItemContextMenu(id, e.clientX, e.clientY);
+        e.preventDefault();
+      }
     }
+  });
 
-    obj_count++;
-
-    // build the list item
-    let li = itemCard(user.id);
-
-//    li.onclick = function (){useItem(item);};
-//    li.oncontextmenu = function (){editItem(id); return false;};
-//
-    li.oncontextmenu = function(e){openItemContextMenu(user.id, e.clientX, e.clientY); return false;};
-    li.id = "userlist"+i;
-    ul.appendChild(li);
-  }
-
-  if (obj_count < 1) {
+  if (selected_ids.length < 1) {
     let li = document.createElement("li");
     li.appendChild(document.createTextNode("None"));
     ul.appendChild(li);
@@ -1470,24 +1539,21 @@ function updateUsersUL() {
   if(!ul)
     return;
 
-  // Empty out the list
-  while(ul.firstChild) {
-    ul.removeChild(ul.firstChild);
-  }
+  let player_ids = Object.values(PlayerWho).filter(
+    item => item.in_user_list || include_all_entities
+  ).map(
+    item => item.id
+  )
 
-  for(var key in PlayerWho) {
-    let user = PlayerWho[key];
-    if(!PlayerWho[key].in_user_list && !include_all_entities)
-      continue;
-    let li = itemCard(key);
-
-    // build the list item
-//    li.onclick = function (){useItem(item);};
-//    li.oncontextmenu = function (){editItem(id); return false;};
-    li.oncontextmenu = function(e){openItemContextMenu(user.id, e.clientX, e.clientY); return false;};
-    li.id = "userlist"+i;
-    ul.appendChild(li);
-  }
+  itemCardList(ul, player_ids, {
+    eventlisteners: {
+      'contextmenu': function(e, id){
+        openItemContextMenu(id, e.clientX, e.clientY);
+        e.preventDefault();
+      }
+    },
+    top_level: true
+  });
 }
 
 function updateMailUL() {
@@ -1679,31 +1745,30 @@ function editItemApply() {
     edittilefolder = PlayerYou;
   }
 
+  var updates = {
+    id: editItemID,
+    "name": edittilename,
+    "desc": edittiledesc
+  };
+
+  if ( edittilefolder != -2 ) {
+    updates.folder = edittilefolder;
+  }
+
   switch(editItemType) {
     case "text":
-      SendCmd("BAG", {
-        update: {"id": editItemID,
-                 "name": edittilename,
-                 "desc": edittiledesc,
-                 "folder": edittilefolder,
-                 "data": document.getElementById('edittiletextarea').value
-                }
-      });
-
+      updates.data = document.getElementById('edittiletextarea').value;
+      SendCmd("BAG", {update: updates});
       break;
 
     case "image":
-      SendCmd("BAG", {
-        update: {"id": editItemID,
-                 "name": edittilename,
-                 "desc": edittiledesc,
-                 "folder": edittilefolder,
-                 "data": document.getElementById('edittileurl').value
-                }
-      });
+      updates.data = document.getElementById('edittileurl').value;
+      SendCmd("BAG", {update: updates});
       break;
 
     case "map_tile":
+      updates.data = JSON.stringify(item);
+      // fall through!
     case "generic":
       // Gather item info
       var sheet = document.getElementById('edittilesheet').value;
@@ -1720,44 +1785,18 @@ function editItemApply() {
       var edittileobject = !document.getElementById('edittileisobject').checked;
 
       // Create the new item
-      var item = {};
-      item.name = edittilename;
-      item.pic = [edittilesheet, edittilex, edittiley];
-      item.density = edittiledensity;
+      updates.pic = [edittilesheet, edittilex, edittiley];
+      updates.density = edittiledensity;
       if(edittileobject)
-        item.obj = true;
+        updates.obj = true;
       if(edittiletype)
-        item.type = edittiletype;
+        updates.type = edittiletype;
 
-      if(editItemType == "map_tile") {
-        SendCmd("BAG", {
-          update: {"id": editItemID,
-                   "name": edittilename,
-                   "desc": edittiledesc,
-                   "folder": edittilefolder,
-                   "data": JSON.stringify(item)
-                  }
-        });
-      } else if(editItemType == "generic") {
-        SendCmd("BAG", {
-          update: {"id": editItemID,
-                   "name": edittilename,
-                   "desc": edittiledesc,
-                   "folder": edittilefolder,
-                   "pic": item.pic
-                  }
-        });
-      }
+      SendCmd("BAG", {update: updates});
       break;
 
     default: // just update name then
-      SendCmd("BAG", {
-        update: {"id": editItemID,
-                 "name": edittilename,
-                 "desc": edittiledesc,
-                 "folder": edittilefolder
-                }
-      });
+      SendCmd("BAG", {update: updates});
       break;
   }
   editItemCancel();

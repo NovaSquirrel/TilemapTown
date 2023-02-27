@@ -340,12 +340,7 @@ function receiveServerMessage(event) {
         }
       }
       if(arg['remove']) {
-        var containing_folder = DBInventory[arg['remove'].id].folder;
         delete DBInventory[arg['remove'].id];
-        for (var key in DBInventory) {
-          if(DBInventory[key].folder == arg['remove'].id)
-            DBInventory[key].folder = containing_folder;
-        }
       }
       if(arg['new_id']) {
         DBInventory[arg['new_id']['new_id']] = DBInventory[arg['new_id']['id']];
