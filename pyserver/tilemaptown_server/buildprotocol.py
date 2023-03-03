@@ -22,14 +22,17 @@ from .buildentity import Entity
 handlers = {}
 command_privilege_level = {} # minimum required privilege level required for the command; see user_privilege in buildglobal.py
 map_only_commands = set()
+pre_identify_commands = set()
 
 # Adds a command handler
-def protocol_command(privilege_level='guest', map_only=False):
+def protocol_command(privilege_level='guest', map_only=False, pre_identify=False):
 	def decorator(f):
 		command_name = f.__name__[3:]
 		handlers[command_name] = f
 		if map_only:
 			map_only_commands.add(command_name)
+		if pre_identify:
+			pre_identify_commands.add(command_name)
 		command_privilege_level[command_name] = privilege_level
 	return decorator
 
@@ -605,7 +608,7 @@ def fn_WHO(map, client, arg):
 	else:
 		client.send("ERR", {'text': 'not implemented'})
 
-@protocol_command()
+@protocol_command(pre_identify=True)
 def fn_VER(map, client, arg):
 	# Receives version info from the client, but ignore it for now
 	server_software_name = "Tilemap Town server"
@@ -614,9 +617,39 @@ def fn_VER(map, client, arg):
 
 	client.send("VER", {'name': server_software_name, 'version': server_software_version, 'code': server_software_code})
 
+@protocol_command(pre_identify=True)
+def fn_PIN(map, client, arg):
+	client.ping_timer = 300
+
+@protocol_command(pre_identify=True)
+def fn_IDN(map, client, arg):
+	if client.identified:
+		return
+
+	override_map = None
+	if "map" in arg:
+		override_map = arg["map"]
+
+	if arg != {} and "username" in arg and "password" in arg:
+		if not client.login(filter_username(arg["username"]), arg["password"], override_map=override_map):
+			client.disconnect()
+			return
+	else:
+		if not override_map or not client.switch_map(override_map[0], new_pos=None if (len(override_map) == 1) else (override_map[1:])):
+			client.switch_map(get_database_meta('default_map'))
+
+	if len(Config["Server"]["MOTD"]):
+		client.send("MSG", {'text': Config["Server"]["MOTD"]})
+	client.identified = True
+	client.send("MSG", {'text': 'Users connected: %d' % len(AllClients)})
+
 # -------------------------------------
 
 def handle_protocol_command(map, client, command, arg):
+	if not client.identified and command not in pre_identify_commands:
+		client.send("ERR", {'text': 'Protocol command requires identifying first: %s' % command})
+		return
+
 	# Attempt to run the command handler if it exists
 	if command in handlers:
 		if command in map_only_commands and (client.map == None or not client.map.is_map()):

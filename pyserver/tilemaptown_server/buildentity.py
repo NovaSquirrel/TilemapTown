@@ -469,6 +469,11 @@ class Entity(object):
 
 	def switch_map(self, map_id, new_pos=None, goto_spawn=True, update_history=True):
 		""" Teleport the user to another map """
+		if self.is_client() and not self.sent_resources_yet:
+			self.sent_resources_yet = True
+			if LoadedAnyServerResources:
+				self.send("RSC", ServerResources)
+
 		added_new_history = False
 		if update_history and self.map_id != None:
 			# Add a new teleport history entry if new map
@@ -625,7 +630,7 @@ class Entity(object):
 		self.db_id = id
 		AllEntitiesByDB[self.db_id] = self
 
-	def load(self, load_id):
+	def load(self, load_id, override_map=None):
 		""" Load an entity from the database """
 		c = Database.cursor()
 		c.execute('SELECT type, name, desc, pic, location, position, home_location, home_position, tags, owner_id, allow, deny, guest_deny, creator_id FROM Entity WHERE id=?', (load_id,))
@@ -640,13 +645,16 @@ class Entity(object):
 		self.desc = result[2]
 		self.pic = loads_if_not_none(result[3])
 		map_id = result[4]
-		if map_id:	
+		if override_map:
+			if not self.switch_map(override_map[0], new_pos=None if (len(override_map) == 1) else (override_map[1:])):
+				self.map_id = override_map[0]
+		elif map_id:
 			position = loads_if_not_none(result[5])
 			if position != None:
 				self.x = position[0]
 				self.y = position[1]
 				if len(position) == 3:
-					self.dir = position[2]			
+					self.dir = position[2]
 			if not self.switch_map(result[4], goto_spawn=False):
 				self.map_id = result[4]
 		#print("Loading %d: %s" % (self.db_id or -1, self.name))

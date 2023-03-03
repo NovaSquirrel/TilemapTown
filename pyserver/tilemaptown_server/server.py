@@ -98,39 +98,19 @@ async def client_handler(websocket, path):
 			if len(message) > 4:
 				arg = json.loads(message[4:])
 
-			# Identify the user and put them on a map
-			if command == "IDN":
-				# Send in resources first, if the server specifies any
-				if LoadedAnyServerResources:
-					client.send("RSC", ServerResources)
-
-				result = False
-				if arg != {}:
-					result = client.login(filter_username(arg["username"]), arg["password"])
-				if result != True: # default to default map if can't log in
-					client.switch_map(get_database_meta('default_map'))
-				if len(Config["Server"]["MOTD"]):
-					client.send("MSG", {'text': Config["Server"]["MOTD"]})
-				client.identified = True
-				client.send("MSG", {'text': 'Users connected: %d' % len(AllClients)})
-			elif command == "PIN":
-				client.ping_timer = 300
-
-			# Don't allow the user to do anything but IDN and PIN unless they've identified
 			# Process the command
-			elif client.identified:
-				client.idle_timer = 0
-				if "remote_map" in arg:
-					if arg["remote_map"] in AllEntitiesByDB:
-						map = AllEntitiesByDB[arg["remote_map"]]
-						if map.has_permission(client, permission['map_bot'], False):
-							handle_protocol_command(map, client, command, arg)
-						else:
-							client.send("ERR", {'text': 'You do not have [tt]map_bot[/tt] permission on map %d' % arg["remote_map"]})
+			client.idle_timer = 0
+			if "remote_map" in arg:
+				if arg["remote_map"] in AllEntitiesByDB:
+					map = AllEntitiesByDB[arg["remote_map"]]
+					if map.has_permission(client, permission['map_bot'], False):
+						handle_protocol_command(map, client, command, arg)
 					else:
-						client.send("ERR", {'text': 'Map %d is not loaded' % arg["remote_map"]})
+						client.send("ERR", {'text': 'You do not have [tt]map_bot[/tt] permission on map %d' % arg["remote_map"]})
 				else:
-					handle_protocol_command(client.map, client, command, arg) # client.map may be None
+					client.send("ERR", {'text': 'Map %d is not loaded' % arg["remote_map"]})
+			else:
+				handle_protocol_command(client.map, client, command, arg) # client.map may be None
 
 		except websockets.ConnectionClosed:
 			print("disconnected: %s (%s, \"%s\")" % (client.ip, client.username or "?", client.name))

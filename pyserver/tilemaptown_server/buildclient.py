@@ -45,6 +45,7 @@ class Client(Entity):
 		self.watch_list = set()
 		self.user_flags = 0
 
+		self.sent_resources_yet = False
 		self.no_inventory_messages = False # don't send BAG updates when adding or removing items
 
 		self.identified = False
@@ -164,7 +165,7 @@ class Client(Entity):
 		values = (self.username, self.password, "sha512", dumps_if_not_empty(list(self.watch_list)), dumps_if_not_empty(list(self.ignore_list)), self.client_settings, datetime.datetime.now(), self.user_flags, self.db_id)
 		c.execute("UPDATE User SET username=?, passhash=?, passalgo=?, watch=?, ignore=?, client_settings=?, last_seen_at=?, flags=? WHERE entity_id=?", values)
 
-	def load(self, username, password):
+	def load(self, username, password, override_map=None):
 		""" Load an account from the database """
 		c = Database.cursor()
 		
@@ -200,16 +201,16 @@ class Client(Entity):
 		self.client_settings = result[5]
 		self.user_flags = result[6]
 		# And copy over the base entity stuff
-		return super().load(self.db_id)
+		return super().load(self.db_id, override_map=override_map)
 
 	def refresh_client_inventory(self):
 		self.send("BAG", {'list': [child.bag_info() for child in self.all_children()], 'clear': True})
 
-	def login(self, username, password):
+	def login(self, username, password, override_map=None):
 		""" Attempt to log the client into an account """
 		username = filter_username(username)
 		self.no_inventory_messages = True      # because load() will load in objects contained by this one
-		result = self.load(username, password)
+		result = self.load(username, password, override_map=override_map)
 		self.no_inventory_messages = False
 		if result == True:
 			print("login: \"%s\" from %s" % (self.username, self.ip))

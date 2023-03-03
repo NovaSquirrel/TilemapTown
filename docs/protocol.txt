@@ -115,12 +115,14 @@ Received data may be in string format, which would need parsing into JSON.
 Clients can send updates about themselves, but only keys that the servers knows to be OK, such as "typing".
 For client-to-server WHO updates, "id" is currently ignored, but it should be the same value the client received in the "you" field.
 
+=== Miscellaneous ===
 --> IDN
 --> IDN {"username": username, "password": password}
-log into the server with or without an account
+--> IDN {"map" [map_id]}
+--> IDN {"map" [map_id, x, y]}
+Log into the server with or without an account.
+Can optionally start on a specific map, with optional map coordinates.
 
-
-=== Misellaneous ===
 --> MSG {"text": "[text]"}
 message
 
