@@ -450,6 +450,8 @@ function receiveServerMessage(event) {
             logMessage("Server message: "+convertBBCode(arg.text), 'server_message');
         }
       break;
+    case "IDN":
+      break;
   }
 }
 
@@ -461,10 +463,18 @@ function ConnectToServer() {
 
   OnlineSocket.onopen = function (event) {
     logMessage("Connected! Waiting for map data.", 'server_message');
-    if(OnlineUsername == "")
-      SendCmd("IDN", null);
-    else
-      SendCmd("IDN", {username: OnlineUsername, password: OnlinePassword});
+
+    let idn_args = {};
+    idn_args["features"] = {
+       "see_past_map_edge": {"version": "0.0.1"}
+    };
+
+    if(OnlineUsername != "") {
+      idn_args["username"] = OnlineUsername;
+      idn_args["password"] = OnlinePassword
+    };
+
+    SendCmd("IDN", idn_args);
     OnlineIsConnected = true;
   }
 

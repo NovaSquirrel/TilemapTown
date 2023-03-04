@@ -120,8 +120,12 @@ For client-to-server WHO updates, "id" is currently ignored, but it should be th
 --> IDN {"username": username, "password": password}
 --> IDN {"map" [map_id]}
 --> IDN {"map" [map_id, x, y]}
-Log into the server with or without an account.
+--> IDN {"features": {"feature_name": {"version": "1.0.0"}}}
+<-- IDN
+<-- IDN {"features": {"feature_name": {"version": "1.0.0"}}}
+Log into the server with or without an account. Server sends an acknowledgement if the IDN was accepted.
 Can optionally start on a specific map, with optional map coordinates.
+Clients can request features and the server can confirm some amount of them.
 
 --> MSG {"text": "[text]"}
 message
@@ -165,7 +169,6 @@ ping, if you don't respond fast enough you disconnect
 --> VER {"name": client_name, "version":1.0, "code": "https://github.com/NovaSquirrel/TilemapTown"}
 <-- VER {"name": server_name, "version":1.0, "code": "https://github.com/NovaSquirrel/TilemapTown"}
 version information for client and server
-(not implemented)
 
 <-- RSC {"images": {"id": "url", ...}, "tilesets": {"id": {}, ...}}
 Resources for the client to preload.
@@ -242,3 +245,40 @@ Item info fields:
 	owner_username (if applicable)
 	username (if applicable)
 	temporary
+
+=== Optional features ===
+Clients and servers can advertise having extra features on top of the basic ones
+
+--> VER {
+	"name": client_name,
+	"version":1.0,
+	"code": "https://github.com/NovaSquirrel/TilemapTown"
+}
+<-- VER {
+	"name": server_name,
+	"version":1.0,
+	"code": "https://github.com/NovaSquirrel/TilemapTown"
+	"features": {
+		"see_past_map_edge": {
+			"version": "0.0.1",
+			"minimum_version": "0.0.1"
+		}
+	}
+}
+--> IDN {
+	"username": "text",
+	"password": "text"
+	"features": {
+		"see_past_map_edge": {
+			"version": "0.0.1"
+		}
+	}
+}
+<-- IDN {
+	"features": {
+		"see_past_map_edge": {
+			"version": "0.0.1"
+		}
+	}
+}
+

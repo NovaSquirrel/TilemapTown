@@ -47,6 +47,7 @@ class Client(Entity):
 
 		self.sent_resources_yet = False
 		self.no_inventory_messages = False # don't send BAG updates when adding or removing items
+		self.features = set() # list of feature names
 
 		self.identified = False
 

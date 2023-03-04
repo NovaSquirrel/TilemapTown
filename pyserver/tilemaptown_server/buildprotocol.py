@@ -609,17 +609,21 @@ def fn_WHO(map, client, arg):
 		client.send("ERR", {'text': 'not implemented'})
 
 @protocol_command(pre_identify=True)
-def fn_VER(map, client, arg):
-	# Receives version info from the client, but ignore it for now
-	server_software_name = "Tilemap Town server"
-	server_software_version = "0.2.0"
-	server_software_code = "https://github.com/NovaSquirrel/TilemapTown"
-
-	client.send("VER", {'name': server_software_name, 'version': server_software_version, 'code': server_software_code})
-
-@protocol_command(pre_identify=True)
 def fn_PIN(map, client, arg):
 	client.ping_timer = 300
+
+available_server_features = {
+	"see_past_map_edge": {"version": "0.0.1", "minimum_version": "0.0.1"}
+}
+server_software_name = "Tilemap Town server"
+server_software_version = "0.2.0"
+server_software_code = "https://github.com/NovaSquirrel/TilemapTown"
+server_version_dict = {'name': server_software_name, 'version': server_software_version, 'code': server_software_code, 'features': available_server_features}
+
+@protocol_command(pre_identify=True)
+def fn_VER(map, client, arg):
+	# Also receives version info from the client, but ignore it for now
+	client.send("VER", server_version_dict)
 
 @protocol_command(pre_identify=True)
 def fn_IDN(map, client, arg):
@@ -641,6 +645,17 @@ def fn_IDN(map, client, arg):
 	if len(Config["Server"]["MOTD"]):
 		client.send("MSG", {'text': Config["Server"]["MOTD"]})
 	client.identified = True
+
+	# Acknowledge the IDN and acknowledge requested features, if they are supported
+	ack_info = {}
+	if arg != {} and "features" in arg:
+		ack_info["features"] = {}
+		for key, value in arg["features"].items():
+			if key in available_server_features: # TODO: check if specified version is >= minimum version
+				client.features.add(key)
+				ack_info["features"][key] = {"version": available_server_features[key]["version"]}
+	client.send("IDN", ack_info if ack_info != {} else None)
+
 	client.send("MSG", {'text': 'Users connected: %d' % len(AllClients)})
 
 # -------------------------------------
