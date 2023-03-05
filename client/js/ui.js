@@ -299,11 +299,11 @@ function useItem(Placed) {
             return;
           Placed.data.message = Message;
         }
-        MapObjs[PlayerX][PlayerY].push(Placed.data);
-        SendCmd("PUT", {pos: [PlayerX, PlayerY], obj: true, atom: MapObjs[PlayerX][PlayerY]});
+        MyMap.Objs[PlayerX][PlayerY].push(Placed.data);
+        SendCmd("PUT", {pos: [PlayerX, PlayerY], obj: true, atom: MyMap.Objs[PlayerX][PlayerY]});
       } else {
-        MapTiles[PlayerX][PlayerY] = Placed.data;
-        SendCmd("PUT", {pos: [PlayerX, PlayerY], obj: false, atom: MapTiles[PlayerX][PlayerY]});
+        MyMap.Tiles[PlayerX][PlayerY] = Placed.data;
+        SendCmd("PUT", {pos: [PlayerX, PlayerY], obj: false, atom: MyMap.Tiles[PlayerX][PlayerY]});
       }
       drawMap();
   }
@@ -377,8 +377,8 @@ function movePlayer(id, x, y, dir) {
 function keyHandler(e) {
  
   function ClampPlayerPos() {
-    PlayerX = Math.min(Math.max(PlayerX, 0), MapWidth-1);
-    PlayerY = Math.min(Math.max(PlayerY, 0), MapHeight-1);;
+    PlayerX = Math.min(Math.max(PlayerX, 0), MyMap.Width-1);
+    PlayerY = Math.min(Math.max(PlayerY, 0), MyMap.Height-1);;
   }
 
   var e = e || window.event;
@@ -428,6 +428,7 @@ function keyHandler(e) {
   var PlayerDir = PlayerWho[PlayerYou].dir;
   var OldPlayerX = PlayerX;
   var OldPlayerY = PlayerY;
+  var Bumped = false, BumpedX = null, BumpedY = null;
   var OldPlayerDir = PlayerWho[PlayerYou].dir;
 
   if(e.keyCode == 32 || e.keyCode == 12) { // space or clear
@@ -491,17 +492,28 @@ function keyHandler(e) {
     e.preventDefault();
   }
 
+  var BeforeClampX = PlayerX, BeforeClampY = PlayerY;
   ClampPlayerPos();
+  if(PlayerX != BeforeClampX || PlayerY != BeforeClampY) {
+    Bumped = true;
+    BumpedX = BeforeClampX;
+    BumpedY = BeforeClampY;
+  }
 
   // Go back if the turf is solid, or if there's objects in the way
   if(OldPlayerX != PlayerX || OldPlayerY != PlayerY) {
     // Check for solid objects in the way first
-    for (var index in MapObjs[PlayerX][PlayerY]) {
-      var Obj = AtomFromName(MapObjs[PlayerX][PlayerY][index]);
+    for (var index in MyMap.Objs[PlayerX][PlayerY]) {
+      var Obj = AtomFromName(MyMap.Objs[PlayerX][PlayerY][index]);
       if(Obj.density) {
         if(!Fly){
+          if(!Bumped) {
+            Bumped = true;
+            BumpedX = PlayerX;
+            BumpedY = PlayerY;
+          }
           PlayerX = OldPlayerX;
-          PlayerY = OldPlayerY;
+          PlayerY = OldPlayerY;          
         }
         if(Obj.type == AtomTypes.SIGN) {
           // Filter out HTML tag characters to prevent XSS (not needed because convertBBCode does this)
@@ -526,19 +538,31 @@ function keyHandler(e) {
       }
     }
 	// Then check for turfs
-    if(!Fly && AtomFromName(MapTiles[PlayerX][PlayerY]).density) {
+    if(!Fly && AtomFromName(MyMap.Tiles[PlayerX][PlayerY]).density) {
+      if(!Bumped) {
+        Bumped = true;
+        BumpedX = PlayerX;
+        BumpedY = PlayerY;
+      }
       PlayerX = OldPlayerX;
       PlayerY = OldPlayerY;
     }
+  }
 
-    if(OldPlayerX != PlayerX || OldPlayerY != PlayerY || OldPlayerDir != PlayerDir) {
-      if(e.shiftKey) {
-        SendCmd("MOV", {dir: PlayerDir});
-        movePlayer(PlayerYou, null, null, PlayerDir);
-      } else {
-        SendCmd("MOV", {from: [OldPlayerX, OldPlayerY], to: [PlayerX, PlayerY], dir: PlayerDir});
-        movePlayer(PlayerYou, PlayerX, PlayerY, PlayerDir);
+  if(Bumped || OldPlayerX != PlayerX || OldPlayerY != PlayerY || OldPlayerDir != PlayerDir) {
+    var Params = {'dir': PlayerDir};
+    if(e.shiftKey) {
+      SendCmd("MOV", Params);
+      movePlayer(PlayerYou, null, null, PlayerDir);
+    } else {
+      if(Bumped)
+        Params['bump'] = [BumpedX, BumpedY];
+      if(PlayerX != OldPlayerX || PlayerY != OldPlayerY) {
+        Params['from'] = [OldPlayerX, OldPlayerY];
+        Params['to'] = [PlayerX, PlayerY];
       }
+      SendCmd("MOV", Params);
+      movePlayer(PlayerYou, PlayerX, PlayerY, PlayerDir);
     }
   }
 
@@ -572,11 +596,11 @@ function drawMap() {
       var RY = y+TileY;
 
       // Skip out-of-bounds tiles
-      if(RX < 0 || RX >= MapWidth || RY < 0 || RY >= MapHeight)
+      if(RX < 0 || RX >= MyMap.Width || RY < 0 || RY >= MyMap.Height)
         continue;
 
       // Draw the turf
-      var Tile = AtomFromName(MapTiles[RX][RY]);
+      var Tile = AtomFromName(MyMap.Tiles[RX][RY]);
       if(Tile) {
         if(IconSheets[Tile.pic[0]])
           ctx.drawImage(IconSheets[Tile.pic[0]], Tile.pic[1]*16, Tile.pic[2]*16, 16, 16, x*16-OffsetX, y*16-OffsetY, 16, 16);
@@ -584,7 +608,7 @@ function drawMap() {
           RequestImageIfNeeded(Tile.pic[0]);
       }
       // Draw anything above the turf
-      var Objs = MapObjs[RX][RY];
+      var Objs = MyMap.Objs[RX][RY];
       if(Objs) {
         for (var index in Objs) {
           var Obj = AtomFromName(Objs[index]);
@@ -853,7 +877,7 @@ function tickWorld() {
   }
 
 /*
-  var Under = MapTiles[PlayerX][PlayerY];
+  var Under = MyMap.Tiles[PlayerX][PlayerY];
   if(!(TickCounter & 0x03)) {
     if(Under.type == AtomTypes.ICE) {
       PlayerX += DirX[PlayerDir];
@@ -886,14 +910,14 @@ function tickWorld() {
     } while (CameraX == OldCameraX && CameraY == OldCameraY);
 
     if(!CameraAlwaysCenter) {
-      if(MapWidth >= ViewWidth)
-        CameraX = Math.min((MapWidth-ViewWidth)<<8, Math.max(CameraX, 0));
+      if(MyMap.Width >= ViewWidth)
+        CameraX = Math.min((MyMap.Width-ViewWidth)<<8, Math.max(CameraX, 0));
       else
-        CameraX = -(Math.floor(ViewWidth/2)-Math.floor(MapWidth/2))<<8;
-      if(MapHeight >= ViewHeight)
-        CameraY = Math.min((MapHeight-ViewHeight)<<8, Math.max(CameraY, 0));
+        CameraX = -(Math.floor(ViewWidth/2)-Math.floor(MyMap.Width/2))<<8;
+      if(MyMap.Height >= ViewHeight)
+        CameraY = Math.min((MyMap.Height-ViewHeight)<<8, Math.max(CameraY, 0));
       else
-        CameraY = -(Math.floor(ViewHeight/2)-Math.floor(MapHeight/2))<<8;
+        CameraY = -(Math.floor(ViewHeight/2)-Math.floor(MyMap.Height/2))<<8;
     }
     drawMap();
   } else if(AnimationTick % 5 == 0) { // every 0.1 seconds
@@ -921,12 +945,12 @@ function selectionDelete() {
 
   for(var x=MouseStartX; x<=MouseEndX; x++) {
     for(var y=MouseStartY; y<=MouseEndY; y++) {
-      if(x < 0 || x > MapWidth || y < 0 || y > MapHeight)
+      if(x < 0 || x > MyMap.Width || y < 0 || y > MyMap.Height)
         continue;
       if(DeleteTurfs)
-        MapTiles[x][y] = MapInfo['default'];
+        MyMap.Tiles[x][y] = MapInfo['default'];
       if(DeleteObjs)
-        MapObjs[x][y] = [];        
+        MyMap.Objs[x][y] = [];        
     }
   }
   SendCmd("DEL", {pos: [MouseStartX, MouseStartY, MouseEndX, MouseEndY], turf: DeleteTurfs, obj: DeleteObjs});

@@ -121,17 +121,34 @@ class Entity(object):
 		return
 
 	# Send a message to all contents
-	def broadcast(self, command_type, command_params, remote_category=None, remote_only=False):
+	def broadcast(self, command_type, command_params, remote_category=None, remote_only=False, send_to_links=False):
 		""" Send a message to everyone on the map """
 		if not remote_only:
 			for client in self.contents:
 				client.send(command_type, command_params)
 
-		""" Also send it to any registered listeners """
-		if remote_category != None and self.db_id in BotWatch[remote_category]:
+		# Add remote map on the params if needed
+		do_linked = send_to_links and self.is_map() and self.edge_ref_links
+		do_listeners = remote_category != None and self.db_id in BotWatch[remote_category]
+		if do_linked or do_listeners:
 			if command_params == None:
 				command_params = {}
 			command_params['remote_map'] = self.db_id
+		else:
+			return
+
+		""" Send it to any maps linked from this one, if send_to_links """
+		if do_linked: # Assume it's a map if do_linked is true
+			for linked_map in self.edge_ref_links:
+				if linked_map == None:
+					continue
+				for client in linked_map.contents:
+					if not client.is_client() or not client.see_past_map_edge:
+						continue
+					client.send(command_type, command_params)
+
+		""" Also send it to any registered listeners """
+		if do_listeners:
 			for client in BotWatch[remote_category][self.db_id]:
 				if (client.map_id != self.db_id) or remote_only: # don't send twice to people on the map
 					client.send(command_type, command_params)

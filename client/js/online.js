@@ -134,12 +134,22 @@ function receiveServerMessage(event) {
       }
       break;
     case "MAI":
-      MapWidth = arg.size[0];
-      MapHeight = arg.size[1];
-      MapInfo = arg;
-      initMap();
+      if("remote_map" in arg) {
+        var remote = arg["remote_map"];
+        LinkedMaps[remote] = new TownMap(arg.size[0], arg.size[1])
+        LinkedMaps[remote].Info = arg;
+        break;
+      } else {
+        LinkedMaps = {}; // Reset linked maps
+        MyMap = new TownMap(arg.size[0], arg.size[1])
+        MyMap.Info = arg;
+      }
       break;
     case "MAP":
+      var Map = MyMap;
+      if("remote_map" in arg) {
+        Map = LinkedMaps[arg["remote_map"]];
+      }
       var Fill = AtomFromName(arg.default);
       var x1 = arg.pos[0];
       var y1 = arg.pos[1];
@@ -149,23 +159,27 @@ function receiveServerMessage(event) {
       // Clear out the area
       for(var x=x1; x<=x2; x++) {
         for(var y=y1; y<=y2; y++) {
-          MapTiles[x][y] = Fill;
-          MapObjs[x][y] = [];
+          Map.Tiles[x][y] = Fill;
+          Map.Objs[x][y] = [];
         }
       }
       // Write in tiles and objects
       for (var key in arg.turf) {
         var turf = arg.turf[key];
-        MapTiles[turf[0]][turf[1]] = turf[2];
+        Map.Tiles[turf[0]][turf[1]] = turf[2];
       }
       for (var key in arg.obj) {
         var obj = arg.obj[key];
-        MapObjs[obj[0]][obj[1]] = obj[2];
+        Map.Objs[obj[0]][obj[1]] = obj[2];
       }
 
       NeedMapRedraw = true;
       break;
     case "BLK":
+      var Map = MyMap;
+      if("remote_map" in arg) {
+        Map = LinkedMaps[arg["remote_map"]];
+      }
       for (var key in arg.copy) {
         var copy_params = arg.copy[key];
         var copy_turf = true, copy_obj = true;
@@ -191,8 +205,8 @@ function receiveServerMessage(event) {
             copiedTurf[w] = [];
             copiedObjs[w] = [];
             for(var h=0; h<height; h++) {
-              copiedTurf[w][h] = MapTiles[x1+w][y1+h];
-              copiedObjs[w][h] = MapObjs[x1+w][y1+h];
+              copiedTurf[w][h] = Map.Tiles[x1+w][y1+h];
+              copiedObjs[w][h] = Map.Objs[x1+w][y1+h];
             }
           }
 
@@ -200,9 +214,9 @@ function receiveServerMessage(event) {
           for(var w = 0; w < width; w++) {
             for(var h = 0; h < height; h++) {
               if(copy_turf == true)
-                MapTiles[x2+w][y2+h] = copiedTurf[w][h];
+                Map.Tiles[x2+w][y2+h] = copiedTurf[w][h];
               if(copy_obj == true)
-                MapObjs[x2+w][y2+h] = copiedObjs[w][h];
+                Map.Objs[x2+w][y2+h] = copiedObjs[w][h];
             }
           }
         }
@@ -218,7 +232,7 @@ function receiveServerMessage(event) {
         // apply rectangle
         for(var w = 0; w < width; w++) {
           for(var h = 0; h < height; h++) {
-            MapTiles[turf[0]+w][turf[1]+h] = turf[2];
+            Map.Tiles[turf[0]+w][turf[1]+h] = turf[2];
           }
         }
       }
@@ -233,7 +247,7 @@ function receiveServerMessage(event) {
         // apply rectangle
         for(var w = 0; w < width; w++) {
           for(var h = 0; h < height; h++) {
-            MapObjs[obj[0]+w][obj[1]+h] = obj[2];
+            Map.Objs[obj[0]+w][obj[1]+h] = obj[2];
           }
         }
 

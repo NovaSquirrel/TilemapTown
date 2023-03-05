@@ -617,6 +617,33 @@ def fn_mapdesc(map, client, context, arg):
 	map.desc = arg
 	respond(context, 'Map description set to \"%s\"' % map.desc)
 
+@cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="edge id")
+def fn_mapedgelink(map, client, context, arg):
+	s = arg.split()
+	if len(s) == 2 and s[0].isnumeric() and s[1].isnumeric():
+		edge = int(s[0])
+		if edge < 0 or edge >= 8:
+			respond(context, 'Edge number should be in the 0-7 range', error=True)
+			return
+		map_id = int(s[1])
+		if map_id < 0:
+			map_id = None
+
+		# Make sure it's a list, so I can write to one of the items
+		if map.edge_id_links == None:
+			map.edge_id_links = [None] * 8
+		map.edge_id_links[edge] = map_id
+
+		# If it's all None, change it to None instead of being a list at all
+		if all(x == None for x in map.edge_id_links):
+			map.edge_id_links = None
+
+		map.map_data_modified = True
+		respond(context, 'Map edge %d set to %s; links: %s' % (edge, map_id, map.edge_id_links))
+	else:
+		respond(context, 'Syntax is /mapedgelink edge id', error=True)
+
+
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="username")
 def fn_mapowner(map, client, context, arg):
 	newowner = find_db_id_by_username(arg)
@@ -974,28 +1001,32 @@ def fn_home(map, client, context, arg):
 def fn_defaultmap(map, client, context, arg):
 	client.switch_map(get_database_meta('default_map'))
 
-@cmd_command(category="Teleport", syntax="map")
+@cmd_command(alias=['tpi'], category="Teleport", syntax="map")
 def fn_map(map, client, context, arg):
-	if arg == '0':
-		client.switch_map(get_database_meta('default_map'))
-		return
 	try:
-		if map_id_exists(int(arg)):
-			if client.switch_map(int(arg)):
-				respond(context, 'Teleported to map %s' % arg)
-			else:
-				respond(context, 'Couldn\t go to map %s' % arg, error=True)
+		s = arg.split()
+		if len(s) == 0:
+			respond(context, 'Map ID is %d' % map.db_id)
+			return
+		if len(s) == 1:
+			map_id = int(s[0])
+			new_pos = None
+		elif len(s) == 3:
+			map_id = int(s[0])
+			new_pos = (int(s[1]), int(s[2]))
 		else:
-			respond(context, 'Map %s doesn\'t exist' % arg, error=True)
-	except:
-		respond(context, 'Couldn\t go to map %s' % arg, error=True)
+			respond(context, 'Syntax is [tt]/map id[/tt] or [tt]/map id x y[/tt]' % arg, error=True)
+			return
+		if map_id == 0:
+			map_id = get_database_meta('default_map')
 
-@cmd_command(alias=['tp_into', 'tpi'], category="Teleport", syntax="map")
-def fn_tpinto(map, client, context, arg):
-	if client.switch_map(int(arg)):
-		respond(context, 'Teleported into entity %s' % arg)
-	else:
-		respond(context, 'Couldn\'t teleport into entity %s' % arg, error=True)
+		if client.switch_map(map_id, new_pos=new_pos):
+			respond(context, 'Teleported to map %s' % map_id)
+		else:
+			respond(context, 'Couldn\'t go to map %s' % map_id, error=True)
+	except:
+		raise
+		respond(context, 'Couldn\'t go to map %s' % map_id, error=True)
 
 @cmd_command(category="Account", privilege_level="registered")
 def fn_saveme(map, client, context, arg):

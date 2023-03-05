@@ -36,19 +36,18 @@ List of permissions:
 
 === Movement on the map ===
 --> MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0}
-move yourself
+Move yourself
+
+--> MOV {"bump": [x,y], "dir": 0}
+Tell the server you attempted to move into a tile but stopped yourself because it was dense.
+Also sent when attempting to move off of the edge of the map, which the server may respond to by sending you to another map.
 
 --> MOV {"dir": 0}
-change direction only
+Change direction only
 
 <-- MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "id": 0}
-move a player on the map.
+Move a player on the map.
 "from" may be left out, and if so, a client won't ignore MOVs for its own ID.
-
---> TAP {"pos": [x,y]}
-sent by an attempt to move into a dense object.
-can be triggered by clicking too
-(not implemented)
 
 === Map contents ===
 --> PUT {"pos": [x,y], "atom": {atom}}
@@ -66,7 +65,7 @@ get a partial (or complete) copy of the map
 --> MAI
 <-- MAI {"name": map_name, "id": map_id, "owner": whoever, "admins": list, "default": default_turf, "size": [width, height], "public": true/false, "private": true/false, "build_enabled": true/false, "full_sandbox": true/false, "you_allow": list, "you_deny": list}
 map info stuff.
-Optionally also defines "entry_whitelist", "entry_banlist" and "start_pos" for map admins
+Optionally also defines "start_pos" for map admins
 
 --> DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true}
 <-- DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true, "username":username, "remote_map": map} (for listeners)
@@ -247,7 +246,8 @@ Item info fields:
 	temporary
 
 === Optional features ===
-Clients and servers can advertise having extra features on top of the basic ones
+Clients and servers can advertise having extra features on top of the basic ones.
+VER will tell the client what features are available, and the client can request specific features with IDN, which the server will acknowledge.
 
 --> VER {
 	"name": client_name,
@@ -282,3 +282,7 @@ Clients and servers can advertise having extra features on top of the basic ones
 	}
 }
 
+=== Extension: see_past_map_edge ====
+If a client signals that it supports see_past_map_edge, then it will receive a MAI and MAP message for all of the maps linked from the one they have just joined.
+After this point, they'll receive MAP messages broadcast to those maps.
+Messages for linked maps are marked with a remote_map field, just like the /listen command adds.

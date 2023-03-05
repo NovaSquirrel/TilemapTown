@@ -24,6 +24,8 @@ command_privilege_level = {} # minimum required privilege level required for the
 map_only_commands = set()
 pre_identify_commands = set()
 
+directions = ((1,0), (1,1), (0,1), (-1,1), (-1,0), (-1,-1), (0,-1), (1,-1))
+
 # Adds a command handler
 def protocol_command(privilege_level='guest', map_only=False, pre_identify=False):
 	def decorator(f):
@@ -90,13 +92,44 @@ def fn_MOV(map, client, arg):
 			fn_MOV(entity.map, entity, arg)
 			return
 
-	# Controlling this entity
+	# Handle bumping into the map edge
+	if "bump" in arg and map.is_map() and map.edge_ref_links != None:
+		bump_pos    = arg["bump"]
+
+		# Check if the bumped position is past one of the edges
+		edge_sign_x = -1 if bump_pos[0] < 0 else (1 if bump_pos[0] >= map.width else 0)
+		edge_sign_y = -1 if bump_pos[1] < 0 else (1 if bump_pos[1] >= map.height else 0)
+		if edge_sign_x != 0 or edge_sign_y != 0:
+			# Find what map link index to use
+			edge_index = directions.index((edge_sign_x, edge_sign_y))
+			new_map = map.edge_ref_links[edge_index]
+			if new_map != None:
+				new_x, new_y = bump_pos
+				if edge_sign_x == 1:
+					new_x = 0
+				elif edge_sign_x == -1:
+					new_x = new_map.width-1
+				if edge_sign_y == 1:
+					new_y = 0
+				elif edge_sign_y == -1:
+					new_y = new_map.height-1
+				# If the client can move to the new map, then it'll remove them from this one,
+				# and this function shouldn't continue.
+				if client.switch_map(new_map.db_id, new_pos=(new_x, new_y)):
+					return
+
+	# Broadcast that this entity moved
 	data = {'id': client.protocol_id()}
+	any_valid_fields = False
 	for valid_field in ('from', 'to', 'dir'):
 		if valid_field in arg:
+			any_valid_fields = True
 			data[valid_field] = arg[valid_field]
+	if not any_valid_fields:
+		return
 	map.broadcast("MOV", data, remote_category=botwatch_type['move'])
 
+	# Update this entity's position
 	new_dir = data['dir'] if 'dir' in data else None
 	if 'to' in data:
 		client.move_to(data['to'][0], data['to'][1], new_dir=new_dir)
@@ -464,7 +497,7 @@ def fn_DEL(map, client, arg):
 					map.turfs[x][y] = None;
 				if arg["obj"]:
 					map.objs[x][y] = None;
-		map.broadcast("MAP", map.map_section(x1, y1, x2, y2))
+		map.broadcast("MAP", map.map_section(x1, y1, x2, y2), send_to_links=True)
 
 		# make username available to listeners
 		arg['username'] = client.username_or_id()
@@ -493,7 +526,7 @@ def fn_PUT(map, client, arg):
 			tile_test = [tile_is_okay(x) for x in arg["atom"]]
 			if all(x[0] for x in tile_test): # all tiles pass the test
 				map.objs[x][y] = arg["atom"]
-				map.broadcast("MAP", map.map_section(x, y, x, y))
+				map.broadcast("MAP", map.map_section(x, y, x, y), send_to_links=True)
 				notify_listeners()
 			else:
 				# todo: give a reason?
@@ -503,7 +536,7 @@ def fn_PUT(map, client, arg):
 			tile_test = tile_is_okay(arg["atom"])
 			if tile_test[0]:
 				map.turfs[x][y] = arg["atom"]
-				map.broadcast("MAP", map.map_section(x, y, x, y))
+				map.broadcast("MAP", map.map_section(x, y, x, y), send_to_links=True)
 				notify_listeners()
 			else:
 				client.send("MAP", map.map_section(x, y, x, y))
@@ -652,6 +685,11 @@ def fn_IDN(map, client, arg):
 		ack_info["features"] = {}
 		for key, value in arg["features"].items():
 			if key in available_server_features: # TODO: check if specified version is >= minimum version
+				# Put it in a variable specifically for this
+				if key == "see_past_map_edge":
+					client.see_past_map_edge = True
+
+				# Add it to the set and acnowledge it too
 				client.features.add(key)
 				ack_info["features"][key] = {"version": available_server_features[key]["version"]}
 	client.send("IDN", ack_info if ack_info != {} else None)
