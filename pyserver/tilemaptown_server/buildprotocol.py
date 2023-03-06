@@ -667,19 +667,7 @@ def fn_IDN(map, client, arg):
 	if "map" in arg:
 		override_map = arg["map"]
 
-	if arg != {} and "username" in arg and "password" in arg:
-		if not client.login(filter_username(arg["username"]), arg["password"], override_map=override_map):
-			client.disconnect()
-			return
-	else:
-		if not override_map or not client.switch_map(override_map[0], new_pos=None if (len(override_map) == 1) else (override_map[1:])):
-			client.switch_map(get_database_meta('default_map'))
-
-	if len(Config["Server"]["MOTD"]):
-		client.send("MSG", {'text': Config["Server"]["MOTD"]})
-	client.identified = True
-
-	# Acknowledge the IDN and acknowledge requested features, if they are supported
+	# Check the features the client requested
 	ack_info = {}
 	if arg != {} and "features" in arg:
 		ack_info["features"] = {}
@@ -692,8 +680,21 @@ def fn_IDN(map, client, arg):
 				# Add it to the set and acnowledge it too
 				client.features.add(key)
 				ack_info["features"][key] = {"version": available_server_features[key]["version"]}
-	client.send("IDN", ack_info if ack_info != {} else None)
 
+	# Now check the username and password and actually log in
+	if arg != {} and "username" in arg and "password" in arg:
+		if not client.login(filter_username(arg["username"]), arg["password"], override_map=override_map):
+			client.disconnect()
+			return
+	else:
+		if not override_map or not client.switch_map(override_map[0], new_pos=None if (len(override_map) == 1) else (override_map[1:])):
+			client.switch_map(get_database_meta('default_map'))
+
+	if len(Config["Server"]["MOTD"]):
+		client.send("MSG", {'text': Config["Server"]["MOTD"]})
+	client.identified = True
+
+	client.send("IDN", ack_info if ack_info != {} else None)
 	client.send("MSG", {'text': 'Users connected: %d' % len(AllClients)})
 
 # -------------------------------------

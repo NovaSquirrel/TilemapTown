@@ -120,6 +120,12 @@ function receiveServerMessage(event) {
     case "MOV":
       if(arg.id != PlayerYou || !arg.from) {
         if("to" in arg) {
+          if(arg.id == PlayerYou) {
+            if(PlayerWho[arg.id].x != arg.to[0])
+              CameraX = arg.to[0]*16+8;
+            if(PlayerWho[arg.id].y != arg.to[1])
+              CameraY = arg.to[1]*16+8; 
+          }
           PlayerWho[arg.id].x = arg.to[0];
           PlayerWho[arg.id].y = arg.to[1];
           if(PlayerWho[arg.id].vehicle == null || PlayerWho[arg.id].is_following) {
