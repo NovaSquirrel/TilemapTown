@@ -694,6 +694,12 @@ def fn_IDN(map, client, arg):
 		client.send("MSG", {'text': Config["Server"]["MOTD"]})
 	client.identified = True
 
+	if Config["Server"]["BroadcastConnects"]:
+		text = '%s has connected!' % client.name_and_username()
+		for u in AllClients:
+			if u is not client:
+				u.send("MSG", {'text': text})
+
 	client.send("IDN", ack_info if ack_info != {} else None)
 	client.send("MSG", {'text': 'Users connected: %d' % len(AllClients)})
 
