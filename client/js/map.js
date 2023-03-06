@@ -1,7 +1,7 @@
 /*
  * Tilemap Town
  *
- * Copyright (C) 2017-2018 NovaSquirrel
+ * Copyright (C) 2017-2023 NovaSquirrel
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -48,16 +48,33 @@ var Directions = {
 var DirX = [ 1,  1,  0, -1, -1, -1,  0,  1];
 var DirY = [ 0,  1,  1,  1,  0, -1, -1, -1];
 
-// world map
-var MapTiles  = [];
-var MapWidth  = 60; // keep synchronized with the one in MapInfo
-var MapHeight = 60;
-var MapObjs   = [];
+class TownMap {
+  constructor(MapWidth, MapHeight) {
+    this.Width = MapWidth;
+    this.Height = MapHeight;
 
-// MAI command arguments
-var MapInfo   = {name: "?", 'id': -1, 'owner': -1, 'default': 'grass', 'size': [60, 60], 'public': true, 'private': false, 'build_enabled': true, 'full_sandbox': true};
+    // Gets filled in from MAI
+    this.Info = {name: "?", 'id': -1, 'owner': -1, 'default': 'grass', 'size': [60, 60], 'public': true, 'private': false, 'build_enabled': true, 'full_sandbox': true};
+
+    // Initialize the map
+    this.Tiles = [];
+    this.Objs = [];
+    for(var i=0; i<MapWidth; i++) {
+      this.Tiles[i] = [];
+      this.Objs[i] = [];
+      for(var j=0; j<MapHeight; j++) {
+        this.Tiles[i][j] = "grass";
+        this.Objs[i][j] = [];
+      }
+    }
+  }
+}
+var MyMap = new TownMap(60, 60);
+var LinkedMaps = {};
 
 var IconSheets = {}; // tile sheets, indexed by first element in a 'pic'
+
+
 var IconSheetsRequested = {};
 var Tilesets = {};   // extra tilesets past just the Predefined list
 var TilesetsRequested = {};
@@ -185,16 +202,6 @@ function initMap() {
   if(Object.keys(IconSheets).length === 0) {
     IconSheets[0] = document.getElementById("potluck");
     IconSheets[-1] = document.getElementById("extras");
-  }
-
-  // Initialize the map
-  for(var i=0; i<MapWidth; i++) {
-    MapTiles[i] = [];
-    MapObjs[i] = [];
-    for(var j=0; j<MapHeight; j++) {
-      MapTiles[i][j] = "grass";
-      MapObjs[i][j] = [];
-    }
   }
 }
 

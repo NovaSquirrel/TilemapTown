@@ -30,8 +30,7 @@ var PlayerAnimation = { // dictionary of animation statuses
 var Mail = [];
 
 // camera settings
-var ViewWidth;
-var ViewHeight;
+// CameraX and CameraY are the pixel coordinates of the *center* of the screen, rather than the top left
 var CameraX = 0;
 var CameraY = 0;
 var CameraAlwaysCenter = true;
@@ -299,11 +298,11 @@ function useItem(Placed) {
             return;
           Placed.data.message = Message;
         }
-        MapObjs[PlayerX][PlayerY].push(Placed.data);
-        SendCmd("PUT", {pos: [PlayerX, PlayerY], obj: true, atom: MapObjs[PlayerX][PlayerY]});
+        MyMap.Objs[PlayerX][PlayerY].push(Placed.data);
+        SendCmd("PUT", {pos: [PlayerX, PlayerY], obj: true, atom: MyMap.Objs[PlayerX][PlayerY]});
       } else {
-        MapTiles[PlayerX][PlayerY] = Placed.data;
-        SendCmd("PUT", {pos: [PlayerX, PlayerY], obj: false, atom: MapTiles[PlayerX][PlayerY]});
+        MyMap.Tiles[PlayerX][PlayerY] = Placed.data;
+        SendCmd("PUT", {pos: [PlayerX, PlayerY], obj: false, atom: MyMap.Tiles[PlayerX][PlayerY]});
       }
       drawMap();
   }
@@ -377,8 +376,8 @@ function movePlayer(id, x, y, dir) {
 function keyHandler(e) {
  
   function ClampPlayerPos() {
-    PlayerX = Math.min(Math.max(PlayerX, 0), MapWidth-1);
-    PlayerY = Math.min(Math.max(PlayerY, 0), MapHeight-1);;
+    PlayerX = Math.min(Math.max(PlayerX, 0), MyMap.Width-1);
+    PlayerY = Math.min(Math.max(PlayerY, 0), MyMap.Height-1);
   }
 
   var e = e || window.event;
@@ -428,6 +427,7 @@ function keyHandler(e) {
   var PlayerDir = PlayerWho[PlayerYou].dir;
   var OldPlayerX = PlayerX;
   var OldPlayerY = PlayerY;
+  var Bumped = false, BumpedX = null, BumpedY = null;
   var OldPlayerDir = PlayerWho[PlayerYou].dir;
 
   if(e.keyCode == 32 || e.keyCode == 12) { // space or clear
@@ -491,17 +491,28 @@ function keyHandler(e) {
     e.preventDefault();
   }
 
+  var BeforeClampX = PlayerX, BeforeClampY = PlayerY;
   ClampPlayerPos();
+  if(PlayerX != BeforeClampX || PlayerY != BeforeClampY) {
+    Bumped = true;
+    BumpedX = BeforeClampX;
+    BumpedY = BeforeClampY;
+  }
 
   // Go back if the turf is solid, or if there's objects in the way
   if(OldPlayerX != PlayerX || OldPlayerY != PlayerY) {
     // Check for solid objects in the way first
-    for (var index in MapObjs[PlayerX][PlayerY]) {
-      var Obj = AtomFromName(MapObjs[PlayerX][PlayerY][index]);
+    for (var index in MyMap.Objs[PlayerX][PlayerY]) {
+      var Obj = AtomFromName(MyMap.Objs[PlayerX][PlayerY][index]);
       if(Obj.density) {
         if(!Fly){
+          if(!Bumped) {
+            Bumped = true;
+            BumpedX = PlayerX;
+            BumpedY = PlayerY;
+          }
           PlayerX = OldPlayerX;
-          PlayerY = OldPlayerY;
+          PlayerY = OldPlayerY;          
         }
         if(Obj.type == AtomTypes.SIGN) {
           // Filter out HTML tag characters to prevent XSS (not needed because convertBBCode does this)
@@ -526,19 +537,31 @@ function keyHandler(e) {
       }
     }
 	// Then check for turfs
-    if(!Fly && AtomFromName(MapTiles[PlayerX][PlayerY]).density) {
+    if(!Fly && AtomFromName(MyMap.Tiles[PlayerX][PlayerY]).density) {
+      if(!Bumped) {
+        Bumped = true;
+        BumpedX = PlayerX;
+        BumpedY = PlayerY;
+      }
       PlayerX = OldPlayerX;
       PlayerY = OldPlayerY;
     }
+  }
 
-    if(OldPlayerX != PlayerX || OldPlayerY != PlayerY || OldPlayerDir != PlayerDir) {
-      if(e.shiftKey) {
-        SendCmd("MOV", {dir: PlayerDir});
-        movePlayer(PlayerYou, null, null, PlayerDir);
-      } else {
-        SendCmd("MOV", {from: [OldPlayerX, OldPlayerY], to: [PlayerX, PlayerY], dir: PlayerDir});
-        movePlayer(PlayerYou, PlayerX, PlayerY, PlayerDir);
+  if(Bumped || OldPlayerX != PlayerX || OldPlayerY != PlayerY || OldPlayerDir != PlayerDir) {
+    var Params = {'dir': PlayerDir};
+    if(e.shiftKey) {
+      SendCmd("MOV", Params);
+      movePlayer(PlayerYou, null, null, PlayerDir);
+    } else {
+      if(Bumped)
+        Params['bump'] = [BumpedX, BumpedY];
+      if(PlayerX != OldPlayerX || PlayerY != OldPlayerY) {
+        Params['from'] = [OldPlayerX, OldPlayerY];
+        Params['to'] = [PlayerX, PlayerY];
       }
+      SendCmd("MOV", Params);
+      movePlayer(PlayerYou, PlayerX, PlayerY, PlayerDir);
     }
   }
 
@@ -547,6 +570,19 @@ function keyHandler(e) {
 }
 document.onkeydown = keyHandler;
 
+var edgeMapLookupTable = [
+  null, // durl - invalid
+  4,    // durL
+  0,    // duRl
+  null, // duRL - invalid
+  6,    // dUrl
+  5,    // dUrL
+  7,    // dURl
+  null, // dURL - invalid
+  2,    // Durl
+  3,    // DurL
+  1,    // DuRl
+];
 // Render the map view
 function drawMap() {
   var canvas = mapCanvas;
@@ -557,56 +593,94 @@ function drawMap() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Calculate camera pixel coordinates
-  var PixelCameraX = CameraX>>4;
-  var PixelCameraY = CameraY>>4;
+  var ViewWidth = Math.floor(canvas.width/16);
+  var ViewHeight = Math.floor(canvas.height/16);
+  var PixelCameraX = Math.round(CameraX - canvas.width/2);
+  var PixelCameraY = Math.round(CameraY - canvas.height/2);
   var OffsetX = PixelCameraX & 15;
   var OffsetY = PixelCameraY & 15;
-  var TileX = PixelCameraX>>4;
-  var TileY = PixelCameraY>>4;
+  var TileX = PixelCameraX >> 4;
+  var TileY = PixelCameraY >> 4;
+
+  var EdgeLinks = null;
+  if("edge_links" in MyMap.Info)
+    EdgeLinks = MyMap.Info["edge_links"];
 
   // Render the map
-  for(x=0;x<(ViewWidth+1);x++) {
-    for(y=0;y<(ViewHeight+1);y++) {
-     try {
-      var RX = x+TileX;
-      var RY = y+TileY;
+  for(x=0;x<(ViewWidth+2);x++) {
+    for(y=0;y<(ViewHeight+2);y++) {
+      try {
+        ctx.globalAlpha = 1;
+        var mapCoordX = x+TileX;
+        var mapCoordY = y+TileY;
+        var map = MyMap;
 
-      // Skip out-of-bounds tiles
-      if(RX < 0 || RX >= MapWidth || RY < 0 || RY >= MapHeight)
-        continue;
-
-      // Draw the turf
-      var Tile = AtomFromName(MapTiles[RX][RY]);
-      if(Tile) {
-        if(IconSheets[Tile.pic[0]])
-          ctx.drawImage(IconSheets[Tile.pic[0]], Tile.pic[1]*16, Tile.pic[2]*16, 16, 16, x*16-OffsetX, y*16-OffsetY, 16, 16);
-        else
-          RequestImageIfNeeded(Tile.pic[0]);
-      }
-      // Draw anything above the turf
-      var Objs = MapObjs[RX][RY];
-      if(Objs) {
-        for (var index in Objs) {
-          var Obj = AtomFromName(Objs[index]);
-          if(IconSheets[Obj.pic[0]])
-            ctx.drawImage(IconSheets[Obj.pic[0]], Obj.pic[1]*16, Obj.pic[2]*16, 16, 16, x*16-OffsetX, y*16-OffsetY, 16, 16);
-          else
-            RequestImageIfNeeded(Obj.pic[0]);
+        // Out-of-bounds tiles may be on another map
+        var edgeLookupIndex = (mapCoordX < 0)*1 + (mapCoordX >= MyMap.Width)*2 +
+                              (mapCoordY < 0)*4 + (mapCoordY >= MyMap.Height)*8;
+        if(edgeLookupIndex != 0) {
+          if(EdgeLinks == null)
+            continue;
+          var map = LinkedMaps[EdgeLinks[edgeMapLookupTable[edgeLookupIndex]]];
+          if(map == null)
+            continue;
+          var gradientHorizontal = 1;
+          var gradientVertical = 1;
+          if(edgeLookupIndex & 1) { // Left
+            gradientHorizontal = 0.5 - (-Math.floor(mapCoordX/2)+1) * 0.025;
+            mapCoordX = map.Width + mapCoordX;
+          }
+          if(edgeLookupIndex & 2) { // Right
+            mapCoordX -= MyMap.Width;
+            gradientHorizontal = 0.5 - Math.floor(mapCoordX/2) * 0.025;
+          }
+          if(edgeLookupIndex & 4) { // Above
+            gradientVertical = 0.5 - (-Math.floor(mapCoordY/2)+1) * 0.025;
+            mapCoordY = map.Height + mapCoordY;
+          }
+          if(edgeLookupIndex & 8) { // Below
+            mapCoordY -= MyMap.Height;
+            gradientVertical = 0.5 - Math.floor(mapCoordY/2) * 0.025;
+          }
+          if(mapCoordX < 0 || mapCoordX >= map.Width || mapCoordY < 0 || mapCoordY >= map.Height)
+            continue;
+          ctx.globalAlpha = Math.max(0, Math.min(gradientHorizontal, gradientVertical));
+          if(ctx.globalAlpha == 0)
+            continue;
         }
+
+        // Draw the turf
+        var Tile = AtomFromName(map.Tiles[mapCoordX][mapCoordY]);
+        if(Tile) {
+          if(IconSheets[Tile.pic[0]])
+            ctx.drawImage(IconSheets[Tile.pic[0]], Tile.pic[1]*16, Tile.pic[2]*16, 16, 16, x*16-OffsetX, y*16-OffsetY, 16, 16);
+          else
+            RequestImageIfNeeded(Tile.pic[0]);
+        }
+        // Draw anything above the turf
+        var Objs = map.Objs[mapCoordX][mapCoordY];
+        if(Objs) {
+          for (var index in Objs) {
+            var Obj = AtomFromName(Objs[index]);
+            if(IconSheets[Obj.pic[0]])
+              ctx.drawImage(IconSheets[Obj.pic[0]], Obj.pic[1]*16, Obj.pic[2]*16, 16, 16, x*16-OffsetX, y*16-OffsetY, 16, 16);
+            else
+              RequestImageIfNeeded(Obj.pic[0]);
+          }
+        }
+      } catch(error) {
       }
-     } catch(error) {
-     }
     }
   }
+  // Draw entities normally
+  ctx.globalAlpha = 1;
 
-  // Draw the player
-//  ctx.drawImage(document.getElementById(PlayerIconSheet), PlayerIconX*16, PlayerIconY*16, 16, 16, (PlayerX*16)-PixelCameraX, (PlayerY*16)-PixelCameraY, 16, 16);
+  // Draw the entities, including the player
 
   function draw32x32Player(who, frameX, frameY) {
     var Mob = PlayerWho[index];
     ctx.drawImage(PlayerImages[who], frameX*32, frameY*32, 32, 32, (Mob.x*16-8)-PixelCameraX, (Mob.y*16-16)-PixelCameraY, 32, 32);
   }
-
 
   var sortedPlayers = [];
   for (var index in PlayerWho)
@@ -719,6 +793,17 @@ function drawMap() {
     ctx.rect(AX-PixelCameraX, AY-PixelCameraY, BX-AX, BY-AY);
     ctx.stroke();
   }
+
+  // Draw the map link edges
+  if(EdgeLinks != null) {
+    ctx.beginPath();
+    ctx.globalAlpha = 0.5;
+    ctx.lineWidth = "2";
+    ctx.strokeStyle = "green";
+    ctx.rect(0-PixelCameraX, 0-PixelCameraY, MyMap.Width*16, MyMap.Height*16);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
 }
 
 function drawText(ctx, x, y, text) {
@@ -753,9 +838,6 @@ function drawSelector() {
 }
 
 function tickWorld() {
-  var TargetCameraX = (PlayerWho[PlayerYou].x-Math.floor(ViewWidth/2))<<8;
-  var TargetCameraY = (PlayerWho[PlayerYou].y-Math.floor(ViewHeight/2))<<8;
-
   if(NeedInventoryUpdate) {
     DisplayInventory = {null: []};
 
@@ -853,7 +935,7 @@ function tickWorld() {
   }
 
 /*
-  var Under = MapTiles[PlayerX][PlayerY];
+  var Under = MyMap.Tiles[PlayerX][PlayerY];
   if(!(TickCounter & 0x03)) {
     if(Under.type == AtomTypes.ICE) {
       PlayerX += DirX[PlayerDir];
@@ -870,30 +952,38 @@ function tickWorld() {
   }
 */
 
-  if(CameraX != TargetCameraX || CameraY != TargetCameraY) {
-    var DifferenceX = TargetCameraX - CameraX;
-    var DifferenceY = TargetCameraY - CameraY;
-	var OldCameraX = CameraX;
-	var OldCameraY = CameraY;
+  var TargetCameraX = (PlayerWho[PlayerYou].x*16+8);
+  var TargetCameraY = (PlayerWho[PlayerYou].y*16+8);
+  var CameraDifferenceX = TargetCameraX - CameraX;
+  var CameraDifferenceY = TargetCameraY - CameraY;
+  var CameraDistance = Math.sqrt(CameraDifferenceX*CameraDifferenceX + CameraDifferenceY*CameraDifferenceY);
+  if(CameraDistance > 0.5) {
+    var DivideBy = 16;
+    var AdjustX = (TargetCameraX - CameraX) / DivideBy;
+    var AdjustY = (TargetCameraY - CameraY) / DivideBy;
 
-    var ShiftBy = 4;
-    do {
-      CameraX += DifferenceX >> ShiftBy;
-      CameraY += DifferenceY >> ShiftBy;
-      ShiftBy--;
-      if(ShiftBy == -1)
-        break;
-    } while (CameraX == OldCameraX && CameraY == OldCameraY);
+    if(Math.abs(AdjustX) > 0.1)
+      CameraX += AdjustX;
+    if(Math.abs(AdjustY) > 0.1)
+      CameraY += AdjustY;
 
     if(!CameraAlwaysCenter) {
-      if(MapWidth >= ViewWidth)
-        CameraX = Math.min((MapWidth-ViewWidth)<<8, Math.max(CameraX, 0));
-      else
-        CameraX = -(Math.floor(ViewWidth/2)-Math.floor(MapWidth/2))<<8;
-      if(MapHeight >= ViewHeight)
-        CameraY = Math.min((MapHeight-ViewHeight)<<8, Math.max(CameraY, 0));
-      else
-        CameraY = -(Math.floor(ViewHeight/2)-Math.floor(MapHeight/2))<<8;
+      var EdgeLinks = null;
+      if("edge_links" in MyMap.Info)
+        EdgeLinks = MyMap.Info["edge_links"];
+
+      var PixelCameraX = Math.round(CameraX - mapCanvas.width/2);
+      var PixelCameraY = Math.round(CameraY - mapCanvas.height/2);
+      if(PixelCameraX < 0 && (!EdgeLinks || !EdgeLinks[4]))
+        CameraX -= PixelCameraX;
+      if(PixelCameraY < 0 && (!EdgeLinks || !EdgeLinks[6]))
+        CameraY -= PixelCameraY;
+      if((PixelCameraX + mapCanvas.width > MyMap.Width*16) && (!EdgeLinks || !EdgeLinks[0])) {
+        CameraX -= (PixelCameraX + mapCanvas.width) - MyMap.Width*16;
+      }
+      if((PixelCameraY + mapCanvas.height > MyMap.Height*16) && (!EdgeLinks || !EdgeLinks[2])) {
+        CameraY -= (PixelCameraY + mapCanvas.height) - MyMap.Height*16;
+      }
     }
     drawMap();
   } else if(AnimationTick % 5 == 0) { // every 0.1 seconds
@@ -921,12 +1011,12 @@ function selectionDelete() {
 
   for(var x=MouseStartX; x<=MouseEndX; x++) {
     for(var y=MouseStartY; y<=MouseEndY; y++) {
-      if(x < 0 || x > MapWidth || y < 0 || y > MapHeight)
+      if(x < 0 || x > MyMap.Width || y < 0 || y > MyMap.Height)
         continue;
       if(DeleteTurfs)
-        MapTiles[x][y] = MapInfo['default'];
+        MyMap.Tiles[x][y] = MyMap.Info['default'];
       if(DeleteObjs)
-        MapObjs[x][y] = [];        
+        MyMap.Objs[x][y] = [];        
     }
   }
   SendCmd("DEL", {pos: [MouseStartX, MouseStartY, MouseEndX, MouseEndY], turf: DeleteTurfs, obj: DeleteObjs});
@@ -991,9 +1081,11 @@ function getMousePos(canvas, evt) {
 }
 
 function getTilePos(evt) {
+  var PixelCameraX = Math.round(CameraX - mapCanvas.width/2);
+  var PixelCameraY = Math.round(CameraY - mapCanvas.height/2);
   var pos = getMousePos(mapCanvas, evt);
-  pos.x = ((pos.x) + (CameraX>>4))>>4;
-  pos.y = ((pos.y) + (CameraY>>4))>>4;
+  pos.x = (pos.x + PixelCameraX)>>4;
+  pos.y = (pos.y + PixelCameraY)>>4;
   return pos;
 }
 
@@ -1084,10 +1176,7 @@ function initMouse() {
   }, false);
 }
 
-function viewInit() {
-  ViewWidth = Math.floor(mapCanvas.width/16);
-  ViewHeight = Math.floor(mapCanvas.height/16);
-  
+function viewInit() {  
   var selector = document.getElementById("selector");
   selector.width = Math.max(240, parseInt(mapCanvas.style.width))+"";
   drawSelector();
@@ -1846,21 +1935,10 @@ XBBCODE.addTags({
 
 
 function resizeCanvas() {
-  // get camera target
-  var cameraCenterX = CameraX + mapCanvas.width*8;
-  var cameraCenterY = CameraY + mapCanvas.height*8;
-
   var parent = mapCanvas.parentNode;
   var r = parent.getBoundingClientRect();
   mapCanvas.width = r.width / CameraScale;
   mapCanvas.height = r.height / CameraScale;
-
-  ViewWidth = Math.ceil(mapCanvas.width/16);
-  ViewHeight = Math.ceil(mapCanvas.height/16);
-
-  // move camera to same relative position
-  CameraX = cameraCenterX - mapCanvas.width*8;
-  CameraY = cameraCenterY - mapCanvas.height*8;
 
   drawMap();
   drawSelector();

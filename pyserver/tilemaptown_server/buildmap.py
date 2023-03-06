@@ -44,6 +44,9 @@ class Map(Entity):
 		# self.turfs[y][x]
 		# self.objs[y][x]
 
+		self.edge_id_links  = None
+		self.edge_ref_links = None
+
 		# map scripting
 		self.has_script = False
 		#loop = asyncio.get_event_loop()
@@ -58,6 +61,7 @@ class Map(Entity):
 	def add_to_contents(self, item):
 		if item.is_client():
 			self.user_count += 1
+			# Don't load data here; wait until send_map_info()
 		super().add_to_contents(item)
 
 	def send_map_info(self, item):
@@ -65,6 +69,26 @@ class Map(Entity):
 			self.load_data()
 		item.send("MAI", self.map_info(user=item))
 		item.send("MAP", self.map_section(0, 0, self.width-1, self.height-1))
+
+		if item.is_client() and item.see_past_map_edge and self.edge_ref_links:
+			for linked_map in self.edge_ref_links:
+				if linked_map == None:
+					continue
+				info = linked_map.map_info(user=item)
+				info['remote_map'] = linked_map.db_id
+				item.send("MAI", info)
+
+				if linked_map.map_data_loaded:
+					section = linked_map.map_section(0, 0, linked_map.width-1, linked_map.height-1)
+				else:
+					# If it's not loaded, load the json and parse it right here
+					from_db = linked_map.load_data_as_text()
+					if from_db == None:
+						continue
+					from_db = json.loads(from_db)
+					section = {'pos': from_db['pos'], 'default': from_db['default'], 'turf': from_db['turf'], 'obj': from_db['obj']}
+				section['remote_map'] = linked_map.db_id
+				item.send("MAP", section)
 
 	def remove_from_contents(self, item):
 		super().remove_from_contents(item)
@@ -76,6 +100,7 @@ class Map(Entity):
 				# Unload
 				self.turfs = None
 				self.objs = None
+				
 				self.map_data_loaded = False
 
 	def blank_map(self, width, height):
@@ -108,6 +133,8 @@ class Map(Entity):
 		return super().load(map_id)
 
 	def load_data(self):
+		if self.map_data_loaded:
+			return True
 		if self.user_count:
 			d = loads_if_not_none(self.load_data_as_text())
 
@@ -118,6 +145,9 @@ class Map(Entity):
 					self.turfs[t[0]][t[1]] = t[2]
 				for o in d["obj"]:
 					self.objs[o[0]][o[1]] = o[2]
+				if "edge_links" in d:
+					self.edge_id_links = d["edge_links"]
+					self.edge_ref_links = [(get_entity_by_id(x) if x != None else None) for x in self.edge_id_links]
 			else:
 				self.blank_map(self.width, self.height)
 			self.map_data_loaded = True
@@ -141,7 +171,10 @@ class Map(Entity):
 
 	def save_data(self):
 		if self.map_data_modified and self.map_data_loaded:
-			self.save_data_as_text(json.dumps(self.map_section(0, 0, self.width-1, self.height-1)))
+			data = self.map_section(0, 0, self.width-1, self.height-1)
+			if self.edge_id_links != None:
+				data["edge_links"] = self.edge_id_links
+			self.save_data_as_text(json.dumps(data))
 			self.map_data_modified = False
 
 	def map_section(self, x1, y1, x2, y2):
@@ -165,7 +198,7 @@ class Map(Entity):
 
 	def map_info(self, user=None, all_info=False):
 		""" MAI message data """
-		out = {'name': self.name, 'id': self.db_id, 'owner_id': self.owner_id, 'owner_username': find_username_by_db_id(self.owner_id) or '?', 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.map_flags & mapflag['public'] != 0, 'private': self.deny & permission['entry'] != 0, 'build_enabled': self.allow & permission['build'] != 0, 'full_sandbox': self.allow & permission['sandbox'] != 0}
+		out = {'name': self.name, 'id': self.db_id, 'owner_id': self.owner_id, 'owner_username': find_username_by_db_id(self.owner_id) or '?', 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.map_flags & mapflag['public'] != 0, 'private': self.deny & permission['entry'] != 0, 'build_enabled': self.allow & permission['build'] != 0, 'full_sandbox': self.allow & permission['sandbox'] != 0, 'edge_links': self.edge_id_links}
 		if all_info:
 			out['start_pos'] = self.start_pos
 		if user:
