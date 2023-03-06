@@ -968,17 +968,22 @@ function tickWorld() {
       CameraY += AdjustY;
 
     if(!CameraAlwaysCenter) {
-// TODO
-/*
-      if(MyMap.Width >= ViewWidth)
-        CameraX = Math.min((MyMap.Width-ViewWidth)*16, Math.max(CameraX, 0));
-      else
-        CameraX = -(Math.floor(ViewWidth/2)-Math.floor(MyMap.Width/2))<<8;
-      if(MyMap.Height >= ViewHeight)
-        CameraY = Math.min((MyMap.Height-ViewHeight)*16, Math.max(CameraY, 0));
-      else
-        CameraY = -(Math.floor(ViewHeight/2)-Math.floor(MyMap.Height/2))*16;
-*/
+      var EdgeLinks = null;
+      if("edge_links" in MyMap.Info)
+        EdgeLinks = MyMap.Info["edge_links"];
+
+      var PixelCameraX = Math.round(CameraX - mapCanvas.width/2);
+      var PixelCameraY = Math.round(CameraY - mapCanvas.height/2);
+      if(PixelCameraX < 0 && (!EdgeLinks || !EdgeLinks[4]))
+        CameraX -= PixelCameraX;
+      if(PixelCameraY < 0 && (!EdgeLinks || !EdgeLinks[6]))
+        CameraY -= PixelCameraY;
+      if((PixelCameraX + mapCanvas.width > MyMap.Width*16) && (!EdgeLinks || !EdgeLinks[0])) {
+        CameraX -= (PixelCameraX + mapCanvas.width) - MyMap.Width*16;
+      }
+      if((PixelCameraY + mapCanvas.height > MyMap.Height*16) && (!EdgeLinks || !EdgeLinks[2])) {
+        CameraY -= (PixelCameraY + mapCanvas.height) - MyMap.Height*16;
+      }
     }
     drawMap();
   } else if(AnimationTick % 5 == 0) { // every 0.1 seconds
