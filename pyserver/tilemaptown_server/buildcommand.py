@@ -620,14 +620,15 @@ def fn_mapdesc(map, client, context, arg):
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="edge id")
 def fn_mapedgelink(map, client, context, arg):
 	s = arg.split()
-	if len(s) == 2 and s[0].isnumeric() and s[1].isnumeric():
+	if len(s) == 2 and s[0].isnumeric() and (s[1].isnumeric() or s[1] == 'none'):
 		edge = int(s[0])
 		if edge < 0 or edge >= 8:
 			respond(context, 'Edge number should be in the 0-7 range', error=True)
 			return
-		map_id = int(s[1])
-		if map_id < 0:
+		if s[1] == 'none':
 			map_id = None
+		else:
+			map_id = int(s[1])
 
 		# Make sure it's a list, so I can write to one of the items
 		if map.edge_id_links == None:
