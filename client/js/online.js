@@ -472,6 +472,8 @@ function receiveServerMessage(event) {
       if(arg.name) {
         if(arg.text.slice(0, 4) == "/me ")
           logMessage("* <i>"+arg.name+" "+convertBBCode(arg.text.slice(4))+"</i>", 'user_message');
+        else if(arg.text.slice(0, 5) == "/ooc ")
+          logMessage("[OOC] "+arg.name+": "+convertBBCode(arg.text.slice(5)), 'ooc_message');
         else
           logMessage("&lt;"+arg.name+"&gt; "+convertBBCode(arg.text), 'user_message');
       } else
