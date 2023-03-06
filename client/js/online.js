@@ -167,6 +167,11 @@ function receiveServerMessage(event) {
         LinkedMaps = {}; // Reset linked maps
         MyMap = new TownMap(arg.size[0], arg.size[1])
         MyMap.Info = arg;
+
+        var logText = "Now entering: <b>"+MyMap.Info['name']+"</b>";
+        if(MyMap.Info['desc'])
+          logText += ' - "'+MyMap.Info['desc']+'"'
+        logMessage(logText, 'server_message');
       }
       break;
     case "MAP":
