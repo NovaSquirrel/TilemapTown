@@ -120,12 +120,30 @@ function receiveServerMessage(event) {
     case "MOV":
       if(arg.id != PlayerYou || !arg.from) {
         if("to" in arg) {
+
+          // If you're being teleported, adjust the camera
           if(arg.id == PlayerYou) {
-            if(PlayerWho[arg.id].x != arg.to[0])
-              CameraX = arg.to[0]*16+8;
-            if(PlayerWho[arg.id].y != arg.to[1])
-              CameraY = arg.to[1]*16+8; 
+            var EdgeWarp = arg["edge_warp"] == true;
+            if(PlayerWho[arg.id].x != arg.to[0]) {
+              if(EdgeWarp) {
+                var TargetCameraX = (PlayerWho[PlayerYou].x*16+8);
+                var CameraDifferenceX = TargetCameraX - CameraX;
+                CameraX = arg.to[0]*16+8 - CameraDifferenceX + (PlayerWho[arg.id].x < arg.to[0] ? 16 : -16);
+              } else {
+                CameraX = arg.to[0]*16+8;
+              }
+            }
+            if(PlayerWho[arg.id].y != arg.to[1]) {
+              if(EdgeWarp) {
+                var TargetCameraY = (PlayerWho[PlayerYou].y*16+8);
+                var CameraDifferenceY = TargetCameraY - CameraY;
+                CameraY = arg.to[1]*16+8 - CameraDifferenceY + (PlayerWho[arg.id].y < arg.to[1] ? 16 : -16);
+              } else {
+                CameraY = arg.to[1]*16+8;
+              }
+            }
           }
+
           PlayerWho[arg.id].x = arg.to[0];
           PlayerWho[arg.id].y = arg.to[1];
           if(PlayerWho[arg.id].vehicle == null || PlayerWho[arg.id].is_following) {

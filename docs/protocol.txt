@@ -49,6 +49,9 @@ Change direction only
 Move a player on the map.
 "from" may be left out, and if so, a client won't ignore MOVs for its own ID.
 
+<-- MOV {"to": [x,y], "dir": 0, "id": 0, "edge_warp": true}
+Indicates a character was put into this position via moving off the edge of a map and onto another.
+
 === Map contents ===
 --> PUT {"pos": [x,y], "atom": {atom}}
 <-- PUT {"pos": [x,y], "atom": {atom}, "username": username, "remote_map": map} (for listeners)

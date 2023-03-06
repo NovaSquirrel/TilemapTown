@@ -484,7 +484,7 @@ class Entity(object):
 
 	# Other movement
 
-	def switch_map(self, map_id, new_pos=None, goto_spawn=True, update_history=True):
+	def switch_map(self, map_id, new_pos=None, goto_spawn=True, update_history=True, edge_warp=False):
 		""" Teleport the user to another map """
 		if self.is_client() and not self.sent_resources_yet:
 			self.sent_resources_yet = True
@@ -524,7 +524,10 @@ class Entity(object):
 		# Move player's X and Y coordinates if needed
 		if new_pos != None:
 			self.move_to(new_pos[0], new_pos[1], is_teleport=True)
-			self.map.broadcast("MOV", {'id': self.protocol_id(), 'to': [self.x, self.y]}, remote_category=botwatch_type['move'])
+			params = {'id': self.protocol_id(), 'to': [self.x, self.y]}
+			if edge_warp:
+				params['edge_warp'] = True
+			self.map.broadcast("MOV", params, remote_category=botwatch_type['move'])
 		elif new_pos == None and goto_spawn and self.map.is_map():
 			self.move_to(self.map.start_pos[0], self.map.start_pos[1], is_teleport=True)
 			self.map.broadcast("MOV", {'id': self.protocol_id(), 'to': [self.x, self.y]}, remote_category=botwatch_type['move'])

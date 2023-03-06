@@ -115,7 +115,7 @@ def fn_MOV(map, client, arg):
 					new_y = new_map.height-1
 				# If the client can move to the new map, then it'll remove them from this one,
 				# and this function shouldn't continue.
-				if client.switch_map(new_map.db_id, new_pos=(new_x, new_y)):
+				if client.switch_map(new_map.db_id, new_pos=(new_x, new_y), edge_warp=True):
 					return
 
 	# Broadcast that this entity moved
