@@ -1142,7 +1142,10 @@ def fn_whereare(map, client, context, arg):
 	for m in AllMaps:
 		if m.map_flags & mapflag['public'] == 0:
 			continue
-		names += '[li][b]%s[/b] (%d): ' % (m.name, m.count_users_inside())
+		user_count = m.count_users_inside()
+		if user_count == 0:
+			continue
+		names += '[li][b]%s[/b] (%d): ' % (m.name, user_count)
 		for u in m.contents:
 			if u.is_client():
 				names += u.name_and_username()+', '
