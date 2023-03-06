@@ -675,6 +675,17 @@ function drawMap() {
   // Draw entities normally
   ctx.globalAlpha = 1;
 
+  // Draw the map link edges
+  if(EdgeLinks != null) {
+    ctx.beginPath();
+    ctx.globalAlpha = 0.5;
+    ctx.lineWidth = "2";
+    ctx.strokeStyle = "green";
+    ctx.rect(0-PixelCameraX, 0-PixelCameraY, MyMap.Width*16, MyMap.Height*16);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
   // Draw the entities, including the player
 
   function draw32x32Player(who, frameX, frameY) {
@@ -794,16 +805,6 @@ function drawMap() {
     ctx.stroke();
   }
 
-  // Draw the map link edges
-  if(EdgeLinks != null) {
-    ctx.beginPath();
-    ctx.globalAlpha = 0.5;
-    ctx.lineWidth = "2";
-    ctx.strokeStyle = "green";
-    ctx.rect(0-PixelCameraX, 0-PixelCameraY, MyMap.Width*16, MyMap.Height*16);
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-  }
 }
 
 function drawText(ctx, x, y, text) {
