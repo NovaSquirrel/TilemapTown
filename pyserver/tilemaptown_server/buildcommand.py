@@ -365,11 +365,31 @@ def fn_time(map, client, context, arg):
 @cmd_command(syntax="message")
 def fn_away(map, client, context, arg):
 	if len(arg) < 1:
-		client.away = False
+		client.status_type = None
+		client.status_message = None
 		respond(context, 'You are no longer marked as away')
 	else:
-		client.away = arg
+		client.status_type = 'away'
+		client.status_message = arg
 		respond(context, 'You are now marked as away ("%s")' % arg)
+
+@cmd_command(alias=['stat'], syntax="message")
+def fn_status(map, client, context, arg):
+	if len(arg) < 1:
+		client.status_type = None
+		client.status_message = None
+		respond(context, 'Your status has been cleared')
+		map.broadcast("WHO", {"update": {'id': client.protocol_id(), 'status': None, 'status_message': None}})
+	else:
+		status_type, status_message = separate_first_word(arg)
+		client.status_type = status_type[0:16]
+		client.status_message = status_message if status_message != '' else None
+
+		if client.status_message:
+			respond(context, 'Your status is now \"%s\" ("%s")' % (client.status_type, client.status_message))
+		else:
+			respond(context, 'Your status is now \"%s\"' % (client.status_type))
+		map.broadcast("WHO", {"update": {'id': client.protocol_id(), 'status': client.status_type, 'status_message': client.status_message}})
 
 @cmd_command(syntax="dice sides")
 def fn_roll(map, client, context, arg):

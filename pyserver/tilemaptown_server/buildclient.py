@@ -40,7 +40,9 @@ class Client(Entity):
 		self.username = None
 		self.password = None # actually the password hash
 
-		self.away = False # true (or a string) if person is away
+		self.status_type = None
+		self.status_message = None
+
 		self.ignore_list = set()
 		self.watch_list = set()
 		self.user_flags = 0
@@ -145,7 +147,8 @@ class Client(Entity):
 		w = super().who()
 		w.update({
 			'username': self.username,
-			'away': self.away
+			'status': self.status_type,
+			'status_message': self.status_message
 		})
 		return w
 
