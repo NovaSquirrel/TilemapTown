@@ -121,17 +121,34 @@ class Entity(object):
 		return
 
 	# Send a message to all contents
-	def broadcast(self, command_type, command_params, remote_category=None, remote_only=False):
+	def broadcast(self, command_type, command_params, remote_category=None, remote_only=False, send_to_links=False):
 		""" Send a message to everyone on the map """
 		if not remote_only:
 			for client in self.contents:
 				client.send(command_type, command_params)
 
-		""" Also send it to any registered listeners """
-		if remote_category != None and self.db_id in BotWatch[remote_category]:
+		# Add remote map on the params if needed
+		do_linked = send_to_links and self.is_map() and self.edge_ref_links
+		do_listeners = remote_category != None and self.db_id in BotWatch[remote_category]
+		if do_linked or do_listeners:
 			if command_params == None:
 				command_params = {}
 			command_params['remote_map'] = self.db_id
+		else:
+			return
+
+		""" Send it to any maps linked from this one, if send_to_links """
+		if do_linked: # Assume it's a map if do_linked is true
+			for linked_map in self.edge_ref_links:
+				if linked_map == None:
+					continue
+				for client in linked_map.contents:
+					if not client.is_client() or not client.see_past_map_edge:
+						continue
+					client.send(command_type, command_params)
+
+		""" Also send it to any registered listeners """
+		if do_listeners:
 			for client in BotWatch[remote_category][self.db_id]:
 				if (client.map_id != self.db_id) or remote_only: # don't send twice to people on the map
 					client.send(command_type, command_params)
@@ -467,7 +484,7 @@ class Entity(object):
 
 	# Other movement
 
-	def switch_map(self, map_id, new_pos=None, goto_spawn=True, update_history=True):
+	def switch_map(self, map_id, new_pos=None, goto_spawn=True, update_history=True, edge_warp=False):
 		""" Teleport the user to another map """
 		if self.is_client() and not self.sent_resources_yet:
 			self.sent_resources_yet = True
@@ -507,7 +524,10 @@ class Entity(object):
 		# Move player's X and Y coordinates if needed
 		if new_pos != None:
 			self.move_to(new_pos[0], new_pos[1], is_teleport=True)
-			self.map.broadcast("MOV", {'id': self.protocol_id(), 'to': [self.x, self.y]}, remote_category=botwatch_type['move'])
+			params = {'id': self.protocol_id(), 'to': [self.x, self.y]}
+			if edge_warp:
+				params['edge_warp'] = True
+			self.map.broadcast("MOV", params, remote_category=botwatch_type['move'])
 		elif new_pos == None and goto_spawn and self.map.is_map():
 			self.move_to(self.map.start_pos[0], self.map.start_pos[1], is_teleport=True)
 			self.map.broadcast("MOV", {'id': self.protocol_id(), 'to': [self.x, self.y]}, remote_category=botwatch_type['move'])
