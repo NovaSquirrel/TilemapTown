@@ -501,12 +501,11 @@ def permission_change(map, client, context, arg, command2):
 	# Group permissions and entity permissions are the same thing
 	if param[1].isnumeric():
 		as_int = int(param[1])
-		if groupid.isnumeric():
-			ename = find_entity_name(as_int)
-			if ename != None:
-				map.change_permission_for_entity(as_int, permission_value, True if command2=="grant" else None)
-				map.broadcast("MSG", {'text': "%s sets entity \"%s\"(%d) \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), ename, as_int, param[0], command2)})
-				return
+		ename = find_entity_name(as_int)
+		if ename != None:
+			map.change_permission_for_entity(as_int, permission_value, True if command2=="grant" else None)
+			map.broadcast("MSG", {'text': "%s sets entity \"%s\"(%d) \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), ename, as_int, param[0], command2)})
+			return
 		respond(context, '"%d" Not a valid entity ID' % as_int, error=True)
 		return
 
