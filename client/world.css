@@ -172,6 +172,7 @@ body {
 
 #chatInput {
     pointer-events: initial;
+    box-sizing: border-box;
 }
 
 #chat-container .chatarea * {
