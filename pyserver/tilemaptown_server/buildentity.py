@@ -571,7 +571,7 @@ class Entity(object):
 			'desc': self.desc,
 			'pic': self.pic,
 			'type': entity_type_name[self.entity_type],
-			'folder': self.map_id,
+			'folder': self.map.protocol_id() if self.map else None,
 			'data': self.data,
 			'tags': self.tags,
 			'allow': permission_list_from_bitfield(self.allow),
