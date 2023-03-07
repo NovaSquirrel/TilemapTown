@@ -152,14 +152,6 @@ def fn_CMD(map, client, arg):
 	handle_user_command(map, actor, client, echo, arg["text"])
 
 @protocol_command()
-def fn_TAK(map, client, arg):
-	pass
-
-@protocol_command()
-def fn_DRO(map, client, arg):
-	pass
-
-@protocol_command()
 def fn_BAG(map, client, arg):
 	def allow_special_ids(text):
 		if text == 'here':
