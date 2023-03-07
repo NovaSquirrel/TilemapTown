@@ -65,7 +65,9 @@ var TickCounter = 0;   // Goes up every 20ms, wraps at 0x10000 (hex)
 var AnimationTick = 0; // Goes up every 20ms, wraps at 10000 (decimal)
 var DisplayInventory = {null: []}; // Indexed by folder
 var DBInventory = {}; // Indexed by ID
-var OpenFolders = {};
+
+const FolderOpenPic = [0, 2, 20];
+const FolderClosedPic = [0, 1, 20];
 
 function getRandomInt(min, max) {
   min = Math.ceil(min);
@@ -260,10 +262,6 @@ function useItem(Placed) {
   var PlayerY = PlayerWho[PlayerYou].y;
 
   switch(Placed.type) {
-    case "folder": // folder
-      OpenFolders[Placed.id] = !OpenFolders[Placed.id];
-      NeedInventoryUpdate = true;
-      break;
     case "tileset": // tileset
       viewTileset(Placed);
       console.log("Open tileset thing");
@@ -824,12 +822,6 @@ function tickWorld() {
           case "reference":
             updated.pic = [0, 9, 22];
             break;
-          case "folder":
-            if(OpenFolders[updated.id])
-              updated.pic = [0, 2, 20];
-            else
-              updated.pic = [0, 1, 20];
-            break;
         }
       }
 
@@ -1009,14 +1001,9 @@ function initMouse() {
   var edittilesheetselect = document.getElementById("edittilesheetselect");
 
   edittilesheetselect.addEventListener('mousedown', function(evt) {
-    var pos = getMousePosRaw(edittilesheetselect, evt);
-    var container = document.getElementById('edittilesheetcontainer');
-    pos.x = (container.scrollLeft + pos.x) >> 4;
-    pos.y = (container.scrollTop + pos.y) >> 4;
-
     // update to choose the selected tile
-    document.getElementById('edittilex').value = pos.x;
-    document.getElementById('edittiley').value = pos.y;
+    document.getElementById('edittilex').value = (evt.clientX - evt.target.getBoundingClientRect().x) >> 4;
+    document.getElementById('edittiley').value = (evt.clientY - evt.target.getBoundingClientRect().y) >> 4;
     editItemUpdatePic();
   }, false);
 
@@ -1276,6 +1263,11 @@ function itemCardList(ul, ids, options = {}) {
     newitem.classList.add('inventoryli', 'inventorymeta');
     newitem.onclick = function(){
       collapseFolder(list, id);
+
+      let item = DBInventory[id] || PlayerWho[id];
+      if (item.type == "folder") {
+        setItemCardImage(list.previousSibling, picIcon(FolderClosedPic));
+      }
     };
     list.appendChild(newitem);
   }
@@ -1294,6 +1286,11 @@ function itemCardList(ul, ids, options = {}) {
     newitem.classList.add('inventoryli', 'inventorymeta');
     newitem.onclick = function(){
       expandFolder(list, id);
+
+      let item = DBInventory[id] || PlayerWho[id];
+      if (item.type == "folder") {
+        setItemCardImage(list.previousSibling, picIcon(FolderOpenPic));
+      }
     };
     list.appendChild(newitem);
   }
@@ -1303,7 +1300,7 @@ function itemCardList(ul, ids, options = {}) {
     for(let id of ids) {
       if (options?.hidden_ids?.includes(id)) { continue; }
 
-      let item = DBInventory[id];
+      let item = DBInventory[id] || PlayerWho[id];
       let li = itemCard(id);
 
       for(let type in options?.eventlisteners){
@@ -1314,16 +1311,43 @@ function itemCardList(ul, ids, options = {}) {
 
       list.appendChild(li);
 
+      // For empty folders which won't go into
+      // the second conditional, just show them open
+      if (item.type == "folder") {
+        setItemCardImage(li, picIcon(FolderOpenPic));
+      }
+
       // If the item itself has sub-items
       const display_id = id == PlayerYou ? null : id;
       if (display_id in DisplayInventory && !options?.top_level) {
         let inner = document.createElement("ul");
         list.appendChild(inner);
 
+        // on "use" for folder items
+        if (item.type == "folder") {
+          li.addEventListener("click", function(e){
+            if (openFolders[id]) {
+              collapseFolder(inner, display_id);
+              setItemCardImage(li, picIcon(FolderClosedPic));
+            } else {
+              expandFolder(inner, display_id);
+              setItemCardImage(li, picIcon(FolderOpenPic));
+            }
+          })
+        }
+
         if (options?.expanded) {
           expandFolder(inner, display_id);
+
+          if (item.type == "folder") {
+            setItemCardImage(li, picIcon(FolderOpenPic));
+          }
         } else {
           collapseFolder(inner, display_id);
+
+          if (item.type == "folder") {
+            setItemCardImage(li, picIcon(FolderClosedPic));
+          }
         }
       }
     }
@@ -1332,11 +1356,20 @@ function itemCardList(ul, ids, options = {}) {
   addItems(ul, ids);
 }
 
+function setItemCardImage(li, new_image) {
+  const id = li.getAttribute("item_id");
+  var item = DBInventory[id] || PlayerWho[id];
+
+  let image = li.querySelector('.item_icon');
+  li.replaceChild(new_image, image);
+}
+
 function itemCard(id) {
   var item = DBInventory[id] || PlayerWho[id];
 
   let li = document.createElement("li");
   li.classList.add('inventoryli');
+  li.setAttribute("item_id", id);
   li.appendChild(itemIcon(id));
 
   let info_div = document.createElement("div");
@@ -1367,6 +1400,29 @@ function itemCard(id) {
 
   li.appendChild(info_div);
   return li;
+}
+
+function picIcon(pic) {
+  var img_container = document.createElement("div");
+  img_container.classList.add('item_icon');
+
+  // create a little icon for the item
+  var img = document.createElement("img");
+  img.src = "img/transparent.png";
+  img.style.width = "16px";
+  img.style.height = "16px";
+  var src = "";
+
+  if(IconSheets[pic[0]])
+    src = IconSheets[pic[0]].src;
+  else
+    src = pic[0];
+
+  var background = "url("+src+") -"+(pic[1]*16)+"px -"+(pic[2]*16)+"px";
+  img.style.background = background;
+
+  img_container.appendChild(img);
+  return img_container;
 }
 
 function itemIcon(key) {
@@ -1438,7 +1494,7 @@ function updateInventoryUL() {
   itemCardList(ul, DisplayInventory[null], {
     eventlisteners: {
       'click': function(e, id){
-        useItem(id)
+        useItem(DBInventory[id]);
       },
       'contextmenu': function(e, id){
         openItemContextMenu(id, e.clientX, e.clientY);
@@ -1740,20 +1796,12 @@ function editItemApply() {
   var edittiledesc = document.getElementById('edittiledesc').value;
   if(edittiledesc == "")
     edittiledesc = null;
-  var edittilefolder = parseInt(document.getElementById('edittilefolder').value, 10);
-  if(edittilefolder == -1) {
-    edittilefolder = PlayerYou;
-  }
 
   var updates = {
     id: editItemID,
     "name": edittilename,
     "desc": edittiledesc
   };
-
-  if ( edittilefolder != -2 ) {
-    updates.folder = edittilefolder;
-  }
 
   switch(editItemType) {
     case "text":
@@ -1767,8 +1815,6 @@ function editItemApply() {
       break;
 
     case "map_tile":
-      updates.data = JSON.stringify(item);
-      // fall through!
     case "generic":
       // Gather item info
       var sheet = document.getElementById('edittilesheet').value;
@@ -1777,6 +1823,7 @@ function editItemApply() {
       } else {
         sheet = parseInt(sheet);
       }
+
       var edittilesheet = parseInt(sheet);
       var edittilex = parseInt(document.getElementById('edittilex').value);
       var edittiley = parseInt(document.getElementById('edittiley').value);
@@ -1784,13 +1831,17 @@ function editItemApply() {
       var edittiledensity = document.getElementById('edittiledensity').checked;
       var edittileobject = !document.getElementById('edittileisobject').checked;
 
-      // Create the new item
       updates.pic = [edittilesheet, edittilex, edittiley];
-      updates.density = edittiledensity;
-      if(edittileobject)
-        updates.obj = true;
-      if(edittiletype)
-        updates.type = edittiletype;
+
+      if(editItemType == "map_tile") {
+        updates.data = JSON.stringify({
+          "name": updates.name,
+          "pic": updates.pic,
+          "obj": edittileobject,
+          "type": edittiletype,
+          "density": edittiledensity
+        })
+      }
 
       SendCmd("BAG", {update: updates});
       break;
