@@ -129,6 +129,7 @@ function receiveServerMessage(event) {
                 var TargetCameraX = (PlayerWho[PlayerYou].x*16+8);
                 var CameraDifferenceX = TargetCameraX - CameraX;
                 CameraX = arg.to[0]*16+8 - CameraDifferenceX + (PlayerWho[arg.id].x < arg.to[0] ? 16 : -16);
+                BumpCooldown = 0;
               } else {
                 CameraX = arg.to[0]*16+8;
               }
@@ -138,6 +139,7 @@ function receiveServerMessage(event) {
                 var TargetCameraY = (PlayerWho[PlayerYou].y*16+8);
                 var CameraDifferenceY = TargetCameraY - CameraY;
                 CameraY = arg.to[1]*16+8 - CameraDifferenceY + (PlayerWho[arg.id].y < arg.to[1] ? 16 : -16);
+                BumpCooldown = 0;
               } else {
                 CameraY = arg.to[1]*16+8;
               }
