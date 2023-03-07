@@ -75,7 +75,7 @@ def sql_exists(query, data):
 
 def is_entity_owner(id, client):
 	""" Note that id is a string here """
-	if not id.isnumeric() or not client.username:
+	if not id.isdecimal() or not client.username:
 		return False
 	return sql_exists('SELECT owner_id FROM Entity WHERE id=? AND owner_id=?', (int(id), client.db_id))
 
@@ -396,7 +396,7 @@ def fn_roll(map, client, context, arg):
 	param = arg.split('d')
 	if len(param) != 2:
 		param = arg.split(' ')
-	if len(param) != 2 or (not param[0].isnumeric()) or (not param[1].isnumeric()):
+	if len(param) != 2 or (not param[0].isdecimal()) or (not param[1].isdecimal()):
 		respond(context, 'Syntax: /roll dice sides', error=True)
 	else:
 		dice = int(param[0])
@@ -499,7 +499,7 @@ def permission_change(map, client, context, arg, command2):
 		return
 
 	# Group permissions and entity permissions are the same thing
-	if param[1].isnumeric():
+	if param[1].isdecimal():
 		as_int = int(param[1])
 		ename = find_entity_name(as_int)
 		if ename != None:
@@ -511,7 +511,7 @@ def permission_change(map, client, context, arg, command2):
 
 	if param[1].startswith("group:"):
 		groupid = param[1][6:]
-		if groupid.isnumeric():
+		if groupid.isdecimal():
 			groupname = find_entity_name(int(groupid))
 			if groupname != None:
 				map.change_permission_for_entity(int(groupid), permission_value, True if command2=="grant" else None)
@@ -639,7 +639,7 @@ def fn_mapdesc(map, client, context, arg):
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="edge id")
 def fn_mapedgelink(map, client, context, arg):
 	s = arg.split()
-	if len(s) == 2 and s[0].isnumeric() and (s[1].isnumeric() or s[1] == 'none'):
+	if len(s) == 2 and s[0].isdecimal() and (s[1].isdecimal() or s[1] == 'none'):
 		edge = int(s[0])
 		if edge < 0 or edge >= 8:
 			respond(context, 'Edge number should be in the 0-7 range', error=True)
@@ -937,7 +937,7 @@ def fn_ipban(map, client, context, arg):
 
 	if expiry == '':
 		expiry = None
-	elif not expiry_value.isnumeric():
+	elif not expiry_value.isdecimal():
 		respond(context, 'Invalid time value "%s"', error=True)
 		return
 	elif expiry_unit == 'm':
@@ -1134,7 +1134,7 @@ def fn_userpic(map, client, context, arg):
 					respond(context, 'URL doesn\t match any allowlisted sites', error=True)
 					return
 	elif len(arg) == 2:
-		if arg[0].isnumeric() and arg[1].isnumeric():
+		if arg[0].isdecimal() and arg[1].isdecimal():
 			client.pic = [0, int(arg[0]), int(arg[1])]
 			success = True
 	if success:
@@ -1246,7 +1246,7 @@ def fn_shutdown(map, client, context, arg):
 	if arg == "cancel":
 		ServerShutdown[0] = -1
 		broadcast_to_all("Server shutdown canceled")
-	elif arg.isnumeric():
+	elif arg.isdecimal():
 		ServerShutdown[0] = int(arg)
 		broadcast_to_all("Server shutdown in %d seconds! (started by %s)" % (ServerShutdown[0], client.name))
 
@@ -1262,7 +1262,7 @@ def fn_newgroup(map, client, context, arg):
 @cmd_command(category="Group", privilege_level="registered", syntax="group_id text")
 def fn_namegroup(map, client, context, arg):
 	groupid, name = separate_first_word(arg)
-	if not groupid.isnumeric() or not client.db_id or not len(name):
+	if not groupid.isdecimal() or not client.db_id or not len(name):
 		return
 	c = Database.cursor()
 	c.execute('UPDATE Entity SET name=? WHERE id=? AND owner_id=? AND type=?', (name, int(groupid), client.db_id, entity_type['group']))
@@ -1271,7 +1271,7 @@ def fn_namegroup(map, client, context, arg):
 @cmd_command(category="Group", privilege_level="registered", syntax="group_id text")
 def fn_descgroup(map, client, context, arg):
 	groupid, desc = separate_first_word(arg)
-	if not groupid.isnumeric() or not client.username or not len(desc):
+	if not groupid.isdecimal() or not client.username or not len(desc):
 		return
 	c = Database.cursor()
 	c.execute('UPDATE Entity SET desc=? WHERE id=? AND owner_id=? AND type=?', (desc, int(groupid), client.db_id, entity_type['group']))
@@ -1280,7 +1280,7 @@ def fn_descgroup(map, client, context, arg):
 @cmd_command(category="Group", privilege_level="registered", syntax="group_id new_owner")
 def fn_changegroupowner(map, client, context, arg):
 	groupid, owner = separate_first_word(arg)
-	if not groupid.isnumeric() or not client.username or not len(owner):
+	if not groupid.isdecimal() or not client.username or not len(owner):
 		return
 	newowner = find_db_id_by_username(owner)
 	if newowner:
@@ -1293,7 +1293,7 @@ def fn_changegroupowner(map, client, context, arg):
 @cmd_command(category="Group", privilege_level="registered", syntax="group_id password")
 def fn_joinpassgroup(map, client, context, arg):
 	groupid, joinpass = separate_first_word(arg)
-	if not groupid.isnumeric() or not client.username or not len(joinpass):
+	if not groupid.isdecimal() or not client.username or not len(joinpass):
 		return
 	c = Database.cursor()
 	c.execute('UPDATE Entity SET data=? WHERE id=? AND owner_id=? AND type=?', (joinpass, int(groupid), client.db_id, entity_type['group']))
@@ -1315,21 +1315,22 @@ def fn_invitetogroup(map, client, context, arg):
 @cmd_command(category="Group", privilege_level="registered", syntax="group_id [password]")
 def fn_joingroup(map, client, context, arg):
 	groupid, password = separate_first_word(arg)
-	if password != "" and groupid.isnumeric() and client.db_id and sql_exists('SELECT * FROM Entity WHERE data=? AND type=?', (password, entity_type['group'])):
+	if groupid.isdecimal() and client.db_id and sql_exists('SELECT * FROM Entity WHERE data=? AND type=?', (password, entity_type['group'])):
 		if not sql_exists('SELECT member_id from Group_Member WHERE member_id=? AND group_id=?', (client.db_id, int(groupid))):
 			c = Database.cursor()
-			c.execute("INSERT INTO Group_Member (group_id, user_id, flags) VALUES (?, ?, ?)", (int(groupid), client.db_id, 0,))
+			c.execute("INSERT INTO Group_Member (group_id, member_id, flags, accepted_at) VALUES (?, ?, ?, ?)", (int(groupid), client.db_id, 0, datetime.datetime.now(),))
 			respond(context, 'Joined group %s' % groupid)
 		else:
-			respond(context, 'Already in group %s', error=True)
+			respond(context, 'Already in group %s' % groupid, error=True)
 	else:
 		respond(context, 'Nonexistent group or wrong password', error=True)
 
 @cmd_command(category="Group", privilege_level="registered", syntax="group_id")
 def fn_leavegroup(map, client, context, arg):
-	if not arg.isnumeric() or not client.username:
+	if not arg.isdecimal() or not client.username:
 		return
-	c.execute('DELETE FROM Group_Member WHERE group_id=? AND uid=?', (int(arg), client.db_id,))
+	c = Database.cursor()
+	c.execute('DELETE FROM Group_Member WHERE group_id=? AND member_id=?', (int(arg), client.db_id,))
 	respond(context, 'Left group %s' % (arg))
 
 @cmd_command(category="Group", privilege_level="registered")
@@ -1349,23 +1350,42 @@ def fn_kickgroup(map, client, context, arg):
 # Perhaps merge these two somehow?
 @cmd_command(category="Group", privilege_level="registered")
 def fn_ownedgroups(map, client, context, arg):
-	if client.db_id == None:
-		return
 	c = Database.cursor()
 	groups = "Groups you are own: [ul]"
-	for row in c.execute('SELECT g.id, g.name FROM Entity g WHERE g.owner=? AND type=?', (client.db_id, entity_type['group'])):
+	for row in c.execute('SELECT g.id, g.name FROM Entity g WHERE g.owner_id=? AND type=?', (client.db_id, entity_type['group'])):
 		groups += "[li][b]%s[/b] (%d)[/li]" % (row[1], row[0])
 	groups += "[/ul]"
 	respond(context, groups)
 
 @cmd_command(category="Group", privilege_level="registered")
 def fn_mygroups(map, client, context, arg):
-	if client.db_id == None:
-		return
 	c = Database.cursor()
 	groups = "Groups you are in: [ul]"
-	for row in c.execute('SELECT g.id, g.name FROM Entity g, Group_Member m WHERE g.id=m.group_id AND m.user_id=? AND m.accepted_at != NULL', (client.db_id,)):
-		groups += "[li][b]%s[/b] (%d)[/li]" % (row[1], row[0])
+	for row in c.execute('SELECT g.id, g.name, m.accepted_at FROM Entity g, Group_Member m WHERE g.id=m.group_id AND m.member_id=?', (client.db_id,)):
+		if row[2]:
+			groups += "[li][b]%s[/b] (%d)[/li]" % (row[1], row[0])
+		else:
+			groups += "[li][b]%s[/b] (%d)[/li] - Invited" % (row[1], row[0])
+	groups += "[/ul]"
+	respond(context, groups)
+
+@cmd_command(category="Group")
+def fn_groupmembers(map, client, context, arg):
+	if not arg.isdecimal():
+		respond(context, "Group ID should be an integer", error=True)
+		return
+	group_id = int(arg)
+	group_name = find_entity_name(group_id)
+	if group_name == None:
+		respond(context, "Group ID %s not found" % arg, error=True)
+		return
+	c = Database.cursor()
+	groups = "Group %d (%s) members: [ul]" % (group_id, group_name)
+	for row in c.execute('SELECT g.id, g.name, m.accepted_at FROM Entity g, Group_Member m WHERE m.group_id=? AND m.member_id=g.id', (group_id,)):
+		if row[2] == None:
+			groups += "[li][b]%s[/b] (%d) - Invited[/li]" % (row[1], row[0])
+		else:
+			groups += "[li][b]%s[/b] (%d)[/li]" % (row[1], row[0])
 	groups += "[/ul]"
 	respond(context, groups)
 
@@ -1485,13 +1505,13 @@ def fn_entity(map, client, context, arg):
 	elif subcommand == 'move':
 		if permission_check(permission['move']):
 			coords = subarg.split()
-			if len(coords) == 2 and coords[0].isnumeric() and coords[1].isnumeric():
+			if len(coords) == 2 and coords[0].isdecimal() and coords[1].isdecimal():
 				e.move_to(int(coords[0]), int(coords[1]))
 	elif subcommand == 'perms':
 		handlers['permlist'](e, client, context, subarg)
 	elif subcommand == 'permsfor':
-		if subarg.isnumeric():
-			allow, deny = get_allow_deny_for_other_entity(self, other_id)
+		if subarg.isdecimal():
+			allow, deny = e.get_allow_deny_for_other_entity(other_id)
 			response(context, 'Allow: %s\nDeny: %s' % (permission_list_from_bitfield(allow), permission_list_from_bitfield(deny)))
 	elif subcommand == 'grant':
 		if permission_check(permission['admin']):

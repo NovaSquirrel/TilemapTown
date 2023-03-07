@@ -218,7 +218,7 @@ def get_entity_type_by_db_id(id):
 def get_entity_by_id(id, load_from_db=True):
 	# If it's temporary, get it if it still exists
 	if isinstance(id, str):
-		if isinstance(id, str) and id[0] == temporary_id_marker and id[1:].isnumeric():
+		if isinstance(id, str) and id[0] == temporary_id_marker and id[1:].isdecimal():
 			id = int(id[1:])
 			if id in AllEntitiesByID:
 				return AllEntitiesByID[id]
@@ -238,7 +238,7 @@ def get_entity_by_id(id, load_from_db=True):
 		elif id.startswith('user:'):
 			id = find_db_id_by_username(id[5:])
 
-		elif isinstance(id, str) and id.isnumeric():
+		elif isinstance(id, str) and id.isdecimal():
 			id = int(id)
 
 	# Fetch it from RAM if it's already loaded from the database
@@ -289,7 +289,7 @@ def pic_is_okay(pic):
 	return True
 
 def valid_id_format(id):
-	return isinstance(id, int) or id.isnumeric() or ((id.startswith(temporary_id_marker) or id.startswith(global_entity_marker)) and id[1:].isnumeric() or id.startswith('user:'))
+	return isinstance(id, int) or id.isdecimal() or ((id.startswith(temporary_id_marker) or id.startswith(global_entity_marker)) and id[1:].isdecimal() or id.startswith('user:'))
 
 def dumps_if_not_none(dump_me):
 	if dump_me != None:
@@ -338,6 +338,13 @@ def reload_database_meta():
 		if row[2] & 1:
 			v = int(v)
 		DatabaseMeta[row[0]] = v
+
+def string_is_int(s):
+	if len(s) == 0:
+		return False
+	if s[0] == '-':
+		return s[1:].isdecimal()
+	return s.isdecimal()
 
 from .buildentity import Entity
 from .buildmap import Map

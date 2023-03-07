@@ -259,7 +259,7 @@ class Entity(object):
 
 		# Turn on permissions granted by groups too
 		for row in c.execute('SELECT p.allow FROM Permission p, Group_Member m\
-			WHERE m.member_id=? AND p.actor_id=m.group_id AND p.subject_id=? AND m.accepted_at != NULL', (self.db_id, other_id)):
+			WHERE m.member_id=? AND p.actor_id=m.group_id AND p.subject_id=? AND m.accepted_at IS NOT NULL', (self.db_id, other_id)):
 			allow |= row[0]
 		return (allow, deny)
 
