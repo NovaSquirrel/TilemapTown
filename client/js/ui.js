@@ -64,6 +64,7 @@ var TickCounter = 0;   // Goes up every 20ms, wraps at 0x10000 (hex)
 var AnimationTick = 0; // Goes up every 20ms, wraps at 10000 (decimal)
 var DisplayInventory = {null: []}; // Indexed by folder
 var DBInventory = {}; // Indexed by ID
+var BumpCooldown = 0;
 
 const FolderOpenPic = [0, 2, 20];
 const FolderClosedPic = [0, 1, 20];
@@ -558,14 +559,16 @@ function keyHandler(e) {
     }
   }
 
-  if(Bumped || OldPlayerX != PlayerX || OldPlayerY != PlayerY || OldPlayerDir != PlayerDir) {
+  if((Bumped && !BumpCooldown) || OldPlayerX != PlayerX || OldPlayerY != PlayerY || OldPlayerDir != PlayerDir) {
     var Params = {'dir': PlayerDir};
     if(e.shiftKey) {
       SendCmd("MOV", Params);
       movePlayer(PlayerYou, null, null, PlayerDir);
     } else {
-      if(Bumped)
+      if(Bumped) {
         Params['bump'] = [BumpedX, BumpedY];
+        BumpCooldown = 50;
+      }
       if(PlayerX != OldPlayerX || PlayerY != OldPlayerY) {
         Params['from'] = [OldPlayerX, OldPlayerY];
         Params['to'] = [PlayerX, PlayerY];
@@ -996,6 +999,8 @@ function tickWorld() {
   NeedMapRedraw = false;
   TickCounter = (TickCounter + 1) & 0xffff;
   AnimationTick = (AnimationTick + 1) % 10000;
+  if(BumpCooldown)
+    BumpCooldown--;
 }
 
 function selectionCopy() {
