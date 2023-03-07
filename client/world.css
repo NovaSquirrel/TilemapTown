@@ -172,6 +172,7 @@ body {
 
 #chatInput {
     pointer-events: initial;
+    box-sizing: border-box;
 }
 
 #chat-container .chatarea * {
@@ -275,4 +276,9 @@ widget-contextmenu li:hover {
     color: grey;
     font-size: 0.8em;
     font-style: italic;
+}
+
+#options ul {
+    padding-left: 1.5em;
+    margin: 0.5em 0;
 }
