@@ -225,12 +225,17 @@ widget-contextmenu li:hover {
 .itemsul {
     list-style-type: none;
     margin: 0;
-    padding: 0;
+    padding: 0 0 0 3px;
+}
+
+.itemsul ul {
+    padding-left: 1em;
+    border-left: 1px dotted black;
 }
 
 .inventoryli {
     border: 1px solid black;
-    margin: 3px;
+    margin: 3px 3px 3px 0px;
     border-radius: 3px;
     display: flex;
     align-items: center;
@@ -259,5 +264,15 @@ widget-contextmenu li:hover {
     color: grey;
     font-size: 0.8em;
     margin-left: 0.1em;
+    font-style: italic;
+}
+
+.inventorymeta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: grey;
+    font-size: 0.8em;
     font-style: italic;
 }
