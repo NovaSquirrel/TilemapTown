@@ -242,6 +242,16 @@
     <input type="checkbox" id="audionotify"><label for="audionotify" class="unselectable">Notify when people talk</label></input><br>
     <input type="checkbox" id="option-fly"><label for="option-fly" class="unselectable">Walk through walls</label></input><br>
 
+    <ul>
+      <li>
+        Zoom level:
+
+        <input id="zoomout" type="button" onclick="zoomOut();" value="-">
+        <span id="zoomlevel">1.00x</span>
+        <input id="zoomin" type="button" onclick="zoomIn();" value="+">
+      </li>
+    </ul>
+
     <input type="button" onclick="applyOptions(); viewOptions();" value="OK">
     <input type="button" onclick="applyOptions();" value="Apply changes">
     <input type="button" onclick="viewOptions();" value="Close options">

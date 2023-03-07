@@ -69,6 +69,9 @@ var BumpCooldown = 0;
 const FolderOpenPic = [0, 2, 20];
 const FolderClosedPic = [0, 1, 20];
 
+const CameraScaleMin = 1;
+const CameraScaleMax = 8;
+
 function getRandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
@@ -1095,6 +1098,37 @@ function getTilePos(evt) {
   return pos;
 }
 
+function zoomIn() {
+  CameraScale = Math.min(Math.max(CameraScaleMin, CameraScale + 0.25), CameraScaleMax);
+  resizeCanvas();
+  updateZoomLevelDisplay();
+}
+
+function zoomOut() {
+  CameraScale = Math.min(Math.max(CameraScaleMin, CameraScale - 0.25), CameraScaleMax);
+  resizeCanvas();
+  updateZoomLevelDisplay();
+}
+
+function updateZoomLevelDisplay() {
+  let readout = document.querySelector('#zoomlevel');
+  let inButt  = document.querySelector('#zoomin');
+  let outButt = document.querySelector('#zoomout');
+
+  readout.innerText = `${CameraScale.toFixed(2)}x`
+
+  if (CameraScale <= CameraScaleMin) {
+    outButt.disabled = true;
+    inButt.disabled = false;
+  } else if (CameraScale >= CameraScaleMax) {
+    outButt.disabled = false;
+    inButt.disabled = true;
+  } else {
+    outButt.disabled = false;
+    inButt.disabled = false;
+  }
+}
+
 function initMouse() {
   var edittilesheetselect = document.getElementById("edittilesheetselect");
 
@@ -1152,8 +1186,9 @@ function initMouse() {
     CameraScale += event.deltaY * -0.01;
 
     // Restrict CameraScale
-    CameraScale = Math.min(Math.max(1, CameraScale), 8);
+    CameraScale = Math.min(Math.max(CameraScaleMin, CameraScale), CameraScaleMax);
 
+    updateZoomLevelDisplay();
     resizeCanvas();
   }, false);
 
