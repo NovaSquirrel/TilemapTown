@@ -1467,7 +1467,7 @@ def fn_entity(map, client, context, arg):
 					respond(context, "Entity \"%s\" doesn't have permission to go to this map" % provided_id, error=True)
 	elif subcommand == 'kick':
 		if (e.map_id == client.db_id and client.db_id != None) or (e.map is client) or (e.map and e.map.owner_id == client.db_id and client.db_id != None) or client.has_permission(e.map_id, (permission['admin'], permission['sandbox']), False):
-			kick_me.send_home()
+			e.send_home()
 
 	elif subcommand == 'tags':
 		respond(context, "Tags: %s" % dumps_if_not_empty(e.tags))
