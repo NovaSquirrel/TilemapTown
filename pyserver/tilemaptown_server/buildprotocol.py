@@ -354,8 +354,8 @@ def fn_BAG(map, client, arg):
 	elif "kick" in arg:
 		kick = arg['kick']
 		kick_me = get_entity_by_id(kick['id'])
-		if kick.map_id == client.db_id or client.has_permission(kick_me.map_id, (permission['admin'], permission['sandbox']), False):
-			kick.send_home()
+		if (kick_me.map_id == client.db_id and client.db_id != None) or (kick_me.map is client) or (kick_me.map and kick_me.map.owner_id == client.db_id and client.db_id != None) or client.has_permission(kick_me.map_id, (permission['admin'], permission['sandbox']), False):
+			kick_me.send_home()
 			client.send("BAG", {'kick': kick})
 
 	elif "delete" in arg:

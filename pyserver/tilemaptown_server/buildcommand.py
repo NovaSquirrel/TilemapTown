@@ -1466,6 +1466,9 @@ def fn_entity(map, client, context, arg):
 			if e.map_id is client.map_id or permission_check(permission['move_new_map']):
 				if not e.switch_map(client.map_id, new_pos=[client.x, client.y]):
 					respond(context, "Entity \"%s\" doesn't have permission to go to this map" % provided_id, error=True)
+	elif subcommand == 'kick':
+		if (e.map_id == client.db_id and client.db_id != None) or (e.map is client) or (e.map and e.map.owner_id == client.db_id and client.db_id != None) or client.has_permission(e.map_id, (permission['admin'], permission['sandbox']), False):
+			kick_me.send_home()
 
 	elif subcommand == 'tags':
 		respond(context, "Tags: %s" % dumps_if_not_empty(e.tags))
