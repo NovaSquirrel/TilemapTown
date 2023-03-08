@@ -262,6 +262,11 @@ def get_entity_by_id(id, load_from_db=True):
 		if e.load(id):
 			return e
 		return None
+	if t == entity_type['group']:
+		e = EntityWithPlainData(t)
+		if e.load(id):
+			return e
+		return None
 
 	# Generic entity
 	e = Entity(t)
@@ -346,5 +351,5 @@ def string_is_int(s):
 		return s[1:].isdecimal()
 	return s.isdecimal()
 
-from .buildentity import Entity
+from .buildentity import Entity, EntityWithPlainData
 from .buildmap import Map

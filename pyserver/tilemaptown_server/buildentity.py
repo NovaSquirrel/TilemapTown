@@ -715,8 +715,11 @@ class Entity(object):
 
 	def load_data(self):
 		""" Load the entity's data to the database, using JSON unless overridden """
-		self.data = loads_if_not_none(self.load_data_as_text())
-		return True
+		try:
+			self.data = loads_if_not_none(self.load_data_as_text())
+			return True
+		except:
+			return False
 
 	def save(self):
 		""" Save entity information to the database """
@@ -771,3 +774,14 @@ class Entity(object):
 		other.creator_id = self.creator_id
 		other.temporary = self.temporary
 
+class EntityWithPlainData(Entity):
+	def load_data(self):
+		""" Load the entity's data to the database, using plain text """
+		try:
+			self.data = self.load_data_as_text()
+			return True
+		except:
+			return False
+	def save_data(self):
+		""" Save the entity's data to the database, using plain text """
+		self.save_data_as_text(self.data)
