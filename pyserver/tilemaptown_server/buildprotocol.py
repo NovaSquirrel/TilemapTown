@@ -331,12 +331,16 @@ def fn_BAG(map, client, arg):
 			if 'pos' in move:
 				if client.has_permission(move_me, permission['move_new_map'], False):
 					move_me.switch_map(move['folder'], new_pos=move['pos'])
+					if not move_me.temporary:
+						move_me.save()
 					client.send('BAG', {'move': move})
 				else:
 					client.send("ERR", {'text': 'Don\'t have permission to move entity'})
 			else:
 				if client.has_permission(move_me, (permission['move'], permission['move_new_map']), False):
 					move_me.switch_map(move['folder'])
+					if not move_me.temporary:
+						move_me.save()
 					client.send('BAG', {'move': move})
 				else:
 					client.send("ERR", {'text': 'Don\'t have permission to move entity'})
