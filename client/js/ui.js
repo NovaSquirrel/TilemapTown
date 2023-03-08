@@ -900,16 +900,20 @@ function tickWorld() {
             }
             break;
           case "text":
-            updated.pic = [0, 0, 24];
+            if(updated.pic == null)
+              updated.pic = [0, 0, 24];
             break;
           case "image":
-            updated.pic = [0, 11, 20];
+            if(updated.pic == null)
+              updated.pic = [0, 11, 20];
             break;
           case "tileset":
-            updated.pic = [0, 19, 18];
+            if(updated.pic == null)
+              updated.pic = [0, 19, 18];
             break;
           case "reference":
-            updated.pic = [0, 9, 22];
+            if(updated.pic == null)
+              updated.pic = [0, 9, 22];
             break;
         }
       }
