@@ -995,6 +995,13 @@ function tickWorld() {
       if((PixelCameraY + mapCanvas.height > MyMap.Height*16) && (!EdgeLinks || !EdgeLinks[2])) {
         CameraY -= (PixelCameraY + mapCanvas.height) - MyMap.Height*16;
       }
+
+      if(MyMap.Width*16 <= mapCanvas.width) {
+        CameraX = MyMap.Width*16/2;
+      }
+      if(MyMap.Height*16 <= mapCanvas.height) {
+        CameraY = MyMap.Height*16/2;
+      }
     }
     drawMap();
   } else if(AnimationTick % 5 == 0) { // every 0.1 seconds
