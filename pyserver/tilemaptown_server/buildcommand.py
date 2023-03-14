@@ -163,13 +163,13 @@ def find_local_entity_by_name(map, name):
 	if map == None:
 		return None
 	name = name.lower()
-	for e in client.map.contents:
+	for e in map.contents:
 		if str(e.protocol_id()) == name:
 			return e
-	for e in client.map.contents:
+	for e in map.contents:
 		if e.name.strip().lower() == name:
 			return e
-	for e in client.map.contents:
+	for e in map.contents:
 		if e.name.strip().lower().startswith(name):
 			return e
 	return None
