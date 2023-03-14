@@ -464,11 +464,20 @@ function receiveServerMessage(event) {
       break;
     case "PRI":
       let respond = '<span onclick="setChatInput(\'/tell '+arg.username+' \')">';
-      if(arg.receive)
-        logMessage(respond+"&larr;["+arg.name+"("+arg.username+")"+"] "+convertBBCode(arg.text)+'</span>', 'private_message');
-      else
-        logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] "+convertBBCode(arg.text)+'</span>', 'private_message');
-        break;
+      if(arg.text.slice(0, 4) == "/me ") {
+        var new_text = arg.text.slice(4);
+        if(arg.receive)
+          logMessage(respond+"&larr;["+arg.name+"("+arg.username+")"+"] * <i>"+arg.name+" "+convertBBCode(new_text)+'</i></span>', 'private_message');
+        else
+          logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] * <i>"+PlayerWho[PlayerYou].name+" "+convertBBCode(new_text)+'</i></span>', 'private_message');
+          break;
+      } else {
+        if(arg.receive)
+          logMessage(respond+"&larr;["+arg.name+"("+arg.username+")"+"] "+convertBBCode(arg.text)+'</span>', 'private_message');
+        else
+          logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] "+convertBBCode(arg.text)+'</span>', 'private_message');
+          break;
+      }
     case "CMD":
     case "MSG":
       if(arg.name) {
