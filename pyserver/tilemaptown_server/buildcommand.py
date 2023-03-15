@@ -1170,8 +1170,10 @@ def fn_look(map, client, context, arg):
 	if not len(arg):
 		return
 	e = find_local_entity_by_name(map, arg)
-	if e == None:
+	if e != None:
 		respond(context, 'Description of [b]%s[/b]: %s' % (e.name, e.desc))
+	else:
+		respond(context, '[b]%s[/b] not found', error=True)
 
 @cmd_command(category="Who", syntax="name")
 def fn_last(map, client, context, arg):
