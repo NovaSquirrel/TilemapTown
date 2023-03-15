@@ -475,12 +475,12 @@ class Entity(object):
 			# Set the new position, and update any passengers
 			self.x = x
 			self.y = y
-			for u in self.passengers:
-				if u.is_following and not is_teleport: # If "from" isn't present, it's a teleport, not normal movement
-					u.move_to(old_x, old_y, old_dir if new_dir != None else None)
-				else:
-					u.move_to(x, y, new_dir)
-				u.map.broadcast("MOV", {'id': u.protocol_id(), 'to': [u.x, u.y], 'dir': u.dir}, remote_category=botwatch_type['move'])
+		for u in self.passengers:
+			if x != None and u.is_following and not is_teleport: # If "from" isn't present, it's a teleport, not normal movement
+				u.move_to(old_x, old_y, old_dir if new_dir != None else None)
+			else:
+				u.move_to(x, y, new_dir)
+			u.map.broadcast("MOV", {'id': u.protocol_id(), 'to': [u.x, u.y], 'dir': u.dir}, remote_category=botwatch_type['move'])
 
 	# Other movement
 

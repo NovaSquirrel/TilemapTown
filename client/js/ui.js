@@ -712,7 +712,16 @@ function drawMap() {
   var sortedPlayers = [];
   for (var index in PlayerWho)
     sortedPlayers.push(index);
-  sortedPlayers.sort((a, b) => (PlayerWho[a].y > PlayerWho[b].y) ? 1 : -1);
+  sortedPlayers.sort(
+    (a, b) => {
+      if (PlayerWho[a].passengers.includes(parseInt(b))) {
+        return -1;
+      } else if (PlayerWho[b].passengers.includes(parseInt(a))) {
+        return 1;
+      }
+      return (PlayerWho[a].y > PlayerWho[b].y) ? 1 : -1;
+    }
+  );
 
   for (var sort_n in sortedPlayers) {
    try {
