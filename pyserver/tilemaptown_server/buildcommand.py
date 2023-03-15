@@ -185,7 +185,7 @@ def fn_nick(map, client, context, arg):
 
 @cmd_command(category="Settings", syntax="description")
 def fn_userdesc(map, client, context, arg):
-	self.desc = arg
+	client.desc = arg
 
 @cmd_command(category="Settings", syntax="text")
 def fn_client_settings(map, client, context, arg):
@@ -901,7 +901,7 @@ def fn_returnall(map, client, context, arg):
 				continue
 			if e.vehicle and e.vehicle.is_client():
 				continue
-			if any(x.is_client() for x in self.passengers):
+			if any(x.is_client() for x in client.passengers):
 				continue
 			e.send_home()
 			returned += 1
@@ -1173,7 +1173,7 @@ def fn_look(map, client, context, arg):
 	if e != None:
 		respond(context, 'Description of [b]%s[/b]: %s' % (e.name, e.desc))
 	else:
-		respond(context, '[b]%s[/b] not found', error=True)
+		respond(context, '[b]%s[/b] not found' % e.name, error=True)
 
 @cmd_command(category="Who", syntax="name")
 def fn_last(map, client, context, arg):
