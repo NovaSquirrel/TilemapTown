@@ -122,6 +122,10 @@ def fn_MOV(map, client, arg):
 					new_y = 0
 				elif edge_sign_y == -1:
 					new_y = new_map.height-1
+				# Allow changing direction while changing maps
+				if "dir" in arg:
+					client.dir = arg["dir"]
+
 				# If the client can move to the new map, then it'll remove them from this one,
 				# and this function shouldn't continue.
 				if client.switch_map(new_map.db_id, new_pos=(new_x, new_y), edge_warp=True):
