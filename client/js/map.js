@@ -70,7 +70,8 @@ class TownMap {
   }
 }
 var MyMap = new TownMap(60, 60);
-var LinkedMaps = {};
+var MapsByID = {}; // Includes the current map
+var CurrentMapID = 0;
 
 var IconSheets = {}; // tile sheets, indexed by first element in a 'pic'
 

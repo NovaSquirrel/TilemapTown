@@ -65,14 +65,23 @@ class Map(Entity):
 		super().add_to_contents(item)
 
 	def send_map_info(self, item):
+		if not item.is_client(): # Map info should only get sent to clients, but it doesn't hurt to be sure
+			return
 		if not self.map_data_loaded:
 			self.load_data()
-		item.send("MAI", self.map_info(user=item))
-		item.send("MAP", self.map_section(0, 0, self.width-1, self.height-1))
 
-		if item.is_client() and item.see_past_map_edge and self.edge_ref_links:
+		# Always send MAI for the map you move to, because it's the formal signal that you entered a new map
+		item.send("MAI", self.map_info(user=item))
+		# Skip the map data if the client should already have it
+		if self.db_id not in item.loaded_maps:
+			item.send("MAP", self.map_section(0, 0, self.width-1, self.height-1))
+
+		if item.see_past_map_edge and self.edge_ref_links:
 			for linked_map in self.edge_ref_links:
 				if linked_map == None:
+					continue
+				# Only send the client maps they wouldn't have yet
+				if linked_map.db_id in item.loaded_maps:
 					continue
 				info = linked_map.map_info(user=item)
 				info['remote_map'] = linked_map.db_id
@@ -89,6 +98,8 @@ class Map(Entity):
 					section = {'pos': from_db['pos'], 'default': from_db['default'], 'turf': from_db['turf'], 'obj': from_db['obj']}
 				section['remote_map'] = linked_map.db_id
 				item.send("MAP", section)
+
+			item.loaded_maps = set([x.db_id for x in self.edge_ref_links if x != None] + [self.db_id])
 
 	def remove_from_contents(self, item):
 		super().remove_from_contents(item)

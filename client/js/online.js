@@ -162,14 +162,34 @@ function receiveServerMessage(event) {
     case "MAI":
       if("remote_map" in arg) {
         var remote = arg["remote_map"];
-        LinkedMaps[remote] = new TownMap(arg.size[0], arg.size[1])
-        LinkedMaps[remote].Info = arg;
+        MapsByID[remote] = new TownMap(arg.size[0], arg.size[1])
+        MapsByID[remote].Info = arg;
         break;
       } else {
-        LinkedMaps = {}; // Reset linked maps
-        MyMap = new TownMap(arg.size[0], arg.size[1])
-        MyMap.Info = arg;
+        CurrentMapID = arg.id;
 
+        if(CurrentMapID in MapsByID) {
+          MyMap = MapsByID[CurrentMapID];
+        } else {
+          MyMap = new TownMap(arg.size[0], arg.size[1])
+          MyMap.Info = arg;
+          MapsByID[CurrentMapID] = MyMap;
+        }
+
+        // Clean up MapsByID
+        var NotNeededMaps = [];
+        for(var key in MapsByID) {
+          console.log("Testing "+key);
+          if(key == CurrentMapID || ("edge_links" in MyMap.Info && MyMap.Info.edge_links.includes(parseInt(key))))
+            continue;
+          NotNeededMaps.push(key);
+        }
+        for(var i=0; i<NotNeededMaps.length; i++) {
+          console.log("Deleting "+NotNeededMaps[i]);
+          delete MapsByID[NotNeededMaps[i]];
+        }
+
+        // Give a notice about a new map
         var logText = "Now entering: <b>"+MyMap.Info['name']+"</b>";
         if(MyMap.Info['desc'])
           logText += ' - "'+MyMap.Info['desc']+'"'
@@ -179,7 +199,7 @@ function receiveServerMessage(event) {
     case "MAP":
       var Map = MyMap;
       if("remote_map" in arg) {
-        Map = LinkedMaps[arg["remote_map"]];
+        Map = MapsByID[arg["remote_map"]];
       }
       var Fill = AtomFromName(arg.default);
       var x1 = arg.pos[0];
@@ -209,7 +229,7 @@ function receiveServerMessage(event) {
     case "BLK":
       var Map = MyMap;
       if("remote_map" in arg) {
-        Map = LinkedMaps[arg["remote_map"]];
+        Map = MapsByID[arg["remote_map"]];
       }
       for (var key in arg.copy) {
         var copy_params = arg.copy[key];

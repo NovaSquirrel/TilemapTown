@@ -52,6 +52,7 @@ class Client(Entity):
 
 		self.features = set() # list of feature names
 		self.see_past_map_edge = False
+		self.loaded_maps = set() # maps the client should have loaded currently
 
 		self.identified = False
 
