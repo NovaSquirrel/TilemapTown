@@ -104,18 +104,7 @@ function asIntIfPossible(i) {
   return i;
 }
 
-function receiveServerMessage(event) {
-//    console.log(event.data);
-  var msg = event.data;
-  if(msg.length < 3)
-    return;
-  if(ShowProtocol)
-    console.log("<< "+msg);
-  var cmd = msg.slice(0, 3);
-  var arg = null;
-  if(msg.length > 4)
-    arg = JSON.parse(msg.slice(4));
-
+function receiveServerMessage(cmd, arg) {
   switch(cmd) {
     case "MOV":
       if(arg.id != PlayerYou || !arg.from) {
@@ -179,8 +168,7 @@ function receiveServerMessage(event) {
         // Clean up MapsByID
         var NotNeededMaps = [];
         for(var key in MapsByID) {
-          console.log("Testing "+key);
-          if(key == CurrentMapID || ("edge_links" in MyMap.Info && MyMap.Info.edge_links.includes(parseInt(key))))
+          if(key == CurrentMapID || ("edge_links" in MyMap.Info && MyMap.Info.edge_links !== null && MyMap.Info.edge_links.includes(parseInt(key))))
             continue;
           NotNeededMaps.push(key);
         }
@@ -526,6 +514,41 @@ function receiveServerMessage(event) {
   }
 }
 
+function receiveServerMessageString(msg) {
+  let cmd = msg.slice(0, 3);
+  if(msg.length > 4) {
+    if(cmd == "BAT") {
+      // Get all of the protocol message lines
+      let batch_data = msg.slice(4).split('\n');
+
+      // Parse each of the sub-messages
+      for(let i=0; i<batch_data.length; i++) {
+        let batch_msg = batch_data[i];
+        let batch_cmd = batch_msg.slice(0, 3);
+        if(batch_msg.length > 4) {
+          receiveServerMessage(batch_cmd, JSON.parse(batch_msg.slice(4)));
+        } else {
+          receiveServerMessage(batch_cmd, null);
+        }
+      }
+    } else {
+      receiveServerMessage(cmd, JSON.parse(msg.slice(4)));
+    }
+  } else {
+    receiveServerMessage(cmd, null);
+  }
+}
+
+function receiveServerMessageEvent(event) {
+//    console.log(event.data);
+  var msg = event.data;
+  if(msg.length < 3)
+    return;
+  if(ShowProtocol)
+    console.log("<< "+msg);
+  receiveServerMessageString(msg);
+}
+
 function ConnectToServer() {
   OnlineMode = true;
 
@@ -537,7 +560,8 @@ function ConnectToServer() {
 
     let idn_args = {};
     idn_args["features"] = {
-       "see_past_map_edge": {"version": "0.0.1"}
+       "see_past_map_edge": {"version": "0.0.1"},
+       "batch": {"version": "0.0.1"}
     };
 
     if(OnlineUsername != "") {
@@ -559,5 +583,5 @@ function ConnectToServer() {
     OnlineIsConnected = false;
   }
 
-  OnlineSocket.onmessage = receiveServerMessage;
+  OnlineSocket.onmessage = receiveServerMessageEvent;
 }

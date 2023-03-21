@@ -93,6 +93,9 @@ def fn_MOV(map, client, arg):
 			fn_MOV(entity.map, entity, arg)
 			return
 
+	if "if_map" in arg and map.db_id != arg["if_map"]:
+		return
+
 	# MOV can be used to switch maps
 	if "new_map" in arg:
 		client.switch_map(arg["new_map"], new_pos=arg["to"])
@@ -648,7 +651,8 @@ def fn_PIN(map, client, arg):
 	client.ping_timer = 300
 
 available_server_features = {
-	"see_past_map_edge": {"version": "0.0.1", "minimum_version": "0.0.1"}
+	"see_past_map_edge": {"version": "0.0.1", "minimum_version": "0.0.1"},
+	"batch": {"version": "0.0.1", "minimum_version": "0.0.1"}
 }
 server_software_name = "Tilemap Town server"
 server_software_version = "0.2.0"
@@ -678,6 +682,8 @@ def fn_IDN(map, client, arg):
 				# Put it in a variable specifically for this
 				if key == "see_past_map_edge":
 					client.see_past_map_edge = True
+				elif key == "batch":
+					client.can_batch_messages = True
 
 				# Add it to the set and acnowledge it too
 				client.features.add(key)

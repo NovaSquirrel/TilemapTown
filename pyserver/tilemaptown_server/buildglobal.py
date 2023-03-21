@@ -351,5 +351,10 @@ def string_is_int(s):
 		return s[1:].isdecimal()
 	return s.isdecimal()
 
+def make_protocol_message_string(command, params):
+	if params != None:
+		return command + " " + json.dumps(params)
+	return command
+
 from .buildentity import Entity, EntityWithPlainData
 from .buildmap import Map

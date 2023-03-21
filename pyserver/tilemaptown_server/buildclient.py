@@ -51,8 +51,15 @@ class Client(Entity):
 		self.no_inventory_messages = False # don't send BAG updates when adding or removing items
 
 		self.features = set() # list of feature names
+
+		# see_past_map_edge variables
 		self.see_past_map_edge = False
 		self.loaded_maps = set() # maps the client should have loaded currently
+
+		# "batch" extension variables
+		self.can_batch_messages = False
+		self.messages_in_batch = []
+		self.make_batch = 0 # Integer instead of bool. Allows layering batches on top of each other and waiting until the bottom level is done.
 
 		self.identified = False
 
@@ -68,10 +75,39 @@ class Client(Entity):
 		""" Send a command to the client """
 		if self.ws == None:
 			return
-		send_me = command_type
-		if command_params != None:
-			send_me += " " + json.dumps(command_params)
-		asyncio.ensure_future(self.ws.send(send_me))
+		self.send_string(make_protocol_message_string(command_type, command_params))
+
+	def send_string(self, raw):
+		""" Send a command to the client that's already in string form """
+		if self.ws == None:
+			return
+		if self.make_batch and self.can_batch_messages:
+			self.messages_in_batch.append(raw)
+		else:
+			asyncio.ensure_future(self.ws.send(raw))
+
+	def start_batch(self):
+		""" Start batching messages """
+		self.make_batch += 1 # Increase batch level
+
+	def finish_batch(self):
+		""" Send all of the queued messages and clear the queue """
+		if self.make_batch > 0:
+			self.make_batch -= 1
+			# If it's not the bottom layer yet, wait until it is
+			if self.make_batch > 0:
+				return
+		if self.ws == None:
+			return
+		n = len(self.messages_in_batch)
+		if n == 0:
+			return
+		elif n == 1: # If there's one message, format it normally
+			asyncio.ensure_future(self.ws.send(self.messages_in_batch[0]))
+		else:
+			asyncio.ensure_future(self.ws.send("BAT "+"\n".join(self.messages_in_batch)))
+		# Clear out the batch
+		self.messages_in_batch = []
 
 	def add_to_contents(self, item):
 		super().add_to_contents(item)

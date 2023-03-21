@@ -83,6 +83,19 @@ class Map(Entity):
 				# Only send the client maps they wouldn't have yet
 				if linked_map.db_id in item.loaded_maps:
 					continue
+
+				# If map data is not loaded, it has to be read before MAI because MAI's edge_links comes from the map's data field
+				if not linked_map.map_data_loaded:
+					# If it's not loaded, load the json and parse it right here
+					from_db = linked_map.load_data_as_text()
+					if from_db == None:
+						continue
+					from_db = json.loads(from_db)
+
+					# Patch in the edge ID links so linked_map.map_info() can include them
+					if "edge_links" in from_db:
+						linked_map.edge_id_links = from_db["edge_links"]
+
 				info = linked_map.map_info(user=item)
 				info['remote_map'] = linked_map.db_id
 				item.send("MAI", info)
@@ -90,11 +103,6 @@ class Map(Entity):
 				if linked_map.map_data_loaded:
 					section = linked_map.map_section(0, 0, linked_map.width-1, linked_map.height-1)
 				else:
-					# If it's not loaded, load the json and parse it right here
-					from_db = linked_map.load_data_as_text()
-					if from_db == None:
-						continue
-					from_db = json.loads(from_db)
 					section = {'pos': from_db['pos'], 'default': from_db['default'], 'turf': from_db['turf'], 'obj': from_db['obj']}
 				section['remote_map'] = linked_map.db_id
 				item.send("MAP", section)
@@ -210,6 +218,7 @@ class Map(Entity):
 	def map_info(self, user=None, all_info=False):
 		""" MAI message data """
 		out = {'name': self.name, 'desc': self.desc, 'id': self.db_id, 'owner_id': self.owner_id, 'owner_username': find_username_by_db_id(self.owner_id) or '?', 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.map_flags & mapflag['public'] != 0, 'private': self.deny & permission['entry'] != 0, 'build_enabled': self.allow & permission['build'] != 0, 'full_sandbox': self.allow & permission['sandbox'] != 0, 'edge_links': self.edge_id_links}
+
 		if all_info:
 			out['start_pos'] = self.start_pos
 		if user:
