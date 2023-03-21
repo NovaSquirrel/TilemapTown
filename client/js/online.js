@@ -173,7 +173,6 @@ function receiveServerMessage(cmd, arg) {
           NotNeededMaps.push(key);
         }
         for(var i=0; i<NotNeededMaps.length; i++) {
-          console.log("Deleting "+NotNeededMaps[i]);
           delete MapsByID[NotNeededMaps[i]];
         }
 

@@ -108,6 +108,8 @@ class Map(Entity):
 				item.send("MAP", section)
 
 			item.loaded_maps = set([x.db_id for x in self.edge_ref_links if x != None] + [self.db_id])
+		if item.see_past_map_edge and not self.edge_ref_links:
+			item.loaded_maps = set([self.db_id])
 
 	def remove_from_contents(self, item):
 		super().remove_from_contents(item)
