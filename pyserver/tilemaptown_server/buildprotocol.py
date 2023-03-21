@@ -76,7 +76,8 @@ def fn_MOV(map, client, arg):
 	# Can control a different entity if you have permission
 	if 'rc' in arg:
 		id = arg['rc']
-		if not client.has_permission(id, (permission['move'], permission['move_new_map']), False):
+		if ("new_map" in arg and not client.has_permission(id, (permission['move_new_map']), False)) \
+			or ("new_map" not in arg and not client.has_permission(id, (permission['move'], permission['move_new_map']), False)):
 			client.send("ERR", {'text': 'You don\'t have permission to move entity %s' % id})
 			return
 		entity = get_entity_by_id(id, load_from_db=False)
@@ -84,7 +85,7 @@ def fn_MOV(map, client, arg):
 			if entity == None:
 				client.send("ERR", {'text': 'Can\'t move entity %s because it\'s not loaded' % id})
 				return
-			if entity.map == None:
+			if entity.map == None and "new_map" not in arg:
 				client.send("ERR", {'text': 'Can\'t move entity %s because it\'s not on a map' % id})
 				return
 
@@ -92,7 +93,15 @@ def fn_MOV(map, client, arg):
 			fn_MOV(entity.map, entity, arg)
 			return
 
-	# Handle bumping into the map edge
+	if "if_map" in arg and map.db_id != arg["if_map"]:
+		return
+
+	# MOV can be used to switch maps
+	if "new_map" in arg:
+		client.switch_map(arg["new_map"], new_pos=arg["to"])
+		return
+
+	# Handle bumping into the map edge (for clients that don't implement see_past_map_edge)
 	if "bump" in arg and map.is_map() and map.edge_ref_links != None:
 		bump_pos    = arg["bump"]
 
@@ -642,7 +651,8 @@ def fn_PIN(map, client, arg):
 	client.ping_timer = 300
 
 available_server_features = {
-	"see_past_map_edge": {"version": "0.0.1", "minimum_version": "0.0.1"}
+	"see_past_map_edge": {"version": "0.0.1", "minimum_version": "0.0.1"},
+	"batch": {"version": "0.0.1", "minimum_version": "0.0.1"}
 }
 server_software_name = "Tilemap Town server"
 server_software_version = "0.2.0"
@@ -672,6 +682,8 @@ def fn_IDN(map, client, arg):
 				# Put it in a variable specifically for this
 				if key == "see_past_map_edge":
 					client.see_past_map_edge = True
+				elif key == "batch":
+					client.can_batch_messages = True
 
 				# Add it to the set and acnowledge it too
 				client.features.add(key)

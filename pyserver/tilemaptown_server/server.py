@@ -123,6 +123,8 @@ async def client_handler(websocket, path):
 			client.ws = None
 		except:
 			client.send("ERR", {'text': 'An exception was thrown: %s' % sys.exc_info()[0]})
+			while client.make_batch:
+				client.finish_batch()
 			print("Unexpected error:", sys.exc_info()[0])
 			print(sys.exc_info()[1])
 			traceback.print_tb(sys.exc_info()[2])

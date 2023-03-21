@@ -65,15 +65,37 @@ class Map(Entity):
 		super().add_to_contents(item)
 
 	def send_map_info(self, item):
+		if not item.is_client(): # Map info should only get sent to clients, but it doesn't hurt to be sure
+			return
 		if not self.map_data_loaded:
 			self.load_data()
-		item.send("MAI", self.map_info(user=item))
-		item.send("MAP", self.map_section(0, 0, self.width-1, self.height-1))
 
-		if item.is_client() and item.see_past_map_edge and self.edge_ref_links:
+		# Always send MAI for the map you move to, because it's the formal signal that you entered a new map
+		item.send("MAI", self.map_info(user=item))
+		# Skip the map data if the client should already have it
+		if self.db_id not in item.loaded_maps:
+			item.send("MAP", self.map_section(0, 0, self.width-1, self.height-1))
+
+		if item.see_past_map_edge and self.edge_ref_links:
 			for linked_map in self.edge_ref_links:
 				if linked_map == None:
 					continue
+				# Only send the client maps they wouldn't have yet
+				if linked_map.db_id in item.loaded_maps:
+					continue
+
+				# If map data is not loaded, it has to be read before MAI because MAI's edge_links comes from the map's data field
+				if not linked_map.map_data_loaded:
+					# If it's not loaded, load the json and parse it right here
+					from_db = linked_map.load_data_as_text()
+					if from_db == None:
+						continue
+					from_db = json.loads(from_db)
+
+					# Patch in the edge ID links so linked_map.map_info() can include them
+					if "edge_links" in from_db:
+						linked_map.edge_id_links = from_db["edge_links"]
+
 				info = linked_map.map_info(user=item)
 				info['remote_map'] = linked_map.db_id
 				item.send("MAI", info)
@@ -81,14 +103,13 @@ class Map(Entity):
 				if linked_map.map_data_loaded:
 					section = linked_map.map_section(0, 0, linked_map.width-1, linked_map.height-1)
 				else:
-					# If it's not loaded, load the json and parse it right here
-					from_db = linked_map.load_data_as_text()
-					if from_db == None:
-						continue
-					from_db = json.loads(from_db)
 					section = {'pos': from_db['pos'], 'default': from_db['default'], 'turf': from_db['turf'], 'obj': from_db['obj']}
 				section['remote_map'] = linked_map.db_id
 				item.send("MAP", section)
+
+			item.loaded_maps = set([x.db_id for x in self.edge_ref_links if x != None] + [self.db_id])
+		if item.see_past_map_edge and not self.edge_ref_links:
+			item.loaded_maps = set([self.db_id])
 
 	def remove_from_contents(self, item):
 		super().remove_from_contents(item)
@@ -199,6 +220,7 @@ class Map(Entity):
 	def map_info(self, user=None, all_info=False):
 		""" MAI message data """
 		out = {'name': self.name, 'desc': self.desc, 'id': self.db_id, 'owner_id': self.owner_id, 'owner_username': find_username_by_db_id(self.owner_id) or '?', 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.map_flags & mapflag['public'] != 0, 'private': self.deny & permission['entry'] != 0, 'build_enabled': self.allow & permission['build'] != 0, 'full_sandbox': self.allow & permission['sandbox'] != 0, 'edge_links': self.edge_id_links}
+
 		if all_info:
 			out['start_pos'] = self.start_pos
 		if user:

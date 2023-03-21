@@ -120,12 +120,25 @@ class Entity(object):
 		# Not supported by default
 		return
 
+	def send_string(self, raw):
+		# Directly send a string, so you can json.dumps once and reuse it for everyone
+		return
+
+	def start_batch(self):
+		# Only for clients
+		return
+
+	def finish_batch(self):
+		# Only for clients
+		return
+
 	# Send a message to all contents
 	def broadcast(self, command_type, command_params, remote_category=None, remote_only=False, send_to_links=False):
 		""" Send a message to everyone on the map """
-		if not remote_only:
+		if not remote_only and self.contents:
+			send_me = make_protocol_message_string(command_type, command_params)
 			for client in self.contents:
-				client.send(command_type, command_params)
+				client.send_string(send_me)
 
 		# Add remote map on the params if needed
 		do_linked = send_to_links and self.is_map() and self.edge_ref_links
@@ -498,6 +511,8 @@ class Entity(object):
 				self.tp_history.append([self.map_id, self.x, self.y])
 				added_new_history = True
 
+		self.start_batch()
+
 		if self.map_id != map_id:
 			# First check if you can even go to that map
 			map_load = get_entity_by_id(map_id)
@@ -505,11 +520,13 @@ class Entity(object):
 				self.send("ERR", {'text': 'Couldn\'t load map %s' % map_id})
 				if added_new_history:
 					self.tp_history.pop()
+				self.finish_batch()
 				return False
 			if not self.has_permission(map_load, permission['entry'] if self.is_client() else permission['object_entry'], True): # probably don't need to check persistent_object_entry
 				self.send("ERR", {'text': 'You don\'t have permission to go to map %d' % map_id})
 				if added_new_history:
 					self.tp_history.pop()
+				self.finish_batch()
 				return False
 
 			# Remove first, so the container can tell everyone
@@ -527,14 +544,18 @@ class Entity(object):
 			params = {'id': self.protocol_id(), 'to': [self.x, self.y]}
 			if edge_warp:
 				params['edge_warp'] = True
+				params['dir'] = self.dir
 			self.map.broadcast("MOV", params, remote_category=botwatch_type['move'])
 		elif new_pos == None and goto_spawn and self.map.is_map():
 			self.move_to(self.map.start_pos[0], self.map.start_pos[1], is_teleport=True)
 			self.map.broadcast("MOV", {'id': self.protocol_id(), 'to': [self.x, self.y]}, remote_category=botwatch_type['move'])
 
+		self.finish_batch()
+
 		# Move any passengers too
 		for u in self.passengers:
 			u.switch_map(map_id, new_pos=[self.x, self.y])
+
 		return True
 
 	def send_home(self):

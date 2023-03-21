@@ -104,18 +104,7 @@ function asIntIfPossible(i) {
   return i;
 }
 
-function receiveServerMessage(event) {
-//    console.log(event.data);
-  var msg = event.data;
-  if(msg.length < 3)
-    return;
-  if(ShowProtocol)
-    console.log("<< "+msg);
-  var cmd = msg.slice(0, 3);
-  var arg = null;
-  if(msg.length > 4)
-    arg = JSON.parse(msg.slice(4));
-
+function receiveServerMessage(cmd, arg) {
   switch(cmd) {
     case "MOV":
       if(arg.id != PlayerYou || !arg.from) {
@@ -162,14 +151,32 @@ function receiveServerMessage(event) {
     case "MAI":
       if("remote_map" in arg) {
         var remote = arg["remote_map"];
-        LinkedMaps[remote] = new TownMap(arg.size[0], arg.size[1])
-        LinkedMaps[remote].Info = arg;
+        MapsByID[remote] = new TownMap(arg.size[0], arg.size[1])
+        MapsByID[remote].Info = arg;
         break;
       } else {
-        LinkedMaps = {}; // Reset linked maps
-        MyMap = new TownMap(arg.size[0], arg.size[1])
-        MyMap.Info = arg;
+        CurrentMapID = arg.id;
 
+        if(CurrentMapID in MapsByID) {
+          MyMap = MapsByID[CurrentMapID];
+        } else {
+          MyMap = new TownMap(arg.size[0], arg.size[1])
+          MyMap.Info = arg;
+          MapsByID[CurrentMapID] = MyMap;
+        }
+
+        // Clean up MapsByID
+        var NotNeededMaps = [];
+        for(var key in MapsByID) {
+          if(key == CurrentMapID || ("edge_links" in MyMap.Info && MyMap.Info.edge_links !== null && MyMap.Info.edge_links.includes(parseInt(key))))
+            continue;
+          NotNeededMaps.push(key);
+        }
+        for(var i=0; i<NotNeededMaps.length; i++) {
+          delete MapsByID[NotNeededMaps[i]];
+        }
+
+        // Give a notice about a new map
         var logText = "Now entering: <b>"+MyMap.Info['name']+"</b>";
         if(MyMap.Info['desc'])
           logText += ' - "'+MyMap.Info['desc']+'"'
@@ -179,7 +186,7 @@ function receiveServerMessage(event) {
     case "MAP":
       var Map = MyMap;
       if("remote_map" in arg) {
-        Map = LinkedMaps[arg["remote_map"]];
+        Map = MapsByID[arg["remote_map"]];
       }
       var Fill = AtomFromName(arg.default);
       var x1 = arg.pos[0];
@@ -209,7 +216,7 @@ function receiveServerMessage(event) {
     case "BLK":
       var Map = MyMap;
       if("remote_map" in arg) {
-        Map = LinkedMaps[arg["remote_map"]];
+        Map = MapsByID[arg["remote_map"]];
       }
       for (var key in arg.copy) {
         var copy_params = arg.copy[key];
@@ -506,6 +513,41 @@ function receiveServerMessage(event) {
   }
 }
 
+function receiveServerMessageString(msg) {
+  let cmd = msg.slice(0, 3);
+  if(msg.length > 4) {
+    if(cmd == "BAT") {
+      // Get all of the protocol message lines
+      let batch_data = msg.slice(4).split('\n');
+
+      // Parse each of the sub-messages
+      for(let i=0; i<batch_data.length; i++) {
+        let batch_msg = batch_data[i];
+        let batch_cmd = batch_msg.slice(0, 3);
+        if(batch_msg.length > 4) {
+          receiveServerMessage(batch_cmd, JSON.parse(batch_msg.slice(4)));
+        } else {
+          receiveServerMessage(batch_cmd, null);
+        }
+      }
+    } else {
+      receiveServerMessage(cmd, JSON.parse(msg.slice(4)));
+    }
+  } else {
+    receiveServerMessage(cmd, null);
+  }
+}
+
+function receiveServerMessageEvent(event) {
+//    console.log(event.data);
+  var msg = event.data;
+  if(msg.length < 3)
+    return;
+  if(ShowProtocol)
+    console.log("<< "+msg);
+  receiveServerMessageString(msg);
+}
+
 function ConnectToServer() {
   OnlineMode = true;
 
@@ -517,7 +559,8 @@ function ConnectToServer() {
 
     let idn_args = {};
     idn_args["features"] = {
-       "see_past_map_edge": {"version": "0.0.1"}
+       "see_past_map_edge": {"version": "0.0.1"},
+       "batch": {"version": "0.0.1"}
     };
 
     if(OnlineUsername != "") {
@@ -539,5 +582,5 @@ function ConnectToServer() {
     OnlineIsConnected = false;
   }
 
-  OnlineSocket.onmessage = receiveServerMessage;
+  OnlineSocket.onmessage = receiveServerMessageEvent;
 }
