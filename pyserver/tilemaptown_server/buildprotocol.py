@@ -696,6 +696,7 @@ def fn_IDN(map, client, arg):
 	# Now check the username and password and actually log in
 	if arg != {} and "username" in arg and "password" in arg:
 		if not client.login(filter_username(arg["username"]), arg["password"], override_map=override_map):
+			print("Failed login for "+filter_username(arg["username"]))
 			client.disconnect()
 			return
 	else:

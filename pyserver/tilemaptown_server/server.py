@@ -113,7 +113,7 @@ async def client_handler(websocket, path):
 				handle_protocol_command(client.map, client, command, arg) # client.map may be None
 
 		except websockets.ConnectionClosed:
-			if Config["Server"]["BroadcastDisconnects"]:
+			if Config["Server"]["BroadcastDisconnects"] and client.identified:
 				text = '%s has disconnected!' % client.name_and_username()
 				for u in AllClients:
 					if u is not client:
