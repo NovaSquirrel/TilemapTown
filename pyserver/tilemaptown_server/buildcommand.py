@@ -200,9 +200,12 @@ def fn_tell(map, client, context, arg):
 		else:
 			u = find_client_by_username(username)
 			if u:
-				if not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
-					client.send("PRI", {'text': privtext, 'name':u.name, 'username': u.username_or_id(), 'receive': False})
-					u.send("PRI", {'text': privtext, 'name':client.name, 'username': client.username_or_id(), 'receive': True})
+				if u.is_client():
+					if not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
+						client.send("PRI", {'text': privtext, 'name':u.name, 'username': u.username_or_id(), 'receive': False})
+						u.send("PRI", {'text': privtext, 'name':client.name, 'username': client.username_or_id(), 'receive': True})
+				else:
+					respond(context, 'That entity isn\'t a user', error=True)
 			else:
 				failed_to_find(context, username)
 	else:
