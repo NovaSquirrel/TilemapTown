@@ -90,7 +90,7 @@ async def client_handler(websocket, path):
 		try:
 			# Read a message, make sure it's not too short
 			message = await websocket.recv()
-			if len(message) < 3:
+			if len(message)<3:
 				continue
 			# Split the message into parts, to parse it
 			command = message[0:3]

@@ -97,7 +97,7 @@ function convertBBCode(t) {
 
 function logMessage(Message, Class) {
   var chatArea = document.getElementById("chatArea");
-  var bottom = chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight <3;
+  var bottom = chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight<3;
 
   let newMessage = document.createElement("div");
   newMessage.className = Class;
