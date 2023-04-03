@@ -1529,7 +1529,10 @@ function itemCard(id) {
     console.log(item.status, item.status_message);
     let status_span = document.createElement('span');
     status_span.classList.add('inventory-status');
-    status_span.innerText = `${item.status} (${item.status_message})`;
+    if(item.status_message)
+      status_span.innerText = `${item.status} (${item.status_message})`;
+    else
+      status_span.innerText = `${item.status}`;
     info_name.appendChild(status_span);
   }
 
