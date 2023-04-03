@@ -1446,7 +1446,7 @@ function itemCardList(ul, ids, options = {}) {
   function addItems(list, ids) {
     for (let id of ids) {
       if (options?.hidden_ids?.includes(id)) { continue; }
-      0
+
       let item = DBInventory[id] || PlayerWho[id];
       let li = itemCard(id);
 
@@ -1526,10 +1526,9 @@ function itemCard(id) {
   info_name.innerText = item.name;
 
   if (item.status) {
-    console.log(item.status, item.status_message);
     let status_span = document.createElement('span');
     status_span.classList.add('inventory-status');
-    if(item.status_message)
+    if (item.status_message)
       status_span.innerText = `${item.status} (${item.status_message})`;
     else
       status_span.innerText = `${item.status}`;
@@ -1610,7 +1609,7 @@ function itemIcon(key) {
     src = PlayerImages[key].src;
   }
 
-  if (item != undefined && item.pic != null)
+  if (item?.pic)
     pic = item.pic;
 
   if (IconSheets[pic[0]])
