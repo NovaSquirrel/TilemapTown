@@ -200,9 +200,12 @@ def fn_tell(map, client, context, arg):
 		else:
 			u = find_client_by_username(username)
 			if u:
-				if not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
-					client.send("PRI", {'text': privtext, 'name':u.name, 'username': u.username_or_id(), 'receive': False})
-					u.send("PRI", {'text': privtext, 'name':client.name, 'username': client.username_or_id(), 'receive': True})
+				if u.is_client():
+					if not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
+						client.send("PRI", {'text': privtext, 'name':u.name, 'username': u.username_or_id(), 'receive': False})
+						u.send("PRI", {'text': privtext, 'name':client.name, 'username': client.username_or_id(), 'receive': True})
+				else:
+					respond(context, 'That entity isn\'t a user', error=True)
 			else:
 				failed_to_find(context, username)
 	else:
@@ -362,34 +365,34 @@ def fn_tpcancel(map, client, context, arg):
 def fn_time(map, client, context, arg):
 	respond(context, datetime.datetime.today().strftime("Now it's %m/%d/%Y, %I:%M %p"))
 
+def broadcast_status_change(map, client, status_type, message):
+	client.status_type = status_type
+	client.status_message = message
+	if map and map.is_map():
+		map.broadcast("WHO", {"update": {'id': client.protocol_id(), 'status': status_type, 'status_message': message}})
+
 @cmd_command(syntax="message")
 def fn_away(map, client, context, arg):
 	if len(arg) < 1:
-		client.status_type = None
-		client.status_message = None
+		broadcast_status_change(map, client, None, None)
 		respond(context, 'You are no longer marked as away')
 	else:
-		client.status_type = 'away'
-		client.status_message = arg
+		broadcast_status_change(map, client, 'away', arg)
 		respond(context, 'You are now marked as away ("%s")' % arg)
 
 @cmd_command(alias=['stat'], syntax="message")
 def fn_status(map, client, context, arg):
 	if len(arg) < 1:
-		client.status_type = None
-		client.status_message = None
+		broadcast_status_change(map, client, None, None)
 		respond(context, 'Your status has been cleared')
-		map.broadcast("WHO", {"update": {'id': client.protocol_id(), 'status': None, 'status_message': None}})
 	else:
 		status_type, status_message = separate_first_word(arg)
-		client.status_type = status_type[0:16]
-		client.status_message = status_message if status_message != '' else None
+		broadcast_status_change(map, client, status_type[0:16], status_message if status_message != '' else None)
 
 		if client.status_message:
 			respond(context, 'Your status is now \"%s\" ("%s")' % (client.status_type, client.status_message))
 		else:
 			respond(context, 'Your status is now \"%s\"' % (client.status_type))
-		map.broadcast("WHO", {"update": {'id': client.protocol_id(), 'status': client.status_type, 'status_message': client.status_message}})
 
 @cmd_command(syntax="dice sides")
 def fn_roll(map, client, context, arg):
