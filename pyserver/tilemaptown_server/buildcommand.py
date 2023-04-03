@@ -394,6 +394,28 @@ def fn_status(map, client, context, arg):
 		else:
 			respond(context, 'Your status is now \"%s\"' % (client.status_type))
 
+@cmd_command(alias=['findrp'])
+def fn_findiic(map, client, context, arg):
+	names = ''
+	for u in AllClients:
+		if u.status_type == None or u.status_type.lower() != 'iic':
+			continue
+		if len(names) > 0:
+			names += ', '
+		names += u.name_and_username()
+	respond(context, 'These users are looking for RP: '+names)
+
+@cmd_command()
+def fn_findic(map, client, context, arg):
+	names = ''
+	for u in AllClients:
+		if u.status_type == None or u.status_type.lower() != 'ic':
+			continue
+		if len(names) > 0:
+			names += ', '
+		names += u.name_and_username()
+	respond(context, 'These users are currently in character: '+names)
+
 @cmd_command(syntax="dice sides")
 def fn_roll(map, client, context, arg):
 	param = arg.split('d')
