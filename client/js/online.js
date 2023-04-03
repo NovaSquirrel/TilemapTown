@@ -541,7 +541,7 @@ function receiveServerMessageString(msg) {
 function receiveServerMessageEvent(event) {
 //    console.log(event.data);
   var msg = event.data;
-  if(msg.length < 3)
+  if(msg.length<3)
     return;
   if(ShowProtocol)
     console.log("<< "+msg);
