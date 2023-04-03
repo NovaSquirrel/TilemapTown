@@ -17,13 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 var PlayerYou = "me";
-var PlayerWho = {me: {name: "Player", pic: [0, 2, 25], x: 5, y: 5, dir: 2, passengers:[]}};
+var PlayerWho = { me: { name: "Player", pic: [0, 2, 25], x: 5, y: 5, dir: 2, passengers: [] } };
 var PlayerImages = {}; // dictionary of Image objects
 var PlayerAnimation = { // dictionary of animation statuses
   "me": {
     "walkTimer": 0,// amount of ticks where the player should be animated as walking
     "lastDirectionLR": 0, //last direction that was set that is left or right
-    "lastDirection4":  0, //last direction that was set that is left, right, up or down
+    "lastDirection4": 0, //last direction that was set that is left, right, up or down
   }
 }
 
@@ -42,13 +42,13 @@ var CameraScale = 1;
 var AudioNotifications = false;
 
 // mouse stuff
-var MouseDown   = false;
+var MouseDown = false;
 var MouseStartX = -1;
 var MouseStartY = -1;
-var MouseEndX   = -1;
-var MouseEndY   = -1;
-var MouseNowX   = -1;
-var MouseNowY   = -1;
+var MouseEndX = -1;
+var MouseEndY = -1;
+var MouseNowX = -1;
+var MouseNowY = -1;
 var MouseActive = false; // is there a selection right now?
 var MousedOverPlayers = [];
 
@@ -62,7 +62,7 @@ var NeedMapRedraw = false;
 var NeedInventoryUpdate = false;
 var TickCounter = 0;   // Goes up every 20ms, wraps at 0x10000 (hex)
 var AnimationTick = 0; // Goes up every 20ms, wraps at 10000 (decimal)
-var DisplayInventory = {null: []}; // Indexed by folder
+var DisplayInventory = { null: [] }; // Indexed by folder
 var DBInventory = {}; // Indexed by ID
 
 const FolderOpenPic = [0, 2, 20];
@@ -97,17 +97,17 @@ function convertBBCode(t) {
 
 function logMessage(Message, Class) {
   var chatArea = document.getElementById("chatArea");
-  var bottom = chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight <3;
+  var bottom = chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight < 3;
 
   let newMessage = document.createElement("div");
   newMessage.className = Class;
   newMessage.innerHTML = Message;
   chatArea.append(newMessage);
 
-  if(bottom)
+  if (bottom)
     chatArea.scrollTop = chatArea.scrollHeight;
 
-  if(AudioNotifications) {
+  if (AudioNotifications) {
     var audio = new Audio('img/notify.wav');
     audio.play();
   }
@@ -120,12 +120,12 @@ function setChatInput(the_text) {
 }
 
 function sendChatCommand(the_text) {
-  SendCmd("CMD", {text: the_text});
+  SendCmd("CMD", { text: the_text });
 }
 
 function sendTyping(isTyping) {
-  if(PlayerWho[PlayerYou].typing != isTyping){
-    SendCmd("WHO", {update: {id: PlayerYou, typing: isTyping}});
+  if (PlayerWho[PlayerYou].typing != isTyping) {
+    SendCmd("WHO", { update: { id: PlayerYou, typing: isTyping } });
     PlayerWho[PlayerYou].typing = isTyping;
     drawMap();
   }
@@ -134,12 +134,12 @@ function sendTyping(isTyping) {
 function PlayersAroundTile(FindX, FindY, Radius) {
   var Found = [];
   for (var index in PlayerWho) {
-    if(index == PlayerYou)
+    if (index == PlayerYou)
       continue;
     var Mob = PlayerWho[index];
-	var Distance = Math.sqrt(Math.pow(Mob.x - FindX, 2)+Math.pow(Mob.y - FindY, 2));
-	if(Distance <= Radius)
-		Found.push(index);
+    var Distance = Math.pow(Mob.x - FindX, 2) + Math.pow(Mob.y - FindY, 2);
+    if (Distance <= Radius * Radius)
+      Found.push(index);
   }
   return Found;
 }
@@ -150,15 +150,15 @@ function editItemUpdatePic() {
   var edittiley = parseInt(document.getElementById('edittiley').value);
 
   var src = "";
-  if(edittilesheet == "keep") {
-    if(IconSheets[editItemOriginalSheet])
+  if (edittilesheet == "keep") {
+    if (IconSheets[editItemOriginalSheet])
       src = IconSheets[editItemOriginalSheet].src;
   } else {
     edittilesheet = parseInt(edittilesheet);
-    if(IconSheets[edittilesheet])
+    if (IconSheets[edittilesheet])
       src = IconSheets[edittilesheet].src;
   }
-  document.getElementById('edittilepic').style.background = "url("+src+") -"+(edittilex*16)+"px -"+(edittiley*16)+"px";
+  document.getElementById('edittilepic').style.background = "url(" + src + ") -" + (edittilex * 16) + "px -" + (edittiley * 16) + "px";
   document.getElementById('edittilesheetselect').src = src;
 }
 
@@ -177,10 +177,10 @@ function editItem(key) {
   document.getElementById('edittileimage').style.display = "none";
   document.getElementById('edittilename').value = item.name;
   document.getElementById('edittiledesc').value = item.desc;
-  switch(item.type) {
+  switch (item.type) {
     case "text":
       document.getElementById('edittiletext').style.display = "block";
-      if(item.data)
+      if (item.data)
         document.getElementById('edittiletextarea').value = item.data;
       else
         document.getElementById('edittiletextarea').value = "";
@@ -192,22 +192,22 @@ function editItem(key) {
 
     case "generic":
     case "map_tile":
-      if(item.type == "map_tile") {
+      if (item.type == "map_tile") {
         itemobj = AtomFromName(item.data);
-        if(itemobj == null) {
-          itemobj = {pic: [0, 8, 24]};
+        if (itemobj == null) {
+          itemobj = { pic: [0, 8, 24] };
         }
       } else {
-        if("pic" in item)
-          itemobj = {pic: item.pic};
+        if ("pic" in item)
+          itemobj = { pic: item.pic };
         else
-          itemobj = {pic: [0, 8, 24]};
+          itemobj = { pic: [0, 8, 24] };
       }
       editItemOriginalSheet = itemobj.pic[0];
 
       // Display all the available images assets in the user's inventory
-      var sheetselect = document.getElementById("edittilesheet"); 
-      while(sheetselect.firstChild) {
+      var sheetselect = document.getElementById("edittilesheet");
+      while (sheetselect.firstChild) {
         sheetselect.removeChild(sheetselect.firstChild);
       }
       el = document.createElement("option");
@@ -224,8 +224,8 @@ function editItem(key) {
       sheetselect.appendChild(el);
 
       // Now display everything in the inventory
-      for(var i in DBInventory) {
-        if(DBInventory[i].type == "image") {
+      for (var i in DBInventory) {
+        if (DBInventory[i].type == "image") {
           el = document.createElement("option");
           el.textContent = DBInventory[i].name;
           el.value = DBInventory[i].id;
@@ -240,7 +240,7 @@ function editItem(key) {
       document.getElementById('edittilex').value = itemobj.pic[1];
       document.getElementById('edittiley').value = itemobj.pic[2];
       var index_for_type = 0;
-      switch(itemobj.type) {
+      switch (itemobj.type) {
         case "sign":
           index_for_type = 1;
           break;
@@ -250,7 +250,7 @@ function editItem(key) {
       document.getElementById('edittileisobject').checked = !itemobj.obj;
       editItemUpdatePic();
 
-      if(IconSheets[itemobj.pic[0] || 0] != undefined)
+      if (IconSheets[itemobj.pic[0] || 0] != undefined)
         document.getElementById('edittilesheetselect').src = IconSheets[itemobj.pic[0] || 0].src;
       break;
   }
@@ -263,7 +263,7 @@ function useItem(Placed) {
   var PlayerX = PlayerWho[PlayerYou].x;
   var PlayerY = PlayerWho[PlayerYou].y;
 
-  switch(Placed.type) {
+  switch (Placed.type) {
     case "tileset": // tileset
       viewTileset(Placed);
       console.log("Open tileset thing");
@@ -271,19 +271,19 @@ function useItem(Placed) {
     case "map_tile": // object
       var ActualAtom = AtomFromName(Placed.data);
       // place the item on the ground
-      if(ActualAtom.obj) {
-        if(ActualAtom.type == AtomTypes.SIGN) {
-          Placed = {data: CloneAtom(ActualAtom)};
+      if (ActualAtom.obj) {
+        if (ActualAtom.type == AtomTypes.SIGN) {
+          Placed = { data: CloneAtom(ActualAtom) };
           Message = prompt("What should the sign say?");
-          if(Message == null)
+          if (Message == null)
             return;
           Placed.data.message = Message;
         }
         MyMap.Objs[PlayerX][PlayerY].push(Placed.data);
-        SendCmd("PUT", {pos: [PlayerX, PlayerY], obj: true, atom: MyMap.Objs[PlayerX][PlayerY]});
+        SendCmd("PUT", { pos: [PlayerX, PlayerY], obj: true, atom: MyMap.Objs[PlayerX][PlayerY] });
       } else {
         MyMap.Tiles[PlayerX][PlayerY] = Placed.data;
-        SendCmd("PUT", {pos: [PlayerX, PlayerY], obj: false, atom: MyMap.Tiles[PlayerX][PlayerY]});
+        SendCmd("PUT", { pos: [PlayerX, PlayerY], obj: false, atom: MyMap.Tiles[PlayerX][PlayerY] });
       }
       drawMap();
   }
@@ -297,7 +297,7 @@ function moveItem(id) {
   var source = document.getElementById('movesourceul');
   var target = document.getElementById('movetargetul');
 
-  while(source.firstChild) {
+  while (source.firstChild) {
     source.removeChild(source.firstChild);
   }
   source.appendChild(itemCard(id));
@@ -307,7 +307,7 @@ function moveItem(id) {
     [PlayerYou],
     {
       eventlisteners: {
-        'click': function(e, dest_id) {
+        'click': function (e, dest_id) {
           moveItemTo(id, dest_id);
           toggleDisplay(window);
         }
@@ -319,19 +319,19 @@ function moveItem(id) {
 }
 
 function moveItemTo(id, dest_id) {
-  SendCmd("BAG", {move: {id: id, folder: dest_id}});
+  SendCmd("BAG", { move: { id: id, folder: dest_id } });
 }
 
 function dropTakeItem(id) {
-  if ( id in DBInventory ) {
+  if (id in DBInventory) {
     sendChatCommand(`e ${id} drop`);
   } else {
     sendChatCommand(`e ${id} take`);
   }
 }
 
-function cloneItem(id, temporary=false) {
-  SendCmd("BAG", {clone: {id: id, temp: temporary}});
+function cloneItem(id, temporary = false) {
+  SendCmd("BAG", { clone: { id: id, temp: temporary } });
 }
 
 function deleteItem(id) {
@@ -340,34 +340,34 @@ function deleteItem(id) {
   if (
     confirm(`Really delete ${item.name} with ID ${item.id}?`)
   ) {
-    SendCmd("BAG", {delete: {id: id}});
+    SendCmd("BAG", { delete: { id: id } });
   }
 }
 
 function referenceItem(id) {
   var item = DBInventory[id] || PlayerWho[id];
-  SendCmd("BAG", {create: {name: `${item.name} (reference)`, type: "reference", data: `${id}`}});
+  SendCmd("BAG", { create: { name: `${item.name} (reference)`, type: "reference", data: `${id}` } });
 }
 
 function updateDirectionForAnim(id) {
   let dir = PlayerWho[id].dir;
-  if((dir & 1) == 0) {
+  if ((dir & 1) == 0) {
     PlayerAnimation[id].lastDirection4 = dir;
   }
-  if(dir == Directions.EAST || dir == Directions.WEST) {
+  if (dir == Directions.EAST || dir == Directions.WEST) {
     PlayerAnimation[id].lastDirectionLR = dir;
   }
 }
 
 function startPlayerWalkAnim(id) {
-  PlayerAnimation[id].walkTimer = 25+1; // 25*(20ms/1000) = 0.5
+  PlayerAnimation[id].walkTimer = 25 + 1; // 25*(20ms/1000) = 0.5
   NeedMapRedraw = true;
 }
 
 function movePlayer(id, x, y, dir) {
-  for(var index of PlayerWho[id].passengers){
-    if(x != null) {
-      if ( PlayerWho[index].is_following ) {
+  for (var index of PlayerWho[id].passengers) {
+    if (x != null) {
+      if (PlayerWho[index].is_following) {
         movePlayer(index, PlayerWho[id].x, PlayerWho[id].y, PlayerWho[id].dir);
       } else {
         movePlayer(index, x, y, dir);
@@ -375,33 +375,33 @@ function movePlayer(id, x, y, dir) {
     }
   }
 
-  if(x != null) {
+  if (x != null) {
     PlayerWho[id].x = x;
     PlayerWho[id].y = y;
     startPlayerWalkAnim(id);
   }
-  if(dir != null) {
+  if (dir != null) {
     PlayerWho[id].dir = dir;
     updateDirectionForAnim(id);
   }
 }
 
 function keyHandler(e) {
- 
+
   function ClampPlayerPos() {
-    PlayerX = Math.min(Math.max(PlayerX, 0), MyMap.Width-1);
-    PlayerY = Math.min(Math.max(PlayerY, 0), MyMap.Height-1);
+    PlayerX = Math.min(Math.max(PlayerX, 0), MyMap.Width - 1);
+    PlayerY = Math.min(Math.max(PlayerY, 0), MyMap.Height - 1);
   }
 
   var e = e || window.event;
 
   // ignore keys when typing in a textbox
-  if(document.activeElement.tagName == "INPUT" || document.activeElement.tagName == "TEXTAREA") {
-    if(document.activeElement == chatInput && e.keyCode == 13) {
+  if (document.activeElement.tagName == "INPUT" || document.activeElement.tagName == "TEXTAREA") {
+    if (document.activeElement == chatInput && e.keyCode == 13) {
       // commands that are local to the client
-      if(chatInput.value.toLowerCase() == "/clear") {
+      if (chatInput.value.toLowerCase() == "/clear") {
         chatArea.innerHTML = "";
-      } else if(chatInput.value.toLowerCase() == "/exportmap") {
+      } else if (chatInput.value.toLowerCase() == "/exportmap") {
         //logMessage('<a href="data:,'+encodeURIComponent(exportMap())+'" download="map.txt">Map download (click here)</a>', 'server_message');
 
         //from https://ourcodeworld.com/articles/read/189/how-to-create-a-file-and-generate-a-download-with-javascript-in-the-browser-without-a-server
@@ -416,10 +416,10 @@ function keyHandler(e) {
 
 
       // commands are CMD while regular room messages are MSG. /me is a room message.
-      else if(chatInput.value.slice(0,1) == "/" && chatInput.value.toLowerCase().slice(0,4) != "/me " && chatInput.value.toLowerCase().slice(0,5) != "/ooc ") {
-        SendCmd("CMD", {text: chatInput.value.slice(1)}); // remove the /
-      } else if(chatInput.value.length > 0) {
-        SendCmd("MSG", {text: chatInput.value});
+      else if (chatInput.value.slice(0, 1) == "/" && chatInput.value.toLowerCase().slice(0, 4) != "/me " && chatInput.value.toLowerCase().slice(0, 5) != "/ooc ") {
+        SendCmd("CMD", { text: chatInput.value.slice(1) }); // remove the /
+      } else if (chatInput.value.length > 0) {
+        SendCmd("MSG", { text: chatInput.value });
       } else {
         chatInput.blur();
       }
@@ -427,7 +427,7 @@ function keyHandler(e) {
       sendTyping(false);
 
       chatInput.value = "";
-    } else if(document.activeElement == chatInput && e.keyCode == 27) {
+    } else if (document.activeElement == chatInput && e.keyCode == 27) {
       // escape press
       chatInput.blur();
     }
@@ -443,24 +443,24 @@ function keyHandler(e) {
   var Bumped = false, BumpedX = null, BumpedY = null;
   var OldPlayerDir = PlayerWho[PlayerYou].dir;
 
-  if(e.keyCode == 32 || e.keyCode == 12) { // space or clear
+  if (e.keyCode == 32 || e.keyCode == 12) { // space or clear
 
-  } if(e.keyCode == 46) { // delete
+  } if (e.keyCode == 46) { // delete
     selectionDelete();
-  } else if(e.keyCode == 27) { // escape
+  } else if (e.keyCode == 27) { // escape
     MouseActive = false;
     MouseDown = false;
     panel.innerHTML = "";
     NeedMapRedraw = true;
     selectionInfoVisibility(false);
-  } else if(e.keyCode >= 48 && e.keyCode <= 57) { // 0 through 9
+  } else if (e.keyCode >= 48 && e.keyCode <= 57) { // 0 through 9
     // calculate which inventory item
     var n = e.keyCode - 48;
-    n = (n-1)%10;
-    if(n < 0)
+    n = (n - 1) % 10;
+    if (n < 0)
       n = 9;
     // if there's no item, stop
-    if(!DisplayInventory[null][n])
+    if (!DisplayInventory[null][n])
       return;
     useItem(DisplayInventory[null][n]);
   } else if (e.keyCode == 38 || e.keyCode == 87) { // up/w
@@ -506,52 +506,52 @@ function keyHandler(e) {
 
   var BeforeClampX = PlayerX, BeforeClampY = PlayerY;
   ClampPlayerPos();
-  if(PlayerX != BeforeClampX || PlayerY != BeforeClampY) {
+  if (PlayerX != BeforeClampX || PlayerY != BeforeClampY) {
     Bumped = true;
     BumpedX = BeforeClampX;
     BumpedY = BeforeClampY;
   }
 
   // Go back if the turf is solid, or if there's objects in the way
-  if(OldPlayerX != PlayerX || OldPlayerY != PlayerY) {
+  if (OldPlayerX != PlayerX || OldPlayerY != PlayerY) {
     // Check for solid objects in the way first
     for (var index in MyMap.Objs[PlayerX][PlayerY]) {
       var Obj = AtomFromName(MyMap.Objs[PlayerX][PlayerY][index]);
-      if(Obj.density) {
-        if(!Fly){
-          if(!Bumped) {
+      if (Obj.density) {
+        if (!Fly) {
+          if (!Bumped) {
             Bumped = true;
             BumpedX = PlayerX;
             BumpedY = PlayerY;
           }
           PlayerX = OldPlayerX;
-          PlayerY = OldPlayerY;          
+          PlayerY = OldPlayerY;
         }
-        if(Obj.type == AtomTypes.SIGN) {
+        if (Obj.type == AtomTypes.SIGN) {
           // Filter out HTML tag characters to prevent XSS (not needed because convertBBCode does this)
-/*
-          var Escaped = "";
-          for (var i = 0; i < Obj.message.length; i++) {
-            var c =Obj.message.charAt(i);
-            if(c == '&') {
-              Escaped += "&amp;";
-            } else if(c == '<') {
-              Escaped += "&lt;";
-            } else if(c == '>') {
-              Escaped += "&gt;";
-            } else {
-              Escaped += c;
-            }
-          }
-*/
-          logMessage(((Obj.name != "sign" && Obj.name != "") ? Obj.name + " says: " : "The sign says: ") +convertBBCode(Obj.message), "server_message");
+          /*
+                    var Escaped = "";
+                    for (var i = 0; i < Obj.message.length; i++) {
+                      var c =Obj.message.charAt(i);
+                      if(c == '&') {
+                        Escaped += "&amp;";
+                      } else if(c == '<') {
+                        Escaped += "&lt;";
+                      } else if(c == '>') {
+                        Escaped += "&gt;";
+                      } else {
+                        Escaped += c;
+                      }
+                    }
+          */
+          logMessage(((Obj.name != "sign" && Obj.name != "") ? Obj.name + " says: " : "The sign says: ") + convertBBCode(Obj.message), "server_message");
         }
         break;
       }
     }
-	// Then check for turfs
-    if(!Fly && AtomFromName(MyMap.Tiles[PlayerX][PlayerY]).density) {
-      if(!Bumped) {
+    // Then check for turfs
+    if (!Fly && AtomFromName(MyMap.Tiles[PlayerX][PlayerY]).density) {
+      if (!Bumped) {
         Bumped = true;
         BumpedX = PlayerX;
         BumpedY = PlayerY;
@@ -561,17 +561,17 @@ function keyHandler(e) {
     }
   }
 
-  if(Bumped || OldPlayerX != PlayerX || OldPlayerY != PlayerY || OldPlayerDir != PlayerDir) {
-    var Params = {'dir': PlayerDir};
-    if(e.shiftKey) {
+  if (Bumped || OldPlayerX != PlayerX || OldPlayerY != PlayerY || OldPlayerDir != PlayerDir) {
+    var Params = { 'dir': PlayerDir };
+    if (e.shiftKey) {
       SendCmd("MOV", Params);
       movePlayer(PlayerYou, null, null, PlayerDir);
     } else {
-      if(Bumped) {
+      if (Bumped) {
         Params['bump'] = [BumpedX, BumpedY];
         Params['if_map'] = CurrentMapID;
       }
-      if(PlayerX != OldPlayerX || PlayerY != OldPlayerY) {
+      if (PlayerX != OldPlayerX || PlayerY != OldPlayerY) {
         Params['from'] = [OldPlayerX, OldPlayerY];
         Params['to'] = [PlayerX, PlayerY];
       }
@@ -580,7 +580,7 @@ function keyHandler(e) {
     }
   }
 
-  if(needRedraw)
+  if (needRedraw)
     drawMap();
 }
 document.onkeydown = keyHandler;
@@ -604,86 +604,86 @@ function drawMap() {
   var ctx = canvas.getContext("2d");
 
   // Clear to black
-  ctx.fillStyle="black";
+  ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Calculate camera pixel coordinates
-  var ViewWidth = Math.floor(canvas.width/16);
-  var ViewHeight = Math.floor(canvas.height/16);
-  var PixelCameraX = Math.round(CameraX - canvas.width/2);
-  var PixelCameraY = Math.round(CameraY - canvas.height/2);
+  var ViewWidth = Math.floor(canvas.width / 16);
+  var ViewHeight = Math.floor(canvas.height / 16);
+  var PixelCameraX = Math.round(CameraX - canvas.width / 2);
+  var PixelCameraY = Math.round(CameraY - canvas.height / 2);
   var OffsetX = PixelCameraX & 15;
   var OffsetY = PixelCameraY & 15;
   var TileX = PixelCameraX >> 4;
   var TileY = PixelCameraY >> 4;
 
   var EdgeLinks = null;
-  if("edge_links" in MyMap.Info)
+  if ("edge_links" in MyMap.Info)
     EdgeLinks = MyMap.Info["edge_links"];
 
   // Render the map
-  for(x=0;x<(ViewWidth+2);x++) {
-    for(y=0;y<(ViewHeight+2);y++) {
+  for (x = 0; x < (ViewWidth + 2); x++) {
+    for (y = 0; y < (ViewHeight + 2); y++) {
       try {
         ctx.globalAlpha = 1;
-        var mapCoordX = x+TileX;
-        var mapCoordY = y+TileY;
+        var mapCoordX = x + TileX;
+        var mapCoordY = y + TileY;
         var map = MyMap;
 
         // Out-of-bounds tiles may be on another map
-        var edgeLookupIndex = (mapCoordX < 0)*1 + (mapCoordX >= MyMap.Width)*2 +
-                              (mapCoordY < 0)*4 + (mapCoordY >= MyMap.Height)*8;
-        if(edgeLookupIndex != 0) {
-          if(EdgeLinks == null)
+        var edgeLookupIndex = (mapCoordX < 0) * 1 + (mapCoordX >= MyMap.Width) * 2 +
+          (mapCoordY < 0) * 4 + (mapCoordY >= MyMap.Height) * 8;
+        if (edgeLookupIndex != 0) {
+          if (EdgeLinks == null)
             continue;
           var map = MapsByID[EdgeLinks[edgeMapLookupTable[edgeLookupIndex]]];
-          if(map == null)
+          if (map == null)
             continue;
           var gradientHorizontal = 1;
           var gradientVertical = 1;
-          if(edgeLookupIndex & 1) { // Left
-            gradientHorizontal = 0.5 - (-Math.floor(mapCoordX/2)+1) * 0.025;
+          if (edgeLookupIndex & 1) { // Left
+            gradientHorizontal = 0.5 - (-Math.floor(mapCoordX / 2) + 1) * 0.025;
             mapCoordX = map.Width + mapCoordX;
           }
-          if(edgeLookupIndex & 2) { // Right
+          if (edgeLookupIndex & 2) { // Right
             mapCoordX -= MyMap.Width;
-            gradientHorizontal = 0.5 - Math.floor(mapCoordX/2) * 0.025;
+            gradientHorizontal = 0.5 - Math.floor(mapCoordX / 2) * 0.025;
           }
-          if(edgeLookupIndex & 4) { // Above
-            gradientVertical = 0.5 - (-Math.floor(mapCoordY/2)+1) * 0.025;
+          if (edgeLookupIndex & 4) { // Above
+            gradientVertical = 0.5 - (-Math.floor(mapCoordY / 2) + 1) * 0.025;
             mapCoordY = map.Height + mapCoordY;
           }
-          if(edgeLookupIndex & 8) { // Below
+          if (edgeLookupIndex & 8) { // Below
             mapCoordY -= MyMap.Height;
-            gradientVertical = 0.5 - Math.floor(mapCoordY/2) * 0.025;
+            gradientVertical = 0.5 - Math.floor(mapCoordY / 2) * 0.025;
           }
-          if(mapCoordX < 0 || mapCoordX >= map.Width || mapCoordY < 0 || mapCoordY >= map.Height)
+          if (mapCoordX < 0 || mapCoordX >= map.Width || mapCoordY < 0 || mapCoordY >= map.Height)
             continue;
           ctx.globalAlpha = Math.max(0, Math.min(gradientHorizontal, gradientVertical));
-          if(ctx.globalAlpha == 0)
+          if (ctx.globalAlpha == 0)
             continue;
         }
 
         // Draw the turf
         var Tile = AtomFromName(map.Tiles[mapCoordX][mapCoordY]);
-        if(Tile) {
-          if(IconSheets[Tile.pic[0]])
-            ctx.drawImage(IconSheets[Tile.pic[0]], Tile.pic[1]*16, Tile.pic[2]*16, 16, 16, x*16-OffsetX, y*16-OffsetY, 16, 16);
+        if (Tile) {
+          if (IconSheets[Tile.pic[0]])
+            ctx.drawImage(IconSheets[Tile.pic[0]], Tile.pic[1] * 16, Tile.pic[2] * 16, 16, 16, x * 16 - OffsetX, y * 16 - OffsetY, 16, 16);
           else
             RequestImageIfNeeded(Tile.pic[0]);
         }
         // Draw anything above the turf
         var Objs = map.Objs[mapCoordX][mapCoordY];
-        if(Objs) {
+        if (Objs) {
           for (var index in Objs) {
             var Obj = AtomFromName(Objs[index]);
-            if(IconSheets[Obj.pic[0]])
-              ctx.drawImage(IconSheets[Obj.pic[0]], Obj.pic[1]*16, Obj.pic[2]*16, 16, 16, x*16-OffsetX, y*16-OffsetY, 16, 16);
+            if (IconSheets[Obj.pic[0]])
+              ctx.drawImage(IconSheets[Obj.pic[0]], Obj.pic[1] * 16, Obj.pic[2] * 16, 16, 16, x * 16 - OffsetX, y * 16 - OffsetY, 16, 16);
             else
               RequestImageIfNeeded(Obj.pic[0]);
           }
         }
-      } catch(error) {
+      } catch (error) {
       }
     }
   }
@@ -691,12 +691,12 @@ function drawMap() {
   ctx.globalAlpha = 1;
 
   // Draw the map link edges
-  if(EdgeLinks != null) {
+  if (EdgeLinks != null) {
     ctx.beginPath();
     ctx.globalAlpha = 0.5;
     ctx.lineWidth = "2";
     ctx.strokeStyle = "green";
-    ctx.rect(0-PixelCameraX, 0-PixelCameraY, MyMap.Width*16, MyMap.Height*16);
+    ctx.rect(0 - PixelCameraX, 0 - PixelCameraY, MyMap.Width * 16, MyMap.Height * 16);
     ctx.stroke();
     ctx.globalAlpha = 1;
   }
@@ -705,7 +705,7 @@ function drawMap() {
 
   function draw32x32Player(who, frameX, frameY) {
     var Mob = PlayerWho[index];
-    ctx.drawImage(PlayerImages[who], frameX*32, frameY*32, 32, 32, (Mob.x*16-8)-PixelCameraX, (Mob.y*16-16)-PixelCameraY, 32, 32);
+    ctx.drawImage(PlayerImages[who], frameX * 32, frameY * 32, 32, 32, (Mob.x * 16 - 8) - PixelCameraX, (Mob.y * 16 - 16) - PixelCameraY, 32, 32);
   }
 
   var sortedPlayers = [];
@@ -723,109 +723,109 @@ function drawMap() {
   );
 
   for (var sort_n in sortedPlayers) {
-   try {
-    var index = sortedPlayers[sort_n];
+    try {
+      var index = sortedPlayers[sort_n];
 
-    var IsMousedOver = false;
-    for (var look=0; look<MousedOverPlayers.length; look++) {
-      if(MousedOverPlayers[look] == index) {
-        IsMousedOver = true;
-        break;
+      var IsMousedOver = false;
+      for (var look = 0; look < MousedOverPlayers.length; look++) {
+        if (MousedOverPlayers[look] == index) {
+          IsMousedOver = true;
+          break;
+        }
       }
-    }
 
-    var Mob = PlayerWho[index];
-    var playerIs16x16 = false;
-    if(index in PlayerImages) {
-      let tilesetWidth = PlayerImages[index].naturalWidth;
-      let tilesetHeight = PlayerImages[index].naturalHeight;
-      if(tilesetWidth == 32 && tilesetHeight == 32) {
-        draw32x32Player(index, 0, 0);
-      } else if(tilesetWidth == 16 && tilesetHeight == 16) {
-        ctx.drawImage(PlayerImages[index], 0, 0, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
+      var Mob = PlayerWho[index];
+      var playerIs16x16 = false;
+      if (index in PlayerImages) {
+        let tilesetWidth = PlayerImages[index].naturalWidth;
+        let tilesetHeight = PlayerImages[index].naturalHeight;
+        if (tilesetWidth == 32 && tilesetHeight == 32) {
+          draw32x32Player(index, 0, 0);
+        } else if (tilesetWidth == 16 && tilesetHeight == 16) {
+          ctx.drawImage(PlayerImages[index], 0, 0, 16, 16, (Mob.x * 16) - PixelCameraX, (Mob.y * 16) - PixelCameraY, 16, 16);
+          playerIs16x16 = true;
+        } else {
+          let frameX = 0, frameY = 0;
+          let frameCountFromAnimationTick = Math.floor(AnimationTick / 5);
+          let isWalking = PlayerAnimation[index].walkTimer != 0;
+
+          switch (tilesetHeight / 32) { // Directions
+            case 2:
+              frameY = Math.floor(PlayerAnimation[index].lastDirectionLR / 4);
+              break;
+            case 4:
+              frameY = Math.floor(PlayerAnimation[index].lastDirection4 / 2);
+              break;
+            case 8:
+              frameY = Mob.dir;
+              break;
+          }
+
+          switch (tilesetWidth / 32) { // Frames per direction
+            case 2:
+              frameX = isWalking * 1;
+              break;
+            case 4:
+              frameX = (isWalking * 2) + (frameCountFromAnimationTick & 1);
+              break;
+            case 6:
+              frameX = (isWalking * 3) + (frameCountFromAnimationTick % 3);
+              break;
+            case 8:
+              frameX = (isWalking * 4) + (frameCountFromAnimationTick & 3);
+              break;
+          }
+
+          draw32x32Player(index, frameX, frameY);
+          //      } else { // Sheet of 32x32 images
+          //        ctx.drawImage(PlayerImages[index], Mob.pic[1]*32, Mob.pic[2]*32, 32, 32, (Mob.x*16-8)-PixelCameraX, (Mob.y*16-16)-PixelCameraY, 32, 32);
+        }
+
+      } else {
+        pic = Mob.pic;
+        if (pic == null)
+          pic = [0, 8, 24];
+        if (pic[0] in IconSheets)
+          ctx.drawImage(IconSheets[pic[0]], pic[1] * 16, pic[2] * 16, 16, 16, (Mob.x * 16) - PixelCameraX, (Mob.y * 16) - PixelCameraY, 16, 16);
         playerIs16x16 = true;
-      } else {
-        let frameX = 0, frameY = 0;
-        let frameCountFromAnimationTick = Math.floor(AnimationTick / 5);
-        let isWalking = PlayerAnimation[index].walkTimer != 0;
-
-        switch(tilesetHeight / 32) { // Directions
-          case 2:
-            frameY = Math.floor(PlayerAnimation[index].lastDirectionLR / 4);
-            break;
-          case 4:
-            frameY = Math.floor(PlayerAnimation[index].lastDirection4 / 2);
-            break;
-          case 8:
-            frameY = Mob.dir;
-            break;
-        }
-
-        switch(tilesetWidth / 32) { // Frames per direction
-          case 2:
-            frameX = isWalking * 1;
-            break;
-          case 4:
-            frameX = (isWalking*2) + (frameCountFromAnimationTick&1);
-            break;
-          case 6:
-            frameX = (isWalking*3) + (frameCountFromAnimationTick%3);
-            break;
-          case 8:
-            frameX = (isWalking*4) + (frameCountFromAnimationTick&3);
-            break;
-        }
-
-        draw32x32Player(index, frameX, frameY);
-//      } else { // Sheet of 32x32 images
-//        ctx.drawImage(PlayerImages[index], Mob.pic[1]*32, Mob.pic[2]*32, 32, 32, (Mob.x*16-8)-PixelCameraX, (Mob.y*16-16)-PixelCameraY, 32, 32);
       }
 
-    } else {
-      pic = Mob.pic;
-      if(pic == null)
-        pic = [0, 8, 24];
-      if(pic[0] in IconSheets)
-        ctx.drawImage(IconSheets[pic[0]], pic[1]*16, pic[2]*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY, 16, 16);
-      playerIs16x16 = true;
-    }
+      var heightForPlayerStatus = (playerIs16x16 ? 16 : 28);
 
-    var heightForPlayerStatus = (playerIs16x16 ? 16 : 28);
-
-    // typing indicators
-    if(Mob.typing) {
-      ctx.drawImage(IconSheets[0], 0, 24*16, 16, 16, (Mob.x*16)-PixelCameraX, (Mob.y*16)-PixelCameraY-heightForPlayerStatus, 16, 16);
-    }
-
-    // carry text and nametags
-    if(IsMousedOver && !(!Mob.is_following && Mob.vehicle)) {
-      if(Mob.passengers.length > 0) {
-        drawText(ctx, (Mob.x*16)-PixelCameraX-(Mob.name.length * 8 / 2 - 8), (Mob.y*16)-PixelCameraY-heightForPlayerStatus-8, Mob.name);
-        var carryNames = [];
-        for(var passenger_index of Mob.passengers) {
-          carryNames.push(PlayerWho[passenger_index].username);
-        }
-        var carryText = "carrying: " + carryNames.join(", ");
-
-        drawText(ctx, (Mob.x*16)-PixelCameraX-(carryText.length * 8 / 2 - 8), (Mob.y*16)-PixelCameraY-heightForPlayerStatus, carryText);
-      } else {
-        drawText(ctx, (Mob.x*16)-PixelCameraX-(Mob.name.length * 8 / 2 - 8), (Mob.y*16)-PixelCameraY-heightForPlayerStatus, Mob.name);
+      // typing indicators
+      if (Mob.typing) {
+        ctx.drawImage(IconSheets[0], 0, 24 * 16, 16, 16, (Mob.x * 16) - PixelCameraX, (Mob.y * 16) - PixelCameraY - heightForPlayerStatus, 16, 16);
       }
+
+      // carry text and nametags
+      if (IsMousedOver && !(!Mob.is_following && Mob.vehicle)) {
+        if (Mob.passengers.length > 0) {
+          drawText(ctx, (Mob.x * 16) - PixelCameraX - (Mob.name.length * 8 / 2 - 8), (Mob.y * 16) - PixelCameraY - heightForPlayerStatus - 8, Mob.name);
+          var carryNames = [];
+          for (var passenger_index of Mob.passengers) {
+            carryNames.push(PlayerWho[passenger_index].username);
+          }
+          var carryText = "carrying: " + carryNames.join(", ");
+
+          drawText(ctx, (Mob.x * 16) - PixelCameraX - (carryText.length * 8 / 2 - 8), (Mob.y * 16) - PixelCameraY - heightForPlayerStatus, carryText);
+        } else {
+          drawText(ctx, (Mob.x * 16) - PixelCameraX - (Mob.name.length * 8 / 2 - 8), (Mob.y * 16) - PixelCameraY - heightForPlayerStatus, Mob.name);
+        }
+      }
+    } catch (error) {
     }
-   } catch (error) {
-   }
   }
 
   // Draw a mouse selection if there is one
-  if(MouseActive) {
+  if (MouseActive) {
     ctx.beginPath();
-    ctx.lineWidth="4";
-    ctx.strokeStyle=(MouseDown)?"#ff00ff":"#00ffff";
-    var AX = Math.min(MouseStartX, MouseEndX)*16+4;
-    var AY = Math.min(MouseStartY, MouseEndY)*16+4;
-    var BX = Math.max(MouseStartX, MouseEndX)*16+12;
-    var BY = Math.max(MouseStartY, MouseEndY)*16+12;
-    ctx.rect(AX-PixelCameraX, AY-PixelCameraY, BX-AX, BY-AY);
+    ctx.lineWidth = "4";
+    ctx.strokeStyle = (MouseDown) ? "#ff00ff" : "#00ffff";
+    var AX = Math.min(MouseStartX, MouseEndX) * 16 + 4;
+    var AY = Math.min(MouseStartY, MouseEndY) * 16 + 4;
+    var BX = Math.max(MouseStartX, MouseEndX) * 16 + 12;
+    var BY = Math.max(MouseStartY, MouseEndY) * 16 + 12;
+    ctx.rect(AX - PixelCameraX, AY - PixelCameraY, BX - AX, BY - AY);
     ctx.stroke();
   }
 
@@ -833,11 +833,11 @@ function drawMap() {
 
 function drawText(ctx, x, y, text) {
   var chicago = document.getElementById("chicago");
-  for(var i=0; i<text.length; i++) {
-    var chr = text.charCodeAt(i)-0x20;
-    var srcX = chr&15;
-    var srcY = chr>>4;
-    ctx.drawImage(chicago, srcX*8, srcY*8, 8, 8, x+i*8, y, 8, 8);
+  for (var i = 0; i < text.length; i++) {
+    var chr = text.charCodeAt(i) - 0x20;
+    var srcX = chr & 15;
+    var srcY = chr >> 4;
+    ctx.drawImage(chicago, srcX * 8, srcY * 8, 8, 8, x + i * 8, y, 8, 8);
   }
 }
 
@@ -851,35 +851,35 @@ function drawSelector() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // Draw ten inventory items
-  var oneWidth = canvas.width/10;
-  for(var i=0; i<10; i++) {
-    drawText(ctx, i*oneWidth, 0, ((i+1)%10)+"");
-// TODO: figure out what to display down here later?
-//    var item = AtomFromName(DisplayInventory[null][i]);
-//    if(item) {
-//      ctx.drawImage(IconSheets[item.pic[0]], item.pic[1]*16, item.pic[2]*16, 16, 16, i*oneWidth+16, 0, 16, 16);
-//    }
+  var oneWidth = canvas.width / 10;
+  for (var i = 0; i < 10; i++) {
+    drawText(ctx, i * oneWidth, 0, ((i + 1) % 10) + "");
+    // TODO: figure out what to display down here later?
+    //    var item = AtomFromName(DisplayInventory[null][i]);
+    //    if(item) {
+    //      ctx.drawImage(IconSheets[item.pic[0]], item.pic[1]*16, item.pic[2]*16, 16, 16, i*oneWidth+16, 0, 16, 16);
+    //    }
   }
 }
 
 function tickWorld() {
-  if(NeedInventoryUpdate) {
-    DisplayInventory = {null: []};
+  if (NeedInventoryUpdate) {
+    DisplayInventory = { null: [] };
 
-    for(var key in DBInventory) {
-      if(DBInventory[key].type == "map_tile" || DBInventory[key].type == "tileset") { // object or tileset
-        if(typeof DBInventory[key].data == "string" &&
+    for (var key in DBInventory) {
+      if (DBInventory[key].type == "map_tile" || DBInventory[key].type == "tileset") { // object or tileset
+        if (typeof DBInventory[key].data == "string" &&
           (DBInventory[key].data[0] == '[' || DBInventory[key].data[0] == '{')) // convert from JSON if needed
           DBInventory[key].data = JSON.parse(DBInventory[key].data);
       }
 
       let updated = DBInventory[key];
-      if(updated.folder == PlayerYou)
+      if (updated.folder == PlayerYou)
         updated.folder = null;
 
       // always reload the picture, for now
-      if(true) {
-        switch(updated.type) {
+      if (true) {
+        switch (updated.type) {
           default: // dummy
             updated.pic = [0, 8, 24];
             break;
@@ -888,55 +888,55 @@ function tickWorld() {
             // (it won't be for players in other maps)
             var is_custom = updated.pic != null && typeof updated.pic[0] == "string";
             if ((!(updated.id in PlayerImages) && is_custom) ||
-                (updated.id in PlayerImages && PlayerImages[updated.id].src != updated.pic[0] && is_custom)) {
+              (updated.id in PlayerImages && PlayerImages[updated.id].src != updated.pic[0] && is_custom)) {
               var img = new Image();
               img.src = pic[0];
               PlayerImages[key] = img;
             }
             break;
           case "generic":
-            if(updated.pic == null)
+            if (updated.pic == null)
               updated.pic = [0, 8, 24];
             break;
           case "map_tile": // object
             // allow for string data like "grass"
             var temp = AtomFromName(updated.data);
-            if(temp && temp.pic) {
+            if (temp && temp.pic) {
               updated.pic = temp.pic;
             } else {
               updated.pic = [0, 8, 24];
             }
             break;
           case "text":
-            if(updated.pic == null)
+            if (updated.pic == null)
               updated.pic = [0, 0, 24];
             break;
           case "image":
-            if(updated.pic == null)
+            if (updated.pic == null)
               updated.pic = [0, 11, 20];
             break;
           case "tileset":
-            if(updated.pic == null)
+            if (updated.pic == null)
               updated.pic = [0, 19, 18];
             break;
           case "reference":
-            if(updated.pic == null)
+            if (updated.pic == null)
               updated.pic = [0, 9, 22];
             break;
         }
       }
 
       // add to DisplayInventory
-      if(updated.folder in DisplayInventory) {
+      if (updated.folder in DisplayInventory) {
         DisplayInventory[updated.folder].push(key);
       } else {
         DisplayInventory[updated.folder] = [key];
       }
     }
-  
+
     // sort by name or date later
-    for(var key in DisplayInventory) {
-      DisplayInventory[key].sort(function(a, b){return a - b});
+    for (var key in DisplayInventory) {
+      DisplayInventory[key].sort(function (a, b) { return a - b });
     }
 
     updateInventoryUL();
@@ -944,77 +944,77 @@ function tickWorld() {
   }
 
   // Tick each player's animation timer
-  for(var id in PlayerAnimation) {
-    if(PlayerAnimation[id].walkTimer) {
+  for (var id in PlayerAnimation) {
+    if (PlayerAnimation[id].walkTimer) {
       PlayerAnimation[id].walkTimer--;
-      if(!PlayerAnimation[id].walkTimer) {
+      if (!PlayerAnimation[id].walkTimer) {
         needMapRedraw = true;
       }
     }
   }
 
-/*
-  var Under = MyMap.Tiles[PlayerX][PlayerY];
-  if(!(TickCounter & 0x03)) {
-    if(Under.type == AtomTypes.ICE) {
-      PlayerX += DirX[PlayerDir];
-      PlayerY += DirY[PlayerDir];
-      ClampPlayerPos();
-      NeedMapRedraw = true;
-    } else if(Under.type == AtomTypes.ESCALATOR) {
-      PlayerX += DirX[Under.dir];
-      PlayerY += DirY[Under.dir];
-      PlayerDir = Under.dir;
-      ClampPlayerPos();
-      NeedMapRedraw = true;
+  /*
+    var Under = MyMap.Tiles[PlayerX][PlayerY];
+    if(!(TickCounter & 0x03)) {
+      if(Under.type == AtomTypes.ICE) {
+        PlayerX += DirX[PlayerDir];
+        PlayerY += DirY[PlayerDir];
+        ClampPlayerPos();
+        NeedMapRedraw = true;
+      } else if(Under.type == AtomTypes.ESCALATOR) {
+        PlayerX += DirX[Under.dir];
+        PlayerY += DirY[Under.dir];
+        PlayerDir = Under.dir;
+        ClampPlayerPos();
+        NeedMapRedraw = true;
+      }
     }
-  }
-*/
+  */
 
-  var TargetCameraX = (PlayerWho[PlayerYou].x*16+8);
-  var TargetCameraY = (PlayerWho[PlayerYou].y*16+8);
+  var TargetCameraX = (PlayerWho[PlayerYou].x * 16 + 8);
+  var TargetCameraY = (PlayerWho[PlayerYou].y * 16 + 8);
   var CameraDifferenceX = TargetCameraX - CameraX;
   var CameraDifferenceY = TargetCameraY - CameraY;
-  var CameraDistance = Math.sqrt(CameraDifferenceX*CameraDifferenceX + CameraDifferenceY*CameraDifferenceY);
-  if(CameraDistance > 0.5) {
+  var CameraDistance = Math.sqrt(CameraDifferenceX * CameraDifferenceX + CameraDifferenceY * CameraDifferenceY);
+  if (CameraDistance > 0.5) {
     var DivideBy = 16;
     var AdjustX = (TargetCameraX - CameraX) / DivideBy;
     var AdjustY = (TargetCameraY - CameraY) / DivideBy;
 
-    if(Math.abs(AdjustX) > 0.1)
+    if (Math.abs(AdjustX) > 0.1)
       CameraX += AdjustX;
-    if(Math.abs(AdjustY) > 0.1)
+    if (Math.abs(AdjustY) > 0.1)
       CameraY += AdjustY;
 
-    if(!CameraAlwaysCenter) {
+    if (!CameraAlwaysCenter) {
       var EdgeLinks = null;
-      if("edge_links" in MyMap.Info)
+      if ("edge_links" in MyMap.Info)
         EdgeLinks = MyMap.Info["edge_links"];
 
-      var PixelCameraX = Math.round(CameraX - mapCanvas.width/2);
-      var PixelCameraY = Math.round(CameraY - mapCanvas.height/2);
-      if(PixelCameraX < 0 && (!EdgeLinks || !EdgeLinks[4]))
+      var PixelCameraX = Math.round(CameraX - mapCanvas.width / 2);
+      var PixelCameraY = Math.round(CameraY - mapCanvas.height / 2);
+      if (PixelCameraX < 0 && (!EdgeLinks || !EdgeLinks[4]))
         CameraX -= PixelCameraX;
-      if(PixelCameraY < 0 && (!EdgeLinks || !EdgeLinks[6]))
+      if (PixelCameraY < 0 && (!EdgeLinks || !EdgeLinks[6]))
         CameraY -= PixelCameraY;
-      if((PixelCameraX + mapCanvas.width > MyMap.Width*16) && (!EdgeLinks || !EdgeLinks[0])) {
-        CameraX -= (PixelCameraX + mapCanvas.width) - MyMap.Width*16;
+      if ((PixelCameraX + mapCanvas.width > MyMap.Width * 16) && (!EdgeLinks || !EdgeLinks[0])) {
+        CameraX -= (PixelCameraX + mapCanvas.width) - MyMap.Width * 16;
       }
-      if((PixelCameraY + mapCanvas.height > MyMap.Height*16) && (!EdgeLinks || !EdgeLinks[2])) {
-        CameraY -= (PixelCameraY + mapCanvas.height) - MyMap.Height*16;
+      if ((PixelCameraY + mapCanvas.height > MyMap.Height * 16) && (!EdgeLinks || !EdgeLinks[2])) {
+        CameraY -= (PixelCameraY + mapCanvas.height) - MyMap.Height * 16;
       }
 
-      if(MyMap.Width*16 <= mapCanvas.width) {
-        CameraX = MyMap.Width*16/2;
+      if (MyMap.Width * 16 <= mapCanvas.width) {
+        CameraX = MyMap.Width * 16 / 2;
       }
-      if(MyMap.Height*16 <= mapCanvas.height) {
-        CameraY = MyMap.Height*16/2;
+      if (MyMap.Height * 16 <= mapCanvas.height) {
+        CameraY = MyMap.Height * 16 / 2;
       }
     }
     drawMap();
-  } else if(AnimationTick % 5 == 0) { // every 0.1 seconds
+  } else if (AnimationTick % 5 == 0) { // every 0.1 seconds
     drawMap();
-  } else if(NeedMapRedraw) {
+  } else if (NeedMapRedraw) {
     drawMap();
   }
 
@@ -1024,28 +1024,28 @@ function tickWorld() {
 }
 
 function selectionCopy() {
-  if(!MouseActive)
+  if (!MouseActive)
     return;
 
 }
 
 function selectionDelete() {
-  if(!MouseActive)
+  if (!MouseActive)
     return;
   var DeleteTurfs = document.getElementById("turfselect").checked;
   var DeleteObjs = document.getElementById("objselect").checked;
 
-  for(var x=MouseStartX; x<=MouseEndX; x++) {
-    for(var y=MouseStartY; y<=MouseEndY; y++) {
-      if(x < 0 || x > MyMap.Width || y < 0 || y > MyMap.Height)
+  for (var x = MouseStartX; x <= MouseEndX; x++) {
+    for (var y = MouseStartY; y <= MouseEndY; y++) {
+      if (x < 0 || x > MyMap.Width || y < 0 || y > MyMap.Height)
         continue;
-      if(DeleteTurfs)
+      if (DeleteTurfs)
         MyMap.Tiles[x][y] = MyMap.Info['default'];
-      if(DeleteObjs)
-        MyMap.Objs[x][y] = [];        
+      if (DeleteObjs)
+        MyMap.Objs[x][y] = [];
     }
   }
-  SendCmd("DEL", {pos: [MouseStartX, MouseStartY, MouseEndX, MouseEndY], turf: DeleteTurfs, obj: DeleteObjs});
+  SendCmd("DEL", { pos: [MouseStartX, MouseStartY, MouseEndX, MouseEndY], turf: DeleteTurfs, obj: DeleteObjs });
 
   MouseActive = false;
   NeedMapRedraw = true;
@@ -1053,8 +1053,8 @@ function selectionDelete() {
 }
 
 function selectionInfoVisibility(visibility) {
-  document.getElementById("selectionInfo").style.display = visibility?'block':'none';
-  if(!visibility)
+  document.getElementById("selectionInfo").style.display = visibility ? 'block' : 'none';
+  if (!visibility)
     panel.innerHTML = "";
 }
 
@@ -1067,20 +1067,20 @@ function selectionInfoVisibility(visibility) {
 function getExactPosition(el) {
   var xPosition = 0;
   var yPosition = 0;
- 
+
   while (el) {
     if (el.tagName == "BODY") {
       // deal with browser quirks with body/window/document and page scroll
       var xScrollPos = el.scrollLeft || document.documentElement.scrollLeft;
       var yScrollPos = el.scrollTop || document.documentElement.scrollTop;
- 
+
       xPosition += (el.offsetLeft - xScrollPos + el.clientLeft);
       yPosition += (el.offsetTop - yScrollPos + el.clientTop);
     } else {
       xPosition += (el.offsetLeft - el.scrollLeft + el.clientLeft);
       yPosition += (el.offsetTop - el.scrollTop + el.clientTop);
     }
- 
+
     el = el.offsetParent;
   }
   return {
@@ -1092,8 +1092,8 @@ function getExactPosition(el) {
 function getMousePosRaw(canvas, evt) {
   var rect = getExactPosition(canvas);
   return {
-    x: (evt.clientX - rect.x)|0,
-    y: (evt.clientY - rect.y)|0
+    x: (evt.clientX - rect.x) | 0,
+    y: (evt.clientY - rect.y) | 0
   };
 }
 
@@ -1101,17 +1101,17 @@ function getMousePos(canvas, evt) {
   var rect = getExactPosition(canvas);
 
   return {
-    x: ((evt.clientX - rect.x)/CameraScale)|0,
-    y: ((evt.clientY - rect.y)/CameraScale)|0
+    x: ((evt.clientX - rect.x) / CameraScale) | 0,
+    y: ((evt.clientY - rect.y) / CameraScale) | 0
   };
 }
 
 function getTilePos(evt) {
-  var PixelCameraX = Math.round(CameraX - mapCanvas.width/2);
-  var PixelCameraY = Math.round(CameraY - mapCanvas.height/2);
+  var PixelCameraX = Math.round(CameraX - mapCanvas.width / 2);
+  var PixelCameraY = Math.round(CameraY - mapCanvas.height / 2);
   var pos = getMousePos(mapCanvas, evt);
-  pos.x = (pos.x + PixelCameraX)>>4;
-  pos.y = (pos.y + PixelCameraY)>>4;
+  pos.x = (pos.x + PixelCameraX) >> 4;
+  pos.y = (pos.y + PixelCameraY) >> 4;
   return pos;
 }
 
@@ -1129,7 +1129,7 @@ function zoomOut() {
 
 function updateZoomLevelDisplay() {
   let readout = document.querySelector('#zoomlevel');
-  let inButt  = document.querySelector('#zoomin');
+  let inButt = document.querySelector('#zoomin');
   let outButt = document.querySelector('#zoomout');
 
   readout.innerText = `${CameraScale.toFixed(2)}x`
@@ -1149,15 +1149,15 @@ function updateZoomLevelDisplay() {
 function initMouse() {
   var edittilesheetselect = document.getElementById("edittilesheetselect");
 
-  edittilesheetselect.addEventListener('mousedown', function(evt) {
+  edittilesheetselect.addEventListener('mousedown', function (evt) {
     // update to choose the selected tile
     document.getElementById('edittilex').value = (evt.clientX - evt.target.getBoundingClientRect().x) >> 4;
     document.getElementById('edittiley').value = (evt.clientY - evt.target.getBoundingClientRect().y) >> 4;
     editItemUpdatePic();
   }, false);
 
-  mapCanvas.addEventListener('mousedown', function(evt) {
-    if(evt.button == 2)
+  mapCanvas.addEventListener('mousedown', function (evt) {
+    if (evt.button == 2)
       return;
     panel.innerHTML = "";
     var pos = getTilePos(evt);
@@ -1171,8 +1171,8 @@ function initMouse() {
     selectionInfoVisibility(false);
   }, false);
 
-  mapCanvas.addEventListener('mouseup', function(evt) {
-    if(evt.button == 2)
+  mapCanvas.addEventListener('mouseup', function (evt) {
+    if (evt.button == 2)
       return;
     MouseDown = false;
     NeedMapRedraw = true;
@@ -1187,7 +1187,7 @@ function initMouse() {
     MouseEndX = BX;
     MouseEndY = BY;
 
-    var panelHTML = (BX-AX+1)+"x"+(BY-AY+1)+"<br>";
+    var panelHTML = (BX - AX + 1) + "x" + (BY - AY + 1) + "<br>";
     updateSelectedObjectsUL();
 
     selectionInfoVisibility(true);
@@ -1197,7 +1197,7 @@ function initMouse() {
 
 
 
-  mapCanvas.addEventListener('wheel', function(event) {
+  mapCanvas.addEventListener('wheel', function (event) {
     event.preventDefault();
 
     CameraScale += event.deltaY * -0.01;
@@ -1209,29 +1209,29 @@ function initMouse() {
     resizeCanvas();
   }, false);
 
-  mapCanvas.addEventListener('mousemove', function(evt) {
+  mapCanvas.addEventListener('mousemove', function (evt) {
     var pos = getTilePos(evt);
     MouseNowX = pos.x;
-	MouseNowY = pos.y;
+    MouseNowY = pos.y;
     // record the nearby players
     var Around = PlayersAroundTile(MouseNowX, MouseNowY, 2);
-    if(MousedOverPlayers.length != Around.length) {
+    if (MousedOverPlayers.length != Around.length) {
       NeedMapRedraw = true;
     }
     MousedOverPlayers = Around;
 
-    if(!MouseDown)
+    if (!MouseDown)
       return;
-    if(pos.x != MouseEndX || pos.y != MouseEndY)
+    if (pos.x != MouseEndX || pos.y != MouseEndY)
       NeedMapRedraw = true;
     MouseEndX = pos.x;
     MouseEndY = pos.y;
   }, false);
 }
 
-function viewInit() {  
+function viewInit() {
   var selector = document.getElementById("selector");
-  selector.width = Math.max(240, parseInt(mapCanvas.style.width))+"";
+  selector.width = Math.max(240, parseInt(mapCanvas.style.width)) + "";
   drawSelector();
   NeedMapRedraw = true;
 }
@@ -1243,16 +1243,16 @@ function redrawBuildCanvas() {
   var BuildWidth = 16;
 
   var len = Object.keys(PredefinedArray).length;
-  canvas.width = (BuildWidth*16)+"";
-  canvas.height = (Math.ceil(len/BuildWidth)*16)+"";
+  canvas.width = (BuildWidth * 16) + "";
+  canvas.height = (Math.ceil(len / BuildWidth) * 16) + "";
   var ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   var count = 0;
-  for(var i in PredefinedArray) {
+  for (var i in PredefinedArray) {
     var item = PredefinedArray[i];
-    if(item.pic[0] in IconSheets)
-      ctx.drawImage(IconSheets[item.pic[0]], item.pic[1]*16, item.pic[2]*16, 16, 16, (count%BuildWidth)*16, Math.floor(count/BuildWidth)*16, 16, 16);
+    if (item.pic[0] in IconSheets)
+      ctx.drawImage(IconSheets[item.pic[0]], item.pic[1] * 16, item.pic[2] * 16, 16, 16, (count % BuildWidth) * 16, Math.floor(count / BuildWidth) * 16, 16, 16);
     count++;
   }
 }
@@ -1263,16 +1263,16 @@ function initBuild() {
   var canvas = document.getElementById('inventoryCanvas');
   var BuildWidth = 16;
 
-  canvas.addEventListener('mousedown', function(evt) {
+  canvas.addEventListener('mousedown', function (evt) {
     var pos = getMousePosRaw(inventoryCanvas, evt);
     pos.x = pos.x >> 4;
     pos.y = pos.y >> 4;
     var index = pos.y * BuildWidth + pos.x;
 
-    if(evt.button == 0)
-      useItem({type: 'map_tile', data: PredefinedArrayNames[index]});
-//      else if(evt.button == 2)
-//        addInventory(PredefinedArrayNames[index]);
+    if (evt.button == 0)
+      useItem({ type: 'map_tile', data: PredefinedArrayNames[index] });
+    //      else if(evt.button == 2)
+    //        addInventory(PredefinedArrayNames[index]);
   }, false);
 }
 
@@ -1284,7 +1284,7 @@ function initWorld() {
   mapCanvas = document.getElementById("map");
 
   chatInput.addEventListener('input', function (evt) {
-    if(this.value.length > 0){
+    if (this.value.length > 0) {
       sendTyping(true);
     }
   });
@@ -1309,7 +1309,7 @@ function initWorld() {
   initBuild();
 
   window.setInterval(tickWorld, 20);
-  if(OnlineServer) {
+  if (OnlineServer) {
     ConnectToServer();
   }
 
@@ -1325,16 +1325,16 @@ function initWorld() {
     let mapbtn = document.getElementById("navmap");
     let span = document.getElementsByClassName("modalclose");
 
-    btn.onclick = function() {
+    btn.onclick = function () {
       modal.style.display = "block";
     }
 
-    mapbtn.onclick = function() {
+    mapbtn.onclick = function () {
       mapmodal.style.display = "block";
     }
 
-    for(var i=0; i<span.length; i++) {
-      span[i].onclick = function() {
+    for (var i = 0; i < span.length; i++) {
+      span[i].onclick = function () {
         modal.style.display = "none";
         newitemmodal.style.display = "none";
         itemmodal.style.display = "none";
@@ -1342,15 +1342,15 @@ function initWorld() {
       }
     }
 
-    window.onclick = function(event) {
+    window.onclick = function (event) {
       if (event.target == modal) {
-          modal.style.display = "none";
+        modal.style.display = "none";
       }
       if (event.target == newitemmodal) {
-          newitemmodal.style.display = "none";
+        newitemmodal.style.display = "none";
       }
       if (event.target == mapmodal) {
-          mapmodal.style.display = "none";
+        mapmodal.style.display = "none";
       }
     }
   }
@@ -1374,9 +1374,9 @@ function rightClick(evt) {
 
 function viewOptions() {
   var options = document.getElementById("options");
-  var Hidden = (options.style.display=='none');
-  document.getElementById("navoptions").setAttribute("class", Hidden?"navactive":"");
-  options.style.display = Hidden?'block':'none';
+  var Hidden = (options.style.display == 'none');
+  document.getElementById("navoptions").setAttribute("class", Hidden ? "navactive" : "");
+  options.style.display = Hidden ? 'block' : 'none';
 }
 
 // options!
@@ -1389,7 +1389,7 @@ function itemCardList(ul, ids, options = {}) {
   var openFolders = [];
 
   // Empty out the list
-  while(ul.firstChild) {
+  while (ul.firstChild) {
     ul.removeChild(ul.firstChild);
   }
 
@@ -1397,7 +1397,7 @@ function itemCardList(ul, ids, options = {}) {
     openFolders[id] = true;
 
     // Empty out the list
-    while(list.firstChild) {
+    while (list.firstChild) {
       list.removeChild(list.firstChild);
     }
 
@@ -1408,7 +1408,7 @@ function itemCardList(ul, ids, options = {}) {
     let newitem = document.createElement("li");
     newitem.appendChild(document.createTextNode("hide contents"));
     newitem.classList.add('inventoryli', 'inventorymeta');
-    newitem.onclick = function(){
+    newitem.onclick = function () {
       collapseFolder(list, id);
 
       let item = DBInventory[id] || PlayerWho[id];
@@ -1423,7 +1423,7 @@ function itemCardList(ul, ids, options = {}) {
     openFolders[id] = false;
 
     // Empty out the list
-    while(list.firstChild) {
+    while (list.firstChild) {
       list.removeChild(list.firstChild);
     }
 
@@ -1431,7 +1431,7 @@ function itemCardList(ul, ids, options = {}) {
     let newitem = document.createElement("li");
     newitem.appendChild(document.createTextNode("show contents"));
     newitem.classList.add('inventoryli', 'inventorymeta');
-    newitem.onclick = function(){
+    newitem.onclick = function () {
       expandFolder(list, id);
 
       let item = DBInventory[id] || PlayerWho[id];
@@ -1444,14 +1444,14 @@ function itemCardList(ul, ids, options = {}) {
 
   // Recursively make the tree with unordered lists
   function addItems(list, ids) {
-    for(let id of ids) {
+    for (let id of ids) {
       if (options?.hidden_ids?.includes(id)) { continue; }
-
+      0
       let item = DBInventory[id] || PlayerWho[id];
       let li = itemCard(id);
 
-      for(let type in options?.eventlisteners){
-        li.addEventListener(type, function(e){
+      for (let type in options?.eventlisteners) {
+        li.addEventListener(type, function (e) {
           return options?.eventlisteners[type](e, id);
         });
       }
@@ -1472,7 +1472,7 @@ function itemCardList(ul, ids, options = {}) {
 
         // on "use" for folder items
         if (item.type == "folder") {
-          li.addEventListener("click", function(e){
+          li.addEventListener("click", function (e) {
             if (openFolders[id]) {
               collapseFolder(inner, display_id);
               setItemCardImage(li, picIcon(FolderClosedPic));
@@ -1525,6 +1525,14 @@ function itemCard(id) {
   info_name.classList.add('inventory-info-name');
   info_name.innerText = item.name;
 
+  if (item.status) {
+    console.log(item.status, item.status_message);
+    let status_span = document.createElement('span');
+    status_span.classList.add('inventory-status');
+    status_span.innerText = `${item.status} (${item.status_message})`;
+    info_name.appendChild(status_span);
+  }
+
   let info_detail = document.createElement("div");
   info_detail.classList.add('inventory-info-detail');
 
@@ -1560,12 +1568,12 @@ function picIcon(pic) {
   img.style.height = "16px";
   var src = "";
 
-  if(IconSheets[pic[0]])
+  if (IconSheets[pic[0]])
     src = IconSheets[pic[0]].src;
   else
     src = pic[0];
 
-  var background = "url("+src+") -"+(pic[1]*16)+"px -"+(pic[2]*16)+"px";
+  var background = "url(" + src + ") -" + (pic[1] * 16) + "px -" + (pic[2] * 16) + "px";
   img.style.background = background;
 
   img_container.appendChild(img);
@@ -1590,8 +1598,8 @@ function itemIcon(key) {
   pic = [0, 8, 24];
 
   let user = PlayerWho[key];
-  if(key in PlayerImages) {
-    if(PlayerImages[key].naturalWidth != 16 || PlayerImages[key].naturalHeight != 16) {
+  if (key in PlayerImages) {
+    if (PlayerImages[key].naturalWidth != 16 || PlayerImages[key].naturalHeight != 16) {
       img.style.width = "32px";
       img.style.height = "32px";
     }
@@ -1599,15 +1607,15 @@ function itemIcon(key) {
     src = PlayerImages[key].src;
   }
 
-  if(item.pic != null)
+  if (item != undefined && item.pic != null)
     pic = item.pic;
 
-  if(IconSheets[pic[0]])
+  if (IconSheets[pic[0]])
     src = IconSheets[pic[0]].src;
   else
     src = pic[0];
 
-  var background = "url("+src+") -"+(pic[1]*16)+"px -"+(pic[2]*16)+"px";
+  var background = "url(" + src + ") -" + (pic[1] * 16) + "px -" + (pic[2] * 16) + "px";
   img.style.background = background;
   img.style.backgroundRepeat = "no-repeat";
 
@@ -1619,7 +1627,7 @@ contextMenuItem = 0;
 function openItemContextMenu(id, x, y) {
   var drop = document.querySelector('#droptakeitem');
 
-  if ( id in DBInventory ) {
+  if (id in DBInventory) {
     drop.innerText = "Drop";
   } else {
     drop.innerText = "Take";
@@ -1636,15 +1644,15 @@ function openItemContextMenu(id, x, y) {
 function updateInventoryUL() {
   // Manage the inventory <ul>
   var ul = document.getElementById('inventoryul');
-  if(!ul)
+  if (!ul)
     return;
 
   itemCardList(ul, DisplayInventory[null], {
     eventlisteners: {
-      'click': function(e, id){
+      'click': function (e, id) {
         useItem(DBInventory[id]);
       },
-      'contextmenu': function(e, id){
+      'contextmenu': function (e, id) {
         openItemContextMenu(id, e.clientX, e.clientY);
         e.preventDefault();
       }
@@ -1656,7 +1664,7 @@ function updateInventoryUL() {
   newitem.appendChild(document.createTextNode("+"));
   newitem.classList.add('inventoryli');
   newitem.id = "inventoryadd"
-  newitem.onclick = function(){document.getElementById('newItemWindow').style.display = "block";};
+  newitem.onclick = function () { document.getElementById('newItemWindow').style.display = "block"; };
   ul.appendChild(newitem);
 }
 
@@ -1692,7 +1700,7 @@ function viewTileset(Item) {
   toggleDisplay(tileset);
 
   var tileset_title = document.getElementById('tileset-title');
-  tileset_title.innerText = "Tileset: "+Item.name;
+  tileset_title.innerText = "Tileset: " + Item.name;
 }
 
 function viewCompose() {
@@ -1700,28 +1708,28 @@ function viewCompose() {
   compose.style.display = 'block';
 }
 
-function inSelection( x, y ) {
+function inSelection(x, y) {
   return x >= MouseStartX && x <= MouseEndX && y >= MouseStartY && y <= MouseEndY;
 }
 
 function updateSelectedObjectsUL() {
   // Manage the users <ul>
   var ul = document.getElementById('selectedobjectsul');
-  if(!ul)
+  if (!ul)
     return;
 
   const selected_ids = Object.values(PlayerWho).filter(
-    item => inSelection( item.x, item.y )
+    item => inSelection(item.x, item.y)
   ).map(
     item => item.id
   )
 
   itemCardList(ul, selected_ids, {
     eventlisteners: {
-      'click': function(e, id){
+      'click': function (e, id) {
         useItem(id)
       },
-      'contextmenu': function(e, id){
+      'contextmenu': function (e, id) {
         openItemContextMenu(id, e.clientX, e.clientY);
         e.preventDefault();
       }
@@ -1740,7 +1748,7 @@ function updateUsersUL() {
 
   // Manage the users <ul>
   var ul = document.getElementById('usersul');
-  if(!ul)
+  if (!ul)
     return;
 
   let player_ids = Object.values(PlayerWho).filter(
@@ -1751,7 +1759,7 @@ function updateUsersUL() {
 
   itemCardList(ul, player_ids, {
     eventlisteners: {
-      'contextmenu': function(e, id){
+      'contextmenu': function (e, id) {
         openItemContextMenu(id, e.clientX, e.clientY);
         e.preventDefault();
       }
@@ -1763,43 +1771,43 @@ function updateUsersUL() {
 function updateMailUL() {
   // Manage the users <ul>
   var ul = document.getElementById('mailul');
-  if(!ul)
+  if (!ul)
     return;
 
   // Empty out the list
-  while(ul.firstChild) {
+  while (ul.firstChild) {
     ul.removeChild(ul.firstChild);
   }
 
-  for(let i=0; i<Mail.length; i++) {
+  for (let i = 0; i < Mail.length; i++) {
     let li = document.createElement("li");
     let letter = Mail[i];
 
     li.appendChild(document.createTextNode("\"" + letter.subject + "\" from " + letter.from));
-    if(!(letter.flags & 1)) {
+    if (!(letter.flags & 1)) {
       li.appendChild(document.createTextNode(" (NEW)"));
     }
 
-    li.onclick = function (){
-      SendCmd("EML", {read: letter.id});
+    li.onclick = function () {
+      SendCmd("EML", { read: letter.id });
       Mail[i].flags |= 1; // mark as read locally
       updateMailUL(); // show it as read locally
 
       document.getElementById('mail-view').style.display = 'block';
       document.getElementById('mail-view-title').innerHTML = `Mail: ${convertBBCode(letter.subject)}`;
-      document.getElementById('mail-view-contents').innerHTML = '<button onclick="replyMail('+letter.id+')">Reply</button>'
-        +'<button onclick="replyAllMail('+letter.id+')">Reply all</button>'
-        +'<button onclick="deleteMail('+letter.id+')">Delete</button><br>'
-        +'<table border="0">'
-        +'<tr><td>From</td><td>'+letter.from+'</td></tr>'
-        +'<tr><td>To</td><td>'+letter.to.join(",")+'</td></tr>'
-        +'</table><hr>'
-        +convertBBCodeMultiline(letter.contents);
+      document.getElementById('mail-view-contents').innerHTML = '<button onclick="replyMail(' + letter.id + ')">Reply</button>'
+        + '<button onclick="replyAllMail(' + letter.id + ')">Reply all</button>'
+        + '<button onclick="deleteMail(' + letter.id + ')">Delete</button><br>'
+        + '<table border="0">'
+        + '<tr><td>From</td><td>' + letter.from + '</td></tr>'
+        + '<tr><td>To</td><td>' + letter.to.join(",") + '</td></tr>'
+        + '</table><hr>'
+        + convertBBCodeMultiline(letter.contents);
     };
-    li.oncontextmenu = function (){return false;};
+    li.oncontextmenu = function () { return false; };
 
     li.classList.add('inventoryli');
-    li.id = "maillist"+i;
+    li.id = "maillist" + i;
     ul.appendChild(li);
   }
 }
@@ -1818,23 +1826,23 @@ function sendMail() {
   let subject = document.getElementById('mailsendsubject').value;
   let contents = document.getElementById('mailsendtext').value;
   let to = document.getElementById('mailsendto').value.split(',');
-  SendCmd("EML", {send: {"subject": subject, "contents": contents, "to": to}});
+  SendCmd("EML", { send: { "subject": subject, "contents": contents, "to": to } });
 }
 
 function replyMail(id) {
   // find mail by ID
   let index = -1;
-  for(let i=0; i<Mail.length; i++) {
-    if(Mail[i].id == id) {
+  for (let i = 0; i < Mail.length; i++) {
+    if (Mail[i].id == id) {
       index = i;
       break;
     }
   }
-  if(index == -1)
+  if (index == -1)
     return;
 
   viewCompose();
-  document.getElementById('mailsendsubject').value = "RE: "+Mail[index].subject;
+  document.getElementById('mailsendsubject').value = "RE: " + Mail[index].subject;
   document.getElementById('mailsendtext').value = "";
   document.getElementById('mailsendto').value = Mail[index]["from"];
 }
@@ -1842,41 +1850,41 @@ function replyMail(id) {
 function replyAllMail(id) {
   // find mail by ID
   let index = -1;
-  for(let i=0; i<Mail.length; i++) {
-    if(Mail[i].id == id) {
+  for (let i = 0; i < Mail.length; i++) {
+    if (Mail[i].id == id) {
       index = i;
       break;
     }
   }
-  if(index == -1)
+  if (index == -1)
     return;
 
   viewCompose();
-  document.getElementById('mailsendsubject').value = "RE: "+Mail[index].subject;
+  document.getElementById('mailsendsubject').value = "RE: " + Mail[index].subject;
   document.getElementById('mailsendtext').value = "";
 
   // add everyone to the list except yourself
   let to_list = [Mail[index]["from"]];
-  for(let i=0; i<Mail[index]["to"].length; i++) {
-    if(Mail[index]["to"][i] != PlayerWho[PlayerYou].username)
+  for (let i = 0; i < Mail[index]["to"].length; i++) {
+    if (Mail[index]["to"][i] != PlayerWho[PlayerYou].username)
       to_list.push(Mail[index]["to"][i]);
   }
   document.getElementById('mailsendto').value = to_list.join(",");
 }
 
 function deleteMail(id) {
-  if(!confirm("Really delete?"))
+  if (!confirm("Really delete?"))
     return;
 
   let newMail = [];
-  for(let i=0; i<Mail.length; i++) {
-    if(Mail[i].id != id)
+  for (let i = 0; i < Mail.length; i++) {
+    if (Mail[i].id != id)
       newMail.push(Mail[i]);
   }
   Mail = newMail;
   updateMailUL();
-  SendCmd("EML", {"delete": id});
-  closeWindow("mail"+id);
+  SendCmd("EML", { "delete": id });
+  closeWindow("mail" + id);
 }
 
 function viewMail() {
@@ -1884,7 +1892,7 @@ function viewMail() {
   toggleDisplay(mail);
 
   var ul = document.getElementById('mailul');
-  if(!ul) {
+  if (!ul) {
     newWindow("Mail", '<button onclick="viewCompose();">Compose</button><br/><ul id="mailul" class="unselectable"></ul>', null);
   }
   updateMailUL();
@@ -1897,24 +1905,24 @@ function viewBuild() {
 
 function viewCustomize() {
   var options = document.getElementById("character");
-  var Hidden = (options.style.display=='none');
-  document.getElementById("navcustomize").setAttribute("class", Hidden?"navactive":"");
-  options.style.display = Hidden?'block':'none';
+  var Hidden = (options.style.display == 'none');
+  document.getElementById("navcustomize").setAttribute("class", Hidden ? "navactive" : "");
+  options.style.display = Hidden ? 'block' : 'none';
 }
 
 function previewIcon() {
   var preview = document.getElementById("iconPreview");
-  var file    = document.getElementById("iconPicker").files[0];
-  var reader  = new FileReader();
+  var file = document.getElementById("iconPicker").files[0];
+  var reader = new FileReader();
 
   reader.addEventListener("load", function () {
     preview.src = reader.result;
     alert(reader.result);
-	alert(reader.result.length);
+    alert(reader.result.length);
     PlayerIconSheet = "iconPreview";
     PlayerIconX = 0;
     PlayerIconY = 0;
- }, false);
+  }, false);
 
   if (file) {
     reader.readAsDataURL(file);
@@ -1931,10 +1939,10 @@ function loginButton() {
   OnlineUsername = document.getElementById("loginuser").value;
   OnlinePassword = document.getElementById("loginpass").value;
   OnlineServer = document.getElementById("loginserver").value;
-  if(!OnlineIsConnected)
+  if (!OnlineIsConnected)
     ConnectToServer();
   else
-    SendCmd("CMD", {text: "login "+OnlineUsername+" "+OnlinePassword});
+    SendCmd("CMD", { text: "login " + OnlineUsername + " " + OnlinePassword });
 
   document.getElementById('loginWindow').style.display = "none";
 }
@@ -1942,7 +1950,7 @@ function loginButton() {
 function editItemApply() {
   var edittilename = document.getElementById('edittilename').value;
   var edittiledesc = document.getElementById('edittiledesc').value;
-  if(edittiledesc == "")
+  if (edittiledesc == "")
     edittiledesc = null;
 
   var updates = {
@@ -1951,22 +1959,22 @@ function editItemApply() {
     "desc": edittiledesc
   };
 
-  switch(editItemType) {
+  switch (editItemType) {
     case "text":
       updates.data = document.getElementById('edittiletextarea').value;
-      SendCmd("BAG", {update: updates});
+      SendCmd("BAG", { update: updates });
       break;
 
     case "image":
       updates.data = document.getElementById('edittileurl').value;
-      SendCmd("BAG", {update: updates});
+      SendCmd("BAG", { update: updates });
       break;
 
     case "map_tile":
     case "generic":
       // Gather item info
       var sheet = document.getElementById('edittilesheet').value;
-      if(sheet == "keep") {
+      if (sheet == "keep") {
         sheet = editItemOriginalSheet;
       } else {
         sheet = parseInt(sheet);
@@ -1981,7 +1989,7 @@ function editItemApply() {
 
       updates.pic = [edittilesheet, edittilex, edittiley];
 
-      if(editItemType == "map_tile") {
+      if (editItemType == "map_tile") {
         updates.data = JSON.stringify({
           "name": updates.name,
           "pic": updates.pic,
@@ -1991,25 +1999,25 @@ function editItemApply() {
         })
       }
 
-      SendCmd("BAG", {update: updates});
+      SendCmd("BAG", { update: updates });
       break;
 
     default: // just update name then
-      SendCmd("BAG", {update: updates});
+      SendCmd("BAG", { update: updates });
       break;
   }
   editItemCancel();
 }
 
 function editItemClone() {
-  SendCmd("BAG", {"clone": {"id": editItemID} });
+  SendCmd("BAG", { "clone": { "id": editItemID } });
   editItemCancel();
 }
 
 function editItemDelete() {
-  if(!confirm("Really delete?"))
+  if (!confirm("Really delete?"))
     return;
-  SendCmd("BAG", {"delete": {"id": editItemID} });
+  SendCmd("BAG", { "delete": { "id": editItemID } });
   editItemCancel();
 }
 
@@ -2019,7 +2027,7 @@ function editItemCancel() {
 }
 
 function newItemCreate(type) {
-  SendCmd("BAG", {create: {"type": type, "name": document.getElementById('newtilename').value}});
+  SendCmd("BAG", { create: { "type": type, "name": document.getElementById('newtilename').value } });
   newItemCancel();
 }
 
@@ -2030,54 +2038,54 @@ function newItemCancel() {
 /////////////////////////////////////////////////////////////////////
 // customize the bbcode parser
 function offerCommand(t) {
-  if(confirm('Run command "'+t+'"?')) {
+  if (confirm('Run command "' + t + '"?')) {
     sendChatCommand(t);
   }
 }
 
 let emptyTag = {
-  openTag: function(params,content) {
+  openTag: function (params, content) {
     return '';
   },
-  closeTag: function(params,content) {
+  closeTag: function (params, content) {
     return '';
   }
 }
 XBBCODE.addTags({
   "tt": XBBCODE.tags()["code"],
   "img": emptyTag,
-//  "center": emptyTag,
+  //  "center": emptyTag,
   "face": emptyTag,
   "font": emptyTag,
-//  "justify": emptyTag,
-//  "left": emptyTag,
+  //  "justify": emptyTag,
+  //  "left": emptyTag,
   "quote": emptyTag,
   "php": emptyTag,
-//  "right": emptyTag,
-//  "table": emptyTag,
-//  "tbody": emptyTag,
-//  "thead": emptyTag,
-//  "tfoot": emptyTag,
-//  "td": emptyTag,
-//  "th": emptyTag,
-//  "tr": emptyTag,
+  //  "right": emptyTag,
+  //  "table": emptyTag,
+  //  "tbody": emptyTag,
+  //  "thead": emptyTag,
+  //  "tfoot": emptyTag,
+  //  "td": emptyTag,
+  //  "th": emptyTag,
+  //  "tr": emptyTag,
   "command": {
-    openTag: function(params,content) {
+    openTag: function (params, content) {
       let filteredJS = content.replace(/\x22/g, '\\\x22');
       let filteredHTML = content.replace(/\x22/g, '&quot;');
-      return '<input type="button" value="'+filteredHTML+'" onClick=\'offerCommand("'+filteredJS+'")\'></input>';
+      return '<input type="button" value="' + filteredHTML + '" onClick=\'offerCommand("' + filteredJS + '")\'></input>';
     },
-    closeTag: function(params,content) {
+    closeTag: function (params, content) {
       return '';
     },
     displayContent: false
   },
   "spoiler": {
-    openTag: function(params,content) {
-        return '<span class="spoiler">';
+    openTag: function (params, content) {
+      return '<span class="spoiler">';
     },
-    closeTag: function(params,content) {
-        return '</span>';
+    closeTag: function (params, content) {
+      return '</span>';
     }
   }
 });
