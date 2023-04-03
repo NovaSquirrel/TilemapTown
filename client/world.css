@@ -268,6 +268,16 @@ widget-contextmenu li:hover {
     font-style: italic;
 }
 
+.inventory-status {
+    color: black;
+    font-size: 75%;
+    background: #dddddd;
+    margin: 2px 4px;
+    padding: 0 4px;
+    border: 1px gray solid;
+    border-radius: 4px;
+}
+
 .inventorymeta {
     display: flex;
     align-items: center;
