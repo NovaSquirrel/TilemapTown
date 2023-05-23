@@ -248,6 +248,7 @@ function editItem(key) {
       document.getElementById('edittiletype').selectedIndex = index_for_type;
       document.getElementById('edittiledensity').checked = itemobj.density;
       document.getElementById('edittileisobject').checked = !itemobj.obj;
+      document.getElementById('edittileover').checked = itemobj.over == true;
       editItemUpdatePic();
 
       if (IconSheets[itemobj.pic[0] || 0] != undefined)
@@ -621,6 +622,8 @@ function drawMap() {
   if ("edge_links" in MyMap.Info)
     EdgeLinks = MyMap.Info["edge_links"];
 
+  var objectsWithOverFlag = []; // X, Y, [pic_sheet, pic_x, pic_y]
+
   // Render the map
   for (x = 0; x < (ViewWidth + 2); x++) {
     for (y = 0; y < (ViewHeight + 2); y++) {
@@ -665,22 +668,28 @@ function drawMap() {
         }
 
         // Draw the turf
-        var Tile = AtomFromName(map.Tiles[mapCoordX][mapCoordY]);
+        let Tile = AtomFromName(map.Tiles[mapCoordX][mapCoordY]);
         if (Tile) {
-          if (IconSheets[Tile.pic[0]])
+          if (IconSheets[Tile.pic[0]]) {
             ctx.drawImage(IconSheets[Tile.pic[0]], Tile.pic[1] * 16, Tile.pic[2] * 16, 16, 16, x * 16 - OffsetX, y * 16 - OffsetY, 16, 16);
-          else
+          } else {
             RequestImageIfNeeded(Tile.pic[0]);
+          }
         }
-        // Draw anything above the turf
+        // Draw anything above the turf (the tile objects)
         var Objs = map.Objs[mapCoordX][mapCoordY];
         if (Objs) {
           for (var index in Objs) {
             var Obj = AtomFromName(Objs[index]);
-            if (IconSheets[Obj.pic[0]])
-              ctx.drawImage(IconSheets[Obj.pic[0]], Obj.pic[1] * 16, Obj.pic[2] * 16, 16, 16, x * 16 - OffsetX, y * 16 - OffsetY, 16, 16);
-            else
+            if (IconSheets[Obj.pic[0]]) {
+              if(Obj.over === true) {
+                objectsWithOverFlag.push([x * 16 - OffsetX, y * 16 - OffsetY, Obj.pic]);
+              } else {
+                ctx.drawImage(IconSheets[Obj.pic[0]], Obj.pic[1] * 16, Obj.pic[2] * 16, 16, 16, x * 16 - OffsetX, y * 16 - OffsetY, 16, 16);
+              }
+            } else {
               RequestImageIfNeeded(Obj.pic[0]);
+            }
           }
         }
       } catch (error) {
@@ -814,6 +823,12 @@ function drawMap() {
       }
     } catch (error) {
     }
+  }
+
+  // Draw objects that should appear above players
+  for (let i=0; i<objectsWithOverFlag.length; i++) {
+    let pic = objectsWithOverFlag[i][2];
+    ctx.drawImage(IconSheets[pic[0]], pic[1] * 16, pic[2] * 16, 16, 16, objectsWithOverFlag[i][0], objectsWithOverFlag[i][1], 16, 16);
   }
 
   // Draw a mouse selection if there is one
@@ -1988,17 +2003,21 @@ function editItemApply() {
       var edittiletype = document.getElementById('edittiletype').value;
       var edittiledensity = document.getElementById('edittiledensity').checked;
       var edittileobject = !document.getElementById('edittileisobject').checked;
+      var edittileover = document.getElementById('edittileover').checked;
 
       updates.pic = [edittilesheet, edittilex, edittiley];
 
       if (editItemType == "map_tile") {
-        updates.data = JSON.stringify({
+        let data = {
           "name": updates.name,
           "pic": updates.pic,
           "obj": edittileobject,
           "type": edittiletype,
           "density": edittiledensity
-        })
+        };
+        if(edittileover)
+          data["over"] = true;
+        updates.data = JSON.stringify(data);
       }
 
       SendCmd("BAG", { update: updates });
