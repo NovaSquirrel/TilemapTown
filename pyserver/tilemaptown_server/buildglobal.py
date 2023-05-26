@@ -90,7 +90,7 @@ DatabaseMeta = {}
 
 # Important information shared by each module
 ServerShutdown = [-1]
-AllClients      = set()
+AllClients      = weakref.WeakSet()
 AllMaps         = weakref.WeakSet()             # Maps only; used by /whereare
 AllEntitiesByDB = weakref.WeakValueDictionary() # All entities (indexed by database ID)
 AllEntitiesByID = weakref.WeakValueDictionary() # All entities (indexed by temporary ID)
@@ -101,7 +101,7 @@ botwatch_type['move']  = 0
 botwatch_type['build'] = 1
 botwatch_type['entry'] = 2
 botwatch_type['chat']  = 3
-BotWatch = [{}, {}, {}, {}] # Indexed by client.db_id
+BotWatch = [weakref.WeakValueDictionary(), weakref.WeakValueDictionary(), weakref.WeakValueDictionary(), weakref.WeakValueDictionary()] # Indexed by client.db_id
 
 # Map permissions
 permission = {}

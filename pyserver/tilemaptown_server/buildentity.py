@@ -85,6 +85,9 @@ class Entity(object):
 		# Make this entity easy to find
 		AllEntitiesByID[self.id] = self
 
+	def __repr__(self):
+		return "%s(%r, type=%r, id=%r, db=%r)" % (self.__class__.__name__, self.name, self.entity_type, self.id, self.db_id)
+
 	def __del__(self):
 		#print("Unloading %d: %s" % (self.db_id or -1, self.name))
 		self.clean_up()

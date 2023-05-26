@@ -1447,6 +1447,42 @@ def fn_whoami(map, client, context, arg):
 	else:
 		respond(context, "Your [b]%s[/b]! Your ID is [b]%s[/b] and your username is [b]%s[/b]" % (client.name, client.protocol_id(), client.username))
 
+import gc
+@cmd_command(alias=['debugref'], privilege_level="server_admin")
+def fn_debugrefs(map, client, context, arg):
+	if len(arg) == 0:
+		return
+	e = get_entity_by_id(arg, load_from_db=False)
+	if e == None:
+		respond(context, '"%s" not a valid ID' % arg, error=True)
+		return
+	respond(context, '🍕'.join(repr(x) for x in gc.get_referrers(e)))
+
+@cmd_command(privilege_level="server_admin")
+def fn_debugref2(map, client, context, arg):
+	if len(arg) == 0:
+		return
+	e = get_entity_by_id(arg, load_from_db=False)
+	if e == None:
+		respond(context, '"%s" not a valid ID' % arg, error=True)
+		return
+	respond(context, '🍕'.join(repr(x) for x in gc.get_referents(e)))
+
+@cmd_command(privilege_level="server_admin")
+def fn_debugkick(map, client, context, arg):
+	if len(arg) == 0:
+		return
+	e = get_entity_by_id(arg, load_from_db=False)
+	if e == None:
+		respond(context, '"%s" not a valid ID' % arg, error=True)
+		return
+	if e.is_client():
+		e.disconnect()
+	e.clean_up()
+	AllEntitiesByID.pop(e.id, None)
+	if e.db_id:
+		AllEntitiesByDB.pop(e.db_id, None)
+
 @cmd_command(alias=['e'])
 def fn_entity(map, client, context, arg):
 	# Parse
