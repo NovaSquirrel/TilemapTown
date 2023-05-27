@@ -133,6 +133,7 @@ async def client_handler(websocket, path):
 	if client.db_id:
 		client.save_on_clean_up = True
 	client.clean_up()
+	del client
 
 global loop
 

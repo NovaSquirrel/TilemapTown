@@ -65,6 +65,14 @@ class Client(Entity):
 
 		AllClients.add(self)
 
+	# Unlike regular entities, clients have *strong* references to their containers
+	@property
+	def map(self):
+		return self.map_ref
+	@map.setter
+	def map(self, value):
+		self.map_ref = value
+
 	def clean_up(self):
 		AllClients.discard(self)
 		for p in self.listening_maps:
@@ -172,10 +180,11 @@ class Client(Entity):
 		return False
 
 	def disconnect(self, text=None):
-		if text != None:
-			# Does not actually seem to go through, might need some refactoring
-			self.send("ERR", {'text': text})
-		asyncio.ensure_future(self.ws.close())
+		if self.ws != None:
+			if text != None:
+				# Does not actually seem to go through, might need some refactoring
+				self.send("ERR", {'text': text})
+			asyncio.ensure_future(self.ws.close())
 
 	def username_or_id(self):
 		return self.username or self.protocol_id()

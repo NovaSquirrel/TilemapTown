@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio, datetime, json, copy, zlib, random
+import asyncio, datetime, json, copy, zlib, random, weakref
 from .buildglobal import *
 from collections import deque
 
@@ -29,7 +29,7 @@ class Entity(object):
 		self.name = '?'
 		self.desc = None
 		self.dir = 2 # South
-		self.map = None
+		self.map_ref = None        # Storage for self.map, which is a property
 
 		self.pic = None
 
@@ -89,8 +89,16 @@ class Entity(object):
 		return "%s(%r, type=%r, id=%r, db=%r)" % (self.__class__.__name__, self.name, self.entity_type, self.id, self.db_id)
 
 	def __del__(self):
-		#print("Unloading %d: %s" % (self.db_id or -1, self.name))
+		#print("Unloading %r" % self)
 		self.clean_up()
+
+	# Non-client entities have a weak reference to their containers
+	@property
+	def map(self):
+		return self.map_ref() if self.map_ref != None else None
+	@map.setter
+	def map(self, value):
+		self.map_ref = weakref.ref(value) if value != None else None
 
 	def clean_up(self):
 		if not self.cleaned_up_already:
