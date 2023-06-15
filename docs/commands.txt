@@ -132,6 +132,10 @@ List all maps whose privacy setting has been set to "public"
 /mymaps
 List all maps that have you set as the owner
 
+/applymapsection {data}
+Overwrites a rectangle of the map with new data, where the data is provided in the same format as the MAP protocol messages.
+Require admin privileges for the map.
+
 ---Moderation---
 /tp user
 Force teleport to user

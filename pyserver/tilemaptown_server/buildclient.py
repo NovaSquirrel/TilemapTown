@@ -256,6 +256,8 @@ class Client(Entity):
 		self.ignore_list = set(json.loads(result[4] or "[]"))
 		self.client_settings = result[5]
 		self.user_flags = result[6]
+		if self.user_flags == None:
+			self.user_flags = 0
 		# And copy over the base entity stuff
 		return super().load(self.db_id, override_map=override_map)
 

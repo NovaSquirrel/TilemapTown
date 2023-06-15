@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sqlite3, json, sys, os.path, weakref
+import sqlite3, json, sys, os.path, weakref, datetime
 
 # Read configuration information
 Config = {}
@@ -52,6 +52,8 @@ setConfigDefault("Server",   "BroadcastDisconnects", True)
 setConfigDefault("Database", "File",             "town.db")
 setConfigDefault("Database", "Setup",            True)
 setConfigDefault("Images",   "URLWhitelist",     ["https://i.imgur.com/"])
+setConfigDefault("Logs",     "BuildFile",        "")
+setConfigDefault("Logs",     "BuildDefault",     True)
 
 # Read server resource file
 ServerResources = {}
@@ -87,6 +89,11 @@ if "ResourceFiles" in Config["Server"]:
 # Open database connection
 Database = sqlite3.connect(Config["Database"]["File"], detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
 DatabaseMeta = {}
+
+# Open logs
+BuildLog = None
+if len(Config["Logs"]["BuildFile"]):
+	BuildLog = open(Config["Logs"]["BuildFile"], 'a', encoding="utf-8")
 
 # Important information shared by each module
 ServerShutdown = [-1]
@@ -135,6 +142,14 @@ def bitfield_from_permission_list(permission_list):
 # Map flags
 mapflag = {}
 mapflag['public'] = 1
+mapflag['build_logs'] = 2
+mapflag['no_build_logs'] = 4
+
+# User flags
+userflag = {}
+userflag['bot'] = 1
+userflag['file_uploads'] = 2
+userflag['no_build_logs'] = 4
 
 # Entity types
 entity_type = {}
@@ -355,6 +370,31 @@ def make_protocol_message_string(command, params):
 	if params != None:
 		return command + " " + json.dumps(params)
 	return command
+
+def write_to_build_log(map, client, command, args):
+	if not BuildLog:
+		return
+
+	# Should this map have logs?
+	if not map.is_map():
+		return
+	if Config["Logs"]["BuildDefault"] and (map.map_flags & mapflag['no_build_logs']):
+		return
+	if not Config["Logs"]["BuildDefault"] and not (map.map_flags & mapflag['build_logs']):
+		return
+
+	# Get the IP, and determine if this client should not be logged
+	ip = None
+	if client.is_client():
+		ip = client.ip
+		if client.user_flags & userflag['no_build_logs']:
+			return
+	else:
+		# TODO: Try to get the creator's ID if they're present, but right now non-clients can't build anyway
+		ip = "(owned by %d)" % client.owner_id
+
+	now = datetime.datetime.today().strftime("%Y-%m-%d %I:%M %p")
+	BuildLog.write('%s map=(%s, %s) ip=%s db=%s name=%s user=%s map=%d | %s %s\n' % (now, json.dumps(map.name), map.protocol_id(), ip, client.db_id if client.db_id != None else "", json.dumps(client.name), client.username if client.is_client() else "", map.db_id, command, json.dumps(args)))
 
 from .buildentity import Entity, EntityWithPlainData
 from .buildmap import Map

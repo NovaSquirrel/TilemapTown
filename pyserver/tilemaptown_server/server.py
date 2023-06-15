@@ -157,5 +157,8 @@ def main():
 		print("Closing the database")
 		Database.close()
 
+		if BuildLog:
+			BuildLog.close()
+
 if __name__ == "__main__":
 	main()

@@ -1447,7 +1447,7 @@ def fn_whoami(map, client, context, arg):
 	else:
 		respond(context, "Your [b]%s[/b]! Your ID is [b]%s[/b] and your username is [b]%s[/b]" % (client.name, client.protocol_id(), client.username))
 
-@cmd_command(alias=['undodelete', 'delundo'])
+@cmd_command(alias=['undodelete', 'delundo'], map_only=True)
 def fn_undodel(map, client, context, arg):
 	if not client.is_client() or not map.is_map():
 		return
@@ -1457,9 +1457,18 @@ def fn_undodel(map, client, context, arg):
 	if time.time() - client.undo_delete_when > 300: # 5 Minute limit
 		respond(context, "Last undo was more than 5 minutes ago")
 		return
-	map.apply_map_section(client.undo_delete_data, username=client.username_or_id())
+	pos = client.undo_delete_data["pos"]
+	write_to_build_log(map, client, "DEL", "undo:%d,%d,%d,%d" % (pos[0], pos[1], pos[2], pos[3]))
+
+	map.apply_map_section(client.undo_delete_data)
+	map.broadcast("DEL", {"undo": True, "pos": client.undo_delete_data["pos"], "username": client.username_or_id()}, remote_only=True, remote_category=botwatch_type['build'])
 	client.undo_delete_data = None
+
 	respond(context, "🐶 Undid the delete!")
+
+@cmd_command(privilege_level="map_admin", map_only=True)
+def fn_applymapsection(map, client, context, arg):
+	map.apply_map_section(json.loads(arg))
 
 import gc
 @cmd_command(alias=['debugref'], privilege_level="server_admin")
