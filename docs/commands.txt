@@ -160,6 +160,9 @@ Sends all users home that aren't admins of the current map
 Sends all entities home that are in the same container, aren't players, aren't following players or being carried by them, and aren't owned by the map owner.
 If you specify a username, it will remove all of that user's entities, and will ignore the above.
 
+/flushbuildlog
+Flushes the build log file, so that it's up to date.
+
 ---Map configuration---
 /mapid
 Get map ID
