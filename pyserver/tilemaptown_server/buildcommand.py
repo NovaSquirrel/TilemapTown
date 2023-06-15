@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import json, random, datetime, ipaddress, hashlib
+import json, random, datetime, time, ipaddress, hashlib
 from .buildglobal import *
 
 handlers = {}	# dictionary of functions to call for each command
@@ -1446,6 +1446,20 @@ def fn_whoami(map, client, context, arg):
 		respond(context, "Your [b]%s[/b]! Your ID is [b]%s[/b] and you have not registered" % (client.name, client.protocol_id()))
 	else:
 		respond(context, "Your [b]%s[/b]! Your ID is [b]%s[/b] and your username is [b]%s[/b]" % (client.name, client.protocol_id(), client.username))
+
+@cmd_command(alias=['undodelete', 'delundo'])
+def fn_undodel(map, client, context, arg):
+	if not client.is_client() or not map.is_map():
+		return
+	if not client.undo_delete_data:
+		respond(context, "There's nothing to undo")
+		return
+	if time.time() - client.undo_delete_when > 300: # 5 Minute limit
+		respond(context, "Last undo was more than 5 minutes ago")
+		return
+	map.apply_map_section(client.undo_delete_data, username=client.username_or_id())
+	client.undo_delete_data = None
+	respond(context, "🐶 Undid the delete!")
 
 import gc
 @cmd_command(alias=['debugref'], privilege_level="server_admin")

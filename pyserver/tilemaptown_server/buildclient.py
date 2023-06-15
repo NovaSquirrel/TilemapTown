@@ -50,6 +50,10 @@ class Client(Entity):
 		self.sent_resources_yet = False
 		self.no_inventory_messages = False # don't send BAG updates when adding or removing items
 
+		# Information for /undodel
+		self.undo_delete_data = None
+		self.undo_delete_when = None
+
 		self.features = set() # list of feature names
 
 		# see_past_map_edge variables

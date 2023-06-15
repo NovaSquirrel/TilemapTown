@@ -510,10 +510,12 @@ class Entity(object):
 
 	def switch_map(self, map_id, new_pos=None, goto_spawn=True, update_history=True, edge_warp=False):
 		""" Teleport the user to another map """
-		if self.is_client() and not self.sent_resources_yet:
-			self.sent_resources_yet = True
-			if LoadedAnyServerResources:
-				self.send("RSC", ServerResources)
+		if self.is_client():
+			self.undo_delete_data = None
+			if not self.sent_resources_yet:
+				self.sent_resources_yet = True
+				if LoadedAnyServerResources:
+					self.send("RSC", ServerResources)
 
 		added_new_history = False
 		if update_history and self.map_id != None:

@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import json, datetime
+import json, datetime, time
 from .buildglobal import *
 from .buildcommand import handle_user_command, escape_tags, tile_is_okay, data_disallowed_for_entity_type
 from .buildentity import Entity
@@ -500,6 +500,12 @@ def fn_DEL(map, client, arg):
 			return
 		map.map_data_modified = True
 
+		# Save undo information
+		if client.is_client() and client.map == map:
+			client.undo_delete_data = map.map_section(x1, y1, x2, y2)
+			client.undo_delete_when = time.time()
+
+		# Do the delete and tell clients about it
 		for x in range(x1, x2+1):
 			for y in range(y1, y2+1):
 				if arg["turf"]:
