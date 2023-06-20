@@ -975,6 +975,18 @@ Predefined.colorwall13 = {
   density: true,
 };
 
+Predefined.colorwall14 = {
+  name: "colored wall",
+  pic: [-1, 13, 7],
+  density: true,
+};
+
+Predefined.colorwall15 = {
+  name: "colored wall",
+  pic: [-1, 14, 7],
+  density: true,
+};
+
 Predefined.colorfloor1 = {
   name: "colored floor",
   pic: [-1, 0, 8],
@@ -1040,6 +1052,15 @@ Predefined.colorfloor13 = {
   pic: [-1, 12, 8],
 };
 
+Predefined.colorfloor14 = {
+  name: "colored floor",
+  pic: [-1, 13, 8],
+};
+
+Predefined.colorfloor15 = {
+  name: "colored floor",
+  pic: [-1, 14, 8],
+};
 
 
 var PredefinedArray = [];
