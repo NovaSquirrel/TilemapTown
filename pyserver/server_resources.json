@@ -843,12 +843,12 @@
 			"colorwall14": {
 				"name": "colored wall",
 				"pic": [-1, 13, 7],
-				"density": true,
+				"density": true
 			},
 			"colorwall15": {
 				"name": "colored wall",
 				"pic": [-1, 14, 7],
-				"density": true,
+				"density": true
 			},
 			"colorfloor1": {
 				"name": "colored floor",
