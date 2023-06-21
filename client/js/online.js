@@ -500,7 +500,7 @@ function receiveServerMessage(cmd, arg) {
         else if(arg.text.slice(0, 5).toLowerCase() == "/ooc ")
           logMessage("[OOC] "+arg.name+": "+convertBBCode(arg.text.slice(5)), 'ooc_message');
         else if(arg.text.slice(0, 7).toLowerCase() == "/spoof ")
-          logMessage("* "+convertBBCode(arg.text.slice(7)) + " <span class=\"spoof_name\">(by "+arg.name+")</span>", 'spoof_message');
+          logMessage("* <i>"+convertBBCode(arg.text.slice(7)) + "</i> <span class=\"spoof_name\">(by "+arg.name+")</span>", 'spoof_message');
         else
           logMessage("&lt;"+arg.name+"&gt; "+convertBBCode(arg.text), 'user_message');
       } else
