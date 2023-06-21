@@ -2,6 +2,15 @@
   color: white;
 }
 
+.spoof_message {
+  color: white;
+}
+
+.spoof_name {
+  font-size:10px;
+  color: silver;
+}
+
 .ooc_message {
   color: silver;
 }

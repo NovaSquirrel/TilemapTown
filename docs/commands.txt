@@ -9,7 +9,13 @@ Private message
 Roll dice
 
 /me text
-Emote
+Send text marked as being an action that you did
+
+/spoof text
+Send text marked as being an action that happened in the environment
+
+/ooc text
+Send text marked as being out-of-character
 
 /ignore username
 /unignore username

@@ -417,7 +417,10 @@ function keyHandler(e) {
 
 
       // commands are CMD while regular room messages are MSG. /me is a room message.
-      else if (chatInput.value.slice(0, 1) == "/" && chatInput.value.toLowerCase().slice(0, 4) != "/me " && chatInput.value.toLowerCase().slice(0, 5) != "/ooc ") {
+      else if (chatInput.value.slice(0, 1) == "/" &&
+        chatInput.value.toLowerCase().slice(0, 4) != "/me " &&
+        chatInput.value.toLowerCase().slice(0, 5) != "/ooc " &&
+        chatInput.value.toLowerCase().slice(0, 7) != "/spoof ") {
         SendCmd("CMD", { text: chatInput.value.slice(1) }); // remove the /
       } else if (chatInput.value.length > 0) {
         SendCmd("MSG", { text: chatInput.value });

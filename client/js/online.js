@@ -478,6 +478,13 @@ function receiveServerMessage(cmd, arg) {
         else
           logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] * <i>"+PlayerWho[PlayerYou].name+" "+convertBBCode(new_text)+'</i></span>', 'private_message');
           break;
+      } else if(arg.text.slice(0, 5) == "/ooc ") {
+        var new_text = arg.text.slice(5);
+        if(arg.receive)
+          logMessage(respond+"&larr;["+arg.name+"("+arg.username+")"+"] [OOC] "+convertBBCode(new_text)+'</i></span>', 'private_message');
+        else
+          logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] [OOC] "+convertBBCode(new_text)+'</i></span>', 'private_message');
+          break;
       } else {
         if(arg.receive)
           logMessage(respond+"&larr;["+arg.name+"("+arg.username+")"+"] "+convertBBCode(arg.text)+'</span>', 'private_message');
@@ -488,10 +495,12 @@ function receiveServerMessage(cmd, arg) {
     case "CMD":
     case "MSG":
       if(arg.name) {
-        if(arg.text.slice(0, 4) == "/me ")
+        if(arg.text.slice(0, 4).toLowerCase() == "/me ")
           logMessage("* <i>"+arg.name+" "+convertBBCode(arg.text.slice(4))+"</i>", 'user_message');
-        else if(arg.text.slice(0, 5) == "/ooc ")
+        else if(arg.text.slice(0, 5).toLowerCase() == "/ooc ")
           logMessage("[OOC] "+arg.name+": "+convertBBCode(arg.text.slice(5)), 'ooc_message');
+        else if(arg.text.slice(0, 7).toLowerCase() == "/spoof ")
+          logMessage("* "+convertBBCode(arg.text.slice(7)) + " <span class=\"spoof_name\">(by "+arg.name+")</span>", 'spoof_message');
         else
           logMessage("&lt;"+arg.name+"&gt; "+convertBBCode(arg.text), 'user_message');
       } else
