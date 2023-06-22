@@ -1487,6 +1487,11 @@ def fn_flushbuildlog(map, client, context, arg):
 		BuildLog.flush()
 
 @cmd_command(privilege_level="server_admin")
+def fn_rehash(map, client, context, arg):
+	loadConfigJson()
+	respond(context, 'Reloaded the config file')
+
+@cmd_command(privilege_level="server_admin")
 def fn_debugref2(map, client, context, arg):
 	if len(arg) == 0:
 		return

@@ -16,18 +16,15 @@
 
 import sqlite3, json, sys, os.path, weakref, datetime
 
-# Read configuration information
+# Config information
 Config = {}
 ConfigFile = 'config.json'
+ServerResources = {}
+LoadedAnyServerResources = [False]
+
 # Override the config filename as a command line argument
 if len(sys.argv) >= 2:
 	ConfigFile = sys.argv[1]
-
-if os.path.isfile(ConfigFile):
-	with open(ConfigFile) as f:
-		Config = json.load(f)
-else:
-	print("Config file '%s' doesn't exist, using defaults" % ConfigFile)
 
 # Initialize in defaults for any undefined values
 def setConfigDefault(group, item, value):
@@ -36,55 +33,64 @@ def setConfigDefault(group, item, value):
 	if item not in Config[group]:
 		Config[group][item] = value
 
-# Set defaults for config items
-setConfigDefault("Server",   "AlwaysLoadedMaps", [])
-setConfigDefault("Server",   "Port",             12550)
-setConfigDefault("Server",   "Name",             "Tilemap Town")
-setConfigDefault("Server",   "MOTD",             "")
-setConfigDefault("Server",   "Admins",           [])
-setConfigDefault("Server",   "MaxUsers",         200)
-setConfigDefault("Server",   "MaxDBMaps",        5000)
-setConfigDefault("Server",   "WSMaxSize",        0x8000)
-setConfigDefault("Server",   "WSMaxQueue",       32)
-setConfigDefault("Server",   "BroadcastConnects", True)
-setConfigDefault("Server",   "BroadcastDisconnects", True)
+def loadConfigJson():
+	if os.path.isfile(ConfigFile):
+		with open(ConfigFile) as f:
+			Config.clear()
+			Config.update(json.load(f))
+	else:
+		print("Config file '%s' doesn't exist, using defaults" % ConfigFile)
 
-setConfigDefault("Database", "File",             "town.db")
-setConfigDefault("Database", "Setup",            True)
-setConfigDefault("Images",   "URLWhitelist",     ["https://i.imgur.com/"])
-setConfigDefault("Logs",     "BuildFile",        "")
-setConfigDefault("Logs",     "BuildDefault",     True)
+	# Set defaults for config items
+	setConfigDefault("Server",   "AlwaysLoadedMaps", [])
+	setConfigDefault("Server",   "Port",             12550)
+	setConfigDefault("Server",   "Name",             "Tilemap Town")
+	setConfigDefault("Server",   "MOTD",             "")
+	setConfigDefault("Server",   "Admins",           [])
+	setConfigDefault("Server",   "MaxUsers",         200)
+	setConfigDefault("Server",   "MaxDBMaps",        5000)
+	setConfigDefault("Server",   "WSMaxSize",        0x8000)
+	setConfigDefault("Server",   "WSMaxQueue",       32)
+	setConfigDefault("Server",   "BroadcastConnects", True)
+	setConfigDefault("Server",   "BroadcastDisconnects", True)
 
-# Read server resource file
-ServerResources = {}
-LoadedAnyServerResources = False
+	setConfigDefault("Database", "File",             "town.db")
+	setConfigDefault("Database", "Setup",            True)
+	setConfigDefault("Images",   "URLWhitelist",     ["https://i.imgur.com/", "https://i.postimg.cc/", "https://i.ibb.co/"])
+	setConfigDefault("Logs",     "BuildFile",        "")
+	setConfigDefault("Logs",     "BuildDefault",     True)
 
-if "ResourceFiles" in Config["Server"]:
-	for fn in Config["Server"]["ResourceFiles"]:
-		if os.path.isfile(fn):
-			with open(fn) as f:
-				LoadedAnyServerResources = True
-				for key,value in json.load(f).items():
-					if key not in ServerResources:
-						ServerResources[key] = {}
+	LoadedAnyServerResources[0] = False
+	ServerResources.clear()
 
-					if key == 'tilesets':
-						for tileset in value:
-							if tileset not in ServerResources['tilesets']:
-								ServerResources['tilesets'][tileset] = {}
-							ServerResources['tilesets'][tileset].update(value[tileset])
-					else:
-						ServerResources[key].update(value)
-		else:
-			print("Server resources file '%s' doesn't exist" % fn)
+	if "ResourceFiles" in Config["Server"]:
+		for fn in Config["Server"]["ResourceFiles"]:
+			if os.path.isfile(fn):
+				with open(fn) as f:
+					LoadedAnyServerResources[0] = True
+					for key,value in json.load(f).items():
+						if key not in ServerResources:
+							ServerResources[key] = {}
 
-	# Fix up images to have the image base, if it's provided
-	if "ResourceIMGBase" in Config["Server"] and "images" in ServerResources:
-		base = Config["Server"]["ResourceIMGBase"]
-		for i in ServerResources["images"]:
-			url = ServerResources["images"][i]
-			if not url.startswith("http://") and not url.startswith("https://"):
-				ServerResources["images"][i] = base + url
+						if key == 'tilesets':
+							for tileset in value:
+								if tileset not in ServerResources['tilesets']:
+									ServerResources['tilesets'][tileset] = {}
+								ServerResources['tilesets'][tileset].update(value[tileset])
+						else:
+							ServerResources[key].update(value)
+			else:
+				print("Server resources file '%s' doesn't exist" % fn)
+
+		# Fix up images to have the image base, if it's provided
+		if "ResourceIMGBase" in Config["Server"] and "images" in ServerResources:
+			base = Config["Server"]["ResourceIMGBase"]
+			for i in ServerResources["images"]:
+				url = ServerResources["images"][i]
+				if not url.startswith("http://") and not url.startswith("https://"):
+					ServerResources["images"][i] = base + url
+loadConfigJson()
+
 
 # Open database connection
 Database = sqlite3.connect(Config["Database"]["File"], detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)

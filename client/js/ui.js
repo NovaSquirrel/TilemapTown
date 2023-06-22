@@ -402,7 +402,7 @@ function keyHandler(e) {
       // commands that are local to the client
       if (chatInput.value.toLowerCase() == "/clear") {
         chatArea.innerHTML = "";
-      } else if (chatInput.value.toLowerCase() == "/exportmap") {
+      } else if (chatInput.value.toLowerCase() == "/exportmap" || chatInput.value.toLowerCase() == "/mapexport") {
         //logMessage('<a href="data:,'+encodeURIComponent(exportMap())+'" download="map.txt">Map download (click here)</a>', 'server_message');
 
         //from https://ourcodeworld.com/articles/read/189/how-to-create-a-file-and-generate-a-download-with-javascript-in-the-browser-without-a-server

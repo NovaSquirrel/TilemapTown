@@ -514,7 +514,7 @@ class Entity(object):
 			self.undo_delete_data = None
 			if not self.sent_resources_yet:
 				self.sent_resources_yet = True
-				if LoadedAnyServerResources:
+				if LoadedAnyServerResources[0]:
 					self.send("RSC", ServerResources)
 
 		added_new_history = False
