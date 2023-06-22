@@ -122,7 +122,7 @@ class Entity(object):
 			if self.db_id != get_database_meta('default_map'):
 				temp = set(self.contents)
 				for u in temp:
-					if not u.is_client() and u.home_id != self.db_id and not u.has_permission(self, permission['persistent_object_entry'], False):
+					if not u.is_client() and u.home_id != self.db_id and u.owner_id != self.owner_id and u.map_id != u.owner_id and not u.has_permission(self, permission['persistent_object_entry'], False):
 						u.send_home()
 
 			cleaned_up_already = True
