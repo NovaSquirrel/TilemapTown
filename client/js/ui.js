@@ -1334,7 +1334,7 @@ function initWorld() {
   {
     // Set up the login window
     // Get the modal
-    let modal = document.getElementById('loginWindow');
+    let loginmodal = document.getElementById('loginWindow');
     let itemmodal = document.getElementById('editItemWindow');
     let newitemmodal = document.getElementById('newItemWindow');
     let mapmodal = document.getElementById('mapOptionsWindow');
@@ -1344,7 +1344,7 @@ function initWorld() {
     let span = document.getElementsByClassName("modalclose");
 
     btn.onclick = function () {
-      modal.style.display = "block";
+      loginmodal.style.display = "block";
     }
 
     mapbtn.onclick = function () {
@@ -1353,7 +1353,7 @@ function initWorld() {
 
     for (var i = 0; i < span.length; i++) {
       span[i].onclick = function () {
-        modal.style.display = "none";
+        loginmodal.style.display = "none";
         newitemmodal.style.display = "none";
         itemmodal.style.display = "none";
         mapmodal.style.display = "none";
@@ -1362,7 +1362,7 @@ function initWorld() {
 
     window.onclick = function (event) {
       if (event.target == modal) {
-        modal.style.display = "none";
+        loginmodal.style.display = "none";
       }
       if (event.target == newitemmodal) {
         newitemmodal.style.display = "none";
@@ -1371,6 +1371,9 @@ function initWorld() {
         mapmodal.style.display = "none";
       }
     }
+
+	// Open the login window by default
+	loginmodal.style.display = "block";
   }
 
 }
