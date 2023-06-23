@@ -1372,8 +1372,10 @@ function initWorld() {
       }
     }
 
-	// Open the login window by default
-	loginmodal.style.display = "block";
+    if (!OnlineServer) {
+	  // Open the login window by default
+	  loginmodal.style.display = "block";
+    }
   }
 
 }
