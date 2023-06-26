@@ -1547,6 +1547,8 @@ def fn_entity(map, client, context, arg):
 			respond(context, "Don\'t have permission to use \"/entity %s\" on %s" % (subcommand, provided_id), error=True)
 			return False
 
+	save_entity = False
+
 	if subcommand == 'info':
 		info = '[b]%s (%s)[/b] - %s' % (e.name, e.protocol_id(), entity_type_name[e.entity_type])
 		if e.desc:
@@ -1564,9 +1566,11 @@ def fn_entity(map, client, context, arg):
 		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
 			e.name = subarg
 			e.broadcast_who()
+		save_entity = True
 	elif subcommand == 'desc':
 		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
 			e.desc = subarg
+		save_entity = True
 	elif subcommand == 'pic':
 		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
 			pic = load_json_if_valid(subarg)
@@ -1575,18 +1579,22 @@ def fn_entity(map, client, context, arg):
 				e.broadcast_who()
 			else:
 				respond(context, "Invalid picture", error=True)
+		save_entity = True
 
 	elif subcommand == 'take':
 		if permission_check(permission['move_new_map']):
 			e.switch_map(client.db_id or client.protocol_id())
+			save_entity = True
 	elif subcommand in ('drop', 'summon'):
 		if permission_check( (permission['move'], permission['move_new_map']) ):
 			if e.map_id is client.map_id or permission_check(permission['move_new_map']):
 				if not e.switch_map(client.map_id, new_pos=[client.x, client.y]):
 					respond(context, "Entity \"%s\" doesn't have permission to go to this map" % provided_id, error=True)
+				save_entity = True
 	elif subcommand == 'kick':
 		if (e.map_id == client.db_id and client.db_id != None) or (e.map is client) or (e.map and e.map.owner_id == client.db_id and client.db_id != None) or client.has_permission(e.map_id, (permission['admin'], permission['sandbox']), False):
 			e.send_home()
+			save_entity = True
 
 	elif subcommand == 'tags':
 		respond(context, "Tags: %s" % dumps_if_not_empty(e.tags))
@@ -1594,9 +1602,11 @@ def fn_entity(map, client, context, arg):
 		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
 			key, value = separate_first_word(subarg)
 			e.set_tag(key, value)
+			save_entity = True
 	elif subcommand == 'deltag':
 		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
 			e.del_tag(subarg)
+			save_entity = True
 
 	elif subcommand == 'do':
 		if permission_check(permission['remote_command']):
@@ -1606,6 +1616,7 @@ def fn_entity(map, client, context, arg):
 			coords = subarg.split()
 			if len(coords) == 2 and coords[0].isdecimal() and coords[1].isdecimal():
 				e.move_to(int(coords[0]), int(coords[1]))
+				save_entity = True
 	elif subcommand == 'perms':
 		handlers['permlist'](e, client, context, subarg)
 	elif subcommand == 'permsfor':
@@ -1621,9 +1632,15 @@ def fn_entity(map, client, context, arg):
 	elif subcommand == 'deny':
 		if permission_check(permission['admin']):
 			permission_change(e, client, context, subarg, 'revoke')
+	elif subcommand == 'save':
+		if permission_check(permission['remote_command']) and not e.temporary: # Maybe use a different permission? Or none
+			e.save()
 
 	else:
 		respond(context, 'Unrecognized subcommand "%s"' % subcommand, error=True)
+
+	if save_entity and not e.temporary:
+		e.save_on_clean_up = True
 
 # -------------------------------------
 
