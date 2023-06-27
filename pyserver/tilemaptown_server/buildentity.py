@@ -125,7 +125,7 @@ class Entity(object):
 					if not u.is_client() and u.home_id != self.db_id and (u.owner_id != self.owner_id or u.owner_id == None) and u.map_id != u.owner_id and not u.has_permission(self, permission['persistent_object_entry'], False):
 						u.send_home()
 
-			cleaned_up_already = True
+			self.cleaned_up_already = True
 
 	def send(self, commandType, commandParams):
 		# Not supported by default
@@ -573,6 +573,8 @@ class Entity(object):
 
 	def send_home(self):
 		""" If entity has a home, send it there. If not, find somewhere else suitable. """
+		if not self.temporary:
+			self.save_on_clean_up = True
 		if self.home_id != None and self.switch_map(self.home_id,
 			new_pos=[self.home_position[0], self.home_position[1]] if (self.home_position and len(self.home_position) == 2) else None
 		):
