@@ -1361,7 +1361,7 @@ function initWorld() {
     }
 
     window.onclick = function (event) {
-      if (event.target == modal) {
+      if (event.target == loginmodal) {
         loginmodal.style.display = "none";
       }
       if (event.target == newitemmodal) {
