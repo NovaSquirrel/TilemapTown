@@ -316,10 +316,10 @@ def fn_tpaccept(map, client, context, arg):
 		failed_to_find(context, arg)
 		return
 	if arg not in client.requests:
-		respond(context, 'No pendint request from '+arg, error=True)
+		respond(context, 'No pending request from '+arg, error=True)
 	else:
 		respond(context, 'You accepted a teleport request from '+arg)
-		u.send("MSG", {'text': u.name_and_username()+" accepted your request"})
+		u.send("MSG", {'text': client.name_and_username()+" accepted your request"})
 		request = client.requests[arg]
 		if request[1] == 'tpa':
 			u.switch_map(u.map_id, new_pos=[client.x, client.y])

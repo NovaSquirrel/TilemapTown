@@ -209,6 +209,12 @@ sandbox   : Allowed to edit or delete other peoples' objects freely
 admin     : Allowed to use admin commands
 map_bot   : Allowed to use /listen
 bulk_build: Allowed to use builk-build protocol commands (BLK)
+object_entry            : Allowed to bring non-player entities here
+persistent_object_entry : Allowed to bring non-player entities here persistently (otherwise, they'll be sent home when the map unloads)
+modify_properties       : Allowed to modify properties of the map
+remote_command          : Allowed to make the command do a command
+modify_appearance       : Allowed to modify certain properties of the map
+list_contents           : Allowed to get a list of the entities on the map remotely
 
 /permlist
 List the map's default permissions and the permissions for each user
