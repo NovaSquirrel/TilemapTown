@@ -1036,7 +1036,7 @@ def fn_sethome(map, client, context, arg):
 
 @cmd_command(category="Teleport")
 def fn_home(map, client, context, arg):
-	if client.home == None:
+	if client.home_id == None:
 		respond(context, 'You don\'t have a home set', error=True)
 	else:
 		respond(context, 'Teleported to your home')
