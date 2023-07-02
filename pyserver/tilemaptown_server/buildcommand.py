@@ -1031,7 +1031,8 @@ def fn_goback(map, client, context, arg):
 
 @cmd_command(category="Teleport")
 def fn_sethome(map, client, context, arg):
-	client.home = [client.map_id, client.x, client.y]
+	client.home_id = client.map_id
+	client.home_position = [client.x, client.y]
 	respond(context, 'Home set')
 
 @cmd_command(category="Teleport")
