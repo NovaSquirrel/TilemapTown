@@ -499,13 +499,14 @@ def fn_DEL(map, client, arg):
 			client.send("ERR", {'text': 'Map isn\'t loaded, so it can\'t be modified'})
 			return
 		map.map_data_modified = True
-		write_to_build_log(map, client, "DEL", arg)
 
 		# Save undo information
+		old_data = None
 		if client.is_client() and client.map == map:
 			client.undo_delete_data = map.map_section(x1, y1, x2, y2)
 			client.undo_delete_when = time.time()
-			write_to_build_log(map, client, "DEL-old-data", client.undo_delete_data)
+			old_data = client.undo_delete_data
+		write_to_build_log(map, client, "DEL", arg, old_data)
 
 		# Do the delete and tell clients about it
 		for x in range(x1, x2+1):
@@ -542,9 +543,9 @@ def fn_PUT(map, client, arg):
 		if arg["obj"]: #object
 			tile_test = [tile_is_okay(x) for x in arg["atom"]]
 			if all(x[0] for x in tile_test): # all tiles pass the test
+				write_to_build_log(map, client, "PUT", arg, map.objs[x][y])
 				map.objs[x][y] = arg["atom"]
 				map.broadcast("MAP", map.map_section(x, y, x, y), send_to_links=True)
-				write_to_build_log(map, client, "PUT", arg)
 				notify_listeners()
 			else:
 				# todo: give a reason?
@@ -553,9 +554,9 @@ def fn_PUT(map, client, arg):
 		else: #turf
 			tile_test = tile_is_okay(arg["atom"])
 			if tile_test[0]:
+				write_to_build_log(map, client, "PUT", arg, map.turfs[x][y])
 				map.turfs[x][y] = arg["atom"]
 				map.broadcast("MAP", map.map_section(x, y, x, y), send_to_links=True)
-				write_to_build_log(map, client, "PUT", arg)
 				notify_listeners()
 			else:
 				client.send("MAP", map.map_section(x, y, x, y))

@@ -377,7 +377,7 @@ def make_protocol_message_string(command, params):
 		return command + " " + json.dumps(params)
 	return command
 
-def write_to_build_log(map, client, command, args):
+def write_to_build_log(map, client, command, args, old_data = None):
 	if not BuildLog:
 		return
 
@@ -399,8 +399,13 @@ def write_to_build_log(map, client, command, args):
 		# TODO: Try to get the creator's ID if they're present, but right now non-clients can't build anyway
 		ip = "(owned by %d)" % client.owner_id
 
+	if old_data == None:
+		old_data = ""
+	else:
+		old_data = " | " + json.dumps(old_data)
+
 	now = datetime.datetime.today().strftime("%Y-%m-%d %I:%M %p")
-	BuildLog.write('%s map=(%s, %s) ip=%s db=%s name=%s user=%s map=%d | %s %s\n' % (now, json.dumps(map.name), map.protocol_id(), ip, client.db_id if client.db_id != None else "", json.dumps(client.name), client.username if client.is_client() else "", map.db_id, command, json.dumps(args)))
+	BuildLog.write('%s map=(%s, %s) ip=%s db=%s name=%s user=%s map=%d | %s %s%s\n' % (now, json.dumps(map.name), map.protocol_id(), ip, client.db_id if client.db_id != None else "", json.dumps(client.name), client.username if client.is_client() else "", map.db_id, command, json.dumps(args), old_data))
 
 from .buildentity import Entity, EntityWithPlainData
 from .buildmap import Map
