@@ -351,6 +351,8 @@ function referenceItem(id) {
 }
 
 function updateDirectionForAnim(id) {
+  if(!PlayerWho[id])
+    return;
   let dir = PlayerWho[id].dir;
   if ((dir & 1) == 0) {
     PlayerAnimation[id].lastDirection4 = dir;

@@ -41,8 +41,8 @@ class Map(Entity):
 		self.map_data_modified = False
 
 		# See also:
-		# self.turfs[y][x]
-		# self.objs[y][x]
+		# self.turfs[x][y]
+		# self.objs[x][y]
 
 		self.edge_id_links  = None
 		self.edge_ref_links = None

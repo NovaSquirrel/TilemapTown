@@ -53,6 +53,7 @@ def loadConfigJson():
 	setConfigDefault("Server",   "WSMaxQueue",       32)
 	setConfigDefault("Server",   "BroadcastConnects", True)
 	setConfigDefault("Server",   "BroadcastDisconnects", True)
+	setConfigDefault("Server",   "MaxMapSize",       256)
 
 	setConfigDefault("Database", "File",             "town.db")
 	setConfigDefault("Database", "Setup",            True)

@@ -157,7 +157,7 @@ function receiveServerMessage(cmd, arg) {
       } else {
         CurrentMapID = arg.id;
 
-        if(CurrentMapID in MapsByID) {
+        if(CurrentMapID in MapsByID && MapsByID[CurrentMapID].Width == arg.size[0] && MapsByID[CurrentMapID].Height == arg.size[1]) {
           MyMap = MapsByID[CurrentMapID];
         } else {
           MyMap = new TownMap(arg.size[0], arg.size[1])
@@ -303,12 +303,14 @@ function receiveServerMessage(cmd, arg) {
         // Set up all of the animation states for each player present in the list
         for (var id in arg.list) {
           initPlayerIfNeeded(id);
+          updateDirectionForAnim(id);
         }
       } else if(arg.add) {
         if(!PlayerWho[arg.add.id] && arg.add.in_user_list) // if player isn't already in the list
           logMessage("Joining: "+arg.add.name, 'server_message');
         PlayerWho[arg.add.id] = arg.add;
         initPlayerIfNeeded(arg.add.id);
+        updateDirectionForAnim(arg.add.id);
         NeedMapRedraw = true;
       } else if(arg.remove) {
         if(PlayerWho[arg.remove].in_user_list)

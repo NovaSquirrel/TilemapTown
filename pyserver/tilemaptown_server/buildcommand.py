@@ -757,6 +757,65 @@ def fn_mapspawn(map, client, context, arg):
 	map.start_pos = [client.x, client.y]
 	respond(context, 'Map start changed to %d,%d' % (client.x, client.y))
 
+@cmd_command(category="Map", map_only=True,)
+def fn_getmapsize(map, client, context, arg):
+	respond(context, 'This map\'s size is %d,%d' % (map.width, map.height))
+
+@cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="width height")
+def fn_mapsize(map, client, context, arg):
+	width_height = arg.split(' ')
+	if len(width_height) != 2 or not width_height[0].isdecimal() or not width_height[1].isdecimal():
+		respond(context, 'Syntax: /mapsize width height', error=True)
+		return
+	width = int(width_height[0])
+	height = int(width_height[1])
+	if width > Config["Server"]["MaxMapSize"] or height > Config["Server"]["MaxMapSize"]:
+		respond(context, 'Map is too big (Max width/height is %d)' % Config["Server"]["MaxMapSize"], error=True)
+		return
+
+	if width < map.width:
+		# Check if it would delete anything
+		for y in range(map.height):
+			for x in range(map.width - width):
+				if map.turfs[x + width][y] or map.objs[x + width][y]:
+					respond(context, 'Can\'t shrink map horizontally, there\'s something at %d,%d' % (x + width, y))
+					return
+	if height < map.height:
+		# Check if it would delete anything
+		for y in range(map.height - height):
+			for x in range(map.width):
+				if map.turfs[x][y + height] or map.objs[x][y + height]:
+					respond(context, 'Can\'t shrink map vertically, there\'s something at %d,%d' % (x, y + height))
+					return
+
+	# Array is [x][y]
+	if width > map.width:
+		for i in range(width - map.width):
+			map.turfs.append([None] * map.height)
+			map.objs.append([None] * map.height)
+	elif width < map.width:
+		del map.turfs[width:]
+		del map.objs[width:]
+	map.width = width
+		
+	if height > map.height:
+		for i in range(map.width):
+			map.turfs[i].extend([None] * (height-map.height))
+			map.objs[i].extend([None] * (height-map.height))
+	elif height < map.height:
+		for i in range(map.width):
+			del map.turfs[i][height:]
+			del map.objs[i][height:]
+	map.height = height
+
+	respond(context, 'This map\'s size is now %d,%d' % (map.width, map.height))
+	for user in map.contents:
+		if user.is_client():
+			user.loaded_maps.discard(map.db_id)
+			user.start_batch()
+			map.send_map_info(user)
+			user.finish_batch()
+
 @cmd_command()
 def fn_coords(map, client, context, arg):
 	respond(context, 'You\'re standing on %d,%d' % (client.x, client.y))
