@@ -134,6 +134,8 @@ permission['modify_properties']       = 0x0800 # user can modify the properties 
 permission['remote_command']          = 0x1000 # user can make this entity do arbitrary commands
 permission['modify_appearance']       = 0x2000 # user can modify visual properties, like picture or description
 permission['list_contents']           = 0x4000 # user can look at the contents of this entity
+permission['set_owner_to_this']       = 0x8000 # user can set their owner to this entity
+
 permission['all']                     = 0xffffffff # future proofing!
 
 def permission_list_from_bitfield(bitfield):

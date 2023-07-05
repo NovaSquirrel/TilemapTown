@@ -1489,6 +1489,8 @@ def fn_selfown(map, client, context, arg):
 			id = find_db_id_by_username(arg)
 			if id == None:
 				failed_to_find(context, arg)
+			elif not client.has_permission(id, permission['set_owner_to_this'], False):
+				respond(context, "You don't have permission to change ownership to %s" % arg)
 			else:
 				client.owner_id = id
 				respond(context, "Changed your ownership to %s" % arg)
