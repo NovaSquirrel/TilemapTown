@@ -236,6 +236,12 @@ Enable or disable building on the map
 /mapdisablesave on/off
 Enable or disable saving the map (temporarily)
 
+/mapedgelink edge map_id
+Link this map to another map, so that moving past the edge will put you on that other map.
+If map_id is "none" then the link will be removed.
+The link has to be applied separately on both maps.
+Edge is a number from 0 to 7, where 0 is east, 1 is south east, 2 is south, and so on.	
+
 ---Miscellaneous---
 /time
 Display current date and time
