@@ -86,7 +86,7 @@ Optionally also defines "start_pos" for map admins
 delete a section of map
 
 --> BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...]}
-<-- BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...], "username": username}
+<-- BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...], "username": username, "user_id": id}
 Bulk building command. Requires the "bulk_build" permission.
 Applies a series of rectangles to the map.
 Width and height may be omitted, in order to just do a single tile.
@@ -313,3 +313,7 @@ MOV {params}
 
 Where BAT signals that it's a batch message, and newline characters (\n) separate the characters that make up each sub-message. Carriage returns (\r) are not used.
 Batch messages cannot be nested, so none of the sub-messages can be BAT.
+
+=== Extension: receive_build_messages ===
+When the server receives any PUT or DEL messages, it will also send them to any clients on the same map supports receive_build_messages.
+These relayed messages will have additional "user_id" and "username" fields on them.

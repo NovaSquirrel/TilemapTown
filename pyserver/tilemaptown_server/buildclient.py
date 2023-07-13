@@ -65,6 +65,9 @@ class Client(Entity):
 		self.messages_in_batch = []
 		self.make_batch = 0 # Integer instead of bool. Allows layering batches on top of each other and waiting until the bottom level is done.
 
+		# Other extensions
+		self.receive_build_messages = False
+
 		self.identified = False
 
 		AllClients.add(self)

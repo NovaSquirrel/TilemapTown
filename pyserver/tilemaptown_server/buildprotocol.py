@@ -515,11 +515,14 @@ def fn_DEL(map, client, arg):
 					map.turfs[x][y] = None;
 				if arg["obj"]:
 					map.objs[x][y] = None;
-		map.broadcast("MAP", map.map_section(x1, y1, x2, y2), send_to_links=True)
-
 		# make username available to listeners
 		arg['username'] = client.username_or_id()
+		arg['user_id'] = client.protocol_id()
 		map.broadcast("DEL", arg, remote_only=True, remote_category=botwatch_type['build'])
+		map.broadcast("DEL", arg, require_extension="receive_build_messages")
+
+		# send map update to everyone on the map
+		map.broadcast("MAP", map.map_section(x1, y1, x2, y2), send_to_links=True)
 	else:
 		client.send("MAP", map.map_section(x1, y1, x2, y2))
 		client.send("ERR", {'text': 'Building is disabled on this map'})
@@ -529,7 +532,9 @@ def fn_PUT(map, client, arg):
 	def notify_listeners():
 		# make username available to listeners
 		arg['username'] = client.username_or_id()
+		arg['user_id'] = client.protocol_id()
 		map.broadcast("PUT", arg, remote_only=True, remote_category=botwatch_type['build'])
+		map.broadcast("PUT", arg, require_extension="receive_build_messages")
 
 	x = arg["pos"][0]
 	y = arg["pos"][1]
@@ -545,8 +550,8 @@ def fn_PUT(map, client, arg):
 			if all(x[0] for x in tile_test): # all tiles pass the test
 				write_to_build_log(map, client, "PUT", arg, map.objs[x][y])
 				map.objs[x][y] = arg["atom"]
-				map.broadcast("MAP", map.map_section(x, y, x, y), send_to_links=True)
 				notify_listeners()
+				map.broadcast("MAP", map.map_section(x, y, x, y), send_to_links=True)
 			else:
 				# todo: give a reason?
 				client.send("MAP", map.map_section(x, y, x, y))
@@ -556,8 +561,8 @@ def fn_PUT(map, client, arg):
 			if tile_test[0]:
 				write_to_build_log(map, client, "PUT", arg, map.turfs[x][y])
 				map.turfs[x][y] = arg["atom"]
-				map.broadcast("MAP", map.map_section(x, y, x, y), send_to_links=True)
 				notify_listeners()
+				map.broadcast("MAP", map.map_section(x, y, x, y), send_to_links=True)
 			else:
 				client.send("MAP", map.map_section(x, y, x, y))
 				client.send("ERR", {'text': 'Tile [tt]%s[/tt] rejected (%s)' % (arg["atom"], tile_test[1])})
@@ -585,6 +590,7 @@ def fn_BLK(map, client, arg):
 				return
 		# make username available to other clients
 		arg['username'] = client.username_or_id()
+		arg['user_id'] = client.protocol_id()
 
 		# do copies
 		for copy in arg.get("copy", []):
@@ -667,7 +673,8 @@ def fn_PIN(map, client, arg):
 
 available_server_features = {
 	"see_past_map_edge": {"version": "0.0.1", "minimum_version": "0.0.1"},
-	"batch": {"version": "0.0.1", "minimum_version": "0.0.1"}
+	"batch": {"version": "0.0.1", "minimum_version": "0.0.1"},
+	"receive_build_messages": {"version": "0.0.1", "minimum_version": "0.0.1"},
 }
 server_software_name = "Tilemap Town server"
 server_software_version = "0.2.0"
@@ -699,6 +706,8 @@ def fn_IDN(map, client, arg):
 					client.see_past_map_edge = True
 				elif key == "batch":
 					client.can_batch_messages = True
+				elif key == "receive_build_messages":
+					client.receive_build_messages = True
 
 				# Add it to the set and acnowledge it too
 				client.features.add(key)

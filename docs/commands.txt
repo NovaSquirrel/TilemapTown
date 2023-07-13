@@ -246,6 +246,7 @@ Display current date and time
 Start or stop listening in on a comma separated list of categories and maps. The client's account must be registered and have the map_bot permission granted for the map being listened in on.
 
 Protocol messages relayed will have a "remote_map" parameter added to them, with the map ID.
+Messages will also have "username" and "user_id", for PUT, DEL and BLK.
 
 Categories available (and protocol messages that get relayed):
 move:  MOV, TAP
