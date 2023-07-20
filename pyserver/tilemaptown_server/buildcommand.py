@@ -322,9 +322,9 @@ def fn_tpaccept(map, client, context, arg):
 		u.send("MSG", {'text': client.name_and_username()+" accepted your request"})
 		request = client.requests[arg]
 		if request[1] == 'tpa':
-			u.switch_map(u.map_id, new_pos=[client.x, client.y])
+			u.switch_map(client.map_id, new_pos=[client.x, client.y], on_behalf_of=client)
 		elif request[1] == 'tpahere':
-			client.switch_map(u.map_id, new_pos=[u.x, u.y])
+			client.switch_map(u.map_id, new_pos=[u.x, u.y], on_behalf_of=u)
 		elif request[1] == 'carry':
 			client.is_following = False
 			client.ride(u)
@@ -1645,12 +1645,12 @@ def fn_entity(map, client, context, arg):
 
 	elif subcommand == 'take':
 		if permission_check(permission['move_new_map']):
-			e.switch_map(client.db_id or client.protocol_id())
+			e.switch_map(client.db_id or client.protocol_id(), on_behalf_of=client)
 			save_entity = True
 	elif subcommand in ('drop', 'summon'):
 		if permission_check( (permission['move'], permission['move_new_map']) ):
 			if e.map_id is client.map_id or permission_check(permission['move_new_map']):
-				if not e.switch_map(client.map_id, new_pos=[client.x, client.y]):
+				if not e.switch_map(client.map_id, new_pos=[client.x, client.y], on_behalf_of=client):
 					respond(context, "Entity \"%s\" doesn't have permission to go to this map" % provided_id, error=True)
 				save_entity = True
 	elif subcommand == 'kick':

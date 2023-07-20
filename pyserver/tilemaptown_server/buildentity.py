@@ -295,6 +295,19 @@ class Entity(object):
 		""" Searches PERMISSION table and update map_allow and map_deny for the entity, so SQL queries can be skipped for the map they're on """
 		self.map_allow, self.map_deny = self.get_allow_deny_for_other_entity(self.map_id)
 
+	# Check if this entity is specifically disallowed from doing something, rather than being disallowed because something uses an allowlist
+	def is_banned_from(self, other_id, perm):
+		# If an entity is passed in, get its ID
+		if isinstance(other_id, Entity):
+			other_id = other_id.db_id
+		if other_id == None:
+			return False
+
+		c = Database.cursor()
+		c.execute('SELECT deny FROM Permission WHERE subject_id=? AND actor_id=?', (other_id, self.db_id,))
+		result = c.fetchone()
+		return result != None and bool(result[0] & perm)
+
 	# Entity has permission to act on some other entity
 	def has_permission(self, other, perm, default):
 		if isinstance(perm, tuple):
@@ -471,7 +484,7 @@ class Entity(object):
 		self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['move'])
 		other.map.broadcast("WHO", {'add': other.who()}, remote_category=botwatch_type['move'])
 
-		self.switch_map(other.map_id, new_pos=[other.x, other.y])
+		self.switch_map(other.map_id, new_pos=[other.x, other.y], on_behalf_of=other)
 
 	def dismount(self):
 		if self.vehicle == None:
@@ -512,7 +525,7 @@ class Entity(object):
 
 	# Other movement
 
-	def switch_map(self, map_id, new_pos=None, goto_spawn=True, update_history=True, edge_warp=False):
+	def switch_map(self, map_id, new_pos=None, goto_spawn=True, update_history=True, edge_warp=False, on_behalf_of=None):
 		""" Teleport the user to another map """
 		if self.is_client():
 			self.undo_delete_data = None
@@ -539,7 +552,11 @@ class Entity(object):
 					self.tp_history.pop()
 				self.finish_batch()
 				return False
-			if not self.has_permission(map_load, permission['entry'] if self.is_client() else permission['object_entry'], True): # probably don't need to check persistent_object_entry
+			which_permission = permission['entry'] if self.is_client() else permission['object_entry']
+			have_permission = (self if on_behalf_of == None else on_behalf_of).has_permission(map_load, which_permission, True) # probably don't need to check persistent_object_entry
+			if have_permission and on_behalf_of and self.is_banned_from(map_id, which_permission):
+				have_permission = False
+			if not have_permission:
 				self.send("ERR", {'text': 'You don\'t have permission to go to map %d' % map_id})
 				if added_new_history:
 					self.tp_history.pop()
@@ -571,7 +588,7 @@ class Entity(object):
 
 		# Move any passengers too
 		for u in self.passengers:
-			u.switch_map(map_id, new_pos=[self.x, self.y])
+			u.switch_map(map_id, new_pos=[self.x, self.y], on_behalf_of=self)
 
 		return True
 

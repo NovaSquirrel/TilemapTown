@@ -227,7 +227,7 @@ def fn_BAG(map, client, arg):
 			new_item.save()
 		# Put it in the player's inventory now, or wherever else they put it
 		if 'folder' in arg['clone']:
-			new_item.switch_map(args['clone']['folder'], new_pos=arg['clone']['pos'] if 'pos' in arg['clone'] else None)
+			new_item.switch_map(args['clone']['folder'], new_pos=arg['clone']['pos'] if 'pos' in arg['clone'] else None, on_behalf_of=client)
 		else:
 			client.add_to_contents(new_item)
 
@@ -284,7 +284,7 @@ def fn_BAG(map, client, arg):
 		if 'folder' in update:
 			if client.has_permission(update['folder'], (permission['entry']), False) \
 			and client.has_permission(update['folder'], (permission['object_entry'], permission['persistent_object_entry']), False):
-				if not update_me.switch_map(update['folder']):
+				if not update_me.switch_map(update['folder'], on_behalf_of=client):
 					client.send("ERR", {'text': 'Entity doesn\'t have permission to move there'})
 					del update['folder']
 			else:
