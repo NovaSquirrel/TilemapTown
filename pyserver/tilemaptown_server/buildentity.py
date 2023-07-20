@@ -267,6 +267,9 @@ class Entity(object):
 			'turf': [],
 			'obj': []
 		})
+
+		item.loaded_maps = set([self.db_id])
+
 		self.broadcast("MOV", {'id': item.protocol_id(), 'to': [random.randint(0, 9), random.randint(0, 9)]})
 
 	# Permission checking
