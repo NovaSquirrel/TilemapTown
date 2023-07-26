@@ -726,6 +726,13 @@ def fn_IDN(map, client, arg):
 		if not override_map or not client.switch_map(override_map[0], new_pos=None if (len(override_map) == 1) else (override_map[1:])):
 			client.switch_map(get_database_meta('default_map'))
 
+	# Apply this after logging in, so it can override the loaded value
+	if "bot" in arg:
+		if arg["bot"]:
+			client.user_flags |= userflag['bot']
+		else:
+			client.user_flags &= ~userflag['bot']
+
 	if len(Config["Server"]["MOTD"]):
 		client.send("MSG", {'text': Config["Server"]["MOTD"]})
 	client.identified = True
@@ -737,7 +744,12 @@ def fn_IDN(map, client, arg):
 				u.send("MSG", {'text': text})
 
 	client.send("IDN", ack_info if ack_info != {} else None)
-	client.send("MSG", {'text': 'Users connected: %d' % len(AllClients)})
+
+	bot_count = 0
+	for c in AllClients:
+		if c.user_flags & userflag['bot']:
+			bot_count += 1
+	client.send("MSG", {'text': 'Users connected: %d' % (len(AllClients)-bot_count) + ('' if bot_count == 0 else '. Bots connected: %d.' % bot_count)})
 
 # -------------------------------------
 

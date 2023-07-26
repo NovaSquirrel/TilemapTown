@@ -207,6 +207,8 @@ class Client(Entity):
 			'status': self.status_type,
 			'status_message': self.status_message
 		})
+		if self.user_flags & userflag['bot']:
+			w['bot'] = True
 		return w
 
 	def save(self):
