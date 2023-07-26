@@ -675,6 +675,7 @@ available_server_features = {
 	"see_past_map_edge": {"version": "0.0.1", "minimum_version": "0.0.1"},
 	"batch": {"version": "0.0.1", "minimum_version": "0.0.1"},
 	"receive_build_messages": {"version": "0.0.1", "minimum_version": "0.0.1"},
+	"message_forwarding": {"version": "0.0.1", "minimum_version": "0.0.1"},
 }
 server_software_name = "Tilemap Town server"
 server_software_version = "0.2.0"
@@ -685,6 +686,13 @@ server_version_dict = {'name': server_software_name, 'version': server_software_
 def fn_VER(map, client, arg):
 	# Also receives version info from the client, but ignore it for now
 	client.send("VER", server_version_dict)
+
+server_feature_attribute = {
+	"see_past_map_edge": "see_past_map_edge",
+	"batch": "can_batch_messages",
+	"receive_build_messages": "receive_build_messages",
+	"entity_message_forwarding": "can_forward_messages_to",
+}
 
 @protocol_command(pre_identify=True)
 def fn_IDN(map, client, arg):
@@ -701,13 +709,8 @@ def fn_IDN(map, client, arg):
 		ack_info["features"] = {}
 		for key, value in arg["features"].items():
 			if key in available_server_features: # TODO: check if specified version is >= minimum version
-				# Put it in a variable specifically for this
-				if key == "see_past_map_edge":
-					client.see_past_map_edge = True
-				elif key == "batch":
-					client.can_batch_messages = True
-				elif key == "receive_build_messages":
-					client.receive_build_messages = True
+				if key in server_feature_attribute:
+					setattr(client, server_feature_attribute[key], True)
 
 				# Add it to the set and acnowledge it too
 				client.features.add(key)

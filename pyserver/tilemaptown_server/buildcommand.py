@@ -77,6 +77,8 @@ def is_entity_owner(id, client):
 	""" Note that id is a string here """
 	if not id.isdecimal() or not client.username:
 		return False
+	if client.oper_override:
+		return True
 	return sql_exists('SELECT owner_id FROM Entity WHERE id=? AND owner_id=?', (int(id), client.db_id))
 
 def separate_first_word(text, lowercaseFirst=True):
@@ -857,13 +859,26 @@ def fn_getobj(map, client, context, arg):
 def fn_listeners(map, client, context, arg):
 	if map == None:
 		return
+
 	out = ''
 	for i in botwatch_type.keys():
 		c = botwatch_type[i]
 		if map.db_id in BotWatch[c]:
 			for u in BotWatch[c][map.db_id]:
 				out += '%s (%s), ' % (u.username, i)
-	respond(context, 'Listeners here: ' + out)
+	out_forward = ''
+	for e in map.contents:
+		if e.forward_messages_to:
+			out_forward += '%s (%s) → [%s], ' % (e.name_and_username(), ', '.join(list(e.forward_message_types)), ', '.join([p.name_and_username() for p in e.forward_messages_to]))
+
+	parts = []
+	if out:
+		parts.append('Remote listeners here: ' + out)
+	if out_forward:
+		parts.append('Forwarders here: ' + out_forward)
+	if not parts:
+		parts = ['Nothing is listening to this map']
+	respond(context, ' | '.join(parts))
 
 @cmd_command(privilege_level="registered", syntax="category,category,category... id,id,id...")
 def fn_listen(map, client, context, arg):
@@ -889,6 +904,7 @@ def fn_listen(map, client, context, arg):
 			# Send initial data
 			if c == 'build':
 				if get_entity_type_by_db_id(m) == entity_type['map']:
+					client.start_batch()
 					map = get_entity_by_id(m)
 					data = map.map_info()
 					data['remote_map'] = m
@@ -897,6 +913,7 @@ def fn_listen(map, client, context, arg):
 					data = map.map_section(0, 0, map.width-1, map.height-1)
 					data['remote_map'] = mh
 					client.send("MAP", data)
+					client.finish_batch()
 			elif c == 'entry':
 				if m in AllEntitiesByDB:
 					client.send("WHO", {'list': AllEntitiesByDB[m].who_contents(), 'remote_map': m})
@@ -1704,6 +1721,62 @@ def fn_entity(map, client, context, arg):
 	if save_entity and not e.temporary:
 		e.save_on_clean_up = True
 
+@cmd_command()
+def fn_message_forwarding(map, client, context, arg):
+	#/message_forwarding entity_id,entity_id,entity_id... MAP,MAI,PRI,...
+	args = arg.split(' ')
+
+	if len(args) >= 1:
+		if args[0] == 'clear':
+			respond(context, 'Clearing %d forwards' % len(client.forwarding_messages_from))
+			for e in client.forwarding_messages_from:
+				e.forward_messages_to.discard(client)
+				if not e.forward_messages_to:
+					e.forward_message_types.clear()
+		elif args[0] == 'list':
+			data = {'list': [e.protocol_id() for e in client.forwarding_messages_from]}
+			respond(context, ', '.join(['%s (%s)' % (e.name_and_username(), ', '.join(list(e.forward_message_types))) for e in client.forwarding_messages_from]), data=data)
+		elif args[0] == 'set':
+			if len(args) == 1:
+				respond(context, 'Provide a list of entities', error=True)
+				return
+			if len(args) >= 3:
+				message_types = args[2].split(',')
+			else:
+				message_types = []
+
+			# For the notice at the end
+			entities_set = []
+			entities_not_found = []
+			entities_not_allowed = []
+
+			# For all of the entities...
+			for entity_id in args[1].split(','):
+				entity = get_entity_by_id(entity_id)
+				if entity == None:
+					entities_not_found.append(entity_id)
+					continue
+				if not client.has_permission(entity):
+					entities_not_allowed.append(entity_id)
+					continue
+				entities_set.append(entity_id)
+
+				entity.forward_message_types = set([x.upper() for x in message_types if len(x) == 3])
+				entity.forward_messages_to.clear()
+
+				if entity.forward_message_types:
+					entity.forward_messages_to.add(client)
+					client.forwarding_messages_from.add(entity)
+					if entity.map:
+						entity.map.broadcast("WHO", {"update": {"id": entity.protocol_id(), "is_forwarding": True, "chat_listener": "MSG" in entity.forward_message_types}})
+				else:
+					client.forwarding_messages_from.discard(entity)
+					if entity.map:
+						entity.map.broadcast("WHO", {"update": {"id": entity.protocol_id(), "is_forwarding": False, "chat_listener": False}})
+			data = {'set': entities_set, 'not_found': entities_not_found, 'denied': entities_not_allowed}
+			respond(context, 'Set: %s. Not found: %s. Denied: %s.' % (','.join(entities_set), ','.join(entities_not_found), ','.join(entities_not_allowed)), data=data)
+		else:
+			respond(context, 'Please provide a subcommand: clear, list, set', error=True)
 # -------------------------------------
 
 def handle_user_command(map, client, respond_to, echo, text):

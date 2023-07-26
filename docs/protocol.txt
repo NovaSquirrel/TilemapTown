@@ -295,6 +295,7 @@ VER will tell the client what features are available, and the client can request
 	}
 }
 
+
 === Extension: see_past_map_edge ====
 If a client signals that it supports see_past_map_edge, then it will receive a MAI and MAP message for all of the maps linked from the one they have just joined.
 After this point, they'll receive MAP messages broadcast to those maps.
@@ -302,6 +303,7 @@ Messages for linked maps are marked with a remote_map field, just like the /list
 
 A client is expected to keep copies of the linked maps in memory, and the server takes this into account to reduce bandwidth usage.
 When a client moves to a new map, the server will send a MAI for the new map, but will not send MAIs or MAPs for the new map or any linked maps if they match the client's old map or any maps adjacent to it.
+
 
 === Extension: batch ====
 This extension allows the server to send multiple protocol messages to the client in one websocket message.
@@ -314,6 +316,41 @@ MOV {params}
 Where BAT signals that it's a batch message, and newline characters (\n) separate the characters that make up each sub-message. Carriage returns (\r) are not used.
 Batch messages cannot be nested, so none of the sub-messages can be BAT.
 
+
 === Extension: receive_build_messages ===
 When the server receives any PUT or DEL messages, it will also send them to any clients on the same map supports receive_build_messages.
 These relayed messages will have additional "user_id" and "username" fields on them.
+
+
+=== Extension: entity_message_forwarding ===
+When you own an entity, you can ask to have all messages with specific command types forwarded to you, instead of just being ignored.
+This has to be done each time you connect. Indicating that you support this extension is required to receive the messages.
+
+-----------------------------
+
+This is managed with the following commands:
+
+/message_forwarding list
+List all entities that are forwarding to you
+
+/message_forwarding clear
+Stop forwarding messages for any entities
+
+/message_forwarding set entity_id,entity_id,entity_id...
+Disable forwarding for a specific entity
+
+/message_forwarding set entity_id,entity_id,entity_id... MAP,MAI,PRI ...
+Enable forwarding for specific message types, for the specific entities
+
+-----------------------------
+
+The forwarded messages take the format:
+FWD ID CMD {params}
+Where ID is the entity's ID and the message will follow afterward like normal.
+
+The client should support forwarded batch messages, in the form:
+FWD ID BAT CMD {params}
+CMD {params}
+CMD {params}
+
+If an entity is forwarding messages, it will have a WHO field named "is_forwarding" that's set to true. If one of the forwarded types is "MSG", then there will be another field named "chat_listener" which is also true.

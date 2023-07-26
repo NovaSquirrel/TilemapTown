@@ -1771,28 +1771,52 @@ function updateSelectedObjectsUL() {
 }
 
 function updateUsersUL() {
-  var include_all_entities = document.getElementById('userlist_all_entities').checked;
+  let include_all_entities = document.getElementById('userlist_all_entities').checked;
 
-  // Manage the users <ul>
-  var ul = document.getElementById('usersul');
-  if (!ul)
-    return;
+  function cards(ul, span, ids) {
+    ul = document.getElementById(ul);
+    if (!ul)
+      return;
+    span = document.getElementById(span);
+    if (!span)
+      return;
+    span.style.display = ids.length ? 'block' : 'none';
 
-  let player_ids = Object.values(PlayerWho).filter(
-    item => item.in_user_list || include_all_entities
+    itemCardList(ul, ids, {
+      eventlisteners: {
+        'contextmenu': function (e, id) {
+          openItemContextMenu(id, e.clientX, e.clientY);
+          e.preventDefault();
+        }
+      },
+      top_level: true
+    });
+  }
+
+  // Manage the lists and spans
+  cards('usersul', 'userlist_span', Object.values(PlayerWho).filter(
+    item => item.in_user_list
   ).map(
     item => item.id
-  )
+  ));
 
-  itemCardList(ul, player_ids, {
-    eventlisteners: {
-      'contextmenu': function (e, id) {
-        openItemContextMenu(id, e.clientX, e.clientY);
-        e.preventDefault();
-      }
-    },
-    top_level: true
-  });
+  cards('chatlistenerul', 'chatlisteners_span', Object.values(PlayerWho).filter(
+    item => !item.in_user_list && item.chat_listener
+  ).map(
+    item => item.id
+  ));
+
+  cards('messageforwardul', 'messageforward_span', !include_all_entities ? [] : Object.values(PlayerWho).filter(
+    item => !item.in_user_list && item.is_forwarding && !item.chat_listener
+  ).map(
+    item => item.id
+  ));
+
+  cards('otherentityul', 'otherentity_span', !include_all_entities ? [] : Object.values(PlayerWho).filter(
+    item => !item.in_user_list && !item.is_forwarding
+  ).map(
+    item => item.id
+  ));
 }
 
 function updateMailUL() {

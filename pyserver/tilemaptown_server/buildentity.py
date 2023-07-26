@@ -50,8 +50,8 @@ class Entity(object):
 		# Other info
 		self.tags = {}    # Description, species, gender and other things
 		self.data = None  # Data that gets stored in the database
-		self.contents = set()
-		self.flags = 0
+		self.contents = set() # Entities stored inside this one
+		self.flags = 0        # Entity flags, like "public"?
 
 		# temporary information
 		self.requests = {} # Indexed by username, array with [timer, type]
@@ -60,6 +60,10 @@ class Entity(object):
 
 		# allow cleaning up BotWatch info
 		self.listening_maps = set() # tuples of (category, map)
+
+		# message forwarding; for bringing bot entities onto different maps, that can listen to messages
+		self.forward_message_types = set()
+		self.forward_messages_to = weakref.WeakSet()
 
 		# riding information
 		self.vehicle = None     # User being ridden
@@ -128,11 +132,19 @@ class Entity(object):
 			self.cleaned_up_already = True
 
 	def send(self, commandType, commandParams):
-		# Not supported by default
+		# Normal entities don't get messages, but they can if there's a forward
+		if self.forward_messages_to and commandType in self.forward_message_types:
+			for c in self.forward_messages_to:
+				if c.can_forward_messages_to:
+					asyncio.ensure_future(c.ws.send("FWD %s %s" % (self.protocol_id(), make_protocol_message_string(commandType, commandParams))))
 		return
 
 	def send_string(self, raw):
 		# Directly send a string, so you can json.dumps once and reuse it for everyone
+		if self.forward_messages_to and raw[0:3] in self.forward_message_types:
+			for c in self.forward_messages_to:
+				if c.can_forward_messages_to:
+					asyncio.ensure_future(c.ws.send("FWD %s %s" % (self.protocol_id(), raw)))
 		return
 
 	def start_batch(self):
@@ -312,7 +324,7 @@ class Entity(object):
 		return result != None and bool(result[0] & perm)
 
 	# Entity has permission to act on some other entity
-	def has_permission(self, other, perm, default):
+	def has_permission(self, other, perm=0, default=False):
 		if isinstance(perm, tuple):
 			return any(self.has_permission(other, x, default) for x in perm)
 
@@ -336,6 +348,8 @@ class Entity(object):
 					return True
 				if other.owner_id == self.db_id and self.db_id != None:
 					return True
+				if perm == 0: # perm = 0 is an owner check
+					return False
 
 				# Let the entity override the default
 				if other.allow & perm:
@@ -360,9 +374,11 @@ class Entity(object):
 				# If you're the owner, you automatically have permission
 				if self.db_id == other.owner_id or self.id == other.creator_temp_id:
 					return True
-				# Also if it's you, you have permission
+				# Also if you're checking permission to act on yourself, it always works
 				if self.db_id == other.db_id:
 					return True
+			if perm == 0: # perm = 0 is an owner check
+				return False
 
 			# Let the entity override the default
 			if other.allow & perm:
@@ -393,18 +409,23 @@ class Entity(object):
 		#############################################################
 		# If it's not loaded, a query is unavoidable
 		other_id = other
-		if isinstance(other_id, Entity):
-			other_id = other.db_id
 
 		# Get the basic allow/deny/guest_deny
 		c = Database.cursor()
-		c.execute('SELECT allow, deny, guest_deny FROM Entity WHERE id=?', (other_id,))
+		c.execute('SELECT allow, deny, guest_deny, owner_id FROM Entity WHERE id=?', (other_id,))
 		result = c.fetchone()
 		if result == None: # Oops, entity doen't even exist
 			return False
 		allow = result[0]
 		deny = result[1]
 		guest_deny = result[2]
+		owner_id = result[3]
+
+		# If you're the owner, you have permission
+		if self.db_id and self.db_id == owner_id:
+			return True
+		if perm == 0:
+			return False
 
 		# Let the entity override the default
 		if allow & perm:
@@ -634,7 +655,7 @@ class Entity(object):
 
 	def who(self):
 		""" A dictionary of information for the WHO command """
-		return {
+		out = {
 			'name': self.name,
 			'pic': self.pic,
 			'x': self.x,
@@ -647,6 +668,11 @@ class Entity(object):
 			'type': entity_type_name[self.entity_type],
 			'in_user_list': self.is_client()
 		}
+		if self.forward_messages_to:
+			out['is_forwarding'] = True
+			if 'MSG' in self.forward_message_types:
+				out['chat_listener'] = True
+		return out
 
 	def bag_info(self):
 		""" Dictionary used to describe an object for a BAG protocol message """		

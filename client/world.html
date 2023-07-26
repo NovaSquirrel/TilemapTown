@@ -215,8 +215,25 @@
   <span slot="title">Users</span>
   <div slot="contents">
     <input type="checkbox" id="userlist_all_entities" onchange="updateUsersUL()"><label for="userlist_all_entities">All entities<label></input>
-    <ul id="usersul" class="itemsul unselectable">
-    </ul>
+    <span id="userlist_span">
+      <hr><strong>Users</strong><br>
+      <ul id="usersul" class="itemsul unselectable"></ul>
+	</span>
+
+    <span id="chatlisteners_span">
+      <hr><strong>Chat listeners</strong><br>
+      <ul id="chatlistenerul" class="itemsul unselectable"></ul>
+    </span>
+
+    <span id="messageforward_span">
+      <hr><strong>Other listeners</strong><br>
+      <ul id="messageforwardul" class="itemsul unselectable"></ul>
+    </span>
+
+    <span id="otherentity_span">
+      <hr><strong>Other entities</strong><br>
+      <ul id="otherentityul" class="itemsul unselectable"></ul>
+    </span>
   </div>
 </widget-window>
 

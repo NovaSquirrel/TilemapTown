@@ -306,15 +306,19 @@ function receiveServerMessage(cmd, arg) {
           updateDirectionForAnim(id);
         }
       } else if(arg.add) {
-        if(!PlayerWho[arg.add.id] && arg.add.in_user_list) // if player isn't already in the list
-          logMessage("Joining: "+arg.add.name, 'server_message');
+        if(!PlayerWho[arg.add.id] && (arg.add.in_user_list || arg.add.chat_listener)) { // if player isn't already in the list
+          let isForwarding = arg.add.chat_listener ? " &#x1F916;" : "";
+          logMessage("Joining: "+arg.add.name + isForwarding, 'server_message');
+        }
         PlayerWho[arg.add.id] = arg.add;
         initPlayerIfNeeded(arg.add.id);
         updateDirectionForAnim(arg.add.id);
         NeedMapRedraw = true;
       } else if(arg.remove) {
-        if(PlayerWho[arg.remove].in_user_list)
+        if(PlayerWho[arg.remove].in_user_list) {
+          let isForwarding = PlayerWho[arg.remove].chat_listener ? " &#x1F916;" : "";
           logMessage("Leaving: "+PlayerWho[arg.remove].name, 'server_message');
+        }
         // unload image if needed
         if (arg.remove in PlayerImages)
           delete PlayerImages[arg.remove];

@@ -67,6 +67,10 @@ class Client(Entity):
 
 		# Other extensions
 		self.receive_build_messages = False
+		self.can_forward_messages_to = False
+
+		# Clients keep the entities they're using for message forwarding alive by keeping strong references to them in this set
+		self.forwarding_messages_from = set()
 
 		self.identified = False
 
