@@ -1247,6 +1247,17 @@ def fn_userpic(map, client, context, arg):
 	else:
 		respond(context, 'Syntax is: /userpic sheet x y', error=True)
 
+@cmd_command(category="Settings", syntax='"x y"')
+def fn_offset(map, client, context, arg):
+	arg = arg.split(' ')
+	if len(arg) == 2:
+		offset_x, offset_y = min(16, max(-16, int(arg[0]))), min(16, max(-16, int(arg[1])))
+		client.offset = [offset_x, offset_y]
+		map.broadcast("MOV", {"id": client.protocol_id(), "offset": [offset_x, offset_y]}, remote_category=botwatch_type['move'])
+	else:
+		client.offset = None
+		map.broadcast("MOV", {"id": client.protocol_id(), "offset": None}, remote_category=botwatch_type['move'])
+
 @cmd_command(category="Who")
 def fn_gwho(map, client, context, arg):
 	names = ''

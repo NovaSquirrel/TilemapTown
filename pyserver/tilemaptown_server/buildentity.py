@@ -36,6 +36,7 @@ class Entity(object):
 		self.map_id = None         # Map the entity is currently on
 		self.x = 0
 		self.y = 0
+		self.offset = None         # Visual offset in pixels
 
 		self.home_id = None        # Map that is the entity's "home"
 		self.home_position = None
@@ -668,6 +669,8 @@ class Entity(object):
 			'type': entity_type_name[self.entity_type],
 			'in_user_list': self.is_client()
 		}
+		if self.offset and self.offset != [0,0]:
+			out['offset'] = self.offset
 		if self.forward_messages_to:
 			out['is_forwarding'] = True
 			if 'MSG' in self.forward_message_types:

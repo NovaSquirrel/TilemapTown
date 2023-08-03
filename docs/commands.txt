@@ -72,6 +72,9 @@ Reads the character description of someone (or something) on the same map
 Displays someone's last login/logout time
 
 ---Movement---
+/offset x y
+Offsets your character some amount of pixels horizontally and vertically
+
 /map mapnumber
 /defaultmap
 Switch to a different map

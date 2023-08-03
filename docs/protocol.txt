@@ -55,6 +55,9 @@ Request to move to a specific position on another map
 --> MOV {"dir": 0}
 Change direction only
 
+--> MOV {"offset": [x,y]}
+Change your pixel offset
+
 <-- MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "id": 0}
 Move a player on the map.
 "from" may be left out, and if so, a client won't ignore MOVs for its own ID.

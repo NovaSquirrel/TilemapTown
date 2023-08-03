@@ -134,13 +134,21 @@ def fn_MOV(map, client, arg):
 	# Broadcast that this entity moved
 	data = {'id': client.protocol_id()}
 	any_valid_fields = False
-	for valid_field in ('from', 'to', 'dir'):
+	for valid_field in ('from', 'to', 'dir', 'offset'):
 		if valid_field in arg:
 			any_valid_fields = True
 			data[valid_field] = arg[valid_field]
 	if not any_valid_fields:
 		return
 	map.broadcast("MOV", data, remote_category=botwatch_type['move'])
+
+	if 'offset' in data:
+		offset = data['offset']
+		if offset == None:
+			client.offset = None
+		else:
+			offset_x, offset_y = min(16, max(-16, offset[0])), min(16, max(-16, offset[1]))
+			client.offset = [offset_x, offset_y]
 
 	# Update this entity's position
 	new_dir = data['dir'] if 'dir' in data else None

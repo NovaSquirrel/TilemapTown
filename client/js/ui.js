@@ -718,8 +718,9 @@ function drawMap() {
   // Draw the entities, including the player
 
   function draw32x32Player(who, frameX, frameY) {
-    var Mob = PlayerWho[index];
-    ctx.drawImage(PlayerImages[who], frameX * 32, frameY * 32, 32, 32, (Mob.x * 16 - 8) - PixelCameraX, (Mob.y * 16 - 16) - PixelCameraY, 32, 32);
+    var Mob = PlayerWho[who];
+    var offset = Mob.offset ?? [0,0];
+    ctx.drawImage(PlayerImages[who], frameX * 32, frameY * 32, 32, 32, (Mob.x * 16 - 8) - PixelCameraX + offset[0], (Mob.y * 16 - 16) - PixelCameraY + offset[1], 32, 32);
   }
 
   var sortedPlayers = [];
@@ -749,6 +750,7 @@ function drawMap() {
       }
 
       var Mob = PlayerWho[index];
+      var MobOffset = Mob.offset ?? [0,0];
       var playerIs16x16 = false;
       if (index in PlayerImages) {
         let tilesetWidth = PlayerImages[index].naturalWidth;
@@ -756,7 +758,7 @@ function drawMap() {
         if (tilesetWidth == 32 && tilesetHeight == 32) {
           draw32x32Player(index, 0, 0);
         } else if (tilesetWidth == 16 && tilesetHeight == 16) {
-          ctx.drawImage(PlayerImages[index], 0, 0, 16, 16, (Mob.x * 16) - PixelCameraX, (Mob.y * 16) - PixelCameraY, 16, 16);
+          ctx.drawImage(PlayerImages[index], 0, 0, 16, 16, (Mob.x * 16) - PixelCameraX + MobOffset[0], (Mob.y * 16) - PixelCameraY + MobOffset[1], 16, 16);
           playerIs16x16 = true;
         } else {
           let frameX = 0, frameY = 0;
@@ -800,7 +802,7 @@ function drawMap() {
         if (pic == null)
           pic = [0, 8, 24];
         if (pic[0] in IconSheets)
-          ctx.drawImage(IconSheets[pic[0]], pic[1] * 16, pic[2] * 16, 16, 16, (Mob.x * 16) - PixelCameraX, (Mob.y * 16) - PixelCameraY, 16, 16);
+          ctx.drawImage(IconSheets[pic[0]], pic[1] * 16, pic[2] * 16, 16, 16, (Mob.x * 16) - PixelCameraX + MobOffset[0], (Mob.y * 16) - PixelCameraY + MobOffset[1], 16, 16);
         playerIs16x16 = true;
       }
 
@@ -808,22 +810,22 @@ function drawMap() {
 
       // typing indicators
       if (Mob.typing) {
-        ctx.drawImage(IconSheets[0], 0, 24 * 16, 16, 16, (Mob.x * 16) - PixelCameraX, (Mob.y * 16) - PixelCameraY - heightForPlayerStatus, 16, 16);
+        ctx.drawImage(IconSheets[0], 0, 24 * 16, 16, 16, (Mob.x * 16) - PixelCameraX + MobOffset[0], (Mob.y * 16) - PixelCameraY - heightForPlayerStatus + MobOffset[1], 16, 16);
       }
 
       // carry text and nametags
       if (IsMousedOver && !(!Mob.is_following && Mob.vehicle)) {
         if (Mob.passengers.length > 0) {
-          drawText(ctx, (Mob.x * 16) - PixelCameraX - (Mob.name.length * 8 / 2 - 8), (Mob.y * 16) - PixelCameraY - heightForPlayerStatus - 8, Mob.name);
+          drawText(ctx, (Mob.x * 16) - PixelCameraX - (Mob.name.length * 8 / 2 - 8) + MobOffset[0], (Mob.y * 16) - PixelCameraY - heightForPlayerStatus - 8 + MobOffset[1], Mob.name);
           var carryNames = [];
           for (var passenger_index of Mob.passengers) {
-            carryNames.push(PlayerWho[passenger_index].username);
+            carryNames.push(PlayerWho[passenger_index].name);
           }
           var carryText = "carrying: " + carryNames.join(", ");
 
-          drawText(ctx, (Mob.x * 16) - PixelCameraX - (carryText.length * 8 / 2 - 8), (Mob.y * 16) - PixelCameraY - heightForPlayerStatus, carryText);
+          drawText(ctx, (Mob.x * 16) - PixelCameraX - (carryText.length * 8 / 2 - 8) + MobOffset[0], (Mob.y * 16) - PixelCameraY - heightForPlayerStatus + MobOffset[1], carryText);
         } else {
-          drawText(ctx, (Mob.x * 16) - PixelCameraX - (Mob.name.length * 8 / 2 - 8), (Mob.y * 16) - PixelCameraY - heightForPlayerStatus, Mob.name);
+          drawText(ctx, (Mob.x * 16) - PixelCameraX - (Mob.name.length * 8 / 2 - 8) + MobOffset[0], (Mob.y * 16) - PixelCameraY - heightForPlayerStatus + MobOffset[1], Mob.name);
         }
       }
     } catch (error) {

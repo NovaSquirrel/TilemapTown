@@ -145,6 +145,9 @@ function receiveServerMessage(cmd, arg) {
           PlayerWho[arg.id].dir = arg.dir;
           updateDirectionForAnim(arg.id);
         }
+        if("offset" in arg) {
+          PlayerWho[arg.id].offset = arg["offset"];
+        }
         NeedMapRedraw = true;
       }
       break;
