@@ -86,7 +86,7 @@ Optionally also defines "start_pos" for map admins
 delete a section of map
 
 --> BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...]}
-<-- BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...], "username": username, "user_id": id}
+<-- BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...], "username": username, "id": user_id}
 Bulk building command. Requires the "bulk_build" permission.
 Applies a series of rectangles to the map.
 Width and height may be omitted, in order to just do a single tile.
@@ -151,13 +151,13 @@ Command may have a machine-readable response if "echo" is provided, provided in 
 If "rc" is supplied, the server will act as if the entity specified in the ID did the command instead, returning the command results to you instead.
 For "rc", you need to either be the owner or have "remote_command" permissions on the object.
 
-<-- MSG {"text": "[text]", "name": speaker, "class": classname, "username": username}
+<-- MSG {"text": "[text]", "name": speaker, "class": classname, "username": username, "id": id}
 <-- MSG {"text": "[text]", "name": speaker, "class": classname, "buttons": ["name 1", "command 1", "name 2", "command 2"]}
 display message in log.
 "class" is a CSS class to style the image with.
 "buttons" provides a list of choices to present that will execute commands.
 
-<-- PRI {"text": "[text"], "name": display name, "username": username, "receive": true/false}
+<-- PRI {"text": "[text"], "name": display name, "id": id, "username": username, "receive": true/false}
 private message, displays in the log
 receive is false for sender, true for recipient
 
@@ -319,7 +319,7 @@ Batch messages cannot be nested, so none of the sub-messages can be BAT.
 
 === Extension: receive_build_messages ===
 When the server receives any PUT or DEL messages, it will also send them to any clients on the same map supports receive_build_messages.
-These relayed messages will have additional "user_id" and "username" fields on them.
+These relayed messages will have additional "id" and "username" fields on them.
 
 
 === Extension: entity_message_forwarding ===

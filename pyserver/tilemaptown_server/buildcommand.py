@@ -204,8 +204,8 @@ def fn_tell(map, client, context, arg):
 			if u:
 				if u.is_client():
 					if not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
-						client.send("PRI", {'text': privtext, 'name':u.name, 'username': u.username_or_id(), 'receive': False})
-						u.send("PRI", {'text': privtext, 'name':client.name, 'username': client.username_or_id(), 'receive': True})
+						client.send("PRI", {'text': privtext, 'name':u.name, 'id': client.protocol_id(), 'username': u.username_or_id(), 'receive': False})
+						u.send("PRI", {'text': privtext, 'name':client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'receive': True})
 				else:
 					respond(context, 'That entity isn\'t a user', error=True)
 			else:

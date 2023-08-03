@@ -461,7 +461,7 @@ def fn_EML(map, client, arg):
 def fn_MSG(map, client, arg):
 	if map:
 		text = arg["text"]
-		map.broadcast("MSG", {'name': client.name, 'username': client.username_or_id(), 'text': escape_tags(text)}, remote_category=botwatch_type['chat'])
+		map.broadcast("MSG", {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': escape_tags(text)}, remote_category=botwatch_type['chat'])
 
 @protocol_command()
 def fn_TSD(map, client, arg):
@@ -517,7 +517,7 @@ def fn_DEL(map, client, arg):
 					map.objs[x][y] = None;
 		# make username available to listeners
 		arg['username'] = client.username_or_id()
-		arg['user_id'] = client.protocol_id()
+		arg['id'] = client.protocol_id()
 		map.broadcast("DEL", arg, remote_only=True, remote_category=botwatch_type['build'])
 		map.broadcast("DEL", arg, require_extension="receive_build_messages")
 
@@ -532,7 +532,7 @@ def fn_PUT(map, client, arg):
 	def notify_listeners():
 		# make username available to listeners
 		arg['username'] = client.username_or_id()
-		arg['user_id'] = client.protocol_id()
+		arg['id'] = client.protocol_id()
 		map.broadcast("PUT", arg, remote_only=True, remote_category=botwatch_type['build'])
 		map.broadcast("PUT", arg, require_extension="receive_build_messages")
 
@@ -590,7 +590,7 @@ def fn_BLK(map, client, arg):
 				return
 		# make username available to other clients
 		arg['username'] = client.username_or_id()
-		arg['user_id'] = client.protocol_id()
+		arg['id'] = client.protocol_id()
 
 		# do copies
 		for copy in arg.get("copy", []):
