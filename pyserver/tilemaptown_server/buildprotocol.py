@@ -336,7 +336,7 @@ def fn_BAG(map, client, arg):
 		if 'temporary' in update and client.db_id:
 			update_me.temporary = update['temporary']
 
-		if not update_me.temporary:
+		if not update_me.is_client() and not update_me.temporary:
 			update_me.save()
 		update_me.broadcast_who()
 
