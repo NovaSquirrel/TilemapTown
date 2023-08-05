@@ -39,7 +39,8 @@ var Fly = false;
 var CameraScale = 1;
 
 // other settings
-var AudioNotifications = false;
+var AudioChatNotifications = true;
+var AudioMiscNotifications = false;
 
 // mouse stuff
 var MouseDown = false;
@@ -71,6 +72,8 @@ const FolderClosedPic = [0, 1, 20];
 const CameraScaleMin = 1;
 const CameraScaleMax = 8;
 
+var chatLogForExport = [];
+
 function getRandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
@@ -95,7 +98,10 @@ function convertBBCode(t) {
   return result.html;
 }
 
-function logMessage(Message, Class) {
+function logMessage(Message, Class, Params) {
+  if (Params === undefined) {
+    Params = {};
+  }
   var chatArea = document.getElementById("chatArea");
   var bottom = chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight<3;
 
@@ -107,9 +113,15 @@ function logMessage(Message, Class) {
   if (bottom)
     chatArea.scrollTop = chatArea.scrollHeight;
 
-  if (AudioNotifications) {
-    var audio = new Audio('img/notify.wav');
+  if ((Params.isChat || Params.isPrivateChat) && AudioChatNotifications) {
+    var audio = new Audio(Params.isPrivateChat ? 'img/notifyprivate.wav' : 'img/notifychat.wav');
     audio.play();
+  } else if (!Params.isChat && AudioMiscNotifications) {
+    var audio = new Audio('img/notifymisc.wav');
+    audio.play();
+  }
+  if (Params.plainText) {
+    chatLogForExport.push(Params.plainText);
   }
 }
 
@@ -404,6 +416,7 @@ function keyHandler(e) {
       // commands that are local to the client
       if (chatInput.value.toLowerCase() == "/clear") {
         chatArea.innerHTML = "";
+        chatLogForExport = [];
       } else if (chatInput.value.toLowerCase() == "/exportmap" || chatInput.value.toLowerCase() == "/mapexport") {
         //logMessage('<a href="data:,'+encodeURIComponent(exportMap())+'" download="map.txt">Map download (click here)</a>', 'server_message');
 
@@ -415,8 +428,22 @@ function keyHandler(e) {
         document.body.appendChild(element);
         element.click();
         document.body.removeChild(element);
-      }
+      } else if (chatInput.value.toLowerCase() == "/exportlogs" || chatInput.value.toLowerCase() == "/exportlog") {
+         // https://stackoverflow.com/a/4929629
+        var today = new Date();
+        var dd = String(today.getDate()).padStart(2, '0');
+        var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+        var yyyy = today.getFullYear();
+        today = yyyy + '-' + mm + '-' + dd;
 
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(chatLogForExport.join('\n')));
+        element.setAttribute('download', "tilemap town "+today+".txt");
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+      }
 
       // commands are CMD while regular room messages are MSG. /me is a room message.
       else if (chatInput.value.slice(0, 1) == "/" &&
@@ -550,7 +577,8 @@ function keyHandler(e) {
                       }
                     }
           */
-          logMessage(((Obj.name != "sign" && Obj.name != "") ? Obj.name + " says: " : "The sign says: ") + convertBBCode(Obj.message), "server_message");
+          logMessage(((Obj.name != "sign" && Obj.name != "") ? Obj.name.replace("<", "&lt;").replace(">", "&gt;") + " says: " : "The sign says: ") + convertBBCode(Obj.message), "server_message",
+            {'plainText': (Obj.name != "sign" && Obj.name != "") ? Obj.name + " says: " : "The sign says: " + Obj.message});
         }
         break;
       }
@@ -1386,11 +1414,13 @@ function initWorld() {
 
 function applyOptions() {
   var vcenter = document.getElementById("alwayscenter");
-  var vnotify = document.getElementById("audionotify");
+  var vnotifychat = document.getElementById("audiochatnotify");
+  var vnotifymisc = document.getElementById("audiomiscnotify");
   var vfly = document.getElementById("option-fly");
 
   CameraAlwaysCenter = vcenter.checked;
-  AudioNotifications = vnotify.checked;
+  AudioChatNotifications = vnotifychat.checked;
+  AudioMiscNotifications = vnotifymisc.checked;
   Fly = vfly.checked;
 }
 

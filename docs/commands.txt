@@ -25,6 +25,14 @@ Manage ignore list
 /away (message, optional)
 Set or clear away status
 
+/status
+/status status
+/status status message
+Clear status, set a status, or set a status with a message attached. The "iic" status is special ("Interested in being In Character") and you can search for it with /findiic.
+
+/exportlogs
+Save the log of your current chat session to a text file
+
 ---Utility---
 /getturf
 Makes a map tile object that would recreate the turf you're standing on, and puts it into your inventory.
