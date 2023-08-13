@@ -350,7 +350,7 @@ function receiveServerMessage(cmd, arg) {
 
             logMessage(message, 'status_change', {'isSilent': true, 'plainText': message});
           } else {
-            logMessage(PlayerWho[arg.update.id].name + " cleared their status", 'status_change', {'isSilent': true, 'plainText': message});
+            logMessage(PlayerWho[arg.update.id].name + " cleared their status", 'status_change', {'isSilent': true, 'plainText': PlayerWho[arg.update.id].name + " cleared their status"});
           }
         }
         PlayerWho[arg.update.id] = Object.assign(
