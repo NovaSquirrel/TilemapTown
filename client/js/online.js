@@ -332,6 +332,27 @@ function receiveServerMessage(cmd, arg) {
 
         NeedMapRedraw = true;
       } else if(arg.update) {
+        if("status" in arg.update && ((arg.update["status"] !== PlayerWho[arg.update.id]["status"]) || (("status_message" in arg.update) && arg.update["status_message"] !== PlayerWho[arg.update.id]["status_message"]))) {
+          if(arg.update["status"]) {
+			let status_name = '"' + escape_tags
+(arg.update["status"]) + '"';
+            switch(arg.update["status"].toLowerCase()) {
+              case "away": status_name = "away"; break;
+              case "busy": status_name = "busy"; break;
+              case "ic": status_name = "in character"; break;
+              case "ooc": status_name =  "out of character"; break;
+              case "iic": status_name = "looking to be in-character"; break;
+            }
+			let message = PlayerWho[arg.update.id].name + (status_name[0] == '"' ? "'s status is now ": " is now ") + status_name;
+			if(arg.update["status_message"]) {
+              message += ' ("' + convertBBCode(arg.update["status_message"]) + '")';
+            }
+
+            logMessage(message, 'status_change', {'isSilent': true, 'plainText': message});
+          } else {
+            logMessage(PlayerWho[arg.update.id].name + " cleared their status", 'status_change', {'isSilent': true, 'plainText': message});
+          }
+        }
         PlayerWho[arg.update.id] = Object.assign(
           PlayerWho[arg.update.id],
           arg.update

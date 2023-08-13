@@ -31,6 +31,10 @@
   color: lime;
 }
 
+.status_change {
+  color: silver;
+}
+
 .spoiler {
   color: gray; 
   background-color: gray;

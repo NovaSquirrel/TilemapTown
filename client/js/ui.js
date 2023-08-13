@@ -80,6 +80,10 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
+function escape_tags(t) {
+  return t.replace("<", "&lt;").replace(">", "&gt;").replace("&", "&amp;");
+}
+
 function convertBBCodeMultiline(t) {
   var result = XBBCODE.process({
     text: t,
@@ -114,11 +118,15 @@ function logMessage(Message, Class, Params) {
     chatArea.scrollTop = chatArea.scrollHeight;
 
   if ((Params.isChat || Params.isPrivateChat) && AudioChatNotifications) {
-    var audio = new Audio(Params.isPrivateChat ? 'img/notifyprivate.wav' : 'img/notifychat.wav');
-    audio.play();
+    if (!Params.isSilent) {
+      var audio = new Audio(Params.isPrivateChat ? 'img/notifyprivate.wav' : 'img/notifychat.wav');
+      audio.play();
+    }
   } else if (!Params.isChat && AudioMiscNotifications) {
-    var audio = new Audio('img/notifymisc.wav');
-    audio.play();
+    if (!Params.isSilent) {
+      var audio = new Audio('img/notifymisc.wav');
+      audio.play();
+    }
   }
   if (Params.plainText) {
     chatLogForExport.push(Params.plainText);
@@ -577,7 +585,7 @@ function keyHandler(e) {
                       }
                     }
           */
-          logMessage(((Obj.name != "sign" && Obj.name != "") ? Obj.name.replace("<", "&lt;").replace(">", "&gt;") + " says: " : "The sign says: ") + convertBBCode(Obj.message), "server_message",
+          logMessage(((Obj.name != "sign" && Obj.name != "") ? escape_tags(Obj.name) + " says: " : "The sign says: ") + convertBBCode(Obj.message), "server_message",
             {'plainText': (Obj.name != "sign" && Obj.name != "") ? Obj.name + " says: " : "The sign says: " + Obj.message});
         }
         break;
