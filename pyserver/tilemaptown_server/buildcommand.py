@@ -48,9 +48,6 @@ def cmd_command(alias=[], category="Miscellaneous", hidden=False, about=None, sy
 # -------------------------------------
 
 # Filtering chat text
-def escape_tags(text):
-	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-
 def find_entity_name(id):
 	c = Database.cursor()
 	c.execute('SELECT name FROM Entity WHERE id=?', (id,))

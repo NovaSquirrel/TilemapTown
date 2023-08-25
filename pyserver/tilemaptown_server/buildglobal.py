@@ -302,6 +302,9 @@ def get_entity_by_id(id, load_from_db=True):
 def filter_username(text):
 	return ''.join([i for i in text if (i.isalnum() or i == '_')]).lower()
 
+def escape_tags(text):
+	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
 def image_url_is_okay(url):
 	for w in Config["Images"]["URLWhitelist"]:
 		if url.startswith(w):

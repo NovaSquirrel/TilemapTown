@@ -710,6 +710,9 @@ def fn_IDN(map, client, arg):
 	override_map = None
 	if "map" in arg:
 		override_map = arg["map"]
+	# Other overrides
+	if "name" in arg:
+		client.name = escape_tags(arg["name"])
 
 	# Check the features the client requested
 	ack_info = {}
