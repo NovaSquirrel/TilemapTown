@@ -334,8 +334,7 @@ function receiveServerMessage(cmd, arg) {
       } else if(arg.update) {
         if("status" in arg.update && ((arg.update["status"] !== PlayerWho[arg.update.id]["status"]) || (("status_message" in arg.update) && arg.update["status_message"] !== PlayerWho[arg.update.id]["status_message"]))) {
           if(arg.update["status"]) {
-			let status_name = '"' + escape_tags
-(arg.update["status"]) + '"';
+			let status_name = '"' + escape_tags(arg.update["status"]) + '"';
             switch(arg.update["status"].toLowerCase()) {
               case "away": status_name = "away"; break;
               case "busy": status_name = "busy"; break;
