@@ -204,6 +204,9 @@ def fn_BAG(map, client, arg):
 			e.save()
 		client.add_to_contents(e)
 
+		arg["create"]["id"] = e.protocol_id()
+		client.send("BAG", {'create': arg['create']}) # Acknowledge
+
 	elif "clone" in arg:
 		clone_me = get_entity_by_id(allow_special_ids(arg['clone']['id']))
 		if clone_me == None:
@@ -400,6 +403,7 @@ def fn_BAG(map, client, arg):
 			client.send("BAG", {'remove': {'id': delete['id']}})
 		if delete_me.map:
 			delete_me.map.remove_from_contents(delete_me)
+		client.send("BAG", {'delete': delete})
 
 	elif "info" in arg:
 		info = arg['info']
@@ -422,7 +426,9 @@ def fn_BAG(map, client, arg):
 		if list_me.owner_id != client.db_id and not client.has_permission(list_me, permission['list_contents'], False):
 			client.send("ERR", {'text': 'Don\'t have permission to list contents for %s' % list_contents['id']})
 			return
-		client.send("BAG", {'list': [child.bag_info() for child in self.all_children()], 'container': list_me.protocol_id(), 'clear': True})
+
+		list_contents['contents'] = [child.bag_info() for child in self.all_children()]
+		client.send("BAG", {'list_contents': list_contents})
 
 @protocol_command()
 def fn_EML(map, client, arg):

@@ -201,7 +201,8 @@ Use item
 
 --> BAG {"create": {"name": name, "type": type}}
 --> BAG {"create": {"name": name, "type": type, "temp": true/false}}
-Create a new item of a given type
+<-- BAG {"create": {"name": name, "type": type, "temp": true/false, "id": new_id}}
+Create a new item of a given type. Valid types include: text, image, map_tile, tileset, reference, folder, landmark, generic
 Can create a temporary object instead if you like
 
 --> BAG {"update": {"id": id, "name": name, "desc": desc, "flags": flags, "folder": folder, "data": data, "allow": allow, "deny": deny, "guest_deny": deny, "tags": tags, ...}}
@@ -212,36 +213,40 @@ Allow, deny, and guest_deny are sent as a list of strings, using the permission 
 Moves an entity to another position. "pos" is optional.
 
 --> BAG {"delete": {"id": id}}
+<-- BAG {"delete": {"id": id}}
 Delete an item
 
 --> BAG {"kick": {"id": id}}
+<-- BAG {"kick": {"id": id}}
 Send an entity to its home
 
 --> BAG {"clone": {"id": id}}
---> BAG {"clone": {"id": id}, "temp": true/false}
+--> BAG {"clone": {"id": id, "temp": true/false}}
+<-- BAG {"clone": {"id": id, "temp": true/false, "new_id": new_id}}
 Make an exact clone of an item with a new ID.
 Can make the new object temporary or non-temporary regardless of if the original object was.
 
 --> BAG {"info": {"id": id}}
+<-- BAG {"info": {"id": id, ...}}
 Request information on an item, whether or not it's in your inventory.
 
 --> BAG {"list_contents": {"id": id}}
+<-- BAG {"list_contents": {"id": id, "contents": [{item info}]}}
 Get a BAG "list" in return for the container you picked, if you have permission.
 
-<-- BAG {"info": {"id": id, ...}}
-Information about an item somewhere. Message doesn't add the item to a container client-side.
-
 <-- BAG {"update": {item info}}
-<-- BAG {"list": [{item info}], "container": id, "clear": false}
+<-- BAG {"list": [{item info}], "clear": false}
 Receive an item or list of items from the server. Lists don't replace the client-side list, unless "clear" is specified.
-"container" specifies that the items are for a specific ID; otherwise it's assume it's the player than the player.
-"clear" specifies that the client-side inventory list for this container should be cleared before adding these.
+"clear" specifies that the client-side inventory list for this container should be cleared before adding these. Optional.
 
 <-- BAG {"new_id": {"id": old_id, "new_id": id}}
 Update the ID of one item in the player's inventory
 
 <-- BAG {"remove": {"id": id}}
 Remove one item from the inventory
+
+BAG messages can have a "container" field with an entity ID, which indicate what entity's inventory is being managed here.
+Currently this isn't used or supported though.
 
 Item info fields:
 (Used for "update", "list", and "info")

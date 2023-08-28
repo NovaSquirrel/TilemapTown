@@ -391,7 +391,7 @@ function receiveServerMessage(cmd, arg) {
       break;
 
     case "BAG":
-      if("container" in arg && arg.container != PlayerYou) { // Ignore BAG messages for other containers currently
+      if("container" in arg && arg.container != PlayerYou) { // Ignore BAG messages for other containers currently. Though nothing sends this currently.
         break;
       }
       if(arg.list) {
@@ -410,14 +410,11 @@ function receiveServerMessage(cmd, arg) {
           for (var key in arg.update) {
             DBInventory[arg.update.id][key] = arg.update[key];
           }
-        } else {
-          // Create a new item
-          DBInventory[arg.update.id] = arg.update;
-        }
 
-        // Load the image when an image asset is modified
-        if(DBInventory[arg.update.id].type == 'image') {
-          SendCmd("IMG", {"id": arg.update.id}); // Unconditionally request the image
+          // Load the image when an image asset is modified
+          if(DBInventory[arg.update.id].type == 'image') {
+            SendCmd("IMG", {"id": arg.update.id}); // Unconditionally request the image
+          }
         }
       }
       if(arg['remove']) {
