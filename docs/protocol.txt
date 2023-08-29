@@ -351,7 +351,7 @@ Disable forwarding for a specific entity
 Enable forwarding for specific message types, for the specific entities
 
 Requesting that "MSG" be forwarded will not forward messages that have a speaker name on them, with the assumption that they're chat messages.
-If you want to forward chat messages, the special type "CHAT" exclusively forwards MSG messages that have speaker names. If "CHAT" is set to be forwarded, users will be be warned that the entity is listening to chat messages.
+If you want to forward chat messages, the special type "CHAT" exclusively forwards MSG messages that have speaker names.
 
 -----------------------------
 
@@ -364,4 +364,4 @@ FWD ID BAT CMD {params}
 CMD {params}
 CMD {params}
 
-If an entity is forwarding messages, it will have a WHO field named "is_forwarding" that's set to true. If one of the forwarded types is "MSG", then there will be another field named "chat_listener" which is also true.
+If an entity is forwarding messages, it will have a WHO field named "is_forwarding" that's set to true. If one of the forwarded types is "CHAT", then there will be another field named "chat_listener" which is also true.
