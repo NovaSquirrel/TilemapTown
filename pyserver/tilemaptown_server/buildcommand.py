@@ -1569,6 +1569,12 @@ def fn_debugrefs(map, client, context, arg):
 	respond(context, '🍕'.join(repr(x) for x in gc.get_referrers(e)))
 
 @cmd_command(privilege_level="server_admin")
+def fn_pyeval(map, client, context, arg):
+	if len(arg) == 0:
+		return
+	respond(context, str(eval(arg.replace("✨", "\n"))))
+
+@cmd_command(privilege_level="server_admin")
 def fn_flushbuildlog(map, client, context, arg):
 	if BuildLog:
 		BuildLog.flush()
