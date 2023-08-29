@@ -96,7 +96,7 @@ class Client(Entity):
 			return
 		self.send_string(make_protocol_message_string(command_type, command_params))
 
-	def send_string(self, raw):
+	def send_string(self, raw, is_chat=False):
 		""" Send a command to the client that's already in string form """
 		if self.ws == None:
 			return

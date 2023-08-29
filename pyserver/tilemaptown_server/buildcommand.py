@@ -200,7 +200,7 @@ def fn_tell(map, client, context, arg):
 			u = find_client_by_username(username)
 			if u:
 				if u.is_client():
-					if not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
+					if not u.is_client() or not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
 						client.send("PRI", {'text': privtext, 'name':u.name, 'id': client.protocol_id(), 'username': u.username_or_id(), 'receive': False})
 						u.send("PRI", {'text': privtext, 'name':client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'receive': True})
 				else:
@@ -220,7 +220,7 @@ def fn_carry(map, client, context, arg):
 	if my_username in u.requests:
 		respond(context, 'You\'ve already sent them a request', error=True)
 		u.requests[my_username][0] = 600 #renew
-	elif not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
+	elif not u.is_client() or not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
 		respond(context, 'You requested to carry '+arg)
 		u.send("MSG", {'text': client.name_and_username()+' wants to carry you', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
 		u.requests[my_username] = [600, 'carry']
@@ -235,7 +235,7 @@ def fn_followme(map, client, context, arg):
 	if my_username in u.requests:
 		respond(context, 'You\'ve already sent them a request', error=True)
 		u.requests[my_username][0] = 600 #renew
-	elif not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
+	elif not u.is_client() or not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
 		respond(context, 'You requested to have '+arg+' follow you')
 		u.send("MSG", {'text': client.name_and_username()+' wants you to follow them', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
 		u.requests[my_username] = [600, 'followme']
@@ -287,7 +287,7 @@ def fn_tpa(map, client, context, arg):
 	if my_username in u.requests:
 		respond(context, 'You\'ve already sent them a request', error=True)
 		u.requests[my_username][0] = 600 #renew
-	elif not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
+	elif not u.is_client() or not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
 		respond(context, 'You requested a teleport to '+arg)
 		u.send("MSG", {'text': client.name_and_username()+' wants to teleport to you', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
 		u.requests[my_username] = [600, 'tpa']
@@ -302,7 +302,7 @@ def fn_tpahere(map, client, context, arg):
 	if my_username in u.requests:
 		respond(context, 'You\'ve already sent them a request', error=True)
 		u.requests[my_username][0] = 600 #renew
-	elif not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
+	elif not u.is_client() or not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
 		respond(context, 'You requested that '+arg+' teleport to you')
 		u.send("MSG", {'text': client.name_and_username()+' wants you to teleport to them', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
 		u.requests[my_username] = [600, 'tpahere']
@@ -1769,14 +1769,14 @@ def fn_message_forwarding(map, client, context, arg):
 					continue
 				entities_set.append(entity_id)
 
-				entity.forward_message_types = set([x.upper() for x in message_types if len(x) == 3])
+				entity.forward_message_types = set([x.upper() for x in message_types if (len(x) == 3 or x == 'CHAT')])
 				entity.forward_messages_to.clear()
 
 				if entity.forward_message_types:
 					entity.forward_messages_to.add(client)
 					client.forwarding_messages_from.add(entity)
 					if entity.map:
-						entity.map.broadcast("WHO", {"update": {"id": entity.protocol_id(), "is_forwarding": True, "chat_listener": "MSG" in entity.forward_message_types}})
+						entity.map.broadcast("WHO", {"update": {"id": entity.protocol_id(), "is_forwarding": True, "chat_listener": "CHAT" in entity.forward_message_types}})
 				else:
 					client.forwarding_messages_from.discard(entity)
 					if entity.map:

@@ -689,7 +689,7 @@ available_server_features = {
 	"see_past_map_edge": {"version": "0.0.1", "minimum_version": "0.0.1"},
 	"batch": {"version": "0.0.1", "minimum_version": "0.0.1"},
 	"receive_build_messages": {"version": "0.0.1", "minimum_version": "0.0.1"},
-	"message_forwarding": {"version": "0.0.1", "minimum_version": "0.0.1"},
+	"entity_message_forwarding": {"version": "0.0.1", "minimum_version": "0.0.1"},
 }
 server_software_name = "Tilemap Town server"
 server_software_version = "0.2.0"

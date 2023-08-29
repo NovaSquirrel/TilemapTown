@@ -133,16 +133,22 @@ class Entity(object):
 			self.cleaned_up_already = True
 
 	def send(self, commandType, commandParams):
+		# Treat chat as a separate pseudo message type
+		is_chat = commandType == 'MSG' and commandParams != None and ("name" in commandParams)
+		if is_chat and 'CHAT' not in self.forward_message_types:
+			return
+
 		# Normal entities don't get messages, but they can if there's a forward
-		if self.forward_messages_to and commandType in self.forward_message_types:
+		if is_chat or (self.forward_messages_to and commandType in self.forward_message_types):
 			for c in self.forward_messages_to:
 				if c.can_forward_messages_to:
 					asyncio.ensure_future(c.ws.send("FWD %s %s" % (self.protocol_id(), make_protocol_message_string(commandType, commandParams))))
-		return
 
-	def send_string(self, raw):
+	def send_string(self, raw, is_chat=False):
 		# Directly send a string, so you can json.dumps once and reuse it for everyone
-		if self.forward_messages_to and raw[0:3] in self.forward_message_types:
+		if is_chat and 'CHAT' not in self.forward_message_types:
+			return
+		if is_chat or self.forward_messages_to and raw[0:3] in self.forward_message_types:
 			for c in self.forward_messages_to:
 				if c.can_forward_messages_to:
 					asyncio.ensure_future(c.ws.send("FWD %s %s" % (self.protocol_id(), raw)))
@@ -160,10 +166,11 @@ class Entity(object):
 	def broadcast(self, command_type, command_params, remote_category=None, remote_only=False, send_to_links=False, require_extension=None):
 		""" Send a message to everyone on the map """
 		if not remote_only and self.contents:
-			send_me = make_protocol_message_string(command_type, command_params)
+			is_chat = command_type == 'MSG' and command_params and 'name' in command_params
+			send_me = make_protocol_message_string(command_type, command_params) # Get the string once and reuse it
 			for client in self.contents:
 				if require_extension == None or (client.is_client() and getattr(client, require_extension)):
-					client.send_string(send_me)
+					client.send_string(send_me, is_chat=is_chat)
 
 		# Add remote map on the params if needed
 		do_linked = send_to_links and self.is_map() and self.edge_ref_links
@@ -371,9 +378,11 @@ class Entity(object):
 			# You have permission if the object is you
 			if self is other:
 				return True
+			if self.id == other.creator_temp_id:
+				return True
 			if self.db_id:
 				# If you're the owner, you automatically have permission
-				if self.db_id == other.owner_id or self.id == other.creator_temp_id:
+				if self.db_id == other.owner_id:
 					return True
 				# Also if you're checking permission to act on yourself, it always works
 				if self.db_id == other.db_id:
@@ -673,7 +682,7 @@ class Entity(object):
 			out['offset'] = self.offset
 		if self.forward_messages_to:
 			out['is_forwarding'] = True
-			if 'MSG' in self.forward_message_types:
+			if 'CHAT' in self.forward_message_types:
 				out['chat_listener'] = True
 		return out
 

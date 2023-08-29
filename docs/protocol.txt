@@ -350,6 +350,9 @@ Disable forwarding for a specific entity
 /message_forwarding set entity_id,entity_id,entity_id... MAP,MAI,PRI ...
 Enable forwarding for specific message types, for the specific entities
 
+Requesting that "MSG" be forwarded will not forward messages that have a speaker name on them, with the assumption that they're chat messages.
+If you want to forward chat messages, the special type "CHAT" exclusively forwards MSG messages that have speaker names. If "CHAT" is set to be forwarded, users will be be warned that the entity is listening to chat messages.
+
 -----------------------------
 
 The forwarded messages take the format:
