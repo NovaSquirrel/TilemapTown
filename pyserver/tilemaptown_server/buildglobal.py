@@ -210,6 +210,8 @@ def find_client_by_username(username, inside=None):
 		return get_entity_by_id(username, load_from_db=False)
 	username = username.lower()
 	for u in inside or AllClients:
+		if not u.is_client():
+			continue
 		if username == u.username:
 			return u
 	return None
