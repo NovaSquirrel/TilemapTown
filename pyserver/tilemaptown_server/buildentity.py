@@ -515,8 +515,10 @@ class Entity(object):
 		self.vehicle = other
 		other.passengers.add(self)
 
-		self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['move'])
-		other.map.broadcast("WHO", {'add': other.who()}, remote_category=botwatch_type['move'])
+		if self.map != None:
+			self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['move'])
+		if other.map != None:
+			other.map.broadcast("WHO", {'add': other.who()}, remote_category=botwatch_type['move'])
 
 		self.switch_map(other.map_id, new_pos=[other.x, other.y], on_behalf_of=other)
 
@@ -532,8 +534,10 @@ class Entity(object):
 			self.vehicle.passengers.discard(self)
 			self.vehicle = None
 
-			self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['move'])
-			other.map.broadcast("WHO", {'add': other.who()}, remote_category=botwatch_type['move'])
+			if self.map != None:
+				self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['move'])
+			if other.map != None:
+				other.map.broadcast("WHO", {'add': other.who()}, remote_category=botwatch_type['move'])
 
 	# Apply information from a MOV message to someone
 
