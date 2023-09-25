@@ -14,13 +14,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sqlite3, json, sys, os.path, weakref, datetime
+import sqlite3, json, sys, os.path, weakref, datetime, zlib
 
 # Config information
 Config = {}
 ConfigFile = 'config.json'
 ServerResources = {}
 LoadedAnyServerResources = [False]
+
+# Information about the code itself
+available_server_features = {
+	"see_past_map_edge": {"version": "0.0.1", "minimum_version": "0.0.1"},
+	"batch": {"version": "0.0.1", "minimum_version": "0.0.1"},
+	"receive_build_messages": {"version": "0.0.1", "minimum_version": "0.0.1"},
+	"entity_message_forwarding": {"version": "0.0.1", "minimum_version": "0.0.1"},
+}
+server_software_name = "Tilemap Town server"
+server_software_version = "0.2.0"
+server_software_code = "https://github.com/NovaSquirrel/TilemapTown"
+server_version_dict = {'name': server_software_name, 'version': server_software_version, 'code': server_software_code, 'features': available_server_features}
 
 # Override the config filename as a command line argument
 if len(sys.argv) >= 2:
@@ -54,6 +66,9 @@ def loadConfigJson():
 	setConfigDefault("Server",   "BroadcastConnects", True)
 	setConfigDefault("Server",   "BroadcastDisconnects", True)
 	setConfigDefault("Server",   "MaxMapSize",       256)
+
+	setConfigDefault("API",      "Port",             12551)
+	setConfigDefault("API",      "Enabled",          True)
 
 	setConfigDefault("Database", "File",             "town.db")
 	setConfigDefault("Database", "Setup",            True)
@@ -159,6 +174,8 @@ userflag = {}
 userflag['bot'] = 1
 userflag['file_uploads'] = 2
 userflag['no_build_logs'] = 4
+userflag['hide_location'] = 8 # Don't show in /whereare and such
+userflag['hide_api'] = 16 # Don't show in API
 
 # Entity types
 entity_type = {}
@@ -414,6 +431,21 @@ def write_to_build_log(map, client, command, args, old_data = None):
 
 	now = datetime.datetime.today().strftime("%Y-%m-%d %I:%M %p")
 	BuildLog.write('%s map=(%s, %s) ip=%s db=%s name=%s user=%s map=%d | %s %s%s\n' % (now, json.dumps(map.name), map.protocol_id(), ip, client.db_id if client.db_id != None else "", json.dumps(client.name), client.username if client.is_client() else "", map.db_id, command, json.dumps(args), old_data))
+
+def map_id_exists(id):
+	if id in AllEntitiesByDB:
+		return AllEntitiesByDB[id].entity_type == entity_type['map']
+	c = Database.cursor()
+	c.execute('SELECT entity_id FROM Map WHERE entity_id=?', (id,))
+	result = c.fetchone()
+	return result != None
+
+def decompress_entity_data(data, compressed_data):
+	if compressed_data == None:
+		return data
+	elif data == 'zlib':
+		return zlib.decompress(compressed_data).decode()
+	return None
 
 from .buildentity import Entity, EntityWithPlainData
 from .buildmap import Map

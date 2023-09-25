@@ -112,7 +112,7 @@ request tileset data from the server
 
 <-- TSD {"id": number, "data": "[id, info, id, info, id, info, ...]"}
 Tileset received from the server
-Received data may be in string format, which would need parsing into JSON.
+Received data may be in string format, which would require parsing into JSON.
 
 === People on the map ===
 --> WHO

@@ -1,0 +1,120 @@
+Currently the server provides a few HTTP endpoints you can call to get basic information about the server.
+This is very experimental so it could change at any time.
+
+----- /v1/town_info -----
+Gets information about the server's current status.
+
+Example response:
+{
+  "stats": {
+    "user_count": 1,
+    "bot_count": 0,
+    "total_connections": 1,
+    "time_online": 10
+  },
+  "users": {
+    "~1": {
+      "name": "Guest 1",
+      "username": null,
+      "id": "~1",
+      "time_online": 3
+    }
+  },
+  "maps": {
+    "61": {
+      "name": "Main map",
+      "desc": "the test",
+      "user_count": 1,
+      "id": 61,
+      "users": [
+        "~1"
+      ]
+    }
+  },
+  "server": {
+    "name": "Tilemap Town",
+    "motd": "Welcome to the official [b]Tilemap Town[/b] testing server.",
+    "default_map": 1
+  }
+}
+
+
+----- /v1/server_version -----
+Gets information about the software running on the server.
+
+Example response:
+{
+  "name": "Tilemap Town server",
+  "version": "0.2.0",
+  "code": "https://github.com/NovaSquirrel/TilemapTown",
+  "features": {
+    "see_past_map_edge": {
+      "version": "0.0.1",
+      "minimum_version": "0.0.1"
+    },
+    "batch": {
+      "version": "0.0.1",
+      "minimum_version": "0.0.1"
+    },
+    "receive_build_messages": {
+      "version": "0.0.1",
+      "minimum_version": "0.0.1"
+    },
+    "entity_message_forwarding": {
+      "version": "0.0.1",
+      "minimum_version": "0.0.1"
+    }
+  }
+}
+
+
+----- /v1/server_resources -----
+Sends information about all of the built-in tile types the server provides, as well as all of the sprite sheets those tiles use.
+Same information sent in "RSC" protocol messages.
+
+
+----- /v1/map/MAP_ID?info=1&data=1 -----
+Retrieves information about a public map.
+If info is nonzero, an "info" field is added (formatted as in "MAI" protocol messages.) Defaults to 1 if not provided.
+If data is nonzero, a "data" field is added (formatted as in "MAP" protocol messages.) Defaults to 0 if not provided.
+Data currently won't be added to the response if it's not loaded by the server (which can happen if no user is on the map).
+
+Example response:
+{
+  "info": {
+    "name": "Main map",
+    "desc": "the test",
+    "id": 61,
+    "owner_id": 1,
+    "owner_username": "novasquirrel",
+    "default": "grass",
+    "size": [100, 100],
+    "public": true,
+    "private": false,
+    "build_enabled": true,
+    "full_sandbox": true,
+    "edge_links": null
+  }
+}
+
+
+----- /v1/tsd/TILESET_ID -----
+Requests a tileset definition from the server. See "TSD" in the protocol document.
+
+Example response:
+{
+	"id": 1,
+	"data": "[id, info, id, info, id, info, ...]"
+}
+
+Received data may be in string format (as in the above example), which would require parsing into JSON.
+
+
+----- /v1/img/IMAGE_ID -----
+Requests an image entity's URL from the server. See "IMG" in the protocol document.
+
+Example response:
+{
+	"id": 1,
+	"url": "http://example.com"
+}

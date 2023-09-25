@@ -144,7 +144,6 @@ class Map(Entity):
 		if result == None:
 			return False
 
-		self.id = map_id
 		self.map_flags = result[0]
 		self.start_pos = [result[1], result[2]]
 		self.width = result[3]  # Will be overwritten by the blank_map call but that's ok

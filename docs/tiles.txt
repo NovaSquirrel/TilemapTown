@@ -32,4 +32,4 @@ Tiles are defined with a JSON object, which can have the following fields:
 	7 = North east
 
 "over":
-	Display over entities. Not implemented.
+	Display over entities. Can currently only apply to map objects, not map tiles.

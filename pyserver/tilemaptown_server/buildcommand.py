@@ -56,14 +56,6 @@ def find_entity_name(id):
 		return None
 	return result[0]
 
-def map_id_exists(id): # Used by /map
-	if id in AllEntitiesByDB:
-		return AllEntitiesByDB[id].entity_type == entity_type['map']
-	c = Database.cursor()
-	c.execute('SELECT entity_id FROM Map WHERE entity_id=?', (id,))
-	result = c.fetchone()
-	return result != None
-
 def sql_exists(query, data):
 	c = Database.cursor()
 	c.execute('SELECT EXISTS(%s)' % query, data)
@@ -1259,6 +1251,8 @@ def fn_offset(map, client, context, arg):
 def fn_gwho(map, client, context, arg):
 	names = ''
 	for u in AllClients:
+		if not u.client.identified:
+			continue
 		if len(names) > 0:
 			names += ', '
 		names += u.name_and_username()
@@ -1313,9 +1307,9 @@ def fn_whereare(map, client, context, arg):
 			continue
 		names += '[li][b]%s[/b] (%d): ' % (m.name, user_count)
 		for u in m.contents:
-			if u.is_client():
+			if u.is_client() and (u.user_flags & userflag['hide_location'] == 0):
 				names += u.name_and_username()+', '
-		names = names.rstrip(', ') + ' [command]map %d[/command][/li]' % m.id
+		names = names.rstrip(', ') + ' [command]map %d[/command][/li]' % m.db_id
 	names += '[/ul]'
 
 	respond(context, names)

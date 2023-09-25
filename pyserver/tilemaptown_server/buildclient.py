@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio, datetime, random, websockets, json, hashlib, ipaddress
+import asyncio, datetime, time, random, websockets, json, hashlib, ipaddress
 from .buildglobal import *
 from .buildentity import *
 
@@ -32,6 +32,7 @@ class Client(Entity):
 
 		self.ping_timer = 180
 		self.idle_timer = 0
+		self.connected_time = int(time.time())
 		self.ip = None           # for IP ban purposes
 
 		self.client_settings = ""

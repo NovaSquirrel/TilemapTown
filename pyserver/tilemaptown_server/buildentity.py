@@ -809,10 +809,7 @@ class Entity(object):
 		c.execute('SELECT data, compressed_data FROM Entity WHERE id=?', (self.db_id,))
 		result = c.fetchone()
 		if result != None:
-			if result[1] == None:
-				return result[0]
-			elif result[0] == 'zlib':
-				return zlib.decompress(result[1]).decode()
+			return decompress_entity_data(result[0], result[1])
 		return None
 
 	def load_data(self):

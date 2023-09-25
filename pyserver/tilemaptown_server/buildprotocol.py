@@ -480,22 +480,22 @@ def fn_MSG(map, client, arg):
 @protocol_command()
 def fn_TSD(map, client, arg):
 	c = Database.cursor()
-	c.execute('SELECT data FROM Entity WHERE type=? AND id=?', (entity_type('tileset'), arg['id'],))
+	c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type('tileset'), arg['id'],))
 	result = c.fetchone()
 	if result == None:
 		client.send("ERR", {'text': 'Invalid item ID'})
 	else:
-		client.send("TSD", {'id': arg['id'], 'data': result[0]})
+		client.send("TSD", {'id': arg['id'], 'data': decompress_entity_data(result[0], result[1])})
 
 @protocol_command()
 def fn_IMG(map, client, arg):
 	c = Database.cursor()
-	c.execute('SELECT data FROM Entity WHERE type=? AND id=?', (entity_type['image'], arg['id'],))
+	c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type['image'], arg['id'],))
 	result = c.fetchone()
 	if result == None:
 		client.send("ERR", {'text': 'Invalid item ID'})
 	else:
-		client.send("IMG", {'id': arg['id'], 'url': loads_if_not_none(result[0])})
+		client.send("IMG", {'id': arg['id'], 'url': loads_if_not_none(decompress_entity_data(result[0], result[1]))})
 
 @protocol_command(map_only=True)
 def fn_MAI(map, client, arg):
@@ -684,17 +684,6 @@ def fn_WHO(map, client, arg):
 @protocol_command(pre_identify=True)
 def fn_PIN(map, client, arg):
 	client.ping_timer = 300
-
-available_server_features = {
-	"see_past_map_edge": {"version": "0.0.1", "minimum_version": "0.0.1"},
-	"batch": {"version": "0.0.1", "minimum_version": "0.0.1"},
-	"receive_build_messages": {"version": "0.0.1", "minimum_version": "0.0.1"},
-	"entity_message_forwarding": {"version": "0.0.1", "minimum_version": "0.0.1"},
-}
-server_software_name = "Tilemap Town server"
-server_software_version = "0.2.0"
-server_software_code = "https://github.com/NovaSquirrel/TilemapTown"
-server_version_dict = {'name': server_software_name, 'version': server_software_version, 'code': server_software_code, 'features': available_server_features}
 
 @protocol_command(pre_identify=True)
 def fn_VER(map, client, arg):

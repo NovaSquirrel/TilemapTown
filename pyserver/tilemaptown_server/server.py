@@ -13,16 +13,19 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import asyncio, datetime, random, websockets, json, sys, traceback, weakref
 from .buildglobal import *
 from .buildmap import *
 from .buildclient import *
 from .buildprotocol import handle_protocol_command
+from .buildapi import start_api
 if Config["Database"]["Setup"]:
 	from .database_setup_v2 import *
 else:
 	reload_database_meta()
+
+# To share with API
+total_connections = [0]
 
 # Timer that runs and performs background tasks
 def main_timer():
@@ -85,6 +88,7 @@ async def client_handler(websocket, path):
 		return
 
 	print("connected: %s %s" % (path, client.ip))
+	total_connections[0] += 1
 
 	while client.ws != None:
 		try:
@@ -145,6 +149,10 @@ def main():
 	loop = asyncio.get_event_loop()
 	loop.call_soon(main_timer)
 	loop.run_until_complete(start_server)
+
+	if Config["API"]["Enabled"]:
+		start_api(loop, Config["API"]["Port"], total_connections=total_connections)
+
 	print("Server started!")
 
 	try:
