@@ -1309,14 +1309,15 @@ function updateZoomLevelDisplay() {
 function initMouse() {
   var edittilesheetselect = document.getElementById("edittilesheetselect");
 
-  function drawingTooFar(x, y) {
+  function drawingTooFar(x, y, maxDistance) {
     let youX = PlayerWho[PlayerYou].x;
     let youY = PlayerWho[PlayerYou].y;
     let diffX = youX - x;
     let diffY = youY - y;
     let distance = Math.sqrt(diffX * diffX + diffY * diffY);
-    return distance > 5;
+    return distance > maxDistance;
   }
+  OK_DRAW_DISTANCE = 5;
 
   edittilesheetselect.addEventListener('mousedown', function (evt) {
     // update to choose the selected tile
@@ -1350,7 +1351,7 @@ function initMouse() {
 
       // ---
 
-      if(drawingTooFar(pos.x, pos.y)) {
+      if(drawingTooFar(pos.x, pos.y, OK_DRAW_DISTANCE)) {
         return;
       }
       let old = useItemAtXY({ type: 'map_tile', data: data }, pos.x, pos.y);
@@ -1382,6 +1383,12 @@ function initMouse() {
       var panelHTML = (BX - AX + 1) + "x" + (BY - AY + 1) + "<br>";
       updateSelectedObjectsUL();
 
+      let selectionWidth = BX-AX;
+      let selectionHeight = BY-AY;
+      let selectionCenterX = (AX+BX)/2;
+      let selectionCenterY = (AY+BY)/2;
+      let distanceTooFar = drawingTooFar(selectionCenterX, selectionCenterY, 10);
+      document.getElementById("deleteTurfObj").style.display = (!distanceTooFar && (selectionWidth * selectionHeight) < 120) ? "block" : "none";
       selectionInfoVisibility(true);
 
       panel.innerHTML = panelHTML;
@@ -1427,7 +1434,7 @@ function initMouse() {
       MouseEndX = pos.x;
       MouseEndY = pos.y;
     } else if(buildTool == BUILD_TOOL_DRAW) {
-      if(drawingTooFar(pos.x, pos.y)) {
+      if(drawingTooFar(pos.x, pos.y, OK_DRAW_DISTANCE)) {
         drawToolX = null;
         drawToolY = null;
         return;

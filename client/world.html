@@ -201,9 +201,11 @@
   <div slot="contents">
     <div id="panel"></div>
     <div>
+      <span id="deleteTurfObj">
       <input type="checkbox" id="turfselect" checked="true"><label for="turfselect">Tiles</label></input>
       <input type="checkbox" id="objselect" checked="true"><label for="objselect">Objects</label></input>
       <input type="button" value="💣Delete" onclick="selectionDelete();">
+      </span>
       <span id="getTileObjSpan">
         <input type="button" value="⛰️Copy Tile"    onclick="copyTurfFromSelection();">
         <input type="button" value="📋Copy Object"  onclick="copyObjFromSelection();">
