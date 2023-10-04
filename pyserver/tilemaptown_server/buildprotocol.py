@@ -69,6 +69,96 @@ def must_be_server_admin(client, give_error=True):
 		client.send("ERR", {'text': 'You don\'t have permission to do that'})
 	return False
 
+def set_entity_params_from_dict(e, d, client):
+	if e.creator_temp_id != client.id and e.owner_id != client.db_id and \
+	not client.has_permission(e, permission['modify_properties'], False):
+		# If you don't have permission for modify_properties you may still be able to do the update if you're only changing specific properties
+		appearance_change_props = {'id', 'name', 'desc', 'pic', 'tags'}
+
+		if any(key not in appearance_change_props for key in d) or not client.has_permission(e, permission['modify_appearance'], False):
+			client.send("ERR", {'text': 'You don\'t have permission to update %s' % e['id']})
+			return
+	if 'data' in d:
+		bad = data_disallowed_for_entity_type(e.entity_type, d['data'])
+		if bad != None:
+			client.send("ERR", {'text': bad})
+			del d['data']
+		else:
+			e.data = d['data']
+
+	if 'owner_id' in d:
+		if e.owner_id != client.db_id:
+			client.send("ERR", {'text': 'Can only reassign ownership on entities you own'})
+			del d['owner_id']
+		elif client.has_permission(d['owner_id'], permission['set_owner_to_this'], False):
+			e.owner_id = d['owner_id']
+		else:
+			client.send("ERR", {'text': 'Don\'t have permission to set owner to ' % d['owner_id']})
+			del d['owner_id']
+	if 'owner_username' in d:
+		if e.owner_id != client.db_id:
+			client.send("ERR", {'text': 'Can only reassign ownership on entities you own'})
+			del d['owner_username']
+		new_owner = find_db_id_by_username(d['owner_username'])
+		if new_owner:
+			if client.has_permission(new_owner, permission['set_owner_to_this'], False):
+				e.owner_id = new_owner
+			else:
+				client.send("ERR", {'text': 'Don\'t have permission to set owner to ' % d['owner_username']})
+				del d['owner_username']
+		else:
+			client.send("ERR", {'text': 'Username \"%s\" not found' % d['owner_username']})
+			del d['owner_username']
+
+	if 'folder' in d:
+		if client.has_permission(d['folder'], (permission['entry']), False) \
+		and client.has_permission(d['folder'], (permission['object_entry'], permission['persistent_object_entry']), False):
+			if not e.switch_map(d['folder'], new_pos=d['pos'] if 'pos' in d else None, on_behalf_of=client):
+				client.send("ERR", {'text': 'Entity doesn\'t have permission to move there'})
+				del d['folder']
+		else:
+			client.send("ERR", {'text': 'Don\'t have permission to move entity there'})
+			del d['folder']
+
+	if 'home' in d:
+		if d['home'] == True and client.has_permission(e.map_id, permission['persistent_object_entry'], False):
+			e.home_id = e.map_id
+			e.home_position = [e.x, e.y]
+		elif d['home'] == None:
+			e.home_id = None
+			e.home_position = None
+		elif client.has_permission(d['home'], permission['persistent_object_entry'], False):
+			e.home_id = d['home']
+			e.home_position = None
+		else:
+			client.send("ERR", {'text': 'Don\'t have permission to set entity\'s home there'})
+			del d['home']
+
+	if 'home_position' in d and len(d['home_position']) == 2:
+		e.home_position = d['home_position']
+	if 'name' in d:
+		e.name = d['name']
+	if 'desc' in d:
+		e.desc = d['desc']
+	if 'pic' in d:
+		if pic_is_okay(d['pic']):
+			e.pic = d['pic']
+		else:
+			client.send("ERR", {'text': 'Invalid picture: %s' % d['pic']})
+			del d['pic']
+	if 'tags' in d:
+		e.tags = d['tags']
+	if 'allow' in d:
+		e.allow = bitfield_from_permission_list(d['allow'])
+	if 'deny' in d:
+		e.deny = bitfield_from_permission_list(d['deny'])
+	if 'guest_deny' in d:
+		e.guest_deny = bitfield_from_permission_list(d['guest_deny'])
+	if 'temporary' in d and client.db_id:
+		e.temporary = d['temporary']
+	if 'temp' in d and client.db_id: # Allow short version too
+		e.temporary = d['temp']
+
 # -------------------------------------
 
 @protocol_command()
@@ -183,14 +273,17 @@ def fn_BAG(map, client, arg):
 
 	c = Database.cursor()
 	if "create" in arg:
+		create = arg['create']
 		# restrict type variable
-		if arg['create']['type'] not in creatable_entity_types:
-			client.send("ERR", {'text': 'Invalid type of item to create (%s)' % arg['create']['type']})
+		if create['type'] not in creatable_entity_types:
+			client.send("ERR", {'text': 'Invalid type of item to create (%s)' % create['type']})
 			return
 		e = Entity(entity_type[arg['create']['type']], creator_id=client.db_id)
-		e.name = arg['create']['name']
+		e.name = "New item" # Default that will probably be overridden
 		e.map_id = client.db_id
 		e.creator_temp_id = client.id
+
+		set_entity_params_from_dict(e, create, client)
 
 		if client.db_id == None:
 			e.temporary = True
@@ -198,14 +291,13 @@ def fn_BAG(map, client, arg):
 			e.allow = permission['all']
 			e.deny = 0
 			e.guest_deny = 0
-		elif 'temp' in arg['create'] and arg['create']['temp'] == True:
-			e.temporary = True
-		else:
+
+		if not e.temporary:
 			e.save()
 		client.add_to_contents(e)
 
-		arg["create"]["id"] = e.protocol_id()
-		client.send("BAG", {'create': arg['create']}) # Acknowledge
+		create["id"] = e.protocol_id()
+		client.send("BAG", {'create': create}) # Acknowledge
 
 	elif "clone" in arg:
 		clone_me = get_entity_by_id(allow_special_ids(arg['clone']['id']))
@@ -221,25 +313,21 @@ def fn_BAG(map, client, arg):
 		# Create a new entity and copy over the properties
 		new_item = Entity(clone_me.entity_type)
 		clone_me.copy_onto(new_item)
+
+		set_entity_params_from_dict(new_item, arg['clone'], client)
 		if client.db_id == None:
 			new_item.temporary = True
 			new_item.allow = permission['all']
 			new_item.deny = 0
 			new_item.guest_deny = 0
-		elif 'temp' in arg['clone']: # Can change the temporary status
-			if arg['clone']['temp'] == True:
-				new_item.temporary = True
-			elif arg['clone']['temp'] == False:
-				new_item.temporary = False
+
 		new_item.owner_id = client.db_id
 		new_item.creator_temp_id = client.id
 
 		if not new_item.temporary:
 			new_item.save()
 		# Put it in the player's inventory now, or wherever else they put it
-		if 'folder' in arg['clone']:
-			new_item.switch_map(args['clone']['folder'], new_pos=arg['clone']['pos'] if 'pos' in arg['clone'] else None, on_behalf_of=client)
-		else:
+		if 'folder' not in arg['clone']:
 			client.add_to_contents(new_item)
 
 		# Update created_at and acquired_at
@@ -258,86 +346,8 @@ def fn_BAG(map, client, arg):
 		if update_me == None:
 			client.send("ERR", {'text': 'Can\'t update %s' % update['id']})
 			return
-		if update_me.creator_temp_id != client.id and update_me.owner_id != client.db_id and \
-		not client.has_permission(update_me, permission['modify_properties'], False):
-			# If you don't have permission for modify_properties you may still be able to do the update if you're only changing specific properties
-			appearance_change_props = {'id', 'name', 'desc', 'pic', 'tags'}
 
-			if any(key not in appearance_change_props for key in update) or not client.has_permission(update_me, permission['modify_appearance'], False):
-				client.send("ERR", {'text': 'You don\'t have permission to update %s' % update['id']})
-				return
-
-		if 'data' in update:
-			bad = data_disallowed_for_entity_type(update_me.entity_type, update['data'])
-			if bad != None:
-				client.send("ERR", {'text': bad})
-				del update['data']
-			else:
-				update_me.data = update['data']
-
-		if 'owner_id' in update:
-			if update_me.owner_id != client.db_id:
-				client.send("ERR", {'text': 'Can only reassign ownership on entities you own'})
-				del update['owner_id']
-			update_me.owner_id = update['owner_id']
-
-		if 'owner_username' in update:
-			if update_me.owner_id != client.db_id:
-				client.send("ERR", {'text': 'Can only reassign ownership on entities you own'})
-				del update['owner_username']
-			new_owner = find_db_id_by_username(update['owner_username'])
-			if new_owner:
-				update_me.owner_id = update['owner']
-			else:
-				client.send("ERR", {'text': 'Username \"%s\" not found' % update['owner_username']})
-				del update['owner_username']
-
-		if 'folder' in update:
-			if client.has_permission(update['folder'], (permission['entry']), False) \
-			and client.has_permission(update['folder'], (permission['object_entry'], permission['persistent_object_entry']), False):
-				if not update_me.switch_map(update['folder'], on_behalf_of=client):
-					client.send("ERR", {'text': 'Entity doesn\'t have permission to move there'})
-					del update['folder']
-			else:
-				client.send("ERR", {'text': 'Don\'t have permission to move entity there'})
-				del update['folder']
-
-		if 'home' in update:
-			if update['home'] == True and client.has_permission(update_me.map_id, permission['persistent_object_entry'], False):
-				update_me.home_id = update_me.map_id
-				update_me.home_position = [update_me.x, update_me.y]
-			elif update['home'] == None:
-				update_me.home_id = None
-				update_me.home_position = None
-			elif client.has_permission(update['home'], permission['persistent_object_entry'], False):
-				update_me.home_id = update['home']
-				update_me.home_position = None
-			else:
-				client.send("ERR", {'text': 'Don\'t have permission to set entity\'s home there'})
-				del update['home']
-
-		if 'home_position' in update and len(update['home_position']) == 2:
-			update_me.home_position = update['home_position']
-		if 'name' in update:
-			update_me.name = update['name']
-		if 'desc' in update:
-			update_me.desc = update['desc']
-		if 'pic' in update:
-			if pic_is_okay(update['pic']):
-				update_me.pic = update['pic']
-			else:
-				client.send("ERR", {'text': 'Invalid picture: %s' % update_me.pic})
-				del update['pic']
-		if 'tags' in update:
-			update_me.tags = update['tags']
-		if 'allow' in update:
-			update_me.allow = bitfield_from_permission_list(update['allow'])
-		if 'deny' in update:
-			update_me.deny = bitfield_from_permission_list(update['deny'])
-		if 'guest_deny' in update:
-			update_me.guest_deny = bitfield_from_permission_list(update['guest_deny'])
-		if 'temporary' in update and client.db_id:
-			update_me.temporary = update['temporary']
+		set_entity_params_from_dict(update_me, update, client)
 
 		if not update_me.is_client() and not update_me.temporary:
 			update_me.save()
@@ -574,7 +584,7 @@ def fn_PUT(map, client, arg):
 			tile_test = tile_is_okay(arg["atom"])
 			if tile_test[0]:
 				write_to_build_log(map, client, "PUT", arg, map.turfs[x][y])
-				map.turfs[x][y] = arg["atom"]
+				map.turfs[x][y] = arg["atom"] if arg["atom"] != map.default_turf else None
 				notify_listeners()
 				map.broadcast("MAP", map.map_section(x, y, x, y), send_to_links=True)
 			else:
