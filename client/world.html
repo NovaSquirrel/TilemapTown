@@ -203,7 +203,11 @@
     <div>
       <input type="checkbox" id="turfselect" checked="true"><label for="turfselect">Tiles</label></input>
       <input type="checkbox" id="objselect" checked="true"><label for="objselect">Objects</label></input>
-      <input type="button" value="Delete" onclick="selectionDelete();">
+      <input type="button" value="💣Delete" onclick="selectionDelete();">
+      <span id="getTileObjSpan">
+        <input type="button" value="⛰️Copy Tile"    onclick="copyTurfFromSelection();">
+        <input type="button" value="📋Copy Object"  onclick="copyObjFromSelection();">
+      </span>
     </div>
     Selected Entities:
     <ul id="selectedobjectsul" class="itemsul unselectable">
@@ -248,7 +252,19 @@
 <widget-window id="build" style="display: none;">
   <span slot="title">Build</span>
   <div slot="contents" id="build-contents">
-    <canvas class="unselectable" id="inventoryCanvas" width="320" height="320" oncontextmenu="return false;" imageSmoothingEnabled="false"></canvas>
+
+	<table style="margin: auto;" id="buildToolSelectTable">
+	<tr>
+	<td><label class="unselectable"><input type="radio" id="buildToolSelect" name="buildTool" onchange="changeBuildTool();" checked>🔍Select</label></td>
+	<td><label class="unselectable"><input type="radio" id="buildToolDraw"   name="buildTool" onchange="changeBuildTool();">🖌️Draw</label></td>
+	</tr>
+	</table>
+
+    <br>
+    <canvas class="unselectable" id="inventoryCanvas" width="320" height="320" imageSmoothingEnabled="false"></canvas>
+    <br>
+    <button onclick="sendChatCommand('undodel');">Undo delete</button>
+    <button onclick="undoDrawStroke();">Undo draw</button>
   </div>
 </widget-window>
 
@@ -435,8 +451,32 @@
     <li onclick="moveItem(contextMenuItem)">Move to...</li>
     <li onclick="cloneItem(contextMenuItem)">Clone</li>
     <li onclick="cloneItem(contextMenuItem, true)">Clone (Temporary)</li>
+    <li id="copyItemToHotbarLi" onclick="copyItemToHotbar(contextMenuItem)">Copy to hotbar</li>
     <li onclick="deleteItem(contextMenuItem)">Delete</li>
     <!-- <li onclick="referenceItem(contextMenuItem)">Create Reference</li> -->
+  </ul>
+</widget-contextmenu>
+
+<widget-contextmenu id="build-contextmenu" style="display: none;">
+  <ul slot="menu" id="build-contextmenu-menu">
+    <li onclick="copyBuildToHotbar();">Copy to hotbar</li>
+    <li onclick="copyBuildToInventory();">Copy to inventory</li>
+  </ul>
+</widget-contextmenu>
+
+<widget-contextmenu id="hotbar-contextmenu" style="display: none; z-index: 10;">
+  <ul slot="menu" id="hotbar-contextmenu-menu">
+    <li onclick="copyHotbarSlotToInventory();">Copy to inventory</li>
+    <li onclick="deleteHotbarSlot();">Delete</li>
+    <li onclick="copyHereHotbarSlot();">Copy here</li>
+    <li onclick="editHotbarSlot();">Edit</li>
+  </ul>
+</widget-contextmenu>
+
+<widget-contextmenu id="hotbar-no-item-contextmenu" style="display: none; z-index: 10;">
+  <ul slot="menu" id="hotbar-no-item-contextmenu-menu">
+    <li onclick="copyHereHotbarSlot();">Copy here</li>
+    <li onclick="newTileHotbarSlot();">New tile</li>
   </ul>
 </widget-contextmenu>
 

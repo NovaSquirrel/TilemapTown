@@ -74,6 +74,23 @@ const CameraScaleMax = 8;
 
 var chatLogForExport = [];
 
+const BUILD_TOOL_SELECT = 0;
+const BUILD_TOOL_DRAW = 1;
+let buildTool = BUILD_TOOL_SELECT;
+let rightClickedBuildTile = null;
+let rightClickedHotbarIndex = null;
+let tileDataForDraw = null;
+
+let hotbarData = [null, null, null, null, null, null, null, null, null, null];
+let hotbarSelectIndex = null;
+let hotbarDragging = false;
+
+let buildMenuSelectIndex = null;
+let drawToolX = null, drawToolY = null;
+let drawToolCurrentStroke = {}; // All the tiles currently being drawn on, indexed by x,y
+let drawToolCurrentStrokeIsObj = false;
+let drawToolUndoHistory = [];
+
 function getRandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
@@ -182,16 +199,19 @@ function editItemUpdatePic() {
   document.getElementById('edittilesheetselect').src = src;
 }
 
-editItemType = null;
-editItemID = null;
-editItemOriginalSheet = null; // Original tileset image that the tile's pic was set to before the edit
+let editItemType = null;
+let editItemID = null;
+let editItemOriginalSheet = null; // Original tileset image that the tile's pic was set to before the edit
 function editItem(key) {
   // open up the item editing screen for a given item
   var item = DBInventory[key] || PlayerWho[key];
-  var itemobj = null;
-  editItemType = item.type;
   editItemID = item.id;
+  editItemShared(item);
+}
 
+function editItemShared(item) {
+  let itemobj = null;
+  editItemType = item.type;
   document.getElementById('edittileobject').style.display = "none";
   document.getElementById('edittiletext').style.display = "none";
   document.getElementById('edittileimage').style.display = "none";
@@ -211,8 +231,9 @@ function editItem(key) {
       break;
 
     case "generic":
+    case "map_tile_hotbar":
     case "map_tile":
-      if (item.type == "map_tile") {
+      if (item.type == "map_tile" || item.type == "map_tile_hotbar") {
         itemobj = AtomFromName(item.data);
         if (itemobj == null) {
           itemobj = { pic: [0, 8, 24] };
@@ -254,7 +275,7 @@ function editItem(key) {
       }
       // Probably also allow just typing in something?
 
-      document.getElementById('edittilemaptile').style.display = item.type == "map_tile" ? "block" : "none";
+      document.getElementById('edittilemaptile').style.display = (item.type == "map_tile" || item.type == "map_tile_hotbar") ? "block" : "none";
       document.getElementById('edittileobject').style.display = "block";
       document.getElementById('edittilesheet').value = "keep";
       document.getElementById('edittilex').value = itemobj.pic[1];
@@ -280,9 +301,10 @@ function editItem(key) {
   document.getElementById('editItemWindow').style.display = "block";
 }
 
-function useItem(Placed) {
-  var PlayerX = PlayerWho[PlayerYou].x;
-  var PlayerY = PlayerWho[PlayerYou].y;
+function useItemAtXY(Placed, x, y) {
+  if(x < 0 || y < 0 || x >= MyMap.Width || y >= MyMap.Height)
+    return undefined;
+  let old = null;
 
   switch (Placed.type) {
     case "tileset": // tileset
@@ -300,15 +322,22 @@ function useItem(Placed) {
             return;
           Placed.data.message = Message;
         }
-        MyMap.Objs[PlayerX][PlayerY].push(Placed.data);
-        SendCmd("PUT", { pos: [PlayerX, PlayerY], obj: true, atom: MyMap.Objs[PlayerX][PlayerY] });
+        old = [...MyMap.Objs[x][y]];
+        MyMap.Objs[x][y].push(Placed.data);
+        SendCmd("PUT", { pos: [x, y], obj: true, atom: MyMap.Objs[x][y] });
       } else {
-        MyMap.Tiles[PlayerX][PlayerY] = Placed.data;
-        SendCmd("PUT", { pos: [PlayerX, PlayerY], obj: false, atom: MyMap.Tiles[PlayerX][PlayerY] });
+        old = MyMap.Tiles[x][y];
+        MyMap.Tiles[x][y] = Placed.data;
+        SendCmd("PUT", { pos: [x, y], obj: false, atom: MyMap.Tiles[x][y] });
       }
       drawMap();
   }
+  return old;
+}
 
+
+function useItem(Placed) {
+  return useItemAtXY(Placed, PlayerWho[PlayerYou].x, PlayerWho[PlayerYou].y);
 }
 
 function moveItem(id) {
@@ -365,6 +394,37 @@ function deleteItem(id) {
   }
 }
 
+function copyBuildToHotbar() {
+  addTileToHotbar(rightClickedBuildTile);
+}
+
+function copyBuildToInventory() {
+  SendCmd("BAG", { create: { "type": "map_tile", "name": rightClickedBuildTile, "data": rightClickedBuildTile } });
+}
+
+function copyItemToHotbar(id) {
+  if(!(id in DBInventory))
+    return;
+  var item = DBInventory[id];
+  if(item.type != 'map_tile')
+    return;
+  addTileToHotbar(item.data);
+}
+
+function addTileToHotbar(tileData) {
+  let freeSlot = hotbarData.indexOf(null);
+  if(freeSlot === -1) {
+    // It goes into the selected index, or the last index
+    if(hotbarSelectIndex !== null)
+      freeSlot = hotbarSelectIndex;
+    else
+      freeSlot = hotbarData.length - 1;
+  }
+
+  hotbarData[freeSlot] = tileData;
+  setHotbarIndex(freeSlot);
+}
+
 function referenceItem(id) {
   var item = DBInventory[id] || PlayerWho[id];
   SendCmd("BAG", { create: { name: `${item.name} (reference)`, type: "reference", data: `${id}` } });
@@ -407,6 +467,15 @@ function movePlayer(id, x, y, dir) {
     PlayerWho[id].dir = dir;
     updateDirectionForAnim(id);
   }
+}
+
+function getDataForDraw() {
+  if(hotbarSelectIndex !== null) {
+    if(hotbarSelectIndex < hotbarData.length)
+      return hotbarData[hotbarSelectIndex];
+  } else if(tileDataForDraw)
+    return tileDataForDraw;
+  return null;
 }
 
 function keyHandler(e) {
@@ -484,11 +553,13 @@ function keyHandler(e) {
   var Bumped = false, BumpedX = null, BumpedY = null;
   var OldPlayerDir = PlayerWho[PlayerYou].dir;
 
-  if (e.keyCode == 32 || e.keyCode == 12) { // space or clear
-
-  } if (e.keyCode == 46) { // delete
+  if (e.code == "Space") { // space or clear
+    let data = getDataForDraw();
+    if(data !== null)
+      useItem({ type: 'map_tile', data: data});
+  } if (e.code == "Delete") { // delete
     selectionDelete();
-  } else if (e.keyCode == 27) { // escape
+  } else if (e.code == "Escape") { // escape
     MouseActive = false;
     MouseDown = false;
     panel.innerHTML = "";
@@ -500,47 +571,50 @@ function keyHandler(e) {
     n = (n - 1) % 10;
     if (n < 0)
       n = 9;
+    setHotbarIndex(n);
+    /*
     // if there's no item, stop
     if (!DisplayInventory[null][n])
       return;
     useItem(DisplayInventory[null][n]);
-  } else if (e.keyCode == 38 || e.keyCode == 87) { // up/w
+    */
+  } else if (e.code == "ArrowUp" || e.code == "KeyW") { // up/w
     PlayerY--;
     PlayerDir = Directions.NORTH;
     e.preventDefault();
-  } else if (e.keyCode == 40 || e.keyCode == 83) { // down/s
+  } else if (e.code == "ArrowDown" || e.code == "KeyS") { // down/s
     PlayerY++;
     PlayerDir = Directions.SOUTH;
     e.preventDefault();
-  } else if (e.keyCode == 37 || e.keyCode == 65) { // left/a
+  } else if (e.code == "ArrowLeft" || e.code == "KeyA") { // left/a
     PlayerX--;
     PlayerDir = Directions.WEST;
     e.preventDefault();
-  } else if (e.keyCode == 39 || e.keyCode == 68) { // right/d
+  } else if (e.code == "ArrowRight" || e.code == "KeyD") { // right/d
     PlayerX++;
     PlayerDir = Directions.EAST;
     e.preventDefault();
-  } else if (e.keyCode == 35) { // end
+  } else if (e.code == "End") { // end
     PlayerX--;
     PlayerY++;
     PlayerDir = Directions.SOUTHWEST;
     e.preventDefault();
-  } else if (e.keyCode == 34) { // pg down
+  } else if (e.code == "PageDown") { // pg down
     PlayerX++;
     PlayerY++;
     PlayerDir = Directions.SOUTHEAST;
     e.preventDefault();
-  } else if (e.keyCode == 36) { // home
+  } else if (e.code == "Home") { // home
     PlayerX--;
     PlayerY--;
     PlayerDir = Directions.NORTHWEST;
     e.preventDefault();
-  } else if (e.keyCode == 33) { // pg up
+  } else if (e.code == "PageUp") { // pg up
     PlayerX++;
     PlayerY--;
     PlayerDir = Directions.NORTHEAST;
     e.preventDefault();
-  } else if (e.keyCode == 13) { // enter (carriage return)
+  } else if (e.code == "Enter") { // enter (carriage return)
     chatInput.focus();
     e.preventDefault();
   }
@@ -886,6 +960,17 @@ function drawMap() {
     ctx.rect(AX - PixelCameraX, AY - PixelCameraY, BX - AX, BY - AY);
     ctx.stroke();
   }
+  if (drawToolX !== null && drawToolY !== null) {
+    ctx.beginPath();
+    ctx.globalAlpha = 0.75;
+    ctx.lineWidth = "4";
+    ctx.strokeStyle = "#ffffff";
+    var AX = drawToolX * 16;
+    var AY = drawToolY * 16;
+    ctx.rect(AX - PixelCameraX, AY - PixelCameraY, 16, 16);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
 
 }
 
@@ -899,7 +984,7 @@ function drawText(ctx, x, y, text) {
   }
 }
 
-function drawSelector() {
+function drawHotbar() {
   // This draws the hotbar on the bottom
   var canvas = document.getElementById("selector");
   var ctx = canvas.getContext("2d");
@@ -912,11 +997,28 @@ function drawSelector() {
   var oneWidth = canvas.width / 10;
   for (var i = 0; i < 10; i++) {
     drawText(ctx, i * oneWidth, 0, ((i + 1) % 10) + "");
-    // TODO: figure out what to display down here later?
-    //    var item = AtomFromName(DisplayInventory[null][i]);
-    //    if(item) {
-    //      ctx.drawImage(IconSheets[item.pic[0]], item.pic[1]*16, item.pic[2]*16, 16, 16, i*oneWidth+16, 0, 16, 16);
-    //    }
+    
+    if(i < hotbarData.length) {
+      var item = AtomFromName(hotbarData[i]);
+      if(item) {
+        ctx.drawImage(IconSheets[item.pic[0]], item.pic[1]*16, item.pic[2]*16, 16, 16, i*oneWidth+12, 0, 16, 16);
+      }
+    }
+    if(i == hotbarSelectIndex) {
+      ctx.beginPath();
+      ctx.globalAlpha = 0.75;
+      ctx.lineWidth = "2";
+      ctx.strokeStyle = "black";
+      ctx.rect(i*oneWidth+12-1, 0, 18, 16);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(i*oneWidth+12-2, 16);
+      ctx.lineTo(i*oneWidth+0,    16);
+      ctx.stroke();
+
+      ctx.globalAlpha = 1;
+    }
   }
 }
 
@@ -1207,6 +1309,15 @@ function updateZoomLevelDisplay() {
 function initMouse() {
   var edittilesheetselect = document.getElementById("edittilesheetselect");
 
+  function drawingTooFar(x, y) {
+    let youX = PlayerWho[PlayerYou].x;
+    let youY = PlayerWho[PlayerYou].y;
+    let diffX = youX - x;
+    let diffY = youY - y;
+    let distance = Math.sqrt(diffX * diffX + diffY * diffY);
+    return distance > 5;
+  }
+
   edittilesheetselect.addEventListener('mousedown', function (evt) {
     // update to choose the selected tile
     document.getElementById('edittilex').value = (evt.clientX - evt.target.getBoundingClientRect().x) >> 4;
@@ -1215,42 +1326,72 @@ function initMouse() {
   }, false);
 
   mapCanvas.addEventListener('mousedown', function (evt) {
-    if (evt.button == 2)
+    if (evt.button != 0)
       return;
     panel.innerHTML = "";
     var pos = getTilePos(evt);
     MouseDown = true;
-    MouseStartX = pos.x;
-    MouseStartY = pos.y;
-    MouseEndX = pos.x;
-    MouseEndY = pos.y;
-    MouseActive = true;
-    NeedMapRedraw = true;
-    selectionInfoVisibility(false);
+
+    if (buildTool == BUILD_TOOL_SELECT) {
+      MouseStartX = pos.x;
+      MouseStartY = pos.y;
+      MouseEndX = pos.x;
+      MouseEndY = pos.y;
+      MouseActive = true;
+      NeedMapRedraw = true;
+      selectionInfoVisibility(false);
+    } else if(buildTool == BUILD_TOOL_DRAW) {
+      let data = getDataForDraw();
+      let atom = AtomFromName(data);
+      if(data === null)
+        return;
+      drawToolCurrentStroke = {};
+      drawToolCurrentStrokeIsObj = "obj" in atom;
+
+      // ---
+
+      if(drawingTooFar(pos.x, pos.y)) {
+        return;
+      }
+      let old = useItemAtXY({ type: 'map_tile', data: data }, pos.x, pos.y);
+      if(old === undefined)
+        return;
+      drawToolCurrentStroke[(pos.x + "," + pos.y)] = old;
+    }
   }, false);
 
   mapCanvas.addEventListener('mouseup', function (evt) {
-    if (evt.button == 2)
+    if (evt.button != 0)
       return;
     MouseDown = false;
     NeedMapRedraw = true;
 
-    // adjust the selection box
-    var AX = Math.min(MouseStartX, MouseEndX);
-    var AY = Math.min(MouseStartY, MouseEndY);
-    var BX = Math.max(MouseStartX, MouseEndX);
-    var BY = Math.max(MouseStartY, MouseEndY);
-    MouseStartX = AX;
-    MouseStartY = AY;
-    MouseEndX = BX;
-    MouseEndY = BY;
+    if (buildTool == BUILD_TOOL_SELECT) {
+      // adjust the selection box
+      var AX = Math.min(MouseStartX, MouseEndX);
+      var AY = Math.min(MouseStartY, MouseEndY);
+      var BX = Math.max(MouseStartX, MouseEndX);
+      var BY = Math.max(MouseStartY, MouseEndY);
+      MouseStartX = AX;
+      MouseStartY = AY;
+      MouseEndX = BX;
+      MouseEndY = BY;
 
-    var panelHTML = (BX - AX + 1) + "x" + (BY - AY + 1) + "<br>";
-    updateSelectedObjectsUL();
+      document.getElementById("getTileObjSpan").style.display = (MouseStartX == MouseEndX && MouseStartY == MouseEndY) ? 'block' : 'none';
 
-    selectionInfoVisibility(true);
+      var panelHTML = (BX - AX + 1) + "x" + (BY - AY + 1) + "<br>";
+      updateSelectedObjectsUL();
 
-    panel.innerHTML = panelHTML;
+      selectionInfoVisibility(true);
+
+      panel.innerHTML = panelHTML;
+    } else if(buildTool == BUILD_TOOL_DRAW) {
+      drawToolUndoHistory.push({
+        'data': drawToolCurrentStroke,
+        'obj': drawToolCurrentStrokeIsObj,
+      });
+      drawToolCurrentStroke = {};
+    }
   }, false);
 
 
@@ -1278,19 +1419,107 @@ function initMouse() {
     }
     MousedOverPlayers = Around;
 
-    if (!MouseDown)
-      return;
-    if (pos.x != MouseEndX || pos.y != MouseEndY)
-      NeedMapRedraw = true;
-    MouseEndX = pos.x;
-    MouseEndY = pos.y;
+    if (buildTool == BUILD_TOOL_SELECT) {
+      if (!MouseDown)
+        return;
+      if (pos.x != MouseEndX || pos.y != MouseEndY)
+        NeedMapRedraw = true;
+      MouseEndX = pos.x;
+      MouseEndY = pos.y;
+    } else if(buildTool == BUILD_TOOL_DRAW) {
+      if(drawingTooFar(pos.x, pos.y)) {
+        drawToolX = null;
+        drawToolY = null;
+        return;
+      }
+      if(drawToolX !== MouseNowX || drawToolY !== MouseNowY) {
+        drawToolX = MouseNowX;
+        drawToolY = MouseNowY;
+        NeedMapRedraw = true;
+
+        if (!MouseDown)
+          return;
+
+        let coords = drawToolX + "," + drawToolY;
+        if(!(coords in drawToolCurrentStroke)) {
+          let data = getDataForDraw();
+          if(data === null)
+            return;
+
+          let old = useItemAtXY({ type: 'map_tile', data: data }, pos.x, pos.y);
+          if(old === undefined)
+            return;
+          drawToolCurrentStroke[coords] = old;
+        }
+      }
+    }
   }, false);
+
+  // ----------------------------------------------------------------
+
+  let selector = document.getElementById("selector");
+
+  edittilesheetselect.addEventListener('mousedown', function (evt) {
+    // update to choose the selected tile
+    document.getElementById('edittilex').value = (evt.clientX - evt.target.getBoundingClientRect().x) >> 4;
+    document.getElementById('edittiley').value = (evt.clientY - evt.target.getBoundingClientRect().y) >> 4;
+    editItemUpdatePic();
+  }, false);
+
+  selector.addEventListener('mousedown', function (evt) {
+    if (evt.button == 2)
+      return;
+    var pos = getMousePosRaw(selector, evt);
+    let oneWidth = selector.width / 10;
+    let index = Math.floor(pos.x / oneWidth);
+    setHotbarIndex(index);
+    hotbarDragging = true;
+  }, false);
+
+  selector.addEventListener('mousemove', function (evt) {
+    if(hotbarDragging) {
+      var pos = getMousePosRaw(selector, evt);
+      let oneWidth = selector.width / 10;
+      let index = Math.floor(pos.x / oneWidth);
+      if(index < 0 || index >= hotbarData.length)
+        return;
+      if(hotbarSelectIndex !== null) {
+        let temp = hotbarData[hotbarSelectIndex]
+        hotbarData[hotbarSelectIndex] = hotbarData[index];
+        hotbarData[index] = temp;
+        setHotbarIndex(index);
+      }
+    }
+  }, false);
+
+  selector.addEventListener('mouseup', function (evt) {
+    if (evt.button == 2)
+      return;
+    hotbarDragging = false;
+  }, false);
+
+  selector.addEventListener('wheel', function (event) {
+    event.preventDefault();
+  }, false);
+
+  selector.addEventListener('contextmenu', function (evt) {
+    var pos = getMousePosRaw(selector, evt);
+    let oneWidth = selector.width / 10;
+    let index = Math.floor(pos.x / oneWidth);
+    rightClickedHotbarIndex = index;
+    var menu = document.querySelector(hotbarData[index] !== null ? '#hotbar-contextmenu' : '#hotbar-no-item-contextmenu');
+    menu.style.left = (evt.clientX) + "px";
+    menu.style.display = "block";
+    menu.style.top = (evt.clientY - menu.offsetHeight) + "px";
+    evt.preventDefault();
+  }, false);
+
 }
 
 function viewInit() {
   var selector = document.getElementById("selector");
   selector.width = Math.max(240, parseInt(mapCanvas.style.width)) + "";
-  drawSelector();
+  drawHotbar();
   NeedMapRedraw = true;
 }
 
@@ -1311,6 +1540,17 @@ function redrawBuildCanvas() {
     var item = PredefinedArray[i];
     if (item.pic[0] in IconSheets)
       ctx.drawImage(IconSheets[item.pic[0]], item.pic[1] * 16, item.pic[2] * 16, 16, 16, (count % BuildWidth) * 16, Math.floor(count / BuildWidth) * 16, 16, 16);
+
+    if(i == buildMenuSelectIndex) {
+      ctx.beginPath();
+      ctx.globalAlpha = 0.75;
+      ctx.lineWidth = "2";
+      ctx.strokeStyle = "black";
+      ctx.rect((count % BuildWidth) * 16, Math.floor(count / BuildWidth) * 16, 16, 16);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
     count++;
   }
 }
@@ -1327,10 +1567,28 @@ function initBuild() {
     pos.y = pos.y >> 4;
     var index = pos.y * BuildWidth + pos.x;
 
-    if (evt.button == 0)
-      useItem({ type: 'map_tile', data: PredefinedArrayNames[index] });
-    //      else if(evt.button == 2)
-    //        addInventory(PredefinedArrayNames[index]);
+	if(evt.button == 0) {
+		if (buildTool == BUILD_TOOL_SELECT) {
+		  useItem({ type: 'map_tile', data: PredefinedArrayNames[index] });
+		} else if(buildTool == BUILD_TOOL_DRAW) {
+		  tileDataForDraw = PredefinedArrayNames[index];
+          setBuildMenuSelectIndex(index);
+		}
+	}
+  }, false);
+
+  canvas.addEventListener('contextmenu', function (evt) {
+    var pos = getMousePosRaw(inventoryCanvas, evt);
+    pos.x = pos.x >> 4;
+    pos.y = pos.y >> 4;
+    var index = pos.y * BuildWidth + pos.x;
+    rightClickedBuildTile = PredefinedArrayNames[index];
+
+    var menu = document.querySelector('#build-contextmenu');
+    menu.style.left = (evt.clientX) + "px";
+    menu.style.top = (evt.clientY) + "px";
+    menu.style.display = "block";
+    evt.preventDefault();
   }, false);
 }
 
@@ -1694,8 +1952,11 @@ contextMenuItem = 0;
 function openItemContextMenu(id, x, y) {
   var drop = document.querySelector('#droptakeitem');
 
+  copyItemToHotbarLi.style.display = "none";
   if (id in DBInventory) {
     drop.innerText = "Drop";
+    if(DBInventory[id].type == "map_tile")
+      copyItemToHotbarLi.style.display = "block";
   } else {
     drop.innerText = "Take";
   }
@@ -1717,7 +1978,13 @@ function updateInventoryUL() {
   itemCardList(ul, DisplayInventory[null], {
     eventlisteners: {
       'click': function (e, id) {
-        useItem(DBInventory[id]);
+        let isMapTile = DBInventory[id].type == 'map_tile';
+        if(buildTool == BUILD_TOOL_SELECT || !isMapTile) {
+          useItem(DBInventory[id]);
+        } else if(buildTool == BUILD_TOOL_DRAW) {
+          unselectDrawToolTile();
+          tileDataForDraw = DBInventory[id].data;
+        }
       },
       'contextmenu': function (e, id) {
         openItemContextMenu(id, e.clientX, e.clientY);
@@ -2061,6 +2328,7 @@ function editItemApply() {
       SendCmd("BAG", { update: updates });
       break;
 
+    case "map_tile_hotbar":
     case "map_tile":
     case "generic":
       // Gather item info
@@ -2081,7 +2349,7 @@ function editItemApply() {
 
       updates.pic = [edittilesheet, edittilex, edittiley];
 
-      if (editItemType == "map_tile") {
+      if (editItemType == "map_tile" || editItemType == "map_tile_hotbar") {
         let data = {
           "name": updates.name,
           "pic": updates.pic,
@@ -2092,9 +2360,15 @@ function editItemApply() {
         if(edittileover)
           data["over"] = true;
         updates.data = JSON.stringify(data);
+        if(editItemType === "map_tile_hotbar") {
+          hotbarData[editItemID] = data;
+          drawHotbar();
+        }
       }
 
-      SendCmd("BAG", { update: updates });
+      if(editItemType !== "map_tile_hotbar") {
+        SendCmd("BAG", { update: updates });
+      }
       break;
 
     default: // just update name then
@@ -2193,5 +2467,138 @@ function resizeCanvas() {
   mapCanvas.height = r.height / CameraScale;
 
   drawMap();
-  drawSelector();
+  drawHotbar();
+}
+
+function changeBuildTool() {
+	let isSelect = document.getElementById("buildToolSelect").checked;
+	let isDraw = document.getElementById("buildToolDraw").checked;
+	if(isSelect) {
+		buildTool = BUILD_TOOL_SELECT;
+        drawToolX = null;
+        drawToolY = null;
+    }
+	if(isDraw) {
+		buildTool = BUILD_TOOL_DRAW;
+        MouseActive = false;
+        NeedMapRedraw = true;
+    }
+}
+
+function copyTurfFromSelection() {
+  if (!MouseActive || MouseStartX != MouseEndX || MouseStartY != MouseEndY || MouseStartX < 0 || MouseStartY < 0 || MouseStartX >= MyMap.Width || MouseStartY >= MyMap.Height)
+    return;
+  let tile = MyMap.Tiles[MouseStartX][MouseStartY];
+  if(tile)
+    addTileToHotbar(tile);
+}
+
+function copyObjFromSelection() {
+  if (!MouseActive || MouseStartX != MouseEndX || MouseStartY != MouseEndY || MouseStartX < 0 || MouseStartY < 0 || MouseStartX >= MyMap.Width || MouseStartY >= MyMap.Height)
+    return;
+  for (var index in MyMap.Objs[MouseStartX][MouseStartY]) {
+    addTileToHotbar(MyMap.Objs[MouseStartX][MouseStartY][index]);
+  }
+}
+
+function undoDrawStroke() {
+  if(drawToolUndoHistory.length == 0)
+    return;
+  let undoData = drawToolUndoHistory.pop();
+  let data = undoData.data;
+  let obj = undoData.obj;
+
+  for(var index in data) {
+     let s = index.split(",");
+     let x = parseInt(s[0]);
+     let y = parseInt(s[1]);
+
+     let value = data[index];
+     if(obj) {
+       MyMap.Objs[x][y] = value;
+       SendCmd("PUT", { pos: [x, y], obj: true, atom: value });
+     } else {
+       MyMap.Tiles[x][y] = value;
+       SendCmd("PUT", { pos: [x, y], obj: false, atom: value });
+     }
+  }
+}
+
+function setHotbarIndex(index) {
+  hotbarSelectIndex = index;
+  if(buildMenuSelectIndex !== null) {
+    buildMenuSelectIndex = null;
+    redrawBuildCanvas();
+  }
+  drawHotbar();
+}
+
+function setBuildMenuSelectIndex(index) {
+  buildMenuSelectIndex = index;
+  if(hotbarSelectIndex !== null) {
+    hotbarSelectIndex = null;
+    drawHotbar();
+  }
+  redrawBuildCanvas();
+}
+
+function unselectDrawToolTile() {
+  if(buildMenuSelectIndex !== null) {
+    buildMenuSelectIndex = null;
+    redrawBuildCanvas();
+  }
+  if(hotbarSelectIndex !== null) {
+    hotbarSelectIndex = null;
+    drawHotbar();
+  }
+}
+
+function copyHotbarSlotToInventory() {
+  if (rightClickedHotbarIndex === null)
+    return;
+  if (hotbarData[rightClickedHotbarIndex] === null)
+    return;
+  let atom = AtomFromName(hotbarData[rightClickedHotbarIndex]);
+  SendCmd("BAG", { create: { "type": "map_tile", "name": atom.name, "data": hotbarData[rightClickedHotbarIndex] } });
+}
+
+function deleteHotbarSlot() {
+  if(rightClickedHotbarIndex === null)
+    return;
+  if (
+    confirm(`Really delete hotbar item ${rightClickedHotbarIndex+1}?`)
+  ) {
+    hotbarData[rightClickedHotbarIndex] = null;
+    drawHotbar();
+  }
+}
+
+function editHotbarSlot() {
+  if(rightClickedHotbarIndex === null)
+    return;
+  let data = getDataForDraw();
+  if (data === null)
+    return;
+  let atom = AtomFromName(hotbarData[rightClickedHotbarIndex]);
+  editItemType = "map_tile_hotbar";
+  editItemID = rightClickedHotbarIndex;
+  editItemShared({ "type": "map_tile_hotbar", "name": atom.name, "desc": "", "data": atom });
+}
+
+function newTileHotbarSlot() {
+  if(rightClickedHotbarIndex === null)
+    return;
+  editItemType = "map_tile_hotbar";
+  editItemID = rightClickedHotbarIndex;
+  editItemShared({ "type": "map_tile_hotbar", "name": "", "desc": "", "data": AtomFromName("grass") });
+}
+
+function copyHereHotbarSlot() {
+  if(rightClickedHotbarIndex === null)
+    return;
+  let data = getDataForDraw();
+  if (data === null)
+    return;
+  hotbarData[rightClickedHotbarIndex] = data;
+  drawHotbar();  
 }
