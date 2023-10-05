@@ -76,7 +76,7 @@ def set_entity_params_from_dict(e, d, client):
 		appearance_change_props = {'id', 'name', 'desc', 'pic', 'tags'}
 
 		if any(key not in appearance_change_props for key in d) or not client.has_permission(e, permission['modify_appearance'], False):
-			client.send("ERR", {'text': 'You don\'t have permission to update %s' % e['id']})
+			client.send("ERR", {'text': 'You don\'t have permission to update %s' % d['id']})
 			return
 	if 'data' in d:
 		bad = data_disallowed_for_entity_type(e.entity_type, d['data'])
@@ -313,6 +313,8 @@ def fn_BAG(map, client, arg):
 		# Create a new entity and copy over the properties
 		new_item = Entity(clone_me.entity_type)
 		clone_me.copy_onto(new_item)
+		new_item.owner_id = client.db_id
+		new_item.creator_temp_id = client.id
 
 		set_entity_params_from_dict(new_item, arg['clone'], client)
 		if client.db_id == None:
@@ -320,9 +322,6 @@ def fn_BAG(map, client, arg):
 			new_item.allow = permission['all']
 			new_item.deny = 0
 			new_item.guest_deny = 0
-
-		new_item.owner_id = client.db_id
-		new_item.creator_temp_id = client.id
 
 		if not new_item.temporary:
 			new_item.save()
