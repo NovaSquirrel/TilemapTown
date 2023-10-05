@@ -26,6 +26,7 @@ var PlayerAnimation = { // dictionary of animation statuses
     "lastDirection4": 0, //last direction that was set that is left, right, up or down
   }
 }
+let PlayerBuildMarkers = {}; // id: {pos, name, timer, del}
 
 var Mail = [];
 
@@ -321,6 +322,7 @@ function useItemAtXY(Placed, x, y) {
           if (Message == null)
             return;
           Placed.data.message = Message;
+          MouseDown = false; // Don't keep placing signs
         }
         old = [...MyMap.Objs[x][y]];
         MyMap.Objs[x][y].push(Placed.data);
@@ -948,6 +950,16 @@ function drawMap() {
     ctx.drawImage(IconSheets[pic[0]], pic[1] * 16, pic[2] * 16, 16, 16, objectsWithOverFlag[i][0], objectsWithOverFlag[i][1], 16, 16);
   }
 
+  // Draw markers that people are building
+  let potluck = document.getElementById('potluck');
+  for (let id in PlayerBuildMarkers) {
+    let marker = PlayerBuildMarkers[id];
+    let nameText = " " + marker.name + " ";
+    let del = marker.del;
+    drawTextSmall(ctx, (marker.pos[0] * 16 + 8) - PixelCameraX - (nameText.length * 4 / 2),   (marker.pos[1] * 16) - PixelCameraY - 8, nameText);
+    ctx.drawImage(potluck, del?(17 * 16):(9 * 16), del?(19 * 16):(22 * 16), 16, 16, marker.pos[0] * 16 - PixelCameraX, marker.pos[1] * 16 - PixelCameraY, 16, 16);
+  }
+
   // Draw a mouse selection if there is one
   if (MouseActive) {
     ctx.beginPath();
@@ -960,6 +972,8 @@ function drawMap() {
     ctx.rect(AX - PixelCameraX, AY - PixelCameraY, BX - AX, BY - AY);
     ctx.stroke();
   }
+
+  // Draw tool position preview
   if (drawToolX !== null && drawToolY !== null) {
     ctx.beginPath();
     ctx.globalAlpha = 0.75;
@@ -981,6 +995,16 @@ function drawText(ctx, x, y, text) {
     var srcX = chr & 15;
     var srcY = chr >> 4;
     ctx.drawImage(chicago, srcX * 8, srcY * 8, 8, 8, x + i * 8, y, 8, 8);
+  }
+}
+
+function drawTextSmall(ctx, x, y, text) {
+  var chicago = document.getElementById("tomthumb");
+  for (var i = 0; i < text.length; i++) {
+    var chr = text.charCodeAt(i) - 0x20;
+    var srcX = chr & 15;
+    var srcY = chr >> 4;
+    ctx.drawImage(tomthumb, srcX * 4, srcY * 6, 4, 6, x + i * 4, y, 4, 6);
   }
 }
 
@@ -1113,6 +1137,19 @@ function tickWorld() {
     }
   }
 
+  // Tick the player build markers
+  let removeMarkers = [];
+  for (let id in PlayerBuildMarkers) {
+    let marker = PlayerBuildMarkers[id];
+    marker.timer--;
+    if(marker.timer <= 0) {
+      removeMarkers.push(id);
+    }
+  }
+  for (let id in removeMarkers) {
+    delete PlayerBuildMarkers[removeMarkers[id]];
+  }
+
   /*
     var Under = MyMap.Tiles[PlayerX][PlayerY];
     if(!(TickCounter & 0x03)) {
@@ -1190,6 +1227,8 @@ function selectionCopy() {
 }
 
 function selectionDelete() {
+  if (document.getElementById("deleteTurfObj").style.display == "none")
+    return;
   if (!MouseActive)
     return;
   var DeleteTurfs = document.getElementById("turfselect").checked;
@@ -1488,6 +1527,8 @@ function initMouse() {
       var pos = getMousePosRaw(selector, evt);
       let oneWidth = selector.width / 10;
       let index = Math.floor(pos.x / oneWidth);
+      if(index == hotbarSelectIndex)
+        return;
       if(index < 0 || index >= hotbarData.length)
         return;
       if(hotbarSelectIndex !== null) {

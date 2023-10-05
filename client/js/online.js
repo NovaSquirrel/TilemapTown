@@ -302,6 +302,7 @@ function receiveServerMessage(cmd, arg) {
         PlayerWho = arg.list;
         PlayerImages = {}; // reset images list
         PlayerAnimation = {}; // reset animation states
+        PlayerBuildMarkers = {}; // reset player build markers
 
         // Set up all of the animation states for each player present in the list
         for (var id in arg.list) {
@@ -558,6 +559,26 @@ function receiveServerMessage(cmd, arg) {
       break;
     case "IDN":
       break;
+
+    case "PUT":
+      {
+        let id = arg.id;
+        if (id === PlayerYou)
+          break;
+        if(id in PlayerWho)
+          PlayerBuildMarkers[id] = {pos: arg.pos, name: PlayerWho[id].name, timer: 100, del: false};
+      }
+      break;
+    case "DEL":
+      {
+        let id = arg.id;
+        if (id === PlayerYou)
+          break;
+        if (id in PlayerWho)
+          PlayerBuildMarkers[id] = {pos: [(arg.pos[0]+arg.pos[2])/2, (arg.pos[1]+arg.pos[3])/2], name: PlayerWho[id].name, timer: 300, del: true};
+      }
+      break;
+
   }
 }
 
