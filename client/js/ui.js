@@ -317,12 +317,12 @@ function useItemAtXY(Placed, x, y) {
       // place the item on the ground
       if (ActualAtom.obj) {
         if (ActualAtom.type == AtomTypes.SIGN) {
+          MouseDown = false; // Don't keep placing signs
           Placed = { data: CloneAtom(ActualAtom) };
           Message = prompt("What should the sign say?");
           if (Message == null)
             return;
           Placed.data.message = Message;
-          MouseDown = false; // Don't keep placing signs
         }
         old = [...MyMap.Objs[x][y]];
         MyMap.Objs[x][y].push(Placed.data);
