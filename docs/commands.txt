@@ -336,6 +336,11 @@ Get permissions on an entity, or test permissions for this entity acting on a di
 /entity id revoke permission id/username
 Change permissions.
 
+/entity id tempgrant permission id/username
+/entity id temprevoke permission id/username
+/entity id temprevokeall
+Temporarily grant a permission that will be gone when either entity unloads.
+
 /entity id summon
 Move entity to your position within the map you're on.
 
