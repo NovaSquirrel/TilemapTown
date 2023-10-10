@@ -75,12 +75,19 @@ class Entity(object):
 		self.creator_id = creator_id
 		self.owner_id = creator_id
 		self.creator_temp_id = None # Temporary ID of the creator of the object, for guests. Not saved to the database.
+
+		# default permissions for when entity is the subject
 		self.allow = 0
 		self.deny = 0
 		self.guest_deny = 0
 
+		# permissions for when entity is the actor
 		self.map_allow = 0       # Used to cache the map allows and map denys to avoid excessive SQL queries
 		self.map_deny = 0
+
+		self.temp_permissions_given_to = weakref.WeakSet()
+		self.temp_permissions = weakref.WeakKeyDictionary() # temp_permissions[subject] = permission bits
+
 		self.oper_override = False
 
 		# Save when clean_up() is called
@@ -335,50 +342,30 @@ class Entity(object):
 	def has_permission(self, other, perm=0, default=False):
 		if isinstance(perm, tuple):
 			return any(self.has_permission(other, x, default) for x in perm)
+		map_value = default
 
 		# Oper override bypasses permission checks
 		if self.oper_override:
 			return True
 
-		map_value = default
-
 		# If you pass in an ID, see if the entity with that ID is already loaded
-		if isinstance(other, str):
-			if other.isnumeric():
-				other = int(other)
-			# You can use a temporary ID too, which will have its own code path
-			elif other.startswith(temporary_id_marker) and other[1:].isnumeric():
-				temp_id = int(other[1:])
-				if temp_id not in AllEntitiesByID:
+		if not isinstance(other, Entity):
+			try_load = get_entity_by_id(other, load_from_db=False)
+			if try_load != None:
+				other = try_load
+			elif isinstance(other, str):
+				other = find_db_id_by_str(other)
+				if other == None:
 					return False
-				other = AllEntitiesByID[temp_id]
-				if self is other or self.id == other.creator_temp_id:
-					return True
-				if other.owner_id == self.db_id and self.db_id != None:
-					return True
-				if perm == 0: # perm = 0 is an owner check
-					return False
-
-				# Let the entity override the default
-				if other.allow & perm:
-					map_value = True
-				if other.deny & perm:
-					map_value = False
-
-				# If guest, apply guest_deny
-				if self.db_id == None and other.guest_deny & perm:
-					has = False
-				return map_value
-
-		if isinstance(other, int) and other in AllEntitiesByDB:
-			other = AllEntitiesByDB[other]
-
-		# Is it loaded?
+			elif not isinstance(other, int):
+				return None
+					
 		if isinstance(other, Entity):
 			# You have permission if the object is you
-			if self is other:
+			if self is other or self.id == other.creator_temp_id:
 				return True
-			if self.id == other.creator_temp_id:
+			# Temporary permissions
+			if self.temp_permissions.get(other, 0) & perm:
 				return True
 			if self.db_id:
 				# If you're the owner, you automatically have permission
@@ -399,7 +386,7 @@ class Entity(object):
 			# If guest, apply guest_deny
 			if self.db_id == None:
 				if other.guest_deny & perm:
-					has = False
+					return False
 				return map_value
 
 			# If user is on the map, use the user's cached value

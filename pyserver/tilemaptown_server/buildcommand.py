@@ -83,9 +83,9 @@ def separate_first_word(text, lowercaseFirst=True):
 
 def failed_to_find(context, username):
 	if username == None or len(username) == 0:
-		respond(context, 'No username given', error=True)
+		respond(context, 'No name given', error=True)
 	else:
-		respond(context, 'Player '+username+' not found', error=True)
+		respond(context, '"'+username+'" not found', error=True)
 
 def in_blocked_username_list(client, banlist, action):
 	# Use the player, instead of whatever entity they're acting through
@@ -548,7 +548,7 @@ def permission_change(map, client, context, arg, command2):
 	# Has to be a user that exists
 	uid = find_db_id_by_username(param[1])
 	if uid == None:
-		failed_to_find(param[1])
+		failed_to_find(context, param[1])
 		return
 
 	# Finally we know it's valid
@@ -602,14 +602,23 @@ def fn_permlist(map, client, context, arg):
 				perms += "-"+k+" "
 		perms += "[/li]"
 
-	# Group permissions
+	# Group (or anything that isn't a user) permissions
 	for row in c.execute('SELECT u.name, u.type, mp.allow, mp.deny, u.id FROM Permission mp, Entity u WHERE mp.subject_id=? AND mp.actor_id=u.id AND u.type != ?', (map.db_id, entity_type['user'])):
-		perms += "[li][b]Group: %s(%s) [/b]: " % (row[4], row[0])
+		perms += "[li][b]%s: %s(%s) [/b]: " % (entity_type_name[row[1]].title(), row[4], row[0])
 		for k,v in permission.items():
 			if (row[2] & v) == v: # allow
 				perms += "+"+k+" "
 			if (row[3] & v) == v: # deny
 				perms += "-"+k+" "
+		perms += "[/li]"
+
+	# Temporary
+	for v in map.temp_permissions_given_to:
+		perms += "[li][b]Temp: %s(%s)[/b]" % (v.name, v.protocol_id())
+		perm_bits = v.temp_permissions.get(map)
+		for k,v in permission.items():
+			if (perm_bits & v) == v: # allow
+				perms += "+"+k+" "
 		perms += "[/li]"
 
 	perms += "[/ul]"
@@ -1634,6 +1643,21 @@ def fn_entity(map, client, context, arg):
 			respond(context, "Don\'t have permission to use \"/entity %s\" on %s" % (subcommand, provided_id), error=True)
 			return False
 
+	def temp_permission_args():
+		param = subarg.lower().split(' ')
+		if len(param) < 2:
+			respond(context, 'Must specify a permission and a username', error=True)
+			return False
+		# Has to be a valid permission
+		if param[0] not in permission:
+			respond(context, '"%s" not a valid permission' % param[0], error=True)
+			return False
+		actor = find_client_by_username(param[1])
+		if actor == None:
+			respond(context, '"%s" not online' % param[1], error=True)
+			return False
+		return (actor, permission[param[0]])
+
 	save_entity = False
 
 	if subcommand == 'info':
@@ -1708,17 +1732,49 @@ def fn_entity(map, client, context, arg):
 		handlers['permlist'](e, client, context, subarg)
 	elif subcommand == 'permsfor':
 		if subarg.isdecimal():
-			allow, deny = e.get_allow_deny_for_other_entity(other_id)
-			response(context, 'Allow: %s\nDeny: %s' % (permission_list_from_bitfield(allow), permission_list_from_bitfield(deny)))
+			allow, deny = e.get_allow_deny_for_other_entity(int(subarg))
+			text = 'Allow: %s\nDeny: %s' % (permission_list_from_bitfield(allow), permission_list_from_bitfield(deny))
+
+			# Add temporary permissions if they're there
+			other_entity = find_client_by_username(subarg)
+			if other_entity != None and other_entity in e.temp_permissions:
+				text += '\nAllow (temporary): %s' % permission_list_from_bitfield(e.temp_permissions[other_entity])
+			response(context, text)
 	elif subcommand == 'grant':
 		if permission_check(permission['admin']):
 			permission_change(e, client, context, subarg, 'grant')
 	elif subcommand == 'revoke':
 		if permission_check(permission['admin']):
-			permission_change(e, client, context, subarg, 'deny')
+			permission_change(e, client, context, subarg, 'revoke')
 	elif subcommand == 'deny':
 		if permission_check(permission['admin']):
-			permission_change(e, client, context, subarg, 'revoke')
+			permission_change(e, client, context, subarg, 'deny')
+
+	elif subcommand == 'tempgrant':
+		if permission_check(permission['admin']):
+			params = temp_permission_args()
+			if params == False:
+				return
+			actor, permission_value = params
+			actor.temp_permissions[e] = actor.temp_permissions.get(e, 0) | permission_value
+			e.temp_permissions_given_to.add(actor)
+	elif subcommand == 'temprevoke':
+		if permission_check(permission['admin']):
+			params = temp_permission_args()
+			if params == False:
+				return
+			actor, permission_value = params
+			if actor in e.temp_permissions:
+				actor.temp_permissions[e] &= ~permission_value
+				if actor.temp_permissions[e] == 0:
+					del actor.temp_permissions[e]
+					e.temp_permissions_given_to.discard(actor)
+	elif subcommand == 'temprevokeall':
+		if permission_check(permission['admin']):
+			for other_entity in e.temp_permissions_given_to:
+				other_entity.temp_permissions.pop(e, None)
+			e.temp_permissions_given_to.clear()
+
 	elif subcommand == 'save':
 		if permission_check(permission['remote_command']) and not e.temporary: # Maybe use a different permission? Or none
 			e.save()

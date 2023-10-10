@@ -132,25 +132,37 @@ botwatch_type['entry'] = 2
 botwatch_type['chat']  = 3
 BotWatch = [weakref.WeakValueDictionary(), weakref.WeakValueDictionary(), weakref.WeakValueDictionary(), weakref.WeakValueDictionary()] # Indexed by client.db_id
 
-# Map permissions
-permission = {}
-permission['entry']                   = 0x0001 # user can visit the map
-permission['build']                   = 0x0002 # user can build on the map
-permission['sandbox']                 = 0x0004 # users can delete any part of the map freely
-permission['admin']                   = 0x0008 # user is an admin on the map
-permission['copy']                    = 0x0010 # user can make copies of this object
-permission['map_bot']                 = 0x0020 # user is given bot-related permissions
-permission['move']                    = 0x0040 # user can move this object around within the same container
-permission['move_new_map']            = 0x0080 # user can move this object to a new map
-permission['bulk_build']              = 0x0100 # user can use the builk building protocol commands
-permission['object_entry']            = 0x0200 # user can bring non-client entities here
-permission['persistent_object_entry'] = 0x0400 # user can bring non-client entities here persistently (will kick clients out when unloading if not true)
-permission['modify_properties']       = 0x0800 # user can modify the properties of this entity
-permission['remote_command']          = 0x1000 # user can make this entity do arbitrary commands
-permission['modify_appearance']       = 0x2000 # user can modify visual properties, like picture or description
-permission['list_contents']           = 0x4000 # user can look at the contents of this entity
-permission['set_owner_to_this']       = 0x8000 # user can set their owner to this entity
-
+# Entity permissions
+permission = {}                                    # (subject type)
+permission['entry']                   = 0x00000001 # (map) user can visit the map
+permission['build']                   = 0x00000002 # (map) user can build on the map
+permission['sandbox']                 = 0x00000004 # (map) users can delete any part of the map freely
+permission['admin']                   = 0x00000008 # (all) user is an admin on the map (also allows grant/revoke)
+permission['copy']                    = 0x00000010 # (all) user can make copies of this object
+permission['map_bot']                 = 0x00000020 # (map) user is given bot-related permissions
+permission['move']                    = 0x00000040 # (all) user can move this object around within the same container
+permission['move_new_map']            = 0x00000080 # (all) user can move this object to a new map
+permission['bulk_build']              = 0x00000100 # (map) user can use the builk building protocol commands
+permission['object_entry']            = 0x00000200 # (all) user can bring non-client entities here
+permission['persistent_object_entry'] = 0x00000400 # (all) user can bring non-client entities here persistently (will kick clients out when unloading if not true)
+permission['modify_properties']       = 0x00000800 # (all) user can modify the properties of this entity
+permission['remote_command']          = 0x00001000 # (all) user can make this entity do arbitrary commands
+permission['modify_appearance']       = 0x00002000 # (all) user can modify visual properties, like picture or description
+permission['list_contents']           = 0x00004000 # (all) user can look at the contents of this entity
+permission['set_owner_to_this']       = 0x00008000 # (all) user can set change the owner of any of their entities to this entity
+                                    # = 0x00010000
+                                    # = 0x00020000
+                                    # = 0x00040000
+                                    # = 0x00080000
+                                    # = 0x00100000
+                                    # = 0x00200000
+                                    # = 0x00400000
+                                    # = 0x00800000
+                                    # = 0x01000000
+                                    # = 0x02000000
+                                    # = 0x04000000
+# Permissions at the end are more meant for temporary use, and may be moved later
+permission['minigame']                = 0x80000000 # (user) entity can capture this user's controls, and control their minigame hotbar
 permission['all']                     = 0xffffffff # future proofing!
 
 def permission_list_from_bitfield(bitfield):
@@ -258,31 +270,32 @@ def get_entity_type_by_db_id(id):
 		return None
 	return result[0]
 
+def find_db_id_by_str(id): # Generic; recognize and handle different prefixes
+	# Can use a global entity ID; look up what the actual entity ID is
+	if id[0] == global_entity_marker:
+		c = Database.cursor()
+		c.execute('SELECT entity_id FROM Global_Entity_Key WHERE key=?', (id[1:],))
+		result = c.fetchone()
+		if result == None:
+			return None
+		return result[0]
+	elif id.startswith('user:'):
+		return find_db_id_by_username(id[5:])
+	elif isinstance(id, str) and id.isdecimal():
+		return int(id)
+	return None
+
 def get_entity_by_id(id, load_from_db=True):
 	# If it's temporary, get it if it still exists
 	if isinstance(id, str):
-		if isinstance(id, str) and id[0] == temporary_id_marker and id[1:].isdecimal():
+		if id[0] == temporary_id_marker and id[1:].isdecimal():
 			id = int(id[1:])
 			if id in AllEntitiesByID:
 				return AllEntitiesByID[id]
 			return None
-
-		# Can use a global entity ID; look up what the actual entity ID is
-		elif id[0] == global_entity_marker:
-			global_key = id[1:]
-
-			c = Database.cursor()
-			c.execute('SELECT entity_id FROM Global_Entity_Key WHERE key=?', (global_key,))
-			result = c.fetchone()
-			if result == None:
-				return None
-			id = result[0]
-
-		elif id.startswith('user:'):
-			id = find_db_id_by_username(id[5:])
-
-		elif isinstance(id, str) and id.isdecimal():
-			id = int(id)
+		id = find_db_id_by_str(id)
+		if id == None:
+			return None
 
 	# Fetch it from RAM if it's already loaded from the database
 	if id in AllEntitiesByDB:
