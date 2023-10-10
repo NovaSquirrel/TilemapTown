@@ -55,8 +55,8 @@ class Entity(object):
 		self.flags = 0        # Entity flags, like "public"?
 
 		# temporary information
-		self.requests = {} # Indexed by username, array with [timer, type]
-		# valid types are "tpa", "tpahere", "carry"
+		self.requests = {} # Indexed by tuple: (username, type). Each item is an array with [timer, id, data]; data may be None. Timer decreases each second, then the request is deleted.
+		# valid types are "tpa", "tpahere", "carry", "followme"
 		self.tp_history = deque(maxlen=20)
 
 		# allow cleaning up BotWatch info

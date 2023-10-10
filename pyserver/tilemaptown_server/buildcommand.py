@@ -24,6 +24,7 @@ command_about = {}		# help text (description of the command)
 command_syntax = {}     # help text (syntax only)
 command_privilege_level = {} # minimum required privilege level required for the command; see user_privilege in buildglobal.py
 map_only_commands = set()
+next_request_id = 1
 
 # Adds a command handler
 def cmd_command(alias=[], category="Miscellaneous", hidden=False, about=None, syntax=None, privilege_level='guest', map_only=False):
@@ -202,35 +203,144 @@ def fn_tell(map, client, context, arg):
 	else:
 		respond(context, 'Private message who?', error=True)
 
-@cmd_command(category="Follow", syntax="username")
-def fn_carry(map, client, context, arg):
+def send_request_to_user(client, context, arg, request_type, request_data, accept_command, decline_command, you_message, them_message):
+	global next_request_id
+
+	# Find the user by name
 	u = find_client_by_username(arg)
 	if u == None:
 		failed_to_find(context, arg)
 		return
-	my_username = client.username_or_id()
-	if my_username in u.requests:
-		respond(context, 'You\'ve already sent them a request', error=True)
-		u.requests[my_username][0] = 600 #renew
-	elif not u.is_client() or not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
-		respond(context, 'You requested to carry '+arg)
-		u.send("MSG", {'text': client.name_and_username()+' wants to carry you', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
-		u.requests[my_username] = [600, 'carry']
+	my_username = client.protocol_id()
+	request_key = (my_username, request_type)
+
+	if request_key in u.requests:
+		if u.requests[request_key][2] == request_data:
+			# Renew it
+			respond(context, 'You\'ve already sent them a request', error=True)
+			u.requests[request_key][0] = 600
+			return		
+	if not u.is_client() or not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
+		respond(context, you_message % arg)
+		u.send("MSG", {'text': them_message % client.name_and_username(), 'buttons': ['Accept', '%s %s %s %d' % (accept_command, my_username, request_type, next_request_id), 'Decline', '%s %s %s %d' % (decline_command, my_username, request_type, next_request_id)]})
+		u.requests[request_key] = [600, next_request_id, request_data]
+		next_request_id += 1
+
+@cmd_command(category="Follow", syntax="username")
+def fn_carry(map, client, context, arg):
+	send_request_to_user(client, context, arg, "carry", None, "tpaccept", "tpdeny", "You requested to carry %s", "%s wants to carry you")
 
 @cmd_command(category="Follow", syntax="username")
 def fn_followme(map, client, context, arg):
+	send_request_to_user(client, context, arg, "followme", None, "tpaccept", "tpdeny", "You requested to have %s follow you", "%s wants you to follow them")
+
+@cmd_command(category="Teleport", syntax="username")
+def fn_tpa(map, client, context, arg):
+	send_request_to_user(client, context, arg, "tpa", None, "tpaccept", "tpdeny", "You requested a teleport to %s", "%s wants to teleport to you")
+
+@cmd_command(category="Teleport", syntax="username")
+def fn_tpahere(map, client, context, arg):
+	send_request_to_user(client, context, arg, "tpahere", None, "tpaccept", "tpdeny", "You requested that %s teleport to you", "%s wants you to teleport to them")
+
+def find_request_from_arg(client, context, arg):
+	args = arg.split(' ')
+	if len(args) == 0:
+		return False
+
+	subject_id = args[0]
+	if not valid_id_format(subject_id):
+		subject_id = find_db_id_by_username(subject_id)
+		if subject_id == None:
+			failed_to_find(context, args[0])
+			return False
+
+	# Gather up request information
+	if len(args) == 1: # Just a username/id
+		requests_from_user = [_ for _ in client.requests.keys() if _[0] == subject_id]
+		if len(requests_from_user) == 0:
+			respond(context, "You have no requests from " + args[0], error=True)
+			return False
+		# Try to find which request type has the most recent request (that is, the one with the highest ID)
+		request_type = max(client.requests, key=lambda k: client.requests[k][1])[1]
+	else:
+		request_type = args[1]
+	request_id = int(args[2]) if len(args) >= 3 else None
+
+	request_key = (subject_id, request_type)
+	if request_key not in client.requests or (request_id != None and client.requests[request_key][1] != request_id):
+		respond(context, "Request not found", error=True)
+		return False
+
+	request_data = client.requests[request_key]
+	del client.requests[request_key]
+	return request_key, request_type, request_data, subject_id, args[0]
+
+@cmd_command(category="Teleport", alias=['hopon'], syntax="username")
+def fn_tpaccept(map, client, context, arg):
+	request = find_request_from_arg(client, context, arg)
+	if request == False:
+		return
+	request_key, request_type, request_data, subject_id, username = request
+
+	subject = find_client_by_username(subject_id)
+	if subject == None:
+		respond(context, "User " + username + " isn't online", error=True)
+		return
+
+	respond(context, 'You accepted a request from ' + username)
+	subject.send("MSG", {'text': client.name_and_username()+" accepted your request", "data":
+			{"request_accepted": {"user": client.protocol_id(), "type": request_type, "data": request_data[2]}}
+		}
+	)
+
+	if request_type == 'tpa':
+		subject.switch_map(client.map_id, new_pos=[client.x, client.y], on_behalf_of=client)
+	elif request_type == 'tpahere':
+		client.switch_map(subject.map_id, new_pos=[subject.x, subject.y], on_behalf_of=subject)
+	elif request_type == 'carry':
+		client.is_following = False
+		client.ride(subject)
+	elif request_type == 'followme':
+		client.is_following = True
+		client.ride(subject)
+
+@cmd_command(category="Teleport", alias=['tpdecline'], syntax="username")
+def fn_tpdeny(map, client, context, arg):
+	request = find_request_from_arg(client, context, arg)
+	if request == False:
+		return
+	request_key, request_type, request_data, subject_id, username = request
+
+	respond(context, 'You rejected a request from ' + username)
+
+	subject = find_client_by_username(subject_id)
+	if subject != None:
+		subject.send("MSG", {'text': client.name_and_username()+" rejected your request", "data":
+				{"request_rejected": {"user": client.protocol_id(), "type": request_type, "data": request_data[2]}}
+			}
+		)
+
+@cmd_command(category="Teleport", syntax="username")
+def fn_tpcancel(map, client, context, arg):
+	arg = arg.lower()
 	u = find_client_by_username(arg)
 	if u == None:
 		failed_to_find(context, arg)
 		return
-	my_username = client.username_or_id()
-	if my_username in u.requests:
-		respond(context, 'You\'ve already sent them a request', error=True)
-		u.requests[my_username][0] = 600 #renew
-	elif not u.is_client() or not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
-		respond(context, 'You requested to have '+arg+' follow you')
-		u.send("MSG", {'text': client.name_and_username()+' wants you to follow them', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
-		u.requests[my_username] = [600, 'followme']
+
+	my_id = client.protocol_id()
+	remove_keys = set()
+	for k in u.requests:
+		if k[0] == my_id:
+			remove_keys.add(k)
+	for k in remove_keys:
+		del u.requests[k]
+
+	if len(remove_keys):
+		respond(context, 'Canceled request to '+arg)
+		del u.requests[my_username]
+	else:
+		respond(Context, 'No request to cancel', error=True)
 
 @cmd_command(category="Follow")
 def fn_hopoff(map, client, context, arg):
@@ -268,89 +378,6 @@ def fn_rideend(map, client, context, arg):
 	temp = set(client.passengers)
 	for u in temp:
 		u.dismount()
-
-@cmd_command(category="Teleport", syntax="username")
-def fn_tpa(map, client, context, arg):
-	u = find_client_by_username(arg)
-	if u == None:
-		failed_to_find(context, arg)
-		return
-	my_username = client.username_or_id()
-	if my_username in u.requests:
-		respond(context, 'You\'ve already sent them a request', error=True)
-		u.requests[my_username][0] = 600 #renew
-	elif not u.is_client() or not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
-		respond(context, 'You requested a teleport to '+arg)
-		u.send("MSG", {'text': client.name_and_username()+' wants to teleport to you', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
-		u.requests[my_username] = [600, 'tpa']
-
-@cmd_command(category="Teleport", syntax="username")
-def fn_tpahere(map, client, context, arg):
-	u = find_client_by_username(arg)
-	if u == None:
-		failed_to_find(context, arg)
-		return
-	my_username = client.username_or_id()
-	if my_username in u.requests:
-		respond(context, 'You\'ve already sent them a request', error=True)
-		u.requests[my_username][0] = 600 #renew
-	elif not u.is_client() or not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
-		respond(context, 'You requested that '+arg+' teleport to you')
-		u.send("MSG", {'text': client.name_and_username()+' wants you to teleport to them', 'buttons': ['Accept', 'tpaccept '+my_username, 'Decline', 'tpdeny '+my_username]})
-		u.requests[my_username] = [600, 'tpahere']
-
-@cmd_command(category="Teleport", alias=['hopon'], syntax="username")
-def fn_tpaccept(map, client, context, arg):
-	arg = arg.lower()
-	u = find_client_by_username(arg)
-	if u == None:
-		failed_to_find(context, arg)
-		return
-	if arg not in client.requests:
-		respond(context, 'No pending request from '+arg, error=True)
-	else:
-		respond(context, 'You accepted a teleport request from '+arg)
-		u.send("MSG", {'text': client.name_and_username()+" accepted your request"})
-		request = client.requests[arg]
-		if request[1] == 'tpa':
-			u.switch_map(client.map_id, new_pos=[client.x, client.y], on_behalf_of=client)
-		elif request[1] == 'tpahere':
-			client.switch_map(u.map_id, new_pos=[u.x, u.y], on_behalf_of=u)
-		elif request[1] == 'carry':
-			client.is_following = False
-			client.ride(u)
-		elif request[1] == 'followme':
-			client.is_following = True
-			client.ride(u)
-		del client.requests[arg]
-
-@cmd_command(category="Teleport", alias=['tpdecline'], syntax="username")
-def fn_tpdeny(map, client, context, arg):
-	arg = arg.lower()
-	u = find_client_by_username(arg)
-	if u == None:
-		failed_to_find(context, arg)
-		return
-	if arg not in client.requests:
-		respond(context, 'No pending request from '+arg, error=True)
-	else:
-		respond(context, 'You rejected a teleport request from '+arg)
-		u.send("MSG", {'text': u.name_and_username()+" rejected your request"})
-		del client.requests[arg]
-
-@cmd_command(category="Teleport", syntax="username")
-def fn_tpcancel(map, client, context, arg):
-	arg = arg.lower()
-	u = find_client_by_username(arg)
-	if u == None:
-		failed_to_find(context, arg)
-		return
-	my_username = client.username_or_id()
-	if my_username in u.requests:
-		respond(context, 'Canceled request to '+arg)
-		del u.requests[my_username]
-	else:
-		respond(Context, 'No request to cancel', error=True)
 
 @cmd_command()
 def fn_time(map, client, context, arg):

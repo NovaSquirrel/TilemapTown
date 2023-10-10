@@ -102,8 +102,12 @@ Accept a teleport request
 /tpdeny user (alias mdecline)
 Refuse a teleport request
 
+/tpaccept user type id
+/tpdeny user type id
+Accept/refuse a specific teleport request, where "type" is currently "tpa", "tpahere", "carry" or "followme". ID may be left out, in which case the request's ID doesn't have to match.
+
 /tpcancel user (alias mcancel)
-Cancel a request you made
+Cancel all requests you made to a specific user
 
 /sethome
 Sets your "home"
