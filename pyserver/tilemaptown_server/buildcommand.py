@@ -242,6 +242,34 @@ def fn_tpa(map, client, context, arg):
 def fn_tpahere(map, client, context, arg):
 	send_request_to_user(client, context, arg, "tpahere", None, "tpaccept", "tpdeny", "You requested that %s teleport to you", "%s wants you to teleport to them")
 
+
+permission_grant_description = {
+	"move":              "Teleport you around this map",
+	"move_new_map":      "Teleport you to another map",
+	"minigame":          "Act on your control inputs, and/or show you a custom hotbar",
+	"set_owner_to_this": "Set you as the owner of any of their items",
+	"modify_appearance": "Change your name, description, appearance, or tags",
+}
+@cmd_command(syntax="username permission,permission")
+def fn_requestpermission(map, client, context, arg):
+	args = arg.split(' ')
+	if len(args) != 2:
+		respond(context, "That command needs a username and permission list", error=True)
+		return
+	arg_name  = args[0]
+	arg_perms = args[1]
+
+	deduplicated = set(list(arg_perms.split(',')))
+	permission_grant_text = "%s wants temporary permissions: [b]" + ", ".join(deduplicated) + "[/b]. This would allow them to: [ul]"
+	for perm in deduplicated:
+		if (perm not in permission) or (perm not in permission_grant_description):
+			respond(context, "Invalid or disallowed permission: "+perm, error=True)
+			return
+		permission_grant_text += "[li]%s[/li]" % permission_grant_description[perm]
+	arg_perms = ','.join(deduplicated)
+	permission_grant_text += "[/ul]"
+	send_request_to_user(client, context, arg_name, "tempgrant", arg_perms, "tpaccept", "tpdeny", "You requested permissions("+", ".join(deduplicated)+") from %s", permission_grant_text)
+
 def find_request_from_arg(client, context, arg):
 	args = arg.split(' ')
 	if len(args) == 0:
@@ -273,8 +301,16 @@ def find_request_from_arg(client, context, arg):
 
 	request_data = client.requests[request_key]
 	del client.requests[request_key]
-	return request_key, request_type, request_data, subject_id, args[0]
+	return request_key, request_type, request_data[2], subject_id, args[0]
 
+
+request_type_to_friendly = {
+	"tpa":       "teleport",
+	"tpahere":   "teleport",
+	"carry":     "carry",
+	"follow":    "follow",
+	"tempgrant": "permission",
+}
 @cmd_command(category="Teleport", alias=['hopon'], syntax="username")
 def fn_tpaccept(map, client, context, arg):
 	request = find_request_from_arg(client, context, arg)
@@ -287,9 +323,9 @@ def fn_tpaccept(map, client, context, arg):
 		respond(context, "User " + username + " isn't online", error=True)
 		return
 
-	respond(context, 'You accepted a request from ' + username)
-	subject.send("MSG", {'text': client.name_and_username()+" accepted your request", "data":
-			{"request_accepted": {"user": client.protocol_id(), "type": request_type, "data": request_data[2]}}
+	respond(context, 'You accepted a %s request from %s' % (request_type_to_friendly[request_type], username))
+	subject.send("MSG", {'text': "%s accepted your %s request" % (client.name_and_username(), request_type_to_friendly[request_type]), "data":
+			{"request_accepted": {"user": client.protocol_id(), "type": request_type, "data": request_data}}
 		}
 	)
 
@@ -303,6 +339,8 @@ def fn_tpaccept(map, client, context, arg):
 	elif request_type == 'followme':
 		client.is_following = True
 		client.ride(subject)
+	elif request_type == 'tempgrant':
+		handlers['entity'](map, client, context, "me tempgrant %s %s" % (request_data, subject_id))
 
 @cmd_command(category="Teleport", alias=['tpdecline'], syntax="username")
 def fn_tpdeny(map, client, context, arg):
@@ -311,12 +349,12 @@ def fn_tpdeny(map, client, context, arg):
 		return
 	request_key, request_type, request_data, subject_id, username = request
 
-	respond(context, 'You rejected a request from ' + username)
+	respond(context, 'You rejected a %s request from %s' % (request_type_to_friendly[request_type], username))
 
 	subject = find_client_by_username(subject_id)
 	if subject != None:
-		subject.send("MSG", {'text': client.name_and_username()+" rejected your request", "data":
-				{"request_rejected": {"user": client.protocol_id(), "type": request_type, "data": request_data[2]}}
+		subject.send("MSG", {'text': "%s rejected your %s request" % (client.name_and_username(), request_type_to_friendly[request_type]), "data":
+				{"request_rejected": {"user": client.protocol_id(), "type": request_type, "data": request_data}}
 			}
 		)
 
@@ -1676,14 +1714,17 @@ def fn_entity(map, client, context, arg):
 			respond(context, 'Must specify a permission and a username', error=True)
 			return False
 		# Has to be a valid permission
-		if param[0] not in permission:
-			respond(context, '"%s" not a valid permission' % param[0], error=True)
-			return False
+		perm_values = 0
+		for perm in param[0].split(','):
+			if perm not in permission:
+				respond(context, '"%s" not a valid permission' % perm, error=True)
+				return False
+			perm_values |= permission[perm]
 		actor = find_client_by_username(param[1])
 		if actor == None:
 			respond(context, '"%s" not online' % param[1], error=True)
 			return False
-		return (actor, permission[param[0]])
+		return (actor, perm_values)
 
 	save_entity = False
 

@@ -33,6 +33,7 @@ Clear status, set a status, or set a status with a message attached. The "iic" s
 /exportlogs
 Save the log of your current chat session to a text file
 
+
 ---Utility---
 /getturf
 Makes a map tile object that would recreate the turf you're standing on, and puts it into your inventory.
@@ -42,6 +43,7 @@ Makes map tile objects that would recreate every map object you're standing on, 
 
 /undodel
 Undoes your most recent delete
+
 
 ---Account/customization---
 /nick newname
@@ -59,6 +61,7 @@ Change your icon
 /register username password
 /changepass newpass
 Manage account
+
 
 ---User information---
 /who
@@ -78,6 +81,7 @@ Reads the character description of someone (or something) on the same map
 
 /last user
 Displays someone's last login/logout time
+
 
 ---Movement---
 /offset x y
@@ -115,6 +119,7 @@ Sets your "home"
 /home
 Teleports to your "home"
 
+
 ---Carrying users---
 /carry user
 Offer to carry a user
@@ -140,6 +145,13 @@ List who you are carrying
 /ridewho
 Display who is carrying you
 
+
+---Other user interaction---
+/requestpermission user permission,permission,permission
+Requests that someone temporarily grant you permissions.
+Valid permissions to request are move, move_new_map, minigame, set_owner_to_this, modify_appearance
+
+
 ---Maps---
 /newmap
 Creates a new map and gives you the number for it (if you are registered)
@@ -156,6 +168,7 @@ List all maps that have you set as the owner
 /applymapsection {data}
 Overwrites a rectangle of the map with new data, where the data is provided in the same format as the MAP protocol messages.
 Require admin privileges for the map.
+
 
 ---Moderation---
 /tp user
@@ -183,6 +196,7 @@ If you specify a username, it will remove all of that user's entities, and will 
 
 /flushbuildlog
 Flushes the build log file, so that it's up to date.
+
 
 ---Map configuration---
 /mapid
@@ -257,9 +271,11 @@ If map_id is "none" then the link will be removed.
 The link has to be applied separately on both maps.
 Edge is a number from 0 to 7, where 0 is east, 1 is south east, 2 is south, and so on.	
 
+
 ---Miscellaneous---
 /time
 Display current date and time
+
 
 ---Bot commands---
 /listen category,category,... map_id,map_id,...
@@ -319,6 +335,7 @@ Display a list of the groups you own
 /mygroups
 List of the groups you're part of
 
+
 ---Entity command---
 
 /entity id
@@ -355,6 +372,7 @@ Move entity to your position within the map you're on.
 Same as sending a CMD protocol message with the "rc" field set.
 
 /e is an alias for /entity
+
 
 ---Admin commands---
 /ipwho
