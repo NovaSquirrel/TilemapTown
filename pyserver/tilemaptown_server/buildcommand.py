@@ -1774,6 +1774,12 @@ def fn_entity(map, client, context, arg):
 			for other_entity in e.temp_permissions_given_to:
 				other_entity.temp_permissions.pop(e, None)
 			e.temp_permissions_given_to.clear()
+	elif subcommand == 'temprelease':
+		if permission_check(permission['admin']):
+			actor = find_client_by_username(subarg)
+			if actor != None:
+				actor.temp_permissions_given_to.discard(e)
+				e.temp_permissions.pop(actor, None)
 
 	elif subcommand == 'save':
 		if permission_check(permission['remote_command']) and not e.temporary: # Maybe use a different permission? Or none

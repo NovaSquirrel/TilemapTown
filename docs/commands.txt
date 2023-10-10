@@ -341,6 +341,9 @@ Change permissions.
 /entity id temprevokeall
 Temporarily grant a permission that will be gone when either entity unloads.
 
+/entity id temprelease username
+Remove a temporary permission that has been given to this entity.
+
 /entity id summon
 Move entity to your position within the map you're on.
 
