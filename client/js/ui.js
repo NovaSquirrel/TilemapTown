@@ -1174,7 +1174,7 @@ function tickWorld() {
   var CameraDifferenceY = TargetCameraY - CameraY;
   var CameraDistance = Math.sqrt(CameraDifferenceX * CameraDifferenceX + CameraDifferenceY * CameraDifferenceY);
   if (CameraDistance > 0.5) {
-    var DivideBy = 16;
+    var DivideBy = InstantCamera ? 1 : 16;
     var AdjustX = (TargetCameraX - CameraX) / DivideBy;
     var AdjustY = (TargetCameraY - CameraY) / DivideBy;
 
@@ -1217,7 +1217,9 @@ function tickWorld() {
 
   NeedMapRedraw = false;
   TickCounter = (TickCounter + 1) & 0xffff;
-  AnimationTick = (AnimationTick + 1) % 10000;
+  if(!SlowAnimationTick || ((TickCounter & 7) == 0)) {
+    AnimationTick = (AnimationTick + 1) % 10000;
+  }
 }
 
 function selectionCopy() {

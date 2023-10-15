@@ -27,27 +27,39 @@ var OnlinePassword = "";
 var OnlineIsConnected = false;
 var ShowProtocol = true;
 
+// URL param options
+var InstantCamera = false;
+var SlowAnimationTick = false;
+
 function readURLParams() {
   var query = window.location.search.substring(1);
   var vars = query.split("&");
   for (var i = 0; i < vars.length; i++) {
     var pair = vars[i].split("=");
-	var value = decodeURIComponent(pair[1]);
-	switch(pair[0]) {
+    if(pair.length >= 2) {
+      var value = decodeURIComponent(pair[1]);
+    }
+    switch(pair[0]) {
       case "server":
-		OnlineServer = value;
-		break;
+        OnlineServer = value;
+        break;
       case "map":
-		OnlineMap = value;
-		break;
+        OnlineMap = value;
+        break;
       case "unencrypted":
-		OnlineSSL = false;
-		OnlineServer = value;
-		OnlinePort = 12550;
-		break;
+        OnlineSSL = false;
+        OnlineServer = value;
+        OnlinePort = 12550;
+        break;
       case "port":
-		OnlinePort = value;
-		break;
+        OnlinePort = value;
+        break;
+
+      // Include non-server related flags too
+      case "low_animation":
+        InstantCamera = true;
+        SlowAnimationTick = true;
+        break;
     }
   }
 }
@@ -631,6 +643,7 @@ function ConnectToServer() {
        "see_past_map_edge": {"version": "0.0.1"},
        "batch": {"version": "0.0.1"},
        "receive_build_messages": {"version": "0.0.1"},
+		"entity_message_forwarding": {"version": "0.0.1"},
     };
 
     if(OnlineUsername != "") {
