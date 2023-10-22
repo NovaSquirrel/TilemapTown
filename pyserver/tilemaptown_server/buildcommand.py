@@ -412,12 +412,12 @@ def fn_tpaccept(map, client, context, arg):
 		if item == None:
 			respond(context, "Unfortunately that item doesn't seem to exist anymore?")
 		elif givetype == 'transfer':
-			item.switch_map(client, on_behalf_of=subject)
+			item.switch_map(client, on_behalf_of=client)
 			if client.db_id:
 				item.owner_id = client.db_id
 			item.creator_temp_id = client.id
 		elif givetype == 'move':
-			item.switch_map(client, on_behalf_of=subject)
+			item.switch_map(client, on_behalf_of=client)
 		elif givetype == 'copy':
 			clone_item(item, False)
 		elif givetype == 'tempcopy':
