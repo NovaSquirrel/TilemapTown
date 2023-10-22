@@ -151,6 +151,17 @@ Display who is carrying you
 Requests that someone temporarily grant you permissions.
 Valid permissions to request are move, move_new_map, minigame, set_owner_to_this, modify_appearance
 
+/giveitem user item transfer
+/giveitem user item move
+/giveitem user item copy
+/giveitem user item tempcopy
+Offer to give an item to someone. Item has to currently be in your inventory somewhere or at the very least loaded.
+
+Give types:
+	transfer: Assign the user as the new owner of the item *and* move it into their inventory
+	move: Move the item into the user's inventory, but leave ownership the same
+	copy: Make a copy of the item, and put it in the user's inventory
+	tempcopy: Same as above, but item will be marked as temporary even if it wasn't already temporary
 
 ---Maps---
 /newmap

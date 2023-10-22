@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import json, random, datetime, time, ipaddress, hashlib
+import json, random, datetime, time, ipaddress, hashlib, weakref
 from .buildglobal import *
 
 handlers = {}	# dictionary of functions to call for each command
@@ -270,6 +270,46 @@ def fn_requestpermission(map, client, context, arg):
 	permission_grant_text += "[/ul]"
 	send_request_to_user(client, context, arg_name, "tempgrant", arg_perms, "tpaccept", "tpdeny", "You requested permissions("+", ".join(deduplicated)+") from %s", permission_grant_text)
 
+givetype_text = {
+	"transfer": "make you the new owner of an item",
+	"move":     "put an item in your inventory",
+	"copy":     "give you a copy of an item",
+	"tempcopy": "give you a copy of an item",
+}
+givetype_text2 = {
+	"transfer": "change ownership on",
+	"move":     "give",
+	"copy":     "give a copy of",
+	"tempcopy": "give a temporary copy of",
+}
+@cmd_command(alias=['itemgive', 'senditem'], syntax="user item transfer/move/copy/tempcopy")
+def fn_giveitem(map, client, context, arg):
+	args = arg.split(' ')
+	if len(args) != 3:
+		respond(context, "Syntax is /giveitem user item transfer/move/copy/tempcopy", error=True)
+		return
+	arg_name = args[0]
+	arg_item = args[1]
+	arg_givetype = args[2].lower()
+
+	e = get_entity_by_id(arg_item, load_from_db=False)
+	if e == None:
+		respond(context, "Can't find item ID: "+arg_item, error=True)
+		return
+	if not client.has_permission(e):
+		# Is it at least in their inventory?
+		if arg_givetype == 'transfer' or not client.has_in_contents_tree(e):
+			respond(context, "That isn't your item", error=True)
+			return
+	if arg_givetype not in ("transfer", "move", "copy", "tempcopy"):
+		respond(context, "Give type must be transfer, move, copy, or tempcopy", error=True)
+		return
+
+	text_for_them = "%s wants to "+givetype_text[arg_givetype]+": "+e.name+" ("+entity_type_name[e.entity_type]+")"
+	text_for_you  = "You offered to "+givetype_text2[arg_givetype]+" \""+e.name+"\" to %s"
+
+	send_request_to_user(client, context, arg_name, "giveitem", (weakref.ref(e), arg_givetype), "tpaccept", "tpdeny", text_for_you, text_for_them)
+
 def find_request_from_arg(client, context, arg):
 	args = arg.split(' ')
 	if len(args) == 0:
@@ -310,6 +350,7 @@ request_type_to_friendly = {
 	"carry":     "carry",
 	"follow":    "follow",
 	"tempgrant": "permission",
+	"giveitem":  "item give",
 }
 @cmd_command(category="Teleport", alias=['hopon'], syntax="username")
 def fn_tpaccept(map, client, context, arg):
@@ -324,10 +365,34 @@ def fn_tpaccept(map, client, context, arg):
 		return
 
 	respond(context, 'You accepted a %s request from %s' % (request_type_to_friendly[request_type], username))
+
+	request_data_for_message = request_data
+	if request_type == 'giveitem': # Get the original item ID
+		e = request_data[0]()
+		if e != None:
+			e = e.protocol_id()
+		request_data_for_message = [e, request_data[1]]
+
 	subject.send("MSG", {'text': "%s accepted your %s request" % (client.name_and_username(), request_type_to_friendly[request_type]), "data":
-			{"request_accepted": {"user": client.protocol_id(), "type": request_type, "data": request_data}}
+			{"request_accepted": {"user": client.protocol_id(), "type": request_type, "data": request_data_for_message}}
 		}
 	)
+
+	def clone_item(item, temp):
+		new_item = Entity(item.entity_type)			
+		item.copy_onto(new_item)
+		new_item.owner_id = client.db_id
+		new_item.creator_temp_id = client.id
+		if client.db_id == None:
+			new_item.temporary = True
+			new_item.allow = permission['all']
+			new_item.deny = 0
+			new_item.guest_deny = 0
+		if temp: # Force it to be temporary
+			new_item.temporary = True
+		if not new_item.temporary:
+			new_item.save()
+		client.add_to_contents(new_item)
 
 	if request_type == 'tpa':
 		subject.switch_map(client.map_id, new_pos=[client.x, client.y], on_behalf_of=client)
@@ -341,6 +406,22 @@ def fn_tpaccept(map, client, context, arg):
 		client.ride(subject)
 	elif request_type == 'tempgrant':
 		handlers['entity'](map, client, context, "me tempgrant %s %s" % (request_data, subject_id))
+	elif request_type == 'giveitem':
+		item, givetype = request_data
+		item = item()
+		if item == None:
+			respond(context, "Unfortunately that item doesn't seem to exist anymore?")
+		elif givetype == 'transfer':
+			item.switch_map(client, on_behalf_of=subject)
+			if client.db_id:
+				item.owner_id = client.db_id
+			item.creator_temp_id = client.id
+		elif givetype == 'move':
+			item.switch_map(client, on_behalf_of=subject)
+		elif givetype == 'copy':
+			clone_item(item, False)
+		elif givetype == 'tempcopy':
+			clone_item(item, True)
 
 @cmd_command(category="Teleport", alias=['tpdecline'], syntax="username")
 def fn_tpdeny(map, client, context, arg):
@@ -351,10 +432,17 @@ def fn_tpdeny(map, client, context, arg):
 
 	respond(context, 'You rejected a %s request from %s' % (request_type_to_friendly[request_type], username))
 
+	request_data_for_message = request_data
+	if request_type == 'giveitem': # Get the original item ID
+		e = request_data[0]()
+		if e != None:
+			e = e.protocol_id()
+		request_data_for_message = [e, request_data[1]]
+
 	subject = find_client_by_username(subject_id)
 	if subject != None:
 		subject.send("MSG", {'text': "%s rejected your %s request" % (client.name_and_username(), request_type_to_friendly[request_type]), "data":
-				{"request_rejected": {"user": client.protocol_id(), "type": request_type, "data": request_data}}
+				{"request_rejected": {"user": client.protocol_id(), "type": request_type, "data": request_data_for_message}}
 			}
 		)
 
@@ -512,7 +600,7 @@ def fn_newmap(map, client, context, arg):
 	new_map.save_and_commit()
 
 	try:
-		client.switch_map(new_map.db_id)
+		client.switch_map(new_map)
 		respond(context, 'Welcome to your new map (id %d)' % new_map.db_id)
 	except: # Is it even possible for switch_map to throw an exception?
 		respond(context, 'Couldn\'t switch to the new map', error=True)
@@ -1762,7 +1850,7 @@ def fn_entity(map, client, context, arg):
 
 	elif subcommand == 'take':
 		if permission_check(permission['move_new_map']):
-			e.switch_map(client.db_id or client.protocol_id(), on_behalf_of=client)
+			e.switch_map(client, on_behalf_of=client)
 			save_entity = True
 	elif subcommand in ('drop', 'summon'):
 		if permission_check( (permission['move'], permission['move_new_map']) ):

@@ -255,6 +255,20 @@ class Entity(object):
 		""" Called on parents when remove_from_contents is called here """
 		pass
 
+	def has_in_contents_tree(self, other):
+		already_found = set()
+		current = other
+		while current:
+			already_found.add(current)
+			if current.map is self:
+				return True
+			if current.entity_type == entity_type['user']: # Don't return true for items in the inventory of another user, even if they're in your inventory
+				return False
+			if current.map in already_found:
+				return False
+			current = current.map
+		return False
+
 	def all_parents(self):
 		already_found = set()
 		current = self.map
@@ -569,14 +583,19 @@ class Entity(object):
 		self.start_batch()
 
 		if self.map_id != map_id:
+			# Find the entity (map_id may also directly be an entity)
+			if isinstance(map_id, Entity):
+				map_load = map_id
+			else:
+				map_load = get_entity_by_id(map_id)
+				if map_load == None:
+					self.send("ERR", {'text': 'Couldn\'t load map %s' % map_id})
+					if added_new_history:
+						self.tp_history.pop()
+					self.finish_batch()
+					return False
+
 			# First check if you can even go to that map
-			map_load = get_entity_by_id(map_id)
-			if map_load == None:
-				self.send("ERR", {'text': 'Couldn\'t load map %s' % map_id})
-				if added_new_history:
-					self.tp_history.pop()
-				self.finish_batch()
-				return False
 			which_permission = permission['entry'] if self.is_client() else permission['object_entry']
 			have_permission = (self if on_behalf_of == None else on_behalf_of).has_permission(map_load, which_permission, True) # probably don't need to check persistent_object_entry
 			if have_permission and on_behalf_of and self.is_banned_from(map_id, which_permission):
