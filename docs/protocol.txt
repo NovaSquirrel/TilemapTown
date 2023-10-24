@@ -69,8 +69,12 @@ Indicates a character was put into this position via moving off the edge of a ma
 --> PUT {"pos": [x,y], "atom": {atom}}
 <-- PUT {"pos": [x,y], "atom": {atom}, "username": username, "remote_map": map} (for listeners)
 <-- MAP {updated map}
-place a tile on the map
-can use string instead of atom definition if it's predefined
+Place a tile on the map.
+Can use string instead of atom definition if it's predefined.
+
+Optional fields:
+	"temp": (Experimental) If present and true, the map change will not mark the map as needing to be re-saved to the database (but currently will get saved there if non-temp changes are done)
+	"obj": If present and true, "atom" is an array of tiles, which go onto the map's object layer
 
 --> MAP - requests the whole thing
 --> MAP {"pos":[x1, y1, x2, y2]}
@@ -93,12 +97,14 @@ delete a section of map
 Bulk building command. Requires the "bulk_build" permission.
 Applies a series of rectangles to the map.
 Width and height may be omitted, in order to just do a single tile.
+Can take a "temp" optional parameter like PUT can.
 
 --> BLK {"copy": [{"turf": true/false, "obj": true/false, "src":[x,y,w,h], "dst":[x,y]}, ...]]}
 <-- BLK {"copy": [{"turf": true/false, "obj": true/false, "src":[x,y,w,h], "dst":[x,y]}, ...]], "username": username}
 Copies from one portion of the map to another, with overlapped rectangles allowed and supported.
 If "turf" and "obj" are also provided in the same BLK message, "copy" is applied first, then "turf" and finally "obj".
 This makes it easy to move something by copying it somewhere else and erasing the tile where it was.
+Can take a "temp" optional parameter like PUT can.
 
 === Resources ===
 --> IMG {"id": number}
@@ -126,9 +132,15 @@ Received data may be in string format, which would require parsing into JSON.
 "update" can be used for partial updates, where only the fields present in the message are updated and other fields are left alone.
 "remove" requests that a specific item be removed.
 "new_id" is mostly used when a temporary object gets saved to the database, 
+For WHO update, you can supply another ID instead of yours, if you have "remote_command" permission for that entity.
 
 Clients can send updates about themselves, but only keys that the servers knows to be OK, such as "typing".
 For client-to-server WHO updates, "id" is currently ignored, but it should be the same value the client received in the "you" field.
+
+Fields you can update with client-->server WHO update:
+	"typing": boolean, shows a currently-typing marker above your character if true
+	"mini_tilemap": null, or an object (see Mini Tilemap section)
+	"mini_tilemap_data": null, or object (see Mini Tilemap section)
 
 === Miscellaneous ===
 --> IDN
@@ -303,6 +315,30 @@ VER will tell the client what features are available, and the client can request
 	}
 }
 
+=== Mini-tilemaps ===
+Entities can display a little tilemap that overlays their graphic. You can use WHO messages to update an entity's "mini_tilemap" and "mini_tilemap_data" fields, which will be broadcast to the people on the map.
+
+"mini_tilemap": {              _Default___Purpose_
+	"visible": boolean,      | True    | If true, display the mini-tilemap; if false, hide it
+	"clickable", boolean,    | False   | If true, clients can click on the mini-tilemap to send the entity messages (unimplemented)
+	"map_size": [w, h],      | N/A     | Size of the mini-tilemap, in tiles; max is [16, 16]
+	"tile_size": [w, h],     | N/A     | Size of each tile in the mini-tilemap, in pixels; max is [64, 64]
+	"tileset_url": string,   | N/A     | Image URL to use for the tiles
+	"offset": [x, y],        | [0,0]   | X and Y offset from the entity, in pixels
+	"transparent_tile": int, | 0       | Which tile is treated as transparent
+}
+map_size, tile_size, and tileset_url are required. Total pixel size of the map can't be bigger than 64x64.
+
+"mini_tilemap_data": {
+	"data": [tile, ...]
+}
+The tilemap's data is a list of integers. Formatted like a binary number it would look like:
+  rrrrrrryyyyyyxxxxxx
+  |||||||||||||++++++- X position in the tileset, in tile units
+  |||||||++++++------- Y position in the tileset, in tile units
+  +++++++------------- Number of time to repeat this tile (minus 1)
+This means the maximum tileset size is 64x64 tiles, for 4096 tile types.
+Tiles are specified top to bottom, going through each line from left to right. If tiles match "transparent_tile" it's not drawn.
 
 === Extension: see_past_map_edge ====
 If a client signals that it supports see_past_map_edge, then it will receive a MAI and MAP message for all of the maps linked from the one they have just joined.

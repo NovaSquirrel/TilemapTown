@@ -16,10 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-var PlayerYou = "me";
-var PlayerWho = { me: { name: "Player", pic: [0, 2, 25], x: 5, y: 5, dir: 2, passengers: [] } };
-var PlayerImages = {}; // dictionary of Image objects
-var PlayerAnimation = { // dictionary of animation statuses
+let PlayerYou = "me";
+let PlayerWho = { me: { name: "Player", pic: [0, 2, 25], x: 5, y: 5, dir: 2, passengers: [] } };
+let PlayerImages = {}; // dictionary of Image objects
+let PlayerAnimation = { // dictionary of animation statuses
   "me": {
     "walkTimer": 0,// amount of ticks where the player should be animated as walking
     "lastDirectionLR": 0, //last direction that was set that is left or right
@@ -27,6 +27,7 @@ var PlayerAnimation = { // dictionary of animation statuses
   }
 }
 let PlayerBuildMarkers = {}; // id: {pos, name, timer, del}
+let PlayerMiniTilemapImages = {}; // directory of Image objects
 
 var Mail = [];
 
@@ -853,6 +854,15 @@ function drawMap() {
     try {
       var index = sortedPlayers[sort_n];
 
+      var Mob = PlayerWho[index];
+      if(
+        (Mob.x < (TileX-3)) ||
+        (Mob.y < (TileY-3)) ||
+        (Mob.x > (TileX+ViewWidth+3)) ||
+        (Mob.y > (TileY+ViewHeight+3))
+      )
+		continue;
+
       var IsMousedOver = false;
       for (var look = 0; look < MousedOverPlayers.length; look++) {
         if (MousedOverPlayers[look] == index) {
@@ -861,7 +871,6 @@ function drawMap() {
         }
       }
 
-      var Mob = PlayerWho[index];
       var MobOffset = Mob.offset ?? [0,0];
       var playerIs16x16 = false;
       if (index in PlayerImages) {
@@ -919,6 +928,47 @@ function drawMap() {
       }
 
       var heightForPlayerStatus = (playerIs16x16 ? 16 : 28);
+
+      // Mini tilemap, if it's present
+      try {
+      if(Mob.mini_tilemap && Mob.mini_tilemap_data && index in PlayerMiniTilemapImages && (Mob.mini_tilemap.visible ?? true)) {
+        let mini_tilemap_map_w = Mob.mini_tilemap.map_size[0];
+        let mini_tilemap_map_h = Mob.mini_tilemap.map_size[1];
+        let mini_tilemap_tile_w = Mob.mini_tilemap.tile_size[0];
+        let mini_tilemap_tile_h = Mob.mini_tilemap.tile_size[1];
+        let mini_tilemap_offset = Mob.mini_tilemap.offset ?? [0,0];
+        let mini_tilemap_transparent_tile = Mob.mini_tilemap.transparent_tile ?? 0;
+        let mini_tilemap_data = Mob.mini_tilemap_data.data;
+        let mini_tilemap_tileset = PlayerMiniTilemapImages[index];
+
+        let data_index = 0;
+        let data_value;
+        let data_count = 0;
+        let start_pixel_x = Math.round((Mob.x * 16) - PixelCameraX + MobOffset[0] + mini_tilemap_offset[0] + 8  - (mini_tilemap_map_w * mini_tilemap_tile_w) / 2);
+        let start_pixel_y = Math.round((Mob.y * 16) - PixelCameraY + MobOffset[1] + mini_tilemap_offset[1] + 16 - (mini_tilemap_map_h * mini_tilemap_tile_h));
+
+        for(let mini_y = 0; mini_y < mini_tilemap_map_h; mini_y++) {
+          for(let mini_x = 0; mini_x < mini_tilemap_map_w; mini_x++) {
+            if(!data_count) {
+              if(data_index >= mini_tilemap_data.length)
+                break;
+              data_value = mini_tilemap_data[data_index++];
+              data_count = ((data_value >> 12) & 127) + 1;
+            }
+            if((data_value & 4095) != mini_tilemap_transparent_tile) {
+              ctx.drawImage(mini_tilemap_tileset,
+                (data_value & 63) * mini_tilemap_tile_w, ((data_value >> 6) & 63) * mini_tilemap_tile_h,
+                mini_tilemap_tile_w, mini_tilemap_tile_h,
+                start_pixel_x + mini_x * mini_tilemap_tile_w,
+                start_pixel_y + mini_y * mini_tilemap_tile_h,
+                mini_tilemap_tile_w, mini_tilemap_tile_h);
+            }
+            data_count--;
+          }
+        }
+      }
+      } catch (error) {
+      }
 
       // typing indicators
       if (Mob.typing) {

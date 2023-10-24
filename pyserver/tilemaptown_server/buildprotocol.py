@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import json, datetime, time
+import json, datetime, time, types
 from .buildglobal import *
 from .buildcommand import handle_user_command, escape_tags, tile_is_okay, data_disallowed_for_entity_type
 from .buildentity import Entity
@@ -40,8 +40,54 @@ def protocol_command(privilege_level='guest', map_only=False, pre_identify=False
 
 # -------------------------------------
 
+def remove_invalid_dict_fields(data, whitelist):
+	out = {}
+	for k,v in data.items():
+		if k in whitelist:
+			whitelist_entry = whitelist[k]
+			if isinstance(whitelist_entry, types.FunctionType):
+				if whitelist_entry(v):
+					out[k] = data[k]
+			elif isinstance(v, whitelist_entry):
+				out[k] = data[k]
+	return out
+def is_list_with_two_ints(data):
+	return isinstance(data, list) and len(data) == 2 and isinstance(data[0], int) and isinstance(data[1], int)
+def who_mini_tilemap(data):
+	if isinstance(data, dict):
+		filtered = remove_invalid_dict_fields(data, {
+			"visible":          bool,
+			"clickable":        bool,
+			"map_size":         lambda x: is_list_with_two_ints(x) and x[0] >= 1   and x[0] <= 16 and x[1] >= 1 and x[1] <= 16,
+			"tile_size":        lambda x: is_list_with_two_ints(x) and x[0] >= 1   and x[0] <= 64 and x[1] >= 1 and x[1] <= 64,
+			"offset":           lambda x: is_list_with_two_ints(x) and x[0] >= -16 and x[0] <= 16 and x[1] >= -16 and x[1] <= 16,
+			"tileset_url":      image_url_is_okay,
+			"transparent_tile": int,
+		})
+		if "map_size" not in filtered or "tile_size" not in filtered or "tileset_url" not in filtered:
+			return None
+		if (filtered["map_size"][0] * filtered["tile_size"][0] > 64) or (filtered["map_size"][1] * filtered["tile_size"][1] > 64):
+			return None
+		# Fill in default values
+		if "visible" not in filtered:
+			filtered["visible"] = True
+		if "clickable" not in filtered:
+			filtered["clickable"] = False
+		if "transparent_tile" not in filtered:
+			filtered["transparent_tile"] = 0
+		return filtered
+	return None
+def who_mini_tilemap_data(data):
+	if isinstance(data, dict):
+		if ("data" not in data) or (len(data["data"]) > 256):
+			return None
+		return {"data": data["data"]}
+	return None
+
 CLIENT_WHO_WHITELIST = {
-	"typing": bool
+	"typing": bool,
+	"mini_tilemap": who_mini_tilemap,
+	"mini_tilemap_data": who_mini_tilemap_data,
 }
 
 def validate_client_who(id, data):
@@ -559,16 +605,18 @@ def fn_PUT(map, client, arg):
 		map.broadcast("PUT", arg, remote_only=True, remote_category=botwatch_type['build'])
 		map.broadcast("PUT", arg, require_extension="receive_build_messages")
 
+	temporary = arg.get('temp', False)
 	x = arg["pos"][0]
 	y = arg["pos"][1]
 	if client.has_permission(map, permission['build'], True) or must_be_map_owner(client, True, give_error=False):
 		if not map.map_data_loaded:
 			client.send("ERR", {'text': 'Map isn\'t loaded, so it can\'t be modified'})
 			return
-		map.map_data_modified = True
+		if not temporary:
+			map.map_data_modified = True
 
 		# verify the the tiles you're attempting to put down are actually good
-		if arg["obj"]: #object
+		if arg.get("obj", False): #object
 			tile_test = [tile_is_okay(x) for x in arg["atom"]]
 			if all(x[0] for x in tile_test): # all tiles pass the test
 				write_to_build_log(map, client, "PUT", arg, map.objs[x][y])
@@ -599,7 +647,9 @@ def fn_BLK(map, client, arg):
 		if not map.map_data_loaded:
 			client.send("ERR", {'text': 'Map isn\'t loaded, so it can\'t be modified'})
 			return
-		map.map_data_modified = True
+		temporary = arg.get('temp', False)
+		if not temporary:
+			map.map_data_modified = True
 
 		# verify the tiles
 		for turf in arg.get("turf", []):
@@ -679,13 +729,32 @@ def fn_BLK(map, client, arg):
 
 @protocol_command()
 def fn_WHO(map, client, arg):
-	if map == None:
-		return
-	if arg["update"]:
-		valid_data = validate_client_who(client.protocol_id(), arg["update"])
+	if "update" in arg:
+		update = arg["update"]
+
+		# Defaults
+		actor = client
+		id_to_use = client.protocol_id()
+
+		if 'id' in update and update['id'] != id_to_use:
+			id_to_use = update['id']
+			if client.has_permission(id_to_use, permission['remote_command'], False):
+				actor = get_entity_by_id(id_to_use, load_from_db=False)
+				if actor == None:
+					client.send("ERR", {'text': 'Entity %s not loaded' % id_to_use})
+					return
+				else:
+					map = actor.map
+			else:
+				client.send("ERR", {'text': 'You don\'t have permission to remote control %s' % id_to_use})
+				return
+		if actor.map == None:
+			return
+
+		valid_data = validate_client_who(id_to_use, arg["update"])
 		for key,value in valid_data.items():
 			if key != 'id':
-				setattr(client,key,value)
+				setattr(actor, key, value)
 		map.broadcast("WHO", {"update": valid_data})
 	else:
 		client.send("ERR", {'text': 'not implemented'})

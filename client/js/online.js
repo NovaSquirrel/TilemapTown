@@ -315,6 +315,7 @@ function receiveServerMessage(cmd, arg) {
         PlayerImages = {}; // reset images list
         PlayerAnimation = {}; // reset animation states
         PlayerBuildMarkers = {}; // reset player build markers
+        PlayerMiniTilemapImage = {}; // reset mini tilemap image list
 
         // Set up all of the animation states for each player present in the list
         for (var id in arg.list) {
@@ -340,6 +341,8 @@ function receiveServerMessage(cmd, arg) {
           delete PlayerImages[arg.remove];
         if (arg.remove in PlayerAnimation)
           delete PlayerAnimation[arg.remove];
+        if (arg.remove in PlayerMiniTilemapImage)
+          delete PlayerMiniTilemapImage[arg.remove];
         // remove entry in PlayerWho
         delete PlayerWho[arg.remove];
 
@@ -397,6 +400,22 @@ function receiveServerMessage(cmd, arg) {
           };
           img.src = pic[0];
           PlayerImages[key] = img;
+        }
+
+        // Mini tilemap
+        if (PlayerWho[key].mini_tilemap) {
+          let url = PlayerWho[key].mini_tilemap.tileset_url;
+          if (!(key in PlayerMiniTilemapImages) ||
+              (key in PlayerMiniTilemapImages && PlayerMiniTilemapImages[key].src != url)) {
+            var img = new Image();
+            img.onload = function(){
+              NeedMapRedraw = true;
+            };
+            img.src = url;
+            PlayerMiniTilemapImages[key] = img;
+          }
+        } else if(key in PlayerMiniTilemapImage) {
+          delete PlayerMiniTilemapImage[key];
         }
       }
 

@@ -688,6 +688,11 @@ class Entity(object):
 			'type': entity_type_name[self.entity_type],
 			'in_user_list': self.is_client()
 		}
+		if hasattr(self, "mini_tilemap") and self.mini_tilemap != None:
+			out['mini_tilemap'] = self.mini_tilemap
+		if hasattr(self, "mini_tilemap_data") and self.mini_tilemap_data != None:
+			out['mini_tilemap_data'] = self.mini_tilemap_data
+
 		if self.offset and self.offset != [0,0]:
 			out['offset'] = self.offset
 		if self.forward_messages_to:
