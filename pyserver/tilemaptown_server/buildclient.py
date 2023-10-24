@@ -34,6 +34,8 @@ class Client(Entity):
 		self.idle_timer = 0
 		self.connected_time = int(time.time())
 		self.ip = None           # for IP ban purposes
+		self.build_count = 0     # Amount this person has built
+		self.delete_count = 0    # Amount this person has deleted
 
 		self.client_settings = ""
 

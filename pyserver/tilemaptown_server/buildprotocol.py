@@ -568,6 +568,7 @@ def fn_DEL(map, client, arg):
 			client.send("ERR", {'text': 'Map isn\'t loaded, so it can\'t be modified'})
 			return
 		map.map_data_modified = True
+		client.delete_count += 1
 
 		# Save undo information
 		old_data = None
@@ -614,6 +615,7 @@ def fn_PUT(map, client, arg):
 			return
 		if not temporary:
 			map.map_data_modified = True
+		client.build_count += 1
 
 		# verify the the tiles you're attempting to put down are actually good
 		if arg.get("obj", False): #object

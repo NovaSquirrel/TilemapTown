@@ -123,7 +123,10 @@ async def client_handler(websocket, path):
 					if u is not client:
 						u.send("MSG", {'text': text})
 
-			print("disconnected: %s (%s, \"%s\")" % (client.ip, client.username or "?", client.name))
+			disconnect_extra = ""
+			if client.build_count or client.delete_count:
+				disconnect_extra = " -  Built %d, Deleted %d" % (client.build_count, client.delete_count)
+			print("disconnected: %s (%s, \"%s\")%s" % (client.ip, client.username or "?", client.name, disconnect_extra))
 			client.ws = None
 		except:
 			client.send("ERR", {'text': 'An exception was thrown: %s' % sys.exc_info()[0]})
