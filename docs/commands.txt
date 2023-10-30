@@ -297,7 +297,7 @@ Protocol messages relayed will have a "remote_map" parameter added to them, with
 Messages will also have "username" and "user_id", for PUT, DEL and BLK.
 
 Categories available (and protocol messages that get relayed):
-move:  MOV, TAP
+move:  MOV
 build: PUT, DEL, BLK
 entry: WHO
 chat:  MSG
@@ -308,6 +308,16 @@ chat:  MSG
 /listeners
 List all remote clients currently listening in on the map
 
+/keep_entities_loaded
+/keep_entities_loaded id,id,id...
+Set a list of entities that should be kept loaded while you're online (or clear the list)
+
+/test_entities_loaded id,id,id...
+Test if specific entities are loaded
+
+/message_forwarding set entity_id,entity_id,entity_id...
+/message_forwarding set entity_id,entity_id,entity_id... MAP,MAI,PRI ...
+See the message forwarding section in protocol.txt
 
 ---Group commands---
 /newgroup

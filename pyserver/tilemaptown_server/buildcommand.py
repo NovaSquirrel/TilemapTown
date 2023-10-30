@@ -113,6 +113,8 @@ def parse_equal_list(text):
 	return (x.split('=') for x in text.split())
 
 def data_disallowed_for_entity_type(type, data):
+	if entity_type_name[type] not in ('text', 'image', 'map_tile', 'tileset', 'landmark'):
+		return 'Not a valid type to change data for'
 	if type == entity_type['image'] and not image_url_is_okay(data):
 		return 'Image asset URL doesn\'t match any allowlisted sites'
 	if type == entity_type['map_tile']:
@@ -348,7 +350,7 @@ request_type_to_friendly = {
 	"tpa":       "teleport",
 	"tpahere":   "teleport",
 	"carry":     "carry",
-	"follow":    "follow",
+	"followme":  "follow",
 	"tempgrant": "permission",
 	"giveitem":  "item give",
 }
@@ -1948,21 +1950,71 @@ def fn_entity(map, client, context, arg):
 		e.save_on_clean_up = True
 
 @cmd_command()
+def fn_test_entities_loaded(map, client, context, arg):
+	if not len(arg):
+		respond(context, 'Provide a list of entities', error=True)
+		return
+	# For the notice at the end
+	entities_loaded = []
+	entities_not_found = []
+
+	# For all of the entities...
+	for entity_id in arg.split(','):
+		entity = get_entity_by_id(entity_id, load_from_db=False)
+		if entity == None:
+			entities_not_found.append(entity_id)
+			continue
+		entities_loaded.append(entity_id)
+	respond(context, 'Loaded: %s. Not found: %s.' % (','.join(entities_loaded), ','.join(entities_not_found),), data={'loaded': entities_loaded, 'not_found': entities_not_found})
+
+@cmd_command()
+def fn_keep_entities_loaded(map, client, context, arg):
+	if not len(arg):
+		respond(context, 'Provide a list of entities', error=True)
+		return
+	# For the notice at the end
+	entities_set = []
+	entities_not_found = []
+	entities_not_allowed = []
+
+	new_keep_entities_loaded = set()
+
+	# For all of the entities...
+	for entity_id in arg.split(','):
+		entity = get_entity_by_id(entity_id)
+		if entity == None:
+			entities_not_found.append(entity_id)
+			continue
+		if not client.has_permission(entity):
+			entities_not_allowed.append(entity_id)
+			continue
+		entities_set.append(entity_id)
+		new_keep_entities_loaded.add(entity)
+
+	data = {'set': entities_set, 'not_found': entities_not_found, 'denied': entities_not_allowed}
+	respond(context, 'Set: %s. Not found: %s. Denied: %s.' % (','.join(entities_set), ','.join(entities_not_found), ','.join(entities_not_allowed)), data=data)
+	client.keep_entities_loaded = new_keep_entities_loaded
+
+allowed_message_forward_types = set(['MOV', 'EXT', 'BAG', 'MSG', 'PRI', 'CMD', 'ERR', 'MAI', 'MAP', 'PUT', 'DEL', 'BLK', 'WHO', 'CHAT', 'KEYS', 'CLICK'])
+@cmd_command()
 def fn_message_forwarding(map, client, context, arg):
-	#/message_forwarding entity_id,entity_id,entity_id... MAP,MAI,PRI,...
+	#/message_forwarding set entity_id,entity_id,entity_id... MAP,MAI,PRI,...
 	args = arg.split(' ')
 
 	if len(args) >= 1:
+		"""
 		if args[0] == 'clear':
 			respond(context, 'Clearing %d forwards' % len(client.forwarding_messages_from))
 			for e in client.forwarding_messages_from:
-				e.forward_messages_to.discard(client)
-				if not e.forward_messages_to:
-					e.forward_message_types.clear()
+				e.forward_messages_to = None
+				e.forward_message_types.clear()
+			client.forwarding_messages_from.clear()
+			
 		elif args[0] == 'list':
 			data = {'list': [e.protocol_id() for e in client.forwarding_messages_from]}
 			respond(context, ', '.join(['%s (%s)' % (e.name_and_username(), ', '.join(list(e.forward_message_types))) for e in client.forwarding_messages_from]), data=data)
-		elif args[0] == 'set':
+		"""
+		if args[0] == 'set':
 			if len(args) == 1:
 				respond(context, 'Provide a list of entities', error=True)
 				return
@@ -1982,27 +2034,28 @@ def fn_message_forwarding(map, client, context, arg):
 				if entity == None:
 					entities_not_found.append(entity_id)
 					continue
-				if not client.has_permission(entity):
+				if not client.has_permission(entity, permission['remote_command']):
 					entities_not_allowed.append(entity_id)
 					continue
+
 				entities_set.append(entity_id)
 
-				entity.forward_message_types = set([x.upper() for x in message_types if (len(x) == 3 or x == 'CHAT')])
-				entity.forward_messages_to.clear()
+				entity.forward_message_types = set([x.upper() for x in message_types if allowed_message_forward_types])
 
 				if entity.forward_message_types:
-					entity.forward_messages_to.add(client)
-					client.forwarding_messages_from.add(entity)
+					entity.forward_messages_to = client.protocol_id()
 					if entity.map:
-						entity.map.broadcast("WHO", {"update": {"id": entity.protocol_id(), "is_forwarding": True, "chat_listener": "CHAT" in entity.forward_message_types}})
+						entity.map.broadcast("WHO", {"update": {"id": entity.protocol_id(), "is_forwarding": True, "clickable": "CLICK" in entity.forward_message_types, "chat_listener": "CHAT" in entity.forward_message_types}})
 				else:
-					client.forwarding_messages_from.discard(entity)
+					entity.forward_messages_to = None
 					if entity.map:
-						entity.map.broadcast("WHO", {"update": {"id": entity.protocol_id(), "is_forwarding": False, "chat_listener": False}})
+						entity.map.broadcast("WHO", {"update": {"id": entity.protocol_id(), "is_forwarding": False, "clickable": False, "chat_listener": False}})
+				if not entity.temporary:
+					entity.save()
 			data = {'set': entities_set, 'not_found': entities_not_found, 'denied': entities_not_allowed}
 			respond(context, 'Set: %s. Not found: %s. Denied: %s.' % (','.join(entities_set), ','.join(entities_not_found), ','.join(entities_not_allowed)), data=data)
 		else:
-			respond(context, 'Please provide a subcommand: clear, list, set', error=True)
+			respond(context, 'Please provide a subcommand: set', error=True)
 # -------------------------------------
 
 def handle_user_command(map, client, respond_to, echo, text):

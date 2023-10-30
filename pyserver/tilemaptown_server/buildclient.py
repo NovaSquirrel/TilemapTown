@@ -73,9 +73,13 @@ class Client(Entity):
 		self.can_forward_messages_to = False
 
 		# Clients keep the entities they're using for message forwarding alive by keeping strong references to them in this set
-		self.forwarding_messages_from = set()
+		self.keep_entities_loaded = set()
+
+		# Allow cleaning up BotWatch info
+		self.listening_maps = set() # tuples of (category, map)
 
 		self.identified = False
+		self.temporary = True # Temporary entity until they identify
 
 		AllClients.add(self)
 
@@ -284,6 +288,7 @@ class Client(Entity):
 		self.no_inventory_messages = False
 		if result == True:
 			print("login: \"%s\" from %s" % (self.username, self.ip))
+			self.temporary = False
 
 			#self.switch_map(self.map_id, goto_spawn=False)
 			if self.map:
@@ -326,6 +331,7 @@ class Client(Entity):
 		# User can't already exist
 		if find_db_id_by_username(username) != None:
 			return False
+		self.temporary = False
 		self.username = username
 		self.changepass(password)
 		# db_id will be set because changepass calls save_and_commit()

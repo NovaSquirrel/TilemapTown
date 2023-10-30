@@ -175,6 +175,10 @@ def bitfield_from_permission_list(permission_list):
 			out |= permission[p]
 	return out
 
+# Generic entity flags
+entityflag = {}
+entityflag['public'] = 1
+
 # Map flags
 mapflag = {}
 mapflag['public'] = 1
@@ -323,8 +327,13 @@ def get_entity_by_id(id, load_from_db=True):
 		if e.load(id):
 			return e
 		return None
+	if t == entity_type['generic']:
+		e = GenericEntity(t)
+		if e.load(id):
+			return e
+		return None
 
-	# Generic entity
+	# Other entity types can use the base class
 	e = Entity(t)
 	if e.load(id):
 		return e
@@ -460,5 +469,5 @@ def decompress_entity_data(data, compressed_data):
 		return zlib.decompress(compressed_data).decode()
 	return None
 
-from .buildentity import Entity, EntityWithPlainData
+from .buildentity import Entity, EntityWithPlainData, GenericEntity
 from .buildmap import Map

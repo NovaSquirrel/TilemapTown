@@ -27,16 +27,15 @@ General:
 		8 reference  (refer to another entity)
 		9 folder     (for categorization; holds any number of other assets)
 		10 landmark  (holds a location and provides the ability to quickly teleport to it)
+		11 generic   (generic entity, used for things like props or puppets)
 
 	name            - text    - name (for display and disambiguation purposes, not to persistently identify a specific entity)
 	desc            - text    - description of the entity
 	pic             - text    - JSON describing the appearance - usually [tileset, x, y] or [url, 0, 0]. If null, a default is used.
 
 	flags           - integer - generic flags field
-		0x0001 don't load this entity when the container loads
-		0x0002 this entity is public, and can be searched for
-		0x0004 owner can't copy this item (unless owner == creator)
-        0x0008 owner can't modify this item (unless owner == creator)
+		0x0001 don't load this entity when the container loads (unimplemented)
+		0x0002 this entity is public, and can be searched for (unimplemented)
 
 	tags            - text    - metadata tags in JSON format, like species, pronouns, etc.
 

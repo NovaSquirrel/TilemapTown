@@ -54,6 +54,12 @@ var MouseNowX = -1;
 var MouseNowY = -1;
 var MouseActive = false; // is there a selection right now?
 var MousedOverPlayers = [];
+var MousedOverEntityClickAvailable = false;
+var MousedOverEntityClickId = null;
+var MousedOverEntityClickIsTilemap = false;
+var MousedOverEntityClickX = undefined;
+var MousedOverEntityClickY = undefined;
+var ShiftPressed = false;
 
 // document elements
 var mapCanvas = null; // main map view
@@ -481,7 +487,12 @@ function getDataForDraw() {
   return null;
 }
 
-function keyHandler(e) {
+function keyUpHandler(e) {
+  var e = e || window.event;
+  ShiftPressed = e.shiftKey;
+}
+
+function keyDownHandler(e) {
 
   function ClampPlayerPos() {
     PlayerX = Math.min(Math.max(PlayerX, 0), MyMap.Width - 1);
@@ -489,6 +500,7 @@ function keyHandler(e) {
   }
 
   var e = e || window.event;
+  ShiftPressed = e.shiftKey;
 
   // ignore keys when typing in a textbox
   if (document.activeElement.tagName == "INPUT" || document.activeElement.tagName == "TEXTAREA") {
@@ -702,7 +714,8 @@ function keyHandler(e) {
   if (needRedraw)
     drawMap();
 }
-document.onkeydown = keyHandler;
+document.onkeydown = keyDownHandler;
+document.onkeyup = keyUpHandler;
 
 var edgeMapLookupTable = [
   null, // durl - invalid
@@ -837,8 +850,9 @@ function drawMap() {
   }
 
   var sortedPlayers = [];
-  for (var index in PlayerWho)
+  for (var index in PlayerWho) {
     sortedPlayers.push(index);
+  }
   sortedPlayers.sort(
     (a, b) => {
       if (PlayerWho[a].passengers.includes(parseInt(b))) {
@@ -986,7 +1000,7 @@ function drawMap() {
           var carryText = "carrying: " + carryNames.join(", ");
 
           drawText(ctx, (Mob.x * 16) - PixelCameraX - (carryText.length * 8 / 2 - 8) + MobOffset[0], (Mob.y * 16) - PixelCameraY - heightForPlayerStatus + MobOffset[1], carryText);
-        } else {
+        } else if(!MousedOverEntityClickAvailable || !MousedOverEntityClickIsTilemap || (MousedOverEntityClickId != index)) {
           drawText(ctx, (Mob.x * 16) - PixelCameraX - (Mob.name.length * 8 / 2 - 8) + MobOffset[0], (Mob.y * 16) - PixelCameraY - heightForPlayerStatus + MobOffset[1], Mob.name);
         }
       }
@@ -1420,6 +1434,13 @@ function initMouse() {
   mapCanvas.addEventListener('mousedown', function (evt) {
     if (evt.button != 0)
       return;
+    if (MousedOverEntityClickAvailable && !ShiftPressed) {
+      SendCmd("EXT", { "entity_click":
+        {"id": MousedOverEntityClickId, "x": MousedOverEntityClickX, "y": MousedOverEntityClickY, "target": MousedOverEntityClickIsTilemap ? "mini_tilemap" : "entity"}
+      });
+      return;
+    }
+
     panel.innerHTML = "";
     var pos = getTilePos(evt);
     MouseDown = true;
@@ -1455,6 +1476,9 @@ function initMouse() {
   mapCanvas.addEventListener('mouseup', function (evt) {
     if (evt.button != 0)
       return;
+    if(!MouseDown) {
+      return;
+    }
     MouseDown = false;
     NeedMapRedraw = true;
 
@@ -1507,7 +1531,8 @@ function initMouse() {
   }, false);
 
   mapCanvas.addEventListener('mousemove', function (evt) {
-    var pos = getTilePos(evt);
+    let pos = getTilePos(evt);
+    let pixelPos = getMousePos(mapCanvas, evt); // Pixel position, for finding click position within a mini tilemap
     MouseNowX = pos.x;
     MouseNowY = pos.y;
     // record the nearby players
@@ -1515,7 +1540,88 @@ function initMouse() {
     if (MousedOverPlayers.length != Around.length) {
       NeedMapRedraw = true;
     }
+    MousedOverEntityClickAvailable = false;
+
+    var AroundLongerRange = PlayersAroundTile(MouseNowX, MouseNowY, 4); // Check for stuff you might click on? Maybe combine it with the other check somehow
+
+    // Check for things you can click on
+    let PixelCameraX = Math.round(CameraX - mapCanvas.width / 2);
+    let PixelCameraY = Math.round(CameraY - mapCanvas.height / 2);
+    for (let i in AroundLongerRange) {
+      let index = AroundLongerRange[i];
+      let Mob = PlayerWho[index];
+      let MobOffset = Mob.offset ?? [0,0];
+
+      let mini_tilemap = Mob.mini_tilemap;
+      if(mini_tilemap && mini_tilemap.clickable) {
+        let mini_tilemap_map_w = Mob.mini_tilemap.map_size[0];
+        let mini_tilemap_map_h = Mob.mini_tilemap.map_size[1];
+        let mini_tilemap_tile_w = Mob.mini_tilemap.tile_size[0];
+        let mini_tilemap_tile_h = Mob.mini_tilemap.tile_size[1];
+        let mini_tilemap_offset = Mob.mini_tilemap.offset ?? [0,0];
+        let mini_tilemap_transparent_tile = Mob.mini_tilemap.transparent_tile ?? 0;
+        let mini_tilemap_data = Mob.mini_tilemap_data.data;
+        if(!mini_tilemap_data) continue;
+        let start_pixel_x = Math.round((Mob.x * 16) - PixelCameraX + MobOffset[0] + mini_tilemap_offset[0] + 8  - (mini_tilemap_map_w * mini_tilemap_tile_w) / 2);
+        let start_pixel_y = Math.round((Mob.y * 16) - PixelCameraY + MobOffset[1] + mini_tilemap_offset[1] + 16 - (mini_tilemap_map_h * mini_tilemap_tile_h));
+
+        if(pixelPos.x < start_pixel_x || pixelPos.y < start_pixel_y || pixelPos.x >= (start_pixel_x + mini_tilemap_map_w * mini_tilemap_tile_w) || pixelPos.y >= (start_pixel_y + mini_tilemap_map_h * mini_tilemap_tile_h) ) {
+           continue;
+        } 
+        // Mouse is over the tilemap, but which part of it?
+
+        // Is mouse over a transparent tile?
+        let decompressed = [];
+        for(let tileInMap of Mob.mini_tilemap_data.data) {
+          let tileId = tileInMap & 4065;
+          let tileRepeat = ((tileInMap  >> 12) & 127) + 1;
+          while(tileRepeat && decompressed.length < (mini_tilemap_map_w * mini_tilemap_map_h)) {
+            decompressed.push(tileId);
+            tileRepeat--;
+          }
+        }
+        let tilemapX = Math.floor((pixelPos.x - start_pixel_x) / mini_tilemap_tile_w);
+        let tilemapY = Math.floor((pixelPos.y - start_pixel_y) / mini_tilemap_tile_h);
+        let tileAtXY = decompressed[tilemapY * mini_tilemap_map_h + tilemapX];
+        if(tileAtXY !== undefined && tileAtXY !== mini_tilemap_transparent_tile) {
+          MousedOverEntityClickAvailable = true;
+          MousedOverEntityClickId = index;
+          MousedOverEntityClickIsTilemap = true;
+          MousedOverEntityClickX = Math.floor(pixelPos.x - start_pixel_x);
+          MousedOverEntityClickY = Math.floor(pixelPos.y - start_pixel_y);
+        }
+      }
+      // Maybe you can click on the entity itself then?
+      if(!MousedOverEntityClickAvailable && Mob.clickable) {
+        // Determine where the entity would even be drawn
+        let playerIs16x16 = true;
+        if (index in PlayerImages) {
+          let tilesetWidth = PlayerImages[index].naturalWidth;
+          let tilesetHeight = PlayerImages[index].naturalHeight;
+          playerIs16x16 = tilesetWidth == 16 && tilesetHeight == 16;
+        }
+        let entityPixelX, entityPixelY, entitySize;
+        if(playerIs16x16) {
+          entityPixelX = (Mob.x * 16) - PixelCameraX + MobOffset[0];
+          entityPixelY = (Mob.y * 16) - PixelCameraY + MobOffset[1];
+          entitySize = 16;
+        } else {
+          entityPixelX = (Mob.x * 16 - 8) - PixelCameraX + offset[0];
+          entityPixelY = (Mob.y * 16 - 16) - PixelCameraY + offset[1];
+          entitySize = 32;
+        }
+        if(pixelPos.x < entityPixelX || pixelPos.y < entityPixelY || pixelPos.x >= (entityPixelX + entitySize) || pixelPos.y >= (entityPixelY + entitySize) ) {
+           continue;
+        } 
+        MousedOverEntityClickAvailable = true;
+        MousedOverEntityClickId = index;
+        MousedOverEntityClickIsTilemap = false;
+        MousedOverEntityClickX = Math.floor(pixelPos.x - entityPixelX);
+        MousedOverEntityClickY = Math.floor(pixelPos.y - entityPixelY);
+      }
+    }
     MousedOverPlayers = Around;
+    mapCanvas.style.cursor = MousedOverEntityClickAvailable ? "pointer" : "auto";
 
     if (buildTool == BUILD_TOOL_SELECT) {
       if (!MouseDown)

@@ -122,7 +122,8 @@ Received data may be in string format, which would require parsing into JSON.
 
 === People on the map ===
 --> WHO
---> WHO {"update": {"id": your_id, other fields}}
+--> WHO {"update": {fields}}
+--> WHO {"update": {fields}, "rc": id}
 <-- WHO {"list": {"[id]": {"name": name, "pic": [s, x, y], "x": x, "y": y, "dir": dir, "id": id}, "you":id}
 <-- WHO {"add": {"name": name, "pic": [s, x, y], "x": x, "y": y, "dir", dir, "id": id}}
 <-- WHO {"update": {"id": id, other fields}}
@@ -132,10 +133,10 @@ Received data may be in string format, which would require parsing into JSON.
 "update" can be used for partial updates, where only the fields present in the message are updated and other fields are left alone.
 "remove" requests that a specific item be removed.
 "new_id" is mostly used when a temporary object gets saved to the database, 
-For WHO update, you can supply another ID instead of yours, if you have "remote_command" permission for that entity.
+For WHO update, you can supply another ID instead of yours with the "rc" parameter, if you have "remote_command" permission for that entity.
 
 Clients can send updates about themselves, but only keys that the servers knows to be OK, such as "typing".
-For client-to-server WHO updates, "id" is currently ignored, but it should be the same value the client received in the "you" field.
+For client-to-server WHO updates, "id" is ignored if provided.
 
 Fields you can update with client-->server WHO update:
 	"typing": boolean, shows a currently-typing marker above your character if true
@@ -155,7 +156,9 @@ Can optionally start on a specific map, with optional map coordinates.
 Clients can request features and the server can confirm some amount of them.
 
 --> MSG {"text": "[text]"}
-message
+--> MSG {"text": "[text]", "rc": id}
+Send a chat message to the current room.
+If "rc" is supplied, the server will have the entity with the specified ID send a chat message to its own current room.
 
 --> CMD {"text": "[text]", "echo": value, "rc": id}
 <-- CMD {"text": "[text]", "echo": value, "data": {}}
@@ -243,8 +246,9 @@ Can make the new object temporary or non-temporary regardless of if the original
 Request information on an item, whether or not it's in your inventory.
 
 --> BAG {"list_contents": {"id": id}}
+--> BAG {"list_contents": {"id": id, "recursive": true}}
 <-- BAG {"list_contents": {"id": id, "contents": [{item info}]}}
-Get a BAG "list" in return for the container you picked, if you have permission.
+Get a BAG "list" in return for the container you picked, if you have permission. If "recursive" is present and true, you will also get the contents of all of the contents.
 
 <-- BAG {"update": {item info}}
 <-- BAG {"list": [{item info}], "clear": false}
@@ -320,7 +324,7 @@ Entities can display a little tilemap that overlays their graphic. You can use W
 
 "mini_tilemap": {              _Default___Purpose_
 	"visible": boolean,      | True    | If true, display the mini-tilemap; if false, hide it
-	"clickable", boolean,    | False   | If true, clients can click on the mini-tilemap to send the entity messages (unimplemented)
+	"clickable", boolean,    | False   | If true, clients can click on the mini-tilemap to send the entity messages
 	"map_size": [w, h],      | N/A     | Size of the mini-tilemap, in tiles; max is [16, 16]
 	"tile_size": [w, h],     | N/A     | Size of each tile in the mini-tilemap, in pixels; max is [64, 64]
 	"tileset_url": string,   | N/A     | Image URL to use for the tiles
@@ -349,6 +353,46 @@ A client is expected to keep copies of the linked maps in memory, and the server
 When a client moves to a new map, the server will send a MAI for the new map, but will not send MAIs or MAPs for the new map or any linked maps if they match the client's old map or any maps adjacent to it.
 
 
+=== EXT messages ===
+Experimental feature: There's a protocol message type "EXT" which is used for sending protocol messages with a type that's longer than three characters. (EXTended type names?)
+This is especially helpful for Tilemap Town forks or other extensions (EXTensions?) that want to define their own protocol message types and want to avoid any potential conflicts with later versions of the official protocol. For this kind of usage, it could be a good idea to prefix the message type name with something specific to the thing you're making. Something like "tilemap_town:key_press".
+Sending an unrecognized type currently does not result in an error, and you can request a list of the types that are recognized.
+You can add an "rc" parameter just like on WHO, CMD, MOV, etc. and it will act as if the specified entity sent the EXT message.
+
+Here are the currently supported types:
+
+--> EXT {"list_available_ext_types": true}
+<-- EXT {"list_available_ext_types": ["entity_click", "key_press", "take_controls", "took_controls", "list_available_ext_types"]}
+Get a list of EXT message types that the server can handle.
+
+--> EXT {"key_press": {"id": id, "key": key_name, "down": true/false}}
+Message gets forwarded to the entity specified in "id". Notifies the client
+Fields:
+	key: Which key was pressed.
+	down: If true, key was pressed. If false, key was released.
+
+--> EXT {"take_controls": {"id": id, "keys": [key_name, key_name, key_name...], "pass_on": true/false, "key_up": true/false}}
+--> EXT {"take_controls": {"id": id, "take": false}}
+Message gets forwarded to the entity specified in "id", if that entity has granted you the "minigame" permission.
+Similar to https://wiki.secondlife.com/wiki/LlTakeControls
+Fields:
+	keys: List of keys the entity wants to track. Can be an empty list in order to release all of the keys.
+	pass_on: Allow the requested keys to continue to do their normal function when pressed.
+	key_up: If true, request to receive key release events in addition to key press events.
+
+--> EXT {"took_controls": {"id": id, "keys": [key_name, key_name, key_name...], "accept": true/false}}
+Message gets forwarded to the entity specified in "id", in order to tell it that that "take_controls" was accepted (or declined) and to let it know which subset of the keys are actually supported by the client.
+
+Key names:
+	Arrow keys and home/end/pgup/pgdn in the web client
+		"move-n", "move-ne", "move-e", "move-se", "move-s", "move-sw", "move-w", "move-nw"
+	Shift+direction in the web client	
+		"turn-n", "turn-ne", "turn-e", "turn-se", "turn-s", "turn-sw", "turn-w", "turn-nw"
+	Action buttons (Action-1 is the same button used to use hotbar items)
+		"action-1", "action-2", "action-3", "action-4"
+	Action buttons, but referenced by the physical layout on the controller (if that makes sense for the client's input method)
+		"action-n", "action-e", "action-s", "action-w"
+
 === Extension: batch ====
 This extension allows the server to send multiple protocol messages to the client in one websocket message.
 When a client supports it, the server may send messages formatted like the following:
@@ -368,20 +412,14 @@ These relayed messages will have additional "id" and "username" fields on them.
 
 === Extension: entity_message_forwarding ===
 When you own an entity, you can ask to have all messages with specific command types forwarded to you, instead of just being ignored.
-This has to be done each time you connect. Indicating that you support this extension is required to receive the messages.
+This is persistent when you set it up. Indicating that you support this extension is required to receive the messages.
 
 -----------------------------
 
 This is managed with the following commands:
 
-/message_forwarding list
-List all entities that are forwarding to you
-
-/message_forwarding clear
-Stop forwarding messages for any entities
-
 /message_forwarding set entity_id,entity_id,entity_id...
-Disable forwarding for a specific entity
+Disable forwarding for specific entities
 
 /message_forwarding set entity_id,entity_id,entity_id... MAP,MAI,PRI ...
 Enable forwarding for specific message types, for the specific entities

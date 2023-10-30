@@ -23,6 +23,7 @@ handlers = {}
 command_privilege_level = {} # minimum required privilege level required for the command; see user_privilege in buildglobal.py
 map_only_commands = set()
 pre_identify_commands = set()
+ext_handlers = {}
 
 directions = ((1,0), (1,1), (0,1), (-1,1), (-1,0), (-1,-1), (0,-1), (1,-1))
 
@@ -38,7 +39,28 @@ def protocol_command(privilege_level='guest', map_only=False, pre_identify=False
 		command_privilege_level[command_name] = privilege_level
 	return decorator
 
+def ext_protocol_command(name):
+	def decorator(f):
+		if isinstance(name, str):
+			ext_handlers[name] = f
+		elif isinstance(name, tuple):
+			for n in name:
+				ext_handlers[n] = f
+	return decorator
+
 # -------------------------------------
+
+def find_remote_control_entity(client, rc):
+	if client.has_permission(rc, permission['remote_command'], False):
+		actor = get_entity_by_id(rc, load_from_db=False)
+		if actor == None:
+			client.send("ERR", {'text': 'Entity %s not loaded' % rc})
+			return None
+		else:
+			return actor
+	else:
+		client.send("ERR", {'text': 'You don\'t have permission to remote control %s' % rc})
+	return None
 
 def remove_invalid_dict_fields(data, whitelist):
 	out = {}
@@ -86,6 +108,7 @@ def who_mini_tilemap_data(data):
 
 CLIENT_WHO_WHITELIST = {
 	"typing": bool,
+	"clickable": bool,
 	"mini_tilemap": who_mini_tilemap,
 	"mini_tilemap_data": who_mini_tilemap_data,
 }
@@ -299,12 +322,11 @@ def fn_CMD(map, client, arg):
 	echo = arg['echo'] if ('echo' in arg) else None
 
 	if 'rc' in arg:
-		if client.has_permission(arg['rc'], permission['remote_command'], False):
-			actor = get_entity_by_id(arg['rc'], load_from_db=False)
-			if actor == None:
-				client.send("ERR", {'text': 'Entity %s not loaded' % arg['rc']})
+		actor = find_remote_control_entity(client, arg['rc'])
+		if actor == None:
+			return
 		else:
-			client.send("ERR", {'text': 'You don\'t have permission to remote control %s' % arg['rc']})
+			map = actor.map
 
 	handle_user_command(map, actor, client, echo, arg["text"])
 
@@ -482,7 +504,10 @@ def fn_BAG(map, client, arg):
 			client.send("ERR", {'text': 'Don\'t have permission to list contents for %s' % list_contents['id']})
 			return
 
-		list_contents['contents'] = [child.bag_info() for child in self.all_children()]
+		if list_contents.get('recursive', False):
+			list_contents['contents'] = [child.bag_info() for child in list_me.all_children()]
+		else:
+			list_contents['contents'] = [child.bag_info() for child in list_me.contents]
 		client.send("BAG", {'list_contents': list_contents})
 
 @protocol_command()
@@ -528,9 +553,22 @@ def fn_EML(map, client, arg):
 
 @protocol_command()
 def fn_MSG(map, client, arg):
+	actor = client
+
+	if 'rc' in arg:
+		actor = find_remote_control_entity(client, arg['rc'])
+		if actor == None:
+			return
+		else:
+			map = actor.map
+
 	if map:
 		text = arg["text"]
-		map.broadcast("MSG", {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': escape_tags(text)}, remote_category=botwatch_type['chat'])
+		fields = {'name': actor.name, 'id': actor.protocol_id(), 'username': actor.username_or_id(), 'text': escape_tags(text)}
+		if 'rc' in arg:
+			fields['rc_id'] = client.protocol_id()
+			fields['rc_username'] = client.username_or_id()
+		map.broadcast("MSG", fields, remote_category=botwatch_type['chat'])
 
 @protocol_command()
 def fn_TSD(map, client, arg):
@@ -738,19 +776,15 @@ def fn_WHO(map, client, arg):
 		actor = client
 		id_to_use = client.protocol_id()
 
-		if 'id' in update and update['id'] != id_to_use:
-			id_to_use = update['id']
-			if client.has_permission(id_to_use, permission['remote_command'], False):
-				actor = get_entity_by_id(id_to_use, load_from_db=False)
-				if actor == None:
-					client.send("ERR", {'text': 'Entity %s not loaded' % id_to_use})
-					return
-				else:
-					map = actor.map
-			else:
-				client.send("ERR", {'text': 'You don\'t have permission to remote control %s' % id_to_use})
+		if 'rc' in arg:
+			actor = find_remote_control_entity(client, arg['rc'])
+			if actor == None:
 				return
-		if actor.map == None:
+			else:
+				map = actor.map
+				id_to_use = arg['rc']
+
+		if map == None:
 			return
 
 		valid_data = validate_client_who(id_to_use, arg["update"])
@@ -836,6 +870,84 @@ def fn_IDN(map, client, arg):
 		if c.user_flags & userflag['bot']:
 			bot_count += 1
 	client.send("MSG", {'text': 'Users connected: %d' % (len(AllClients)-bot_count) + ('' if bot_count == 0 else '. Bots connected: %d.' % bot_count)})
+
+# -------------------------------------
+
+def forward_ext_if_needed(entity_id, forward_message_type):
+	e = get_entity_by_id(entity_id, load_from_db=False)
+	if e == None:
+		return None
+	if forward_message_type and (forward_message_type in e.forward_message_types):
+		return get_entity_by_id(e.forward_messages_to, load_from_db=False)
+	return e
+
+@ext_protocol_command("entity_click")
+def entity_click(map, client, arg, name):
+	e = forward_ext_if_needed(arg['id'], 'CLICK')
+	if e == None:
+		return
+	arg = remove_invalid_dict_fields(arg, {
+		"x":                int, # Where 0,0 is the top left of the mini tilemap or the entity
+		"y":                int,
+		"button":           int, # Usually 0?
+		"target":           lambda x: x in (None, "entity", "mini_tilemap"),
+	})
+	arg['id'] = client.protocol_id()
+	e.send("EXT", {name: arg})
+
+@ext_protocol_command("key_press")
+def key_press(map, client, arg, name):
+	e = forward_ext_if_needed(arg['id'], 'KEYS')
+	if e == None:
+		return
+	arg = remove_invalid_dict_fields(arg, {
+		"key":				str,
+		"down":             bool,
+	})
+	arg['id'] = client.protocol_id()
+	c.send("EXT", {name: arg})
+
+@ext_protocol_command("take_controls")
+def take_controls(map, client, arg, name):
+	e = get_entity_by_id(arg['id'], load_from_db=False)
+	if client.has_permission(e, permission['minigame']):
+		arg = remove_invalid_dict_fields(arg, {
+			"keys":             list, # Keys to ask for
+			"pass_on":          bool, # Allow keys to do their normal actions
+			"key_up":           bool, # Include key release events
+		})
+		arg['id'] = client.protocol_id()
+		e.send("EXT", {name: arg})
+
+@ext_protocol_command("took_controls")
+def took_controls(map, client, arg, name):
+	e = forward_ext_if_needed(arg['id'], 'KEYS')
+	if e == None:
+		return
+	arg = remove_invalid_dict_fields(arg, {
+		"keys":             list,
+		"accept":           bool,
+	})
+	arg['id'] = client.protocol_id()
+	e.send("EXT", {name: arg})
+
+@ext_protocol_command("list_available_ext_types")
+def list_available_ext_types(map, client, arg, name):
+	client.send("EXT", {name: list(ext_handlers.keys())})
+
+@protocol_command()
+def fn_EXT(map, client, arg):
+	actor = client
+	if 'rc' in arg:
+		actor = find_remote_control_entity(client, arg['rc'])
+		if actor == None:
+			return
+		else:
+			map = actor.map
+
+	for k,v in arg.items():
+		if k in ext_handlers:
+			ext_handlers[k](map, actor, v, k)
 
 # -------------------------------------
 

@@ -59,12 +59,9 @@ class Entity(object):
 		# valid types are "tpa", "tpahere", "carry", "followme"
 		self.tp_history = deque(maxlen=20)
 
-		# allow cleaning up BotWatch info
-		self.listening_maps = set() # tuples of (category, map)
-
 		# message forwarding; for bringing bot entities onto different maps, that can listen to messages
 		self.forward_message_types = set()
-		self.forward_messages_to = weakref.WeakSet()
+		self.forward_messages_to = None
 
 		# riding information
 		self.vehicle = None     # User being ridden
@@ -146,28 +143,27 @@ class Entity(object):
 			return
 
 		# Normal entities don't get messages, but they can if there's a forward
-		if is_chat or (self.forward_messages_to and commandType in self.forward_message_types):
-			for c in self.forward_messages_to:
-				if c.can_forward_messages_to:
-					asyncio.ensure_future(c.ws.send("FWD %s %s" % (self.protocol_id(), make_protocol_message_string(commandType, commandParams))))
+		if is_chat or (self.forward_messages_to != None and commandType in self.forward_message_types):
+			c = get_entity_by_id(self.forward_messages_to, load_from_db=False)
+			if c != None and c.can_forward_messages_to:
+				asyncio.ensure_future(c.ws.send("FWD %s %s" % (self.protocol_id(), make_protocol_message_string(commandType, commandParams))))
 
 	def send_string(self, raw, is_chat=False):
 		# Directly send a string, so you can json.dumps once and reuse it for everyone
 		if is_chat and 'CHAT' not in self.forward_message_types:
 			return
-		if is_chat or self.forward_messages_to and raw[0:3] in self.forward_message_types:
-			for c in self.forward_messages_to:
-				if c.can_forward_messages_to:
-					asyncio.ensure_future(c.ws.send("FWD %s %s" % (self.protocol_id(), raw)))
-		return
+		if is_chat or (self.forward_messages_to != None and raw[0:3] in self.forward_message_types):
+			c = get_entity_by_id(self.forward_messages_to, load_from_db=False)
+			if c != None and c.can_forward_messages_to:
+				asyncio.ensure_future(c.ws.send("FWD %s %s" % (self.protocol_id(), raw)))
 
 	def start_batch(self):
 		# Only for clients
-		return
+		pass
 
 	def finish_batch(self):
 		# Only for clients
-		return
+		pass
 
 	# Send a message to all contents
 	def broadcast(self, command_type, command_params, remote_category=None, remote_only=False, send_to_links=False, require_extension=None):
@@ -692,6 +688,8 @@ class Entity(object):
 			out['mini_tilemap'] = self.mini_tilemap
 		if hasattr(self, "mini_tilemap_data") and self.mini_tilemap_data != None:
 			out['mini_tilemap_data'] = self.mini_tilemap_data
+		if (hasattr(self, "clickable") and self.clickable) or 'CLICK' in self.forward_message_types:
+			out['clickable'] = True
 
 		if self.offset and self.offset != [0,0]:
 			out['offset'] = self.offset
@@ -895,3 +893,34 @@ class EntityWithPlainData(Entity):
 	def save_data(self):
 		""" Save the entity's data to the database, using plain text """
 		self.save_data_as_text(self.data)
+
+# If the entity is truly generic, then use the data field (when it would've otherwise gone unused) in a useful way
+class GenericEntity(Entity):
+	def __init__(self,websocket):
+		super().__init__(entity_type['generic'])
+
+	def load_data(self):
+		try:
+			data = loads_if_not_none(self.load_data_as_text())
+			if data == None:
+				return True
+			if 'forward_message_types' in data:
+				self.forward_message_types = set()
+			self.forward_messages_to = data.get('forward_messages_to', None)
+			return True
+		except:
+			return False
+
+	def save_data(self):
+		data = {}
+		if len(self.forward_message_types):
+			data['forward_message_types'] = list(self.forward_message_types)
+		if self.forward_messages_to != None:
+			data['forward_messages_to'] = self.forward_messages_to
+		if not data:
+			data = None
+		self.save_data_as_text(dumps_if_not_none(data))
+
+	def who(self):
+		w = super().who()
+		return w
