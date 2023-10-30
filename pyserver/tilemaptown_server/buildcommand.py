@@ -1374,8 +1374,7 @@ def fn_userpic(map, client, context, arg):
 	arg = arg.split(' ')
 	success = False
 
-	if not client.is_client() and not client.temporary:
-		client.save_on_clean_up = True
+	client.save_on_clean_up = True
 
 	if len(arg) == 1:
 		defaults = {'bunny': [0, 2, 25], 'cat': [0, 2, 26], 'hamster': [0, 8, 25], 'fire': [0, 4,26]}
@@ -1946,7 +1945,7 @@ def fn_entity(map, client, context, arg):
 	else:
 		respond(context, 'Unrecognized subcommand "%s"' % subcommand, error=True)
 
-	if save_entity and not e.temporary:
+	if save_entity:
 		e.save_on_clean_up = True
 
 @cmd_command()

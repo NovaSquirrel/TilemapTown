@@ -112,7 +112,7 @@ class Entity(object):
 	def clean_up(self):
 		if not self.cleaned_up_already:
 
-			if self.save_on_clean_up:
+			if self.save_on_clean_up and not self.temporary and not self.is_client():
 				self.save_and_commit()
 				self.save_on_clean_up = False
 
@@ -539,6 +539,7 @@ class Entity(object):
 	# Apply information from a MOV message to someone
 
 	def move_to(self, x, y, new_dir=None, is_teleport=False):
+		self.save_on_clean_up = True
 		old_dir = self.dir
 
 		if new_dir != None:
@@ -562,6 +563,7 @@ class Entity(object):
 
 	def switch_map(self, map_id, new_pos=None, goto_spawn=True, update_history=True, edge_warp=False, on_behalf_of=None):
 		""" Teleport the user to another map """
+		self.save_on_clean_up = True
 		if self.is_client():
 			self.undo_delete_data = None
 			if not self.sent_resources_yet:
@@ -634,8 +636,7 @@ class Entity(object):
 
 	def send_home(self):
 		""" If entity has a home, send it there. If not, find somewhere else suitable. """
-		if not self.temporary:
-			self.save_on_clean_up = True
+		self.save_on_clean_up = True
 		if self.home_id != None and self.switch_map(self.home_id,
 			new_pos=[self.home_position[0], self.home_position[1]] if (self.home_position and len(self.home_position) == 2) else None
 		):

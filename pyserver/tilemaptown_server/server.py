@@ -67,7 +67,7 @@ def main_timer():
 
 def save_everything():
 	for e in AllEntitiesByDB.values():
-		if e.save_on_clean_up or (e.is_client() and e.db_id):
+		if (e.save_on_clean_up and not e.temporary) or (e.is_client() and e.db_id):
 			e.save()
 			e.save_on_clean_up = False
 
