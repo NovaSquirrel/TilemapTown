@@ -667,6 +667,7 @@ def permission_change(map, client, context, arg, command2):
 			map.allow &= ~permission_value
 			map.deny &= ~permission_value
 		map.broadcast("MSG", {'text': "%s sets the default \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[0], command2)})
+		map.save_on_clean_up = True
 		return
 
 	# Group permissions and entity permissions are the same thing
@@ -1883,8 +1884,7 @@ def fn_entity(map, client, context, arg):
 		if permission_check(permission['move']):
 			coords = subarg.split()
 			if len(coords) == 2 and coords[0].isdecimal() and coords[1].isdecimal():
-				e.move_to(int(coords[0]), int(coords[1]))
-				save_entity = True
+				e.move_to(int(coords[0]), int(coords[1])) # Will mark the entity for saving
 	elif subcommand == 'perms':
 		handlers['permlist'](e, client, context, subarg)
 	elif subcommand == 'permsfor':

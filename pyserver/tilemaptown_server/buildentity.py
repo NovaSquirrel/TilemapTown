@@ -834,6 +834,7 @@ class Entity(object):
 		""" Save entity information to the database """
 		if self.temporary:
 			return
+		save_on_clean_up = False
 		c = Database.cursor()
 
 		if self.db_id == None:
