@@ -31,6 +31,8 @@ var ShowProtocol = true;
 var InstantCamera = false;
 var SlowAnimationTick = false;
 
+const SupportedTakeControlsKeys = new Set(['move-e', 'move-se', 'move-s', 'move-sw', 'move-w', 'move-nw', 'move-n', 'move-ne', 'turn-e', 'turn-se', 'turn-s', 'turn-sw', 'turn-w', 'turn-nw', 'turn-n', 'turn-ne', 'use-item', 'cancel', 'hotbar-1', 'hotbar-2', 'hotbar-3', 'hotbar-4', 'hotbar-5', 'hotbar-6', 'hotbar-7', 'hotbar-8', 'hotbar-9', 'hotbar-10']);
+
 function readURLParams() {
   var query = window.location.search.substring(1);
   var vars = query.split("&");
@@ -610,6 +612,30 @@ function receiveServerMessage(cmd, arg) {
       }
       break;
 
+    case "EXT":
+      {
+        if(arg.take_controls) {
+          let take_controls = arg.take_controls;
+          let supported_controls = take_controls.keys.filter((key) => SupportedTakeControlsKeys.has(key));
+          takeControlsPassOn = take_controls.pass_on ?? false;
+          takeControlsKeyUp  = take_controls.key_up ?? false;
+          takeControlsId     = take_controls.id;
+          takeControlsKeys   = new Set(supported_controls);
+          SendCmd("EXT", {
+            "took_controls": {
+              "id": take_controls.id,
+              "keys": supported_controls,
+            }
+          });
+          if(supported_controls.length) {
+            if(!takeControlsEnabled)
+              logMessage('A script is now acting on some keys. <input type="button" value="Stop" onclick="forceReleaseKeys();"/>', 'server_message',   {'isChat': false});
+            takeControlsEnabled = true;
+          } else {
+            takeControlsEnabled = false;
+          }
+        }
+      }
   }
 }
 

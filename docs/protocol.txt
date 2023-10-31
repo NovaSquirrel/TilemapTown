@@ -372,7 +372,7 @@ Fields:
 	down: If true, key was pressed. If false, key was released.
 
 --> EXT {"take_controls": {"id": id, "keys": [key_name, key_name, key_name...], "pass_on": true/false, "key_up": true/false}}
---> EXT {"take_controls": {"id": id, "take": false}}
+--> EXT {"take_controls": {"id": id, "keys": []}}
 Message gets forwarded to the entity specified in "id", if that entity has granted you the "minigame" permission.
 Similar to https://wiki.secondlife.com/wiki/LlTakeControls
 Fields:
@@ -388,9 +388,14 @@ Key names:
 		"move-n", "move-ne", "move-e", "move-se", "move-s", "move-sw", "move-w", "move-nw"
 	Shift+direction in the web client	
 		"turn-n", "turn-ne", "turn-e", "turn-se", "turn-s", "turn-sw", "turn-w", "turn-nw"
-	Action buttons (Action-1 is the same button used to use hotbar items)
+	Selection
+		"hotbar-prev" "hotbar-next" "hotbar-1" "hotbar-2" "hotbar-3" "hotbar-4" "hotbar-5 "hotbar-6" "hotbar-7" "hotbar-8" "hotbar-9" "hotbar-10"
+	Other actions
+		"use-item" "cancel"
+	Miscellaneous action buttons
+	1 2 3 4 could be Z X C V potentially? Maybe it'd be best if the client let you configure it
 		"action-1", "action-2", "action-3", "action-4"
-	Action buttons, but referenced by the physical layout on the controller (if that makes sense for the client's input method)
+	Miscellaneous action buttons, but referenced by the physical layout on the controller (if that makes sense for the client's input method)
 		"action-n", "action-e", "action-s", "action-w"
 
 === Extension: batch ====

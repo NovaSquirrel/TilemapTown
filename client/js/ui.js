@@ -99,6 +99,13 @@ let drawToolCurrentStroke = {}; // All the tiles currently being drawn on, index
 let drawToolCurrentStrokeIsObj = false;
 let drawToolUndoHistory = [];
 
+// take_controls feature
+let takeControlsEnabled = false;
+let takeControlsPassOn = false;
+let takeControlsKeyUp = false;
+let takeControlsId = null;
+let takeControlsKeys = new Set();
+
 function getRandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
@@ -487,9 +494,69 @@ function getDataForDraw() {
   return null;
 }
 
+function keyEventToTilemapTownKey(e) {
+	var e = e || window.event;
+	switch(e.code) {
+		case "PageUp":
+			return e.shiftKey ? "turn-ne" : "move-ne";
+		case "PageDown":
+			return e.shiftKey ? "turn-se" : "move-se";
+		case "Home":
+			return e.shiftKey ? "turn-nw" : "move-nw";
+		case "End":
+			return e.shiftKey ? "turn-sw" : "move-sw";
+		case "ArrowLeft": case "KeyA":
+			return e.shiftKey ? "turn-w" : "move-w";
+		case "ArrowDown": case "KeyS":
+			return e.shiftKey ? "turn-s" : "move-s";
+		case "ArrowUp": case "KeyW":
+		  return e.shiftKey ? "turn-n" : "move-n";
+		case "ArrowRight": case "KeyD":
+		  return e.shiftKey ? "turn-e" : "move-e";
+		case "Space":  return "use-item";
+		case "Escape": return "cancel";
+		case "Digit1": return "hotbar-1";
+		case "Digit2": return "hotbar-2";
+		case "Digit3": return "hotbar-3";
+		case "Digit4": return "hotbar-4";
+		case "Digit5": return "hotbar-5";
+		case "Digit6": return "hotbar-6";
+		case "Digit7": return "hotbar-7";
+		case "Digit8": return "hotbar-8";
+		case "Digit9": return "hotbar-9";
+		case "Digit0": return "hotbar-10";
+	}
+	return null;
+}
+
 function keyUpHandler(e) {
   var e = e || window.event;
   ShiftPressed = e.shiftKey;
+  if(takeControlsEnabled && takeControlsKeyUp) {
+    let ttKey = keyEventToTilemapTownKey(e);
+    if(takeControlsKeys.has(ttKey)) {
+      SendCmd("EXT", {
+        "key_press": {
+          "id": takeControlsId,
+          "key": ttKey,
+          "down": false,
+        }
+      });
+    }
+  }
+}
+
+function forceReleaseKeys() {
+  if(takeControlsEnabled) {
+    logMessage('Stopped sending keys to the script', 'server_message',   {'isChat': false});
+    SendCmd("EXT", {
+      "took_controls": {
+        "id": takeControlsId,
+        "keys": [],
+      }
+    });
+    takeControlsEnabled = false;
+  }
 }
 
 function keyDownHandler(e) {
@@ -505,7 +572,7 @@ function keyDownHandler(e) {
   // ignore keys when typing in a textbox
   if (document.activeElement.tagName == "INPUT" || document.activeElement.tagName == "TEXTAREA") {
     if (document.activeElement == chatInput && e.keyCode == 13) {
-      // commands that are local to the client
+      // First, check for commands that are local to the client
       if (chatInput.value.toLowerCase() == "/clear") {
         chatArea.innerHTML = "";
         chatLogForExport = [];
@@ -520,6 +587,8 @@ function keyDownHandler(e) {
         document.body.appendChild(element);
         element.click();
         document.body.removeChild(element);
+      } else if (chatInput.value.toLowerCase() == "/releasekeys") {
+        forceReleaseKeys();
       } else if (chatInput.value.toLowerCase() == "/exportlogs" || chatInput.value.toLowerCase() == "/exportlog") {
          // https://stackoverflow.com/a/4929629
         var today = new Date();
@@ -558,6 +627,25 @@ function keyDownHandler(e) {
     }
     return;
   }
+
+  if(takeControlsEnabled) {
+    let ttKey = keyEventToTilemapTownKey(e);
+    if(takeControlsKeys.has(ttKey)) {
+      if(e.repeat !== true) {
+        SendCmd("EXT", {
+          "key_press": {
+            "id": takeControlsId,
+            "key": ttKey,
+            "down": true,
+          }
+        });
+      }
+      if(!takeControlsPassOn) {
+        return;
+      }
+    }    
+  }
+
   var needRedraw = false;
 
   var PlayerX = PlayerWho[PlayerYou].x;

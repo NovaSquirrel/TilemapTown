@@ -44,6 +44,8 @@ Makes map tile objects that would recreate every map object you're standing on, 
 /undodel
 Undoes your most recent delete
 
+/releasekeys
+If a script is currently acting on your inputs, this command cancels out that mode
 
 ---Account/customization---
 /nick newname

@@ -905,7 +905,7 @@ def key_press(map, client, arg, name):
 		"down":             bool,
 	})
 	arg['id'] = client.protocol_id()
-	c.send("EXT", {name: arg})
+	e.send("EXT", {name: arg})
 
 @ext_protocol_command("take_controls")
 def take_controls(map, client, arg, name):
