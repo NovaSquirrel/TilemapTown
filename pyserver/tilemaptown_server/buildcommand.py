@@ -1415,7 +1415,7 @@ def fn_offset(map, client, context, arg):
 def fn_gwho(map, client, context, arg):
 	names = ''
 	for u in AllClients:
-		if not u.client.identified:
+		if not u.identified:
 			continue
 		if len(names) > 0:
 			names += ', '
