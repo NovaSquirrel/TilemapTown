@@ -2777,6 +2777,8 @@ function changeBuildTool() {
         MouseActive = false;
         NeedMapRedraw = true;
     }
+  // Remove focus from the radio buttons, restoring the player's ability to move around
+  document.activeElement.blur();
 }
 
 function copyTurfFromSelection() {
