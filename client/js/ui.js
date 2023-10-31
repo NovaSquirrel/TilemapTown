@@ -548,7 +548,7 @@ function keyUpHandler(e) {
 
 function forceReleaseKeys() {
   if(takeControlsEnabled) {
-    logMessage('Stopped sending keys to the script', 'server_message',   {'isChat': false});
+    logMessage('Stopped sending keys to the script.', 'server_message',   {'isChat': false});
     SendCmd("EXT", {
       "took_controls": {
         "id": takeControlsId,
