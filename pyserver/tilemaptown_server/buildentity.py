@@ -112,7 +112,7 @@ class Entity(object):
 	def clean_up(self):
 		if not self.cleaned_up_already:
 
-			if self.save_on_clean_up and not self.temporary and not self.is_client():
+			if self.save_on_clean_up and not self.temporary:
 				self.save_and_commit()
 				self.save_on_clean_up = False
 
