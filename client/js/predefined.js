@@ -1062,6 +1062,67 @@ Predefined.colorfloor15 = {
   pic: [-1, 14, 8],
 };
 
+Predefined.shadow = {
+  name: "shadow",
+  pic: [-1, 0, 19],
+  obj: true,
+  over: true
+};
+Predefined.shadow_dr = {
+  name: "shadow",
+  pic: [-1, 1, 19],
+  obj: true,
+  over: true
+};
+Predefined.shadow_dl = {
+  name: "shadow",
+  pic: [-1, 2, 19],
+  obj: true,
+  over: true
+};
+Predefined.shadow_ur = {
+  name: "shadow",
+  pic: [-1, 3, 19],
+  obj: true,
+  over: true
+};
+Predefined.shadow_ul = {
+  name: "shadow",
+  pic: [-1, 4, 19],
+  obj: true,
+  over: true
+};
+Predefined.shadow2 = {
+  name: "shadow",
+  pic: [-1, 5, 19],
+  obj: true,
+  over: true
+};
+Predefined.shadow2_dr = {
+  name: "shadow",
+  pic: [-1, 6, 19],
+  obj: true,
+  over: true
+};
+Predefined.shadow2_dl = {
+  name: "shadow",
+  pic: [-1, 7, 19],
+  obj: true,
+  over: true
+};
+Predefined.shadow2_ur = {
+  name: "shadow",
+  pic: [-1, 8, 19],
+  obj: true,
+  over: true
+};
+Predefined.shadow2_ul = {
+  name: "shadow",
+  pic: [-1, 9, 19],
+  obj: true,
+  over: true
+};
+
 
 var PredefinedArray = [];
 var PredefinedArrayNames = [];
