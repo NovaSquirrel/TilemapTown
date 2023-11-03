@@ -60,6 +60,7 @@ var MousedOverEntityClickIsTilemap = false;
 var MousedOverEntityClickX = undefined;
 var MousedOverEntityClickY = undefined;
 var ShiftPressed = false;
+var MouseRawPos = null;
 
 // document elements
 var mapCanvas = null; // main map view
@@ -98,6 +99,7 @@ let drawToolX = null, drawToolY = null;
 let drawToolCurrentStroke = {}; // All the tiles currently being drawn on, indexed by x,y
 let drawToolCurrentStrokeIsObj = false;
 let drawToolUndoHistory = [];
+let ctrlZUndoType = null;
 
 // take_controls feature
 let takeControlsEnabled = false;
@@ -494,6 +496,65 @@ function getDataForDraw() {
   return null;
 }
 
+function runLocalCommand(t) {
+  if (t.toLowerCase() == "/clear") {
+    chatArea.innerHTML = "";
+    chatLogForExport = [];
+    return true;
+  } else if (t.toLowerCase() == "/exportmap" || t.toLowerCase() == "/mapexport") {
+    //logMessage('<a href="data:,'+encodeURIComponent(exportMap())+'" download="map.txt">Map download (click here)</a>', 'server_message');
+
+    //from https://ourcodeworld.com/articles/read/189/how-to-create-a-file-and-generate-a-download-with-javascript-in-the-browser-without-a-server
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(exportMap()));
+    element.setAttribute('download', "map.txt");
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    return true;
+  } else if (t.toLowerCase() == "/releasekeys") {
+    forceReleaseKeys();
+    return true;
+  } else if (t.toLowerCase() == "/exportlogs" || t.toLowerCase() == "/exportlog") {
+    // https://stackoverflow.com/a/4929629
+    var today = new Date();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var yyyy = today.getFullYear();
+    today = yyyy + '-' + mm + '-' + dd;
+
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(chatLogForExport.join('\n')));
+    element.setAttribute('download', "tilemap town "+today+".txt");
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    return true;
+  } else if(t.toLowerCase() == "/clearhotbar") {
+    hotbarData = [null, null, null, null, null, null, null, null, null, null];
+    hotbarSelectIndex = null;
+    hotbarDragging = false;
+    drawHotbar();
+    return true;
+  }
+  return false;
+}
+
+function forceReleaseKeys() {
+  if(takeControlsEnabled) {
+    logMessage('Stopped sending keys to the script.', 'server_message',   {'isChat': false});
+    SendCmd("EXT", {
+      "took_controls": {
+        "id": takeControlsId,
+        "keys": [],
+      }
+    });
+    takeControlsEnabled = false;
+  }
+}
+
 function keyEventToTilemapTownKey(e) {
 	var e = e || window.event;
 	switch(e.code) {
@@ -546,19 +607,6 @@ function keyUpHandler(e) {
   }
 }
 
-function forceReleaseKeys() {
-  if(takeControlsEnabled) {
-    logMessage('Stopped sending keys to the script.', 'server_message',   {'isChat': false});
-    SendCmd("EXT", {
-      "took_controls": {
-        "id": takeControlsId,
-        "keys": [],
-      }
-    });
-    takeControlsEnabled = false;
-  }
-}
-
 function keyDownHandler(e) {
 
   function ClampPlayerPos() {
@@ -573,39 +621,7 @@ function keyDownHandler(e) {
   if (document.activeElement.tagName == "INPUT" || document.activeElement.tagName == "TEXTAREA") {
     if (document.activeElement == chatInput && e.keyCode == 13) {
       // First, check for commands that are local to the client
-      if (chatInput.value.toLowerCase() == "/clear") {
-        chatArea.innerHTML = "";
-        chatLogForExport = [];
-      } else if (chatInput.value.toLowerCase() == "/exportmap" || chatInput.value.toLowerCase() == "/mapexport") {
-        //logMessage('<a href="data:,'+encodeURIComponent(exportMap())+'" download="map.txt">Map download (click here)</a>', 'server_message');
-
-        //from https://ourcodeworld.com/articles/read/189/how-to-create-a-file-and-generate-a-download-with-javascript-in-the-browser-without-a-server
-        var element = document.createElement('a');
-        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(exportMap()));
-        element.setAttribute('download', "map.txt");
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-      } else if (chatInput.value.toLowerCase() == "/releasekeys") {
-        forceReleaseKeys();
-      } else if (chatInput.value.toLowerCase() == "/exportlogs" || chatInput.value.toLowerCase() == "/exportlog") {
-         // https://stackoverflow.com/a/4929629
-        var today = new Date();
-        var dd = String(today.getDate()).padStart(2, '0');
-        var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-        var yyyy = today.getFullYear();
-        today = yyyy + '-' + mm + '-' + dd;
-
-        var element = document.createElement('a');
-        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(chatLogForExport.join('\n')));
-        element.setAttribute('download', "tilemap town "+today+".txt");
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-      }
-
+      if (runLocalCommand(chatInput.value));
       // commands are CMD while regular room messages are MSG. /me is a room message.
       else if (chatInput.value.slice(0, 1) == "/" &&
         chatInput.value.toLowerCase().slice(0, 4) != "/me " &&
@@ -720,6 +736,42 @@ function keyDownHandler(e) {
   } else if (e.code == "Enter") { // enter (carriage return)
     chatInput.focus();
     e.preventDefault();
+  } else if (e.code == "KeyZ" && e.ctrlKey) {
+    if(ctrlZUndoType == "put") {
+      undoDrawStroke();
+    } else if(ctrlZUndoType == "del") {
+      sendChatCommand('undodel');
+    }
+    ctrlZUndoType = null;
+  } else if (e.code == "KeyF") { // Pick
+    if(drawToolX !== null && drawToolY !== null) {
+      if(e.shiftKey) {
+        let tiles = MyMap.Objs[drawToolX][drawToolY];
+        if(tiles && tiles.length) {
+          addTileToHotbar(tiles[0]);
+        }
+      } else {
+        let tile = MyMap.Tiles[drawToolX][drawToolY];
+        if(tile) {
+          addTileToHotbar(tile);
+        }
+      }
+    }
+  } else if (e.code == "KeyR") { // Swap between draw and select
+    if(buildTool == BUILD_TOOL_SELECT) {
+      buildTool = BUILD_TOOL_DRAW;
+	  isSelect = document.getElementById("buildToolSelect").checked = false;
+	  isDraw = document.getElementById("buildToolDraw").checked = true;
+      MouseActive = false;
+      NeedMapRedraw = true;
+    } else if(buildTool == BUILD_TOOL_DRAW) {
+      buildTool = BUILD_TOOL_SELECT;
+	  isSelect = document.getElementById("buildToolSelect").checked = true;
+	  isDraw = document.getElementById("buildToolDraw").checked = false;
+      drawToolX = null;
+      drawToolY = null;
+      NeedMapRedraw = true;
+    }
   }
 
   var BeforeClampX = PlayerX, BeforeClampY = PlayerY;
@@ -1360,6 +1412,18 @@ function tickWorld() {
         CameraY = MyMap.Height * 16 / 2;
       }
     }
+
+    // The camera movement may cause the map to change
+//    console.log();
+    if(MouseRawPos != null) {
+      let underCursor = getTilePosAtPixel(MouseRawPos);
+      if(underCursor.x != MouseNowX || underCursor.y != MouseNowY) {
+        MouseNowX = underCursor.x;
+        MouseNowY = underCursor.y;
+        handleDragging(underCursor);
+      }
+    }
+
     drawMap();
   } else if (AnimationTick % 5 == 0) { // every 0.1 seconds
     drawMap();
@@ -1399,6 +1463,7 @@ function selectionDelete() {
     }
   }
   SendCmd("DEL", { pos: [MouseStartX, MouseStartY, MouseEndX, MouseEndY], turf: DeleteTurfs, obj: DeleteObjs });
+  ctrlZUndoType = "del";
 
   MouseActive = false;
   NeedMapRedraw = true;
@@ -1462,10 +1527,17 @@ function getMousePos(canvas, evt) {
 function getTilePos(evt) {
   var PixelCameraX = Math.round(CameraX - mapCanvas.width / 2);
   var PixelCameraY = Math.round(CameraY - mapCanvas.height / 2);
-  var pos = getMousePos(mapCanvas, evt);
+  pos = getMousePos(mapCanvas, evt);
   pos.x = (pos.x + PixelCameraX) >> 4;
   pos.y = (pos.y + PixelCameraY) >> 4;
   return pos;
+}
+
+function getTilePosAtPixel(pos) {
+  var PixelCameraX = Math.round(CameraX - mapCanvas.width / 2);
+  var PixelCameraY = Math.round(CameraY - mapCanvas.height / 2);
+  var out = {x: (pos.x + PixelCameraX) >> 4, y: (pos.y + PixelCameraY) >> 4};
+  return out;
 }
 
 function zoomIn() {
@@ -1499,18 +1571,55 @@ function updateZoomLevelDisplay() {
   }
 }
 
+function drawingTooFar(x, y, maxDistance) {
+  let youX = PlayerWho[PlayerYou].x;
+  let youY = PlayerWho[PlayerYou].y;
+  let diffX = youX - x;
+  let diffY = youY - y;
+  let distance = Math.sqrt(diffX * diffX + diffY * diffY);
+  return distance > maxDistance;
+}
+OK_DRAW_DISTANCE = 5;
+
+function handleDragging(pos) {
+  if (buildTool == BUILD_TOOL_SELECT) {
+    if (!MouseDown)
+      return;
+    if (pos.x != MouseEndX || pos.y != MouseEndY)
+      NeedMapRedraw = true;
+    MouseEndX = pos.x;
+    MouseEndY = pos.y;
+  } else if(buildTool == BUILD_TOOL_DRAW) {
+    if(drawingTooFar(pos.x, pos.y, OK_DRAW_DISTANCE)) {
+      drawToolX = null;
+      drawToolY = null;
+      return;
+    }
+    if(drawToolX !== MouseNowX || drawToolY !== MouseNowY) {
+      drawToolX = MouseNowX;
+      drawToolY = MouseNowY;
+      NeedMapRedraw = true;
+
+      if (!MouseDown)
+        return;
+
+      let coords = drawToolX + "," + drawToolY;
+      if(!(coords in drawToolCurrentStroke)) {
+        let data = getDataForDraw();
+        if(data === null)
+          return;
+
+        let old = useItemAtXY({ type: 'map_tile', data: data }, pos.x, pos.y);
+        if(old === undefined)
+          return;
+        drawToolCurrentStroke[coords] = old;
+      }
+    }
+  }
+}
+
 function initMouse() {
   var edittilesheetselect = document.getElementById("edittilesheetselect");
-
-  function drawingTooFar(x, y, maxDistance) {
-    let youX = PlayerWho[PlayerYou].x;
-    let youY = PlayerWho[PlayerYou].y;
-    let diffX = youX - x;
-    let diffY = youY - y;
-    let distance = Math.sqrt(diffX * diffX + diffY * diffY);
-    return distance > maxDistance;
-  }
-  OK_DRAW_DISTANCE = 5;
 
   edittilesheetselect.addEventListener('mousedown', function (evt) {
     // update to choose the selected tile
@@ -1531,6 +1640,7 @@ function initMouse() {
 
     panel.innerHTML = "";
     var pos = getTilePos(evt);
+    MouseRawPos = getMousePos(mapCanvas, evt);
     MouseDown = true;
 
     if (buildTool == BUILD_TOOL_SELECT) {
@@ -1558,6 +1668,7 @@ function initMouse() {
       if(old === undefined)
         return;
       drawToolCurrentStroke[(pos.x + "," + pos.y)] = old;
+      ctrlZUndoType = "put";
     }
   }, false);
 
@@ -1567,6 +1678,7 @@ function initMouse() {
     if(!MouseDown) {
       return;
     }
+    MouseRawPos = getMousePos(mapCanvas, evt);
     MouseDown = false;
     NeedMapRedraw = true;
 
@@ -1621,6 +1733,7 @@ function initMouse() {
   mapCanvas.addEventListener('mousemove', function (evt) {
     let pos = getTilePos(evt);
     let pixelPos = getMousePos(mapCanvas, evt); // Pixel position, for finding click position within a mini tilemap
+    MouseRawPos = pixelPos;
     MouseNowX = pos.x;
     MouseNowY = pos.y;
     // record the nearby players
@@ -1711,40 +1824,7 @@ function initMouse() {
     MousedOverPlayers = Around;
     mapCanvas.style.cursor = MousedOverEntityClickAvailable ? "pointer" : "auto";
 
-    if (buildTool == BUILD_TOOL_SELECT) {
-      if (!MouseDown)
-        return;
-      if (pos.x != MouseEndX || pos.y != MouseEndY)
-        NeedMapRedraw = true;
-      MouseEndX = pos.x;
-      MouseEndY = pos.y;
-    } else if(buildTool == BUILD_TOOL_DRAW) {
-      if(drawingTooFar(pos.x, pos.y, OK_DRAW_DISTANCE)) {
-        drawToolX = null;
-        drawToolY = null;
-        return;
-      }
-      if(drawToolX !== MouseNowX || drawToolY !== MouseNowY) {
-        drawToolX = MouseNowX;
-        drawToolY = MouseNowY;
-        NeedMapRedraw = true;
-
-        if (!MouseDown)
-          return;
-
-        let coords = drawToolX + "," + drawToolY;
-        if(!(coords in drawToolCurrentStroke)) {
-          let data = getDataForDraw();
-          if(data === null)
-            return;
-
-          let old = useItemAtXY({ type: 'map_tile', data: data }, pos.x, pos.y);
-          if(old === undefined)
-            return;
-          drawToolCurrentStroke[coords] = old;
-        }
-      }
-    }
+    handleDragging(pos);
   }, false);
 
   // ----------------------------------------------------------------
@@ -2737,6 +2817,17 @@ XBBCODE.addTags({
       let filteredJS = content.replace(/\x22/g, '\\\x22');
       let filteredHTML = content.replace(/\x22/g, '&quot;');
       return '<input type="button" value="' + filteredHTML + '" onClick=\'offerCommand("' + filteredJS + '")\'></input>';
+    },
+    closeTag: function (params, content) {
+      return '';
+    },
+    displayContent: false
+  },
+  "copy2chat": {
+    openTag: function (params, content) {
+      let filteredJS = content.replace(/\x22/g, '\\\x22');
+      let filteredHTML = content.replace(/\x22/g, '&quot;');
+      return '<input type="button" value="&#x1F4CB;' + filteredHTML + '" onClick=\'setChatInput("' + filteredJS + '")\'></input>';
     },
     closeTag: function (params, content) {
       return '';
