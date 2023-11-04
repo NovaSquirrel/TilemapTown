@@ -412,6 +412,10 @@ function deleteItem(id) {
   }
 }
 
+function sendPrivateMessageToItem(id) {
+  setChatInput("/tell "+id+" ");
+}
+
 function copyBuildToHotbar() {
   addTileToHotbar(rightClickedBuildTile);
 }

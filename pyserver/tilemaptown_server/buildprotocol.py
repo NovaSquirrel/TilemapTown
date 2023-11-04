@@ -50,16 +50,33 @@ def ext_protocol_command(name):
 
 # -------------------------------------
 
-def find_remote_control_entity(client, rc):
+def protocol_error(client, echo, text=None, code=None, detail=None, subject_id=None):
+	out = {}
+	if text != None:
+		out['text'] = text
+	if code != None:
+		out['code'] = code
+	if detail != None:
+		out['detail'] = detail
+	if subject_id != None:
+		if isinstance(subject_id, Entity):
+			out['subject_id'] = subject_id
+		else:
+			out['subject_id'] = subject_id.protocol_id()
+	if echo != None:
+		out['echo'] = echo
+	client.send("ERR", out)
+
+def find_remote_control_entity(client, rc, echo):
 	if client.has_permission(rc, permission['remote_command'], False):
 		actor = get_entity_by_id(rc, load_from_db=False)
 		if actor == None:
-			client.send("ERR", {'text': 'Entity %s not loaded' % rc})
+			protocol_error(client, echo, text='Entity %s not loaded' % rc, code='not_loaded', subject_id=rc)
 			return None
 		else:
 			return actor
 	else:
-		client.send("ERR", {'text': 'You don\'t have permission to remote control %s' % rc})
+		protocol_error(client, echo, text='Entity %s not loaded' % rc, code='missing_permission', detail='remote_command', subject_id=rc)
 	return None
 
 def remove_invalid_dict_fields(data, whitelist):
@@ -120,73 +137,76 @@ def validate_client_who(id, data):
 			validated_data[key] = CLIENT_WHO_WHITELIST[key](value)
 	return validated_data
 
-def must_be_map_owner(client, admin_okay, give_error=True):
+def must_be_map_owner(client, echo, admin_okay, give_error=True):
 	if client.map == None:
 		return False
 	if (client.db_id != None and client.map.owner_id == client.db_id) or client.oper_override or (admin_okay and client.has_permission(client.map, permission['admin'], False)):
 		return True
 	elif give_error:
-		client.send("ERR", {'text': 'You don\'t have permission to do that'})
+		protocol_error(client, echo, text='You don\'t have permission to do that', code='missing_permission', detail='admin' if admin_okay else None, subject_id=client.map)
 	return False
 
-def must_be_server_admin(client, give_error=True):
+# Not used?
+"""
+def must_be_server_admin(client, echo, give_error=True):
 	if not client.is_client():
 		return False
 	if client.username in Config["Server"]["Admins"]:
 		return True
 	elif give_error:
-		client.send("ERR", {'text': 'You don\'t have permission to do that'})
+		client.send("ERR", {'text': 'You don\'t have permission to do that', 'code': 'server_admin_only'})
 	return False
+"""
 
-def set_entity_params_from_dict(e, d, client):
+def set_entity_params_from_dict(e, d, client, echo):
 	if e.creator_temp_id != client.id and e.owner_id != client.db_id and \
 	not client.has_permission(e, permission['modify_properties'], False):
 		# If you don't have permission for modify_properties you may still be able to do the update if you're only changing specific properties
 		appearance_change_props = {'id', 'name', 'desc', 'pic', 'tags'}
 
 		if any(key not in appearance_change_props for key in d) or not client.has_permission(e, permission['modify_appearance'], False):
-			client.send("ERR", {'text': 'You don\'t have permission to update %s' % d['id']})
+			protocol_error(client, echo, text='You don\'t have permission to update %s' % d['id'], code='missing_permission', detail='modify_properties', subject_id=e)
 			return
 	if 'data' in d:
 		bad = data_disallowed_for_entity_type(e.entity_type, d['data'])
 		if bad != None:
-			client.send("ERR", {'text': bad})
+			protocol_error(client, echo, text=bad, code='bad_value', detail='data', subject_id=e)
 			del d['data']
 		else:
 			e.data = d['data']
 
 	if 'owner_id' in d:
 		if e.owner_id != client.db_id:
-			client.send("ERR", {'text': 'Can only reassign ownership on entities you own'})
+			protocol_error(client, echo, text='Can only reassign ownership on entities you own', code='owner_only', subject_id=e)
 			del d['owner_id']
 		elif client.has_permission(d['owner_id'], permission['set_owner_to_this'], False):
 			e.owner_id = d['owner_id']
 		else:
-			client.send("ERR", {'text': 'Don\'t have permission to set owner to ' % d['owner_id']})
+			protocol_error(client, echo, text='Don\'t have permission to set owner to ' % d['owner_id'], code='missing_permission', detail='set_owner_to_this', subject_id=e)
 			del d['owner_id']
 	if 'owner_username' in d:
 		if e.owner_id != client.db_id:
-			client.send("ERR", {'text': 'Can only reassign ownership on entities you own'})
+			protocol_error(client, echo, text='Can only reassign ownership on entities you own', code='owner_only', subject_id=e)
 			del d['owner_username']
 		new_owner = find_db_id_by_username(d['owner_username'])
 		if new_owner:
 			if client.has_permission(new_owner, permission['set_owner_to_this'], False):
 				e.owner_id = new_owner
 			else:
-				client.send("ERR", {'text': 'Don\'t have permission to set owner to ' % d['owner_username']})
+				protocol_error(client, echo, text='Don\'t have permission to set owner to ' % d['owner_username'], code='missing_permission', detail='set_owner_to_this', subject_id=e)
 				del d['owner_username']
 		else:
-			client.send("ERR", {'text': 'Username \"%s\" not found' % d['owner_username']})
+			protocol_error(client, echo, text='Username \"%s\" not found' % d['owner_username'], code='not_found', subject_id=e)
 			del d['owner_username']
 
 	if 'folder' in d:
 		if client.has_permission(d['folder'], (permission['entry']), False) \
 		and client.has_permission(d['folder'], (permission['object_entry'], permission['persistent_object_entry']), False):
 			if not e.switch_map(d['folder'], new_pos=d['pos'] if 'pos' in d else None, on_behalf_of=client):
-				client.send("ERR", {'text': 'Entity doesn\'t have permission to move there'})
+				protocol_error(client, echo, text='Entity doesn\'t have permission to move there', code='missing_permission', subject_id=e)
 				del d['folder']
 		else:
-			client.send("ERR", {'text': 'Don\'t have permission to move entity there'})
+			protocol_error(client, echo, text='Don\'t have permission to move entity there', code='missing_permission', subject_id=e)
 			del d['folder']
 
 	if 'home' in d:
@@ -200,7 +220,7 @@ def set_entity_params_from_dict(e, d, client):
 			e.home_id = d['home']
 			e.home_position = None
 		else:
-			client.send("ERR", {'text': 'Don\'t have permission to set entity\'s home there'})
+			protocol_error(client, echo, text='Don\'t have permission to set entity\'s home there', code='missing_permission', detail='persistent_object_entry', subject_id=e_id)
 			del d['home']
 
 	if 'home_position' in d and len(d['home_position']) == 2:
@@ -213,7 +233,7 @@ def set_entity_params_from_dict(e, d, client):
 		if pic_is_okay(d['pic']):
 			e.pic = d['pic']
 		else:
-			client.send("ERR", {'text': 'Invalid picture: %s' % d['pic']})
+			protocol_error(client, echo, text='Invalid picture: %s' % d['pic'], code='bad_value', detail='pic', subject_id=e_id)
 			del d['pic']
 	if 'tags' in d:
 		e.tags = d['tags']
@@ -231,21 +251,21 @@ def set_entity_params_from_dict(e, d, client):
 # -------------------------------------
 
 @protocol_command()
-def fn_MOV(map, client, arg):
+def fn_MOV(map, client, arg, echo):
 	# Can control a different entity if you have permission
 	if 'rc' in arg:
 		id = arg['rc']
 		if ("new_map" in arg and not client.has_permission(id, (permission['move_new_map']), False)) \
 			or ("new_map" not in arg and not client.has_permission(id, (permission['move'], permission['move_new_map']), False)):
-			client.send("ERR", {'text': 'You don\'t have permission to move entity %s' % id})
+			protocol_error(client, echo, text='You don\'t have permission to move entity %s' % id, code='missing_permission', detail='move_new_map', subject_id=id)
 			return
 		entity = get_entity_by_id(id, load_from_db=False)
 		if entity is not client: # Make sure it's not actually just the client supplying their own ID
 			if entity == None:
-				client.send("ERR", {'text': 'Can\'t move entity %s because it\'s not loaded' % id})
+				protocol_error(client, echo, text='Can\'t move entity %s because it\'s not loaded' % id, code='not_loaded', subject_id=id)
 				return
 			if entity.map == None and "new_map" not in arg:
-				client.send("ERR", {'text': 'Can\'t move entity %s because it\'s not on a map' % id})
+				protocol_error(client, echo, text='Can\'t move entity %s because it\'s not on a map' % id)
 				return
 
 			del arg['rc']
@@ -317,12 +337,12 @@ def fn_MOV(map, client, arg):
 		client.move_to(None, None, new_dir=new_dir)		
 
 @protocol_command()
-def fn_CMD(map, client, arg):
+def fn_CMD(map, client, arg, echo):
 	actor = client
 	echo = arg['echo'] if ('echo' in arg) else None
 
 	if 'rc' in arg:
-		actor = find_remote_control_entity(client, arg['rc'])
+		actor = find_remote_control_entity(client, arg['rc'], echo)
 		if actor == None:
 			return
 		else:
@@ -331,7 +351,7 @@ def fn_CMD(map, client, arg):
 	handle_user_command(map, actor, client, echo, arg["text"])
 
 @protocol_command()
-def fn_BAG(map, client, arg):
+def fn_BAG(map, client, arg, echo):
 	def allow_special_ids(text):
 		if text == 'here':
 			return map.db_id
@@ -344,14 +364,14 @@ def fn_BAG(map, client, arg):
 		create = arg['create']
 		# restrict type variable
 		if create['type'] not in creatable_entity_types:
-			client.send("ERR", {'text': 'Invalid type of item to create (%s)' % create['type']})
+			protocol_error(client, echo, text='Invalid type of item to create (%s)' % create['type'])
 			return
 		e = Entity(entity_type[arg['create']['type']], creator_id=client.db_id)
 		e.name = "New item" # Default that will probably be overridden
 		e.map_id = client.db_id
 		e.creator_temp_id = client.id
 
-		set_entity_params_from_dict(e, create, client)
+		set_entity_params_from_dict(e, create, client, echo)
 
 		if client.db_id == None:
 			e.temporary = True
@@ -370,12 +390,12 @@ def fn_BAG(map, client, arg):
 	elif "clone" in arg:
 		clone_me = get_entity_by_id(allow_special_ids(arg['clone']['id']))
 		if clone_me == None:
-			client.send("ERR", {'text': 'Can\'t clone %s' % arg['clone']['id']})
+			protocol_error(client, echo, text='Can\'t clone %s' % arg['clone']['id'], code='not_found', subject_id=arg['clone']['id'])
 			return
 
 		if clone_me.creator_temp_id != client.id and clone_me.owner_id != client.db_id and \
 		not client.has_permission(clone_me, permission['copy'], False):
-			client.send("ERR", {'text': 'You don\'t have permission to clone %s' % arg['clone']['id']})
+			protocol_error(client, echo, text='You don\'t have permission to clone %s' % arg['clone']['id'], code='missing_permission', detail='copy', subject_id=arg['clone']['id'])
 			return
 
 		# Create a new entity and copy over the properties
@@ -384,7 +404,7 @@ def fn_BAG(map, client, arg):
 		new_item.owner_id = client.db_id
 		new_item.creator_temp_id = client.id
 
-		set_entity_params_from_dict(new_item, arg['clone'], client)
+		set_entity_params_from_dict(new_item, arg['clone'], client, echo)
 		if client.db_id == None:
 			new_item.temporary = True
 			new_item.allow = permission['all']
@@ -411,10 +431,10 @@ def fn_BAG(map, client, arg):
 		update = arg['update']
 		update_me = get_entity_by_id(allow_special_ids(update['id']))
 		if update_me == None:
-			client.send("ERR", {'text': 'Can\'t update %s' % update['id']})
+			protocol_error(client, echo, text='Can\'t update %s' % update['id'], code='not_found', subject_id=update['id'])
 			return
 
-		set_entity_params_from_dict(update_me, update, client)
+		set_entity_params_from_dict(update_me, update, client, echo)
 
 		if not update_me.is_client() and not update_me.temporary:
 			update_me.save()
@@ -436,7 +456,7 @@ def fn_BAG(map, client, arg):
 						move_me.save()
 					client.send('BAG', {'move': move})
 				else:
-					client.send("ERR", {'text': 'Don\'t have permission to move entity'})
+					protocol_error(client, echo, text='Don\'t have permission to move entity', code='missing_permission', detail='move_new_map', subject_id=move['id'])
 			else:
 				if client.has_permission(move_me, (permission['move'], permission['move_new_map']), False):
 					move_me.switch_map(move['folder'])
@@ -444,9 +464,9 @@ def fn_BAG(map, client, arg):
 						move_me.save()
 					client.send('BAG', {'move': move})
 				else:
-					client.send("ERR", {'text': 'Don\'t have permission to move entity'})
+					protocol_error(client, echo, text='Don\'t have permission to move entity', code='missing_permission', detail='move', subject_id=move['id'])
 		else:
-			client.send("ERR", {'text': 'Don\'t have permission to move entity there'})
+			protocol_error(client, echo, text='Don\'t have permission to move entity there', code='missing_permission', detail='object_entry', subject_id=move['folder'])
 
 	elif "kick" in arg:
 		kick = arg['kick']
@@ -460,12 +480,12 @@ def fn_BAG(map, client, arg):
 
 		delete_me = get_entity_by_id(delete['id'])
 		if delete_me == None or delete_me.is_client():
-			client.send("ERR", {'text': 'Can\'t delete %s' % delete['id']})
+			protocol_error(client, echo, text='Can\'t delete %s' % delete['id'], code='not_found', subject_id=delete['id'])
 			return
 		elif delete_me.creator_temp_id == client.id:
 			pass
 		elif delete_me.owner_id == None or delete_me.owner_id != client.db_id:
-			client.send("ERR", {'text': 'You don\'t have permission to delete %s' % delete['id']})
+			protocol_error(client, echo, text='You don\'t have permission to delete %s' % delete['id'], code='owner_id', subject_id=delete['id'])
 			return
 
 		# Move everything inside to the parent
@@ -486,7 +506,7 @@ def fn_BAG(map, client, arg):
 		info = arg['info']
 		info_me = get_entity_by_id(info['id'])
 		if info_me == None:
-			client.send("ERR", {'text': 'Can\'t get info for %s' % info['id']})
+			protocol_error(client, echo, text='Can\'t get info for %s' % info['id'], code='not_found', subject_id=info['id'])
 			return
 
 		bag_info = info_me.bag_info()
@@ -498,10 +518,10 @@ def fn_BAG(map, client, arg):
 		list_contents = arg['list_contents']
 		list_me = get_entity_by_id(list_contents['id'])
 		if list_me == None:
-			client.send("ERR", {'text': 'Can\'t list contents for %s' % list_contents['id']})
+			protocol_error(client, echo, text='Can\'t list contents for %s' % list_contents['id'], subject_id=info['id'])
 			return
 		if list_me.owner_id != client.db_id and not client.has_permission(list_me, permission['list_contents'], False):
-			client.send("ERR", {'text': 'Don\'t have permission to list contents for %s' % list_contents['id']})
+			protocol_error(client, echo, text='Don\'t have permission to list contents for %s' % list_contents['id'], code='missing_permission', detail='list_contents', subject_id=list_contents['id'])
 			return
 
 		if list_contents.get('recursive', False):
@@ -511,7 +531,7 @@ def fn_BAG(map, client, arg):
 		client.send("BAG", {'list_contents': list_contents})
 
 @protocol_command()
-def fn_EML(map, client, arg):
+def fn_EML(map, client, arg, echo):
 	if client.db_id != None:
 		c = Database.cursor()
 		if "send" in arg:
@@ -522,7 +542,7 @@ def fn_EML(map, client, arg):
 			recipient_string = ','.join([str(x) for x in recipient_id])
 
 			if any(x == None for x in recipient_id):
-				client.send("ERR", {'text': 'Couldn\'t find one or more users you wanted to mail'})
+				protocol_error(client, echo, text='Couldn\'t find one or more users you wanted to mail', code='not_found')
 				return
 
 			# let the client know who sent it, since the 'send' argument will get passed along directly
@@ -549,14 +569,14 @@ def fn_EML(map, client, arg):
 			c.execute('DELETE FROM Mail WHERE owner_id=? AND id=?', (client.db_id, arg['delete']))
 
 	else:
-		client.send("ERR", {'text': 'Guests don\'t have mail. Use [tt]/register username password[/tt]'})
+		protocol_error(client, echo, text='Guests don\'t have mail. Use [tt]/register username password[/tt]', code='no_guests')
 
 @protocol_command()
-def fn_MSG(map, client, arg):
+def fn_MSG(map, client, arg, echo):
 	actor = client
 
 	if 'rc' in arg:
-		actor = find_remote_control_entity(client, arg['rc'])
+		actor = find_remote_control_entity(client, arg['rc'], echo)
 		if actor == None:
 			return
 		else:
@@ -571,39 +591,39 @@ def fn_MSG(map, client, arg):
 		map.broadcast("MSG", fields, remote_category=botwatch_type['chat'])
 
 @protocol_command()
-def fn_TSD(map, client, arg):
+def fn_TSD(map, client, arg, echo):
 	c = Database.cursor()
 	c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type('tileset'), arg['id'],))
 	result = c.fetchone()
 	if result == None:
-		client.send("ERR", {'text': 'Invalid item ID'})
+		protocol_error(client, echo, text='Invalid item ID', code='not_found', subject_id=arg['id'])
 	else:
 		client.send("TSD", {'id': arg['id'], 'data': decompress_entity_data(result[0], result[1])})
 
 @protocol_command()
-def fn_IMG(map, client, arg):
+def fn_IMG(map, client, arg, echo):
 	c = Database.cursor()
 	c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type['image'], arg['id'],))
 	result = c.fetchone()
 	if result == None:
-		client.send("ERR", {'text': 'Invalid item ID'})
+		protocol_error(client, echo, text='Invalid item ID', code='not_found', subject_id=arg['id'])
 	else:
 		client.send("IMG", {'id': arg['id'], 'url': loads_if_not_none(decompress_entity_data(result[0], result[1]))})
 
 @protocol_command(map_only=True)
-def fn_MAI(map, client, arg):
+def fn_MAI(map, client, arg, echo):
 	send_all_info = must_be_map_owner(client, True, give_error=False)
 	client.send("MAI", map.map_info(all_info=send_all_info))
 
 @protocol_command(map_only=True)
-def fn_DEL(map, client, arg):
+def fn_DEL(map, client, arg, echo):
 	x1 = arg["pos"][0]
 	y1 = arg["pos"][1]
 	x2 = arg["pos"][2]
 	y2 = arg["pos"][3]
 	if client.has_permission(map, permission['build'], True) or must_be_map_owner(client, True, give_error=False):
 		if not map.map_data_loaded:
-			client.send("ERR", {'text': 'Map isn\'t loaded, so it can\'t be modified'})
+			protocol_error(client, echo, text='Map isn\'t loaded, so it can\'t be modified', code='not_loaded', subject_id=map)
 			return
 		map.map_data_modified = True
 		client.delete_count += 1
@@ -633,10 +653,10 @@ def fn_DEL(map, client, arg):
 		map.broadcast("MAP", map.map_section(x1, y1, x2, y2), send_to_links=True)
 	else:
 		client.send("MAP", map.map_section(x1, y1, x2, y2))
-		client.send("ERR", {'text': 'Building is disabled on this map'})
+		protocol_error(client, echo, text='Building is disabled on this map', code='missing_permission', detail='build', subject_id=map)
 
 @protocol_command(map_only=True)
-def fn_PUT(map, client, arg):
+def fn_PUT(map, client, arg, echo):
 	def notify_listeners():
 		# make username available to listeners
 		arg['username'] = client.username_or_id()
@@ -649,7 +669,7 @@ def fn_PUT(map, client, arg):
 	y = arg["pos"][1]
 	if client.has_permission(map, permission['build'], True) or must_be_map_owner(client, True, give_error=False):
 		if not map.map_data_loaded:
-			client.send("ERR", {'text': 'Map isn\'t loaded, so it can\'t be modified'})
+			protocol_error(client, echo, text='Map isn\'t loaded, so it can\'t be modified', code='not_loaded', subject_id=map)
 			return
 		if not temporary:
 			map.map_data_modified = True
@@ -666,7 +686,7 @@ def fn_PUT(map, client, arg):
 			else:
 				# todo: give a reason?
 				client.send("MAP", map.map_section(x, y, x, y))
-				client.send("ERR", {'text': 'Placed objects rejected'})
+				protocol_error(client, echo, text='Placed objects rejected')
 		else: #turf
 			tile_test = tile_is_okay(arg["atom"])
 			if tile_test[0]:
@@ -676,16 +696,16 @@ def fn_PUT(map, client, arg):
 				map.broadcast("MAP", map.map_section(x, y, x, y), send_to_links=True)
 			else:
 				client.send("MAP", map.map_section(x, y, x, y))
-				client.send("ERR", {'text': 'Tile [tt]%s[/tt] rejected (%s)' % (arg["atom"], tile_test[1])})
+				protocol_error(client, echo, text='Tile [tt]%s[/tt] rejected (%s)' % (arg["atom"], tile_test[1]))
 	else:
 		client.send("MAP", map.map_section(x, y, x, y))
-		client.send("ERR", {'text': 'Building is disabled on this map'})
+		protocol_error(client, echo, text='Building is disabled on this map', code='missing_permission', detail='build', subject_id=map)
 
 @protocol_command(map_only=True)
-def fn_BLK(map, client, arg):
+def fn_BLK(map, client, arg, echo):
 	if client.has_permission(map, permission['bulk_build'], False) or must_be_map_owner(client, True, give_error=False):
 		if not map.map_data_loaded:
-			client.send("ERR", {'text': 'Map isn\'t loaded, so it can\'t be modified'})
+			protocol_error(client, echo, text='Map isn\'t loaded, so it can\'t be modified', code='not_loaded', subject_id=map)
 			return
 		temporary = arg.get('temp', False)
 		if not temporary:
@@ -694,12 +714,12 @@ def fn_BLK(map, client, arg):
 		# verify the tiles
 		for turf in arg.get("turf", []):
 			if not tile_is_okay(turf[2])[0]:
-				client.send("ERR", {'text': 'Bad turf in bulk build'})
+				protocol_error(client, echo, text='Bad turf in bulk build', subject_id=map)
 				return
 		for obj in arg.get("obj", []):
 			tile_test = [tile_is_okay(x) for x in obj[2]]
 			if any(not x[0] for x in tile_test): # any tiles don't pass the test
-				client.send("ERR", {'text': 'Bad obj in bulk build'})
+				protocol_error(client, echo, text='Bad obj in bulk build', subject_id=map)
 				return
 		# make username available to other clients
 		arg['username'] = client.username_or_id()
@@ -765,10 +785,10 @@ def fn_BLK(map, client, arg):
 					map.objs[x+w][y+h] = a
 		map.broadcast("BLK", arg, remote_category=botwatch_type['build'])
 	else:
-		client.send("ERR", {'text': 'Bulk building is disabled on this map'})
+		protocol_error(client, echo, text='Bulk building is disabled on this map', code='missing_permission', detail='bulk_build', subject_id=map)
 
 @protocol_command()
-def fn_WHO(map, client, arg):
+def fn_WHO(map, client, arg, echo):
 	if "update" in arg:
 		update = arg["update"]
 
@@ -777,7 +797,7 @@ def fn_WHO(map, client, arg):
 		id_to_use = client.protocol_id()
 
 		if 'rc' in arg:
-			actor = find_remote_control_entity(client, arg['rc'])
+			actor = find_remote_control_entity(client, arg['rc'], echo)
 			if actor == None:
 				return
 			else:
@@ -793,14 +813,14 @@ def fn_WHO(map, client, arg):
 				setattr(actor, key, value)
 		map.broadcast("WHO", {"update": valid_data})
 	else:
-		client.send("ERR", {'text': 'not implemented'})
+		protocol_error(client, echo, text='Not implemented')
 
 @protocol_command(pre_identify=True)
-def fn_PIN(map, client, arg):
+def fn_PIN(map, client, arg, echo):
 	client.ping_timer = 300
 
 @protocol_command(pre_identify=True)
-def fn_VER(map, client, arg):
+def fn_VER(map, client, arg, echo):
 	# Also receives version info from the client, but ignore it for now
 	client.send("VER", server_version_dict)
 
@@ -812,7 +832,7 @@ server_feature_attribute = {
 }
 
 @protocol_command(pre_identify=True)
-def fn_IDN(map, client, arg):
+def fn_IDN(map, client, arg, echo):
 	if client.identified:
 		return
 
@@ -873,6 +893,25 @@ def fn_IDN(map, client, arg):
 
 # -------------------------------------
 
+def ext_error(context, text=None, data=None, code=None, detail=None, subject_id=None):
+	respond_to, echo, ext_name = context
+	args = {'ext_type': ext_name}
+
+	if echo:
+		args['echo'] = echo
+	if text:
+		args['text'] = text
+	if data:
+		args['data'] = data
+	if code:
+		args['code'] = code
+	if detail:
+		args['detail'] = detail
+	if subject_id:
+		args['subject_id'] = subject_id
+
+	respond_to.send('ERR', args)
+
 def forward_ext_if_needed(entity_id, forward_message_type):
 	e = get_entity_by_id(entity_id, load_from_db=False)
 	if e == None:
@@ -882,7 +921,7 @@ def forward_ext_if_needed(entity_id, forward_message_type):
 	return e
 
 @ext_protocol_command("entity_click")
-def entity_click(map, client, arg, name):
+def entity_click(map, client, context, arg, name):
 	e = forward_ext_if_needed(arg['id'], 'CLICK')
 	if e == None:
 		return
@@ -896,7 +935,7 @@ def entity_click(map, client, arg, name):
 	e.send("EXT", {name: arg})
 
 @ext_protocol_command("key_press")
-def key_press(map, client, arg, name):
+def key_press(map, client, context, arg, name):
 	e = forward_ext_if_needed(arg['id'], 'KEYS')
 	if e == None:
 		return
@@ -908,7 +947,7 @@ def key_press(map, client, arg, name):
 	e.send("EXT", {name: arg})
 
 @ext_protocol_command("take_controls")
-def take_controls(map, client, arg, name):
+def take_controls(map, client, context, arg, name):
 	e = get_entity_by_id(arg['id'], load_from_db=False)
 	if client.has_permission(e, permission['minigame']):
 		arg = remove_invalid_dict_fields(arg, {
@@ -918,9 +957,11 @@ def take_controls(map, client, arg, name):
 		})
 		arg['id'] = client.protocol_id()
 		e.send("EXT", {name: arg})
+	else:
+		ext_error(context, code="missing_permission", detail="minigame", subject_id=arg['id'])
 
 @ext_protocol_command("took_controls")
-def took_controls(map, client, arg, name):
+def took_controls(map, client, context, arg, name):
 	e = forward_ext_if_needed(arg['id'], 'KEYS')
 	if e == None:
 		return
@@ -932,35 +973,37 @@ def took_controls(map, client, arg, name):
 	e.send("EXT", {name: arg})
 
 @ext_protocol_command("list_available_ext_types")
-def list_available_ext_types(map, client, arg, name):
+def list_available_ext_types(map, client, context, arg, name):
 	client.send("EXT", {name: list(ext_handlers.keys())})
 
 @protocol_command()
-def fn_EXT(map, client, arg):
+def fn_EXT(map, client, arg, echo):
 	actor = client
 	if 'rc' in arg:
-		actor = find_remote_control_entity(client, arg['rc'])
+		actor = find_remote_control_entity(client, arg['rc'], echo)
 		if actor == None:
 			return
 		else:
 			map = actor.map
 
+	echo = arg['echo'] if ('echo' in arg) else None
 	for k,v in arg.items():
 		if k in ext_handlers:
-			ext_handlers[k](map, actor, v, k)
+			context = (client, echo, k)
+			ext_handlers[k](map, actor, context, v, k)
 
 # -------------------------------------
 
-def handle_protocol_command(map, client, command, arg):
+def handle_protocol_command(map, client, command, arg, echo):
 	if not client.identified and command not in pre_identify_commands:
-		client.send("ERR", {'text': 'Protocol command requires identifying first: %s' % command})
+		protocol_error(client, echo, text='Protocol command requires identifying first: %s', code='identify')
 		return
 
 	# Attempt to run the command handler if it exists
 	if command in handlers:
 		if command in map_only_commands and (client.map == None or not client.map.is_map()):
-			client.send("ERR", {'text': 'Protocol command must be done on a map: %s' % command})
+			protocol_error(client, echo, text='Protocol command must be done on a map: %s' % command, code='map_only')
 		else:
-			return handlers[command](map, client, arg)
+			return handlers[command](map, client, arg, echo)
 	else:
-		client.send("ERR", {'text': 'Bad protocol command: %s' % command})
+		protocol_error(client, echo, text='Bad protocol command: %s' % command, code='invalid_command', detail=command)

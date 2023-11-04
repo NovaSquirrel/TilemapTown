@@ -190,7 +190,30 @@ send mail or manipulate your inbox
 receive mail from someone, or get a list upon logging in. "sent" acknowledges mail was successfully sent
 
 <-- ERR {"text": "[text]"}
-error, maybe include the command that failed?
+Receive an error.
+
+Possible fields:
+	text: Text to display to the user
+	echo: A repeat of the "echo" field in the protocol message
+	data: Miscellaneous machine-friendly information about the error
+	code: A string for the specific kidn of error
+	detail: Additional information that further clarifies the code
+	subject_id: ID the error is about
+
+Error codes you might find:
+	missing_permission: Don't have permission to do the thing you're trying to do; permission needed may be in "detail" (which may be an array)
+	owner_only: Can't do that unless you own the subject
+	map_only: Can't do that unless you're on a map
+	server_admin_only: Can't do that unless you're a server admin
+	invalid_command: Command isn't recognized
+	invalid_subcommand: Subcommand isn't recognized
+	not_found: Supplied name isn't found
+	not_loaded: Entity you're referencing is not currently loaded
+	identify: Can't use that command until you identify
+	bad_value: Value wasn't accepted for whatever reason; "detail" may provide a field or something.
+	no_guests: Guests cannot do this
+	exception: Exception was thrown
+	blocked: Can't do that because you're on a block list of some sort
 
 --> PIN
 <-- PIN
@@ -373,6 +396,7 @@ Fields:
 
 --> EXT {"take_controls": {"id": id, "keys": [key_name, key_name, key_name...], "pass_on": true/false, "key_up": true/false}}
 --> EXT {"take_controls": {"id": id, "keys": []}}
+<-- ERR {"ext_type": "take_controls", "code": "missing_permission", "detail": "minigame", "subject_id": id}
 Message gets forwarded to the entity specified in "id", if that entity has granted you the "minigame" permission.
 Similar to https://wiki.secondlife.com/wiki/LlTakeControls
 Fields:

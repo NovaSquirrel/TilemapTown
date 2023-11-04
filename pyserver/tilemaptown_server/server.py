@@ -104,17 +104,18 @@ async def client_handler(websocket, path):
 
 			# Process the command
 			client.idle_timer = 0
+			echo = arg.get("echo", None)
 			if "remote_map" in arg:
 				if arg["remote_map"] in AllEntitiesByDB:
 					map = AllEntitiesByDB[arg["remote_map"]]
 					if map.has_permission(client, permission['map_bot'], False):
-						handle_protocol_command(map, client, command, arg)
+						handle_protocol_command(map, client, command, arg, echo)
 					else:
-						client.send("ERR", {'text': 'You do not have [tt]map_bot[/tt] permission on map %d' % arg["remote_map"]})
+						client.send("ERR", {'text': 'You do not have [tt]map_bot[/tt] permission on map %d' % arg["remote_map"], 'code':'missing_permission', 'detail':'map_bot', 'subject_id': arg["remote_map"], 'echo': echo})
 				else:
-					client.send("ERR", {'text': 'Map %d is not loaded' % arg["remote_map"]})
+					client.send("ERR", {'text': 'Map %d is not loaded' % arg["remote_map"], 'code': 'not_loaded', 'subject_id': arg["remote_map"], 'echo': echo})
 			else:
-				handle_protocol_command(client.map, client, command, arg) # client.map may be None
+				handle_protocol_command(client.map, client, command, arg, echo) # client.map may be None
 
 		except websockets.ConnectionClosed:
 			if Config["Server"]["BroadcastDisconnects"] and client.identified:
@@ -129,7 +130,8 @@ async def client_handler(websocket, path):
 			print("disconnected: %s (%s, \"%s\")%s" % (client.ip, client.username or "?", client.name, disconnect_extra))
 			client.ws = None
 		except:
-			client.send("ERR", {'text': 'An exception was thrown: %s' % sys.exc_info()[0]})
+			exception_type = sys.exc_info()[0]
+			client.send("ERR", {'text': 'An exception was thrown: %s' % exception_type.__name__, 'code': 'exception', 'detail': exception_type.__name__})
 			while client.make_batch:
 				client.finish_batch()
 			print("Unexpected error:", sys.exc_info()[0])

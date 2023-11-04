@@ -91,14 +91,14 @@ def failed_to_find(context, username):
 def in_blocked_username_list(client, banlist, action):
 	# Use the player, instead of whatever entity they're acting through
 	if client.username == None and '!guests' in banlist:
-		client.send("ERR", {'text': 'Guests may not %s' % action})
+		client.send("ERR", {'text': 'Guests may not %s' % action, 'code': 'no_guests', 'detail': action})
 		return True
 	if client.username in banlist:
-		client.send("ERR", {'text': 'You may not %s' % action})
+		client.send("ERR", {'text': 'You may not %s' % action, 'code': 'blocked', 'detail': action})
 		return True
 	return False
 
-def respond(context, text, data=None, error=False):
+def respond(context, text, data=None, error=False, code=None, detail=None, subject_id=None):
 	args = {}
 	respond_to, echo = context
 	if echo:
@@ -107,6 +107,13 @@ def respond(context, text, data=None, error=False):
 		args['text'] = text
 	if data:
 		args['data'] = data
+	if code:
+		args['code'] = code
+	if detail:
+		args['detail'] = detail
+	if subject_id:
+		args['subject_id'] = subject
+
 	respond_to.send('ERR' if error else 'CMD', args)
 
 def parse_equal_list(text):
@@ -194,7 +201,7 @@ def fn_tell(map, client, context, arg):
 		else:
 			u = find_client_by_username(username)
 			if u:
-				if u.is_client():
+				if u.is_client() or "PRI" in u.forward_message_types:
 					if not u.is_client() or not in_blocked_username_list(client, u.ignore_list, 'message %s' % u.name):
 						client.send("PRI", {'text': privtext, 'name':u.name, 'id': client.protocol_id(), 'username': u.username_or_id(), 'receive': False})
 						u.send("PRI", {'text': privtext, 'name':client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'receive': True})
@@ -1879,7 +1886,7 @@ def fn_entity(map, client, context, arg):
 
 	elif subcommand == 'do':
 		if permission_check(permission['remote_command']):
-			handle_user_command(e.map, e, client, context[1], subarg)
+			handle_user_command(e.map, e, client, context[0], context[1], subarg)
 	elif subcommand == 'move':
 		if permission_check(permission['move']):
 			coords = subarg.split()
@@ -1943,7 +1950,7 @@ def fn_entity(map, client, context, arg):
 			e.save()
 
 	else:
-		respond(context, 'Unrecognized subcommand "%s"' % subcommand, error=True)
+		respond(context, 'Unrecognized subcommand "%s"' % subcommand, code='invalid_subcommand', detail=subcommand, error=True)
 
 	if save_entity:
 		e.save_on_clean_up = True
@@ -2088,4 +2095,4 @@ def handle_user_command(map, client, respond_to, echo, text):
 		else:
 			return handlers[command](map, client, context, arg)
 	else:
-		respond(context, 'Invalid command? "%s"' % command, error=True)
+		respond(context, 'Invalid command? "%s"' % command, code="invalid_command", detail=command, error=True)
