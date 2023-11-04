@@ -924,6 +924,7 @@ def forward_ext_if_needed(entity_id, forward_message_type):
 def entity_click(map, client, context, arg, name):
 	e = forward_ext_if_needed(arg['id'], 'CLICK')
 	if e == None:
+		ext_error(context, code="not_found", subject_id=arg['id'])
 		return
 	arg = remove_invalid_dict_fields(arg, {
 		"x":                int, # Where 0,0 is the top left of the mini tilemap or the entity
@@ -938,6 +939,7 @@ def entity_click(map, client, context, arg, name):
 def key_press(map, client, context, arg, name):
 	e = forward_ext_if_needed(arg['id'], 'KEYS')
 	if e == None:
+		ext_error(context, code="not_found", subject_id=arg['id'])
 		return
 	arg = remove_invalid_dict_fields(arg, {
 		"key":				str,
@@ -949,7 +951,9 @@ def key_press(map, client, context, arg, name):
 @ext_protocol_command("take_controls")
 def take_controls(map, client, context, arg, name):
 	e = get_entity_by_id(arg['id'], load_from_db=False)
-	if client.has_permission(e, permission['minigame']):
+	if e == None:
+		ext_error(context, code="not_found", subject_id=arg['id'])
+	elif client.has_permission(e, permission['minigame']):
 		arg = remove_invalid_dict_fields(arg, {
 			"keys":             list, # Keys to ask for
 			"pass_on":          bool, # Allow keys to do their normal actions

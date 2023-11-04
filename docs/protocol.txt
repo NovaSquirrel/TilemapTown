@@ -388,6 +388,11 @@ Here are the currently supported types:
 <-- EXT {"list_available_ext_types": ["entity_click", "key_press", "take_controls", "took_controls", "list_available_ext_types"]}
 Get a list of EXT message types that the server can handle.
 
+--> EXT {"entity_click": {"x": x, "y": y, "button": 0, "target": "entity"/"mini_tilemap"}}
+<-- EXT {"entity_click": {"x": x, "y": y, "button": 0, "target": "entity"/"mini_tilemap"}}
+Notify an entity that they were clicked on. X and Y are in pixels, starting from the top left of the entity or mini tilemap.
+"0" means left click, or a stylus tap, or anything like that.
+
 --> EXT {"key_press": {"id": id, "key": key_name, "down": true/false}}
 Message gets forwarded to the entity specified in "id". Notifies the client
 Fields:
