@@ -383,7 +383,7 @@ def fn_tpaccept(map, client, context, arg):
 		request_data_for_message = [e, request_data[1]]
 
 	subject.send("MSG", {'text': "%s accepted your %s request" % (client.name_and_username(), request_type_to_friendly[request_type]), "data":
-			{"request_accepted": {"user": client.protocol_id(), "type": request_type, "data": request_data_for_message}}
+			{"request_accepted": {"id": client.protocol_id(), "type": request_type, "data": request_data_for_message}}
 		}
 	)
 
@@ -451,7 +451,7 @@ def fn_tpdeny(map, client, context, arg):
 	subject = find_client_by_username(subject_id)
 	if subject != None:
 		subject.send("MSG", {'text': "%s rejected your %s request" % (client.name_and_username(), request_type_to_friendly[request_type]), "data":
-				{"request_rejected": {"user": client.protocol_id(), "type": request_type, "data": request_data_for_message}}
+				{"request_rejected": {"id": client.protocol_id(), "type": request_type, "data": request_data_for_message}}
 			}
 		)
 
