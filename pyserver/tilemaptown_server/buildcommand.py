@@ -2085,13 +2085,13 @@ def handle_user_command(map, client, respond_to, echo, text):
 		privilege_needed = command_privilege_level[command] # See user_privilege in buildglobal.py
 
 		if privilege_needed == 1 and client.db_id == None: # Registered
-			respond(context, 'Only registered accounts can use "%s"' % command, error=True)
+			respond(context, 'Only registered accounts can use "%s"' % command, error=True, code='no_guests')
 		elif privilege_needed == 2 and client.db_id != map.owner_id and (not client.is_client() or not client.oper_override) and not client.has_permission(map, permission['admin'], False): # Map admin
-			respond(context, 'Only the map owner or map admins can use "%s"' % command, error=True)
+			respond(context, 'Only the map owner or map admins can use "%s"' % command, error=True, code='missing_permission', detail='admin', subject_id=map)
 		elif privilege_needed == 3 and client.db_id != map.owner_id and (not client.is_client() or not client.oper_override): # Map owner
-			respond(context, 'Only the map owner can use "%s"' % command, error=True)
+			respond(context, 'Only the map owner can use "%s"' % command, error=True, code='owner_only', subject_id=map)
 		elif privilege_needed == 4 and (not client.is_client() or client.username not in Config["Server"]["Admins"]):
-			respond(context, 'Only server admins can use "%s"' % command, error=True)
+			respond(context, 'Only server admins can use "%s"' % command, error=True, code='server_admin_only')
 		else:
 			return handlers[command](map, client, context, arg)
 	else:
