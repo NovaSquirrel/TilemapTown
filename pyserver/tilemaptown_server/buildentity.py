@@ -47,6 +47,7 @@ class Entity(object):
 		self.db_id = None        # More persistent ID: the database key
 
 		self.temporary = False   # If true, don't save the entity to the database
+		self.delete_on_logout = False # If true, delete entity when the owner logs out
 
 		# Other info
 		self.tags = {}    # Description, species, gender and other things

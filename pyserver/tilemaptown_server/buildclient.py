@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio, datetime, time, random, websockets, json, hashlib, ipaddress
+import asyncio, datetime, time, random, websockets, json, hashlib, ipaddress, weakref
 from .buildglobal import *
 from .buildentity import *
 
@@ -74,6 +74,9 @@ class Client(Entity):
 
 		# Clients keep the entities they're using for message forwarding alive by keeping strong references to them in this set
 		self.keep_entities_loaded = set()
+
+		# Remove these entities when you log out
+		self.cleanup_entities_on_logout = weakref.WeakSet()
 
 		# Allow cleaning up BotWatch info
 		self.listening_maps = set() # tuples of (category, map)

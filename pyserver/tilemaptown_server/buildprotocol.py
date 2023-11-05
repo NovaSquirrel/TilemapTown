@@ -247,6 +247,11 @@ def set_entity_params_from_dict(e, d, client, echo):
 		e.temporary = d['temporary']
 	if 'temp' in d and client.db_id: # Allow short version too
 		e.temporary = d['temp']
+	if 'delete_on_logout' in d and client.has_permission(e):
+		if d['delete_on_logout']:
+			client.cleanup_entities_on_logout.add(e)
+		else:
+			client.cleanup_entities_on_logout.discard(e)
 
 # -------------------------------------
 
@@ -482,6 +487,8 @@ def fn_BAG(map, client, arg, echo):
 		if delete_me == None or delete_me.is_client():
 			protocol_error(client, echo, text='Can\'t delete %s' % delete['id'], code='not_found', subject_id=delete['id'])
 			return
+		elif client.oper_override:
+			pass
 		elif delete_me.owner_id == None and delete_me.creator_temp_id and delete_me.creator_temp_id not in AllEntitiesByID:
 			pass
 		elif delete_me.creator_temp_id == client.id:

@@ -302,8 +302,9 @@ Item info fields:
 	guest_deny
 	owner_id
 	owner_username (if applicable)
-	username (if applicable)
+	username (read-only; may not be present)
 	temporary
+	delete_on_logout (causes the entity to get removed when you log out)
 
 === Optional features ===
 Clients and servers can advertise having extra features on top of the basic ones.

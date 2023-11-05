@@ -141,6 +141,8 @@ async def client_handler(websocket, path):
 
 	if client.db_id:
 		client.save_on_clean_up = True
+	for e in client.cleanup_entities_on_logout:
+		e.clean_up()
 	client.clean_up()
 	del client
 
