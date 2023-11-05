@@ -274,7 +274,7 @@ def fn_MOV(map, client, arg, echo):
 				return
 
 			del arg['rc']
-			fn_MOV(entity.map, entity, arg)
+			handlers['MOV'](entity.map, entity, arg, echo)
 			return
 
 	if "if_map" in arg and map.db_id != arg["if_map"]:
