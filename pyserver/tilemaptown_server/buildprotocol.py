@@ -60,9 +60,9 @@ def protocol_error(client, echo, text=None, code=None, detail=None, subject_id=N
 		out['detail'] = detail
 	if subject_id != None:
 		if isinstance(subject_id, Entity):
-			out['subject_id'] = subject_id
-		else:
 			out['subject_id'] = subject_id.protocol_id()
+		else:
+			out['subject_id'] = subject_id
 	if echo != None:
 		out['echo'] = echo
 	client.send("ERR", out)
@@ -482,6 +482,8 @@ def fn_BAG(map, client, arg, echo):
 		if delete_me == None or delete_me.is_client():
 			protocol_error(client, echo, text='Can\'t delete %s' % delete['id'], code='not_found', subject_id=delete['id'])
 			return
+		elif delete_me.owner_id == None and delete_me.creator_temp_id and delete_me.creator_temp_id not in AllEntitiesByID:
+			pass
 		elif delete_me.creator_temp_id == client.id:
 			pass
 		elif delete_me.owner_id == None or delete_me.owner_id != client.db_id:
