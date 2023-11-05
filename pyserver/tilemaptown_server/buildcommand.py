@@ -90,6 +90,11 @@ def failed_to_find(context, username):
 
 def in_blocked_username_list(client, banlist, action):
 	# Use the player, instead of whatever entity they're acting through
+	if not client.is_client():
+		if '!objects' in banlist:
+			client.send("ERR", {'text': 'Only clients may %s' % action, 'code': 'clients_only'})
+			return True
+		return False
 	if client.username == None and '!guests' in banlist:
 		client.send("ERR", {'text': 'Guests may not %s' % action, 'code': 'no_guests', 'detail': action})
 		return True

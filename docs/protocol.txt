@@ -204,6 +204,7 @@ Error codes you might find:
 	missing_permission: Don't have permission to do the thing you're trying to do; permission needed may be in "detail" (which may be an array)
 	owner_only: Can't do that unless you own the subject
 	map_only: Can't do that unless you're on a map
+	clients_only: Can't do that unless you're a user
 	server_admin_only: Can't do that unless you're a server admin
 	invalid_command: Command isn't recognized
 	invalid_subcommand: Subcommand isn't recognized
