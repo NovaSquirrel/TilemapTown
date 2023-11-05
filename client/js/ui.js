@@ -818,6 +818,7 @@ function keyDownHandler(e) {
                       }
                     }
           */
+          botMessageButton = null;
           logMessage(((Obj.name != "sign" && Obj.name != "") ? escape_tags(Obj.name) + " says: " : "The sign says: ") + convertBBCode(Obj.message), "server_message",
             {'plainText': (Obj.name != "sign" && Obj.name != "") ? Obj.name + " says: " : "The sign says: " + Obj.message});
         }
@@ -2790,6 +2791,10 @@ function offerCommand(t) {
   }
 }
 
+function botMessageButton(bot_id, t) {
+  SendCmd("EXT", { "bot_message_button": { "id": bot_id, "text": t } });
+}
+
 let emptyTag = {
   openTag: function (params, content) {
     return '';
@@ -2798,6 +2803,7 @@ let emptyTag = {
     return '';
   }
 }
+let senderIdForBbcode;
 XBBCODE.addTags({
   "tt": XBBCODE.tags()["code"],
   "img": emptyTag,
@@ -2832,6 +2838,21 @@ XBBCODE.addTags({
       let filteredJS = content.replace(/\x22/g, '\\\x22');
       let filteredHTML = content.replace(/\x22/g, '&quot;');
       return '<input type="button" value="&#x1F4CB;' + filteredHTML + '" onClick=\'setChatInput("' + filteredJS + '")\'></input>';
+    },
+    closeTag: function (params, content) {
+      return '';
+    },
+    displayContent: false
+  },
+  "bot-message-button": {
+    openTag: function (params, content) {
+      let filteredJS = content.replace(/\x22/g, '\\\x22');
+      let filteredHTML = content.replace(/\x22/g, '&quot;');
+      if(params !== undefined) {
+        filteredHTML = params.substr(1).replace(/\x22/g, '&quot;');
+      }
+      console.log('<input type="button" value="&#x1F916;' + filteredHTML + '" onClick=\'botMessageButton('+JSON.stringify(senderIdForBbcode)+'"' + filteredJS + '")\'></input>');
+      return '<input type="button" value="&#x1F916;' + filteredHTML + '" onClick=\'botMessageButton('+JSON.stringify(senderIdForBbcode)+',"' + filteredJS + '")\'></input>';
     },
     closeTag: function (params, content) {
       return '';

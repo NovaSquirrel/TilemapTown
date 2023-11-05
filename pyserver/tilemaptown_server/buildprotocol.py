@@ -921,6 +921,7 @@ def ext_error(context, text=None, data=None, code=None, detail=None, subject_id=
 
 	respond_to.send('ERR', args)
 
+"""
 def forward_ext_if_needed(entity_id, forward_message_type):
 	e = get_entity_by_id(entity_id, load_from_db=False)
 	if e == None:
@@ -928,10 +929,12 @@ def forward_ext_if_needed(entity_id, forward_message_type):
 	if forward_message_type and (forward_message_type in e.forward_message_types):
 		return get_entity_by_id(e.forward_messages_to, load_from_db=False)
 	return e
+"""
 
 @ext_protocol_command("entity_click")
 def entity_click(map, client, context, arg, name):
-	e = forward_ext_if_needed(arg['id'], 'CLICK')
+	#e = forward_ext_if_needed(arg['id'], 'CLICK')
+	e = get_entity_by_id(arg['id'], load_from_db=False)
 	if e == None:
 		ext_error(context, code="not_found", subject_id=arg['id'])
 		return
@@ -946,7 +949,8 @@ def entity_click(map, client, context, arg, name):
 
 @ext_protocol_command("key_press")
 def key_press(map, client, context, arg, name):
-	e = forward_ext_if_needed(arg['id'], 'KEYS')
+	#e = forward_ext_if_needed(arg['id'], 'KEYS')
+	e = get_entity_by_id(arg['id'], load_from_db=False)
 	if e == None:
 		ext_error(context, code="not_found", subject_id=arg['id'])
 		return
@@ -975,12 +979,24 @@ def take_controls(map, client, context, arg, name):
 
 @ext_protocol_command("took_controls")
 def took_controls(map, client, context, arg, name):
-	e = forward_ext_if_needed(arg['id'], 'KEYS')
+	#e = forward_ext_if_needed(arg['id'], 'KEYS')
+	e = get_entity_by_id(arg['id'], load_from_db=False)
 	if e == None:
 		return
 	arg = remove_invalid_dict_fields(arg, {
 		"keys":             list,
 		"accept":           bool,
+	})
+	arg['id'] = client.protocol_id()
+	e.send("EXT", {name: arg})
+
+@ext_protocol_command("bot_message_button")
+def bot_message_button(map, client, context, arg, name):
+	e = get_entity_by_id(arg['id'], load_from_db=False)
+	if e == None:
+		return
+	arg = remove_invalid_dict_fields(arg, {
+		"text":             str,
 	})
 	arg['id'] = client.protocol_id()
 	e.send("EXT", {name: arg})

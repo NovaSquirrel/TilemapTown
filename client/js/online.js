@@ -530,6 +530,7 @@ function receiveServerMessage(cmd, arg) {
       logMessage("Error: "+convertBBCode(arg.text), 'error_message', {'plainText': `Error: ${arg.text}`});
       break;
     case "PRI":
+      senderIdForBbcode = arg.id ?? null;
       let respond = '<span onclick="setChatInput(\'/tell '+arg.username+' \')">';
       if(arg.text.slice(0, 4) == "/me ") {
         var new_text = arg.text.slice(4);
@@ -560,6 +561,7 @@ function receiveServerMessage(cmd, arg) {
       }
     case "CMD":
     case "MSG":
+      senderIdForBbcode = arg.id ?? null;
       if(arg.name) {
         if(arg.text.slice(0, 4).toLowerCase() == "/me ")
           logMessage("* <i>"+arg.name+" "+convertBBCode(arg.text.slice(4))+"</i>", 'user_message',
