@@ -999,6 +999,8 @@ def bot_message_button(map, client, context, arg, name):
 		"text":             str,
 	})
 	arg['id'] = client.protocol_id()
+	arg['name'] = client.name
+	arg['username'] = client.username_or_id()
 	e.send("EXT", {name: arg})
 
 @ext_protocol_command("list_available_ext_types")
