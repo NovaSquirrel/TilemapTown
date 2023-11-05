@@ -1778,7 +1778,7 @@ function initMouse() {
         // Is mouse over a transparent tile?
         let decompressed = [];
         for(let tileInMap of Mob.mini_tilemap_data.data) {
-          let tileId = tileInMap & 4065;
+          let tileId = tileInMap & 4095;
           let tileRepeat = ((tileInMap  >> 12) & 127) + 1;
           while(tileRepeat && decompressed.length < (mini_tilemap_map_w * mini_tilemap_map_h)) {
             decompressed.push(tileId);
