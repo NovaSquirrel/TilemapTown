@@ -2837,7 +2837,7 @@ XBBCODE.addTags({
     openTag: function (params, content) {
       let filteredJS = content.replace(/\x22/g, '\\\x22');
       let filteredHTML = content.replace(/\x22/g, '&quot;');
-      return '<input type="button" value="&#x1F4CB;' + filteredHTML + '" onClick=\'setChatInput("' + filteredJS + '")\'></input>';
+      return '<input type="button" value="&#x1F4CB;' + filteredHTML + '" onClick=\'setChatInput("' + filteredJS + '"); event.stopPropagation();\'></input>';
     },
     closeTag: function (params, content) {
       return '';
@@ -2851,8 +2851,7 @@ XBBCODE.addTags({
       if(params !== undefined) {
         filteredHTML = params.substr(1).replace(/\x22/g, '&quot;');
       }
-      console.log('<input type="button" value="&#x1F916;' + filteredHTML + '" onClick=\'botMessageButton('+JSON.stringify(senderIdForBbcode)+'"' + filteredJS + '")\'></input>');
-      return '<input type="button" value="&#x1F916;' + filteredHTML + '" onClick=\'botMessageButton('+JSON.stringify(senderIdForBbcode)+',"' + filteredJS + '")\'></input>';
+      return '<input type="button" value="&#x1F916;' + filteredHTML + '" onClick=\'botMessageButton('+JSON.stringify(senderIdForBbcode)+',"' + filteredJS + '"); event.stopPropagation();\'></input>';
     },
     closeTag: function (params, content) {
       return '';
