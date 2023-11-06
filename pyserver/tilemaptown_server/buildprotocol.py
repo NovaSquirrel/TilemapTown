@@ -1020,7 +1020,7 @@ def fn_EXT(map, client, arg, echo):
 	echo = arg['echo'] if ('echo' in arg) else None
 	for k,v in arg.items():
 		if k in ext_handlers:
-			context = (client, echo, k)
+			context = (actor, echo, k)
 			ext_handlers[k](map, actor, context, v, k)
 
 # -------------------------------------
