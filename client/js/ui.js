@@ -1788,7 +1788,7 @@ function initMouse() {
         }
         let tilemapX = Math.floor((pixelPos.x - start_pixel_x) / mini_tilemap_tile_w);
         let tilemapY = Math.floor((pixelPos.y - start_pixel_y) / mini_tilemap_tile_h);
-        let tileAtXY = decompressed[tilemapY * mini_tilemap_map_h + tilemapX];
+        let tileAtXY = decompressed[tilemapY * mini_tilemap_map_w + tilemapX];
         if(tileAtXY !== undefined && tileAtXY !== mini_tilemap_transparent_tile) {
           MousedOverEntityClickAvailable = true;
           MousedOverEntityClickId = index;
