@@ -335,6 +335,8 @@ def find_request_from_arg(client, context, arg):
 		if subject_id == None:
 			failed_to_find(context, args[0])
 			return False
+	if subject_id.isdecimal():
+		subject_id = int(subject_id)
 
 	# Gather up request information
 	if len(args) == 1: # Just a username/id
