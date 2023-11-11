@@ -1145,7 +1145,7 @@ function drawMap() {
           var carryText = "carrying: " + carryNames.join(", ");
 
           drawText(ctx, (Mob.x * 16) - PixelCameraX - (carryText.length * 8 / 2 - 8) + MobOffset[0], (Mob.y * 16) - PixelCameraY - heightForPlayerStatus + MobOffset[1], carryText);
-        } else if(!MousedOverEntityClickAvailable || !MousedOverEntityClickIsTilemap) {
+        } else if(Mob.in_user_list && (!MousedOverEntityClickAvailable || !MousedOverEntityClickIsTilemap)) {
           drawText(ctx, (Mob.x * 16) - PixelCameraX - (Mob.name.length * 8 / 2 - 8) + MobOffset[0], (Mob.y * 16) - PixelCameraY - heightForPlayerStatus + MobOffset[1], Mob.name);
         }
       }
