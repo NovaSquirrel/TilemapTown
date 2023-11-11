@@ -2020,6 +2020,12 @@ function initWorld() {
     let mapbtn = document.getElementById("navmap");
     let span = document.getElementsByClassName("modalclose");
 
+    // Prefill the login window username if it is saved
+    const saved_username = localStorage.getItem("username");
+    if (saved_username) {
+      document.getElementById("loginuser").value = saved_username;
+    }
+
     btn.onclick = function () {
       loginmodal.style.display = "block";
     }
@@ -2680,6 +2686,9 @@ function loginButton() {
     ConnectToServer();
   else
     SendCmd("CMD", { text: "login " + OnlineUsername + " " + OnlinePassword });
+
+  // Save the username so that in the future it is prefilled
+  localStorage.setItem("username", OnlineUsername);
 
   document.getElementById('loginWindow').style.display = "none";
 }
