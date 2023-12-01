@@ -736,22 +736,39 @@ class Entity(object):
 	def name_and_username(self):
 		return '%s (%s)' % (self.name, self.username_or_id())
 
-	def set_tag(self, name, value):
+	def set_tag(self, group, name, value):
 		if self.tags == None:
 			self.tags = {}
-		self.tags[name] = value
+		if group != None and group not in self.tags:
+			self.tags[group] = {name: value}
+			return
+		if group != None:
+			self.tags[group][name] = value
+		else:
+			self.tags[name] = value
 
-	def get_tag(self, name, default=None):
+	def get_tag(self, group, name, default=None):
 		if self.tags == None:
 			return default
-		if name in self.tags:
-			return self.tags[name]
-		return default
+		look_in = self.tags.get(group, None) if group != None else self.tags
+		if look_in == None:
+			return default
+		return look_in.get(name, default)
 
-	def del_tag(self, name):
+	def del_tag(self, group, name):
 		if self.tags == None:
 			return
-		self.tags.pop(name, None)
+		if group == None:
+			self.tags.pop(name, None)
+		else:
+			look_in = self.tags.get(group, None)
+			if look_in == None:
+				return
+			look_in.pop(name, None)
+			if look_in == {}:
+				self.tags.pop(group, None)
+		if self.tags == {}:
+			self.tags = None
 
 	# Database access
 

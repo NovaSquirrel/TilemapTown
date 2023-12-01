@@ -367,8 +367,10 @@ Get information about the entity, such as properties and contents.
 
 /entity id move x y
 /entity id tags
-/entity id addtag tag value 
-/entity id deltag tag
+/entity id addtag      tag_group tag value 
+/entity id deltag      tag_group tag
+/entity id addtag_root tag value 
+/entity id deltag_root tag
 Get tags or change them.
 
 /entity id perms

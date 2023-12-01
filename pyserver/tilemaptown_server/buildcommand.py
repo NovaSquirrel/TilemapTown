@@ -1881,14 +1881,27 @@ def fn_entity(map, client, context, arg):
 
 	elif subcommand == 'tags':
 		respond(context, "Tags: %s" % dumps_if_not_empty(e.tags))
-	elif subcommand in ('addtag', 'settag'):
+
+	elif subcommand in ('addtag_root', 'settag_root'):
 		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
 			key, value = separate_first_word(subarg)
-			e.set_tag(key, value)
+			e.set_tag(None, key, value)
+			save_entity = True
+	elif subcommand == 'deltag_root':
+		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
+			e.del_tag(None, subarg)
+			save_entity = True
+
+	elif subcommand in ('addtag', 'settag'):
+		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
+			group, sub2 = separate_first_word(subarg)
+			key, value = separate_first_word(sub2)
+			e.set_tag(group, key, value)
 			save_entity = True
 	elif subcommand == 'deltag':
 		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
-			e.del_tag(subarg)
+			group, key = separate_first_word(subarg)
+			e.del_tag(group, key)
 			save_entity = True
 
 	elif subcommand == 'do':
