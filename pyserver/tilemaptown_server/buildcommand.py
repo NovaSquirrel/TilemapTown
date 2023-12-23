@@ -1906,7 +1906,7 @@ def fn_entity(map, client, context, arg):
 
 	elif subcommand == 'do':
 		if permission_check(permission['remote_command']):
-			handle_user_command(e.map, e, client, context[0], context[1], subarg)
+			handle_user_command(e.map, e, client, context[1], subarg)
 	elif subcommand == 'move':
 		if permission_check(permission['move']):
 			coords = subarg.split()
