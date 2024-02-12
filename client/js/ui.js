@@ -875,6 +875,37 @@ var edgeMapLookupTable = [
   3,    // DurL
   1,    // DuRl
 ];
+
+// Autotile related functions
+function getForAutotile(t, map, x, y) {
+  // Get a map tile, except that off-map tiles return t instead
+  if (x < 0 || x >= map.Width || y < 0 || y >= map.Height)
+    return t;
+  return map.Tiles[x][y];
+}
+function isAutotileMatch(t, map, x, y) {
+  // Is the tile on the map at x,y the "same" as t for autotiling purposes?
+  let other = AtomFromName(getForAutotile(t, map, x, y));
+  if (t.autotile_class)
+    return t.autotile_class == other.autotile_class;
+  if (t.name)
+    return t.name == other.name;
+  return false;
+}
+function getAutotileIndex4(t, map, x, y) {
+  /* Check on the four adjacent tiles and see if they "match", to get an index for an autotile lookup table.
+     Will result in one of the following:
+     0 durl  1 durL 2  duRl  3 duRL
+     4 dUrl  5 dUrL 6  dURl  7 dURL
+     8 Durl  9 DurL 10 DuRl 11 DuRL
+    12 DUrl 13 DUrL 14 DURl 15 DURL
+  */
+  return (isAutotileMatch(t, map, x-1, y) << 0)
+       | (isAutotileMatch(t, map, x+1, y) << 1)
+       | (isAutotileMatch(t, map, x, y-1) << 2)
+       | (isAutotileMatch(t, map, x, y+1) << 3)
+}
+
 // Render the map view
 function drawMap() {
   var canvas = mapCanvas;
@@ -947,7 +978,76 @@ function drawMap() {
         let Tile = AtomFromName(map.Tiles[mapCoordX][mapCoordY]);
         if (Tile) {
           if (IconSheets[Tile.pic[0]]) {
-            ctx.drawImage(IconSheets[Tile.pic[0]], Tile.pic[1] * 16, Tile.pic[2] * 16, 16, 16, x * 16 - OffsetX, y * 16 - OffsetY, 16, 16);
+            let PicX = Tile.pic[1];
+            let PicY = Tile.pic[2];
+            let pair;
+            let skip16x16 = false;
+			let autotile_layout = Tile.autotile_layout ?? 0;
+            switch(autotile_layout) {
+              case 0: // No autotiling, so leave PicX and PicY as-is
+                break;
+              case 1: // 4-direction autotiling 9 tiles, origin is middle
+                pair = [[0,0], [0, 0], [0,  0], [0, 0],
+                        [0,0], [1, 1], [-1, 1], [0, 1],
+                        [0,0], [1,-1], [-1,-1], [0,-1],
+                        [0,0], [1, 0], [-1, 0], [0, 0]][getAutotileIndex4(Tile, map, mapCoordX, mapCoordY)];
+                PicX += pair[0];
+                PicY += pair[1];
+                break;
+              case 2: // 4-direction autotiling, 9 tiles, origin is middle, horizonal & vertical & single as separate tiles
+                pair = [[2,-2], [1,-2], [-1,-2], [0,-2],
+                        [2, 1], [1, 1], [-1, 1], [0, 1],
+                        [2,-1], [1,-1], [-1,-1], [0,-1],
+                        [2, 0], [1, 0], [-1, 0], [0, 0]][getAutotileIndex4(Tile, map, mapCoordX, mapCoordY)];
+                PicX += pair[0];
+                PicY += pair[1];
+                break;
+              case 3: // 8-direction autotiling, origin point is middle
+              case 4: // 8-direction autotiling, origin point is single
+                {
+                  let autotileIndex = getAutotileIndex4(Tile, map, mapCoordX, mapCoordY);
+
+                  // Start out with 4-direction autotiling
+                  let tiles = [[[-2,-4],[-1,-4],[-2,-3],[-1,-3]], [[2,-2],[3,-2],[2,3],[3,3]], [[-2,-2],[-1,-2],[-2, 3],[-1, 3]], [[0,-2],[1,-2],[0, 3],[1, 3]],
+                               [[-2, 2],[ 3, 2],[-2, 3],[ 3, 3]], [[2, 2],[3, 2],[2,3],[3,3]], [[-2, 2],[-1, 2],[-2, 3],[-1, 3]], [[0, 2],[1, 2],[0, 3],[1, 3]],
+                               [[-2,-2],[ 3,-2],[-2,-1],[ 3,-1]], [[2,-2],[3,-2],[2,1],[3,1]], [[-2,-2],[-1,-2],[-2,-1],[-1,-1]], [[0,-2],[1,-2],[0,-1],[1,-1]],
+                               [[-2, 0],[ 3, 0],[-2, 1],[ 3, 1]], [[2, 0],[3, 0],[2,1],[3,1]], [[-2, 0],[-1, 0],[-2, 1],[-1, 1]], [[0, 0],[1, 0],[0, 1],[1, 1]],
+                              ][autotileIndex];
+                  // Add the inner parts of turns
+                  if (((autotileIndex & 5) == 5) && !isAutotileMatch(Tile, map, mapCoordX-1, mapCoordY-1)) {
+                    tiles[0][0] = 2;
+                    tiles[0][1] = -4;
+                  }
+                  if (((autotileIndex & 6) == 6) && !isAutotileMatch(Tile, map, mapCoordX+1, mapCoordY-1)) {
+                    tiles[1][0] = 3;
+                    tiles[1][1] = -4;
+                  }
+                  if (((autotileIndex & 9) == 9) && !isAutotileMatch(Tile, map, mapCoordX-1, mapCoordY+1)) {
+                    tiles[2][0] = 2;
+                    tiles[2][1] = -3;
+                  }
+                  if (((autotileIndex & 10) == 10) && !isAutotileMatch(Tile, map, mapCoordX+1, mapCoordY+1)) {
+                    tiles[3][0] = 3;
+                    tiles[3][1] = -3;
+                  }
+                  // Layout 4 has the origin point on the single tile instead of the middle tile
+                  if (autotile_layout == 4) {
+                    PicX++;
+                    PicY += 2;
+                  }
+                  // Draw the four tiles
+                  let sheet = IconSheets[Tile.pic[0]];
+                  ctx.drawImage(sheet, PicX * 16 + tiles[0][0] * 8, PicY * 16 + tiles[0][1] * 8, 8, 8, x * 16 - OffsetX,     y * 16 - OffsetY,     8, 8);
+                  ctx.drawImage(sheet, PicX * 16 + tiles[1][0] * 8, PicY * 16 + tiles[1][1] * 8, 8, 8, x * 16 - OffsetX + 8, y * 16 - OffsetY,     8, 8);
+                  ctx.drawImage(sheet, PicX * 16 + tiles[2][0] * 8, PicY * 16 + tiles[2][1] * 8, 8, 8, x * 16 - OffsetX,     y * 16 - OffsetY + 8, 8, 8);
+                  ctx.drawImage(sheet, PicX * 16 + tiles[3][0] * 8, PicY * 16 + tiles[3][1] * 8, 8, 8, x * 16 - OffsetX + 8, y * 16 - OffsetY + 8, 8, 8);
+                }
+                skip16x16 = true;
+                break;
+            }
+            if(!skip16x16) {
+              ctx.drawImage(IconSheets[Tile.pic[0]], PicX * 16, PicY * 16, 16, 16, x * 16 - OffsetX, y * 16 - OffsetY, 16, 16);
+            }
           } else {
             RequestImageIfNeeded(Tile.pic[0]);
           }

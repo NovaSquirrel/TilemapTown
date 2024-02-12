@@ -1,11 +1,11 @@
 Tiles are defined with a JSON object, which can have the following fields:
 
 "name"
-	Friendly name for the tile. Not currently used for anything, but could be displayed in a client.
+	Friendly name for the tile. Not currently used for anything except autotiling, but could be displayed in a client.
 
 "pic":
 	Graphic to use for the tile.
-	Format is [sheet, x, y] where sheet may be an image URL directly, or it may be an ID that points to a tileset image indirectly.
+	Format is [sheet, x, y] where sheet may be an image URL directly, or it may be an ID that points to a tileset image indirectly (in which case you'll need to send the IMG protocol command to get the URL).
 
 "density":
 	Defaults to false. If true, users will be stopped when attempting to walk onto this tile.
@@ -33,3 +33,55 @@ Tiles are defined with a JSON object, which can have the following fields:
 
 "over":
 	Display over entities. Can currently only apply to map objects, not map tiles.
+
+"autotile_layout"
+	Determines how to change "pic" to make it look connected to surrounding tiles of the same type (where the same type means that "autotile_class" matches, or that "name" matches if "autotile_class" is not provided).
+
+	Possble values for this:
+	0 = Leave "pic" as-is and don't change it.
+	1 = The client looks at the four cardinal directions for connections.
+		"pic" points at the middle of a 3x3 square of tiles representing a square of connected tiles, with four corners, edges, and a middle tile.
+		Similar to how 9-slice scaling works. Will use the middle tile if the needed tile can't be represented (like one that has a connection only on the left and right).
+
+		.-.
+		|P|
+		'-'
+
+		P = Pic
+
+	2 = An extension of 1 that also supports tiles connected only horizontally and vertically (with tiles above and to the right of the 3x3 square).
+
+		HHHO
+		.-.V
+		|P|V
+		'-'V
+
+		P = Pic
+		O = Tile to use if there is no connection in any direction
+		H = Tiles to use when the only connections are horizontal
+		V = Tiles to use when the only connections are vertical
+
+	3 = The client looks at all eight surrounding tiles, and builds a 16x16 tile out of four 8x8 parts from the tileset.
+		For example, a tile that's connected on the left and the right will be built out of 8x8 tiles from the top edge of the main square and 8x8 tiles from the bottom edge.
+		8x8 tiles from the # position override 8x8 tiles in the result when there is a connection north and east but not northeast, north and west but not northwest and so on.
+		This layout is supposed to be similar to how RPG Maker 2000/2003 does autotiling, though one difference is that the tile in the O position is actually used, instead of only showing up on the map editor.
+
+		O #
+		.-.
+		|P|
+		'-'
+
+		P = Pic
+		O = Tile to use when there are no connections
+		# = Tile to use when there are connections on all four cardinal directions, but not northeast, northwest, southeast, or southwest
+
+	4 = Exactly the same as how 3 works, except "pic" points at the tile used for when there are no connections.
+		The reason 3 and 4 both exist is so that you can choose which fallback will look better for clients that don't support autotiling.
+
+		P #
+		.-.
+		|~|
+		'-'
+
+"autotile_class"
+	When provided, the client will use this field for determining whether tiles should look connected to each other.
