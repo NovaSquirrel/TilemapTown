@@ -666,15 +666,15 @@ function keyDownHandler(e) {
     }    
   }
 
-  var needRedraw = false;
+  let needRedraw = false;
 
-  var PlayerX = PlayerWho[PlayerYou].x;
-  var PlayerY = PlayerWho[PlayerYou].y;
-  var PlayerDir = PlayerWho[PlayerYou].dir;
-  var OldPlayerX = PlayerX;
-  var OldPlayerY = PlayerY;
-  var Bumped = false, BumpedX = null, BumpedY = null;
-  var OldPlayerDir = PlayerWho[PlayerYou].dir;
+  let PlayerX = PlayerWho[PlayerYou].x;
+  let PlayerY = PlayerWho[PlayerYou].y;
+  let PlayerDir = PlayerWho[PlayerYou].dir;
+  let OldPlayerX = PlayerX;
+  let OldPlayerY = PlayerY;
+  let Bumped = false, BumpedX = null, BumpedY = null;
+  let OldPlayerDir = PlayerWho[PlayerYou].dir;
 
   if (e.code == "Space") { // space or clear
     let data = getDataForDraw();
@@ -788,52 +788,67 @@ function keyDownHandler(e) {
 
   // Go back if the turf is solid, or if there's objects in the way
   if (OldPlayerX != PlayerX || OldPlayerY != PlayerY) {
-    // Check for solid objects in the way first
-    for (var index in MyMap.Objs[PlayerX][PlayerY]) {
-      var Obj = AtomFromName(MyMap.Objs[PlayerX][PlayerY][index]);
-      if (Obj.density) {
-        if (!Fly) {
-          if (!Bumped) {
+    // Check if the player is attempting to cross a wall on the tile they're currently on
+    if(!Fly) {
+      // Check for a wall in the objs on that tile
+      for (let index in MyMap.Objs[OldPlayerX][OldPlayerY]) {
+        let Obj = AtomFromName(MyMap.Objs[OldPlayerX][OldPlayerY][index]);
+		if ((Obj.walls ?? 0) & (1 << PlayerDir)) {
+          Bumped = true;
+          BumpedX = OldPlayerX;
+          BumpedY = OldPlayerY;
+          PlayerX = OldPlayerX;
+          PlayerX = OldPlayerY;
+          break;
+        }
+      }
+
+      // Check for a wall on the turf
+      if(!Bumped && ((AtomFromName(MyMap.Tiles[OldPlayerX][OldPlayerY]).walls ?? 0) & (1 << PlayerDir))) {
+        Bumped = true;
+        BumpedX = OldPlayerX;
+        BumpedY = OldPlayerY;
+        PlayerX = OldPlayerX;
+        PlayerY = OldPlayerY;
+      }
+    }
+
+    if(!Bumped) {
+      // For the tile you're moving into, the direction that's checked against is rotated 180 degrees
+      let DenseWallBit = 1 << ((PlayerDir + 4) & 7);
+
+      // Check for solid objects in the way
+      for (let index in MyMap.Objs[PlayerX][PlayerY]) {
+        let Obj = AtomFromName(MyMap.Objs[PlayerX][PlayerY][index]);
+        if (Obj.density || ((Obj.walls ?? 0) & DenseWallBit)) {
+          if (!Fly && !Bumped) {
             Bumped = true;
             BumpedX = PlayerX;
             BumpedY = PlayerY;
+            PlayerX = OldPlayerX;
+            PlayerY = OldPlayerY;
+            // Don't break here, so that if a sign is in the stack of objects it will get read
           }
+          if (Obj.type == AtomTypes.SIGN) {
+            botMessageButton = null;
+            logMessage(((Obj.name != "sign" && Obj.name != "") ? escape_tags(Obj.name) + " says: " : "The sign says: ") + convertBBCode(Obj.message), "server_message",
+              {'plainText': (Obj.name != "sign" && Obj.name != "") ? Obj.name + " says: " : "The sign says: " + Obj.message});
+          }
+          break;
+        }
+      }
+
+      // Then check for turfs
+      if (!Fly && !Bumped) {
+        let Turf = AtomFromName(MyMap.Tiles[PlayerX][PlayerY]);
+        if (Turf.density || ((Turf.walls ?? 0) & DenseWallBit)) {
+          Bumped = true;
+          BumpedX = PlayerX;
+          BumpedY = PlayerY;
           PlayerX = OldPlayerX;
           PlayerY = OldPlayerY;
         }
-        if (Obj.type == AtomTypes.SIGN) {
-          // Filter out HTML tag characters to prevent XSS (not needed because convertBBCode does this)
-          /*
-                    var Escaped = "";
-                    for (var i = 0; i < Obj.message.length; i++) {
-                      var c =Obj.message.charAt(i);
-                      if(c == '&') {
-                        Escaped += "&amp;";
-                      } else if(c == '<') {
-                        Escaped += "&lt;";
-                      } else if(c == '>') {
-                        Escaped += "&gt;";
-                      } else {
-                        Escaped += c;
-                      }
-                    }
-          */
-          botMessageButton = null;
-          logMessage(((Obj.name != "sign" && Obj.name != "") ? escape_tags(Obj.name) + " says: " : "The sign says: ") + convertBBCode(Obj.message), "server_message",
-            {'plainText': (Obj.name != "sign" && Obj.name != "") ? Obj.name + " says: " : "The sign says: " + Obj.message});
-        }
-        break;
       }
-    }
-    // Then check for turfs
-    if (!Fly && AtomFromName(MyMap.Tiles[PlayerX][PlayerY]).density) {
-      if (!Bumped) {
-        Bumped = true;
-        BumpedX = PlayerX;
-        BumpedY = PlayerY;
-      }
-      PlayerX = OldPlayerX;
-      PlayerY = OldPlayerY;
     }
   }
 

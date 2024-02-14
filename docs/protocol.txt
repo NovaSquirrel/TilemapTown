@@ -34,6 +34,16 @@ List of permissions:
 	list_contents               user can look at the contents of this entity
 	all							shorthand for assigning all permissions
 
+List of directions (used for "dir" values):
+	0 = East
+	1 = Southeast
+	2 = South
+	3 = Southwest
+	4 = West
+	5 = Northwest
+	6 = North
+	7 = Northeast
+
 === Movement on the map ===
 --> MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0}
 Move yourself

@@ -10,6 +10,30 @@ Tiles are defined with a JSON object, which can have the following fields:
 "density":
 	Defaults to false. If true, users will be stopped when attempting to walk onto this tile.
 
+"walls":
+	Bit field representing which sides of this tile are solid.
+	When a user attempts to move from a tile onto another one, the client will check the "walls" values on both of those tiles, and prevent the movement if a bit corresponding to the movement direction is set on either of those tiles.
+
+	For the original tile, the bit to check for is (1 << Movement Direction):
+	1   = East
+	2   = Southeast
+	4   = South
+	8   = Southwest
+	16  = West
+	32  = Northwest
+	64  = North
+	128 = Northeast
+
+	For the destination tile, the bit to check for is (1 << ((Movement Direction + 4) & 7)):
+	1   = West
+	2   = Northwest
+	4   = North
+	8   = Northeast
+	16  = East
+	32  = Southeast
+	64  = South
+	128 = Southwest
+
 "obj":
 	Defaults to false. If true, tile goes on the map's object layer instead of the turf layer.
 
@@ -23,13 +47,13 @@ Tiles are defined with a JSON object, which can have the following fields:
 "dir":
 	Tile direction. Not used for anything currently. Directions available:
 	0 = East
-	1 = South east
+	1 = Southeast
 	2 = South
-	3 = South west
+	3 = Southwest
 	4 = West
-	5 = North west
+	5 = Northwest
 	6 = North
-	7 = North east
+	7 = Northeast
 
 "over":
 	Display over entities. Can currently only apply to map objects, not map tiles.
