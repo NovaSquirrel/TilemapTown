@@ -356,7 +356,7 @@ function drawMap() {
 				if (edgeLookupIndex != 0) {
 					if (edgeLinks == null)
 						continue;
-					let map = MapsByID[edgeLinks[edgeMapLookupTable[edgeLookupIndex]]];
+					map = MapsByID[edgeLinks[edgeMapLookupTable[edgeLookupIndex]]];
 					if (map == null)
 						continue;
 					let gradientHorizontal = 1;
