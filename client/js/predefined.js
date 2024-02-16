@@ -1,59 +1,59 @@
-var Predefined = {};
-Predefined.grass = {
+let GlobalTiles = {};
+GlobalTiles.grass = {
   name: "grass",
   pic: [0, 0, 4],
   density: false,
 };
 
-Predefined.grass2 = {
+GlobalTiles.grass2 = {
   name: "grass",
   pic: [-1, 3, 0],
   density: false,
 };
 
-Predefined.grass3 = {
+GlobalTiles.grass3 = {
   name: "grass",
   pic: [-1, 3, 1],
   density: false,
 };
 
-Predefined.grass4 = {
+GlobalTiles.grass4 = {
   name: "grass",
   pic: [-1, 0, 3],
   density: false,
 };
 
-Predefined.dirt = {
+GlobalTiles.dirt = {
   name: "dirt",
   pic: [0, 6, 4],
   density: false,
 };
 
-Predefined.dirt2 = {
+GlobalTiles.dirt2 = {
   name: "dirt",
   pic: [-1, 2, 0],
   density: false,
 };
 
-Predefined.dirt3 = {
+GlobalTiles.dirt3 = {
   name: "dirt",
   pic: [-1, 7, 2],
   density: false,
 };
 
-Predefined.water = {
+GlobalTiles.water = {
   name: "water",
   pic: [-1, 1, 1],
   density: true,
 };
 
-Predefined.water2 = {
+GlobalTiles.water2 = {
   name: "water",
   pic: [-1, 10, 3],
   density: true,
 };
 
-Predefined.waterfall = {
+GlobalTiles.waterfall = {
   name: "waterfall",
   pic: [-1, 1, 0],
   density: false,
@@ -61,104 +61,104 @@ Predefined.waterfall = {
   dir: Directions.SOUTH,  
 };
 
-Predefined.brownsand = {
+GlobalTiles.brownsand = {
   name: "brown sand",
   pic: [0, 10, 3],
-  density: false,
+  density: false
 };
 
-Predefined.purplesand = {
+GlobalTiles.purplesand = {
   name: "purple sand",
   pic: [0, 10, 4],
-  density: false,
+  density: false
 };
 
-Predefined.redbrickfloor = {
+GlobalTiles.redbrickfloor = {
   name: "red brick floor",
   pic: [0, 10, 8],
-  density: false,
+  density: false
 };
 
-Predefined.graybrickfloor = {
+GlobalTiles.graybrickfloor = {
   name: "gray brick floor",
   pic: [0, 11, 8],
   density: false,
 };
 
-Predefined.stonewall = {
+GlobalTiles.stonewall = {
   name: "stone wall",
   pic: [0, 9, 1],
   density: true,
 };
 
-Predefined.xblock = {
+GlobalTiles.xblock = {
   name: "x block",
   pic: [0, 15, 0],
   density: true,
 };
 
-Predefined.ice = {
+GlobalTiles.ice = {
   name: "ice",
   pic: [0, 15, 10],
   density: false,
   type: AtomTypes.ICE,
 };
 
-Predefined.brownbricks = {
+GlobalTiles.brownbricks = {
   name: "brown bricks",
   pic: [0, 7, 6],
   density: true,
 };
 
-Predefined.woodfloor2 = {
+GlobalTiles.woodfloor2 = {
   name: "wood floor",
   pic: [-1, 10, 2],
   density: false,
 };
 
-Predefined.woodfloor = {
+GlobalTiles.woodfloor = {
   name: "wood floor",
   pic: [0, 1, 6],
   density: false,
 };
 
-Predefined.woodwall = {
+GlobalTiles.woodwall = {
   name: "wood wall",
   pic: [0, 3, 8],
   density: true,
 };
 
-Predefined.floor1 = {
+GlobalTiles.floor1 = {
   name: "floor",
   pic: [0, 6, 15],
   density: false,
 };
 
-Predefined.floor2 = {
+GlobalTiles.floor2 = {
   name: "floor",
   pic: [0, 7, 15],
   density: false,
 };
 
-Predefined.floor3 = {
+GlobalTiles.floor3 = {
   name: "floor",
   pic: [0, 7, 14],
   density: false,
 };
 
-Predefined.floor4 = {
+GlobalTiles.floor4 = {
   name: "floor",
   pic: [0, 7, 13],
   density: false,
 };
 
-Predefined.floor5 = {
+GlobalTiles.floor5 = {
   name: "floor",
   pic: [0, 6, 17],
   density: false,
 };
 
-Predefined.forcedown = {
+GlobalTiles.forcedown = {
   name: "force",
   pic: [0, 12, 19],
   density: false,
@@ -166,7 +166,7 @@ Predefined.forcedown = {
   dir: Directions.SOUTH,
 };
 
-Predefined.forceup = {
+GlobalTiles.forceup = {
   name: "force",
   pic: [0, 13, 19],
   density: false,
@@ -174,7 +174,7 @@ Predefined.forceup = {
   dir: Directions.NORTH,
 };
 
-Predefined.forceleft = {
+GlobalTiles.forceleft = {
   name: "force",
   pic: [0, 14, 19],
   density: false,
@@ -182,7 +182,7 @@ Predefined.forceleft = {
   dir: Directions.WEST,
 };
 
-Predefined.forceright = {
+GlobalTiles.forceright = {
   name: "force",
   pic: [0, 15, 19],
   density: false,
@@ -190,25 +190,25 @@ Predefined.forceright = {
   dir: Directions.EAST,
 };
 
-Predefined.bluewall = {
+GlobalTiles.bluewall = {
   name: "blue wall",
   pic: [0, 16, 27],
   density: true,
 };
 
-Predefined.pinkwall = {
+GlobalTiles.pinkwall = {
   name: "pink wall",
   pic: [0, 17, 27],
   density: true,
 };
 
-Predefined.greenwall = {
+GlobalTiles.greenwall = {
   name: "green wall",
   pic: [0, 18, 27],
   density: true,
 };
 
-Predefined.orangewall = {
+GlobalTiles.orangewall = {
   name: "orange wall",
   pic: [0, 19, 27],
   density: true,
@@ -217,84 +217,84 @@ Predefined.orangewall = {
 
 
 // objects
-Predefined.skull = {
+GlobalTiles.skull = {
   name: "skull",
   pic: [0, 11, 10],
   density: true,
   obj: true,
 };
 
-Predefined.bush1 = {
+GlobalTiles.bush1 = {
   name: "bush",
   pic: [0, 13, 16],
   density: true,
   obj: true,
 };
 
-Predefined.bush2 = {
+GlobalTiles.bush2 = {
   name: "bush",
   pic: [0, 14, 16],
   density: true,
   obj: true,
 };
 
-Predefined.bush3 = {
+GlobalTiles.bush3 = {
   name: "bush",
   pic: [-1, 8, 3],
   density: true,
   obj: true,
 };
 
-Predefined.rocks1 = {
+GlobalTiles.rocks1 = {
   name: "rocks",
   pic: [0, 15, 16],
   density: true,
   obj: true,
 };
 
-Predefined.rocks2 = {
+GlobalTiles.rocks2 = {
   name: "rocks",
   pic: [0, 16, 16],
   density: true,
   obj: true,
 };
 
-Predefined.rocks3 = {
+GlobalTiles.rocks3 = {
   name: "rocks",
   pic: [0, 17, 16],
   density: true,
   obj: true,
 };
 
-Predefined.flower1 = {
+GlobalTiles.flower1 = {
   name: "flowers",
   pic: [0, 15, 15],
   density: false,
   obj: true,
 };
 
-Predefined.flower2 = {
+GlobalTiles.flower2 = {
   name: "flowers",
   pic: [0, 16, 15],
   density: false,
   obj: true,
 };
 
-Predefined.flower3 = {
+GlobalTiles.flower3 = {
   name: "flower",
   pic: [0, 17, 15],
   density: false,
   obj: true,
 };
 
-Predefined.flower4 = {
+GlobalTiles.flower4 = {
   name: "flowers",
   pic: [0, 18, 15],
   density: false,
   obj: true,
 };
 
-Predefined.sign = {
+GlobalTiles.sign = {
   name: "sign",
   pic: [0, 16, 17],
   density: true,
@@ -302,231 +302,231 @@ Predefined.sign = {
   type: AtomTypes.SIGN,
 };
 
-Predefined.redwhitesign = {
+GlobalTiles.redwhitesign = {
   name: "sign",
   pic: [0, 17, 17],
   density: true,
   obj: true,
 };
 
-Predefined.pot1 = {
+GlobalTiles.pot1 = {
   name: "pot",
   pic: [0, 16, 18],
   density: true,
   obj: true,
 };
 
-Predefined.pot2 = {
+GlobalTiles.pot2 = {
   name: "pot",
   pic: [0, 17, 18],
   density: true,
   obj: true,
 };
 
-Predefined.barrel = {
+GlobalTiles.barrel = {
   name: "barrel",
   pic: [0, 18, 18],
   density: true,
   obj: true,
 };
 
-Predefined.barrel2 = {
+GlobalTiles.barrel2 = {
   name: "barrel",
   pic: [-1, 2, 3],
   density: true,
   obj: true,
 };
 
-Predefined.books = {
+GlobalTiles.books = {
   name: "bookshelves",
   pic: [0, 19, 18],
   density: true,
   obj: true,
 };
 
-Predefined.tv1 = {
+GlobalTiles.tv1 = {
   name: "television",
   pic: [0, 21, 18],
   density: true,
   obj: true,
 };
 
-Predefined.tv2 = {
+GlobalTiles.tv2 = {
   name: "television",
   pic: [0, 22, 18],
   density: true,
   obj: true,
 };
 
-Predefined.cherry = {
+GlobalTiles.cherry = {
   name: "cherry",
   pic: [0, 0, 19],
   density: false,
   obj: true,
 };
 
-Predefined.corn = {
+GlobalTiles.corn = {
   name: "corn",
   pic: [0, 1, 19],
   density: false,
   obj: true,
 };
 
-Predefined.eggplant = {
+GlobalTiles.eggplant = {
   name: "eggplant",
   pic: [0, 2, 19],
   density: false,
   obj: true,
 };
 
-Predefined.eggplant2 = {
+GlobalTiles.eggplant2 = {
   name: "eggplant",
   pic: [-1, 3, 10],
   density: false,
   obj: true,
 };
 
-Predefined.watermelon = {
+GlobalTiles.watermelon = {
   name: "watermelon",
   pic: [-1, 0, 10],
   density: false,
   obj: true,
 };
 
-Predefined.cookie = {
+GlobalTiles.cookie = {
   name: "cookie",
   pic: [-1, 1, 10],
   density: false,
   obj: true,
 };
 
-Predefined.chickenleg = {
+GlobalTiles.chickenleg = {
   name: "chicken leg",
   pic: [-1, 2, 10],
   density: false,
   obj: true,
 };
 
-Predefined.pie = {
+GlobalTiles.pie = {
   name: "pie",
   pic: [-1, 4, 10],
   density: false,
   obj: true,
 };
 
-Predefined.pickle = {
+GlobalTiles.pickle = {
   name: "pickle",
   pic: [-1, 7, 10],
   density: false,
   obj: true,
 };
 
-Predefined.potato = {
+GlobalTiles.potato = {
   name: "potato",
   pic: [-1, 8, 10],
   density: false,
   obj: true,
 };
 
-Predefined.cheese = {
+GlobalTiles.cheese = {
   name: "cheese",
   pic: [-1, 10, 10],
   density: false,
   obj: true,
 };
 
-Predefined.pretzel = {
+GlobalTiles.pretzel = {
   name: "pretzel",
   pic: [-1, 13, 10],
   density: false,
   obj: true,
 };
 
-Predefined.turnip = {
+GlobalTiles.turnip = {
   name: "turnip",
   pic: [-1, 15, 10],
   density: false,
   obj: true,
 };
 
-Predefined.bread = {
+GlobalTiles.bread = {
   name: "bread",
   pic: [0, 3, 19],
   density: false,
   obj: true,
 };
 
-Predefined.bread2 = {
+GlobalTiles.bread2 = {
   name: "bread",
   pic: [-1, 7, 6],
   density: false,
   obj: true,
 };
 
-Predefined.eggs = {
+GlobalTiles.eggs = {
   name: "bacon and eggs",
   pic: [0, 4, 19],
   density: false,
   obj: true,
 };
 
-Predefined.eggs2 = {
+GlobalTiles.eggs2 = {
   name: "egg",
   pic: [0, 5, 19],
   density: false,
   obj: true,
 };
 
-Predefined.candy = {
+GlobalTiles.candy = {
   name: "candy",
   pic: [0, 6, 19],
   density: false,
   obj: true,
 };
 
-Predefined.cake = {
+GlobalTiles.cake = {
   name: "cake",
   pic: [0, 8, 19],
   density: false,
   obj: true,
 };
 
-Predefined.icecream = {
+GlobalTiles.icecream = {
   name: "icecream",
   pic: [0, 9, 19],
   density: false,
   obj: true,
 };
 
-Predefined.icecream2 = {
+GlobalTiles.icecream2 = {
   name: "icecream",
   pic: [-1, 6, 6],
   density: false,
   obj: true,
 };
 
-Predefined.pizza = {
+GlobalTiles.pizza = {
   name: "pizza",
   pic: [-1, 5, 6],
   density: false,
   obj: true,
 };
 
-Predefined.soda = {
+GlobalTiles.soda = {
   name: "soda",
   pic: [-1, 4, 6],
   density: false,
   obj: true,
 };
 
-Predefined.apple = {
+GlobalTiles.apple = {
   name: "apple",
   pic: [-1, 3, 6],
   density: false,
   obj: true,
 };
 
-Predefined.apple2 = {
+GlobalTiles.apple2 = {
   name: "apple",
   pic: [-1, 9, 10],
   density: false,
@@ -534,14 +534,14 @@ Predefined.apple2 = {
 };
 
 
-Predefined.box = {
+GlobalTiles.box = {
   name: "box",
   pic: [0, 0, 20],
   density: true,
   obj: true,
 };
 
-Predefined.chest = {
+GlobalTiles.chest = {
   name: "chest",
   pic: [0, 1, 20],
   closedpic: [0, 1, 20],
@@ -550,126 +550,126 @@ Predefined.chest = {
   obj: true,
 };
 
-Predefined.chest2 = {
+GlobalTiles.chest2 = {
   name: "chest",
   pic: [-1, 3, 3],
   density: true,
   obj: true,
 };
 
-Predefined.chest3 = {
+GlobalTiles.chest3 = {
   name: "chest",
   pic: [-1, 11, 6],
   density: true,
   obj: true,
 };
 
-Predefined.coin = {
+GlobalTiles.coin = {
   name: "coin",
   pic: [0, 3, 20],
   density: false,
   obj: true,
 };
 
-Predefined.diamond = {
+GlobalTiles.diamond = {
   name: "diamond",
   pic: [0, 4, 20],
   density: false,
   obj: true,
 };
 
-Predefined.diamond2 = {
+GlobalTiles.diamond2 = {
   name: "diamond",
   pic: [-1, 8, 6],
   density: false,
   obj: true,
 };
 
-Predefined.diamond3 = {
+GlobalTiles.diamond3 = {
   name: "diamond",
   pic: [-1, 9, 6],
   density: false,
   obj: true,
 };
 
-Predefined.diamond4 = {
+GlobalTiles.diamond4 = {
   name: "diamond",
   pic: [-1, 10, 6],
   density: false,
   obj: true,
 };
 
-Predefined.stopwatch = {
+GlobalTiles.stopwatch = {
   name: "stopwatch",
   pic: [0, 5, 20],
   density: false,
   obj: true,
 };
 
-Predefined.potion1 = {
+GlobalTiles.potion1 = {
   name: "potion",
   pic: [0, 6, 20],
   density: false,
   obj: true,
 };
 
-Predefined.potion2 = {
+GlobalTiles.potion2 = {
   name: "potion",
   pic: [0, 7, 20],
   density: false,
   obj: true,
 };
 
-Predefined.potion3 = {
+GlobalTiles.potion3 = {
   name: "potion",
   pic: [0, 8, 20],
   density: false,
   obj: true,
 };
 
-Predefined.tree = {
+GlobalTiles.tree = {
   name: "tree",
   pic: [-1, 0, 0],
   density: true,
   obj: true,
 };
 
-Predefined.tree2 = {
+GlobalTiles.tree2 = {
   name: "tree",
   pic: [-1, 0, 1],
   density: true,
   obj: true,
 };
 
-Predefined.treefall = {
+GlobalTiles.treefall = {
   name: "tree",
   pic: [-1, 9, 5],
   density: true,
   obj: true,
 };
 
-Predefined.treefall2 = {
+GlobalTiles.treefall2 = {
   name: "tree",
   pic: [-1, 7, 5],
   density: true,
   obj: true,
 };
 
-Predefined.treewinter = {
+GlobalTiles.treewinter = {
   name: "tree",
   pic: [-1, 10, 5],
   density: true,
   obj: true,
 };
 
-Predefined.treewinter2 = {
+GlobalTiles.treewinter2 = {
   name: "tree",
   pic: [-1, 8, 5],
   density: true,
   obj: true,
 };
 
-Predefined.treetop = {
+GlobalTiles.treetop = {
   name: "tree",
   pic: [-1, 6, 3],
   density: false,
@@ -677,63 +677,63 @@ Predefined.treetop = {
   over: true,
 };
 
-Predefined.treebot = {
+GlobalTiles.treebot = {
   name: "tree",
   pic: [-1, 7, 3],
   density: true,
   obj: true,
 };
 
-Predefined.well = {
+GlobalTiles.well = {
   name: "well",
   pic: [-1, 15, 1],
   density: true,
   obj: true,
 };
 
-Predefined.table = {
+GlobalTiles.table = {
   name: "table",
   pic: [-1, 13, 3],
   density: true,
   obj: true,
 };
 
-Predefined.table2 = {
+GlobalTiles.table2 = {
   name: "table",
   pic: [-1, 11, 4],
   density: true,
   obj: true,
 };
 
-Predefined.table3 = {
+GlobalTiles.table3 = {
   name: "table",
   pic: [-1, 12, 4],
   density: true,
   obj: true,
 };
 
-Predefined.table4 = {
+GlobalTiles.table4 = {
   name: "table",
   pic: [-1, 15, 5],
   density: true,
   obj: true,
 };
 
-Predefined.cabinet = {
+GlobalTiles.cabinet = {
   name: "cabinet",
   pic: [-1, 13, 5],
   density: true,
   obj: true,
 };
 
-Predefined.cabinet2 = {
+GlobalTiles.cabinet2 = {
   name: "cabinet",
   pic: [-1, 14, 5],
   density: true,
   obj: true,
 };
 
-Predefined.throne = {
+GlobalTiles.throne = {
   name: "throne",
   pic: [-1, 8, 4],
   density: true,
@@ -741,39 +741,39 @@ Predefined.throne = {
 };
 
 
-Predefined.stool = {
+GlobalTiles.stool = {
   name: "stool",
   pic: [-1, 10, 4],
   density: false,
   obj: true,
 };
 
-Predefined.rockwall = {
+GlobalTiles.rockwall = {
   name: "rock wall",
   pic: [-1, 6, 4],
   density: true,
 };
 
-Predefined.statue = {
+GlobalTiles.statue = {
   name: "statue",
   pic: [-1, 7, 4],
   density: true,
   obj: true,
 };
 
-Predefined.stump = {
+GlobalTiles.stump = {
   name: "stump",
   pic: [-1, 5, 5],
   obj: true,
 };
 
-Predefined.window = {
+GlobalTiles.window = {
   name: "window",
   pic: [-1, 6, 5],
   obj: true,
 };
 
-Predefined.pillar = {
+GlobalTiles.pillar = {
   name: "pillar",
   pic: [-1, 9, 4],
   density: true,
@@ -782,70 +782,70 @@ Predefined.pillar = {
 
 
 
-Predefined.drawers = {
+GlobalTiles.drawers = {
   name: "drawers",
   pic: [-1, 14, 3],
   density: true,
   obj: true,
 };
 
-Predefined.drawers2 = {
+GlobalTiles.drawers2 = {
   name: "drawers",
   pic: [-1, 13, 4],
   density: true,
   obj: true,
 };
 
-Predefined.glasswall = {
+GlobalTiles.glasswall = {
   name: "glass wall",
   pic: [-1, 1, 5],
   density: true,
   obj: true,
 };
 
-Predefined.tombstone = {
+GlobalTiles.tombstone = {
   name: "tombstone",
   pic: [-1, 12, 5],
   density: true,
   obj: true,
 };
 
-Predefined.mossrock = {
+GlobalTiles.mossrock = {
   name: "mossrock",
   pic: [-1, 11, 5],
   density: true,
   obj: true,
 };
 
-Predefined.grasstuft = {
+GlobalTiles.grasstuft = {
   name: "grasstuft",
   pic: [-1, 5, 4],
   density: false,
   obj: true,
 };
 
-Predefined.lava = {
+GlobalTiles.lava = {
   name: "lava",
   pic: [-1, 11, 2],
   density: true,
   obj: false,
 };
 
-Predefined.door = {
+GlobalTiles.door = {
   name: "door",
   pic: [-1, 15, 0],
   density: false,
   obj: true,
 };
 
-Predefined.goldchalice = {
+GlobalTiles.goldchalice = {
   name: "gold chalice",
   pic: [-1, 5, 11],
   density: false,
   obj: true,
 };
 
-Predefined.goldbars = {
+GlobalTiles.goldbars = {
   name: "gold bars",
   pic: [-1, 6, 11],
   density: false,
@@ -853,21 +853,21 @@ Predefined.goldbars = {
 };
 
 
-Predefined.book = {
+GlobalTiles.book = {
   name: "book",
   pic: [-1, 0, 9],
   density: false,
   obj: true,
 };
 
-Predefined.bottle = {
+GlobalTiles.bottle = {
   name: "bottle",
   pic: [-1, 1, 9],
   density: false,
   obj: true,
 };
 
-Predefined.orb = {
+GlobalTiles.orb = {
   name: "orb",
   pic: [-1, 2, 9],
   density: false,
@@ -875,21 +875,21 @@ Predefined.orb = {
 };
 
 
-Predefined.mushroom = {
+GlobalTiles.mushroom = {
   name: "mushroom",
   pic: [-1, 3, 9],
   density: false,
   obj: true,
 };
 
-Predefined.scroll = {
+GlobalTiles.scroll = {
   name: "scroll",
   pic: [-1, 6, 9],
   density: false,
   obj: true,
 };
 
-Predefined.sword = {
+GlobalTiles.sword = {
   name: "sword",
   pic: [-1, 7, 9],
   density: false,
@@ -897,226 +897,226 @@ Predefined.sword = {
 };
 
 
-Predefined.colorwall1 = {
+GlobalTiles.colorwall1 = {
   name: "colored wall",
   pic: [-1, 0, 7],
   density: true,
 };
 
-Predefined.colorwall2 = {
+GlobalTiles.colorwall2 = {
   name: "colored wall",
   pic: [-1, 1, 7],
   density: true,
 };
 
-Predefined.colorwall3 = {
+GlobalTiles.colorwall3 = {
   name: "colored wall",
   pic: [-1, 2, 7],
   density: true,
 };
 
-Predefined.colorwall4 = {
+GlobalTiles.colorwall4 = {
   name: "colored wall",
   pic: [-1, 3, 7],
   density: true,
 };
 
-Predefined.colorwall5 = {
+GlobalTiles.colorwall5 = {
   name: "colored wall",
   pic: [-1, 4, 7],
   density: true,
 };
 
-Predefined.colorwall6 = {
+GlobalTiles.colorwall6 = {
   name: "colored wall",
   pic: [-1, 5, 7],
   density: true,
 };
 
-Predefined.colorwall7 = {
+GlobalTiles.colorwall7 = {
   name: "colored wall",
   pic: [-1, 6, 7],
   density: true,
 };
 
-Predefined.colorwall8 = {
+GlobalTiles.colorwall8 = {
   name: "colored wall",
   pic: [-1, 7, 7],
   density: true,
 };
 
-Predefined.colorwall9 = {
+GlobalTiles.colorwall9 = {
   name: "colored wall",
   pic: [-1, 8, 7],
   density: true,
 };
 
-Predefined.colorwall10 = {
+GlobalTiles.colorwall10 = {
   name: "colored wall",
   pic: [-1, 9, 7],
   density: true,
 };
 
-Predefined.colorwall11 = {
+GlobalTiles.colorwall11 = {
   name: "colored wall",
   pic: [-1, 10, 7],
   density: true,
 };
 
-Predefined.colorwall12 = {
+GlobalTiles.colorwall12 = {
   name: "colored wall",
   pic: [-1, 11, 7],
   density: true,
 };
 
-Predefined.colorwall13 = {
+GlobalTiles.colorwall13 = {
   name: "colored wall",
   pic: [-1, 12, 7],
   density: true,
 };
 
-Predefined.colorwall14 = {
+GlobalTiles.colorwall14 = {
   name: "colored wall",
   pic: [-1, 13, 7],
   density: true,
 };
 
-Predefined.colorwall15 = {
+GlobalTiles.colorwall15 = {
   name: "colored wall",
   pic: [-1, 14, 7],
   density: true,
 };
 
-Predefined.colorfloor1 = {
+GlobalTiles.colorfloor1 = {
   name: "colored floor",
   pic: [-1, 0, 8],
 };
 
-Predefined.colorfloor2 = {
+GlobalTiles.colorfloor2 = {
   name: "colored floor",
   pic: [-1, 1, 8],
 };
 
-Predefined.colorfloor3 = {
+GlobalTiles.colorfloor3 = {
   name: "colored floor",
   pic: [-1, 2, 8],
 };
 
-Predefined.colorfloor4 = {
+GlobalTiles.colorfloor4 = {
   name: "colored floor",
   pic: [-1, 3, 8],
 };
 
-Predefined.colorfloor5 = {
+GlobalTiles.colorfloor5 = {
   name: "colored floor",
   pic: [-1, 4, 8],
 };
 
-Predefined.colorfloor6 = {
+GlobalTiles.colorfloor6 = {
   name: "colored floor",
   pic: [-1, 5, 8],
 };
 
-Predefined.colorfloor7 = {
+GlobalTiles.colorfloor7 = {
   name: "colored floor",
   pic: [-1, 6, 8],
 };
 
-Predefined.colorfloor8 = {
+GlobalTiles.colorfloor8 = {
   name: "colored floor",
   pic: [-1, 7, 8],
 };
 
-Predefined.colorfloor9 = {
+GlobalTiles.colorfloor9 = {
   name: "colored floor",
   pic: [-1, 8, 8],
 };
 
-Predefined.colorfloor10 = {
+GlobalTiles.colorfloor10 = {
   name: "colored floor",
   pic: [-1, 9, 8],
 };
 
-Predefined.colorfloor11 = {
+GlobalTiles.colorfloor11 = {
   name: "colored floor",
   pic: [-1, 10, 8],
 };
 
-Predefined.colorfloor12 = {
+GlobalTiles.colorfloor12 = {
   name: "colored floor",
   pic: [-1, 11, 8],
 };
 
-Predefined.colorfloor13 = {
+GlobalTiles.colorfloor13 = {
   name: "colored floor",
   pic: [-1, 12, 8],
 };
 
-Predefined.colorfloor14 = {
+GlobalTiles.colorfloor14 = {
   name: "colored floor",
   pic: [-1, 13, 8],
 };
 
-Predefined.colorfloor15 = {
+GlobalTiles.colorfloor15 = {
   name: "colored floor",
   pic: [-1, 14, 8],
 };
 
-Predefined.shadow = {
+GlobalTiles.shadow = {
   name: "shadow",
   pic: [-1, 0, 19],
   obj: true,
   over: true
 };
-Predefined.shadow_dr = {
+GlobalTiles.shadow_dr = {
   name: "shadow",
   pic: [-1, 1, 19],
   obj: true,
   over: true
 };
-Predefined.shadow_dl = {
+GlobalTiles.shadow_dl = {
   name: "shadow",
   pic: [-1, 2, 19],
   obj: true,
   over: true
 };
-Predefined.shadow_ur = {
+GlobalTiles.shadow_ur = {
   name: "shadow",
   pic: [-1, 3, 19],
   obj: true,
   over: true
 };
-Predefined.shadow_ul = {
+GlobalTiles.shadow_ul = {
   name: "shadow",
   pic: [-1, 4, 19],
   obj: true,
   over: true
 };
-Predefined.shadow2 = {
+GlobalTiles.shadow2 = {
   name: "shadow",
   pic: [-1, 5, 19],
   obj: true,
   over: true
 };
-Predefined.shadow2_dr = {
+GlobalTiles.shadow2_dr = {
   name: "shadow",
   pic: [-1, 6, 19],
   obj: true,
   over: true
 };
-Predefined.shadow2_dl = {
+GlobalTiles.shadow2_dl = {
   name: "shadow",
   pic: [-1, 7, 19],
   obj: true,
   over: true
 };
-Predefined.shadow2_ur = {
+GlobalTiles.shadow2_ur = {
   name: "shadow",
   pic: [-1, 8, 19],
   obj: true,
   over: true
 };
-Predefined.shadow2_ul = {
+GlobalTiles.shadow2_ul = {
   name: "shadow",
   pic: [-1, 9, 19],
   obj: true,
@@ -1126,15 +1126,17 @@ Predefined.shadow2_ul = {
 
 var PredefinedArray = [];
 var PredefinedArrayNames = [];
+var GlobalTilesArray = [];
+var GlobalTilesArrayNames = [];
 var i=0;
-for (var key in Predefined) {
-  PredefinedArrayNames[i] = key;
-  PredefinedArray[i++] = Predefined[key];
+for (var key in GlobalTiles) {
+  GlobalTilesArrayNames[i] = key;
+  GlobalTilesArray[i++] = GlobalTiles[key];
 }
 
 /*
-for (var key in Predefined) {
-  var obj = Predefined[key];
+for (var key in GlobalTiles) {
+  var obj = GlobalTiles[key];
   console.log(obj.name);
 }
 */

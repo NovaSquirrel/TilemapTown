@@ -1,7 +1,7 @@
 /*
  * Tilemap Town
  *
- * Copyright (C) 2017-2023 NovaSquirrel
+ * Copyright (C) 2017-2024 NovaSquirrel
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -16,22 +16,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-var OnlineMode = false;
-var OnlineServer = null;
-var OnlineMap = "";
-var OnlineSocket = null;
-var OnlineSSL = true;
-var OnlinePort = 443;
-var OnlineUsername = "";
-var OnlinePassword = "";
-var OnlineIsConnected = false;
-var ShowProtocol = true;
+let OnlineMode = false;
+let OnlineServer = null;
+let OnlineMap = "";
+let OnlineSocket = null;
+let OnlineSSL = true;
+let OnlinePort = 443;
+let OnlineUsername = "";
+let OnlinePassword = "";
+let OnlineIsConnected = false;
+let ShowProtocol = true;
 
 // URL param options
 var InstantCamera = false;
 var SlowAnimationTick = false;
-
-const SupportedTakeControlsKeys = new Set(['move-e', 'move-se', 'move-s', 'move-sw', 'move-w', 'move-nw', 'move-n', 'move-ne', 'turn-e', 'turn-se', 'turn-s', 'turn-sw', 'turn-w', 'turn-nw', 'turn-n', 'turn-ne', 'use-item', 'cancel', 'hotbar-1', 'hotbar-2', 'hotbar-3', 'hotbar-4', 'hotbar-5', 'hotbar-6', 'hotbar-7', 'hotbar-8', 'hotbar-9', 'hotbar-10']);
 
 function readURLParams() {
   var query = window.location.search.substring(1);
@@ -475,14 +473,14 @@ function receiveServerMessage(cmd, arg) {
         for(var key in arg['tilesets']) {
           var tileset = arg['tilesets'][key];
           if(key == '') {
-            Predefined = tileset;
-            PredefinedArray = [];
-            PredefinedArrayNames = [];
+            GlobalTiles = tileset;
+            GlobalTilesArray = [];
+            GlobalTilesArrayNames = [];
             for(var tileKey in tileset) {
               var i=0;
-              for (var key in Predefined) {
-                PredefinedArrayNames[i] = key;
-                PredefinedArray[i++] = Predefined[key];
+              for (var key in GlobalTiles) {
+                GlobalTilesArrayNames[i] = key;
+                GlobalTilesArray[i++] = GlobalTiles[key];
               }
             }
           } else {
