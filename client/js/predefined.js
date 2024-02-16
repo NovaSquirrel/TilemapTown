@@ -1124,8 +1124,6 @@ GlobalTiles.shadow2_ul = {
 };
 
 
-var PredefinedArray = [];
-var PredefinedArrayNames = [];
 var GlobalTilesArray = [];
 var GlobalTilesArrayNames = [];
 var i=0;
