@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Tilemap Town</title>
+<title>Tilemap Town (for phones)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <!-- Resources -->
 <link rel="stylesheet" type="text/css" href="css/world.css" />
 <link rel="stylesheet" type="text/css" href="css/chat.css" />
 <link rel="stylesheet" type="text/css" href="css/xbbcode.css" />
+<link rel="stylesheet" type="text/css" href="css/touch_ui.css" />
 <script src="js/stretch.js"></script>
 <script src="js/xbbcode.js"></script>
 <script src="js/ui.js"></script>
@@ -14,13 +16,14 @@
 <script src="js/map.js"></script>
 <script src="js/predefined.js"></script>
 <script src="js/online.js"></script>
+<script src="js/touch_ui.js"></script>
 <!-- Image resources -->
 <img src="img/potluck.png"  style="display: none;" id="potluck">
 <img src="img/extra.png"    style="display: none;" id="extras">
 <img src="img/chicago.png"  style="display: none;" id="chicago">
 <img src="img/tomthumb.png" style="display: none;" id="tomthumb">
 </head>
-<body onLoad="initWorld();" ondragstart="return false;" ondrop="return false;">
+<body onLoad="initTouchUI();" ondragstart="return false;" ondrop="return false;">
 
 <template id="widget-window-template">
   <style>
@@ -504,6 +507,27 @@
   <div>
     <input type="text" style="width:100%;" id="chatInput" autocomplete="off" placeholder="chat here... (click or press enter to start!)">
   </div>
+</div>
+
+<!-- Mobile buttons --->
+<div id="touch-button-container" class="unselectable">
+  <table border="0">
+    <tr>
+      <td id="touch_button_ul">&nwarr;</td>
+      <td id="touch_button_u">&uarr;</td>
+      <td id="touch_button_ur">&nearr;</td>
+    </tr>
+    <tr>
+      <td id="touch_button_l">&larr;</td>
+      <td id="touch_button_walkturn">&#x1F6B6;</td>
+      <td id="touch_button_r">&rarr;</td>
+    </tr>
+    <tr>
+      <td id="touch_button_dl">&swarr;</td>
+      <td id="touch_button_d">&darr;</td>
+      <td id="touch_button_dr">&searr;</td>
+    </tr>
+  </table>
 </div>
 
 <!-- Main wrapper div -->

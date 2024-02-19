@@ -292,3 +292,27 @@ widget-contextmenu li:hover {
     padding-left: 1.5em;
     margin: 0.5em 0;
 }
+
+/* Touch UI buttons */
+#touch-button-container {
+	position: absolute;
+	right: 8px;
+	bottom: 32px;
+	font-size: 20px;
+}
+
+#touch-button-container td {
+    display: inline-block;
+    color: white;
+    background-color: #333;
+    border-radius: 5px;
+    border: 1px solid #000;
+	width: 2em;
+	height: 2em;
+    text-align: center;
+    cursor: pointer;
+}
+
+#touch-button-container td:hover {
+    background-color: lightpink;
+}
