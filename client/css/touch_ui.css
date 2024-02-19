@@ -2,3 +2,10 @@ html, body {
   font-size: 16px;
   touch-action: none;
 }
+
+#chat-container {
+    position: absolute;
+    left: 8px;
+    bottom: 32px;
+    width: 50%;
+}
