@@ -3,49 +3,9 @@ html, body {
   touch-action: none;
 }
 
-#wrapper {
-  flex-direction: column;
-}
-
 #chat-container {
-	position: relative;
-	left: 0px;
-	bottom: 0px;
-	width: 100%;
-}
-
-#selector-container {
-    width: 100%;
-    bottom: 0px;
-}
-
-#map-container {
-	flex-grow: 1;
-}
-
-
-/* Touch UI buttons */
-#touch-button-container {
-	font-size: 24px;
-	margin: auto;
-}
-
-#touch-button-container td {
-	display: inline-block;
-	color: white;
-	background-color: #333;
-	border-radius: 5px;
-	border: 1px solid #000;
-	width: 2em;
-	height: 2em;
-	text-align: center;
-	cursor: pointer;
-}
-
-#touch-button-container td:hover {
-	background-color: lightpink;
-}
-
-#movement-button-container {
-	margin:auto;
+    position: absolute;
+    left: 8px;
+    bottom: 32px;
+    width: 50%;
 }
