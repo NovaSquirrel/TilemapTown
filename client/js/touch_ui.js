@@ -22,7 +22,7 @@ let touchButtonsAreTurn = false;
 function initTouchUI() {
 	initWorld();
 
-	CameraScale = 4;
+	CameraScale = 2;
 	resizeCanvas();
 	updateZoomLevelDisplay();
 

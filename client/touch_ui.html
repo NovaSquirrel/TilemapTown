@@ -494,40 +494,41 @@
 <!-- Map and hotbar -->
 <div id="map-container">
   <canvas class="unselectable" id="map"></canvas>
-
-  <div id="selector-container">
-    <canvas class="unselectable" id="selector" width="320" height="16" imageSmoothingEnabled="false"></canvas>
-  </div>
 </div>
 
-<!-- Chat -->
-<div id="chat-container">
-  <div id="chatArea" class="chatarea">
-  </div>
-  <div>
-    <input type="text" style="width:100%;" id="chatInput" autocomplete="off" placeholder="chat here... (click or press enter to start!)">
-  </div>
-</div>
+<div id="bottom-container">
+	<!-- Chat -->
+	<div id="chat-container">
+		<div id="chatArea" class="chatarea"></div>
+		<div>
+			<input type="text" style="width:100%;" id="chatInput" autocomplete="off" placeholder="chat here... (click or press enter to start!)">
+		</div>
+	</div>
 
-<!-- Mobile buttons --->
-<div id="touch-button-container" class="unselectable">
-  <table border="0">
-    <tr>
-      <td id="touch_button_ul">&nwarr;</td>
-      <td id="touch_button_u">&uarr;</td>
-      <td id="touch_button_ur">&nearr;</td>
-    </tr>
-    <tr>
-      <td id="touch_button_l">&larr;</td>
-      <td id="touch_button_walkturn">&#x1F6B6;</td>
-      <td id="touch_button_r">&rarr;</td>
-    </tr>
-    <tr>
-      <td id="touch_button_dl">&swarr;</td>
-      <td id="touch_button_d">&darr;</td>
-      <td id="touch_button_dr">&searr;</td>
-    </tr>
-  </table>
+	<!-- Mobile buttons --->
+	<div id="touch-button-container" class="unselectable">
+		<table id="movement-button-container" border="0">
+			<tr>
+				<td id="touch_button_ul">&nwarr;</td>
+				<td id="touch_button_u">&uarr;</td>
+				<td id="touch_button_ur">&nearr;</td>
+			</tr>
+			<tr>
+				<td id="touch_button_l">&larr;</td>
+				<td id="touch_button_walkturn">&#x1F6B6;</td>
+				<td id="touch_button_r">&rarr;</td>
+			</tr>
+			<tr>
+				<td id="touch_button_dl">&swarr;</td>
+				<td id="touch_button_d">&darr;</td>
+				<td id="touch_button_dr">&searr;</td>
+			</tr>
+		</table>
+	</div>
+
+	<div id="selector-container">
+		<canvas class="unselectable" id="selector" width="320" height="16" imageSmoothingEnabled="false"></canvas>
+	</div>
 </div>
 
 <!-- Main wrapper div -->
