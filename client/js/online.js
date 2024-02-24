@@ -694,6 +694,7 @@ function ConnectToServer() {
       idn_args["username"] = OnlineUsername;
       idn_args["password"] = OnlinePassword
     };
+	idn_args["client_name"] = "Tilemap Town Web Client";
 
     SendCmd("IDN", idn_args);
     OnlineIsConnected = true;

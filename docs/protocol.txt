@@ -159,11 +159,13 @@ Fields you can update with client-->server WHO update:
 --> IDN {"map" [map_id]}
 --> IDN {"map" [map_id, x, y]}
 --> IDN {"features": {"feature_name": {"version": "1.0.0"}}}
+--> IDN {"client_name": "name", "client_version": "1.0.0"}
 <-- IDN
 <-- IDN {"features": {"feature_name": {"version": "1.0.0"}}}
 Log into the server with or without an account. Server sends an acknowledgement if the IDN was accepted.
 Can optionally start on a specific map, with optional map coordinates.
 Clients can request features and the server can confirm some amount of them.
+Clients can report what name and version they're running if they like.
 
 --> MSG {"text": "[text]"}
 --> MSG {"text": "[text]", "rc": id}
