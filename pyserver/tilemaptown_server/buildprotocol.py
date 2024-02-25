@@ -865,6 +865,35 @@ def fn_IDN(map, client, arg, echo):
 				client.features.add(key)
 				ack_info["features"][key] = {"version": available_server_features[key]["version"]}
 
+	def login_successful():
+		client.identified = True
+		client.send("IDN", ack_info if ack_info != {} else None)
+
+		if len(Config["Server"]["MOTD"]):
+			client.send("MSG", {'text': Config["Server"]["MOTD"]})
+
+		if Config["Server"]["BroadcastConnects"]:
+			text = '%s has connected!' % client.name_and_username()
+			for u in AllClients:
+				if u is not client:
+					u.send("MSG", {'text': text})
+
+		# Bot and user counts
+		if "bot" in arg:
+			if arg["bot"]:
+				client.user_flags |= userflag['bot']
+			else:
+				client.user_flags &= ~userflag['bot']
+
+		bot_count = 0
+		for c in AllClients:
+			if c.user_flags & userflag['bot']:
+				bot_count += 1
+		client.send("MSG", {'text': 'Users connected: %d' % (len(AllClients)-bot_count) + ('' if bot_count == 0 else '. Bots connected: %d.' % bot_count)})
+		client.login_successful_callback = None
+
+	client.login_successful_callback = login_successful
+
 	# Now check the username and password and actually log in
 	if arg != {} and "username" in arg and "password" in arg:
 		if not client.login(filter_username(arg["username"]), arg["password"], override_map=override_map):
@@ -875,30 +904,8 @@ def fn_IDN(map, client, arg, echo):
 		if not override_map or not client.switch_map(override_map[0], new_pos=None if (len(override_map) == 1) else (override_map[1:])):
 			client.switch_map(get_database_meta('default_map'))
 
-	# Apply this after logging in, so it can override the loaded value
-	if "bot" in arg:
-		if arg["bot"]:
-			client.user_flags |= userflag['bot']
-		else:
-			client.user_flags &= ~userflag['bot']
-
-	if len(Config["Server"]["MOTD"]):
-		client.send("MSG", {'text': Config["Server"]["MOTD"]})
-	client.identified = True
-
-	if Config["Server"]["BroadcastConnects"]:
-		text = '%s has connected!' % client.name_and_username()
-		for u in AllClients:
-			if u is not client:
-				u.send("MSG", {'text': text})
-
-	client.send("IDN", ack_info if ack_info != {} else None)
-
-	bot_count = 0
-	for c in AllClients:
-		if c.user_flags & userflag['bot']:
-			bot_count += 1
-	client.send("MSG", {'text': 'Users connected: %d' % (len(AllClients)-bot_count) + ('' if bot_count == 0 else '. Bots connected: %d.' % bot_count)})
+	if client.login_successful_callback: # Make sure this gets called even if the map switch fails
+		client.login_successful_callback()
 
 # -------------------------------------
 

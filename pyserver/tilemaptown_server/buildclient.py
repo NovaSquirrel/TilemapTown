@@ -51,6 +51,7 @@ class Client(Entity):
 		self.user_flags = 0
 
 		self.sent_resources_yet = False
+		self.login_successful_callback = None
 		self.no_inventory_messages = False # don't send BAG updates when adding or removing items
 
 		# Information for /undodel

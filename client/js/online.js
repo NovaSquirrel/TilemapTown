@@ -566,7 +566,7 @@ function receiveServerMessage(cmd, arg) {
             {'isChat': true, 'plainText': `* ${arg.name} ${arg.text.slice(4)}`});
         else if(arg.text.slice(0, 5).toLowerCase() == "/ooc ")
           logMessage("[OOC] "+arg.name+": "+convertBBCode(arg.text.slice(5)), 'ooc_message',
-            {'isChat': true, 'plainText': `[OOC] ${arg.name} ${arg.text.slice(5)}`});
+            {'isChat': true, 'plainText': `[OOC] ${arg.name}: ${arg.text.slice(5)}`});
         else if(arg.text.slice(0, 7).toLowerCase() == "/spoof ")
           logMessage("* <i>"+convertBBCode(arg.text.slice(7)) + "</i> <span class=\"spoof_name\">(by "+arg.name+")</span>", 'spoof_message',
             {'isChat': true, 'plainText': `* ${arg.text.slice(7)} (by ${arg.name})`});

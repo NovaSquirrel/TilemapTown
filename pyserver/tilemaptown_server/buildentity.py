@@ -564,10 +564,15 @@ class Entity(object):
 
 	def switch_map(self, map_id, new_pos=None, goto_spawn=True, update_history=True, edge_warp=False, on_behalf_of=None):
 		""" Teleport the user to another map """
+
+		self.start_batch()
+
 		self.save_on_clean_up = True
 		if self.is_client():
 			self.undo_delete_data = None
 			if not self.sent_resources_yet:
+				if self.login_successful_callback:
+					self.login_successful_callback()
 				self.sent_resources_yet = True
 				if LoadedAnyServerResources[0]:
 					self.send("RSC", ServerResources)
@@ -578,8 +583,6 @@ class Entity(object):
 			if self.map_id != map_id:
 				self.tp_history.append([self.map_id, self.x, self.y])
 				added_new_history = True
-
-		self.start_batch()
 
 		if self.map_id != map_id:
 			# Find the entity (map_id may also directly be an entity)
