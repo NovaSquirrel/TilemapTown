@@ -164,7 +164,11 @@ class Client(Entity):
 		# Look for IP bans
 		if self.ip != '':
 			c = Database.cursor()
-			ip = ipaddress.ip_address(self.ip)
+			try:
+				ip = ipaddress.ip_address(self.ip)
+			except:
+				print("Bad IP: "+self.ip)
+				return False
 			if ip.version == 4:
 				split = ip.exploded.split('.')
 				c.execute("""SELECT id, expires_at, reason FROM Server_Ban WHERE
