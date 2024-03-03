@@ -419,7 +419,6 @@ function keyDownHandler(e) {
 						// Don't break here, so that if a sign is in the stack of objects it will get read
 					}
 					if (Obj.type == AtomTypes.SIGN) {
-						botMessageButton = null;
 						logMessage(((Obj.name != "sign" && Obj.name != "") ? escape_tags(Obj.name) + " says: " : "The sign says: ") + convertBBCode(Obj.message), "server_message",
 						  {'plainText': (Obj.name != "sign" && Obj.name != "") ? Obj.name + " says: " : "The sign says: " + Obj.message});
 					}
