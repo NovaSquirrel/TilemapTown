@@ -413,7 +413,16 @@
       <option value="custom">Custom</option>
     </select>
     <input type="number" value="0" id="edittilex" oninput="editItemUpdatePic();" size="4" />
-    <input type="number" value="0" id="edittiley" oninput="editItemUpdatePic();" size="4" />
+    <input type="number" value="0" id="edittiley" oninput="editItemUpdatePic();" size="4" /><br >
+	Autotiling: <select id="edittileautotile">
+		<option value="0">None</option>
+		<option value="1">9 slice</option>
+		<option value="2">4 directions - Middle</option>
+		<option value="3">4 directions - Single</option>
+		<option value="4">RPG - Middle</option>
+		<option value="5">RPG - Single</option>
+	</select>
+    <input type="text" id="edittileautotileclass" placeholder="Autotile class" />
     <br/>
     <div style="overflow:scroll; width:512px; height:128px;" id="edittilesheetcontainer">
     <img src="" id="edittilesheetselect">

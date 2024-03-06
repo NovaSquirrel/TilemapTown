@@ -752,6 +752,8 @@ function editItemShared(item) {
 		document.getElementById('edittilesheet').value = "keep";
 		document.getElementById('edittilex').value = itemobj.pic[1];
 		document.getElementById('edittiley').value = itemobj.pic[2];
+		document.getElementById('edittileautotile').value = (itemobj.autotile_layout ?? 0).toString();
+		document.getElementById('edittileautotileclass').value = itemobj.autotile_class ?? "";
 		let index_for_type = 0;
 		switch (itemobj.type) {
 			case "sign":
@@ -839,19 +841,28 @@ function editItemApply() {
 			let edittiledensity = document.getElementById('edittiledensity').checked;
 			let edittileobject = !document.getElementById('edittileisobject').checked;
 			let edittileover = document.getElementById('edittileover').checked;
+			let edittileautotile = parseInt(document.getElementById('edittileautotile').value);
+			let edittileautotileclass = document.getElementById('edittileautotileclass').value;
 
 			updates.pic = [edittilesheet, edittilex, edittiley];
 
 			if (editItemType == "map_tile" || editItemType == "map_tile_hotbar") {
 				let data = {
 					"name": updates.name,
-					"pic": updates.pic,
-					"obj": edittileobject,
-					"type": edittiletype,
-					"density": edittiledensity
+					"pic": updates.pic
 				};
+				if(edittiletype)
+					data["type"] = edittiletype;
+				if(edittileobject)
+					data["obj"] = true;
+				if(edittiledensity)
+					data["density"] = true;
 				if(edittileover)
 					data["over"] = true;
+				if(edittileautotile)
+					data["autotile_layout"] = edittileautotile;
+				if(edittileautotileclass)
+					data["autotile_class"] = edittileautotileclass;
 				updates.data = JSON.stringify(data);
 				if(editItemType === "map_tile_hotbar") {
 					hotbarData[editItemID] = data;

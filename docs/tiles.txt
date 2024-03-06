@@ -85,7 +85,15 @@ Tiles are defined with a JSON object, which can have the following fields:
 		H = Tiles to use when the only connections are horizontal
 		V = Tiles to use when the only connections are vertical
 
-	3 = The client looks at all eight surrounding tiles, and builds a 16x16 tile out of four 8x8 parts from the tileset.
+	3 = Exactly the same as how 2 works, except "pic" points at the tile used for when there are no connections.
+		The reason 2 and 3 both exist is so that you can choose which fallback will look better for clients that don't support autotiling.
+
+		HHHP
+		.-.V
+		|~|V
+		'-'V
+
+	4 = The client looks at all eight surrounding tiles, and builds a 16x16 tile out of four 8x8 parts from the tileset.
 		For example, a tile that's connected on the left and the right will be built out of 8x8 tiles from the top edge of the main square and 8x8 tiles from the bottom edge.
 		8x8 tiles from the # position override 8x8 tiles in the result when there is a connection north and east but not northeast, north and west but not northwest and so on.
 		This layout is supposed to be similar to how RPG Maker 2000/2003 does autotiling, though one difference is that the tile in the O position is actually used, instead of only showing up on the map editor.
@@ -99,8 +107,7 @@ Tiles are defined with a JSON object, which can have the following fields:
 		O = Tile to use when there are no connections
 		# = Tile to use when there are connections on all four cardinal directions, but not northeast, northwest, southeast, or southwest
 
-	4 = Exactly the same as how 3 works, except "pic" points at the tile used for when there are no connections.
-		The reason 3 and 4 both exist is so that you can choose which fallback will look better for clients that don't support autotiling.
+	5 = Exactly the same as how 4 works, except "pic" points at the tile used for when there are no connections.
 
 		P #
 		.-.

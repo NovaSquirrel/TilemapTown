@@ -262,15 +262,20 @@ function drawTurf(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCoordY) {
 			picY += pair[1];
 			break;
 		case 2: // 4-direction autotiling, 9 tiles, origin is middle, horizonal & vertical & single as separate tiles
+		case 3: // same, but origin point is the single tile
 			pair = [[2,-2], [1,-2], [-1,-2], [0,-2],
 					[2, 1], [1, 1], [-1, 1], [0, 1],
 					[2,-1], [1,-1], [-1,-1], [0,-1],
 					[2, 0], [1, 0], [-1, 0], [0, 0]][getAutotileIndex4(tile, map, mapCoordX, mapCoordY)];
 			picX += pair[0];
 			picY += pair[1];
+			if (autotileLayout == 3) {
+				picX -= 2;
+				picY += 2;
+			}
 			break;
-		case 3: // 8-direction autotiling, origin point is middle
-		case 4: // 8-direction autotiling, origin point is single
+		case 4: // 8-direction autotiling, origin point is middle
+		case 5: // 8-direction autotiling, origin point is single
 		{
 			let autotileIndex = getAutotileIndex4(tile, map, mapCoordX, mapCoordY);
 
@@ -302,8 +307,8 @@ function drawTurf(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCoordY) {
 				quarters[3][0] = 3;
 				quarters[3][1] = -3;
 			}
-			// Layout 4 has the origin point on the single tile instead of the middle tile
-			if (autotileLayout == 4) {
+			// Layout 5 has the origin point on the single tile instead of the middle tile
+			if (autotileLayout == 5) {
 				picX++;
 				picY += 2;
 			}
