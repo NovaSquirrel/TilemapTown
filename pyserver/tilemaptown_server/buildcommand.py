@@ -909,8 +909,8 @@ def fn_mapdisablesave(map, client, context, arg):
 	else:
 		respond(context, 'Map save disabling must be on or off', error=True)
 
-@cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="text")
-def fn_defaultfloor(map, client, context, arg):
+@cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="text", alias=['defaultfloor'])
+def fn_mapdefaultfloor(map, client, context, arg):
 	as_json = load_json_if_valid(arg)
 	if as_json != None:
 		if tile_is_okay(as_json):
