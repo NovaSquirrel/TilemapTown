@@ -794,6 +794,15 @@ def fn_permlist(map, client, context, arg):
 	perms += "[/ul]"
 	respond(context, perms)
 
+@cmd_command(privilege_level="registered")
+def fn_findmyitems(map, client, context, arg):
+	c = Database.cursor()
+	maps = "My items: [ul]"
+	for row in c.execute('SELECT m.id, m.name, m.type FROM Entity m WHERE m.owner_id=? AND m.type != ? AND m.type != ? AND m.location == NULL', (client.db_id, entity_type['map'], entity_type['group'])):
+		maps += "[li][b]%s[/b] (%s) [command]e %d take[/command][/li]" % (row[1], entity_type_name[row[2]], row[0])
+	maps += "[/ul]"
+	respond(context, maps)
+
 @cmd_command(category="Map", privilege_level="registered")
 def fn_mymaps(map, client, context, arg):
 	c = Database.cursor()

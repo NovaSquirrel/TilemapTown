@@ -132,7 +132,11 @@ class Entity(object):
 			if self.db_id != get_database_meta('default_map'):
 				temp = set(self.contents)
 				for u in temp:
-					if not u.is_client() and u.home_id != self.db_id and (u.owner_id != self.owner_id or u.owner_id == None) and u.map_id != u.owner_id and not u.has_permission(self, permission['persistent_object_entry'], False):
+					if not u.is_client() \
+					and u.home_id != self.db_id \
+					and (u.owner_id != self.owner_id or u.owner_id == None) \
+					and u.map_id != u.owner_id \
+					and not u.has_permission(self, permission['persistent_object_entry'], False):
 						u.send_home()
 
 			self.cleaned_up_already = True
@@ -647,15 +651,16 @@ class Entity(object):
 			return
 		if self.is_client() and self.switch_map(get_database_meta('default_map')):
 			return
-		if self.owner_id:
+		owner = self.owner_id if self.owner_id != None else self.creator_id # TODO: Figure out how a null owner ID can happen
+		if owner:
 			# Try to put it into the owner's inventory, if they're online
-			if self.switch_map(self.owner_id):
+			if self.switch_map(owner):
 				return
 			if self.db_id:
 				# Move it to the owner's inventory
 				if self.map:
 					self.map.remove_from_contents(self)
-				self.map_id = self.owner_id
+				self.map_id = owner
 				self.save_and_commit()
 				self.clean_up() # Owner isn't online so item should be unloaded
 				return
@@ -820,6 +825,10 @@ class Entity(object):
 		self.deny = result[11]
 		self.guest_deny = result[12]
 		self.creator_id = result[13]
+		if self.owner_id == None and self.creator_id != None:
+			# TODO: Figure out how null owner IDs are even able to happen
+			print("Correcting null owner ID for loaded entity %s to %s" % (load_id, self.creator_id))
+			self.owner_id = self.creator_id
 
 		if not self.load_data():
 			return False
@@ -864,7 +873,12 @@ class Entity(object):
 			if self.db_id == None:
 				return
 
-		values = (self.entity_type, self.name, self.desc, dumps_if_not_none(self.pic), self.map_id, json.dumps([self.x, self.y] + ([self.dir] if self.dir != 2 else [])), self.home_id, dumps_if_not_none(self.home_position), dumps_if_condition(self.tags, self.tags != {}), self.owner_id, self.allow, self.deny, self.guest_deny, self.db_id)
+		if self.owner_id == None and self.creator_id != None:
+			# TODO: Figure out how null owner IDs are even able to happen
+			print("Correcting null owner ID for saved entity %s to %s" % (load_id, self.creator_id))
+			self.owner_id = self.creator_id
+
+		values = (self.entity_type, self.name, self.desc, dumps_if_not_none(self.pic), self.map_id, json.dumps([self.x, self.y] + ([self.dir] if self.dir != 2 else [])), self.home_id, dumps_if_not_none(self.home_position), dumps_if_condition(self.tags, self.tags != {} and self.tags != None), self.owner_id if self.owner_id != None else self.creator_id, self.allow, self.deny, self.guest_deny, self.db_id)
 		c.execute("UPDATE Entity SET type=?, name=?, desc=?, pic=?, location=?, position=?, home_location=?, home_position=?, tags=?, owner_id=?, allow=?, deny=?, guest_deny=? WHERE id=?", values)
 
 		self.save_data()

@@ -398,7 +398,16 @@ def fn_BAG(map, client, arg, echo):
 			protocol_error(client, echo, text='Can\'t clone %s' % arg['clone']['id'], code='not_found', subject_id=arg['clone']['id'])
 			return
 
-		if clone_me.creator_temp_id != client.id and clone_me.owner_id != client.db_id and \
+		clone_type = clone_me.entity_type
+		if clone_type == entity_type['user']:
+			clone_type = entity_type['generic']
+		else:
+			clone_type_name = entity_type_name[clone_type]
+			if clone_type_name not in creatable_entity_types:
+				protocol_error(client, echo, text='Invalid type of item to clone (%s)' % clone_type_name)
+				return
+
+		if clone_me.creator_temp_id != client.id and (clone_me.owner_id != client.db_id or client.db_id == None) and \
 		not client.has_permission(clone_me, permission['copy'], False):
 			protocol_error(client, echo, text='You don\'t have permission to clone %s' % arg['clone']['id'], code='missing_permission', detail='copy', subject_id=arg['clone']['id'])
 			return

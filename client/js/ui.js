@@ -684,6 +684,7 @@ let editItemOriginalSheet = null; // Original tileset image that the tile's pic 
 function editItemShared(item) {
 	let itemobj = null;
 	editItemType = item.type;
+	document.getElementById('edittileautotileoptions').style.display = "none";
 	document.getElementById('edittileobject').style.display = "none";
 	document.getElementById('edittiletext').style.display = "none";
 	document.getElementById('edittileimage').style.display = "none";
@@ -706,6 +707,7 @@ function editItemShared(item) {
 		case "map_tile_hotbar":
 		case "map_tile":
 		if (item.type == "map_tile" || item.type == "map_tile_hotbar") {
+			document.getElementById('edittileautotileoptions').style.display = "block";
 			itemobj = AtomFromName(item.data);
 			if (itemobj == null) {
 				itemobj = { pic: [0, 8, 24] };
