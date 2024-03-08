@@ -620,13 +620,21 @@ def fn_TSD(map, client, arg, echo):
 
 @protocol_command()
 def fn_IMG(map, client, arg, echo):
-	c = Database.cursor()
-	c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type['image'], arg['id'],))
-	result = c.fetchone()
-	if result == None:
-		protocol_error(client, echo, text='Invalid item ID', code='not_found', subject_id=arg['id'])
+	if isinstance(arg['id'], list):
+		images = set(arg['id'])
 	else:
-		client.send("IMG", {'id': arg['id'], 'url': loads_if_not_none(decompress_entity_data(result[0], result[1]))})
+		images = (arg['id'],)
+
+	client.start_batch()
+	for i in images:
+		c = Database.cursor()
+		c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type['image'], i,))
+		result = c.fetchone()
+		if result == None:
+			protocol_error(client, echo, text='Invalid item ID', code='not_found', subject_id=arg['id'])
+		else:
+			client.send("IMG", {'id': i, 'url': loads_if_not_none(decompress_entity_data(result[0], result[1]))})
+	client.finish_batch()
 
 @protocol_command(map_only=True)
 def fn_MAI(map, client, arg, echo):

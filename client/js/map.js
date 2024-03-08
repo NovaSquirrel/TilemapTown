@@ -69,6 +69,7 @@ let CurrentMapID = 0;
 
 let IconSheets = {}; // Tile sheets, indexed by first element in a 'pic'
 let IconSheetsRequested = {};
+let IconSheetRequestList = [];
 
 let Tilesets = {};   // Extra tilesets past just the GlobalTiles list
 let TilesetsRequested = {};
@@ -77,7 +78,7 @@ function RequestImageIfNeeded(id) {
   if(!IconSheets[id] && !IconSheetsRequested[id]) {
     // ask for the image
     IconSheetsRequested[id] = true;
-    SendCmd("IMG", {"id": id});
+    IconSheetRequestList.push(id);
   }
 }
 

@@ -470,6 +470,14 @@ function drawMap() {
 		ctx.stroke();
 		ctx.globalAlpha = 1;
 	}
+
+	if (IconSheetRequestList.length) {
+		if (IconSheetRequestList.length == 1)
+			SendCmd("IMG", {"id": IconSheetRequestList[0]});
+		else
+			SendCmd("IMG", {"id": IconSheetRequestList});
+		IconSheetRequestList = [];
+	}
 }
 
 function drawText(ctx, x, y, text) {

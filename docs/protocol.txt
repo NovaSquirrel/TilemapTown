@@ -118,7 +118,9 @@ Can take a "temp" optional parameter like PUT can.
 
 === Resources ===
 --> IMG {"id": number}
-request an image asset's URL
+--> IMG {"id": [number, number, number...]}
+Request an image asset's URL
+Can request multiple image assets at once
 
 <-- IMG {"id": number, "url": string}
 have the client load an image, for tilesets or avatars or other purposes
