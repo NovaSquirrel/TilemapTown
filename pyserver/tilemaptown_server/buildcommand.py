@@ -130,23 +130,32 @@ def data_disallowed_for_entity_type(type, data):
 	if type == entity_type['image'] and not image_url_is_okay(data):
 		return 'Image asset URL doesn\'t match any allowlisted sites'
 	if type == entity_type['map_tile']:
-		tile_ok, tile_reason = tile_is_okay(data)
+		tile_ok, tile_reason = tile_is_okay(data, parse_json=True)
 		if not tile_ok:
 			return 'Tile [tt]%s[/tt] rejected (%s)' % (data, tile_reason)
 	return None
 
-def tile_is_okay(tile):
-	# convert to a dictionary to check first if necessary
-	if type(tile) == str and len(tile) and tile[0] == '{':
-		tile = json.loads(tile)
-
-	# Strings refer to tiles in tilesets and are
-	# definitely OK as long as they're not excessively long.
+def tile_is_okay(tile, parse_json=False):
 	if type(tile) == str:
-		if len(tile) <= 32:
+		if not len(tile):
+			return (False, 'Empty string')
+		if tile.strip() != tile:
+			return (False, '')
+
+		# Sometimes it's a string containing JSON 
+		if tile[0] == '{':
+			if parse_json:
+				tile = json.loads(tile)
+			else:
+				return (False, 'JSON string')
+
+		# Strings that aren't JSON refer to tiles in tilesets and are
+		# definitely OK as long as they're not excessively long.
+		elif len(tile) <= 32:
 			return (True, None)
 		else:
 			return (False, 'Identifier too long')
+
 	# If it's not a string it must be a dictionary
 	if type(tile) != dict:
 		return (False, 'Invalid type')
