@@ -117,7 +117,7 @@ def respond(context, text, data=None, error=False, code=None, detail=None, subje
 	if detail:
 		args['detail'] = detail
 	if subject_id:
-		args['subject_id'] = subject
+		args['subject_id'] = subject_id
 
 	respond_to.send('ERR' if error else 'CMD', args)
 
@@ -842,11 +842,13 @@ def fn_publicmaps(map, client, context, arg):
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="newname")
 def fn_mapname(map, client, context, arg):
 	map.name = arg
+	map.save_on_clean_up = True
 	respond(context, 'Map name set to \"%s\"' % map.name)
 
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="text")
 def fn_mapdesc(map, client, context, arg):
 	map.desc = arg
+	map.save_on_clean_up = True
 	respond(context, 'Map description set to \"%s\"' % map.desc)
 
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="edge id")
@@ -881,10 +883,11 @@ def fn_mapedgelink(map, client, context, arg):
 def fn_mapowner(map, client, context, arg):
 	newowner = find_db_id_by_username(arg)
 	if newowner:
-		map.owner = newowner
+		map.owner_id = newowner
 		respond(context, 'Map owner set to \"%s\"' % map.owner)
 	else:
 		respond(context, 'Nonexistent account', error=True)
+	map.save_on_clean_up = True
 
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="public/private/unlisted")
 def fn_mapprivacy(map, client, context, arg):
@@ -899,6 +902,7 @@ def fn_mapprivacy(map, client, context, arg):
 		map.map_flags &= ~mapflag['public']
 	else:
 		respond(context, 'Map privacy must be public, private, or unlisted', error=True)
+	map.save_on_clean_up = True
 
 @cmd_command(category="Map", privilege_level="map_admin", map_only=True, syntax="on/off")
 def fn_mapprotect(map, client, context, arg):
@@ -933,16 +937,19 @@ def fn_mapdefaultfloor(map, client, context, arg):
 	if as_json != None:
 		if tile_is_okay(as_json):
 			map.default_turf = as_json
+			map.save_on_clean_up = True
 			respond(context, 'Map floor changed to custom tile %s' % arg)
 		else:
 			respond(context, 'Map floor not changed, custom tile not ok: %s' % arg)
 	else:
 		map.default_turf = arg
+		map.save_on_clean_up = True
 		respond(context, 'Map floor changed to %s' % arg)
 
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="text")
 def fn_mapspawn(map, client, context, arg):
 	map.start_pos = [client.x, client.y]
+	map.save_on_clean_up = True
 	respond(context, 'Map start changed to %d,%d' % (client.x, client.y))
 
 @cmd_command(category="Map", map_only=True,)
@@ -1003,6 +1010,8 @@ def fn_mapsize(map, client, context, arg):
 			user.start_batch()
 			map.send_map_info(user)
 			user.finish_batch()
+	map.map_data_modified = True
+	map.save_on_clean_up = True
 
 @cmd_command()
 def fn_coords(map, client, context, arg):
@@ -2127,7 +2136,7 @@ def handle_user_command(map, client, respond_to, echo, text):
 		elif privilege_needed == 2 and client.db_id != map.owner_id and (not client.is_client() or not client.oper_override) and not client.has_permission(map, permission['admin'], False): # Map admin
 			respond(context, 'Only the map owner or map admins can use "%s"' % command, error=True, code='missing_permission', detail='admin', subject_id=map)
 		elif privilege_needed == 3 and client.db_id != map.owner_id and (not client.is_client() or not client.oper_override): # Map owner
-			respond(context, 'Only the map owner can use "%s"' % command, error=True, code='owner_only', subject_id=map)
+			respond(context, 'Only the map owner can use "%s"' % command, error=True, code='owner_only', subject_id=map.protocol_id())
 		elif privilege_needed == 4 and (not client.is_client() or client.username not in Config["Server"]["Admins"]):
 			respond(context, 'Only server admins can use "%s"' % command, error=True, code='server_admin_only')
 		else:

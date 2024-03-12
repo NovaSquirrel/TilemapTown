@@ -148,7 +148,12 @@ class Map(Entity):
 		self.start_pos = [result[1], result[2]]
 		self.width = result[3]  # Will be overwritten by the blank_map call but that's ok
 		self.height = result[4]
-		self.default_turf = result[5]
+		self.default_turf = result[5] or "grass"
+		if self.default_turf[0] == '{':
+			try:
+				self.default_turf = json.loads(self.default_turf)
+			except:
+				self.default_turf = "grass"
 
 		return super().load(map_id)
 
@@ -185,8 +190,12 @@ class Map(Entity):
 		if c.fetchone() == None:
 			c.execute("INSERT INTO Map (entity_id) VALUES (?)", (self.db_id,))
 
+		default_turf = self.default_turf # Handle JSON default turfs
+		if isinstance(default_turf, dict):
+			default_turf = json.dumps(default_turf)
+
 		# Update the map
-		values = (self.map_flags, self.start_pos[0], self.start_pos[1], self.width, self.height, self.default_turf, self.db_id)
+		values = (self.map_flags, self.start_pos[0], self.start_pos[1], self.width, self.height, default_turf, self.db_id)
 		c.execute("UPDATE Map SET flags=?, start_x=?, start_y=?, width=?, height=?, default_turf=? WHERE entity_id=?", values)
 
 	def save_data(self):
