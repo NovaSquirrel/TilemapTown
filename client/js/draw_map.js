@@ -66,6 +66,51 @@ function getAutotileIndex4(t, map, x, y) {
 	     | (isAutotileMatch(t, map, x, y+1) << 3)
 }
 
+/////////////////////////////////////////////////
+
+function getObjForAutotile(o, map, x, y) {
+	// Get a map tile's objects, except that off-map tiles return [o] instead
+	if (x < 0 || x >= map.Width || y < 0 || y >= map.Height)
+		return [o];
+	return map.Objs[x][y];
+}
+
+function isObjAutotileMatch(o, map, x, y) {
+	// Is any tile on the map at x,y the "same" as o for autotiling purposes?
+	let objs = getObjForAutotile(o, map, x, y);
+	if (objs == null || objs == []) {
+		return false;
+	}
+	if (o.autotile_class) {
+		for (let other of objs) {
+			other = AtomFromName(other);
+			if (o.autotile_class == other.autotile_class)
+				return true;
+		}
+	} else if (o.name) {
+		for (let other of objs) {
+			other = AtomFromName(other);
+			if (o.name == other.name)
+				return true;
+		}
+	}
+	return false;
+}
+
+function getObjAutotileIndex4(o, map, x, y) {
+	/* Check on the four adjacent tiles and see if any of the objects on them "match", to get an index for an autotile lookup table.
+		Will result in one of the following:
+		0 durl  1 durL 2  duRl  3 duRL
+		4 dUrl  5 dUrL 6  dURl  7 dURL
+		8 Durl  9 DurL 10 DuRl 11 DuRL
+		12 DUrl 13 DUrL 14 DURl 15 DURL
+	*/
+	return (isObjAutotileMatch(o, map, x-1, y) << 0)
+	     | (isObjAutotileMatch(o, map, x+1, y) << 1)
+	     | (isObjAutotileMatch(o, map, x, y-1) << 2)
+	     | (isObjAutotileMatch(o, map, x, y+1) << 3)
+}
+
 ///////////////////////////////////////////////////////////
 // Render the map view
 ///////////////////////////////////////////////////////////
@@ -237,7 +282,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 	}
 }
 
-function drawTurf(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCoordY) {
+function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCoordY, autotileIndexFunction, autotileMatchFunction) {
 	if (!tile) {
 		return;
 	}
@@ -257,7 +302,7 @@ function drawTurf(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCoordY) {
 			pair = [[0,0], [0, 0], [0,  0], [0, 0],
 					[0,0], [1, 1], [-1, 1], [0, 1],
 					[0,0], [1,-1], [-1,-1], [0,-1],
-					[0,0], [1, 0], [-1, 0], [0, 0]][getAutotileIndex4(tile, map, mapCoordX, mapCoordY)];
+					[0,0], [1, 0], [-1, 0], [0, 0]][autotileIndexFunction(tile, map, mapCoordX, mapCoordY)];
 			picX += pair[0];
 			picY += pair[1];
 			break;
@@ -266,7 +311,7 @@ function drawTurf(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCoordY) {
 			pair = [[2,-2], [1,-2], [-1,-2], [0,-2],
 					[2, 1], [1, 1], [-1, 1], [0, 1],
 					[2,-1], [1,-1], [-1,-1], [0,-1],
-					[2, 0], [1, 0], [-1, 0], [0, 0]][getAutotileIndex4(tile, map, mapCoordX, mapCoordY)];
+					[2, 0], [1, 0], [-1, 0], [0, 0]][autotileIndexFunction(tile, map, mapCoordX, mapCoordY)];
 			picX += pair[0];
 			picY += pair[1];
 			if (autotileLayout == 3) {
@@ -277,7 +322,7 @@ function drawTurf(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCoordY) {
 		case 4: // 8-direction autotiling, origin point is middle
 		case 5: // 8-direction autotiling, origin point is single
 		{
-			let autotileIndex = getAutotileIndex4(tile, map, mapCoordX, mapCoordY);
+			let autotileIndex = autotileIndexFunction(tile, map, mapCoordX, mapCoordY);
 
 			// Start out with 4-direction autotiling
 			let quarters = [[[-2,-4],[-1,-4],[-2,-3],[-1,-3]], [[2,-2],[3,-2],[2, 3],[3, 3]],
@@ -291,19 +336,19 @@ function drawTurf(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCoordY) {
 			][autotileIndex];
 
 			// Add the inner parts of turns
-			if (((autotileIndex & 5) == 5) && !isAutotileMatch(tile, map, mapCoordX-1, mapCoordY-1)) {
+			if (((autotileIndex & 5) == 5) && !autotileMatchFunction(tile, map, mapCoordX-1, mapCoordY-1)) {
 				quarters[0][0] = 2;
 				quarters[0][1] = -4;
 			}
-			if (((autotileIndex & 6) == 6) && !isAutotileMatch(tile, map, mapCoordX+1, mapCoordY-1)) {
+			if (((autotileIndex & 6) == 6) && !autotileMatchFunction(tile, map, mapCoordX+1, mapCoordY-1)) {
 				quarters[1][0] = 3;
 				quarters[1][1] = -4;
 			}
-			if (((autotileIndex & 9) == 9) && !isAutotileMatch(tile, map, mapCoordX-1, mapCoordY+1)) {
+			if (((autotileIndex & 9) == 9) && !autotileMatchFunction(tile, map, mapCoordX-1, mapCoordY+1)) {
 				quarters[2][0] = 2;
 				quarters[2][1] = -3;
 			}
-			if (((autotileIndex & 10) == 10) && !isAutotileMatch(tile, map, mapCoordX+1, mapCoordY+1)) {
+			if (((autotileIndex & 10) == 10) && !autotileMatchFunction(tile, map, mapCoordX+1, mapCoordY+1)) {
 				quarters[3][0] = 3;
 				quarters[3][1] = -3;
 			}
@@ -322,6 +367,14 @@ function drawTurf(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCoordY) {
 		return;
 	}
 	ctx.drawImage(IconSheets[tile.pic[0]], picX * 16, picY * 16, 16, 16, drawAtX, drawAtY, 16, 16);
+}
+
+function drawTurf(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCoordY) {
+	drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCoordY, getAutotileIndex4, isAutotileMatch);
+}
+
+function drawObj(ctx, drawAtX, drawAtY, obj, map, mapCoordX, mapCoordY) {
+	drawAtomWithAutotile(ctx, drawAtX, drawAtY, obj, map, mapCoordX, mapCoordY, getObjAutotileIndex4, isObjAutotileMatch);
 }
 
 function drawMap() {
@@ -395,16 +448,12 @@ function drawMap() {
 				// Draw anything above the turf (the tile objects)
 				let Objs = map.Objs[mapCoordX][mapCoordY];
 				if (Objs) {
-					for (let index in Objs) {
-						let Obj = AtomFromName(Objs[index]);
-						if (IconSheets[Obj.pic[0]]) {
-							if(Obj.over === true) {
-								objectsWithOverFlag.push([x * 16 - offsetX, y * 16 - offsetY, Obj.pic]);
-							} else {
-								ctx.drawImage(IconSheets[Obj.pic[0]], Obj.pic[1] * 16, Obj.pic[2] * 16, 16, 16, x * 16 - offsetX, y * 16 - offsetY, 16, 16);
-							}
+					for (let o of Objs) {
+						o = AtomFromName(o);
+						if(o.over === true) {
+							objectsWithOverFlag.push([x * 16 - offsetX, y * 16 - offsetY, o, map, mapCoordX, mapCoordY]);
 						} else {
-							RequestImageIfNeeded(Obj.pic[0]);
+							drawObj(ctx, x * 16 - offsetX, y * 16 - offsetY, o, map, mapCoordX, mapCoordY);
 						}
 					}
 				}
@@ -431,8 +480,8 @@ function drawMap() {
 
 	// Draw objects that should appear above players
 	for (let i=0; i<objectsWithOverFlag.length; i++) {
-		let pic = objectsWithOverFlag[i][2];
-		ctx.drawImage(IconSheets[pic[0]], pic[1] * 16, pic[2] * 16, 16, 16, objectsWithOverFlag[i][0], objectsWithOverFlag[i][1], 16, 16);
+		let [x, y, object, map, mapx, mapy] = objectsWithOverFlag[i];
+		drawObj(ctx, x, y, object, map, mapx, mapy);
 	}
 
 	// Draw markers that show that people are building
