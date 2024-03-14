@@ -33,6 +33,13 @@ Clear status, set a status, or set a status with a message attached. The "iic" s
 /exportlogs
 Save the log of your current chat session to a text file
 
+/topic
+/topic message
+Get or set the discussion topic/activity of the current map, if allowed
+Currently only registered users can set topics, and topics are cleared when there is no longer anyone on a map
+
+/cleartopic
+Clears the map's current topic
 
 ---Utility---
 /getturf
@@ -74,6 +81,7 @@ List all entities on the map, not just users
 
 /whereare (alias: wa)
 Display a list of public maps that have users
+If these maps also have topics set, they are displayed too
 
 /gwho
 List all users on the server
@@ -257,6 +265,8 @@ modify_properties       : Allowed to modify properties of the map
 remote_command          : Allowed to make the command do a command
 modify_appearance       : Allowed to modify certain properties of the map
 list_contents           : Allowed to get a list of the entities on the map remotely
+set_owner_to_this       : Allowed to set the owner of their entities to this entity
+set_topic               : Allowed to change the topic on this map
 
 /permlist
 List the map's default permissions and the permissions for each user
@@ -364,6 +374,9 @@ List of the groups you're part of
 /entity id
 /entity id info
 Get information about the entity, such as properties and contents.
+
+/entity id locate
+Find where this entity is
 
 /entity id move x y
 /entity id tags

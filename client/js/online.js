@@ -192,10 +192,17 @@ function receiveServerMessage(cmd, arg) {
         }
 
         // Give a notice about a new map
-        var logText = "Now entering: <b>"+MyMap.Info['name']+"</b>";
-        if(MyMap.Info['desc'])
-          logText += ' - "'+MyMap.Info['desc']+'"'
-        logMessage(logText, 'server_message', {'plainText': `Now entering: ${MyMap.Info['name']}`});
+        let logText = "Now entering: <b>"+MyMap.Info['name']+"</b>";
+        let plainText = `Now entering: ${MyMap.Info['name']}`;
+        if(MyMap.Info['desc']) {
+          logText += ' - "'+MyMap.Info['desc']+'"';
+          plainText += ' - "'+MyMap.Info['desc']+'"';
+        }
+        if(MyMap.Info['topic']) {
+          logText += `<br>Current topic: "${MyMap.Info['topic']}" (set by ${MyMap.Info['topic_username']})`;
+          plainText += ` | Current topic: "${MyMap.Info['topic']}" (set by ${MyMap.Info['topic_username']})`;
+        }
+        logMessage(logText, 'server_message', {'plainText': plainText});
       }
       break;
     case "MAP":
@@ -357,6 +364,8 @@ function receiveServerMessage(cmd, arg) {
               case "ic": status_name = "in character"; break;
               case "ooc": status_name =  "out of character"; break;
               case "iic": status_name = "looking to be in-character"; break;
+              case "rp": status_name = "in a roleplay"; break;
+              case "irp": status_name = "looking to roleplay"; break;
             }
 			let message = PlayerWho[arg.update.id].name + (status_name[0] == '"' ? "'s status is now ": " is now ") + status_name;
 			if(arg.update["status_message"]) {

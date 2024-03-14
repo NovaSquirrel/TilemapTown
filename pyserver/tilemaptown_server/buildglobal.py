@@ -150,6 +150,7 @@ permission['remote_command']          = 0x00001000 # (all) user can make this en
 permission['modify_appearance']       = 0x00002000 # (all) user can modify visual properties, like picture or description
 permission['list_contents']           = 0x00004000 # (all) user can look at the contents of this entity
 permission['set_owner_to_this']       = 0x00008000 # (all) user can set change the owner of any of their entities to this entity
+permission['set_topic']               = 0x00010000 # (map) user can set the map's discussion topic
                                     # = 0x00010000
                                     # = 0x00020000
                                     # = 0x00040000

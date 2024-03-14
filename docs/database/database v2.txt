@@ -66,19 +66,24 @@ Permissions:
 	guest_deny      - integer - default permissions to deny for guests
 
 	Values:
-		0x0001 entry (deny to ban a user)
-		0x0002 build (or "modify" for things other than maps)
-		0x0004 full sandbox (anyone can delete anything)
-		0x0008 map admin (can do things that otherwise only map owners can, like kick or ban, but not things that are truly owner only)
-		0x0010 make copies of this entity
-		0x0020 map bot (can operate on map remotely)
-		0x0040 move this entity within the container
-		0x0080 move this entity onto another map
-		0x0100 for maps: bulk build (can use the BLK command)
+		0x00000001 entry (deny to ban a user)
+		0x00000002 build (or "modify" for things other than maps)
+		0x00000004 full sandbox (anyone can delete anything)
+		0x00000008 map admin (can do things that otherwise only map owners can, like kick or ban, but not things that are truly owner only)
+		0x00000010 make copies of this entity
+		0x00000020 map bot (can operate on map remotely)
+		0x00000040 move this entity within the container
+		0x00000080 move this entity onto another map
+		0x00000100 for maps: bulk build (can use the BLK command)
 		       for groups: anyone can get a list of the members
-		0x0200 allowed to bring non-player entities here temporarily
-		0x0400 allowed to bring non-player entities here that can be here without the player's owner
-
+		0x00000200 allowed to bring non-player entities here temporarily
+		0x00000400 allowed to bring non-player entities here that can be here without the player's owner
+		0x00000800 allowed to modify properties on this entity
+		0x00001000 allowed to make this entity do arbitrary commands
+		0x00002000 allowed to change visual properties, like picture or description 
+		0x00004000 allowed to look at the contents of the entity
+		0x00008000 user can set the owner of any of their entities to this entity
+		0x00010000 allowed to set a topic on this map
 
 ---PERMISSION---
 subject_id      * integer - ENTITY that the permissions apply to

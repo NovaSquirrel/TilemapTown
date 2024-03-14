@@ -567,7 +567,7 @@ def fn_status(map, client, context, arg):
 def fn_findiic(map, client, context, arg):
 	names = ''
 	for u in AllClients:
-		if u.status_type == None or u.status_type.lower() != 'iic':
+		if u.status_type == None or u.status_type.lower() not in ('iic', 'irp'):
 			continue
 		if len(names) > 0:
 			names += ', '
@@ -578,12 +578,12 @@ def fn_findiic(map, client, context, arg):
 def fn_findic(map, client, context, arg):
 	names = ''
 	for u in AllClients:
-		if u.status_type == None or u.status_type.lower() != 'ic':
+		if u.status_type == None or u.status_type.lower() not in ('ic', 'rp'):
 			continue
 		if len(names) > 0:
 			names += ', '
 		names += u.name_and_username()
-	respond(context, 'These users are currently in character: '+names)
+	respond(context, 'These users are currently in character (or roleplaying): '+names)
 
 @cmd_command(syntax="dice sides")
 def fn_roll(map, client, context, arg):
@@ -850,6 +850,36 @@ def fn_mapdesc(map, client, context, arg):
 	map.desc = arg
 	map.save_on_clean_up = True
 	respond(context, 'Map description set to \"%s\"' % map.desc)
+
+@cmd_command(category="Map", map_only=True, syntax="text")
+def fn_topic(map, client, context, arg):
+	if arg == None:
+		arg = ""
+	arg = arg.strip()
+
+	if arg:
+		if not client.db_id:
+			respond(context, 'Only registered users can set topics', error=True)
+		elif client.is_client() and client.has_permission(map, permission['set_topic'], True):
+			map.topic = arg[:250]
+			map.topic_username = client.username_or_id()
+			map.broadcast("MSG", {'text': 'Map\'s current topic is now: "%s" (set by %s)' % (map.topic, client.name_and_username())})
+		else:
+			respond(context, 'Don\t have permission to set a topic for this map', error=True)
+	else:
+		if map.topic:
+			respond(context, 'Map\'s current topic: "%s" (set by %s)' % (map.topic, map.topic_username))
+		else:
+			respond(context, 'There is no topic set for this map')
+
+@cmd_command(category="Map", privilege_level="registered", map_only=True)
+def fn_cleartopic(map, client, context, arg):
+	if client.is_client() and client.has_permission(map, permission['set_topic'], True):
+		map.topic = None
+		map.topic_username = None
+		map.broadcast("MSG", {'text': 'Map\'s current topic was cleared by %s' % (map.topic, client.name_and_username())})
+	else:
+		respond(context, 'Don\t have permission to set a topic for this map', error=True)
 
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="edge id")
 def fn_mapedgelink(map, client, context, arg):
@@ -1514,7 +1544,10 @@ def fn_whereare(map, client, context, arg):
 		for u in m.contents:
 			if u.is_client() and (u.user_flags & userflag['hide_location'] == 0):
 				names += u.name_and_username()+', '
-		names = names.rstrip(', ') + ' [command]map %d[/command][/li]' % m.db_id
+		names = names.rstrip(', ') + ' | [command]map %d[/command]' % m.db_id
+		if m.topic:
+			names += ' (📅[i]"%s" by %s[/i])' % (m.topic, m.topic_username)
+		names += '[/li]'
 	names += '[/ul]'
 
 	respond(context, names)
@@ -1872,6 +1905,19 @@ def fn_entity(map, client, context, arg):
 		if len(e.contents):
 			info += '\n[b]Contents:[/b] %s' % ', '.join(c.name_and_username() for c in e.contents)
 		respond(context, info)
+	elif subcommand == 'locate':
+		if e.is_client() and not client.oper_override and \
+			((e.user_flags & userflag['hide_location'] != 0) or (e.map and e.map.is_map() and (e.map.map_flags & mapflag['public'] == 0))):
+			respond(context, "That user's location is private")
+		else:
+			info = '[b]%s (%s)[/b]' % (e.name, e.protocol_id())
+			if e.map == None:
+				info += " doesn't have a location"
+			else:
+				info += ' is at ' + e.map.name_and_username()
+			if not e.map or (e.map and e.map.db_id != e.map_id):
+				info += ' (or %s?)' % e.map_id
+			respond(context, info)
 	elif subcommand == 'name':
 		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
 			e.name = subarg

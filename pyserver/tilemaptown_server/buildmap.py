@@ -39,6 +39,8 @@ class Map(Entity):
 		self.user_count = 0
 		self.map_data_loaded = False
 		self.map_data_modified = False
+		self.topic = None
+		self.topic_username = None
 
 		# See also:
 		# self.turfs[x][y]
@@ -123,6 +125,9 @@ class Map(Entity):
 				self.objs = None
 				
 				self.map_data_loaded = False
+			if self.user_count == 0:
+				self.topic = None
+				self.topic_username = None
 
 	def blank_map(self, width, height):
 		""" Make a blank map of a given size """
@@ -256,6 +261,9 @@ class Map(Entity):
 		if user:
 			out['you_allow'] = permission_list_from_bitfield(self.map_allow)
 			out['you_deny'] = permission_list_from_bitfield(self.map_deny)
+		if self.topic:
+			out['topic'] = self.topic
+			out['topic_username'] = self.topic_username
 		return out
 
 	def count_users_inside(self, recursive=True):
