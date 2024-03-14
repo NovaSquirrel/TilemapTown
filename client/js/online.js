@@ -365,7 +365,7 @@ function receiveServerMessage(cmd, arg) {
               case "ooc": status_name =  "out of character"; break;
               case "iic": status_name = "looking to be in-character"; break;
               case "rp": status_name = "in a roleplay"; break;
-              case "irp": status_name = "looking to roleplay"; break;
+              case "lfrp": case "irp": status_name = "looking to roleplay"; break;
             }
 			let message = PlayerWho[arg.update.id].name + (status_name[0] == '"' ? "'s status is now ": " is now ") + status_name;
 			if(arg.update["status_message"]) {

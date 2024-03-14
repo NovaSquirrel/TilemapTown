@@ -567,7 +567,7 @@ def fn_status(map, client, context, arg):
 def fn_findiic(map, client, context, arg):
 	names = ''
 	for u in AllClients:
-		if u.status_type == None or u.status_type.lower() not in ('iic', 'irp'):
+		if u.status_type == None or u.status_type.lower() not in ('iic', 'irp', 'lfrp'):
 			continue
 		if len(names) > 0:
 			names += ', '
