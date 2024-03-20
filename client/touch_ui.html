@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Tilemap Town</title>
+<title>Tilemap Town (for phones)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <!-- Resources -->
 <link rel="stylesheet" type="text/css" href="css/world.css" />
 <link rel="stylesheet" type="text/css" href="css/chat.css" />
 <link rel="stylesheet" type="text/css" href="css/xbbcode.css" />
+<link rel="stylesheet" type="text/css" href="css/touch_ui.css" />
 <script src="js/stretch.js"></script>
 <script src="js/xbbcode.js"></script>
 <script src="js/ui.js"></script>
@@ -14,13 +16,14 @@
 <script src="js/map.js"></script>
 <script src="js/predefined.js"></script>
 <script src="js/online.js"></script>
+<script src="js/touch_ui.js"></script>
 <!-- Image resources -->
 <img src="img/potluck.png"  style="display: none;" id="potluck">
 <img src="img/extra.png"    style="display: none;" id="extras">
 <img src="img/chicago.png"  style="display: none;" id="chicago">
 <img src="img/tomthumb.png" style="display: none;" id="tomthumb">
 </head>
-<body onLoad="initWorld();" ondragstart="return false;" ondrop="return false;">
+<body onLoad="initTouchUI();" ondragstart="return false;" ondrop="return false;">
 
 <template id="widget-window-template">
   <style>
@@ -190,9 +193,6 @@
     <input type="button" value="Tileset" onclick="newItemCreate('tileset');" />
     <input type="button" value="Folder" onclick="newItemCreate('folder');" />
     </p>
-	<p>
-	<label class="unselectable"><input type="checkbox" id="createtempobject">Create as temporary entity</label>
-	</p>
     <p>
     Map tiles are templates for tiles to place down on the map, like how the build menu works. Generic items are more like standard video game items, and you can drop them onto maps to have them act as props!
     </p>
@@ -208,8 +208,8 @@
     <div id="panel"></div>
     <div>
       <span id="deleteTurfObj">
-      <label><input type="checkbox" id="turfselect" checked="true">Tiles</label>
-      <label><input type="checkbox" id="objselect" checked="true">Objects</label>
+      <input type="checkbox" id="turfselect" checked="true"><label for="turfselect">Tiles</label></input>
+      <input type="checkbox" id="objselect" checked="true"><label for="objselect">Objects</label></input>
       <input type="button" value="&#x1F4A3;Delete" onclick="selectionDelete();">
       </span>
       <span id="getTileObjSpan">
@@ -226,7 +226,7 @@
 <widget-window id="users" style="display: none;">
   <span slot="title">Users</span>
   <div slot="contents">
-    <label class="unselectable"><input type="checkbox" id="userlist_all_entities" onchange="updateUsersUL()">All entities</label>
+    <input type="checkbox" id="userlist_all_entities" onchange="updateUsersUL()"><label for="userlist_all_entities">All entities<label></input>
     <span id="userlist_span">
       <hr><strong>Users</strong><br>
       <ul id="usersul" class="itemsul unselectable"></ul>
@@ -279,10 +279,10 @@
 <widget-window id="options" style="display: none;">
   <span slot="title">Options</span>
   <div slot="contents">
-    <label class="unselectable"><input type="checkbox" id="alwayscenter" checked="true"><label for="alwayscenter" class="unselectable">Always center camera</label><br>
-    <label class="unselectable"><input type="checkbox" id="audiochatnotify" checked>Notify when people talk</label><br>
-    <label class="unselectable"><input type="checkbox" id="audiomiscnotify">Notify on other messages</label><br>
-    <label class="unselectable"><input type="checkbox" id="option-fly">Walk through walls</label><br>
+    <input type="checkbox" id="alwayscenter" checked="true"><label for="alwayscenter" class="unselectable">Always center camera</label></input><br>
+    <input type="checkbox" id="audiochatnotify" checked><label for="audiochatnotify" class="unselectable">Notify when people talk</label></input><br>
+    <input type="checkbox" id="audiomiscnotify"><label for="audiomiscnotify" class="unselectable">Notify on other messages</label></input><br>
+    <input type="checkbox" id="option-fly"><label for="option-fly" class="unselectable">Walk through walls</label></input><br>
 
     <ul>
       <li>
@@ -416,19 +416,8 @@
       <option value="custom">Custom</option>
     </select>
     <input type="number" value="0" id="edittilex" oninput="editItemUpdatePic();" size="4" />
-    <input type="number" value="0" id="edittiley" oninput="editItemUpdatePic();" size="4" /><br >
-    <span id="edittileautotileoptions">
-	Autotiling: <select id="edittileautotile">
-		<option value="0">None</option>
-		<option value="1">9 slice</option>
-		<option value="2">4 directions - Middle</option>
-		<option value="3">4 directions - Single</option>
-		<option value="4">RPG - Middle</option>
-		<option value="5">RPG - Single</option>
-	</select>
-    <input type="text" id="edittileautotileclass" placeholder="Autotile class" />
+    <input type="number" value="0" id="edittiley" oninput="editItemUpdatePic();" size="4" />
     <br/>
-    </span>
     <div style="overflow:scroll; width:512px; height:128px;" id="edittilesheetcontainer">
     <img src="" id="edittilesheetselect">
     </div>
@@ -448,9 +437,9 @@
     </p>
 
     <p>
-    <label class="unselectable"><input type="checkbox" id="edittiledensity">Item is an obstacle (dense)</label><br>
-    <label class="unselectable"><input type="checkbox" id="edittileisobject">Item is a map tile (uncheck if it should go on top of the ground, instead of replacing it)</label><br>
-    <label class="unselectable"><input type="checkbox" id="edittileover">Display above players, instead of underneath</label>
+    <input type="checkbox" id="edittiledensity"><label for="edittiledensity" class="unselectable">Item is an obstacle (dense)</label></input><br>
+    <input type="checkbox" id="edittileisobject"><label for="edittileisobject" class="unselectable">Item is a map tile (uncheck if it should go on top of the ground, instead of replacing it)</label></input><br>
+    <input type="checkbox" id="edittileover"><label for="edittileover" class="unselectable">Display above players, instead of underneath</label></input>
     </p>
     </div>
     </div>
@@ -518,6 +507,27 @@
   <div>
     <input type="text" style="width:100%;" id="chatInput" autocomplete="off" placeholder="chat here... (click or press enter to start!)">
   </div>
+</div>
+
+<!-- Mobile buttons --->
+<div id="touch-button-container" class="unselectable">
+  <table border="0">
+    <tr>
+      <td id="touch_button_ul">&nwarr;</td>
+      <td id="touch_button_u">&uarr;</td>
+      <td id="touch_button_ur">&nearr;</td>
+    </tr>
+    <tr>
+      <td id="touch_button_l">&larr;</td>
+      <td id="touch_button_walkturn">&#x1F6B6;</td>
+      <td id="touch_button_r">&rarr;</td>
+    </tr>
+    <tr>
+      <td id="touch_button_dl">&swarr;</td>
+      <td id="touch_button_d">&darr;</td>
+      <td id="touch_button_dr">&searr;</td>
+    </tr>
+  </table>
 </div>
 
 <!-- Main wrapper div -->
