@@ -209,8 +209,11 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 				pic = Mob.pic;
 				if (pic == null)
 					pic = [0, 8, 24];
-				if (pic[0] in IconSheets)
+				if (pic[0] in IconSheets) {
 					ctx.drawImage(IconSheets[pic[0]], pic[1] * 16, pic[2] * 16, 16, 16, (Mob.x * 16) - pixelCameraX + MobOffset[0], (Mob.y * 16) - pixelCameraY + MobOffset[1], 16, 16);
+				} else {
+					RequestImageIfNeeded(pic[0]);
+				}
 				playerIs16x16 = true;
 			}
 
