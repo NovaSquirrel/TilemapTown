@@ -902,7 +902,11 @@ function editItemCancel() {
 }
 
 function newItemCreate(type) {
-	SendCmd("BAG", { create: { "type": type, "name": document.getElementById('newtilename').value } });
+	let params = { create: { "type": type, "name": document.getElementById('newtilename').value } };
+	if(document.getElementById("createtempobject").checked) {
+		params['create']['temp'] = true;
+	}
+	SendCmd("BAG", params);
 	newItemCancel();
 }
 

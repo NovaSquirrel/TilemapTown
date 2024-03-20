@@ -190,6 +190,9 @@
     <input type="button" value="Tileset" onclick="newItemCreate('tileset');" />
     <input type="button" value="Folder" onclick="newItemCreate('folder');" />
     </p>
+	<p>
+	<label class="unselectable"><input type="checkbox" id="createtempobject">Create as temporary entity</label>
+	</p>
     <p>
     Map tiles are templates for tiles to place down on the map, like how the build menu works. Generic items are more like standard video game items, and you can drop them onto maps to have them act as props!
     </p>
@@ -205,8 +208,8 @@
     <div id="panel"></div>
     <div>
       <span id="deleteTurfObj">
-      <input type="checkbox" id="turfselect" checked="true"><label for="turfselect">Tiles</label></input>
-      <input type="checkbox" id="objselect" checked="true"><label for="objselect">Objects</label></input>
+      <label><input type="checkbox" id="turfselect" checked="true">Tiles</label>
+      <label><input type="checkbox" id="objselect" checked="true">Objects</label>
       <input type="button" value="&#x1F4A3;Delete" onclick="selectionDelete();">
       </span>
       <span id="getTileObjSpan">
@@ -223,7 +226,7 @@
 <widget-window id="users" style="display: none;">
   <span slot="title">Users</span>
   <div slot="contents">
-    <input type="checkbox" id="userlist_all_entities" onchange="updateUsersUL()"><label for="userlist_all_entities">All entities<label></input>
+    <label class="unselectable"><input type="checkbox" id="userlist_all_entities" onchange="updateUsersUL()">All entities</label>
     <span id="userlist_span">
       <hr><strong>Users</strong><br>
       <ul id="usersul" class="itemsul unselectable"></ul>
@@ -276,10 +279,10 @@
 <widget-window id="options" style="display: none;">
   <span slot="title">Options</span>
   <div slot="contents">
-    <input type="checkbox" id="alwayscenter" checked="true"><label for="alwayscenter" class="unselectable">Always center camera</label></input><br>
-    <input type="checkbox" id="audiochatnotify" checked><label for="audiochatnotify" class="unselectable">Notify when people talk</label></input><br>
-    <input type="checkbox" id="audiomiscnotify"><label for="audiomiscnotify" class="unselectable">Notify on other messages</label></input><br>
-    <input type="checkbox" id="option-fly"><label for="option-fly" class="unselectable">Walk through walls</label></input><br>
+    <label class="unselectable"><input type="checkbox" id="alwayscenter" checked="true"><label for="alwayscenter" class="unselectable">Always center camera</label><br>
+    <label class="unselectable"><input type="checkbox" id="audiochatnotify" checked>Notify when people talk</label><br>
+    <label class="unselectable"><input type="checkbox" id="audiomiscnotify">Notify on other messages</label><br>
+    <label class="unselectable"><input type="checkbox" id="option-fly">Walk through walls</label><br>
 
     <ul>
       <li>
@@ -445,9 +448,9 @@
     </p>
 
     <p>
-    <input type="checkbox" id="edittiledensity"><label for="edittiledensity" class="unselectable">Item is an obstacle (dense)</label></input><br>
-    <input type="checkbox" id="edittileisobject"><label for="edittileisobject" class="unselectable">Item is a map tile (uncheck if it should go on top of the ground, instead of replacing it)</label></input><br>
-    <input type="checkbox" id="edittileover"><label for="edittileover" class="unselectable">Display above players, instead of underneath</label></input>
+    <label class="unselectable"><input type="checkbox" id="edittiledensity">Item is an obstacle (dense)</label><br>
+    <label class="unselectable"><input type="checkbox" id="edittileisobject">Item is a map tile (uncheck if it should go on top of the ground, instead of replacing it)</label><br>
+    <label class="unselectable"><input type="checkbox" id="edittileover">Display above players, instead of underneath</label>
     </p>
     </div>
     </div>
