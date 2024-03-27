@@ -112,8 +112,10 @@ Displays someone's last login/logout time
 Offsets your character some amount of pixels horizontally and vertically
 
 /map mapnumber
+/map mapnumber x y
 /defaultmap
 Switch to a different map
+You can optionally provide coordinates to teleport to on the new map
 
 /goback
 Go back to the map you were previously on
