@@ -819,7 +819,12 @@ class Entity(object):
 
 		self.home_id = result[6]
 		self.home_position = loads_if_not_none(result[7])
-		self.tags = loads_if_not_none(result[8])
+
+		# "tags" column can be reused to store other things
+		tags_column = loads_if_not_none(result[8])
+		if tags_column:
+			self.tags = tags_column.get('tags', {})
+
 		self.owner_id = result[9]
 		self.allow = result[10]
 		self.deny = result[11]
@@ -878,7 +883,12 @@ class Entity(object):
 			print("Correcting null owner ID for saved entity %s to %s" % (load_id, self.creator_id))
 			self.owner_id = self.creator_id
 
-		values = (self.entity_type, self.name, self.desc, dumps_if_not_none(self.pic), self.map_id, json.dumps([self.x, self.y] + ([self.dir] if self.dir != 2 else [])), self.home_id, dumps_if_not_none(self.home_position), dumps_if_condition(self.tags, self.tags != {} and self.tags != None), self.owner_id if self.owner_id != None else self.creator_id, self.allow, self.deny, self.guest_deny, self.db_id)
+		# "tags" column can be reused to store other things
+		tags_column = {}
+		if self.tags:
+			tags_column['tags'] = self.tags
+
+		values = (self.entity_type, self.name, self.desc, dumps_if_not_none(self.pic), self.map_id, json.dumps([self.x, self.y] + ([self.dir] if self.dir != 2 else [])), self.home_id, dumps_if_not_none(self.home_position), dumps_if_condition(tags_column, tags_column != {}), self.owner_id if self.owner_id != None else self.creator_id, self.allow, self.deny, self.guest_deny, self.db_id)
 		c.execute("UPDATE Entity SET type=?, name=?, desc=?, pic=?, location=?, position=?, home_location=?, home_position=?, tags=?, owner_id=?, allow=?, deny=?, guest_deny=? WHERE id=?", values)
 
 		self.save_data()
