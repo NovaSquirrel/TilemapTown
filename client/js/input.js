@@ -207,6 +207,13 @@ function keyUpHandler(e) {
 	}
 }
 
+function bump_into_atom(atom) {
+	if (atom.type == AtomTypes.SIGN && atom.message) {
+		logMessage(((atom.name != "sign" && atom.name != "") ? escape_tags(atom.name) + " says: " : "The sign says: ") + convertBBCode(atom.message), "server_message",
+		  {'plainText': (atom.name != "sign" && atom.name != "") ? atom.name + " says: " : "The sign says: " + atom.message});
+	}
+}
+
 function keyDownHandler(e) {
 	function ClampPlayerPos() {
 		PlayerX = Math.min(Math.max(PlayerX, 0), MyMap.Width - 1);
@@ -409,6 +416,7 @@ function keyDownHandler(e) {
 			// Check for solid objects in the way
 			for (let index in MyMap.Objs[PlayerX][PlayerY]) {
 				let Obj = AtomFromName(MyMap.Objs[PlayerX][PlayerY][index]);
+				bump_into_atom(Obj);
 				if (Obj.density || ((Obj.walls ?? 0) & DenseWallBit)) {
 					if (!Fly && !Bumped) {
 						Bumped = true;
@@ -418,10 +426,6 @@ function keyDownHandler(e) {
 						PlayerY = OldPlayerY;
 						// Don't break here, so that if a sign is in the stack of objects it will get read
 					}
-					if (Obj.type == AtomTypes.SIGN) {
-						logMessage(((Obj.name != "sign" && Obj.name != "") ? escape_tags(Obj.name) + " says: " : "The sign says: ") + convertBBCode(Obj.message), "server_message",
-						  {'plainText': (Obj.name != "sign" && Obj.name != "") ? Obj.name + " says: " : "The sign says: " + Obj.message});
-					}
 					break;
 				}
 			}
@@ -429,6 +433,7 @@ function keyDownHandler(e) {
 			// Then check for turfs
 			if (!Fly && !Bumped) {
 				let Turf = AtomFromName(MyMap.Tiles[PlayerX][PlayerY]);
+				bump_into_atom(Turf);
 				if (Turf.density || ((Turf.walls ?? 0) & DenseWallBit)) {
 					Bumped = true;
 					BumpedX = PlayerX;
@@ -612,15 +617,18 @@ function useItemAtXY(Placed, x, y) {
 		case "map_tile": // object
 			let ActualAtom = AtomFromName(Placed.data);
 			// place the item on the ground
+
+			// If it's a sign, offer to put text on it
+			if (ActualAtom.type == AtomTypes.SIGN) {
+				MouseDown = false; // Don't keep placing signs
+				Placed = { data: CloneAtom(ActualAtom) };
+				Message = prompt("What should the sign say?");
+				if (Message == null)
+					return;
+				Placed.data.message = Message;
+			}
+
 			if (ActualAtom.obj) {
-				if (ActualAtom.type == AtomTypes.SIGN) {
-					MouseDown = false; // Don't keep placing signs
-					Placed = { data: CloneAtom(ActualAtom) };
-					Message = prompt("What should the sign say?");
-					if (Message == null)
-						return;
-					Placed.data.message = Message;
-				}
 				old = [...MyMap.Objs[x][y]];
 				MyMap.Objs[x][y].push(Placed.data);
 				SendCmd("PUT", { pos: [x, y], obj: true, atom: MyMap.Objs[x][y] });
