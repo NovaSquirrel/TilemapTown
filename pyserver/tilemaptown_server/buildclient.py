@@ -29,6 +29,7 @@ class Client(Entity):
 		self.name = 'Guest '+ str(userCounter)
 		userCounter += 1
 		self.pic = [0, 2, 25]
+		self.saved_pics = {}
 
 		self.ping_timer = 180
 		self.idle_timer = 0
@@ -159,6 +160,19 @@ class Client(Entity):
 		""" Called on parents when remove_from_contents is called here """
 		if not self.no_inventory_messages:
 			self.send("BAG", {'remove': {'id': item.protocol_id()}})
+
+	def load_data(self):
+		d = loads_if_not_none(self.load_data_as_text())
+		if d == None:
+			return True
+		self.saved_pics = d.get('saved_pics', {})
+		return True
+
+	def save_data(self):
+		d = {}
+		if self.saved_pics:
+			d['saved_pics'] = self.saved_pics
+		self.save_data_as_text(json.dumps(d))
 
 	def test_server_banned(self):
 		""" Test for and take action on IP bans """

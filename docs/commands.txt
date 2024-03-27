@@ -66,6 +66,20 @@ Change your description
 /userpic imgur link
 Change your icon
 
+/savedpic
+/savedpic name
+Switch to a different saved pic.
+If you don't provide a name, you'll get a list of pics you have saved.
+
+/savedpiclist
+/savedpiclist set name url
+/savedpiclist del name
+/savedpiclist clear
+Manage the saved pic list.
+
+/savedpiclist list2
+Get the list of saved pics in text form (just in case you're on a client that doesn't support buttons).
+
 /login username password
 /register username password
 /changepass newpass

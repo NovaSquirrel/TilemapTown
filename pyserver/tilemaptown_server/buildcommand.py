@@ -103,7 +103,7 @@ def in_blocked_username_list(client, banlist, action):
 		return True
 	return False
 
-def respond(context, text, data=None, error=False, code=None, detail=None, subject_id=None):
+def respond(context, text, data=None, error=False, code=None, detail=None, subject_id=None, buttons=None):
 	args = {}
 	respond_to, echo = context
 	if echo:
@@ -118,6 +118,8 @@ def respond(context, text, data=None, error=False, code=None, detail=None, subje
 		args['detail'] = detail
 	if subject_id:
 		args['subject_id'] = subject_id
+	if buttons:
+		args['buttons'] = buttons
 
 	respond_to.send('ERR' if error else 'CMD', args)
 
@@ -1474,6 +1476,68 @@ def fn_userpic(map, client, context, arg):
 		client.broadcast_who()
 	else:
 		respond(context, 'Syntax is: /userpic sheet x y', error=True)
+
+
+def show_saved_pic_list(context, client):
+	if client.saved_pics == {}:
+		respond(context, "You don't have any saved pics")
+	else:
+		buttons = []
+		for pic in sorted(client.saved_pics.keys()):
+			buttons.append(pic)
+			buttons.append('sp ' + pic)
+		respond(context, "Saved pics:", buttons=buttons)
+
+@cmd_command(category="Settings", syntax='state name', alias=['sp', 'savpic', 'savepic'])
+def fn_savedpic(map, client, context, arg):
+	if not client.is_client():
+		respond(context, 'Only clients can use /savedpic', error=True)
+		return
+	arg = arg.strip().lower()
+	if arg == '':
+		show_saved_pic_list(context, client)
+	elif client.saved_pics and arg in client.saved_pics:
+		handlers['userpic'](map, client, context, client.saved_pics[arg])
+	else:
+		respond(context, "You don't have a saved pic named \"%s\"" % arg, error=True)
+
+@cmd_command(category="Settings", syntax='state name', alias=['savepiclist', 'spl'])
+def fn_savedpiclist(map, client, context, arg):
+	if not client.is_client():
+		respond(context, 'Only clients can use /savedpiclist', error=True)
+		return
+	if arg == '' or arg.lower() == 'list':
+		show_saved_pic_list(context, client)
+		return
+
+	subcommand, subarg = separate_first_word(arg)
+	if subcommand in ('set', 'add'):
+		picname, picvalue = separate_first_word(subarg)
+		if picvalue.startswith("http"):
+			if image_url_is_okay(picvalue):
+				client.saved_pics[picname] = picvalue
+				respond(context, "Saved pic \"%s\": %s" % (picname, picvalue))
+			else:
+				respond(context, 'URL doesn\t match any allowlisted sites', error=True)
+		else:
+			respond(context, 'Not a URL', error=True)
+	elif subcommand == 'list2': # Provide it as text just in case
+		if client.saved_pics == {}:
+			respond(context, "You don't have any saved pics")
+		else:
+			respond(context, "Saved pics: %s" % ', '.join(sorted(client.saved_pics.keys())))
+	elif subcommand == 'del' and subarg:
+		subarg = subarg.lower()
+		was = client.saved_pics.pop(subarg, None)
+		if was:
+			respond(context, 'Deleted saved pic \"%s" (it was %s)' % (subarg, was))
+		else:
+			respond(context, "You don't have a saved pic named \"%s\"" % subarg, error=True)
+	elif subcommand == 'clear':
+		client.saved_pics = {}
+		respond(context, 'Cleared save pic list')
+	else:
+		respond(context, 'Unrecognized subcommand "%s"' % subcommand, code='invalid_subcommand', detail=subcommand, error=True)
 
 @cmd_command(category="Settings", syntax='"x y"')
 def fn_offset(map, client, context, arg):
