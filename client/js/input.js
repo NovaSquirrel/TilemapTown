@@ -210,7 +210,7 @@ function keyUpHandler(e) {
 function bump_into_atom(atom) {
 	if (atom.type == AtomTypes.SIGN && atom.message) {
 		logMessage(((atom.name != "sign" && atom.name != "") ? escape_tags(atom.name) + " says: " : "The sign says: ") + convertBBCode(atom.message), "server_message",
-		  {'plainText': (atom.name != "sign" && atom.name != "") ? atom.name + " says: " : "The sign says: " + atom.message});
+		  {'plainText': (atom.name != "sign" && atom.name != "") ? atom.name + " says: " + atom.message : "The sign says: " + atom.message});
 	}
 }
 
