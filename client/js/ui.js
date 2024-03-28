@@ -1095,6 +1095,10 @@ function logMessage(Message, Class, Params) {
 	newMessage.innerHTML = Message;
 	chatArea.append(newMessage);
 
+	if(OnlineMuWebview) {
+		window.chrome.webview.hostObjects.client.Display(Params.plainText ?? Message);
+	}
+
 	if (bottom)
 		chatArea.scrollTop = chatArea.scrollHeight;
 

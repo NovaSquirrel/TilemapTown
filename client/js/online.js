@@ -25,6 +25,7 @@ let OnlinePort = 443;
 let OnlineUsername = "";
 let OnlinePassword = "";
 let OnlineIsConnected = false;
+let OnlineMuWebview = false;
 let ShowProtocol = true;
 
 // URL param options
@@ -53,6 +54,34 @@ function readURLParams() {
         break;
       case "port":
         OnlinePort = value;
+        break;
+      case "username":
+        OnlineUsername = value;
+        break;
+      case "userpass":
+        OnlinePassword = value;
+        break;
+      case "mu_webview":
+        OnlineMuWebview = parseInt(value);
+        if(OnlineMuWebview) {
+          window.chrome.webview.hostObjects.options.defaultSyncProxy=true;
+
+          window.chrome.webview.hostObjects.client.SetOnSend(function(t) {
+            if (runLocalCommand(t));
+            else if (t.slice(0, 1) == "\"") {
+              SendCmd("MSG", { text: t.slice(1) });
+            } else if (t.slice(0, 1) == ":") {
+              SendCmd("MSG", { text: "/me "+t.slice(1) });
+            } else if (t.slice(0, 6) == "spoof ") {
+              SendCmd("MSG", { text: "/spoof "+t.slice(6) });
+            } else if (t.slice(0, 4) == "ooc ") {
+              SendCmd("MSG", { text: "/ooc "+t.slice(4) });
+            } else if (t == "/webview" || t.slice(0, 9) == "/webview ") {
+            } else {
+              SendCmd("CMD", { text: t}); // assume it's a command
+            }
+          });
+        }
         break;
 
       // Include non-server related flags too

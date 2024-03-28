@@ -117,6 +117,9 @@ Offsets your character some amount of pixels horizontally and vertically
 Switch to a different map
 You can optionally provide coordinates to teleport to on the new map
 
+/coords
+Display your coordinates
+
 /goback
 Go back to the map you were previously on
 
