@@ -1543,7 +1543,7 @@ def fn_savedpiclist(map, client, context, arg):
 def fn_offset(map, client, context, arg):
 	arg = arg.split(' ')
 	if len(arg) == 2:
-		offset_x, offset_y = min(16, max(-16, int(arg[0]))), min(16, max(-16, int(arg[1])))
+		offset_x, offset_y = min(32, max(-32, int(arg[0]))), min(32, max(-32, int(arg[1])))
 		client.offset = [offset_x, offset_y]
 		map.broadcast("MOV", {"id": client.protocol_id(), "offset": [offset_x, offset_y]}, remote_category=botwatch_type['move'])
 	else:
