@@ -713,6 +713,12 @@ function receiveServerMessageEvent(event) {
 }
 
 function ConnectToServer() {
+  const beforeUnloadHandler = (event) => {
+    event.preventDefault();
+    event.returnValue = true;
+  };
+  window.addEventListener("beforeunload", beforeUnloadHandler);
+
   OnlineMode = true;
 
   OnlineSocket = new WebSocket((OnlineSSL?"wss://":"ws://")+OnlineServer+":"+OnlinePort);
