@@ -93,9 +93,28 @@ get a partial (or complete) copy of the map
 (currently server-->client only)
 
 --> MAI
-<-- MAI {"name": map_name, "id": map_id, "owner": whoever, "admins": list, "default": default_turf, "size": [width, height], "public": true/false, "private": true/false, "build_enabled": true/false, "full_sandbox": true/false, "you_allow": list, "you_deny": list}
-map info stuff.
-Optionally also defines "start_pos" for map admins
+<-- MAI {parameters that describe the map}
+
+Fields that may appear in MAI on the official server:
+	"name": string; Name of the map
+	"desc": string; Map description
+	"id": string or integer; Map's database ID
+	"owner_id": integer; Database ID of the person the map belongs to
+	"owner_username": string; Username of the person the map belongs to; may be "?"
+	"default": string or object; Default type of turf; may be a string or JSON object
+	"size": 2-element list; [width, height]
+	"start_pos": 2-element list; [x, y]. It's the position users are put at when they teleport to the map; only sent to map admins
+	"public": boolean; If true, the map shows up in commands like /whereare
+	"private": boolean; If true, users can not join the map unless given entry permission
+	"build_enabled": boolean; If true, users can build without specifically being given permission to
+	"full_sandbox": boolean; Not currently used, but the intention is that when it's true, users can edit or delete other users' objects on the map
+	"edge_links": List of 8 database IDs for the maps surrounding this one; starts with the west link and goes clockwise and each entry may be null if there is no link
+	"tags": dictionary; Generic entity tags set on this map
+	"you_allow": List of permission names that the user is granted for this map
+	"you_deny": List of permission names that the user is denied for this map
+	"topic": string; Current topic, if there is one
+	"topic_username": string; Username of the person who set the topic
+	"remote_map": integer; If set, this MAI is actually for a different map, and not the one you're on; the parameter is the database ID of that other map
 
 --> DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true}
 <-- DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true, "username":username, "remote_map": map} (for listeners)
@@ -154,6 +173,23 @@ Fields you can update with client-->server WHO update:
 	"typing": boolean, shows a currently-typing marker above your character if true
 	"mini_tilemap": null, or an object (see Mini Tilemap section)
 	"mini_tilemap_data": null, or object (see Mini Tilemap section)
+	"clickable": boolean; If true, clicking this entity will send a notification to it that the entity can act on
+
+Other fields that may appear in WHO messages on the official server:
+	"name": string; Name of the entity
+	"pic": [sprite sheet ID or URL, x, y]; Entity appearance
+	"x": integer; X coordinate on the map
+	"y": integer; Y coordinate on the map
+	"dir": integer; Direction from 0 to 7
+	"id": integer or string; An ID to reference this entity with
+	"passengers": List of IDs this entity is carrying
+	"vehicle": integer or string; ID of the entity this entity is being carried by
+	"is_following": boolean; If true, entity is following behind its vehicle, instead of being carried
+	"type": string; Entity type, like "user" or "generic"
+	"in_user_list": boolean; True if this entity is a real user, and should therefore go in the user list
+	"offset": [x,y]; Offset in pixels away from where this entity would normally be drawn
+	"is_forwarding": boolean; If true, this entity is not a user, but some events that happen on the map this entity is on are being forwarded to a user
+	"chat_listener": boolean; If true, this entity is not a user, but chat messages that are sent to this entity's map are being forwarded to a user
 
 === Miscellaneous ===
 --> IDN
@@ -207,28 +243,28 @@ receive mail from someone, or get a list upon logging in. "sent" acknowledges ma
 Receive an error.
 
 Possible fields:
-	text: Text to display to the user
-	echo: A repeat of the "echo" field in the protocol message
-	data: Miscellaneous machine-friendly information about the error
-	code: A string for the specific kidn of error
-	detail: Additional information that further clarifies the code
-	subject_id: ID the error is about
+	"text": Text to display to the user
+	"echo": A repeat of the "echo" field in the protocol message
+	"data": Miscellaneous machine-friendly information about the error
+	"code": A string for the specific kidn of error
+	"detail": Additional information that further clarifies the code
+	"subject_id": ID the error is about
 
 Error codes you might find:
-	missing_permission: Don't have permission to do the thing you're trying to do; permission needed may be in "detail" (which may be an array)
-	owner_only: Can't do that unless you own the subject
-	map_only: Can't do that unless you're on a map
-	clients_only: Can't do that unless you're a user
-	server_admin_only: Can't do that unless you're a server admin
-	invalid_command: Command isn't recognized
-	invalid_subcommand: Subcommand isn't recognized
-	not_found: Supplied name isn't found
-	not_loaded: Entity you're referencing is not currently loaded
-	identify: Can't use that command until you identify
-	bad_value: Value wasn't accepted for whatever reason; "detail" may provide a field or something.
-	no_guests: Guests cannot do this
-	exception: Exception was thrown
-	blocked: Can't do that because you're on a block list of some sort
+	"missing_permission": Don't have permission to do the thing you're trying to do; permission needed may be in "detail" (which may be an array)
+	"owner_only": Can't do that unless you own the subject
+	"map_only": Can't do that unless you're on a map
+	"clients_only": Can't do that unless you're a user
+	"server_admin_only": Can't do that unless you're a server admin
+	"invalid_command": Command isn't recognized
+	"invalid_subcommand": Subcommand isn't recognized
+	"not_found": Supplied name isn't found
+	"not_loaded": Entity you're referencing is not currently loaded
+	"identify": Can't use that command until you identify
+	"bad_value": Value wasn't accepted for whatever reason; "detail" may provide a field or something.
+	"no_guests": Guests cannot do this
+	"exception": Exception was thrown
+	"blocked": Can't do that because you're on a block list of some sort
 
 --> PIN
 <-- PIN
@@ -304,22 +340,21 @@ Currently this isn't used or supported though.
 
 Item info fields:
 (Used for "update", "list", and "info")
-	id
-	name
-	desc
-	type
-	flags
-	folder
-	data
-	tags
-	allow (list of strings, using the permission names at the start of the file)
-	deny
-	guest_deny
-	owner_id
-	owner_username (if applicable)
-	username (read-only; may not be present)
-	temporary
-	delete_on_logout (causes the entity to get removed when you log out)
+	"id": string or integer; Item's database ID, or a temporary ID if there isn't a database one
+	"name": string; Name of the item
+	"desc": string; Item description
+	"type": string; Entity type
+	"folder": integer or string; ID of the entity that contains this entity
+	"data": string, usually? It's specific to the entity type
+	"tags": dictionary; Generic entity tags set on this map
+	"allow": List of strings, using the permission names earlier in this file. These permissions are granted by default.
+	"deny": List of strings, using the permission names earlier in this file. These permissions are denied by default.
+	"guest_deny": List of strings, using the permission names earlier in this file. These permissions are denied to guests.
+	"owner_id": integer; Database ID of the user this entity belongs to; can be written to to give the item to someone else
+	"owner_username" string; Username of the user this etity belongs to; can be written to to give the item to someone else
+	"username"; string; Read-only and may not be present (for when you check a user entity's information)
+	"temporary": boolean; Changes to this entity do not get saved to the database
+	"delete_on_logout": boolean; Causes the entity to get removed when the owner logs out
 
 === Optional features ===
 Clients and servers can advertise having extra features on top of the basic ones.
@@ -412,8 +447,8 @@ Notify an entity that they were clicked on. X and Y are in pixels, starting from
 --> EXT {"key_press": {"id": id, "key": key_name, "down": true/false}}
 Message gets forwarded to the entity specified in "id". Notifies the client
 Fields:
-	key: Which key was pressed.
-	down: If true, key was pressed. If false, key was released.
+	"key": Which key was pressed.
+	"down": If true, key was pressed. If false, key was released.
 
 --> EXT {"take_controls": {"id": id, "keys": [key_name, key_name, key_name...], "pass_on": true/false, "key_up": true/false}}
 --> EXT {"take_controls": {"id": id, "keys": []}}
@@ -421,9 +456,9 @@ Fields:
 Message gets forwarded to the entity specified in "id", if that entity has granted you the "minigame" permission.
 Similar to https://wiki.secondlife.com/wiki/LlTakeControls
 Fields:
-	keys: List of keys the entity wants to track. Can be an empty list in order to release all of the keys.
-	pass_on: Allow the requested keys to continue to do their normal function when pressed.
-	key_up: If true, request to receive key release events in addition to key press events.
+	"keys": List of keys the entity wants to track. Can be an empty list in order to release all of the keys.
+	"pass_on": Allow the requested keys to continue to do their normal function when pressed.
+	"key_up": If true, request to receive key release events in addition to key press events.
 
 --> EXT {"took_controls": {"id": id, "keys": [key_name, key_name, key_name...], "accept": true/false}}
 Message gets forwarded to the entity specified in "id", in order to tell it that the "take_controls" was accepted (or declined) and to let it know which subset of the keys are actually supported by the client.
