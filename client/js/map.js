@@ -82,7 +82,23 @@ function RequestImageIfNeeded(id) {
   }
 }
 
+function FlushIconSheetRequestList() {
+	if (IconSheetRequestList.length) {
+		if (IconSheetRequestList.length == 1)
+			SendCmd("IMG", {"id": IconSheetRequestList[0]});
+		else
+			SendCmd("IMG", {"id": IconSheetRequestList});
+		IconSheetRequestList = [];
+	}
+}
+
 function FetchTilesetImage(id, url) {
+	if(id in IconSheets && IconSheets[id].src == url) {
+		// If you already have it, just keep the preexisting image
+		delete IconSheetsRequested[id];
+		return;
+	}
+
 	// unload an image
 	if(url == null) {
 		delete IconSheets[id];

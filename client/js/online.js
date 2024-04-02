@@ -417,6 +417,7 @@ function receiveServerMessage(cmd, arg) {
         if(arg.new_id.id == PlayerYou)
           PlayerYou = arg.new_id.new_id;
         // TODO: Search for the old ID and update it anywhere else it might appear, like your inventory?
+        // TODO: Seems like there's some sort of issue involving trying to get an item card for this entity with the old name?? Look into this and do it properly later.
         delete PlayerWho[arg.new_id.id];
       }
 
@@ -473,6 +474,7 @@ function receiveServerMessage(cmd, arg) {
           if(item.type == 'image') // image
             RequestImageIfNeeded(item.id);
         }
+        FlushIconSheetRequestList();
       }
       if(arg.update) {
         if(arg.update.id in DBInventory) {
@@ -481,10 +483,10 @@ function receiveServerMessage(cmd, arg) {
             DBInventory[arg.update.id][key] = arg.update[key];
           }
 
-          // Load the image when an image asset is modified
-          if(DBInventory[arg.update.id].type == 'image') {
-            SendCmd("IMG", {"id": arg.update.id}); // Unconditionally request the image
-          }
+          // Server now notifies clients about image urls updating, so the client no longer needs to proactively request it
+          // if(DBInventory[arg.update.id].type == 'image') {
+          //  SendCmd("IMG", {"id": arg.update.id}); // Unconditionally request the image
+          // }
         }
       }
       if(arg['remove']) {

@@ -173,7 +173,16 @@ def set_entity_params_from_dict(e, d, client, echo):
 			protocol_error(client, echo, text=bad, code='bad_value', detail='data', subject_id=e)
 			del d['data']
 		else:
+			old_data = e.data
 			e.data = d['data']
+			if e.db_id != None and entity_type_name[e.entity_type] in ('image', 'tileset') and old_data != e.data:
+				is_tileset = entity_type_name[e.entity_type] == 'tileset'
+				for u in AllClients:
+					if e.db_id in u.images_and_tilesets_received_so_far:
+						if is_tileset:
+							u.send("TSD", {'id': e.db_id, 'data': e.data, 'update': True})
+						else:
+							u.send("IMG", {'id': e.db_id, 'url': e.data, 'update': True})
 
 	if 'owner_id' in d:
 		if e.owner_id != client.db_id:
@@ -610,13 +619,22 @@ def fn_MSG(map, client, arg, echo):
 
 @protocol_command()
 def fn_TSD(map, client, arg, echo):
-	c = Database.cursor()
-	c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type('tileset'), arg['id'],))
-	result = c.fetchone()
-	if result == None:
-		protocol_error(client, echo, text='Invalid item ID', code='not_found', subject_id=arg['id'])
+	if isinstance(arg['id'], list):
+		tilesets = set(arg['id'])
 	else:
-		client.send("TSD", {'id': arg['id'], 'data': decompress_entity_data(result[0], result[1])})
+		tilesets = (arg['id'],)
+
+	client.start_batch()
+	for t in tilesets:
+		c = Database.cursor()
+		c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type('tileset'), t,))
+		result = c.fetchone()
+		if result == None:
+			protocol_error(client, echo, text='Invalid item ID', code='not_found', subject_id=t)
+		else:
+			client.send("TSD", {'id': t, 'data': decompress_entity_data(result[0], result[1])})
+			client.images_and_tilesets_received_so_far.add(t)
+	client.finish_batch()
 
 @protocol_command()
 def fn_IMG(map, client, arg, echo):
@@ -631,9 +649,10 @@ def fn_IMG(map, client, arg, echo):
 		c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type['image'], i,))
 		result = c.fetchone()
 		if result == None:
-			protocol_error(client, echo, text='Invalid item ID', code='not_found', subject_id=arg['id'])
+			protocol_error(client, echo, text='Invalid item ID', code='not_found', subject_id=i)
 		else:
 			client.send("IMG", {'id': i, 'url': loads_if_not_none(decompress_entity_data(result[0], result[1]))})
+			client.images_and_tilesets_received_so_far.add(i)
 	client.finish_batch()
 
 @protocol_command(map_only=True)

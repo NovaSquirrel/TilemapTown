@@ -119,7 +119,7 @@ Fields that may appear in MAI on the official server:
 --> DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true}
 <-- DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true, "username":username, "remote_map": map} (for listeners)
 <-- MAP {updated map}
-delete a section of map
+Delete a section of map.
 
 --> BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...]}
 <-- BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...], "username": username, "id": user_id}
@@ -138,18 +138,22 @@ Can take a "temp" optional parameter like PUT can.
 === Resources ===
 --> IMG {"id": number}
 --> IMG {"id": [number, number, number...]}
-Request an image asset's URL
-Can request multiple image assets at once
+Request an image asset's URL.
+Can request multiple image assets at once.
 
 <-- IMG {"id": number, "url": string}
-have the client load an image, for tilesets or avatars or other purposes
+Have the client load an image, for tilesets or avatars or other purposes.
+There may be an additional boolean field named "update" which is set to true when the IMG message is sent as a result of an image item being updated.
 
 --> TSD {"id": number}
-request tileset data from the server
+--> TSD {"id": [number, number, number]}
+Request tileset data from the server.
+Can request multiple tilesets at once.
 
 <-- TSD {"id": number, "data": "[id, info, id, info, id, info, ...]"}
-Tileset received from the server
+Tileset received from the server.
 Received data may be in string format, which would require parsing into JSON.
+There may be an additional boolean field named "update" which is set to true when the IMG message is sent as a result of an image item being updated.
 
 === People on the map ===
 --> WHO

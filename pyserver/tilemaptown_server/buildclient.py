@@ -85,6 +85,7 @@ class Client(Entity):
 
 		self.identified = False
 		self.temporary = True # Temporary entity until they identify
+		self.images_and_tilesets_received_so_far = set()
 
 		AllClients.add(self)
 

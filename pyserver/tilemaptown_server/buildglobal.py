@@ -130,7 +130,7 @@ botwatch_type['move']  = 0
 botwatch_type['build'] = 1
 botwatch_type['entry'] = 2
 botwatch_type['chat']  = 3
-BotWatch = [weakref.WeakValueDictionary(), weakref.WeakValueDictionary(), weakref.WeakValueDictionary(), weakref.WeakValueDictionary()] # Indexed by client.db_id
+BotWatch = [{}, {}, {}, {}] # Indexed by client.db_id
 
 # Entity permissions
 permission = {}                                    # (subject type)
@@ -348,6 +348,8 @@ def escape_tags(text):
 	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 def image_url_is_okay(url):
+	if url == "":
+		return True
 	for w in Config["Images"]["URLWhitelist"]:
 		if url.startswith(w):
 			return True

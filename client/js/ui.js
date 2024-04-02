@@ -329,6 +329,8 @@ function itemCardList(ul, ids, options = {}) {
 			collapseFolder(list, id);
 
 			let item = DBInventory[id] || PlayerWho[id];
+			if(item == undefined)
+				item = {name: "?"};
 			if (item.type == "folder") {
 				setItemCardImage(list.previousSibling, picIcon(FolderClosedPic));
 			}
@@ -365,6 +367,8 @@ function itemCardList(ul, ids, options = {}) {
 			if (options?.hidden_ids?.includes(id)) { continue; }
 
 			let item = DBInventory[id] || PlayerWho[id];
+			if(item == undefined)
+				item = {name: "?"};
 			let li = itemCard(id);
 
 			for (let type in options?.eventlisteners) {
@@ -423,13 +427,16 @@ function itemCardList(ul, ids, options = {}) {
 function setItemCardImage(li, new_image) {
 	const id = li.getAttribute("item_id");
 	let item = DBInventory[id] || PlayerWho[id];
-
+	if(item == undefined)
+		item = {name: "?"};
 	let image = li.querySelector('.item_icon');
 	li.replaceChild(new_image, image);
 }
 
 function itemCard(id) {
 	let item = DBInventory[id] || PlayerWho[id];
+	if(item == undefined)
+		item = {name: "?"};
 
 	let li = document.createElement("li");
 	li.classList.add('inventoryli');
@@ -594,7 +601,8 @@ function cloneItem(id, temporary = false) {
 
 function deleteItem(id) {
 	let item = DBInventory[id] || PlayerWho[id];
-
+	if(item == undefined)
+		item = {name: "?"};
 	if (
 		confirm(`Really delete ${item.name} with ID ${item.id}?`)
 	) {
