@@ -626,6 +626,8 @@ def fn_TSD(map, client, arg, echo):
 
 	client.start_batch()
 	for t in tilesets:
+		if isinstance(t, str) and string_is_int(t):
+			t = int(t)
 		c = Database.cursor()
 		c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type('tileset'), t,))
 		result = c.fetchone()
@@ -645,6 +647,8 @@ def fn_IMG(map, client, arg, echo):
 
 	client.start_batch()
 	for i in images:
+		if isinstance(i, str) and string_is_int(i):
+			i = int(i)
 		c = Database.cursor()
 		c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type['image'], i,))
 		result = c.fetchone()
