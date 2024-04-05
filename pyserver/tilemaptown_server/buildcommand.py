@@ -948,9 +948,9 @@ def fn_mapprotect(map, client, context, arg):
 @cmd_command(category="Map", privilege_level="map_admin", map_only=True, syntax="on/off")
 def fn_mapbuild(map, client, context, arg):
 	if arg == "on":
-		map.allow |= permission['build']
+		map.deny &= ~permission['build']
 	elif arg == "off":
-		map.allow &= ~permission['build']
+		map.deny |= permission['build']
 	else:
 		respond(context, 'Map building must be on or off', error=True)
 

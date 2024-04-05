@@ -661,7 +661,7 @@ def fn_IMG(map, client, arg, echo):
 
 @protocol_command(map_only=True)
 def fn_MAI(map, client, arg, echo):
-	send_all_info = must_be_map_owner(client, True, give_error=False)
+	send_all_info = must_be_map_owner(client, echo, True, give_error=False)
 	client.send("MAI", map.map_info(all_info=send_all_info))
 
 @protocol_command(map_only=True)
@@ -670,7 +670,7 @@ def fn_DEL(map, client, arg, echo):
 	y1 = arg["pos"][1]
 	x2 = arg["pos"][2]
 	y2 = arg["pos"][3]
-	if client.has_permission(map, permission['build'], True) or must_be_map_owner(client, True, give_error=False):
+	if client.has_permission(map, permission['build'], True) or must_be_map_owner(client, echo, True, give_error=False):
 		if not map.map_data_loaded:
 			protocol_error(client, echo, text='Map isn\'t loaded, so it can\'t be modified', code='not_loaded', subject_id=map)
 			return
@@ -716,7 +716,7 @@ def fn_PUT(map, client, arg, echo):
 	temporary = arg.get('temp', False)
 	x = arg["pos"][0]
 	y = arg["pos"][1]
-	if client.has_permission(map, permission['build'], True) or must_be_map_owner(client, True, give_error=False):
+	if client.has_permission(map, permission['build'], True) or must_be_map_owner(client, echo, True, give_error=False):
 		if not map.map_data_loaded:
 			protocol_error(client, echo, text='Map isn\'t loaded, so it can\'t be modified', code='not_loaded', subject_id=map)
 			return
@@ -752,7 +752,7 @@ def fn_PUT(map, client, arg, echo):
 
 @protocol_command(map_only=True)
 def fn_BLK(map, client, arg, echo):
-	if client.has_permission(map, permission['bulk_build'], False) or must_be_map_owner(client, True, give_error=False):
+	if client.has_permission(map, permission['bulk_build'], False) or must_be_map_owner(client, echo, True, give_error=False):
 		if not map.map_data_loaded:
 			protocol_error(client, echo, text='Map isn\'t loaded, so it can\'t be modified', code='not_loaded', subject_id=map)
 			return
