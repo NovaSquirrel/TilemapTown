@@ -259,6 +259,22 @@ def fn_carry(map, client, context, arg):
 def fn_followme(map, client, context, arg):
 	send_request_to_user(client, context, arg, "followme", None, "tpaccept", "tpdeny", "You requested to have %s follow you", "%s wants you to follow them")
 
+@cmd_command(category="Follow", syntax="username", alias=['followmemap'])
+def fn_followmap(map, client, context, arg):
+	send_request_to_user(client, context, arg, "followmap", None, "tpaccept", "tpdeny", "You requested to have %s follow you onto other maps", "%s wants you to follow them onto other maps")
+
+@cmd_command(category="Follow", syntax="username", alias=['uppies'])
+def fn_carryme(map, client, context, arg):
+	send_request_to_user(client, context, arg, "carryme", None, "tpaccept", "tpdeny", "You requested to have %s carry you", "%s wants you to carry them")
+
+@cmd_command(category="Follow", syntax="username")
+def fn_followyou(map, client, context, arg):
+	send_request_to_user(client, context, arg, "followyou", None, "tpaccept", "tpdeny", "You requested to follow %s", "%s wants to follow behind you")
+
+@cmd_command(category="Follow", syntax="username")
+def fn_followyoumap(map, client, context, arg):
+	send_request_to_user(client, context, arg, "followyoumap", None, "tpaccept", "tpdeny", "You requested to have %s bring you to other maps", "%s wants to follow you onto other maps")
+
 @cmd_command(category="Teleport", syntax="username")
 def fn_tpa(map, client, context, arg):
 	send_request_to_user(client, context, arg, "tpa", None, "tpaccept", "tpdeny", "You requested a teleport to %s", "%s wants to teleport to you")
@@ -375,10 +391,15 @@ request_type_to_friendly = {
 	"tpa":       "teleport",
 	"tpahere":   "teleport",
 	"carry":     "carry",
+	"carryme":   "carryme",
 	"followme":  "follow",
+	"followmap": "follow",
+	"followyou":    "follow",
+	"followyoumap": "follow",
 	"tempgrant": "permission",
 	"giveitem":  "item give",
 }
+
 @cmd_command(category="Teleport", alias=['hopon'], syntax="username")
 def fn_tpaccept(map, client, context, arg):
 	request = find_request_from_arg(client, context, arg)
@@ -428,9 +449,29 @@ def fn_tpaccept(map, client, context, arg):
 	elif request_type == 'carry':
 		client.is_following = False
 		client.ride(subject)
+	elif request_type == 'carryme':
+		subject.is_following = False
+		subject.ride(client)
 	elif request_type == 'followme':
 		client.is_following = True
 		client.ride(subject)
+	elif request_type == 'followyou':
+		subject.is_following = True
+		subject.ride(client)
+	elif request_type == 'followmap':
+		if client != subject:
+			client.stop_current_ride()
+			client.follow_map_vehicle = subject
+			subject.follow_map_passengers.add(client)
+			client.send("MSG", {'text': 'You start following %s to other maps (/hopoff to stop)' % subject.name_and_username()})
+			subject.send("MSG", {'text': 'You will bring %s to other maps' % client.name_and_username()})
+	elif request_type == 'followyoumap':
+		if client != subject:
+			subject.stop_current_ride()
+			subject.follow_map_vehicle = client
+			client.follow_map_passengers.add(subject)
+			subject.send("MSG", {'text': 'You start following %s to other maps (/hopoff to stop)' % client.name_and_username()})
+			client.send("MSG", {'text': 'You will bring %s to other maps' % subject.name_and_username()})
 	elif request_type == 'tempgrant':
 		handlers['entity'](map, client, context, "me tempgrant %s %s" % (request_data, subject_id))
 	elif request_type == 'giveitem':
@@ -501,7 +542,7 @@ def fn_hopoff(map, client, context, arg):
 
 @cmd_command(category="Follow")
 def fn_dropoff(map, client, context, arg):
-	u = find_client_by_username(arg, inside=client.passengers)
+	u = find_client_by_username(arg, inside=client.passengers.union(client.follow_map_passengers))
 	if u:
 		u.dismount()
 	else:
@@ -509,28 +550,27 @@ def fn_dropoff(map, client, context, arg):
 
 @cmd_command(category="Follow")
 def fn_carrywho(map, client, context, arg):
+	no_error = False
+	if len(client.follow_map_passengers):
+		respond(context, 'You are bringing %s to other maps' % ', '.join(['%s (%s)' % (u.name, u.username_or_id()) for u in client.follow_map_passengers]))
+		no_error = True
 	if len(client.passengers):
-		names = ''
-		for u in client.passengers:
-			if len(names) > 0:
-				names += ', '
-			names += '%s (%s)' % (u.name, u.username_or_id())
-		respond(context, 'You are carrying %s' % names)
-	else:
+		respond(context, 'You are carrying %s' % ', '.join(['%s (%s)' % (u.name, u.username_or_id()) for u in client.passengers]))
+	elif no_error == False:
 		respond(context, 'You aren\'t carrying anything')
 
 @cmd_command(category="Follow")
 def fn_ridewho(map, client, context, arg):
-	if client.vehicle:
+	if client.follow_map_vehicle:
+		respond(context, "You are following %s to other maps" % client.follow_map_vehicle.name_and_username())	
+	elif client.vehicle:
 		respond(context, "You are riding %s" % client.vehicle.name_and_username())
 	else:
 		respond(context, "You aren\'t riding anything")
 
 @cmd_command(category="Follow")
 def fn_rideend(map, client, context, arg):
-	temp = set(client.passengers)
-	for u in temp:
-		u.dismount()
+	client.stop_current_ride()
 
 @cmd_command()
 def fn_time(map, client, context, arg):
@@ -1442,6 +1482,11 @@ def fn_login(map, client, context, arg):
 		respond(context, 'Syntax is /login username password', error=True)
 	else:
 		client.login(filter_username(params[0]), params[1])
+
+@cmd_command()
+def fn_disconnect(map, client, context, arg):
+	respond(context, 'Goodbye!')
+	client.disconnect()
 
 @cmd_command(category="Settings", syntax='"x y" OR "url" OR "bunny/cat/hamster/fire"')
 def fn_userpic(map, client, context, arg):

@@ -69,6 +69,9 @@ class Entity(object):
 		self.passengers = set() # Users being carried
 		self.is_following = False # If true, follow behind instead of being carried
 
+		self.follow_map_vehicle = None
+		self.follow_map_passengers = set()
+
 		# permissions
 		self.creator_id = creator_id
 		self.owner_id = creator_id
@@ -122,11 +125,7 @@ class Entity(object):
 				self.map.remove_from_contents(self)
 
 			# Let go of all passengers
-			temp = set(self.passengers)
-			for u in temp:
-				u.dismount()
-			if self.vehicle:
-				self.dismount()
+			self.stop_current_ride()
 
 			# Get rid of any contents that don't have persistent_object_entry permission
 			if self.db_id != get_database_meta('default_map'):
@@ -497,19 +496,26 @@ class Entity(object):
 
 	# Riding
 
+	def stop_current_ride(self):
+		self.start_batch()
+		# remove the old ride before getting a new one
+		if self.vehicle != None or self.follow_map_vehicle != None:
+			self.dismount()
+		# let's not deal with trees of passengers first
+		if len(self.passengers) or len(self.follow_map_passengers):
+			self.send("MSG", {'text': 'You let out all your passengers'})
+			temp = set(self.passengers).union(self.follow_map_passengers)
+			for u in temp:
+				u.dismount()
+		self.finish_batch()
+
 	def ride(self, other):
 		# cannot ride yourself
 		if self == other:
 			return
-		# remove the old ride before getting a new one
-		if self.vehicle != None:
-			self.dismount()
-		# let's not deal with trees of passengers first
-		if len(self.passengers):
-			self.send("MSG", {'text': 'You let out all your passengers first'})
-			temp = set(self.passengers)
-			for u in temp:
-				u.dismount()
+
+		self.start_batch()
+		self.stop_current_ride()
 
 		self.send("MSG", {'text': 'You get on %s (/hopoff to get off)' % other.name_and_username()})
 		other.send("MSG", {'text': 'You carry %s' % self.name_and_username()})
@@ -523,23 +529,36 @@ class Entity(object):
 			other.map.broadcast("WHO", {'add': other.who()}, remote_category=botwatch_type['move'])
 
 		self.switch_map(other.map_id, new_pos=[other.x, other.y], on_behalf_of=other)
+		self.finish_batch()
 
 	def dismount(self):
-		if self.vehicle == None:
-			self.send("ERR", {'text': 'You\'re not being carried'})
-		else:
-			self.send("MSG", {'text': 'You get off %s' % self.vehicle.name_and_username()})
-			self.vehicle.send("MSG", {'text': '%s gets off of you' % self.name_and_username()})
+		no_error = False
+		if self.follow_map_vehicle:
+			other = self.follow_map_vehicle
 
+			self.send("MSG", {'text': 'You stop following %s to other maps' % other.name_and_username()})
+			other.send("MSG", {'text': '%s stops following you to other maps' % self.name_and_username()})
+
+			other.follow_map_passengers.discard(self)
+			self.follow_map_vehicle = None
+
+			no_error = True
+		if self.vehicle:
 			other = self.vehicle
 
-			self.vehicle.passengers.discard(self)
+			self.send("MSG", {'text': 'You get off %s' % other.name_and_username()})
+			other.send("MSG", {'text': '%s gets off of you' % self.name_and_username()})
+
+			other.passengers.discard(self)
 			self.vehicle = None
 
+			# Notify other people
 			if self.map != None:
 				self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['move'])
 			if other.map != None:
 				other.map.broadcast("WHO", {'add': other.who()}, remote_category=botwatch_type['move'])
+		elif not no_error:
+			self.send("ERR", {'text': 'You\'re not being carried'})
 
 	# Apply information from a MOV message to someone
 
@@ -637,7 +656,7 @@ class Entity(object):
 		self.finish_batch()
 
 		# Move any passengers too
-		for u in self.passengers:
+		for u in self.passengers.union(self.follow_map_passengers):
 			u.switch_map(map_id, new_pos=[self.x, self.y], on_behalf_of=self)
 
 		return True

@@ -137,7 +137,7 @@ Refuse a teleport request
 
 /tpaccept user type id
 /tpdeny user type id
-Accept/refuse a specific teleport request, where "type" is currently "tpa", "tpahere", "carry" or "followme". ID may be left out, in which case the request's ID doesn't have to match.
+Accept/refuse a specific teleport request, where "type" is currently "tpa", "tpahere", "carry", "followme", or "followmap". ID may be left out, in which case the request's ID doesn't have to match.
 
 /tpcancel user (alias mcancel)
 Cancel all requests you made to a specific user
@@ -151,16 +151,22 @@ Teleports to your "home"
 
 ---Carrying users---
 /carry user
-Offer to carry a user
+/carryme user
+Offer to carry a user (or request that a user carry you)
 
 /followme user
-Offer to let a user follow behind you
+/followyou user
+Offer to let a user follow behind you (or request that a user let you follow them)
+
+/followmap user
+/followyoumap user
+Offer to let a user follow you to other maps (or request that a user bring you to other maps)
 
 /hopon user
 Accept a user's carry request
 
 /hopoff
-Stop being carried
+Stop being carried (and stop following)
 
 /dropoff user
 Stop carrying a specific user
@@ -318,6 +324,8 @@ Edge is a number from 0 to 7, where 0 is east, 1 is south east, 2 is south, and 
 /time
 Display current date and time
 
+/disconnect
+Disconnect yourself from the server
 
 ---Bot commands---
 /listen category,category,... map_id,map_id,...
