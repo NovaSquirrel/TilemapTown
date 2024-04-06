@@ -216,16 +216,16 @@ class Client(Entity):
 					c.execute('DELETE FROM Server_Ban WHERE id=?', (result[0],))
 				else:
 					print("Denied access to banned user %s" % self.ip)
-					self.disconnect('Banned from the server until %s (%s)' % (str(result[1]), result[2]))
+					self.disconnect('Banned from the server until %s (%s)' % (str(result[1]), result[2]), reason='Ban')
 					return True
 		return False
 
-	def disconnect(self, text=None):
+	def disconnect(self, text=None, reason=''):
 		if self.ws != None:
 			if text != None:
 				# Does not actually seem to go through, might need some refactoring
 				self.send("ERR", {'text': text})
-			asyncio.ensure_future(self.ws.close())
+			asyncio.ensure_future(self.ws.close(reason=reason))
 
 	def username_or_id(self):
 		return self.username or self.protocol_id()

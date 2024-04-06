@@ -484,7 +484,7 @@ Key names:
 
 --> EXT {"bot_message_button": {"id": id, "text": text}}
 Message gets forwarded to the entity specified in "id", in order to tell it that a [bot-message-button] button was clicked on.
-The forwrded copy has additional fields for "name" and "username" as in PRI.
+The forwarded copy has additional fields for "name" and "username" as in PRI.
 
 === Extension: batch ====
 This extension allows the server to send multiple protocol messages to the client in one websocket message.
@@ -532,3 +532,19 @@ CMD {params}
 CMD {params}
 
 If an entity is forwarding messages, it will have a WHO field named "is_forwarding" that's set to true. If one of the forwarded types is "CHAT", then there will be another field named "chat_listener" which is also true.
+
+
+=== WebSocket disconnect reasons ===
+The server may send the following WebSocket disconnect reasons:
+	"Quit": User requested a disconnect
+	"Shutdown": Server is shutting down, with no guarantee on when or if it will be back
+	"Restart": Server is shutting down, but is expected to be back very soon
+	"Ban": User is banned from the server
+	"Kick": User's connection was terminated by another user
+	"BadLogin": User's login credentials are wrong
+
+A client may choose to automatically reconnect in response to a "Restart" reason but should *not* automatically reconnect in response to the other reasons.
+There will probably be other reasons in the future for things like a private server, or the client's version being too old, or not supporting a required extension.
+
+A disconnect reason can have additional text in it that's meant to give additional context to the user about why the disconnect happened. If it's present, there will be a | separating the two parts of the disconnect message, for example:
+"Restart|Restarting to update nginx"

@@ -118,7 +118,7 @@ if len(Config["Logs"]["BuildFile"]):
 	BuildLog = open(Config["Logs"]["BuildFile"], 'a', encoding="utf-8")
 
 # Important information shared by each module
-ServerShutdown = [-1]
+ServerShutdown = [-1, False] # First value is seconds left, second value is true for restarts but false for shutdowns
 AllClients      = weakref.WeakSet()
 AllMaps         = weakref.WeakSet()             # Maps only; used by /whereare
 AllEntitiesByDB = weakref.WeakValueDictionary() # All entities (indexed by database ID)

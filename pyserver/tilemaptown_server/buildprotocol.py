@@ -938,7 +938,7 @@ def fn_IDN(map, client, arg, echo):
 	if arg != {} and "username" in arg and "password" in arg:
 		if not client.login(filter_username(arg["username"]), arg["password"], override_map=override_map):
 			print("Failed login for "+filter_username(arg["username"]))
-			client.disconnect()
+			client.disconnect(reason="BadLogin")
 			return
 	else:
 		if not override_map or not client.switch_map(override_map[0], new_pos=None if (len(override_map) == 1) else (override_map[1:])):

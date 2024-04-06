@@ -58,7 +58,7 @@ def main_timer():
 		if ServerShutdown[0] == 1:
 			broadcast_to_all("Server is going down!")
 			for u in AllClients:
-				u.disconnect()
+				u.disconnect(reason='Restart' if ServerShutdown[1] else 'Shutdown')
 			save_everything()
 		elif ServerShutdown[0] == 0:
 			loop.stop()

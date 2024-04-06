@@ -251,6 +251,10 @@ function viewCustomize() {
 }
 
 function loginButton() {
+	// The user manually hitting the login button should reset the reconnect state
+	DidConnectOnce = false;
+	ReconnectAttempts = 0;
+
 	OnlineUsername = document.getElementById("loginuser").value;
 	OnlinePassword = document.getElementById("loginpass").value;
 	OnlineServer = document.getElementById("loginserver").value;

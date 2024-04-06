@@ -1486,7 +1486,7 @@ def fn_login(map, client, context, arg):
 @cmd_command()
 def fn_disconnect(map, client, context, arg):
 	respond(context, 'Goodbye!')
-	client.disconnect()
+	client.disconnect(reason="Quit")
 
 @cmd_command(category="Settings", syntax='"x y" OR "url" OR "bunny/cat/hamster/fire"')
 def fn_userpic(map, client, context, arg):
@@ -1697,18 +1697,30 @@ def fn_broadcast(map, client, context, arg):
 def fn_kill(map, client, context, arg):
 	u = find_client_by_username(arg)
 	if u != None:
-		respond(context, 'Killed '+u.name_and_username())
-		u.disconnect('Killed by '+client.name_and_username())
+		respond(context, 'Kicked '+u.name_and_username())
+		u.disconnect('Kicked by '+client.name_and_username(), reason="Kick")
 
 @cmd_command(category="Server Admin", privilege_level="server_admin", syntax="cancel/seconds")
 def fn_shutdown(map, client, context, arg):
 	global ServerShutdown
-	if arg == "cancel":
+	if arg == "cancel" and ServerShutdown[0] != -1:
 		ServerShutdown[0] = -1
 		broadcast_to_all("Server shutdown canceled")
 	elif arg.isdecimal():
 		ServerShutdown[0] = int(arg)
+		ServerShutdown[1] = False
 		broadcast_to_all("Server shutdown in %d seconds! (started by %s)" % (ServerShutdown[0], client.name))
+
+@cmd_command(category="Server Admin", privilege_level="server_admin", syntax="cancel/seconds", alias=['serverrestart'])
+def fn_restartserver(map, client, context, arg):
+	global ServerShutdown
+	if arg == "cancel" and ServerShutdown[0] != -1:
+		ServerShutdown[0] = -1
+		broadcast_to_all("Server restart canceled")
+	elif arg.isdecimal():
+		ServerShutdown[0] = int(arg)
+		ServerShutdown[1] = True
+		broadcast_to_all("Server restarting in %d seconds! (started by %s)" % (ServerShutdown[0], client.name))
 
 # Group commands
 @cmd_command(category="Group", privilege_level="registered")
@@ -1948,7 +1960,7 @@ def fn_debugkick(map, client, context, arg):
 		respond(context, '"%s" not a valid ID' % arg, error=True)
 		return
 	if e.is_client():
-		e.disconnect()
+		e.disconnect(reason="Kick")
 	e.clean_up()
 	AllEntitiesByID.pop(e.id, None)
 	if e.db_id:

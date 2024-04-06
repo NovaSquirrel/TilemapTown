@@ -27,10 +27,11 @@ let OnlinePassword = "";
 let OnlineIsConnected = false;
 let OnlineMuWebview = false;
 let ShowProtocol = true;
+let DidConnectOnce = false; // A connection got an IDN from the server at least once, indicating the connection went all the way through
 
 // URL param options
-var InstantCamera = false;
-var SlowAnimationTick = false;
+let InstantCamera = false;
+let SlowAnimationTick = false;
 
 function readURLParams() {
   var query = window.location.search.substring(1);
@@ -631,6 +632,7 @@ function receiveServerMessage(cmd, arg) {
         }
       break;
     case "IDN":
+      DidConnectOnce = true;
       break;
 
     case "PUT":
@@ -680,81 +682,151 @@ function receiveServerMessage(cmd, arg) {
 }
 
 function receiveServerMessageString(msg) {
-  let cmd = msg.slice(0, 3);
-  if(msg.length > 4) {
-    if(cmd == "BAT") {
-      // Get all of the protocol message lines
-      let batch_data = msg.slice(4).split('\n');
+	let cmd = msg.slice(0, 3);
+	if(msg.length > 4) {
+		if(cmd == "BAT") {
+			// Get all of the protocol message lines
+			let batch_data = msg.slice(4).split('\n');
 
-      // Parse each of the sub-messages
-      for(let i=0; i<batch_data.length; i++) {
-        let batch_msg = batch_data[i];
-        let batch_cmd = batch_msg.slice(0, 3);
-        if(batch_msg.length > 4) {
-          receiveServerMessage(batch_cmd, JSON.parse(batch_msg.slice(4)));
-        } else {
-          receiveServerMessage(batch_cmd, null);
-        }
-      }
-    } else {
-      receiveServerMessage(cmd, JSON.parse(msg.slice(4)));
-    }
-  } else {
-    receiveServerMessage(cmd, null);
-  }
+			// Parse each of the sub-messages
+			for(let i=0; i<batch_data.length; i++) {
+				let batch_msg = batch_data[i];
+				let batch_cmd = batch_msg.slice(0, 3);
+				if(batch_msg.length > 4) {
+					receiveServerMessage(batch_cmd, JSON.parse(batch_msg.slice(4)));
+				} else {
+					receiveServerMessage(batch_cmd, null);
+				}
+			}
+		} else {
+			receiveServerMessage(cmd, JSON.parse(msg.slice(4)));
+		}
+	} else {
+		receiveServerMessage(cmd, null);
+	}
 }
 
 function receiveServerMessageEvent(event) {
 //    console.log(event.data);
-  var msg = event.data;
-  if(msg.length<3)
-    return;
-  if(ShowProtocol)
-    console.log("<< "+msg);
-  receiveServerMessageString(msg);
+	let msg = event.data;
+	if(msg.length<3)
+		return;
+	if(ShowProtocol)
+		console.log("<< "+msg);
+	receiveServerMessageString(msg);
+}
+
+
+let ReconnectTimeout = null;
+let ReconnectAttempts = 0;
+function AttemptReconnect() {
+	if(!OnlineIsConnected && (!OnlineSocket || OnlineSocket.readyState == 3)) { // Socket should be marked as closed, if it exists
+		ConnectToServer();
+	}
+}
+function CancelReconnect() {
+	if(ReconnectTimeout != null) {
+		logMessage("Press the Login button when you want to try again.", 'server_message');
+		clearTimeout(ReconnectTimeout);
+		ReconnectTimeout = null;
+	}
 }
 
 function ConnectToServer() {
-  const beforeUnloadHandler = (event) => {
-    event.preventDefault();
-    event.returnValue = true;
-  };
-  window.addEventListener("beforeunload", beforeUnloadHandler);
+	const beforeUnloadHandler = (event) => {
+		event.preventDefault();
+		event.returnValue = true;
+	};
+	window.addEventListener("beforeunload", beforeUnloadHandler);
 
-  OnlineMode = true;
+	OnlineMode = true;
+	OnlineIsConnected = false;
 
-  OnlineSocket = new WebSocket((OnlineSSL?"wss://":"ws://")+OnlineServer+":"+OnlinePort);
-  logMessage("Attempting to connect", 'server_message');
+	OnlineSocket = new WebSocket((OnlineSSL?"wss://":"ws://")+OnlineServer+":"+OnlinePort);
+	logMessage("Attempting to connect", 'server_message');
 
-  OnlineSocket.onopen = function (event) {
-    logMessage("Connected! Waiting for map data.", 'server_message');
+	OnlineSocket.onopen = function (event) {
+		logMessage("Connected! Now logging in...", 'server_message');
 
-    let idn_args = {};
-    idn_args["features"] = {
-       "see_past_map_edge": {"version": "0.0.1"},
-       "batch": {"version": "0.0.1"},
-       "receive_build_messages": {"version": "0.0.1"},
-    };
+		// Log in with the server
+		let idn_args = {};
+		idn_args["features"] = {
+			"see_past_map_edge": {"version": "0.0.1"},
+			"batch": {"version": "0.0.1"},
+			"receive_build_messages": {"version": "0.0.1"},
+		};
 
-    if(OnlineUsername != "") {
-      idn_args["username"] = OnlineUsername;
-      idn_args["password"] = OnlinePassword
-    };
-	idn_args["client_name"] = "Tilemap Town Web Client";
+		if(OnlineUsername != "") {
+			idn_args["username"] = OnlineUsername;
+			idn_args["password"] = OnlinePassword
+		};
+		idn_args["client_name"] = "Tilemap Town Web Client";
 
-    SendCmd("IDN", idn_args);
-    OnlineIsConnected = true;
-  }
+		SendCmd("IDN", idn_args);
+		OnlineIsConnected = true;
 
-  OnlineSocket.onerror = function (event) {
-    logMessage("Socket error", 'error_message');
-    OnlineIsConnected = false;
-  }
+		// Cancel any reconnect going on
+		ReconnectAttempts = 0;
+		if(ReconnectTimeout != null) {
+			clearTimeout(ReconnectTimeout);
+			ReconnectTimeout = null;
+		}
+	}
 
-  OnlineSocket.onclose = function (event) {
-    logMessage("Connection closed", 'error_message');
-    OnlineIsConnected = false;
-  }
+	OnlineSocket.onerror = function (event) {
+		//logMessage("Socket error", 'error_message');
+		//OnlineIsConnected = false;
+	}
 
-  OnlineSocket.onmessage = receiveServerMessageEvent;
+	OnlineSocket.onclose = function (event) {
+		// Separate the message into a reason and a message
+		let reason = event.reason;
+		let message = '';
+		let separatorIndex = reason.indexOf('|');
+		if(separatorIndex != -1) {
+			message = reason.substring(separatorIndex+1);
+			reason = reason.substring(0, separatorIndex);
+		}
+
+		// Handle the disconnect reasons
+		let should_reconnect = false;
+		let display = OnlineIsConnected ? (event.wasClean ? 'Connection closed' : 'Connection closed due to an error') : 'Connection failed';
+		if(!reason || reason == "Quit") {
+			// Leave it as the default
+		} else if(reason == "BadLogin") {
+			display = "Connection closed due to bad login credentials";
+			document.getElementById('loginWindow').style.display = "block";
+		} else if(reason == "Shutdown") {
+			display = "Connection closed because the server shut down";
+		} else if(reason == "Restart") {
+			display = "Connection closed because the server is restarting";
+			should_reconnect = true;
+		} else if(reason == "Ban") {
+			display = "Connection closed because you're banned!! :(";
+		} else if(reason == "Kick") {
+			display = "Connection closed because you were kicked!";
+		} else {
+			display = "Connection closed because: " + convertBBCode(reason);
+		}
+		if(message != '')
+			display += "<br>More information: "+convertBBCode(message);
+
+		if(DidConnectOnce && (should_reconnect || !event.wasClean)) {
+			if(ReconnectAttempts < 10) {
+				ReconnectAttempts++;
+				display+= "<br>Will try to reconnect in "+(ReconnectAttempts*10)+" seconds...";
+				if(ReconnectAttempts == 1) {
+					display += " <button onclick=\"CancelReconnect();\">Cancel</button>";
+				}
+				ReconnectTimeout = setTimeout(AttemptReconnect, 1000 * 10 * ReconnectAttempts);
+			} else {
+				display+= "<br>Press the Login button when you want to try again.";
+			}
+		}
+		logMessage(display, 'error_message');
+
+		OnlineIsConnected = false;
+	}
+
+	OnlineSocket.onmessage = receiveServerMessageEvent;
 }
