@@ -632,6 +632,7 @@ function receiveServerMessage(cmd, arg) {
         }
       break;
     case "IDN":
+      ReconnectAttempts = 0;
       DidConnectOnce = true;
       break;
 
