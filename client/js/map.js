@@ -48,7 +48,8 @@ class TownMap {
 		this.Height = MapHeight;
 
 		// Gets filled in from MAI
-		this.Info = {name: "?", 'id': -1, 'owner': -1, 'default': 'grass', 'size': [60, 60], 'public': true, 'private': false, 'build_enabled': true, 'full_sandbox': true};
+		this.Info = {name: "?", 'id': -1, 'owner': -1, 'default': 'grass', 'size': [60, 60], 'public': true, 'private': false, 'build_enabled': true, 'full_sandbox': true, 'wallpaper': null};
+		this.WallpaperImage = null;
 
 		// Initialize the map
 		this.Tiles = [];
@@ -61,6 +62,20 @@ class TownMap {
 				this.Objs[i][j] = [];
 			}
 		}
+
+		// Canvas to speed up drawing
+		this.canvas = document.createElement("canvas");
+		this.canvas.width  = this.Width * 16;
+		this.canvas.height = this.Height * 16;
+		this.canvasContext = this.canvas.getContext("2d");
+
+		this.overCanvas = document.createElement("canvas");
+		this.overCanvas.width  = this.Width * 16;
+		this.overCanvas.height = this.Height * 16;
+		this.overCanvasContext = this.overCanvas.getContext("2d");
+
+		// Canvas needs to be redrawn
+		this.dirtyCanvas = true;
 	}
 }
 let MyMap = new TownMap(60, 60);
@@ -108,6 +123,7 @@ function FetchTilesetImage(id, url) {
 	let img = new Image();
 	img.onload = function(){
 		NeedMapRedraw = true;
+		NeedMapCanvasRedraw = true;
 		if(id <= 0) {
 			redrawBuildCanvas();
 		}
@@ -155,7 +171,7 @@ function AtomFromName(str) {
 						SendCmd("TSD", {id: s[0]});
 					}
 				}
-			console.log("Unknown atom: "+str);
+			//console.log("Unknown atom: "+str);
 			return GlobalTiles.grass;
 		}
 	}

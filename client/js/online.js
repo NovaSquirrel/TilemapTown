@@ -146,6 +146,23 @@ function asIntIfPossible(i) {
   return i;
 }
 
+function updateWallpaperOnMap(map) {
+  // Check on the wallpaper
+  if(MyMap.Info["wallpaper"] && Object.keys(MyMap.Info["wallpaper"]).length != 0) {
+    if(MyMap.WallpaperImage == null || MyMap.WallpaperImage.src == MyMap.Info["wallpaper"].url) {
+      let img = new Image();
+      img.onload = function(){
+		MyMap.dirtyCanvas = true;
+        NeedMapRedraw = true;
+      };
+      img.src = MyMap.Info["wallpaper"].url;
+      MyMap.WallpaperImage = img;
+    }
+  } else {
+    MyMap.WallpaperImage = null;
+  }
+}
+
 function receiveServerMessage(cmd, arg) {
   switch(cmd) {
     case "MOV":
@@ -198,17 +215,20 @@ function receiveServerMessage(cmd, arg) {
         var remote = arg["remote_map"];
         MapsByID[remote] = new TownMap(arg.size[0], arg.size[1])
         MapsByID[remote].Info = arg;
+        updateWallpaperOnMap(MapsByID[remote]);
         break;
       } else {
+        let OldMapID = CurrentMapID;
         CurrentMapID = arg.id;
 
         if(CurrentMapID in MapsByID && MapsByID[CurrentMapID].Width == arg.size[0] && MapsByID[CurrentMapID].Height == arg.size[1]) {
           MyMap = MapsByID[CurrentMapID];
         } else {
           MyMap = new TownMap(arg.size[0], arg.size[1])
-          MyMap.Info = arg;
           MapsByID[CurrentMapID] = MyMap;
         }
+        MyMap.Info = arg;
+        updateWallpaperOnMap(MyMap);
 
         // Clean up MapsByID
         var NotNeededMaps = [];
@@ -222,17 +242,21 @@ function receiveServerMessage(cmd, arg) {
         }
 
         // Give a notice about a new map
-        let logText = "Now entering: <b>"+MyMap.Info['name']+"</b>";
-        let plainText = `Now entering: ${MyMap.Info['name']}`;
-        if(MyMap.Info['desc']) {
-          logText += ' - "'+MyMap.Info['desc']+'"';
-          plainText += ' - "'+MyMap.Info['desc']+'"';
+        if(OldMapID != CurrentMapID) {
+          let logText = "Now entering: <b>"+MyMap.Info['name']+"</b>";
+          let plainText = `Now entering: ${MyMap.Info['name']}`;
+          if(MyMap.Info['desc']) {
+            logText += ' - "'+MyMap.Info['desc']+'"';
+            plainText += ' - "'+MyMap.Info['desc']+'"';
+          }
+          if(MyMap.Info['topic']) {
+            logText += `<br>Current topic: "${MyMap.Info['topic']}" (set by ${MyMap.Info['topic_username']})`;
+            plainText += ` | Current topic: "${MyMap.Info['topic']}" (set by ${MyMap.Info['topic_username']})`;
+          }
+          logMessage(logText, 'server_message', {'plainText': plainText});
         }
-        if(MyMap.Info['topic']) {
-          logText += `<br>Current topic: "${MyMap.Info['topic']}" (set by ${MyMap.Info['topic_username']})`;
-          plainText += ` | Current topic: "${MyMap.Info['topic']}" (set by ${MyMap.Info['topic_username']})`;
-        }
-        logMessage(logText, 'server_message', {'plainText': plainText});
+
+        NeedMapRedraw = true;
       }
       break;
     case "MAP":
@@ -263,6 +287,7 @@ function receiveServerMessage(cmd, arg) {
         Map.Objs[obj[0]][obj[1]] = obj[2];
       }
 
+      redrawPortionOfMapCanvas(Map, Math.max(0, x1-1), Math.max(0, y1-1), Math.min(Map.Width-1, x2+1), Math.min(Map.Height-1, y2+1));
       NeedMapRedraw = true;
       break;
     case "BLK":
@@ -342,6 +367,8 @@ function receiveServerMessage(cmd, arg) {
         }
 
       }
+
+      Map.dirtyCanvas = true;
       NeedMapRedraw = true;
       break;
     case "WHO":

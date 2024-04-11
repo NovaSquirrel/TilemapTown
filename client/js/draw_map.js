@@ -380,6 +380,86 @@ function drawObj(ctx, drawAtX, drawAtY, obj, map, mapCoordX, mapCoordY) {
 	drawAtomWithAutotile(ctx, drawAtX, drawAtY, obj, map, mapCoordX, mapCoordY, getObjAutotileIndex4, isObjAutotileMatch);
 }
 
+function wrapWithin(value, max) {
+	if(value >= 0)
+		return value % max;
+	return max + (value % max) - 1;
+}
+
+function redrawPortionOfMapCanvas(map, x1, y1, x2, y2) {
+	let ctx = map.canvasContext;
+	let overCtx = map.overCanvasContext;
+	ctx.clearRect(x1*16, y1*16, (x2-x1+1)*16, (y2-y1+1)*16);
+	overCtx.clearRect(x1*16, y1*16, (x2-x1+1)*16, (y2-y1+1)*16);
+
+	let defaultTurfName = AtomFromName(map.Info?.["default"] ?? "grass").name;
+
+	let hasWallpaper = false;
+	let wallpaperStartX, wallpaperStartY, wallpaperEndX, wallpaperEndY, wallpaperTileX, wallpaperTileY;
+	if(MyMap.WallpaperImage && MyMap.WallpaperImage.complete) {
+		let wallpaper = MyMap.Info["wallpaper"];
+		let wallpaperDrawX = 0, wallpaperDrawY = 0;
+		if(wallpaper.center) {
+			wallpaperDrawX = MyMap.Width*8 - MyMap.WallpaperImage.naturalWidth/2;
+			wallpaperDrawY = MyMap.Height*8 - MyMap.WallpaperImage.naturalHeight/2;
+		}
+		if(wallpaper.offset) {
+			wallpaperDrawX += wallpaper.offset[0];
+			wallpaperDrawY += wallpaper.offset[1];
+		}
+
+		// Calculate region where the default floor should be hidden
+		wallpaper.repeat = true;
+
+		wallpaperTileX  = Math.floor(wallpaperDrawX / 16);
+		wallpaperTileY  = Math.floor(wallpaperDrawY / 16);
+		wallpaperStartX = (wallpaper.repeat || wallpaper.repeat_x) ? 0 : wallpaperTileX;
+		wallpaperStartY = (wallpaper.repeat || wallpaper.repeat_y) ? 0 : wallpaperTileY;
+		wallpaperEndX   = (wallpaper.repeat || wallpaper.repeat_x) ? (map.Width-1) : (Math.ceil(wallpaperDrawX + MyMap.WallpaperImage.naturalWidth) / 16);
+		wallpaperEndY   = (wallpaper.repeat || wallpaper.repeat_y) ? (map.Height-1) :(Math.ceil(wallpaperDrawY + MyMap.WallpaperImage.naturalHeight) / 16);
+		hasWallpaper = true;
+	}
+
+
+	for (let x = 0; x < map.Width; x++) {
+		for (let y = 0; y < map.Height; y++) {
+			try {
+				let turfAtom = AtomFromName(map.Tiles[x][y]);
+				drawTurf(ctx, x * 16, y * 16, turfAtom, map, x, y);
+
+				if(hasWallpaper && turfAtom.name == defaultTurfName && (x >= wallpaperStartX && x <= wallpaperEndX && y >= wallpaperStartY && y <= wallpaperEndY)) {
+/*
+					ctx.drawImage(MyMap.WallpaperImage,
+						wrapWithin((x - wallpaperTileX) * 16, MyMap.WallpaperImage.naturalWidth),
+						wrapWithin((y - wallpaperTileY) * 16, MyMap.WallpaperImage.naturalHeight),
+						16, 16, x * 16, y * 16, 16, 16);
+*/
+				}
+
+				let Objs = map.Objs[x][y];
+				if (Objs) {
+					for (let o of Objs) {
+						o = AtomFromName(o);
+						drawObj((o.over == true) ? overCtx : ctx, x * 16, y * 16, o, map, x, y);
+					}
+				}
+			} catch (error) {
+			}
+		}
+	}
+}
+
+function redrawEntireMapCanvas(map) {
+	redrawPortionOfMapCanvas(map, 0, 0, map.Width, map.Height);
+}
+
+function redrawMapCanvasIfNeeded(map) {
+	if(map.dirtyCanvas || NeedMapCanvasRedraw) {
+		redrawEntireMapCanvas(map);
+		map.dirtyCanvas = false;
+	}
+}
+
 function drawMap() {
 	let canvas = mapCanvas;
 	let ctx = canvas.getContext("2d");
@@ -400,74 +480,61 @@ function drawMap() {
 
 	let edgeLinks = MyMap?.Info?.edge_links ?? null;
 
-	let objectsWithOverFlag = []; // X, Y, [pic_sheet, pic_x, pic_y]
+	///////////////////////////
+	// Draw the maps
 
-	// Render the map
-	for (x = 0; x < (viewWidth + 2); x++) {
-		for (y = 0; y < (viewHeight + 2); y++) {
-			try {
-				ctx.globalAlpha = 1;
-				let mapCoordX = x + tileX;
-				let mapCoordY = y + tileY;
-				let map = MyMap;
+	for(let map of Object.values(MapsByID))
+		redrawMapCanvasIfNeeded(map);
 
-				// Out-of-bounds tiles may be on another map
-				let edgeLookupIndex = (mapCoordX < 0) * 1 + (mapCoordX >= MyMap.Width) * 2 +
-					(mapCoordY < 0) * 4 + (mapCoordY >= MyMap.Height) * 8;
-				if (edgeLookupIndex != 0) {
-					if (edgeLinks == null)
-						continue;
-					map = MapsByID[edgeLinks[edgeMapLookupTable[edgeLookupIndex]]];
-					if (map == null)
-						continue;
-					let gradientHorizontal = 1;
-					let gradientVertical = 1;
-					if (edgeLookupIndex & 1) { // Left
-						gradientHorizontal = 0.5 - (-Math.floor(mapCoordX / 2) + 1) * 0.025;
-						mapCoordX = map.Width + mapCoordX;
-					}
-					if (edgeLookupIndex & 2) { // Right
-						mapCoordX -= MyMap.Width;
-						gradientHorizontal = 0.5 - Math.floor(mapCoordX / 2) * 0.025;
-					}
-					if (edgeLookupIndex & 4) { // Above
-						gradientVertical = 0.5 - (-Math.floor(mapCoordY / 2) + 1) * 0.025;
-						mapCoordY = map.Height + mapCoordY;
-					}
-					if (edgeLookupIndex & 8) { // Below
-						mapCoordY -= MyMap.Height;
-						gradientVertical = 0.5 - Math.floor(mapCoordY / 2) * 0.025;
-					}
-					if (mapCoordX < 0 || mapCoordX >= map.Width || mapCoordY < 0 || mapCoordY >= map.Height)
-						continue;
-					ctx.globalAlpha = Math.max(0, Math.min(gradientHorizontal, gradientVertical));
-					if (ctx.globalAlpha == 0)
-						continue;
-				}
-
-				// Draw the turf
-				drawTurf(ctx, x * 16 - offsetX, y * 16 - offsetY, AtomFromName(map.Tiles[mapCoordX][mapCoordY]), map, mapCoordX, mapCoordY);
-
-				// Draw anything above the turf (the tile objects)
-				let Objs = map.Objs[mapCoordX][mapCoordY];
-				if (Objs) {
-					for (let o of Objs) {
-						o = AtomFromName(o);
-						if(o.over === true) {
-							objectsWithOverFlag.push([x * 16 - offsetX, y * 16 - offsetY, o, map, mapCoordX, mapCoordY]);
-						} else {
-							drawObj(ctx, x * 16 - offsetX, y * 16 - offsetY, o, map, mapCoordX, mapCoordY);
-						}
-					}
-				}
-			} catch (error) {
-			}
+	ctx.drawImage(MyMap.canvas, -pixelCameraX, -pixelCameraY);
+	if(edgeLinks) {
+		let pastLeftEdge = pixelCameraX < 0;
+		let pastRightEdge = (pixelCameraX + canvas.width) >= (MyMap.Width*16);
+		let pastTopEdge = pixelCameraY < 0;
+		let pastBottomEdge = (pixelCameraY + canvas.height) >= (MyMap.Height*16);
+		if(pastRightEdge && edgeLinks[0] && MapsByID[edgeLinks[0]]) {
+			let map = MapsByID[edgeLinks[0]];
+			ctx.drawImage(map.canvas, -pixelCameraX+MyMap.canvas.width, -pixelCameraY);
+			ctx.drawImage(map.overCanvas, -pixelCameraX+MyMap.canvas.width, -pixelCameraY);
+		}
+		if(pastRightEdge && pastBottomEdge && edgeLinks[1] && MapsByID[edgeLinks[1]]) {
+			let map = MapsByID[edgeLinks[1]];
+			ctx.drawImage(map.canvas, -pixelCameraX+MyMap.canvas.width, -pixelCameraY+MyMap.canvas.height);
+			ctx.drawImage(map.overCanvas, -pixelCameraX+MyMap.canvas.width, -pixelCameraY+MyMap.canvas.height);
+		}
+		if(pastBottomEdge && edgeLinks[2] && MapsByID[edgeLinks[2]]) {
+			let map = MapsByID[edgeLinks[2]];
+			ctx.drawImage(map.canvas, -pixelCameraX, -pixelCameraY+MyMap.canvas.height);
+			ctx.drawImage(map.overCanvas, -pixelCameraX, -pixelCameraY+MyMap.canvas.height);
+		}
+		if(pastLeftEdge && pastBottomEdge && edgeLinks[3] && MapsByID[edgeLinks[3]]) {
+			let map = MapsByID[edgeLinks[3]];
+			ctx.drawImage(map.canvas, -pixelCameraX-map.canvas.width, -pixelCameraY+MyMap.canvas.height);
+			ctx.drawImage(map.overCanvas, -pixelCameraX-map.canvas.width, -pixelCameraY+MyMap.canvas.height);
+		}
+		if(pastLeftEdge && edgeLinks[4] && MapsByID[edgeLinks[4]]) {
+			let map = MapsByID[edgeLinks[4]];
+			ctx.drawImage(map.canvas, -pixelCameraX-map.canvas.width, -pixelCameraY);
+			ctx.drawImage(map.overCanvas, -pixelCameraX-map.canvas.width, -pixelCameraY);
+		}
+		if(pastLeftEdge && pastTopEdge && edgeLinks[5] && MapsByID[edgeLinks[5]]) {
+			let map = MapsByID[edgeLinks[5]];
+			ctx.drawImage(map.canvas, -pixelCameraX-map.canvas.width, -pixelCameraY-map.canvas.height);
+			ctx.drawImage(map.overCanvas, -pixelCameraX-map.canvas.width, -pixelCameraY-map.canvas.height);
+		}
+		if(pastTopEdge && edgeLinks[6] && MapsByID[edgeLinks[6]]) {
+			let map = MapsByID[edgeLinks[6]];
+			ctx.drawImage(map.canvas, -pixelCameraX, -pixelCameraY-map.canvas.height);
+			ctx.drawImage(map.overCanvas, -pixelCameraX, -pixelCameraY-map.canvas.height);
+		}
+		if(pastRightEdge && pastTopEdge && edgeLinks[7] && MapsByID[edgeLinks[7]]) {
+			let map = MapsByID[edgeLinks[7]];
+			ctx.drawImage(map.canvas, -pixelCameraX+MyMap.canvas.width, -pixelCameraY-map.canvas.height);
+			ctx.drawImage(map.overCanvas, -pixelCameraX+MyMap.canvas.width, -pixelCameraY-map.canvas.height);
 		}
 	}
 
-	// Draw entities and map link edge normally
-	ctx.globalAlpha = 1;
-
+	///////////////////////////
 	// Draw the map link edges
 	if (edgeLinks != null) {
 		ctx.beginPath();
@@ -481,12 +548,12 @@ function drawMap() {
 
 	drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCameraX, pixelCameraY, tileX, tileY);
 
+	/////////////////////////////////////////////////
 	// Draw objects that should appear above players
-	for (let i=0; i<objectsWithOverFlag.length; i++) {
-		let [x, y, object, map, mapx, mapy] = objectsWithOverFlag[i];
-		drawObj(ctx, x, y, object, map, mapx, mapy);
-	}
 
+	ctx.drawImage(MyMap.overCanvas, -pixelCameraX, -pixelCameraY);
+
+	///////////////////////////////////////////////////
 	// Draw markers that show that people are building
 	let potluck = document.getElementById('potluck');
 	for (let id in PlayerBuildMarkers) {
@@ -497,6 +564,7 @@ function drawMap() {
 		ctx.drawImage(potluck, del?(17 * 16):(9 * 16), del?(19 * 16):(22 * 16), 16, 16, marker.pos[0] * 16 - pixelCameraX, marker.pos[1] * 16 - pixelCameraY, 16, 16);
 	}
 
+	//////////////////////////////////////////
 	// Draw a mouse selection if there is one
 	if (MouseActive) {
 		ctx.beginPath();
@@ -510,6 +578,7 @@ function drawMap() {
 		ctx.stroke();
 	}
 
+	//////////////////////////////
 	// Draw tool position preview
 	if (drawToolX !== null && drawToolY !== null) {
 		ctx.beginPath();
@@ -524,6 +593,7 @@ function drawMap() {
 	}
 
 	FlushIconSheetRequestList();
+	NeedMapCanvasRedraw = false;
 }
 
 function drawText(ctx, x, y, text) {

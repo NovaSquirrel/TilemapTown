@@ -66,6 +66,7 @@ let chatInput = null;
 let panel = null;
 
 let NeedMapRedraw = false;
+let NeedMapCanvasRedraw = false;
 let NeedInventoryUpdate = false;
 let TickCounter = 0;   // Goes up every 20ms, wraps at 0x10000 (hex)
 let AnimationTick = 0; // Goes up every 20ms, wraps at 10000 (decimal)
