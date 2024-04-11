@@ -256,6 +256,18 @@ Change map info
 /mapdefaultfloor grass
 Change what tile type is the default
 
+/mapwallpaper none
+/mapwallpaper url
+/mapwallpaper url absolute
+/mapwallpaper url center
+/mapwallpaper url repeat
+/mapwallpaper url repeatx
+/mapwallpaper url repeaty
+/mapwallpaper url over_turf
+/mapwallpaper url offset=16,16
+Remove a map wallpaper, or set one. You can specify a series of parameters to specify how the wallpaper should look. You can put all of them on a line together (like /mapwallpaper url center repeat repeatx repeaty offset=8,8), though "absolute" and "center" override each other.
+Wallpapers are images that are overlaid on top of a map, replacing the default floor. If "over_turf" is enabled, the wallpaper will draw on top of all floors, not just the default. Map objects will still draw on top as normal.
+
 /mapspawn
 Set map starting position to where you're currently standing
 

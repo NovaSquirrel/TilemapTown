@@ -115,6 +115,14 @@ Fields that may appear in MAI on the official server:
 	"topic": string; Current topic, if there is one
 	"topic_username": string; Username of the person who set the topic
 	"remote_map": integer; If set, this MAI is actually for a different map, and not the one you're on; the parameter is the database ID of that other map
+	"wallpaper": object, containing:
+		"url": string; image link
+		"center": boolean; if true, the wallpaper's origin point is the middle of the map, not the top left
+		"repeat": boolean; if true, the wallpaper repeats across the entire map
+		"repeat_x": boolean; if true, the wallpaper repeats across the map horizontally
+		"repeat_y": boolean; if true, the wallpaper repeats across the map vertically
+		"over_turf": boolean; if true, draw over all turf, not just default turf
+		"offset": 2-element list; [x,y]. Number of pixels to shift the image horizontally and vertically from the default spot it would be at
 
 --> DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true}
 <-- DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true, "username":username, "remote_map": map} (for listeners)

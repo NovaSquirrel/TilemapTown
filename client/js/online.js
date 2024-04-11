@@ -146,6 +146,56 @@ function asIntIfPossible(i) {
   return i;
 }
 
+function updateWallpaperData(map) {
+	// Calculate wallpaper positioning information to have it ready for when the map is drawn
+	let WallpaperData = {};
+	let hasWallpaper = false;
+	let defaultTurf = AtomFromName(map.Info?.["default"] ?? "grass");
+	let wallpaperStartX, wallpaperStartY, wallpaperEndX, wallpaperEndY, wallpaperTileX, wallpaperTileY, wallpaperDrawX = 0, wallpaperDrawY = 0, wallpaperHasRepeat;
+	if(map.WallpaperImage && map.WallpaperImage.complete) {
+		let wallpaper = map.Info["wallpaper"];
+		if(wallpaper.center) {
+			wallpaperDrawX = map.Width*8 - map.WallpaperImage.naturalWidth/2;
+			wallpaperDrawY = map.Height*8 - map.WallpaperImage.naturalHeight/2;
+		}
+		if(wallpaper.offset) {
+			wallpaperDrawX += wallpaper.offset[0];
+			wallpaperDrawY += wallpaper.offset[1];
+		}
+
+		// Calculate region where the client should attempt to draw the wallpaper
+		wallpaperTileX  = Math.floor(wallpaperDrawX / 16);
+		wallpaperTileY  = Math.floor(wallpaperDrawY / 16);
+		wallpaperStartX = (wallpaper.repeat || wallpaper.repeat_x) ? 0 : wallpaperTileX;
+		wallpaperStartY = (wallpaper.repeat || wallpaper.repeat_y) ? 0 : wallpaperTileY;
+		wallpaperEndX   = (wallpaper.repeat || wallpaper.repeat_x) ? (map.Width-1)  : (Math.ceil(wallpaperDrawX + map.WallpaperImage.naturalWidth - 1) / 16);
+		wallpaperEndY   = (wallpaper.repeat || wallpaper.repeat_y) ? (map.Height-1) : (Math.ceil(wallpaperDrawY + map.WallpaperImage.naturalHeight - 1) / 16);
+		wallpaperHasRepeat = wallpaper.repeat || wallpaper.repeat_x || wallpaper.repeat_y;
+
+		hasWallpaper    = true;
+	}
+	map.WallpaperData = {hasWallpaper, defaultTurf, wallpaperStartX, wallpaperStartY, wallpaperEndX, wallpaperEndY, wallpaperTileX, wallpaperTileY, wallpaperDrawX, wallpaperDrawY, wallpaperHasRepeat};
+}
+
+function updateWallpaperOnMap(map) {
+	// Check on the wallpaper
+	if(map.Info["wallpaper"] && Object.keys(map.Info["wallpaper"]).length != 0) {
+		if(map.WallpaperImage == null || map.WallpaperImage.src != map.Info["wallpaper"].url) {
+			let img = new Image();
+			img.onload = function(){
+				NeedMapRedraw = true;
+				updateWallpaperData(map);
+			};
+			img.src = map.Info["wallpaper"].url;
+			map.WallpaperImage = img;
+		}
+		updateWallpaperData(map);
+	} else {
+		map.WallpaperImage = null;
+		map.WallpaperData = null;
+	}
+}
+
 function receiveServerMessage(cmd, arg) {
   switch(cmd) {
     case "MOV":
@@ -198,17 +248,20 @@ function receiveServerMessage(cmd, arg) {
         var remote = arg["remote_map"];
         MapsByID[remote] = new TownMap(arg.size[0], arg.size[1])
         MapsByID[remote].Info = arg;
+        updateWallpaperOnMap(MapsByID[remote]);
         break;
       } else {
+        let OldMapID = CurrentMapID;
         CurrentMapID = arg.id;
 
         if(CurrentMapID in MapsByID && MapsByID[CurrentMapID].Width == arg.size[0] && MapsByID[CurrentMapID].Height == arg.size[1]) {
           MyMap = MapsByID[CurrentMapID];
         } else {
           MyMap = new TownMap(arg.size[0], arg.size[1])
-          MyMap.Info = arg;
           MapsByID[CurrentMapID] = MyMap;
         }
+        MyMap.Info = arg;
+        updateWallpaperOnMap(MyMap);
 
         // Clean up MapsByID
         var NotNeededMaps = [];
@@ -222,17 +275,21 @@ function receiveServerMessage(cmd, arg) {
         }
 
         // Give a notice about a new map
-        let logText = "Now entering: <b>"+MyMap.Info['name']+"</b>";
-        let plainText = `Now entering: ${MyMap.Info['name']}`;
-        if(MyMap.Info['desc']) {
-          logText += ' - "'+MyMap.Info['desc']+'"';
-          plainText += ' - "'+MyMap.Info['desc']+'"';
+        if(OldMapID != CurrentMapID) {
+          let logText = "Now entering: <b>"+MyMap.Info['name']+"</b>";
+          let plainText = `Now entering: ${MyMap.Info['name']}`;
+          if(MyMap.Info['desc']) {
+            logText += ' - "'+MyMap.Info['desc']+'"';
+            plainText += ' - "'+MyMap.Info['desc']+'"';
+          }
+          if(MyMap.Info['topic']) {
+            logText += `<br>Current topic: "${MyMap.Info['topic']}" (set by ${MyMap.Info['topic_username']})`;
+            plainText += ` | Current topic: "${MyMap.Info['topic']}" (set by ${MyMap.Info['topic_username']})`;
+          }
+          logMessage(logText, 'server_message', {'plainText': plainText});
         }
-        if(MyMap.Info['topic']) {
-          logText += `<br>Current topic: "${MyMap.Info['topic']}" (set by ${MyMap.Info['topic_username']})`;
-          plainText += ` | Current topic: "${MyMap.Info['topic']}" (set by ${MyMap.Info['topic_username']})`;
-        }
-        logMessage(logText, 'server_message', {'plainText': plainText});
+
+        NeedMapRedraw = true;
       }
       break;
     case "MAP":

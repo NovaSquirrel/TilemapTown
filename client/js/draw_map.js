@@ -380,6 +380,12 @@ function drawObj(ctx, drawAtX, drawAtY, obj, map, mapCoordX, mapCoordY) {
 	drawAtomWithAutotile(ctx, drawAtX, drawAtY, obj, map, mapCoordX, mapCoordY, getObjAutotileIndex4, isObjAutotileMatch);
 }
 
+function wrapWithin(value, max) {
+	if(value >= 0)
+		return value % max;
+	return max + (value % max) - 1;
+}
+
 function drawMap() {
 	let canvas = mapCanvas;
 	let ctx = canvas.getContext("2d");
@@ -446,11 +452,32 @@ function drawMap() {
 				}
 
 				// Draw the turf
-				drawTurf(ctx, x * 16 - offsetX, y * 16 - offsetY, AtomFromName(map.Tiles[mapCoordX][mapCoordY]), map, mapCoordX, mapCoordY);
+				let turfAtom = AtomFromName(map.Tiles[mapCoordX][mapCoordY]);
+				drawTurf(ctx, x * 16 - offsetX, y * 16 - offsetY, turfAtom, map, mapCoordX, mapCoordY);
+
+				// Draw wallpaper if available
+				if(map.WallpaperData) {
+					let wallpaper = map.WallpaperData;
+					if(wallpaper.hasWallpaper &&
+					(map.Info["wallpaper"]["over_turf"] || (turfAtom.name == wallpaper.defaultTurf.name && turfAtom.pic[0] == wallpaper.defaultTurf.pic[0] && turfAtom.pic[1] == wallpaper.defaultTurf.pic[1] && turfAtom.pic[2] == wallpaper.defaultTurf.pic[2]))
+					&& (mapCoordX >= wallpaper.wallpaperStartX && mapCoordX <= wallpaper.wallpaperEndX && mapCoordY >= wallpaper.wallpaperStartY && mapCoordY <= wallpaper.wallpaperEndY)) {
+						if(wallpaper.wallpaperHasRepeat) {
+							ctx.drawImage(map.WallpaperImage,
+								wrapWithin(mapCoordX - wallpaper.wallpaperTileX, map.WallpaperImage.naturalWidth>>4)*16,
+								wrapWithin(mapCoordY - wallpaper.wallpaperTileY, map.WallpaperImage.naturalHeight>>4)*16,
+								16, 16, x * 16 - offsetX, y * 16 - offsetY, 16, 16);
+						} else {
+							ctx.drawImage(map.WallpaperImage,
+								(mapCoordX - wallpaper.wallpaperTileX)*16 - (wallpaper.wallpaperDrawX&15),
+								(mapCoordY - wallpaper.wallpaperTileY)*16 - (wallpaper.wallpaperDrawY&15),
+								16, 16, x * 16 - offsetX, y * 16 - offsetY, 16, 16);
+						}
+					}
+				}
 
 				// Draw anything above the turf (the tile objects)
 				let Objs = map.Objs[mapCoordX][mapCoordY];
-				if (Objs) {
+				if (Objs.length) {
 					for (let o of Objs) {
 						o = AtomFromName(o);
 						if(o.over === true) {

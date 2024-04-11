@@ -1018,6 +1018,51 @@ def fn_mapdefaultfloor(map, client, context, arg):
 		map.save_on_clean_up = True
 		respond(context, 'Map floor changed to %s' % arg)
 
+@cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="url")
+def fn_mapwallpaper(map, client, context, arg):
+	arg = arg.split(' ')
+	if len(arg) == 0:
+		return
+	if arg[0].lower() in ("none", "off"):
+		if map.map_wallpaper != None:
+			map.map_wallpaper = None
+			map.map_data_modified = True # Because wallpapers get saved in with the rest of the data
+			map.save_on_clean_up = True
+			for user in map.contents:
+				if user.is_client():
+					user.send("MAI", map.map_info(user=user))
+			respond(context, 'Wallpaper removed')
+		else:
+			respond(context, 'No wallpaper to remove', error=True)
+	elif arg[0].startswith("http"):
+		if image_url_is_okay(arg[0]):
+			wallpaper = {"url": arg[0], "center": True, "offset": [0,0]}
+			for a in arg[1:]:
+				lowered = a.lower()
+				if lowered == "absolute":
+					wallpaper["center"] = False
+				elif lowered in ("repeat", "repeat_x", "repeat_y", "over_turf", "center"):
+					wallpaper[lowered] = True
+				elif lowered.startswith("offset="):
+					offset_arg = a[7:].split(',')
+					if len(offset_arg) == 2 and string_is_int(offset_arg[0]) and string_is_int(offset_arg[1]):
+						wallpaper["offset"] = [int(offset_arg[0]), int(offset_arg[1])]
+				else:
+					respond(context, 'Unrecognized parameter "%s"' % a, error=True)
+					return
+			map.map_wallpaper = wallpaper
+			map.map_data_modified = True # Because wallpapers get saved in with the rest of the data
+			map.save_on_clean_up = True
+
+			for user in map.contents:
+				if user.is_client():
+					user.send("MAI", map.map_info(user=user))
+			respond(context, 'Wallpaper changed to "%s"' % arg[0])
+		else:
+			respond(context, 'URL doesn\t match any allowlisted sites', error=True)
+	else:
+		respond(context, 'Please provide a URL', error=True)
+
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="text")
 def fn_mapspawn(map, client, context, arg):
 	map.start_pos = [client.x, client.y]
@@ -1076,12 +1121,7 @@ def fn_mapsize(map, client, context, arg):
 	map.height = height
 
 	respond(context, 'This map\'s size is now %d,%d' % (map.width, map.height))
-	for user in map.contents:
-		if user.is_client():
-			user.loaded_maps.discard(map.db_id)
-			user.start_batch()
-			map.send_map_info(user)
-			user.finish_batch()
+	map.resend_map_info_to_users()
 	map.map_data_modified = True
 	map.save_on_clean_up = True
 

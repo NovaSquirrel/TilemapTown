@@ -48,7 +48,8 @@ class TownMap {
 		this.Height = MapHeight;
 
 		// Gets filled in from MAI
-		this.Info = {name: "?", 'id': -1, 'owner': -1, 'default': 'grass', 'size': [60, 60], 'public': true, 'private': false, 'build_enabled': true, 'full_sandbox': true};
+		this.Info = {name: "?", 'id': -1, 'owner': -1, 'default': 'grass', 'size': [60, 60], 'public': true, 'private': false, 'build_enabled': true, 'full_sandbox': true, 'wallpaper': null};
+		this.WallpaperImage = null;
 
 		// Initialize the map
 		this.Tiles = [];

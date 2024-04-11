@@ -49,6 +49,8 @@ class Map(Entity):
 		self.edge_id_links  = None
 		self.edge_ref_links = None
 
+		self.map_wallpaper = None
+
 		# map scripting
 		self.has_script = False
 		#loop = asyncio.get_event_loop()
@@ -94,9 +96,11 @@ class Map(Entity):
 						continue
 					from_db = json.loads(from_db)
 
-					# Patch in the edge ID links so linked_map.map_info() can include them
+					# Patch in the edge ID links and wallpaper so linked_map.map_info() can include them
 					if "edge_links" in from_db:
 						linked_map.edge_id_links = from_db["edge_links"]
+					if "wallpaper" in from_db:
+						linked_map.wallpaper = from_db["wallpaper"]
 
 				info = linked_map.map_info(user=item)
 				info['remote_map'] = linked_map.db_id
@@ -112,6 +116,14 @@ class Map(Entity):
 			item.loaded_maps = set([x.db_id for x in self.edge_ref_links if x != None] + [self.db_id])
 		if item.see_past_map_edge and not self.edge_ref_links:
 			item.loaded_maps = set([self.db_id])
+
+	def resend_map_info_to_users(self):
+		for user in self.contents:
+			if user.is_client():
+				user.loaded_maps.discard(self.db_id)
+				user.start_batch()
+				self.send_map_info(user)
+				user.finish_batch()
 
 	def remove_from_contents(self, item):
 		super().remove_from_contents(item)
@@ -178,6 +190,8 @@ class Map(Entity):
 				if "edge_links" in d:
 					self.edge_id_links = d["edge_links"]
 					self.edge_ref_links = [(get_entity_by_id(x) if x != None else None) for x in self.edge_id_links]
+				if "wallpaper" in d:
+					self.map_wallpaper = d["wallpaper"]
 			else:
 				self.blank_map(self.width, self.height)
 			self.map_data_loaded = True
@@ -208,6 +222,8 @@ class Map(Entity):
 			data = self.map_section(0, 0, self.width-1, self.height-1)
 			if self.edge_id_links != None:
 				data["edge_links"] = self.edge_id_links
+			if self.map_wallpaper != None:
+				data["wallpaper"] = self.map_wallpaper
 			self.save_data_as_text(json.dumps(data))
 			self.map_data_modified = False
 
@@ -263,6 +279,8 @@ class Map(Entity):
 		if self.topic:
 			out['topic'] = self.topic
 			out['topic_username'] = self.topic_username
+		if self.map_wallpaper:
+			out['wallpaper'] = self.map_wallpaper
 		return out
 
 	def count_users_inside(self, recursive=True):
