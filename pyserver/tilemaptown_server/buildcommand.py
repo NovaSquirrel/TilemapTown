@@ -1437,14 +1437,14 @@ def fn_map(map, client, context, arg):
 		if len(s) == 0:
 			respond(context, 'Map ID is %d' % map.db_id)
 			return
-		if len(s) == 1:
+		if len(s) == 1 and string_is_int(s[0]):
 			map_id = int(s[0])
 			new_pos = None
-		elif len(s) == 3:
+		elif len(s) == 3 and string_is_int(s[0]) and string_is_int(s[1]) and string_is_int(s[2]):
 			map_id = int(s[0])
 			new_pos = (int(s[1]), int(s[2]))
 		else:
-			respond(context, 'Syntax is [tt]/map id[/tt] or [tt]/map id x y[/tt]' % arg, error=True)
+			respond(context, 'Syntax is [tt]/map id[/tt] or [tt]/map id x y[/tt]', error=True)
 			return
 		if map_id == 0:
 			map_id = get_database_meta('default_map')
