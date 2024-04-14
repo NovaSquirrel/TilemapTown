@@ -28,6 +28,8 @@ let OnlineIsConnected = false;
 let OnlineMuWebview = false;
 let ShowProtocol = true;
 let DidConnectOnce = false; // A connection got an IDN from the server at least once, indicating the connection went all the way through
+let StatusOnDisconnect = null;
+let StatusMessageOnDisconnect = null;
 
 // URL param options
 let InstantCamera = false;
@@ -691,6 +693,16 @@ function receiveServerMessage(cmd, arg) {
     case "IDN":
       ReconnectAttempts = 0;
       DidConnectOnce = true;
+
+      if(StatusOnDisconnect) {
+        if(StatusMessageOnDisconnect && StatusMessageOnDisconnect != '') {
+          SendCmd("CMD", {text: "status " + StatusOnDisconnect + " " + StatusMessageOnDisconnect});
+        } else {
+          SendCmd("CMD", {text: "status " + StatusOnDisconnect});
+        }
+        StatusOnDisconnect = null;
+        StatusMessageOnDisconnect = null;
+      }
       break;
 
     case "PUT":
@@ -870,6 +882,12 @@ function ConnectToServer() {
 			display += "<br>More information: "+convertBBCode(message);
 
 		if(DidConnectOnce && (should_reconnect || !event.wasClean)) {
+			// If this is the first disconnect and not a disconnect attempt, save the player status info
+			if(ReconnectAttempts == 0) {
+				StatusOnDisconnect = PlayerWho?.[PlayerYou]?.status;
+				StatusMessageOnDisconnect = PlayerWho?.[PlayerYou]?.status_message;
+			}
+			// Don't keep retrying the connection forever
 			if(ReconnectAttempts < 10) {
 				ReconnectAttempts++;
 				display+= "<br>Will try to reconnect in "+(ReconnectAttempts*10)+" seconds...";
@@ -880,6 +898,8 @@ function ConnectToServer() {
 			} else {
 				display+= "<br>Press the Login button when you want to try again.";
 			}
+		} else {
+			StatusOnDisconnect = null;
 		}
 		logMessage(display, 'error_message');
 
