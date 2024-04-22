@@ -457,10 +457,12 @@ function itemCard(id) {
 	if (item.status) {
 		let status_span = document.createElement('span');
 		status_span.classList.add('inventory-status');
-		if (item.status_message)
+		if (item.status_message && item.status == '.')
+			status_span.innerText = `${item.status_message}`;
+		else if (item.status_message)
 			status_span.innerText = `${item.status} (${item.status_message})`;
 		else
-		status_span.innerText = `${item.status}`;
+			status_span.innerText = `${item.status}`;
 		info_name.appendChild(status_span);
 	}
 
@@ -1077,7 +1079,7 @@ function viewMail() {
 let chatLogForExport = [];
 
 function escape_tags(t) {
-	return t.replace("<", "&lt;").replace(">", "&gt;").replace("&", "&amp;");
+	return t.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
 function convertBBCodeMultiline(t) {

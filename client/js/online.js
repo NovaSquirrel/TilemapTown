@@ -446,22 +446,34 @@ function receiveServerMessage(cmd, arg) {
       } else if(arg.update) {
         if("status" in arg.update && ((arg.update["status"] !== PlayerWho[arg.update.id]["status"]) || (("status_message" in arg.update) && arg.update["status_message"] !== PlayerWho[arg.update.id]["status_message"]))) {
           if(arg.update["status"]) {
-			let status_name = '"' + escape_tags(arg.update["status"]) + '"';
-            switch(arg.update["status"].toLowerCase()) {
-              case "away": status_name = "away"; break;
-              case "busy": status_name = "busy"; break;
-              case "ic": status_name = "in character"; break;
-              case "ooc": status_name =  "out of character"; break;
-              case "iic": status_name = "looking to be in-character"; break;
-              case "rp": status_name = "in a roleplay"; break;
-              case "lfrp": case "irp": status_name = "looking to roleplay"; break;
-            }
-			let message = PlayerWho[arg.update.id].name + (status_name[0] == '"' ? "'s status is now ": " is now ") + status_name;
-			if(arg.update["status_message"]) {
-              message += ' ("' + convertBBCode(arg.update["status_message"]) + '")';
-            }
+            if(arg.update["status"] == "." && arg.update["status_message"]) {
+              let message = PlayerWho[arg.update.id].name + "'s status is now \"" + convertBBCode(arg.update["status_message"]) + "\"";
+              let plain_message = PlayerWho[arg.update.id].name + "'s status is now \"" + arg.update["status_message"] + "\"";
+              logMessage(message, 'status_change', {'isSilent': true, 'plainText': plain_message});
+            } else {
+              let status_name = '"' + escape_tags(arg.update["status"]) + '"';
+              let plain_status_name = '"' + arg.update["status"] + '"';
+              switch(arg.update["status"].toLowerCase()) {
+                case "away": status_name = "away"; break;
+                case "busy": status_name = "busy"; break;
+                case "ic": status_name = "in character"; break;
+                case "ooc": status_name =  "out of character"; break;
+                case "iic": status_name = "looking to be in-character"; break;
+                case "rp": status_name = "in a roleplay"; break;
+                case "lfrp": case "irp": status_name = "looking to roleplay"; break;
+              }
+              if(status_name[0] != '"')
+                plain_status_name = status_name;
+              let message = PlayerWho[arg.update.id].name + (status_name[0] == '"' ? "'s status is now ": " is now ") + status_name;
+              let plain_message = PlayerWho[arg.update.id].name + (plain_status_name[0] == '"' ? "'s status is now ": " is now ") + plain_status_name;
 
-            logMessage(message, 'status_change', {'isSilent': true, 'plainText': message});
+              if(arg.update["status_message"]) {
+                message += ' ("' + convertBBCode(arg.update["status_message"]) + '")';
+                plain_message += ' ("' + arg.update["status_message"] + '")';
+              }
+
+              logMessage(message, 'status_change', {'isSilent': true, 'plainText': plain_message});
+           }
           } else {
             logMessage(PlayerWho[arg.update.id].name + " cleared their status", 'status_change', {'isSilent': true, 'plainText': PlayerWho[arg.update.id].name + " cleared their status"});
           }
