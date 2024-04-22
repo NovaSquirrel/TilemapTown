@@ -643,13 +643,14 @@ function receiveServerMessage(cmd, arg) {
       senderIdForBbcode = arg.id ?? null;
       let respond = '<span onclick="setChatInput(\'/tell '+arg.username+' \')">';
       if(arg.text.slice(0, 4) == "/me ") {
-        var new_text = arg.text.slice(4);
+        let new_text = arg.text.slice(4);
+        let no_space = new_text.startsWith("'s ") || new_text.startsWith("'d ") || new_text.startsWith("'ll ");
         if(arg.receive)
-          logMessage(respond+"&larr;["+arg.name+"("+arg.username+")"+"] * <i>"+arg.name+" "+convertBBCode(new_text)+'</i></span>', 'private_message',
-            {'isPrivateChat': true, 'plainText': `<-- [${arg.name}(${arg.username})] * ${arg.name} ${new_text}`});
+          logMessage(respond+"&larr;["+arg.name+"("+arg.username+")"+"] * <i>"+arg.name+(no_space?"":" ")+convertBBCode(new_text)+'</i></span>', 'private_message',
+            {'isPrivateChat': true, 'plainText': `<-- [${arg.name}(${arg.username})] * ${arg.name}${no_space?"":" "}${new_text}`});
         else
-          logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] * <i>"+PlayerWho[PlayerYou].name+" "+convertBBCode(new_text)+'</i></span>', 'private_message',
-            {'isPrivateChat': true, 'plainText': `--> [${arg.name}(${arg.username})] * ${PlayerWho[PlayerYou].name} ${new_text}`});
+          logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] * <i>"+PlayerWho[PlayerYou].name+(no_space?"":" ")+convertBBCode(new_text)+'</i></span>', 'private_message',
+            {'isPrivateChat': true, 'plainText': `--> [${arg.name}(${arg.username})] * ${PlayerWho[PlayerYou].name}${no_space?"":" "}${new_text}`});
           break;
       } else if(arg.text.slice(0, 5) == "/ooc ") {
         var new_text = arg.text.slice(5);
@@ -673,10 +674,12 @@ function receiveServerMessage(cmd, arg) {
     case "MSG":
       senderIdForBbcode = arg.id ?? null;
       if(arg.name) {
-        if(arg.text.slice(0, 4).toLowerCase() == "/me ")
-          logMessage("* <i>"+arg.name+" "+convertBBCode(arg.text.slice(4))+"</i>", 'user_message',
-            {'isChat': true, 'plainText': `* ${arg.name} ${arg.text.slice(4)}`});
-        else if(arg.text.slice(0, 5).toLowerCase() == "/ooc ")
+        if(arg.text.slice(0, 4).toLowerCase() == "/me ") {
+          let message = arg.text.slice(4);
+          let no_space = message.startsWith("'s ") || message.startsWith("'d ") || message.startsWith("'ll ");
+          logMessage("* <i>"+arg.name+(no_space?"":" ")+convertBBCode(message)+"</i>", 'user_message',
+            {'isChat': true, 'plainText': `* ${arg.name}${no_space?"":" "}${message}`});
+        } else if(arg.text.slice(0, 5).toLowerCase() == "/ooc ")
           logMessage("[OOC] "+arg.name+": "+convertBBCode(arg.text.slice(5)), 'ooc_message',
             {'isChat': true, 'plainText': `[OOC] ${arg.name}: ${arg.text.slice(5)}`});
         else if(arg.text.slice(0, 7).toLowerCase() == "/spoof ")
