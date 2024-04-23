@@ -194,7 +194,7 @@ Other fields that may appear in WHO messages on the official server:
 	"y": integer; Y coordinate on the map
 	"dir": integer; Direction from 0 to 7
 	"id": integer or string; An ID to reference this entity with
-	"passengers": List of IDs this entity is carrying
+	"passengers": List of IDs this entity is carrying (note that there may be recursion here that you need to be careful about)
 	"vehicle": integer or string; ID of the entity this entity is being carried by
 	"is_following": boolean; If true, entity is following behind its vehicle, instead of being carried
 	"type": string; Entity type, like "user" or "generic"

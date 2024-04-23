@@ -283,6 +283,10 @@ def fn_tpa(map, client, context, arg):
 def fn_tpahere(map, client, context, arg):
 	send_request_to_user(client, context, arg, "tpahere", None, "tpaccept", "tpdeny", "You requested that %s teleport to you", "%s wants you to teleport to them")
 
+@cmd_command(category="Teleport", syntax="username")
+def fn_syncmove(map, client, context, arg):
+	send_request_to_user(client, context, arg, "syncmove", None, "tpaccept", "tpdeny", "You requested to synchronize movement with %s", "%s wants to synchronize movement with you")
+
 
 permission_grant_description = {
 	"move":              "Teleport you around this map",
@@ -398,6 +402,7 @@ request_type_to_friendly = {
 	"followyoumap": "follow",
 	"tempgrant": "permission",
 	"giveitem":  "item give",
+	"syncmove":  "movement",
 }
 
 @cmd_command(category="Teleport", alias=['hopon'], syntax="username")
@@ -463,14 +468,14 @@ def fn_tpaccept(map, client, context, arg):
 			client.stop_current_ride()
 			client.follow_map_vehicle = subject
 			subject.follow_map_passengers.add(client)
-			client.send("MSG", {'text': 'You start following %s to other maps (/hopoff to stop)' % subject.name_and_username()})
+			client.send("MSG", {'text': 'You start following %s to other maps ([command]hopoff[/command] to stop)' % subject.name_and_username()})
 			subject.send("MSG", {'text': 'You will bring %s to other maps' % client.name_and_username()})
 	elif request_type == 'followyoumap':
 		if client != subject:
 			subject.stop_current_ride()
 			subject.follow_map_vehicle = client
 			client.follow_map_passengers.add(subject)
-			subject.send("MSG", {'text': 'You start following %s to other maps (/hopoff to stop)' % client.name_and_username()})
+			subject.send("MSG", {'text': 'You start following %s to other maps ([command]hopoff[/command] to stop)' % client.name_and_username()})
 			client.send("MSG", {'text': 'You will bring %s to other maps' % subject.name_and_username()})
 	elif request_type == 'tempgrant':
 		handlers['entity'](map, client, context, "me tempgrant %s %s" % (request_data, subject_id))
@@ -490,6 +495,31 @@ def fn_tpaccept(map, client, context, arg):
 			clone_item(item, False)
 		elif givetype == 'tempcopy':
 			clone_item(item, True)
+	elif request_type == "syncmove":
+		if client is subject:
+			return
+
+		client.start_batch()
+		client.stop_current_ride()
+		subject.start_batch()
+		subject.stop_current_ride()
+
+		client.send("MSG", {'text': 'You start moving with %s ([command]rideend[/command] to stop)' % client.name_and_username()})
+		subject.send("MSG", {'text': 'You start moving with %s ([command]rideend[/command] to stop)' % subject.name_and_username()})
+
+		client.vehicle = subject
+		subject.vehicle = client
+		client.passengers.add(subject)
+		subject.passengers.add(client)
+
+		if client.map != None:
+			client.map.broadcast("WHO", {'add': client.who()}, remote_category=botwatch_type['move'])
+		if subject.map != None:
+			subject.map.broadcast("WHO", {'add': subject.who()}, remote_category=botwatch_type['move'])
+
+		client.switch_map(subject.map_id, new_pos=[subject.x, subject.y], on_behalf_of=subject)
+		client.finish_batch()
+		subject.finish_batch()
 
 @cmd_command(category="Teleport", alias=['tpdecline'], syntax="username")
 def fn_tpdeny(map, client, context, arg):
@@ -542,11 +572,14 @@ def fn_hopoff(map, client, context, arg):
 
 @cmd_command(category="Follow")
 def fn_dropoff(map, client, context, arg):
-	u = find_client_by_username(arg, inside=client.passengers.union(client.follow_map_passengers))
-	if u:
-		u.dismount()
+	if arg == '':
+		client.stop_current_ride()
 	else:
-		respond(context, 'You aren\'t carrying %s' % arg, error=True)
+		u = find_client_by_username(arg, inside=client.passengers.union(client.follow_map_passengers))
+		if u:
+			u.dismount()
+		else:
+			respond(context, 'You aren\'t carrying %s' % arg, error=True)
 
 @cmd_command(category="Follow")
 def fn_carrywho(map, client, context, arg):

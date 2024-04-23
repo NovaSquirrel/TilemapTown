@@ -121,8 +121,11 @@ function sendTyping(isTyping) {
 // Keys
 ///////////////////////////////////////////////////////////
 
-function movePlayer(id, x, y, dir) {
+function movePlayer(id, x, y, dir, already_moved) {
+	already_moved.add(id);
 	for (let index of PlayerWho[id].passengers) {
+		if (already_moved.has(id))
+			continue;
 		if (x != null) {
 			if (PlayerWho[index].is_following) {
 				movePlayer(index, PlayerWho[id].x, PlayerWho[id].y, PlayerWho[id].dir);
@@ -449,7 +452,7 @@ function keyDownHandler(e) {
 		let Params = { 'dir': PlayerDir };
 		if (e.shiftKey) {
 			SendCmd("MOV", Params);
-			movePlayer(PlayerYou, null, null, PlayerDir);
+			movePlayer(PlayerYou, null, null, PlayerDir, new Set([PlayerYou]));
 		} else {
 			if (Bumped) {
 				Params['bump'] = [BumpedX, BumpedY];
@@ -460,7 +463,7 @@ function keyDownHandler(e) {
 				Params['to'] = [PlayerX, PlayerY];
 			}
 			SendCmd("MOV", Params);
-			movePlayer(PlayerYou, PlayerX, PlayerY, PlayerDir);
+			movePlayer(PlayerYou, PlayerX, PlayerY, PlayerDir, new Set([PlayerYou]));
 		}
 	}
 

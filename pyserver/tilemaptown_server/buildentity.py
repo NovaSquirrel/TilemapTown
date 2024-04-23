@@ -511,7 +511,7 @@ class Entity(object):
 
 	def ride(self, other):
 		# cannot ride yourself
-		if self == other:
+		if self is other:
 			return
 
 		self.start_batch()
@@ -562,7 +562,7 @@ class Entity(object):
 
 	# Apply information from a MOV message to someone
 
-	def move_to(self, x, y, new_dir=None, is_teleport=False):
+	def move_to(self, x, y, new_dir=None, is_teleport=False, already_moved=None):
 		self.save_on_clean_up = True
 		old_dir = self.dir
 
@@ -576,16 +576,24 @@ class Entity(object):
 			# Set the new position, and update any passengers
 			self.x = x
 			self.y = y
-		for u in self.passengers:
-			if x != None and u.is_following and not is_teleport: # If "from" isn't present, it's a teleport, not normal movement
-				u.move_to(old_x, old_y, old_dir if new_dir != None else None)
+		if self.passengers:
+			# Avoid endless recursion
+			if already_moved == None:
+				already_moved = {self}
 			else:
-				u.move_to(x, y, new_dir)
-			u.map.broadcast("MOV", {'id': u.protocol_id(), 'to': [u.x, u.y], 'dir': u.dir}, remote_category=botwatch_type['move'])
+				already_moved.add(self)
+			for u in self.passengers:
+				if u in already_moved:
+					continue
+				if x != None and u.is_following and not is_teleport: # If "from" isn't present, then it's a teleport, not normal movement
+					u.move_to(old_x, old_y, old_dir if new_dir != None else None, already_moved=already_moved)
+				else:
+					u.move_to(x, y, new_dir, already_moved=already_moved)
+				u.map.broadcast("MOV", {'id': u.protocol_id(), 'to': [u.x, u.y], 'dir': u.dir}, remote_category=botwatch_type['move'])
 
 	# Other movement
 
-	def switch_map(self, map_id, new_pos=None, goto_spawn=True, update_history=True, edge_warp=False, on_behalf_of=None):
+	def switch_map(self, map_id, new_pos=None, goto_spawn=True, update_history=True, edge_warp=False, on_behalf_of=None, already_moved=None):
 		""" Teleport the user to another map """
 
 		self.start_batch()
@@ -656,8 +664,13 @@ class Entity(object):
 		self.finish_batch()
 
 		# Move any passengers too
+		if already_moved == None:
+			already_moved = {self}
+		else:
+			already_moved.add(self)
 		for u in self.passengers.union(self.follow_map_passengers):
-			u.switch_map(map_id, new_pos=[self.x, self.y], on_behalf_of=self)
+			if u not in already_moved:
+				u.switch_map(map_id, new_pos=[self.x, self.y], on_behalf_of=self, already_moved=already_moved)
 
 		return True
 

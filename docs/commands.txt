@@ -162,6 +162,9 @@ Offer to let a user follow behind you (or request that a user let you follow the
 /followyoumap user
 Offer to let a user follow you to other maps (or request that a user bring you to other maps)
 
+/syncmove user
+Offer to synchronize movement with another user, where either of you moving will move the other
+
 /hopon user
 Accept a user's carry request
 
