@@ -208,6 +208,18 @@ def fn_userdesc(map, client, context, arg):
 def fn_client_settings(map, client, context, arg):
 	client.client_settings = arg
 
+@cmd_command(category="Communication")
+def fn_say(map, client, context, arg):
+	if arg != '':
+		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': escape_tags(arg)}
+		map.broadcast("MSG", fields, remote_category=botwatch_type['chat'])
+
+@cmd_command(category="Communication")
+def fn_me(map, client, context, arg):
+	if arg != '':
+		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': "/me "+escape_tags(arg)}
+		map.broadcast("MSG", fields, remote_category=botwatch_type['chat'])
+
 @cmd_command(category="Communication", alias=['msg', 'p'], syntax="username message")
 def fn_tell(map, client, context, arg):
 	if arg != "":
@@ -1741,6 +1753,20 @@ def fn_offset(map, client, context, arg):
 	arg = arg.split(' ')
 	if len(arg) == 2:
 		offset_x, offset_y = min(32, max(-32, int(arg[0]))), min(32, max(-32, int(arg[1])))
+		client.offset = [offset_x, offset_y]
+		map.broadcast("MOV", {"id": client.protocol_id(), "offset": [offset_x, offset_y]}, remote_category=botwatch_type['move'])
+	else:
+		client.offset = None
+		map.broadcast("MOV", {"id": client.protocol_id(), "offset": None}, remote_category=botwatch_type['move'])
+
+@cmd_command(category="Settings", syntax='"x y"')
+def fn_roffset(map, client, context, arg):
+	arg = arg.split(' ')
+	if len(arg) == 2:
+		offset = client.offset
+		if offset == None:
+			offset = [0, 0]
+		offset_x, offset_y = min(32, max(-32, offset[0] + int(arg[0]))), min(32, max(-32, offset[1] + int(arg[1])))
 		client.offset = [offset_x, offset_y]
 		map.broadcast("MOV", {"id": client.protocol_id(), "offset": [offset_x, offset_y]}, remote_category=botwatch_type['move'])
 	else:

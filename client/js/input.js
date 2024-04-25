@@ -35,6 +35,7 @@ let MousedOverEntityClickY = undefined;
 let MouseRawPos = null;
 
 let ShiftPressed = false;
+let CtrlPressed = false;
 
 // take_controls status
 let takeControlsEnabled = false;
@@ -196,6 +197,7 @@ function keyEventToTilemapTownKey(e) {
 function keyUpHandler(e) {
 	var e = e || window.event;
 	ShiftPressed = e.shiftKey;
+	CtrlPressed = e.ctrlKey;
 	if(takeControlsEnabled && takeControlsKeyUp) {
 		let ttKey = keyEventToTilemapTownKey(e);
 		if(takeControlsKeys.has(ttKey)) {
@@ -225,6 +227,7 @@ function keyDownHandler(e) {
 
 	var e = e || window.event;
 	ShiftPressed = e.shiftKey;
+	CtrlPressed = e.ctrlKey;
 
 	// ignore keys when typing in a textbox
 	if (document.activeElement.tagName == "INPUT" || document.activeElement.tagName == "TEXTAREA") {
@@ -300,19 +303,19 @@ function keyDownHandler(e) {
 		if (n < 0)
 			n = 9;
 		setHotbarIndex(n);
-	} else if (e.code == "ArrowUp" || e.code == "KeyW") { // up/w
+	} else if (!CtrlPressed && (e.code == "ArrowUp" || e.code == "KeyW")) { // up/w
 		PlayerY--;
 		PlayerDir = Directions.NORTH;
 		e.preventDefault();
-	} else if (e.code == "ArrowDown" || e.code == "KeyS") { // down/s
+	} else if (!CtrlPressed && (e.code == "ArrowDown" || e.code == "KeyS")) { // down/s
 		PlayerY++;
 		PlayerDir = Directions.SOUTH;
 		e.preventDefault();
-	} else if (e.code == "ArrowLeft" || e.code == "KeyA") { // left/a
+	} else if (!CtrlPressed && (e.code == "ArrowLeft" || e.code == "KeyA")) { // left/a
 		PlayerX--;
 		PlayerDir = Directions.WEST;
 		e.preventDefault();
-	} else if (e.code == "ArrowRight" || e.code == "KeyD") { // right/d
+	} else if (!CtrlPressed && (e.code == "ArrowRight" || e.code == "KeyD")) { // right/d
 		PlayerX++;
 		PlayerDir = Directions.EAST;
 		e.preventDefault();
@@ -336,6 +339,14 @@ function keyDownHandler(e) {
 		PlayerY--;
 		PlayerDir = Directions.NORTHEAST;
 		e.preventDefault();
+	} else if (CtrlPressed && e.code == "ArrowUp") {
+		sendChatCommand("roffset 0 -1");
+	} else if (CtrlPressed && e.code == "ArrowDown") {
+		sendChatCommand("roffset 0 1");
+	} else if (CtrlPressed && e.code == "ArrowLeft") {
+		sendChatCommand("roffset -1 0");
+	} else if (CtrlPressed && e.code == "ArrowRight") {
+		sendChatCommand("roffset 1 0");
 	} else if (e.code == "Enter") { // enter (carriage return)
 		chatInput.focus();
 		e.preventDefault();

@@ -716,6 +716,7 @@ class Entity(object):
 		out = {
 			'name': self.name,
 			'pic': self.pic,
+			'desc': self.desc,
 			'x': self.x,
 			'y': self.y,
 			'dir': self.dir,
