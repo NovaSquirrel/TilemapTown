@@ -80,6 +80,21 @@ Manage the saved pic list.
 /savedpiclist list2
 Get the list of saved pics in text form (just in case you're on a client that doesn't support buttons).
 
+/morph
+/morph name
+/qmorph name
+Switch to a different morph (which is a combination of name, description, pic, saved pics, and tags)
+qmorph will morph "quietly" which means that there is no notification sent to the other users on the map
+
+/morphlist
+/morphlist set name
+/morphlist del name
+/morphlist clear
+Manage the morph list
+
+/morphlist list2
+Get the list of morphs in text form (just in case you're on a client that doesn't support buttons).
+
 /login username password
 /register username password
 /changepass newpass
@@ -108,8 +123,12 @@ Displays someone's last login/logout time
 
 
 ---Movement---
+/offset
 /offset x y
+/roffset x y
 Offsets your character some amount of pixels horizontally and vertically
+/roffset will change the offset relative to the current offset
+If no offset is given, the offset is reset
 
 /map mapnumber
 /map mapnumber x y

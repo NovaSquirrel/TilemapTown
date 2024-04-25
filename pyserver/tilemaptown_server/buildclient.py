@@ -30,6 +30,7 @@ class Client(Entity):
 		userCounter += 1
 		self.pic = [0, 2, 25]
 		self.saved_pics = {}
+		self.morphs = {}
 
 		self.ping_timer = 180
 		self.idle_timer = 0
@@ -167,12 +168,15 @@ class Client(Entity):
 		if d == None:
 			return True
 		self.saved_pics = d.get('saved_pics', {})
+		self.morphs = d.get('morphs', {})
 		return True
 
 	def save_data(self):
 		d = {}
 		if self.saved_pics:
 			d['saved_pics'] = self.saved_pics
+		if self.morphs:
+			d['morphs'] = self.morphs
 		self.save_data_as_text(json.dumps(d))
 
 	def test_server_banned(self):

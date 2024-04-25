@@ -275,6 +275,10 @@ def fn_followyou(map, client, context, arg):
 def fn_followyoumap(map, client, context, arg):
 	send_request_to_user(client, context, arg, "followyoumap", None, "tpaccept", "tpdeny", "You requested to have %s bring you to other maps", "%s wants to follow you onto other maps")
 
+@cmd_command(category="Follow", syntax="username")
+def fn_syncmove(map, client, context, arg):
+	send_request_to_user(client, context, arg, "syncmove", None, "tpaccept", "tpdeny", "You requested to synchronize movement with %s", "%s wants to synchronize movement with you")
+
 @cmd_command(category="Teleport", syntax="username")
 def fn_tpa(map, client, context, arg):
 	send_request_to_user(client, context, arg, "tpa", None, "tpaccept", "tpdeny", "You requested a teleport to %s", "%s wants to teleport to you")
@@ -282,10 +286,6 @@ def fn_tpa(map, client, context, arg):
 @cmd_command(category="Teleport", syntax="username")
 def fn_tpahere(map, client, context, arg):
 	send_request_to_user(client, context, arg, "tpahere", None, "tpaccept", "tpdeny", "You requested that %s teleport to you", "%s wants you to teleport to them")
-
-@cmd_command(category="Teleport", syntax="username")
-def fn_syncmove(map, client, context, arg):
-	send_request_to_user(client, context, arg, "syncmove", None, "tpaccept", "tpdeny", "You requested to synchronize movement with %s", "%s wants to synchronize movement with you")
 
 
 permission_grant_description = {
@@ -1595,7 +1595,7 @@ def fn_userpic(map, client, context, arg):
 	else:
 		respond(context, 'Syntax is: /userpic sheet x y', error=True)
 
-
+# Saved pic functions
 def show_saved_pic_list(context, client):
 	if client.saved_pics == {}:
 		respond(context, "You don't have any saved pics")
@@ -1619,7 +1619,7 @@ def fn_savedpic(map, client, context, arg):
 	else:
 		respond(context, "You don't have a saved pic named \"%s\"" % arg, error=True)
 
-@cmd_command(category="Settings", syntax='state name', alias=['savepiclist', 'spl'])
+@cmd_command(category="Settings", alias=['savepiclist', 'spl'])
 def fn_savedpiclist(map, client, context, arg):
 	if not client.is_client():
 		respond(context, 'Only clients can use /savedpiclist', error=True)
@@ -1629,7 +1629,7 @@ def fn_savedpiclist(map, client, context, arg):
 		return
 
 	subcommand, subarg = separate_first_word(arg)
-	if subcommand in ('set', 'add'):
+	if subcommand in ('set', 'add') and subarg:
 		picname, picvalue = separate_first_word(subarg)
 		if picvalue.startswith("http"):
 			if image_url_is_okay(picvalue):
@@ -1656,6 +1656,85 @@ def fn_savedpiclist(map, client, context, arg):
 		respond(context, 'Cleared save pic list')
 	else:
 		respond(context, 'Unrecognized subcommand "%s"' % subcommand, code='invalid_subcommand', detail=subcommand, error=True)
+
+# Morph functions
+def show_morph_list(context, client, quiet=False):
+	if client.morphs == {}:
+		respond(context, "You don't have any morphs")
+	else:
+		buttons = []
+		for morph in sorted(client.morphs.keys()):
+			buttons.append(morph)
+			buttons.append(('q' if quiet else '') + 'morph ' + morph)
+		respond(context, "Morphs:", buttons=buttons)
+
+def morph_shared(map, client, context, arg, quiet):
+	if not client.is_client():
+		respond(context, 'Only clients can use /morph', error=True)
+		return
+	arg = arg.strip().lower()
+	if arg == '':
+		show_morph_list(context, client, quiet)
+	elif client.morphs and arg in client.morphs:
+		old_name = client.name
+		morph = client.morphs[arg]
+		client.name = morph.get('name', client.name)
+		client.pic = morph.get('pic', client.pic)
+		client.desc = morph.get('desc', None)
+		client.saved_pics = morph.get('saved_pics', None)
+		client.tags = morph.get('tags', {})
+		client.broadcast_who()
+		if client.name != old_name and not quiet:
+			map.broadcast("MSG", {'text': "\""+old_name+"\" switches to \""+client.name+"\""})
+	else:
+		respond(context, "You don't have a morph named \"%s\"" % arg, error=True)
+
+@cmd_command(category="Settings", syntax='morph name')
+def fn_morph(map, client, context, arg):
+	morph_shared(map, client, context, arg, False)
+
+@cmd_command(category="Settings", syntax='morph name')
+def fn_qmorph(map, client, context, arg):
+	morph_shared(map, client, context, arg, True)
+
+@cmd_command(category="Settings", alias=['morphs'])
+def fn_morphlist(map, client, context, arg):
+	if not client.is_client():
+		respond(context, 'Only clients can use /morphlist', error=True)
+		return
+	if arg == '' or arg.lower() == 'list':
+		show_morph_list(context, client)
+		return
+
+	subcommand, subarg = separate_first_word(arg)
+	if subcommand in ('set', 'add') and subarg:
+		client.morphs[subarg] = {
+			'name': client.name,
+			'pic': client.pic,
+			'desc': client.desc,
+			'saved_pics': client.saved_pics,
+			'tags': client.tags
+		}
+		respond(context, "Saved morph \"%s\"" % (subarg))
+	elif subcommand == 'list2': # Provide it as text just in case
+		if client.morphs == {}:
+			respond(context, "You don't have any morphs")
+		else:
+			respond(context, "Morphs: %s" % ', '.join(sorted(client.morphs.keys())))
+	elif subcommand == 'del' and subarg:
+		subarg = subarg.lower()
+		was = client.morphs.pop(subarg, None)
+		if was:
+			respond(context, 'Deleted morph \"%s" (it was %s)' % (subarg, was))
+		else:
+			respond(context, "You don't have a morph named \"%s\"" % subarg, error=True)
+	elif subcommand == 'clear':
+		client.morphs = {}
+		respond(context, 'Cleared morph list')
+	else:
+		respond(context, 'Unrecognized subcommand "%s"' % subcommand, code='invalid_subcommand', detail=subcommand, error=True)
+
+
 
 @cmd_command(category="Settings", syntax='"x y"')
 def fn_offset(map, client, context, arg):
