@@ -587,6 +587,17 @@ function updateSelectedObjectsUL(x, y) {
 	}
 
 	document.getElementById('selectedobjects_span').style.display = (objs.length >= 1) ? 'block' : 'none';
+	if(objs.length >= 2) {
+		document.getElementById('mapobj_movetop').style.display = 'block';
+		document.getElementById('mapobj_moveup').style.display = 'block';
+		document.getElementById('mapobj_movedown').style.display = 'block';
+		document.getElementById('mapobj_movebottom').style.display = 'block';
+	} else {
+		document.getElementById('mapobj_movetop').style.display = 'none';
+		document.getElementById('mapobj_moveup').style.display = 'none';
+		document.getElementById('mapobj_movedown').style.display = 'none';
+		document.getElementById('mapobj_movebottom').style.display = 'none';
+	}
 }
 
 function getDataForDraw() {
