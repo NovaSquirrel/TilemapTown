@@ -233,7 +233,11 @@ function keyDownHandler(e) {
 
 	// ignore keys when typing in a textbox
 	if (document.activeElement.tagName == "INPUT" || document.activeElement.tagName == "TEXTAREA") {
-		if (document.activeElement == chatInput && e.keyCode == 13) {
+		if (document.activeElement == chatInput && e.code == "ArrowUp") {
+			if(chatInput.value.length == 0)
+				chatInput.value = lastChatUsed;
+			return;
+		} else if (document.activeElement == chatInput && e.keyCode == 13) {
 			if (chatInput.value.toLowerCase().trim() == "/oops") {
 				sendTyping(false);
 				chatInput.value = lastChatUsed;
