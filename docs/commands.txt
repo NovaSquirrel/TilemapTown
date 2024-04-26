@@ -41,6 +41,9 @@ Currently only registered users can set topics, and topics are cleared when ther
 /cleartopic
 Clears the map's current topic
 
+/oops
+Put the most recent text you tried to send back into the chat bar, so that you can have another attempt at a command.
+
 ---Utility---
 /getturf
 Makes a map tile object that would recreate the turf you're standing on, and puts it into your inventory.

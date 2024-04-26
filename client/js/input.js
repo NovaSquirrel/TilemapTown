@@ -48,6 +48,8 @@ let hotbarDragging = false;
 
 let ctrlZUndoType = null;
 
+let lastChatUsed = "";
+
 const OK_DRAW_DISTANCE = 5;
 
 ///////////////////////////////////////////////////////////
@@ -232,6 +234,14 @@ function keyDownHandler(e) {
 	// ignore keys when typing in a textbox
 	if (document.activeElement.tagName == "INPUT" || document.activeElement.tagName == "TEXTAREA") {
 		if (document.activeElement == chatInput && e.keyCode == 13) {
+			if (chatInput.value.toLowerCase().trim() == "/oops") {
+				sendTyping(false);
+				chatInput.value = lastChatUsed;
+				return;
+			}
+			if (chatInput.value.length > 5)
+				lastChatUsed = chatInput.value;
+
 			// First, check for commands that are local to the client
 			if (runLocalCommand(chatInput.value));
 				// commands are CMD while regular room messages are MSG. /me is a room message.
