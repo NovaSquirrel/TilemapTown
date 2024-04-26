@@ -299,7 +299,7 @@ function receiveServerMessage(cmd, arg) {
       if("remote_map" in arg) {
         Map = MapsByID[arg["remote_map"]];
       }
-      var Fill = AtomFromName(arg.default);
+      var Fill = arg.default;
       var x1 = arg.pos[0];
       var y1 = arg.pos[1];
       var x2 = arg.pos[2];

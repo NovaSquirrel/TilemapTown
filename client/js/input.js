@@ -502,9 +502,13 @@ function inSelection(x, y) {
   return x >= MouseStartX && x <= MouseEndX && y >= MouseStartY && y <= MouseEndY;
 }
 
-function updateSelectedObjectsUL() {
+function withinCurrentMap(x, y) {
+	return x >= 0 && y >= 0 && x < MyMap.Width && y < MyMap.Height;
+}
+
+function updateSelectedEntitiesUL() {
 	// Manage the users <ul>
-	let ul = document.getElementById('selectedobjectsul');
+	let ul = document.getElementById('selectedentitiesul');
 	if (!ul)
 		return;
 
@@ -526,11 +530,63 @@ function updateSelectedObjectsUL() {
 		}
 	});
 
-	if (selected_ids.length < 1) {
-		let li = document.createElement("li");
-		li.appendChild(document.createTextNode("None"));
+	document.getElementById('selectedentities_span').style.display = (selected_ids.length >= 1) ? 'block' : 'none';
+}
+
+function updateSelectedTurfUL(x, y) {
+	let ul = document.getElementById('selectedfloorul');
+	if (!ul)
+		return;
+
+	// Empty out the list
+	while (ul.firstChild) {
+		ul.removeChild(ul.firstChild);
+	}
+
+	let tile;
+	if(withinCurrentMap(x, y)) {
+		tile = MyMap.Tiles[x][y];
+	} else {
+		return;
+	}
+
+	tile = AtomFromName(tile);
+	let li = itemCard({"name": tile.name, "pic": tile.pic});
+	li.addEventListener('contextmenu', function (e) {
+		openTurfContextMenu(x, y, e.clientX, e.clientY);
+		e.preventDefault();
+	});
+	ul.appendChild(li);
+}
+
+function updateSelectedObjectsUL(x, y) {
+	let ul = document.getElementById('selectedobjectsul');
+	if (!ul)
+		return;
+
+	// Empty out the list
+	while (ul.firstChild) {
+		ul.removeChild(ul.firstChild);
+	}
+
+	let objs = [];
+	if(withinCurrentMap(x, y)) {
+		objs = [...MyMap.Objs[x][y]];
+	} else {
+		return;
+	}
+
+	for (let i=objs.length-1; i>=0; i--) {
+		let obj = AtomFromName(objs[i]);
+		let li = itemCard({"name": obj.name, "pic": obj.pic});
+		li.addEventListener('contextmenu', function (e) {
+			openMapObjContextMenu(x, y, i, e.clientX, e.clientY);
+			e.preventDefault();
+		});
 		ul.appendChild(li);
 	}
+
+	document.getElementById('selectedobjects_span').style.display = (objs.length >= 1) ? 'block' : 'none';
 }
 
 function getDataForDraw() {
@@ -814,10 +870,23 @@ function initMouse() {
 			MouseEndX = BX;
 			MouseEndY = BY;
 
-			document.getElementById("getTileObjSpan").style.display = (MouseStartX == MouseEndX && MouseStartY == MouseEndY) ? 'block' : 'none';
+			if(withinCurrentMap(MouseStartX, MouseStartY) && MouseStartX == MouseEndX && MouseStartY == MouseEndY) {
+				document.getElementById("getTileObjSpan").style.display = 'block';
+				document.getElementById("selectedobjects_span").style.display = 'block';
+				document.getElementById("selectedfloor_span").style.display = 'block';
+				updateSelectedTurfUL(AX, AY);
+				updateSelectedObjectsUL(AX, AY);
+			} else {
+				document.getElementById("getTileObjSpan").style.display = 'none';
+				document.getElementById("selectedobjects_span").style.display = 'none';
+				document.getElementById("selectedfloor_span").style.display = 'none';
+			}
 
-			let panelHTML = (BX - AX + 1) + "x" + (BY - AY + 1) + "<br>";
-			updateSelectedObjectsUL();
+			let panelHTML = (BX - AX + 1) + "x" + (BY - AY + 1);
+			if(MouseStartX == MouseEndX && MouseStartY == MouseEndY)
+				panelHTML += " at " + MouseStartX + "," + MouseStartY;
+			panelHTML += "<br>";
+			updateSelectedEntitiesUL();
 
 			let selectionWidth = BX-AX;
 			let selectionHeight = BY-AY;

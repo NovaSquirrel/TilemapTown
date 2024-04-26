@@ -439,9 +439,14 @@ function setItemCardImage(li, new_image) {
 }
 
 function itemCard(id) {
-	let item = DBInventory[id] || PlayerWho[id];
-	if(item == undefined)
-		item = {name: "?"};
+	let item;
+	if(typeof id === 'object')
+		item = id;
+	else {
+		item = DBInventory[id] || PlayerWho[id];
+		if(item == undefined)
+			item = {name: "?"};
+	}
 
 	let li = document.createElement("li");
 	li.classList.add('inventoryli');
@@ -484,8 +489,9 @@ function itemCard(id) {
 	info_detail.innerText = `(${info})`;
 
 	info_div.appendChild(info_name);
-	info_div.appendChild(info_detail);
-
+	if(item.id !== undefined) {
+		info_div.appendChild(info_detail);
+	}
 	li.appendChild(info_div);
 	return li;
 }
@@ -526,7 +532,7 @@ function itemIcon(key) {
 	img.style.height = "16px";
 	let src = "";
 
-	let item = DBInventory[key] || PlayerWho[key];
+	let item = (typeof key === 'object') ? key : (DBInventory[key] || PlayerWho[key]);
 
 	// allow custom avatars
 	// as well as built-in ones
@@ -624,6 +630,107 @@ function referenceItem(id) {
 }
 */
 
+
+function getStackForMapObjMenu() {
+	if(mapObjContextMenuX >= 0 && mapObjContextMenuY >= 0 && mapObjContextMenuX < MyMap.Width && mapObjContextMenuY < MyMap.Height) {
+		return MyMap.Objs[mapObjContextMenuX][mapObjContextMenuY];
+	}
+	return null;
+}
+
+function finishMapObjMenuChange() {
+	// Tell the server about the change
+	if(mapObjContextMenuX >= 0 && mapObjContextMenuY >= 0 && mapObjContextMenuX < MyMap.Width && mapObjContextMenuY < MyMap.Height) {
+		SendCmd("PUT", { pos: [mapObjContextMenuX, mapObjContextMenuY], obj: true, atom: MyMap.Objs[mapObjContextMenuX][mapObjContextMenuY] });
+	}
+
+	// Update the selection window
+	if(!MouseActive || MouseStartX != mapObjContextMenuX || MouseStartY != mapObjContextMenuY || MouseStartX != MouseEndX || MouseStartY != MouseEndY)
+		return;
+	updateSelectedObjectsUL(MouseStartX, MouseStartY);	
+}
+
+function editMapObj() {
+	let stack = getStackForMapObjMenu();
+	let atom = AtomFromName(stack[mapObjContextMenuIndex]);
+	editItemID = mapObjContextMenuIndex;
+	editItemShared({ "type": "map_tile_mapobj_edit", "name": atom.name, "desc": "", "data": atom });
+}
+function editTurf() {
+	let tile;
+	if(withinCurrentMap(turfContextMenuX, turfContextMenuY)) {
+		tile = MyMap.Tiles[turfContextMenuX][turfContextMenuY];
+	} else {
+		return;
+	}
+	let atom = AtomFromName(tile);
+	editItemID = null;
+	editItemShared({ "type": "map_tile_turf_edit", "name": atom.name, "desc": "", "data": atom });
+}
+function moveTopMapObj() {
+	let stack = getStackForMapObjMenu();
+	let item = stack.splice(mapObjContextMenuIndex, 1)[0];
+	stack.push(item);
+	finishMapObjMenuChange();
+}
+function moveUpMapObj() {
+	let stack = getStackForMapObjMenu();
+	if(mapObjContextMenuIndex+1 < stack.length)
+		item = stack.splice(mapObjContextMenuIndex, 2, stack[mapObjContextMenuIndex+1], stack[mapObjContextMenuIndex]);
+	finishMapObjMenuChange();
+}
+function moveDownMapObj() {
+	let stack = getStackForMapObjMenu();
+	if(mapObjContextMenuIndex-1 >= 0)
+		stack.splice(mapObjContextMenuIndex-1, 2, stack[mapObjContextMenuIndex], stack[mapObjContextMenuIndex-1]);
+	finishMapObjMenuChange();
+}
+function moveBottomMapObj() {
+	let stack = getStackForMapObjMenu();
+	let item = stack.splice(mapObjContextMenuIndex, 1)[0];
+	stack.unshift(item);
+	finishMapObjMenuChange();
+}
+function copyTurfToHotbar() {
+	let tile;
+	if(withinCurrentMap(turfContextMenuX, turfContextMenuY)) {
+		tile = MyMap.Tiles[turfContextMenuX][turfContextMenuY];
+	} else {
+		return;
+	}
+	addTileToHotbar(tile);
+}
+function copyMapObjToHotbar() {
+	let stack = getStackForMapObjMenu();
+	addTileToHotbar(stack[mapObjContextMenuIndex]);
+}
+function deleteMapObj() {
+	let stack = getStackForMapObjMenu();
+	stack.splice(mapObjContextMenuIndex, 1);
+	finishMapObjMenuChange();
+}
+
+let mapObjContextMenuX, mapObjContextMenuY, mapObjContextMenuIndex;
+function openMapObjContextMenu(map_x, map_y, index, x, y) {
+	mapObjContextMenuX = map_x;
+	mapObjContextMenuY = map_y;
+	mapObjContextMenuIndex = index;
+	let menu = document.querySelector('#mapobj-contextmenu');
+	menu.style.left = (x) + "px";
+	menu.style.top = (y) + "px";
+	menu.style.display = "block";
+}
+
+let turfContextMenuX, turfContextMenuY;
+function openTurfContextMenu(map_x, map_y, x, y) {
+	turfContextMenuX = map_x;
+	turfContextMenuY = map_y;
+	let menu = document.querySelector('#turf-contextmenu');
+	menu.style.left = (x) + "px";
+	menu.style.top = (y) + "px";
+	menu.style.display = "block";	
+}
+
 let contextMenuItem = 0;
 function openItemContextMenu(id, x, y) {
 	let drop = document.querySelector('#droptakeitem');
@@ -720,72 +827,74 @@ function editItemShared(item) {
 
 		case "generic":
 		case "map_tile_hotbar":
+		case "map_tile_mapobj_edit":
+		case "map_tile_turf_edit":
 		case "map_tile":
-		if (item.type == "map_tile" || item.type == "map_tile_hotbar") {
-			document.getElementById('edittileautotileoptions').style.display = "block";
-			itemobj = AtomFromName(item.data);
-			if (itemobj == null) {
-				itemobj = { pic: [0, 8, 24] };
+			if (item.type == "map_tile" || item.type == "map_tile_hotbar" || item.type == "map_tile_mapobj_edit" || item.type == "map_tile_turf_edit") {
+				document.getElementById('edittileautotileoptions').style.display = "block";
+				itemobj = AtomFromName(item.data);
+				if (itemobj == null) {
+					itemobj = { pic: [0, 8, 24] };
+				}
+			} else {
+				if ("pic" in item)
+					itemobj = { pic: item.pic };
+				else
+					itemobj = { pic: [0, 8, 24] };
 			}
-		} else {
-			if ("pic" in item)
-				itemobj = { pic: item.pic };
-			else
-				itemobj = { pic: [0, 8, 24] };
-		}
-		editItemOriginalSheet = itemobj.pic[0];
+			editItemOriginalSheet = itemobj.pic[0];
 
-		// Display all the available images assets in the user's inventory
-		let sheetselect = document.getElementById("edittilesheet");
-		while (sheetselect.firstChild) {
-			sheetselect.removeChild(sheetselect.firstChild);
-		}
-		el = document.createElement("option");
-		el.textContent = "Don't change";
-		el.value = "keep";
-		sheetselect.appendChild(el);
-		el = document.createElement("option");
-		el.textContent = "Potluck";
-		el.value = 0;
-		sheetselect.appendChild(el);
-		el = document.createElement("option");
-		el.textContent = "Extras";
-		el.value = -1;
-		sheetselect.appendChild(el);
-
-		// Now display everything in the inventory
-		for (let i in DBInventory) {
-			if (DBInventory[i].type == "image") {
-				el = document.createElement("option");
-				el.textContent = DBInventory[i].name;
-				el.value = DBInventory[i].id;
-				sheetselect.appendChild(el);
+			// Display all the available images assets in the user's inventory
+			let sheetselect = document.getElementById("edittilesheet");
+			while (sheetselect.firstChild) {
+				sheetselect.removeChild(sheetselect.firstChild);
 			}
-		}
-		// Probably also allow just typing in something?
+			el = document.createElement("option");
+			el.textContent = "Don't change";
+			el.value = "keep";
+			sheetselect.appendChild(el);
+			el = document.createElement("option");
+			el.textContent = "Potluck";
+			el.value = 0;
+			sheetselect.appendChild(el);
+			el = document.createElement("option");
+			el.textContent = "Extras";
+			el.value = -1;
+			sheetselect.appendChild(el);
 
-		document.getElementById('edittilemaptile').style.display = (item.type == "map_tile" || item.type == "map_tile_hotbar") ? "block" : "none";
-		document.getElementById('edittileobject').style.display = "block";
-		document.getElementById('edittilesheet').value = "keep";
-		document.getElementById('edittilex').value = itemobj.pic[1];
-		document.getElementById('edittiley').value = itemobj.pic[2];
-		document.getElementById('edittileautotile').value = (itemobj.autotile_layout ?? 0).toString();
-		document.getElementById('edittileautotileclass').value = itemobj.autotile_class ?? "";
-		let index_for_type = 0;
-		switch (itemobj.type) {
-			case "sign":
-				index_for_type = 1;
-				break;
-		}
-		document.getElementById('edittiletype').selectedIndex = index_for_type;
-		document.getElementById('edittiledensity').checked = itemobj.density;
-		document.getElementById('edittileisobject').checked = !itemobj.obj;
-		document.getElementById('edittileover').checked = itemobj.over == true;
-		editItemUpdatePic();
+			// Now display everything in the inventory
+			for (let i in DBInventory) {
+				if (DBInventory[i].type == "image") {
+					el = document.createElement("option");
+					el.textContent = DBInventory[i].name;
+					el.value = DBInventory[i].id;
+					sheetselect.appendChild(el);
+				}
+			}
+			// Probably also allow just typing in something?
 
-		if (IconSheets[itemobj.pic[0] || 0] != undefined)
-			document.getElementById('edittilesheetselect').src = IconSheets[itemobj.pic[0] || 0].src;
-		break;
+			document.getElementById('edittilemaptile').style.display = (item.type == "map_tile" || item.type == "map_tile_hotbar" || item.type == "map_tile_mapobj_edit") ? "block" : "none";
+			document.getElementById('edittileobject').style.display = "block";
+			document.getElementById('edittilesheet').value = "keep";
+			document.getElementById('edittilex').value = itemobj.pic[1];
+			document.getElementById('edittiley').value = itemobj.pic[2];
+			document.getElementById('edittileautotile').value = (itemobj.autotile_layout ?? 0).toString();
+			document.getElementById('edittileautotileclass').value = itemobj.autotile_class ?? "";
+			let index_for_type = 0;
+			switch (itemobj.type) {
+				case "sign":
+					index_for_type = 1;
+					break;
+			}
+			document.getElementById('edittiletype').selectedIndex = index_for_type;
+			document.getElementById('edittiledensity').checked = itemobj.density;
+			document.getElementById('edittileisobject').checked = !itemobj.obj;
+			document.getElementById('edittileover').checked = itemobj.over == true;
+			editItemUpdatePic();
+
+			if (IconSheets[itemobj.pic[0] || 0] != undefined)
+				document.getElementById('edittilesheetselect').src = IconSheets[itemobj.pic[0] || 0].src;
+			break;
 	}
 
 	// show the window
@@ -840,6 +949,8 @@ function editItemApply() {
 			SendCmd("BAG", { update: updates });
 			break;
 
+		case "map_tile_turf_edit":
+		case "map_tile_mapobj_edit":
 		case "map_tile_hotbar":
 		case "map_tile":
 		case "generic":
@@ -863,7 +974,7 @@ function editItemApply() {
 
 			updates.pic = [edittilesheet, edittilex, edittiley];
 
-			if (editItemType == "map_tile" || editItemType == "map_tile_hotbar") {
+			if (editItemType == "map_tile" || editItemType == "map_tile_hotbar" || editItemType == "map_tile_mapobj_edit" || editItemType == "map_tile_turf_edit") {
 				let data = {
 					"name": updates.name,
 					"pic": updates.pic
@@ -884,10 +995,24 @@ function editItemApply() {
 				if(editItemType === "map_tile_hotbar") {
 					hotbarData[editItemID] = data;
 					drawHotbar();
+				} else if(editItemType === "map_tile_mapobj_edit") {
+					let stack = getStackForMapObjMenu();
+					stack.splice(mapObjContextMenuIndex, 1, data);
+					finishMapObjMenuChange();
+				} else if(editItemType === "map_tile_turf_edit") {
+					// Tell the server about the change
+					if(withinCurrentMap(turfContextMenuX, turfContextMenuY)) {
+						MyMap.Tiles[turfContextMenuX][turfContextMenuY] = data;
+						SendCmd("PUT", { pos: [turfContextMenuX, turfContextMenuY], atom: data });
+					}
+					// Update the selection window
+					if(MouseActive && MouseStartX == turfContextMenuX && MouseStartY == turfContextMenuY && MouseStartX == MouseEndX && MouseStartY == MouseEndY) {
+						updateSelectedTurfUL(MouseStartX, MouseStartY);
+					}
 				}
 			}
 
-			if(editItemType !== "map_tile_hotbar") {
+			if(editItemType === "map_tile" || editItemType === "generic") {
 				SendCmd("BAG", { update: updates });
 			}
 			break;
@@ -1396,7 +1521,6 @@ function editHotbarSlot() {
 	if (data === null)
 		return;
 	let atom = AtomFromName(hotbarData[rightClickedHotbarIndex]);
-	editItemType = "map_tile_hotbar";
 	editItemID = rightClickedHotbarIndex;
 	editItemShared({ "type": "map_tile_hotbar", "name": atom.name, "desc": "", "data": atom });
 }
@@ -1404,7 +1528,6 @@ function editHotbarSlot() {
 function newTileHotbarSlot() {
 	if(rightClickedHotbarIndex === null)
 		return;
-	editItemType = "map_tile_hotbar";
 	editItemID = rightClickedHotbarIndex;
 	editItemShared({ "type": "map_tile_hotbar", "name": "", "desc": "", "data": AtomFromName("grass") });
 }
