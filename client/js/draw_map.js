@@ -30,6 +30,9 @@ let edgeMapLookupTable = [
 	3,    // DurL
 	1,    // DuRl
 ];
+let tileAnimationEnabled = true;
+let entityAnimationEnabled = true;
+let tenthOfSecondTimer = 0;
 
 ///////////////////////////////////////////////////////////
 // Autotile related functions
@@ -172,7 +175,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 					playerIs16x16 = true;
 				} else {
 					let frameX = 0, frameY = 0;
-					let frameCountFromAnimationTick = Math.floor(AnimationTick / 5);
+					let frameCountFromAnimationTick = entityAnimationEnabled ? tenthOfSecondTimer : 0;
 					let isWalking = PlayerAnimation[index].walkTimer != 0;
 
 					switch (tilesetHeight / 32) { // Directions
@@ -298,15 +301,47 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 	let picY = tile.pic[2];
 	let pair;
 	let autotileLayout = tile.autotile_layout ?? 0;
+
+	let animationFrame = 0;
+	if(tileAnimationEnabled) {
+		let animationFrameCount = Math.max(1, tile.anim_frames ?? 1);
+		if(animationFrameCount > 1) {
+			let animationTimer = tenthOfSecondTimer + (tile.anim_offset ?? 0);
+			let animationSpeed = Math.max(1, tile.anim_speed ?? 1);
+			let animationMode = tile.anim_mode ?? 0;
+			switch(animationMode) {
+				case 0: // Forwards
+					animationFrame = Math.floor(animationTimer / animationSpeed) % animationFrameCount;
+					break;
+				case 1: // Backwards
+					animationFrame = animationFrameCount - 1 - Math.floor(animationTimer / animationSpeed) % animationFrameCount;
+					break;
+				case 2: // Ping-pong forwards
+				case 3: // Ping-pong backwards
+					animationFrameCount--;
+					let subAnimationFrame = Math.floor(animationTimer / animationSpeed) % animationFrameCount;
+					let isBackwards = Math.floor(Math.floor(animationTimer / animationSpeed) / animationFrameCount) & 1;
+					if(animationMode == 3)
+						isBackwards ^= 1;
+					if(isBackwards) {
+						animationFrame = animationFrameCount - subAnimationFrame;
+					} else {
+						animationFrame = subAnimationFrame;
+					}
+					break;
+			}
+		}
+	}
 	switch(autotileLayout) {
 		case 0: // No autotiling, so leave picX and picY as-is
+			picX += animationFrame;
 			break;
 		case 1: // 4-direction autotiling 9 tiles, origin is middle
 			pair = [[0,0], [0, 0], [0,  0], [0, 0],
 					[0,0], [1, 1], [-1, 1], [0, 1],
 					[0,0], [1,-1], [-1,-1], [0,-1],
 					[0,0], [1, 0], [-1, 0], [0, 0]][autotileIndexFunction(tile, map, mapCoordX, mapCoordY)];
-			picX += pair[0];
+			picX += pair[0] + animationFrame*3;
 			picY += pair[1];
 			break;
 		case 2: // 4-direction autotiling, 9 tiles, origin is middle, horizonal & vertical & single as separate tiles
@@ -315,7 +350,7 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 					[2, 1], [1, 1], [-1, 1], [0, 1],
 					[2,-1], [1,-1], [-1,-1], [0,-1],
 					[2, 0], [1, 0], [-1, 0], [0, 0]][autotileIndexFunction(tile, map, mapCoordX, mapCoordY)];
-			picX += pair[0];
+			picX += pair[0] + animationFrame * 2;
 			picY += pair[1];
 			if (autotileLayout == 3) {
 				picX -= 2;
@@ -362,10 +397,10 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 			}
 			// Draw the four tiles
 			let sheet = IconSheets[tile.pic[0]];
-				ctx.drawImage(sheet, picX * 16 + quarters[0][0] * 8, picY * 16 + quarters[0][1] * 8, 8, 8, drawAtX,     drawAtY,   8, 8);
-				ctx.drawImage(sheet, picX * 16 + quarters[1][0] * 8, picY * 16 + quarters[1][1] * 8, 8, 8, drawAtX + 8, drawAtY,   8, 8);
-				ctx.drawImage(sheet, picX * 16 + quarters[2][0] * 8, picY * 16 + quarters[2][1] * 8, 8, 8, drawAtX,     drawAtY+8, 8, 8);
-				ctx.drawImage(sheet, picX * 16 + quarters[3][0] * 8, picY * 16 + quarters[3][1] * 8, 8, 8, drawAtX + 8, drawAtY+8, 8, 8);
+				ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[0][0] * 8, picY * 16 + quarters[0][1] * 8, 8, 8, drawAtX,     drawAtY,   8, 8);
+				ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[1][0] * 8, picY * 16 + quarters[1][1] * 8, 8, 8, drawAtX + 8, drawAtY,   8, 8);
+				ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[2][0] * 8, picY * 16 + quarters[2][1] * 8, 8, 8, drawAtX,     drawAtY+8, 8, 8);
+				ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[3][0] * 8, picY * 16 + quarters[3][1] * 8, 8, 8, drawAtX + 8, drawAtY+8, 8, 8);
 		}
 		return;
 	}
@@ -389,6 +424,7 @@ function wrapWithin(value, max) {
 function drawMap() {
 	let canvas = mapCanvas;
 	let ctx = canvas.getContext("2d");
+	tenthOfSecondTimer = Math.floor(AnimationTick / 5); // Increases every 0.1 seconds
 
 	// Clear to black
 	ctx.fillStyle = "black";
@@ -411,7 +447,7 @@ function drawMap() {
 	// Render the map
 	for (x = 0; x < (viewWidth + 2); x++) {
 		for (y = 0; y < (viewHeight + 2); y++) {
-			try {
+//			try {
 				ctx.globalAlpha = 1;
 				let mapCoordX = x + tileX;
 				let mapCoordY = y + tileY;
@@ -487,8 +523,8 @@ function drawMap() {
 						}
 					}
 				}
-			} catch (error) {
-			}
+//			} catch (error) {
+//			}
 		}
 	}
 

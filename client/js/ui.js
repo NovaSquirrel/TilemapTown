@@ -67,8 +67,8 @@ let panel = null;
 
 let NeedMapRedraw = false;
 let NeedInventoryUpdate = false;
-let TickCounter = 0;   // Goes up every 20ms, wraps at 0x10000 (hex)
-let AnimationTick = 0; // Goes up every 20ms, wraps at 10000 (decimal)
+let TickCounter = 0;   // Goes up every 20ms, wraps at 0x1000000 (hex)
+let AnimationTick = 0; // Goes up every 20ms, wraps at 1000000 (decimal)
 let DisplayInventory = { null: [] }; // Indexed by folder
 let DBInventory = {}; // Indexed by ID
 
@@ -114,15 +114,21 @@ function sendPrivateMessageToItem(id) {
 }
 
 function applyOptions() {
-	let vcenter = document.getElementById("alwayscenter");
-	let vnotifychat = document.getElementById("audiochatnotify");
-	let vnotifymisc = document.getElementById("audiomiscnotify");
-	let vfly = document.getElementById("option-fly");
+	CameraAlwaysCenter = document.getElementById("alwayscenter").checked;
+	AudioChatNotifications = document.getElementById("audiochatnotify").checked;
+	AudioMiscNotifications = document.getElementById("audiomiscnotify").checked;
+	Fly = document.getElementById("option-fly").checked;
+	entityAnimationEnabled = document.getElementById("option-entity-animation").checked;
+	tileAnimationEnabled = document.getElementById("option-tile-animation").checked;
 
-	CameraAlwaysCenter = vcenter.checked;
-	AudioChatNotifications = vnotifychat.checked;
-	AudioMiscNotifications = vnotifymisc.checked;
-	Fly = vfly.checked;
+	let saved_options = {
+		"always_center_camera": CameraAlwaysCenter,
+		"audio_chat_notify": AudioChatNotifications,
+		"audio_misc_notify": AudioMiscNotifications,
+		"entity_animation": entityAnimationEnabled,
+		"tile_animation": tileAnimationEnabled,
+	};
+	localStorage.setItem("options", JSON.stringify(saved_options));
 }
 
 function zoomIn() {
@@ -880,6 +886,12 @@ function editItemShared(item) {
 			document.getElementById('edittiley').value = itemobj.pic[2];
 			document.getElementById('edittileautotile').value = (itemobj.autotile_layout ?? 0).toString();
 			document.getElementById('edittileautotileclass').value = itemobj.autotile_class ?? "";
+
+			document.getElementById('edittileanimationmode').value = (itemobj.anim_mode ?? 0).toString();
+			document.getElementById('edittileanimationframes').value = itemobj.anim_frames ?? 1;
+			document.getElementById('edittileanimationspeed').value = itemobj.anim_speed ?? 1;
+			document.getElementById('edittileanimationoffset').value = itemobj.anim_offset ?? 0;
+
 			let index_for_type = 0;
 			switch (itemobj.type) {
 				case "sign":
@@ -972,6 +984,11 @@ function editItemApply() {
 			let edittileautotile = parseInt(document.getElementById('edittileautotile').value);
 			let edittileautotileclass = document.getElementById('edittileautotileclass').value;
 
+			let edittileanimationmode = parseInt(document.getElementById('edittileanimationmode').value);
+			let edittileanimationframes = parseInt(document.getElementById('edittileanimationframes').value);
+			let edittileanimationspeed = parseInt(document.getElementById('edittileanimationspeed').value);
+			let edittileanimationoffset = parseInt(document.getElementById('edittileanimationoffset').value);
+
 			updates.pic = [edittilesheet, edittilex, edittiley];
 
 			if (editItemType == "map_tile" || editItemType == "map_tile_hotbar" || editItemType == "map_tile_mapobj_edit" || editItemType == "map_tile_turf_edit") {
@@ -991,6 +1008,14 @@ function editItemApply() {
 					data["autotile_layout"] = edittileautotile;
 				if(edittileautotileclass)
 					data["autotile_class"] = edittileautotileclass;
+				if(edittileanimationmode)
+					data["anim_mode"] = edittileanimationmode;
+				if(edittileanimationframes != NaN && edittileanimationframes > 1)
+					data["anim_frames"] = edittileanimationframes;
+				if(edittileanimationspeed != NaN && edittileanimationspeed > 1)
+					data["anim_speed"] = edittileanimationspeed;
+				if(edittileanimationoffset != NaN)
+					data["anim_offset"] = edittileanimationoffset;
 				updates.data = JSON.stringify(data);
 				if(editItemType === "map_tile_hotbar") {
 					hotbarData[editItemID] = data;
@@ -1728,9 +1753,9 @@ function tickWorld() {
 	}
 
 	NeedMapRedraw = false;
-	TickCounter = (TickCounter + 1) & 0xffff;
+	TickCounter = (TickCounter + 1) & 0xffffff;
 	if(!SlowAnimationTick || ((TickCounter & 7) == 0)) {
-		AnimationTick = (AnimationTick + 1) % 10000;
+		AnimationTick = (AnimationTick + 1) % 1000000;
 	}
 }
 
@@ -1841,7 +1866,16 @@ function initWorld() {
 	window.onresize = resizeCanvas;
 	resizeCanvas();
 
-	// applies saved options from browser form fill
+	// applies saved options from browser form fill (or from local storage)
+	let saved_options = localStorage.getItem("options");
+	if (saved_options) {
+		saved_options = JSON.parse(saved_options);
+		document.getElementById("alwayscenter").checked = saved_options.always_center_camera ?? false;
+		document.getElementById("audiochatnotify").checked = saved_options.audio_chat_notify ?? true;
+		document.getElementById("audiomiscnotify").checked = saved_options.audio_misc_notify ?? false;
+		document.getElementById("option-entity-animation").checked = saved_options.entity_animation ?? true;
+		document.getElementById("option-tile-animation").checked = saved_options.tile_animation ?? true;
+	}
 	applyOptions();
 
 	initBuild();
