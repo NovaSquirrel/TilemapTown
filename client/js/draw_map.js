@@ -341,7 +341,7 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 					[0,0], [1, 1], [-1, 1], [0, 1],
 					[0,0], [1,-1], [-1,-1], [0,-1],
 					[0,0], [1, 0], [-1, 0], [0, 0]][autotileIndexFunction(tile, map, mapCoordX, mapCoordY)];
-			picX += pair[0] + animationFrame*3;
+			picX += pair[0] + animationFrame * 3;
 			picY += pair[1];
 			break;
 		case 2: // 4-direction autotiling, 9 tiles, origin is middle, horizonal & vertical & single as separate tiles
@@ -350,7 +350,7 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 					[2, 1], [1, 1], [-1, 1], [0, 1],
 					[2,-1], [1,-1], [-1,-1], [0,-1],
 					[2, 0], [1, 0], [-1, 0], [0, 0]][autotileIndexFunction(tile, map, mapCoordX, mapCoordY)];
-			picX += pair[0] + animationFrame * 2;
+			picX += pair[0] + animationFrame * 4;
 			picY += pair[1];
 			if (autotileLayout == 3) {
 				picX -= 2;
