@@ -447,7 +447,7 @@ function drawMap() {
 	// Render the map
 	for (x = 0; x < (viewWidth + 2); x++) {
 		for (y = 0; y < (viewHeight + 2); y++) {
-//			try {
+			try {
 				ctx.globalAlpha = 1;
 				let mapCoordX = x + tileX;
 				let mapCoordY = y + tileY;
@@ -523,8 +523,8 @@ function drawMap() {
 						}
 					}
 				}
-//			} catch (error) {
-//			}
+			} catch (error) {
+			}
 		}
 	}
 
