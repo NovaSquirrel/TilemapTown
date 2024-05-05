@@ -817,7 +817,13 @@ function editItemShared(item) {
 	document.getElementById('edittiletext').style.display = "none";
 	document.getElementById('edittileimage').style.display = "none";
 	document.getElementById('edittilename').value = item.name;
-	document.getElementById('edittiledesc').value = item.desc;
+	if(editTypeIsDirectEdit(item.type)) {
+		document.getElementById('description_or_message').textContent = "Message";
+		document.getElementById('edittiledesc').value = item?.data?.message ?? "";
+	} else {
+		document.getElementById('description_or_message').textContent = "Description";
+		document.getElementById('edittiledesc').value = item.desc ?? "";
+	}
 	switch (item.type) {
 		case "text":
 			document.getElementById('edittiletext').style.display = "block";
@@ -938,6 +944,10 @@ function editItem(key) {
 	editItemShared(item);
 }
 
+function editTypeIsDirectEdit(type) {
+	return type == "map_tile_hotbar" || type == "map_tile_mapobj_edit" || type == "map_tile_turf_edit";
+}
+
 function editItemApply() {
 	let edittilename = document.getElementById('edittilename').value;
 	let edittiledesc = document.getElementById('edittiledesc').value;
@@ -991,7 +1001,7 @@ function editItemApply() {
 
 			updates.pic = [edittilesheet, edittilex, edittiley];
 
-			if (editItemType == "map_tile" || editItemType == "map_tile_hotbar" || editItemType == "map_tile_mapobj_edit" || editItemType == "map_tile_turf_edit") {
+			if (editItemType == "map_tile" || editTypeIsDirectEdit(editItemType)) {
 				let data = {
 					"name": updates.name,
 					"pic": updates.pic
@@ -1016,6 +1026,8 @@ function editItemApply() {
 					data["anim_speed"] = edittileanimationspeed;
 				if(edittileanimationoffset != NaN)
 					data["anim_offset"] = edittileanimationoffset;
+				if(updates["desc"])
+					data["message"] = updates["desc"];
 				updates.data = JSON.stringify(data);
 				if(editItemType === "map_tile_hotbar") {
 					hotbarData[editItemID] = data;
