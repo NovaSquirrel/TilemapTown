@@ -839,6 +839,7 @@ function ConnectToServer() {
 			"see_past_map_edge": {"version": "0.0.1"},
 			"batch": {"version": "0.0.1"},
 			"receive_build_messages": {"version": "0.0.1"},
+			"bulk_build": {"version": "0.0.1"}
 		};
 
 		if(OnlineUsername != "") {
