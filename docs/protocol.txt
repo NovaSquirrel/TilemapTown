@@ -3,6 +3,18 @@ Uses websockets and JSON. WIP.
 --> send to server
 <-- receive from server
 
+For a basic graphical client, a good minimal set of message types to support are:
+	IDN (logging in)
+	MSG, ERR, CMD, PRI (sending and receiving text, sending chat commands)
+	MAP (map data)
+	MAI (information about the current map you're on)
+	PIN (pings)
+	RSC (defines the global tilesets)
+	IMG (request URL for an image ID that was seen on a map)
+	WHO (list of entities, and entity property management)
+	MOV (entity movement)
+Building, mail, inventory management, and all extensions are optional.
+
 List of entity types:
 	user        An entity controlled by a client.
 	map         A map.
@@ -44,6 +56,7 @@ List of directions (used for "dir" values):
 	6 = North
 	7 = Northeast
 
+
 === Movement on the map ===
 --> MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0}
 Move yourself
@@ -75,6 +88,7 @@ Move a player on the map.
 <-- MOV {"to": [x,y], "dir": 0, "id": 0, "edge_warp": true}
 Indicates a character was put into this position via moving off the edge of a map and onto another.
 
+
 === Map contents ===
 --> PUT {"pos": [x,y], "atom": {atom}}
 <-- PUT {"pos": [x,y], "atom": {atom}, "username": username, "remote_map": map} (for listeners)
@@ -83,7 +97,6 @@ Place a tile on the map.
 Can use string instead of atom definition if it's predefined.
 
 Optional fields:
-	"temp": (Experimental) If present and true, the map change will not mark the map as needing to be re-saved to the database (but currently will get saved there if non-temp changes are done)
 	"obj": If present and true, "atom" is an array of tiles, which go onto the map's object layer
 
 --> MAP - requests the whole thing
@@ -123,25 +136,13 @@ Fields that may appear in MAI on the official server:
 		"repeat_y": boolean; if true, the wallpaper repeats across the map vertically
 		"over_turf": boolean; if true, draw over all turf, not just default turf
 		"offset": 2-element list; [x,y]. Number of pixels to shift the image horizontally and vertically from the default spot it would be at
+	Most important fields to support are "id", "name", "desc", "default" and "size". Most of the others are just informational.
 
 --> DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true}
 <-- DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true, "username":username, "remote_map": map} (for listeners)
 <-- MAP {updated map}
 Delete a section of map.
 
---> BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...]}
-<-- BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...], "username": username, "id": user_id}
-Bulk building command. Requires the "bulk_build" permission.
-Applies a series of rectangles to the map.
-Width and height may be omitted, in order to just do a single tile.
-Can take a "temp" optional parameter like PUT can.
-
---> BLK {"copy": [{"turf": true/false, "obj": true/false, "src":[x,y,w,h], "dst":[x,y]}, ...]]}
-<-- BLK {"copy": [{"turf": true/false, "obj": true/false, "src":[x,y,w,h], "dst":[x,y]}, ...]], "username": username}
-Copies from one portion of the map to another, with overlapped rectangles allowed and supported.
-If "turf" and "obj" are also provided in the same BLK message, "copy" is applied first, then "turf" and finally "obj".
-This makes it easy to move something by copying it somewhere else and erasing the tile where it was.
-Can take a "temp" optional parameter like PUT can.
 
 === Resources ===
 --> IMG {"id": number}
@@ -202,6 +203,8 @@ Other fields that may appear in WHO messages on the official server:
 	"offset": [x,y]; Offset in pixels away from where this entity would normally be drawn
 	"is_forwarding": boolean; If true, this entity is not a user, but some events that happen on the map this entity is on are being forwarded to a user
 	"chat_listener": boolean; If true, this entity is not a user, but chat messages that are sent to this entity's map are being forwarded to a user
+	Most important fields to support are "id", "name", "pic", "x", "y", "dir" and ideally "offset" too.
+
 
 === Miscellaneous ===
 --> IDN
@@ -368,6 +371,7 @@ Item info fields:
 	"temporary": boolean; Changes to this entity do not get saved to the database
 	"delete_on_logout": boolean; Causes the entity to get removed when the owner logs out
 
+
 === Optional features ===
 Clients and servers can advertise having extra features on top of the basic ones.
 VER will tell the client what features are available, and the client can request specific features with IDN, which the server will acknowledge.
@@ -405,6 +409,7 @@ VER will tell the client what features are available, and the client can request
 	}
 }
 
+
 === Mini-tilemaps ===
 Entities can display a little tilemap that overlays their graphic. You can use WHO messages to update an entity's "mini_tilemap" and "mini_tilemap_data" fields, which will be broadcast to the people on the map.
 
@@ -429,6 +434,7 @@ The tilemap's data is a list of integers. Formatted like a binary number it woul
   +++++++------------- Number of time to repeat this tile (minus 1)
 This means the maximum tileset size is 64x64 tiles, for 4096 tile types.
 Tiles are specified top to bottom, going through each line from left to right. If tiles match "transparent_tile" it's not drawn.
+
 
 === Extension: see_past_map_edge ====
 If a client signals that it supports see_past_map_edge, then it will receive a MAI and MAP message for all of the maps linked from the one they have just joined.
@@ -493,6 +499,26 @@ Key names:
 --> EXT {"bot_message_button": {"id": id, "text": text}}
 Message gets forwarded to the entity specified in "id", in order to tell it that a [bot-message-button] button was clicked on.
 The forwarded copy has additional fields for "name" and "username" as in PRI.
+
+
+=== Extension: bulk_build ===
+This extension allows a client to request multiple map changes in one message, including operations like copies.
+Clients that support it will receive a BLK to communicate the changes, but clients that don't will receive the map changes via MAP.
+
+--> BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...]}
+<-- BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...], "username": username, "id": user_id}
+Bulk building command. Requires the "bulk_build" permission.
+Applies a series of rectangles to the map.
+Width and height may be omitted, in order to just do a single tile.
+Can take a "temp" optional parameter like PUT can.
+
+--> BLK {"copy": [{"turf": true/false, "obj": true/false, "src":[x,y,w,h], "dst":[x,y]}, ...]]}
+<-- BLK {"copy": [{"turf": true/false, "obj": true/false, "src":[x,y,w,h], "dst":[x,y]}, ...]], "username": username, "id" user_id}
+Copies from one portion of the map to another, with overlapped rectangles allowed and supported.
+If "turf" and "obj" are also provided in the same BLK message, "copy" is applied first, then "turf" and finally "obj".
+This makes it easy to move something by copying it somewhere else and erasing the tile where it was.
+Can take a "temp" optional parameter like PUT can.
+
 
 === Extension: batch ====
 This extension allows the server to send multiple protocol messages to the client in one websocket message.
