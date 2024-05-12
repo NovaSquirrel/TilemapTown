@@ -1814,7 +1814,7 @@ function changedBuildToolCategory() {
 			}
 		}
 	} else {
-		currentBuildCategoryArrayNames = buildCategories[currentBuildCategoryName];
+		currentBuildCategoryArrayNames = buildCategories[currentBuildCategoryName] ?? [];
 	}
 
 	redrawBuildCanvas();
