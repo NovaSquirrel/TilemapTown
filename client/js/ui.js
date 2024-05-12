@@ -85,6 +85,12 @@ let drawToolCurrentStroke = {}; // All the tiles currently being drawn on, index
 let drawToolCurrentStrokeIsObj = false;
 let drawToolUndoHistory = [];
 
+let buildCategories = {};
+let currentBuildCategoryName = "!global";
+//currentBuildCategoryArrayNames; <-- will be set in predefined.js
+var GlobalTilesArray = [];
+var GlobalTilesArrayNames = [];
+
 ///////////////////////////////////////////////////////////
 
 function getRandomInt(min, max) {
@@ -1671,6 +1677,10 @@ function tickWorld() {
 			} else {
 				DisplayInventory[updated.folder] = [key];
 			}
+
+			if(currentBuildCategoryName == "!inventory") {
+				changedBuildToolCategory();
+			}
 		}
 
 		// sort by name or date later
@@ -1775,21 +1785,56 @@ function tickWorld() {
 // Initial setup
 ///////////////////////////////////////////////////////////
 
+function updateBuildToolCategoriesAvailable() {
+	let categorySelect = document.getElementById('buildToolCategory');
+
+	// Empty out the list
+	while (categorySelect.childElementCount > 2) {
+		categorySelect.removeChild(ul.lastChild);
+	}
+
+	for(let e of Object.keys(buildCategories)) {
+		el = document.createElement("option");
+		el.textContent = e;
+		el.value = e;
+		categorySelect.appendChild(el);
+	}
+}
+
+function changedBuildToolCategory() {
+	buildMenuSelectIndex = null;
+	currentBuildCategoryName = document.getElementById('buildToolCategory').value;
+	if(currentBuildCategoryName == "!global") {
+		currentBuildCategoryArrayNames = GlobalTilesArrayNames;
+	} else if(currentBuildCategoryName == "!inventory") {
+		currentBuildCategoryArrayNames = [];
+		for (let i in DBInventory) {
+			if (DBInventory[i].type == "map_tile" && DBInventory[i].data) {
+				currentBuildCategoryArrayNames.push(DBInventory[i].data);
+			}
+		}
+	} else {
+		currentBuildCategoryArrayNames = buildCategories[currentBuildCategoryName];
+	}
+
+	redrawBuildCanvas();
+}
+
 function redrawBuildCanvas() {
 	let canvas = document.getElementById('inventoryCanvas');
 	// add click action
 	canvas = document.getElementById('inventoryCanvas');
 	let BuildWidth = 16;
 
-	let len = Object.keys(GlobalTilesArray).length;
+	let len = Object.keys(currentBuildCategoryArrayNames).length;
 	canvas.width = (BuildWidth * 16) + "";
 	canvas.height = (Math.ceil(len / BuildWidth) * 16) + "";
 	let ctx = canvas.getContext("2d");
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
 	let count = 0;
-	for (let i in GlobalTilesArray) {
-		let item = GlobalTilesArray[i];
+	for (let i in currentBuildCategoryArrayNames) {
+		let item = AtomFromName(currentBuildCategoryArrayNames[i]);
 		if (item.pic[0] in IconSheets)
 			ctx.drawImage(IconSheets[item.pic[0]], item.pic[1] * 16, item.pic[2] * 16, 16, 16, (count % BuildWidth) * 16, Math.floor(count / BuildWidth) * 16, 16, 16);
 
@@ -1828,9 +1873,9 @@ function initBuild() {
 
 		if(evt.button == 0) {
 			if (buildTool == BUILD_TOOL_SELECT) {
-				useItem({ type: 'map_tile', data: GlobalTilesArrayNames[index] });
+				useItem({ type: 'map_tile', data: window['currentBuildCategoryArrayNames'][index] });
 			} else if(buildTool == BUILD_TOOL_DRAW) {
-				tileDataForDraw = GlobalTilesArrayNames[index];
+				tileDataForDraw = window['currentBuildCategoryArrayNames'][index];
 				setBuildMenuSelectIndex(index);
 			}
 		}
@@ -1841,7 +1886,7 @@ function initBuild() {
 		pos.x = pos.x >> 4;
 		pos.y = pos.y >> 4;
 		let index = pos.y * BuildWidth + pos.x;
-		rightClickedBuildTile = GlobalTilesArrayNames[index];
+		rightClickedBuildTile = window['currentBuildCategoryArrayNames'][index];
 
 		let menu = document.querySelector('#build-contextmenu');
 		menu.style.left = (evt.clientX) + "px";
@@ -1889,6 +1934,8 @@ function initWorld() {
 		document.getElementById("option-tile-animation").checked = saved_options.tile_animation ?? true;
 	}
 	applyOptions();
+	changeBuildTool();
+	changedBuildToolCategory();
 
 	initBuild();
 

@@ -600,6 +600,11 @@ function receiveServerMessage(cmd, arg) {
           }
         }
       }
+      if('build_categories' in arg) {
+        buildCategories = arg['build_categories'];
+        updateBuildToolCategoriesAvailable();
+      }
+      redrawBuildCanvas();
       break;
 
     case "IMG":

@@ -1124,12 +1124,10 @@ GlobalTiles.shadow2_ul = {
 };
 
 
-var GlobalTilesArray = [];
 var GlobalTilesArrayNames = [];
 var i=0;
 for (var key in GlobalTiles) {
-  GlobalTilesArrayNames[i] = key;
-  GlobalTilesArray[i++] = GlobalTiles[key];
+  GlobalTilesArrayNames[i++] = key;
 }
 
 /*
@@ -1138,3 +1136,5 @@ for (var key in GlobalTiles) {
   console.log(obj.name);
 }
 */
+
+currentBuildCategoryArrayNames = GlobalTilesArrayNames;

@@ -280,6 +280,11 @@
 	</tr>
 	</table>
 
+    <label class="unselectable">Category: <select id="buildToolCategory" onchange="changedBuildToolCategory();">
+      <option value="!global">Global tiles</option>
+      <option value="!inventory">My inventory</option>
+    </select></label>
+
     <br>
     <canvas class="unselectable" id="inventoryCanvas" width="320" height="320" imageSmoothingEnabled="false"></canvas>
     <br>
