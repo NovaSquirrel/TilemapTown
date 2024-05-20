@@ -7,7 +7,7 @@
 }
 
 .spoof_name {
-  font-size:10px;
+  font-size: 10px;
   color: silver;
 }
 
@@ -43,4 +43,9 @@
 .spoiler:hover {
   color: white; 
   background-color: black;
+}
+
+.timestamp {
+  font-size: 10px;
+  color: silver;
 }

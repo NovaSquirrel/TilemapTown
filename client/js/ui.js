@@ -91,6 +91,8 @@ let currentBuildCategoryName = "!global";
 var GlobalTilesArray = [];
 var GlobalTilesArrayNames = [];
 
+let chatTimestamps = true;
+
 ///////////////////////////////////////////////////////////
 
 function getRandomInt(min, max) {
@@ -126,6 +128,7 @@ function applyOptions() {
 	Fly = document.getElementById("option-fly").checked;
 	entityAnimationEnabled = document.getElementById("option-entity-animation").checked;
 	tileAnimationEnabled = document.getElementById("option-tile-animation").checked;
+	chatTimestamps = document.getElementById("chat-timestamp").checked;
 
 	let saved_options = {
 		"always_center_camera": CameraAlwaysCenter,
@@ -133,6 +136,7 @@ function applyOptions() {
 		"audio_misc_notify": AudioMiscNotifications,
 		"entity_animation": entityAnimationEnabled,
 		"tile_animation": tileAnimationEnabled,
+		"chat_timestamps": chatTimestamps,
 	};
 	localStorage.setItem("options", JSON.stringify(saved_options));
 }
@@ -1268,14 +1272,21 @@ function convertBBCode(t) {
 	return result.html;
 }
 
+let dateFormat = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
 function logMessage(Message, Class, Params) {
 	Params = Params ?? {};
 	let chatArea = document.getElementById("chatArea");
 	let bottom = chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight<3;
 
+	let timestampText = "";
+	if (chatTimestamps) {
+		let currentDate = new Date();
+		timestampText = dateFormat.format(currentDate);
+	}
+
 	let newMessage = document.createElement("div");
 	newMessage.className = Class;
-	newMessage.innerHTML = Message;
+	newMessage.innerHTML = (timestampText.length ? (`<span class="timestamp">${timestampText}</span> `) : "") + Message;
 	chatArea.append(newMessage);
 
 	if(OnlineMuWebview) {
@@ -1296,8 +1307,9 @@ function logMessage(Message, Class, Params) {
 			audio.play();
 		}
 	}
+
 	if (Params.plainText) {
-		chatLogForExport.push(Params.plainText);
+		chatLogForExport.push((timestampText.length ? (`[${timestampText}] `) : "") + Params.plainText);
 	}
 }
 
@@ -1932,6 +1944,7 @@ function initWorld() {
 		document.getElementById("audiomiscnotify").checked = saved_options.audio_misc_notify ?? false;
 		document.getElementById("option-entity-animation").checked = saved_options.entity_animation ?? true;
 		document.getElementById("option-tile-animation").checked = saved_options.tile_animation ?? true;
+		document.getElementById("chat-timestamp").checked = saved_options.chat_timestamps ?? true;
 	}
 	applyOptions();
 	changeBuildTool();

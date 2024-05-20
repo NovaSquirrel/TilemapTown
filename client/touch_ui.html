@@ -268,6 +268,11 @@
 	</tr>
 	</table>
 
+    <label class="unselectable">Category: <select id="buildToolCategory" onchange="changedBuildToolCategory();">
+      <option value="!global">Global tiles</option>
+      <option value="!inventory">My inventory</option>
+    </select></label>
+
     <br>
     <canvas class="unselectable" id="inventoryCanvas" width="320" height="320" imageSmoothingEnabled="false"></canvas>
     <br>
@@ -279,10 +284,13 @@
 <widget-window id="options" style="display: none;">
   <span slot="title">Options</span>
   <div slot="contents">
-    <input type="checkbox" id="alwayscenter" checked="true"><label for="alwayscenter" class="unselectable">Always center camera</label></input><br>
-    <input type="checkbox" id="audiochatnotify" checked><label for="audiochatnotify" class="unselectable">Notify when people talk</label></input><br>
-    <input type="checkbox" id="audiomiscnotify"><label for="audiomiscnotify" class="unselectable">Notify on other messages</label></input><br>
-    <input type="checkbox" id="option-fly"><label for="option-fly" class="unselectable">Walk through walls</label></input><br>
+    <label class="unselectable"><input type="checkbox" id="alwayscenter" checked="true"><label for="alwayscenter" class="unselectable">Always center camera</label><br>
+    <label class="unselectable"><input type="checkbox" id="audiochatnotify" checked>Notify when people talk</label><br>
+    <label class="unselectable"><input type="checkbox" id="audiomiscnotify">Notify on other messages</label><br>
+    <label class="unselectable"><input type="checkbox" id="option-fly">Walk through walls</label><br>
+    <label class="unselectable"><input type="checkbox" id="option-entity-animation" checked>Entity animation</label><br>
+    <label class="unselectable"><input type="checkbox" id="option-tile-animation" checked>Tile animation</label><br>
+    <label class="unselectable"><input type="checkbox" id="chat-timestamp" checked>Show chat timestamps</label><br>
 
     <ul>
       <li>
