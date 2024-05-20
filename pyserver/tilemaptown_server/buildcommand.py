@@ -1720,7 +1720,7 @@ def fn_morphlist(map, client, context, arg):
 
 	subcommand, subarg = separate_first_word(arg)
 	if subcommand in ('set', 'add') and subarg:
-		client.morphs[subarg] = {
+		client.morphs[subarg.lower()] = {
 			'name': client.name,
 			'pic': client.pic,
 			'desc': client.desc,
