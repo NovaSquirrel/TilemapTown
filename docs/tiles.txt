@@ -125,7 +125,7 @@ Tiles are defined with a JSON object, which can have the following fields:
 	Defaults to 1, which disables animation. Number of frames for the animation the tile is involved with.
 
 "anim_speed"
-	Defaults to 1. Amount of time each frame takes up in untis of 0.1 seconds.
+	Defaults to 1. Amount of time each frame takes up in units of 0.1 seconds.
 
 "anim_mode"
 	Defaults to 0. Integer that specifies how to play the animation. You can choose from the following options:
