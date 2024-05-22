@@ -644,7 +644,7 @@
 			"throne": {
 				"name": "throne",
 				"pic": [-1, 8, 4],
-				"density": true,
+				"density": false,
 				"obj": true
 			},
 			"stool": {
