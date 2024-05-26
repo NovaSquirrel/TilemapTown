@@ -604,7 +604,7 @@ function receiveServerMessage(cmd, arg) {
         buildCategories = arg['build_categories'];
         updateBuildToolCategoriesAvailable();
       }
-      redrawBuildCanvas();
+      changedBuildToolCategory();
       break;
 
     case "IMG":
