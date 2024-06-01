@@ -1,7 +1,9 @@
 {
 	"images": {
 		"0": "potluck.png",
-		"-1": "extra.png"
+		"-1": "extra.png",
+		"-2": "pulp.png"
+	},
 	"image_names": {
 		"0": "Potluck",
 		"-1": "Extra",
@@ -1243,7 +1245,7 @@
 				"name": "brick wall",
 				"pic": [0, 12, 4],
 				"density": true
-			}
+			},
 			"redgreenbrickwall": {
 				"name": "brick wall",
 				"pic": [0, 16, 4],
