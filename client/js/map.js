@@ -211,6 +211,7 @@ function initMap() {
 	if(Object.keys(IconSheets).length === 0) {
 		IconSheets[0] = document.getElementById("potluck");
 		IconSheets[-1] = document.getElementById("extras");
+		IconSheets[-2] = document.getElementById("pulp");
 	}
 }
 

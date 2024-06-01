@@ -275,6 +275,7 @@ Get map ID
 
 /mapsize width height
 /mapname name
+/mapdesc text
 /mapowner user
 Change map info
 

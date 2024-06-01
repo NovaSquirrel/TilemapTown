@@ -875,14 +875,14 @@ function editItemShared(item) {
 			el.textContent = "Don't change";
 			el.value = "keep";
 			sheetselect.appendChild(el);
-			el = document.createElement("option");
-			el.textContent = "Potluck";
-			el.value = 0;
-			sheetselect.appendChild(el);
-			el = document.createElement("option");
-			el.textContent = "Extras";
-			el.value = -1;
-			sheetselect.appendChild(el);
+
+			// Display the global images; TODO: don't hardcode the amount of them
+			for(let i=0; i>=-2; i--) {
+				el = document.createElement("option");
+				el.textContent = GlobalImageNames[i];
+				el.value = i;
+				sheetselect.appendChild(el);
+			}
 
 			// Now display everything in the inventory
 			for (let i in DBInventory) {
@@ -1827,6 +1827,13 @@ function changedBuildToolCategory() {
 		}
 	} else {
 		currentBuildCategoryArrayNames = buildCategories[currentBuildCategoryName] ?? [];
+		if(typeof currentBuildCategoryArrayNames === 'string') {
+			let tileset = currentBuildCategoryArrayNames;
+			currentBuildCategoryArrayNames = [];
+			for (let i in Tilesets[tileset]) {
+				currentBuildCategoryArrayNames.push(tileset + ":" + i);
+			}
+		}
 	}
 
 	redrawBuildCanvas();

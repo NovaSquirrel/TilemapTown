@@ -30,6 +30,7 @@ let ShowProtocol = true;
 let DidConnectOnce = false; // A connection got an IDN from the server at least once, indicating the connection went all the way through
 let StatusOnDisconnect = null;
 let StatusMessageOnDisconnect = null;
+let GlobalImageNames = {"0": "Potluck", "-1": "Extra", "-2": "Pulp"};
 
 // URL param options
 let InstantCamera = false;
@@ -580,6 +581,9 @@ function receiveServerMessage(cmd, arg) {
         for(var key in arg['images']) {
           FetchTilesetImage(asIntIfPossible(key), arg['images'][key]);
         }
+      }
+      if('image_names' in arg) {
+        GlobalImageNames = arg['image_names'];
       }
       if('tilesets' in arg) {
         for(var key in arg['tilesets']) {

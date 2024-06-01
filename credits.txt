@@ -37,6 +37,9 @@ https://opengameart.org/content/16x16-indoor-rpg-tileset
 https://opengameart.org/content/1616-block-textures
 	Art by ARoachIFoundOnMyPillow
 
+Everything in pulp.png is by JustthePulp and is licensed for use in Tilemap Town only, unless further permission is asked
+They granted permission to modify the tiles, and some of them have been modified to autotile better
+
 Potluck tileset credits:
 https://gist.github.com/eevee/59012b2a3d4dcdb40b5247ecdc2cfb34
 
