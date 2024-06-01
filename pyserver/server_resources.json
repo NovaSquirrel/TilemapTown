@@ -1253,7 +1253,7 @@
 			},
 			"torch": {
 				"name": "torch",
-				"pic": [0, 5, 15],
+				"pic": [-1, 5, 15],
 				"density": true,
 				"obj": true
 			}
