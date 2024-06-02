@@ -1338,8 +1338,6 @@ XBBCODE.addTags({
 	"img": emptyTag,
 	"face": emptyTag,
 	"font": emptyTag,
-	"quote": emptyTag,
-	"php": emptyTag,
 	"command": {
 		openTag: function (params, content) {
 		let filteredJS = content.replace(/\x22/g, '\\\x22');
