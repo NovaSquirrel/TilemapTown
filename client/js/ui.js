@@ -1034,7 +1034,7 @@ function editItemApply() {
 					data["anim_frames"] = edittileanimationframes;
 				if(edittileanimationspeed != NaN && edittileanimationspeed > 1)
 					data["anim_speed"] = edittileanimationspeed;
-				if(edittileanimationoffset != NaN)
+				if(edittileanimationoffset != NaN && edittileanimationoffset != 0)
 					data["anim_offset"] = edittileanimationoffset;
 				if(updates["desc"])
 					data["message"] = updates["desc"];
