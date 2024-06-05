@@ -10,7 +10,8 @@
 				"name": "leaves",
 				"pic": [-2, 5, 2],
 				"autotile_layout": 2,
-				"obj": true
+				"obj": true,
+				"density": true
 			},
 			"green": {
 				"name": "green",
@@ -104,7 +105,7 @@
 				"density": true
 			},
 			"afloor1": {
-				"name": "floor",
+				"name": "sand",
 				"pic": [-2, 1, 10],
 				"autotile_layout": 2
 			},
