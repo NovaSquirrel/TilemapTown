@@ -1366,7 +1366,10 @@ def fn_ipwho(map, client, context, arg):
 	for u in AllClients:
 		if len(names) > 0:
 			names += ', '
-		names += "%s [%s]" % (u.name_and_username(), ipaddress.ip_address(u.ip).exploded or "?")
+		connection = u.connection()
+		if not connection:
+			continue
+		names += "%s [%s]" % (u.name_and_username(), ipaddress.ip_address(connection.ip).exploded or "?")
 	respond(context, 'List of users connected: '+names)
 
 @cmd_command(category="Server Admin", privilege_level="server_admin", syntax="ip;reason;length")
@@ -1566,7 +1569,9 @@ def fn_login(map, client, context, arg):
 	if len(params) != 2:
 		respond(context, 'Syntax is /login username password', error=True)
 	else:
-		client.login(filter_username(params[0]), params[1])
+		connection = client.connection()
+		if connection:
+			connection.login(filter_username(params[0]), params[1], client)
 
 @cmd_command()
 def fn_disconnect(map, client, context, arg):

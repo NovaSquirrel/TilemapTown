@@ -21,11 +21,11 @@ from .buildentity import *
 userCounter = 1
 
 class Client(Entity):
-	def __init__(self,websocket):
+	def __init__(self, connection):
 		super().__init__(entity_type['user'])
 
 		global userCounter
-		self.ws = websocket
+		self.connection = weakref.ref(connection)
 		self.name = 'Guest '+ str(userCounter)
 		userCounter += 1
 		self.pic = [0, 2, 25]
@@ -53,7 +53,6 @@ class Client(Entity):
 		self.user_flags = 0
 
 		self.sent_resources_yet = False
-		self.login_successful_callback = None
 		self.no_inventory_messages = False # don't send BAG updates when adding or removing items
 
 		# Information for /undodel
@@ -105,19 +104,16 @@ class Client(Entity):
 		super().clean_up()
 
 	def send(self, command_type, command_params):
-		""" Send a command to the client """
-		if self.ws == None:
-			return
 		self.send_string(make_protocol_message_string(command_type, command_params))
 
 	def send_string(self, raw, is_chat=False):
-		""" Send a command to the client that's already in string form """
-		if self.ws == None:
+		connection = self.connection()
+		if connection == None or connection.ws == None:
 			return
 		if self.make_batch and self.can_batch_messages:
 			self.messages_in_batch.append(raw)
 		else:
-			asyncio.ensure_future(self.ws.send(raw))
+			asyncio.ensure_future(connection.ws.send(raw))
 
 	def start_batch(self):
 		""" Start batching messages """
@@ -130,17 +126,23 @@ class Client(Entity):
 			# If it's not the bottom layer yet, wait until it is
 			if self.make_batch > 0:
 				return
-		if self.ws == None:
+		connection = self.connection()
+		if connection == None or connection.ws == None:
 			return
 		n = len(self.messages_in_batch)
 		if n == 0:
 			return
 		elif n == 1: # If there's one message, format it normally
-			asyncio.ensure_future(self.ws.send(self.messages_in_batch[0]))
+			asyncio.ensure_future(connection.ws.send(self.messages_in_batch[0]))
 		else:
-			asyncio.ensure_future(self.ws.send("BAT "+"\n".join(self.messages_in_batch)))
+			asyncio.ensure_future(connection.ws.send("BAT "+"\n".join(self.messages_in_batch)))
 		# Clear out the batch
 		self.messages_in_batch = []
+
+	def disconnect(self, text=None, reason=''):
+		connection = self.connection()
+		if connection:
+			connection.disconnect(text=text, reason=reason)
 
 	def add_to_contents(self, item):
 		super().add_to_contents(item)
@@ -178,6 +180,183 @@ class Client(Entity):
 		if self.morphs:
 			d['morphs'] = self.morphs
 		self.save_data_as_text(json.dumps(d))
+
+	def username_or_id(self):
+		return self.username or self.protocol_id()
+
+	def who(self):
+		w = super().who()
+		w.update({
+			'username': self.username,
+			'status': self.status_type,
+			'status_message': self.status_message
+		})
+		if self.user_flags & userflag['bot']:
+			w['bot'] = True
+		return w
+
+	def save(self):
+		""" Save user information to the database """
+		super().save()
+		if self.db_id == None:
+			return
+
+		# Create new user if user doesn't already exist
+		c = Database.cursor()
+		c.execute('SELECT entity_id FROM User WHERE entity_id=?', (self.db_id,))
+		if c.fetchone() == None:
+			c.execute("INSERT INTO User (entity_id) VALUES (?)", (self.db_id,))
+			self.db_id = c.lastrowid
+			if self.db_id == None:
+				return
+
+		# Update the user
+		values = (self.username, dumps_if_not_empty(list(self.watch_list)), dumps_if_not_empty(list(self.ignore_list)), self.client_settings, datetime.datetime.now(), self.user_flags, self.db_id)
+		c.execute("UPDATE User SET username=?, watch=?, ignore=?, client_settings=?, last_seen_at=?, flags=? WHERE entity_id=?", values)
+
+	def load(self, username, override_map=None):
+		""" Load an account from the database """
+		c = Database.cursor()
+		
+		c.execute('SELECT entity_id, watch, ignore, client_settings, flags FROM User WHERE username=?', (username,))
+		result = c.fetchone()
+		if result == None:
+			return None
+
+		# TODO
+
+		# If the password is good, copy the other stuff over
+		self.username = username
+		self.assign_db_id(result[0])
+		self.watch_list = set(json.loads(result[1] or "[]"))
+		self.ignore_list = set(json.loads(result[2] or "[]"))
+		self.client_settings = result[3]
+		self.user_flags = result[4]
+		if self.user_flags == None:
+			self.user_flags = 0
+		# And copy over the base entity stuff
+
+		self.no_inventory_messages = True  # because load() will load in objects contained by this one
+		result = super().load(self.db_id, override_map=override_map)
+		self.no_inventory_messages = False
+		return result
+
+	def refresh_client_inventory(self):
+		self.send("BAG", {'list': [child.bag_info() for child in self.all_children()], 'clear': True})
+
+	def changepass(self, password):
+		# Generate a random salt and append it to the password
+		salt = str(random.random())
+		combined = password+salt
+		passhash = "%s:%s" % (salt, hashlib.sha512(combined.encode()).hexdigest())
+
+		c = Database.cursor()
+		c.execute("UPDATE User SET passhash=?, passalgo=? WHERE entity_id=?", (passhash, "sha512", self.db_id))
+		Database.commit()
+
+	def register(self, username, password):
+		username = str(filter_username(username))
+		# User can't already exist
+		if find_db_id_by_username(username) != None:
+			return False
+		self.temporary = False
+		self.username = username
+		self.save()
+		self.changepass(password)
+		# db_id will be set because of self.save()
+		return True
+
+	def is_client(self):
+		return True
+
+class Connection(object):
+	def __init__(self, websocket, ip):
+		self.ws = websocket
+		self.ip = ip
+		self.entity = FakeClient(self)
+		self.identified = False
+
+	def send(self, command_type, command_params):
+		""" Send a command to the client """
+		if self.ws == None:
+			return
+		self.send_string(make_protocol_message_string(command_type, command_params))
+
+	def send_string(self, raw):
+		""" Send a command to the client that's already in string form """
+		if self.ws == None:
+			return
+		asyncio.ensure_future(self.ws.send(raw))
+
+	def test_login(self, username, password):
+		c = Database.cursor()
+		
+		c.execute('SELECT passalgo, passhash FROM User WHERE username=?', (username,))
+		result = c.fetchone()
+		if result == None:
+			return None
+
+		passalgo = result[0] # Algorithm used; specifying it allows more options later
+		passhash = result[1] # Hash that may be formatted "hash" or "salt:hash"
+
+		if passalgo == "sha512":
+			# Start with a default for no salt
+			salt = ""
+			comparewith = passhash
+
+			# Is there a salt?
+			split = passhash.split(':')
+			if len(split) == 2:
+				salt = split[0]
+				comparewith = split[1]
+
+			# Verify the password
+			if hashlib.sha512((password+salt).encode()).hexdigest() != comparewith:
+				return False
+			return True
+
+		print("Unrecognized password algorithm \"%s\" for \"%s\"" % (passalgo, username))
+		return False
+
+	def login(self, username, password, client, override_map=None):
+		""" Attempt to log the client into an account """
+		username = filter_username(username)
+
+		login_successful = self.test_login(username, password)
+
+		if login_successful == True:
+			client.load(username, override_map=override_map)
+
+			print("login: \"%s\" from %s" % (username, self.ip))
+			client.temporary = False
+
+			if client.map:
+				client.map.broadcast("MSG", {'text': client.name+" has logged in ("+client.username+")"})
+				client.map.broadcast("WHO", {'add': client.who()}, remote_category=botwatch_type['entry']) # update client view
+			else:
+				client.send("MSG", {'text': "Your last map wasn't saved correctly. Sending you to the default one..."})
+				client.switch_map(get_database_meta('default_map'))
+
+			# send the client their inventory
+			client.refresh_client_inventory()
+
+			c = Database.cursor()
+			# send the client their mail
+			mail = []
+			for row in c.execute('SELECT id, sender_id, recipients, subject, contents, flags FROM Mail WHERE owner_id=?', (client.db_id,)):
+				item = {'id': row[0], 'from': find_username_by_db_id(row[1]),
+				'to': [find_username_by_db_id(int(x)) for x in row[2].split(',')],
+				'subject': row[3], 'contents': row[4], 'flags': row[5]}
+				mail.append(item)
+			if len(mail):
+				self.send("EML", {'list': mail})
+
+			return True
+		elif login_successful == False:
+			self.send("ERR", {'text': 'Login fail, bad password for account'})
+		else:
+			self.send("ERR", {'text': 'Login fail, nonexistent account'})
+		return False
 
 	def test_server_banned(self):
 		""" Test for and take action on IP bans """
@@ -231,138 +410,31 @@ class Client(Entity):
 				self.send("ERR", {'text': text})
 			asyncio.ensure_future(self.ws.close(reason=reason))
 
-	def username_or_id(self):
-		return self.username or self.protocol_id()
-
-	def who(self):
-		w = super().who()
-		w.update({
-			'username': self.username,
-			'status': self.status_type,
-			'status_message': self.status_message
-		})
-		if self.user_flags & userflag['bot']:
-			w['bot'] = True
-		return w
-
-	def save(self):
-		""" Save user information to the database """
-		super().save()
-		if self.db_id == None:
-			return
-
-		# Create new user if user doesn't already exist
-		c = Database.cursor()
-		c.execute('SELECT entity_id FROM User WHERE entity_id=?', (self.db_id,))
-		if c.fetchone() == None:
-			c.execute("INSERT INTO User (entity_id) VALUES (?)", (self.db_id,))
-			self.db_id = c.lastrowid
-			if self.db_id == None:
-				return
-
-		# Update the user
-		values = (self.username, self.password, "sha512", dumps_if_not_empty(list(self.watch_list)), dumps_if_not_empty(list(self.ignore_list)), self.client_settings, datetime.datetime.now(), self.user_flags, self.db_id)
-		c.execute("UPDATE User SET username=?, passhash=?, passalgo=?, watch=?, ignore=?, client_settings=?, last_seen_at=?, flags=? WHERE entity_id=?", values)
-
-	def load(self, username, password, override_map=None):
-		""" Load an account from the database """
-		c = Database.cursor()
-		
-		c.execute('SELECT entity_id, passhash, passalgo, watch, ignore, client_settings, flags FROM User WHERE username=?', (username,))
-		result = c.fetchone()
-		if result == None:
-			return None
-
-		passalgo = result[2] # Algorithm used, allows more options later
-		passhash = result[1] # Hash that may be formatted "hash" or "salt:hash"
-
-		if passalgo == "sha512":
-			# Start with a default for no salt
-			salt = ""
-			comparewith = passhash
-
-			# Is there a salt?
-			split = passhash.split(':')
-			if len(split) == 2:
-				salt = split[0]
-				comparewith = split[1]
-
-			# Verify the password
-			if hashlib.sha512((password+salt).encode()).hexdigest() != comparewith:
-				return False
-			self.password = passhash
-
-		# If the password is good, copy the other stuff over
-		self.username = username
-		self.assign_db_id(result[0])
-		self.watch_list = set(json.loads(result[3] or "[]"))
-		self.ignore_list = set(json.loads(result[4] or "[]"))
-		self.client_settings = result[5]
-		self.user_flags = result[6]
-		if self.user_flags == None:
-			self.user_flags = 0
-		# And copy over the base entity stuff
-		return super().load(self.db_id, override_map=override_map)
-
-	def refresh_client_inventory(self):
-		self.send("BAG", {'list': [child.bag_info() for child in self.all_children()], 'clear': True})
-
-	def login(self, username, password, override_map=None):
-		""" Attempt to log the client into an account """
-		username = filter_username(username)
-		self.no_inventory_messages = True      # because load() will load in objects contained by this one
-		result = self.load(username, password, override_map=override_map)
-		self.no_inventory_messages = False
-		if result == True:
-			print("login: \"%s\" from %s" % (self.username, self.ip))
-			self.temporary = False
-
-			#self.switch_map(self.map_id, goto_spawn=False)
-			if self.map:
-				self.map.broadcast("MSG", {'text': self.name+" has logged in ("+self.username+")"})
-				self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['entry']) # update client view
-			else:
-				self.send("MSG", {'text': "Your last map wasn't saved correctly. Sending you to the default one..."})
-				self.switch_map(get_database_meta('default_map'))
-
-			# send the client their inventory
-			self.refresh_client_inventory()
-
-			c = Database.cursor()
-			# send the client their mail
-			mail = []
-			for row in c.execute('SELECT id, sender_id, recipients, subject, contents, flags FROM Mail WHERE owner_id=?', (self.db_id,)):
-				item = {'id': row[0], 'from': find_username_by_db_id(row[1]),
-				'to': [find_username_by_db_id(int(x)) for x in row[2].split(',')],
-				'subject': row[3], 'contents': row[4], 'flags': row[5]}
-				mail.append(item)
-			if len(mail):
-				self.send("EML", {'list': mail})
-
-			return True
-		elif result == False:
-			self.send("ERR", {'text': 'Login fail, bad password for account'})
-		else:
-			self.send("ERR", {'text': 'Login fail, nonexistent account'})
-		return False
-
-	def changepass(self, password):
-		# Generate a random salt and append it to the password
-		salt = str(random.random())
-		combined = password+salt
-		self.password = "%s:%s" % (salt, hashlib.sha512(combined.encode()).hexdigest())
-		self.save_and_commit()
-
-	def register(self, username, password):
-		username = str(filter_username(username))
-		# User can't already exist
-		if find_db_id_by_username(username) != None:
-			return False
-		self.temporary = False
-		self.username = username
-		self.changepass(password)
-		# db_id will be set because changepass calls save_and_commit()
-		return True
+class FakeClient(object):
+	def __init__(self, connection):
+		self.connection = weakref.ref(connection)
+		self.map = None
 
 	def is_client(self):
-		return True
+		return False
+
+	def send(self, command_type, command_params):
+		connection = self.connection()
+		if connection:
+			connection.send(command_type, command_params)
+
+	def send_string(self, raw, is_chat=False):
+		connection = self.connection()
+		if connection:
+			connection.send(raw, is_chat=is_chat)
+
+	def start_batch(self):
+		pass
+
+	def finish_batch(self):
+		pass
+
+	def disconnect(self, text=None, reason=''):
+		connection = self.connection()
+		if connection:
+			connection.disconnect(text=text, reason=reason)

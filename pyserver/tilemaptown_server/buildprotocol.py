@@ -14,10 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import json, datetime, time, types
+import json, datetime, time, types, weakref
 from .buildglobal import *
 from .buildcommand import handle_user_command, escape_tags, tile_is_okay, data_disallowed_for_entity_type
 from .buildentity import Entity
+from .buildclient import Client
 
 handlers = {}
 command_privilege_level = {} # minimum required privilege level required for the command; see user_privilege in buildglobal.py
@@ -882,15 +883,46 @@ server_feature_attribute = {
 
 @protocol_command(pre_identify=True)
 def fn_IDN(map, client, arg, echo):
-	if client.identified:
+	if client.is_client(): # Already identified
+		return
+	connection = client.connection()
+	if not connection:
 		return
 
 	override_map = None
 	if "map" in arg:
 		override_map = arg["map"]
-	# Other overrides
-	if "name" in arg:
-		client.name = escape_tags(arg["name"])
+
+	def login_successful():
+		new_client.send("IDN", ack_info if ack_info != {} else None)
+
+		if len(Config["Server"]["MOTD"]):
+			new_client.send("MSG", {'text': Config["Server"]["MOTD"]})
+
+		if Config["Server"]["BroadcastConnects"]:
+			text = '%s has connected!' % new_client.name_and_username()
+			for u in AllClients:
+				if u is not new_client:
+					u.send("MSG", {'text': text})
+
+		# Bot and user counts
+		if "bot" in arg:
+			if arg["bot"]:
+				new_client.user_flags |= userflag['bot']
+			else:
+				new_client.user_flags &= ~userflag['bot']
+
+		bot_count = 0
+		for c in AllClients:
+			if c.user_flags & userflag['bot']:
+				bot_count += 1
+		new_client.send("MSG", {'text': 'Users connected: %d' % (len(AllClients)-bot_count) + ('' if bot_count == 0 else '. Bots connected: %d.' % bot_count)})
+		new_client.login_successful_callback = None
+
+	#######################################################
+	new_client = Client(connection)
+	connection.entity = new_client
+	new_client.login_successful_callback = login_successful
 
 	# Check the features the client requested
 	ack_info = {}
@@ -899,53 +931,42 @@ def fn_IDN(map, client, arg, echo):
 		for key, value in arg["features"].items():
 			if key in available_server_features: # TODO: check if specified version is >= minimum version
 				if key in server_feature_attribute:
-					setattr(client, server_feature_attribute[key], True)
+					setattr(new_client, server_feature_attribute[key], True)
 
 				# Add it to the set and acnowledge it too
-				client.features.add(key)
+				new_client.features.add(key)
 				ack_info["features"][key] = {"version": available_server_features[key]["version"]}
-
-	def login_successful():
-		client.identified = True
-		client.send("IDN", ack_info if ack_info != {} else None)
-
-		if len(Config["Server"]["MOTD"]):
-			client.send("MSG", {'text': Config["Server"]["MOTD"]})
-
-		if Config["Server"]["BroadcastConnects"]:
-			text = '%s has connected!' % client.name_and_username()
-			for u in AllClients:
-				if u is not client:
-					u.send("MSG", {'text': text})
-
-		# Bot and user counts
-		if "bot" in arg:
-			if arg["bot"]:
-				client.user_flags |= userflag['bot']
-			else:
-				client.user_flags &= ~userflag['bot']
-
-		bot_count = 0
-		for c in AllClients:
-			if c.user_flags & userflag['bot']:
-				bot_count += 1
-		client.send("MSG", {'text': 'Users connected: %d' % (len(AllClients)-bot_count) + ('' if bot_count == 0 else '. Bots connected: %d.' % bot_count)})
-		client.login_successful_callback = None
-
-	client.login_successful_callback = login_successful
 
 	# Now check the username and password and actually log in
 	if arg != {} and "username" in arg and "password" in arg:
-		if not client.login(filter_username(arg["username"]), arg["password"], override_map=override_map):
+		old_connection = None
+		entity_id = find_db_id_by_username(arg["username"])
+		if entity_id != None and entity_id in AllEntitiesByDB and connection.test_login(arg["username"], arg["password"]):
+			#TODO: figure out the logic here!!
+			new_client = AllEntitiesByDB[entity_id]
+			old_connection = new_client.connection()
+			connection.entity = new_client
+			new_client.connection = weakref.ref(connection)
+			new_client.login_successful_callback = login_successful
+			if old_connection:
+				old_connection.entity = None
+				old_connection.disconnect(reason="LoggedInElsewhere")
+
+		# Log into an existing account
+		if not connection.login(filter_username(arg["username"]), arg["password"], new_client, override_map=override_map):
 			print("Failed login for "+filter_username(arg["username"]))
-			client.disconnect(reason="BadLogin")
+			connection.disconnect(reason="BadLogin")
+			entity_id.login_successful_callback = None
 			return
 	else:
-		if not override_map or not client.switch_map(override_map[0], new_pos=None if (len(override_map) == 1) else (override_map[1:])):
-			client.switch_map(get_database_meta('default_map'))
+		# Become a guest
+		if "name" in arg:
+			new_client.name = escape_tags(arg["name"])
+		if not override_map or not new_client.switch_map(override_map[0], new_pos=None if (len(override_map) == 1) else (override_map[1:])):
+			connection.entity.switch_map(get_database_meta('default_map'))
 
-	if client.login_successful_callback: # Make sure this gets called even if the map switch fails
-		client.login_successful_callback()
+	if new_client.login_successful_callback: # Make sure this gets called even if the map switch fails
+		new_client.login_successful_callback()
 
 # -------------------------------------
 
@@ -1073,7 +1094,7 @@ def fn_EXT(map, client, arg, echo):
 # -------------------------------------
 
 def handle_protocol_command(map, client, command, arg, echo):
-	if not client.identified and command not in pre_identify_commands:
+	if not client.is_client() and command not in pre_identify_commands:
 		protocol_error(client, echo, text='Protocol command requires identifying first: %s', code='identify')
 		return
 
