@@ -893,14 +893,25 @@ def fn_IDN(map, client, arg, echo):
 	if "map" in arg:
 		override_map = arg["map"]
 
+	# Check if an entity exists already; only used for the broadcasted connection message
+	had_old_entity = False
+	if arg != {} and "username" in arg:
+		entity_id = find_db_id_by_username(arg["username"])
+		if entity_id != None:
+			had_old_entity = entity_id in AllEntitiesByDB
+
 	def login_successful():
+		connection.identified = True
 		new_client.send("IDN", ack_info if ack_info != {} else None)
 
 		if len(Config["Server"]["MOTD"]):
 			new_client.send("MSG", {'text': Config["Server"]["MOTD"]})
 
 		if Config["Server"]["BroadcastConnects"]:
-			text = '%s has connected!' % new_client.name_and_username()
+			if had_old_entity:
+				text = '[small](switching %s over to a new connection)[/small]' % new_client.name_and_username()
+			else:
+				text = '%s has connected!' % new_client.name_and_username()
 			for u in AllClients:
 				if u is not new_client:
 					u.send("MSG", {'text': text})
@@ -939,21 +950,8 @@ def fn_IDN(map, client, arg, echo):
 
 	# Now check the username and password and actually log in
 	if arg != {} and "username" in arg and "password" in arg:
-		old_connection = None
-		entity_id = find_db_id_by_username(arg["username"])
-		if entity_id != None and entity_id in AllEntitiesByDB and connection.test_login(arg["username"], arg["password"]):
-			#TODO: figure out the logic here!!
-			new_client = AllEntitiesByDB[entity_id]
-			old_connection = new_client.connection()
-			connection.entity = new_client
-			new_client.connection = weakref.ref(connection)
-			new_client.login_successful_callback = login_successful
-			if old_connection:
-				old_connection.entity = None
-				old_connection.disconnect(reason="LoggedInElsewhere")
-
 		# Log into an existing account
-		if not connection.login(filter_username(arg["username"]), arg["password"], new_client, override_map=override_map):
+		if not connection.login(filter_username(arg["username"]), arg["password"], new_client, override_map=override_map, announce_login=False):
 			print("Failed login for "+filter_username(arg["username"]))
 			connection.disconnect(reason="BadLogin")
 			entity_id.login_successful_callback = None

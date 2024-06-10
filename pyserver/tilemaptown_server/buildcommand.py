@@ -1782,8 +1782,6 @@ def fn_roffset(map, client, context, arg):
 def fn_gwho(map, client, context, arg):
 	names = ''
 	for u in AllClients:
-		if not u.identified:
-			continue
 		if len(names) > 0:
 			names += ', '
 		names += u.name_and_username()

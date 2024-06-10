@@ -83,7 +83,6 @@ class Client(Entity):
 		# Allow cleaning up BotWatch info
 		self.listening_maps = set() # tuples of (category, map)
 
-		self.identified = False
 		self.temporary = True # Temporary entity until they identify
 		self.images_and_tilesets_received_so_far = set()
 
@@ -275,6 +274,7 @@ class Connection(object):
 		self.ip = ip
 		self.entity = FakeClient(self)
 		self.identified = False
+		self.username = None
 
 	def send(self, command_type, command_params):
 		""" Send a command to the client """
@@ -318,20 +318,36 @@ class Connection(object):
 		print("Unrecognized password algorithm \"%s\" for \"%s\"" % (passalgo, username))
 		return False
 
-	def login(self, username, password, client, override_map=None):
+	def login(self, username, password, client, override_map=None, announce_login=True):
 		""" Attempt to log the client into an account """
 		username = filter_username(username)
 
 		login_successful = self.test_login(username, password)
 
 		if login_successful == True:
+			# Don't allow multiple connections to be tied to the same account at once
+			entity_id = find_db_id_by_username(username)
+			had_old_entity = entity_id in AllEntitiesByDB
+			if had_old_entity:
+				old_entity = AllEntitiesByDB[entity_id]
+				old_connection = old_entity.connection()
+				old_entity.save_on_clean_up = True
+				old_entity.clean_up()
+				if old_connection:
+					old_connection.entity = None
+					old_connection.disconnect(reason="LoggedInElsewhere")
+				del old_entity
+				del old_connection
+
+			self.username = username
 			client.load(username, override_map=override_map)
 
 			print("login: \"%s\" from %s" % (username, self.ip))
 			client.temporary = False
 
 			if client.map:
-				client.map.broadcast("MSG", {'text': client.name+" has logged in ("+client.username+")"})
+				if announce_login:
+					client.map.broadcast("MSG", {'text': client.name+" has logged in ("+client.username+")"})
 				client.map.broadcast("WHO", {'add': client.who()}, remote_category=botwatch_type['entry']) # update client view
 			else:
 				client.send("MSG", {'text': "Your last map wasn't saved correctly. Sending you to the default one..."})

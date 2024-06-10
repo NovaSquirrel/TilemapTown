@@ -129,6 +129,8 @@ async def client_handler(websocket, path):
 				if connection.entity.build_count or connection.entity.delete_count:
 					disconnect_extra = " -  Built %d, Deleted %d" % (connection.entity.build_count, connection.entity.delete_count)
 				print("disconnected: %s (%s, \"%s\")%s" % (ip, connection.entity.username or "?", connection.entity.name, disconnect_extra))
+			elif connection.identified:
+				print("disconnected: %s (%s, logged in elsewhere)" % (ip, connection.username))
 			else:
 				print("disconnected: %s (didn't identify)" % ip)
 			connection.ws = None
