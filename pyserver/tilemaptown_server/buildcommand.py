@@ -1174,6 +1174,9 @@ def fn_mapsize(map, client, context, arg):
 def fn_coords(map, client, context, arg):
 	respond(context, 'You\'re standing on %d,%d' % (client.x, client.y))
 
+@cmd_command()
+def fn_tpherecommand(map, client, context, arg):
+	respond(context, 'You can teleport here with [tt]/map %d %d %d[/tt]' % (map.db_id, client.x, client.y))
 
 def clone_tile_into_inventory(client, tile):
 	e = Entity(entity_type['map_tile'], creator_id=client.db_id)
@@ -2108,6 +2111,12 @@ def fn_pyeval(map, client, context, arg):
 	if len(arg) == 0:
 		return
 	respond(context, str(eval(arg.replace("✨", "\n"))))
+
+@cmd_command(privilege_level="server_admin")
+def fn_pyexec(map, client, context, arg):
+	if len(arg) == 0:
+		return
+	respond(context, str(exec(compile(arg.replace("✨", "\n"), "test", "exec"))))
 
 @cmd_command(privilege_level="server_admin")
 def fn_flushbuildlog(map, client, context, arg):

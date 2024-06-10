@@ -170,6 +170,8 @@ Sets your "home"
 /home
 Teleports to your "home"
 
+/tpherecommand
+Get a command you can paste to other people that will allow them to teleport to your current location
 
 ---Carrying users---
 /carry user
