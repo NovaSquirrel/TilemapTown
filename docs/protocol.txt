@@ -179,6 +179,11 @@ There may be an additional boolean field named "update" which is set to true whe
 "new_id" is mostly used when a temporary object gets saved to the database, 
 For WHO update, you can supply another ID instead of yours with the "rc" parameter, if you have "remote_command" permission for that entity.
 
+A server-->client WHO may have a "type" parameter on it, which indicates which user list specifically is being managed here.
+If it's not present, treat it like it's "map"; values are:
+	"map" - User list for a map (usually the one the player is currently in; "remote_map" will be provided if not)
+	"watch" - Users in your watch list that are currently online
+
 Clients can send updates about themselves, but only keys that the servers knows to be OK, such as "typing".
 For client-to-server WHO updates, "id" is ignored if provided.
 

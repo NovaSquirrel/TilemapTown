@@ -119,10 +119,12 @@ if len(Config["Logs"]["BuildFile"]):
 
 # Important information shared by each module
 ServerShutdown = [-1, False] # First value is seconds left, second value is true for restarts but false for shutdowns
-AllClients      = weakref.WeakSet()
+AllClients      = weakref.WeakSet()             # All connections curently in the world
+AllConnections  = weakref.WeakSet()             # All connections, regardless of if they're in the world
 AllMaps         = weakref.WeakSet()             # Maps only; used by /whereare
 AllEntitiesByDB = weakref.WeakValueDictionary() # All entities (indexed by database ID)
 AllEntitiesByID = weakref.WeakValueDictionary() # All entities (indexed by temporary ID)
+ConnectionsByUsername = weakref.WeakValueDictionary() # Look up connections by lowercased username
 
 # Remote map-watching for bots
 botwatch_type = {}
@@ -230,7 +232,7 @@ creatable_entity_types = ('text', 'image', 'map_tile', 'tileset', 'reference', '
 
 # Important shared functions
 def broadcast_to_all(text):
-	for u in AllClients:
+	for u in AllConnections:
 		u.send("MSG", {'text': text, 'class': 'broadcast_message'})
 
 def find_client_by_db_id(id, inside=None):
@@ -249,6 +251,9 @@ def find_client_by_username(username, inside=None):
 		if username == u.username:
 			return u
 	return None
+
+def find_connection_by_username(username):
+	return ConnectionsByUsername.get(username.lower(), None)
 
 def find_username_by_db_id(dbid):
 	c = Database.cursor()

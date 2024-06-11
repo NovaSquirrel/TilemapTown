@@ -85,6 +85,7 @@ async def client_handler(websocket, path):
 	connection = Connection(websocket, ip)
 	if connection.test_server_banned():
 		return
+	AllConnections.add(connection)
 
 	print("connected: %s %s" % (path, ip))
 	total_connections[0] += 1
@@ -138,8 +139,8 @@ async def client_handler(websocket, path):
 			exception_type = sys.exc_info()[0]
 			connection.entity.send("ERR", {'text': 'An exception was thrown: %s' % exception_type.__name__, 'code': 'exception', 'detail': exception_type.__name__})
 			if isinstance(connection.entity, Client):
-				while connection.entity.make_batch:
-					connection.entity.finish_batch()
+				while connection.make_batch:
+					connection.finish_batch()
 			print("Unexpected error:", sys.exc_info()[0])
 			print(sys.exc_info()[1])
 			traceback.print_tb(sys.exc_info()[2])

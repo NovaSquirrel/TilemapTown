@@ -141,7 +141,7 @@ def validate_client_who(id, data):
 def must_be_map_owner(client, echo, admin_okay, give_error=True):
 	if client.map == None:
 		return False
-	if (client.db_id != None and client.map.owner_id == client.db_id) or client.oper_override or (admin_okay and client.has_permission(client.map, permission['admin'], False)):
+	if (client.db_id != None and client.map.owner_id == client.db_id) or client.connection_attr('oper_override') or (admin_okay and client.has_permission(client.map, permission['admin'], False)):
 		return True
 	elif give_error:
 		protocol_error(client, echo, text='You don\'t have permission to do that', code='missing_permission', detail='admin' if admin_okay else None, subject_id=client.map)
@@ -506,7 +506,7 @@ def fn_BAG(map, client, arg, echo):
 		if delete_me == None or delete_me.is_client():
 			protocol_error(client, echo, text='Can\'t delete %s' % delete['id'], code='not_found', subject_id=delete['id'])
 			return
-		elif client.oper_override:
+		elif client.connection_attr('oper_override'):
 			pass
 		elif delete_me.owner_id == None and delete_me.creator_temp_id and delete_me.creator_temp_id not in AllEntitiesByID:
 			pass
@@ -919,13 +919,13 @@ def fn_IDN(map, client, arg, echo):
 		# Bot and user counts
 		if "bot" in arg:
 			if arg["bot"]:
-				new_client.user_flags |= userflag['bot']
+				connection.user_flags |= userflag['bot']
 			else:
-				new_client.user_flags &= ~userflag['bot']
+				connection.user_flags &= ~userflag['bot']
 
 		bot_count = 0
 		for c in AllClients:
-			if c.user_flags & userflag['bot']:
+			if (c.connection_attr('user_flags') or 0) & userflag['bot']:
 				bot_count += 1
 		new_client.send("MSG", {'text': 'Users connected: %d' % (len(AllClients)-bot_count) + ('' if bot_count == 0 else '. Bots connected: %d.' % bot_count)})
 		new_client.login_successful_callback = None
@@ -941,11 +941,12 @@ def fn_IDN(map, client, arg, echo):
 		ack_info["features"] = {}
 		for key, value in arg["features"].items():
 			if key in available_server_features: # TODO: check if specified version is >= minimum version
+				# TODO: Probably migrate these all to the connection, instead of the entity?
 				if key in server_feature_attribute:
-					setattr(new_client, server_feature_attribute[key], True)
+					setattr(connection, server_feature_attribute[key], True)
 
-				# Add it to the set and acnowledge it too
-				new_client.features.add(key)
+				# Add it to the set and acknowledge it too
+				connection.features.add(key)
 				ack_info["features"][key] = {"version": available_server_features[key]["version"]}
 
 	# Now check the username and password and actually log in

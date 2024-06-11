@@ -20,7 +20,43 @@ from .buildentity import *
 
 userCounter = 1
 
-class Client(Entity):
+class ClientMixin(object):
+	def send(self, command_type, command_params):
+		connection = self.connection()
+		if connection:
+			connection.send(command_type, command_params)
+
+	def send_string(self, raw, is_chat=False):
+		connection = self.connection()
+		if connection:
+			connection.send_string(raw, is_chat=is_chat)
+
+	def start_batch(self):
+		connection = self.connection()
+		if connection:
+			connection.start_batch()
+
+	def finish_batch(self):
+		connection = self.connection()
+		if connection:
+			connection.finish_batch()
+
+	def disconnect(self, text=None, reason=''):
+		connection = self.connection()
+		if connection:
+			connection.disconnect(text=text, reason=reason)
+
+	def connection_attr(self, attribute):
+		connection = self.connection()
+		if connection:
+			return getattr(connection, attribute)
+		return None
+
+	@property
+	def username(self):
+		return self.connection_attr('username')
+
+class Client(ClientMixin, Entity):
 	def __init__(self, connection):
 		super().__init__(entity_type['user'])
 
@@ -39,18 +75,8 @@ class Client(Entity):
 		self.build_count = 0     # Amount this person has built
 		self.delete_count = 0    # Amount this person has deleted
 
-		self.client_settings = ""
-
-		# account stuff
-		self.username = None
-		self.password = None # actually the password hash
-
 		self.status_type = None
 		self.status_message = None
-
-		self.ignore_list = set()
-		self.watch_list = set()
-		self.user_flags = 0
 
 		self.sent_resources_yet = False
 		self.no_inventory_messages = False # don't send BAG updates when adding or removing items
@@ -58,21 +84,6 @@ class Client(Entity):
 		# Information for /undodel
 		self.undo_delete_data = None
 		self.undo_delete_when = None
-
-		self.features = set() # list of feature names
-
-		# see_past_map_edge variables
-		self.see_past_map_edge = False
-		self.loaded_maps = set() # maps the client should have loaded currently
-
-		# "batch" extension variables
-		self.can_batch_messages = False
-		self.messages_in_batch = []
-		self.make_batch = 0 # Integer instead of bool. Allows layering batches on top of each other and waiting until the bottom level is done.
-
-		# Other extensions
-		self.receive_build_messages = False
-		self.can_forward_messages_to = False
 
 		# Clients keep the entities they're using for message forwarding alive by keeping strong references to them in this set
 		self.keep_entities_loaded = set()
@@ -101,47 +112,6 @@ class Client(Entity):
 		for p in self.listening_maps:
 			BotWatch[p[0]][p[1]].remove(self)
 		super().clean_up()
-
-	def send(self, command_type, command_params):
-		self.send_string(make_protocol_message_string(command_type, command_params))
-
-	def send_string(self, raw, is_chat=False):
-		connection = self.connection()
-		if connection == None or connection.ws == None:
-			return
-		if self.make_batch and self.can_batch_messages:
-			self.messages_in_batch.append(raw)
-		else:
-			asyncio.ensure_future(connection.ws.send(raw))
-
-	def start_batch(self):
-		""" Start batching messages """
-		self.make_batch += 1 # Increase batch level
-
-	def finish_batch(self):
-		""" Send all of the queued messages and clear the queue """
-		if self.make_batch > 0:
-			self.make_batch -= 1
-			# If it's not the bottom layer yet, wait until it is
-			if self.make_batch > 0:
-				return
-		connection = self.connection()
-		if connection == None or connection.ws == None:
-			return
-		n = len(self.messages_in_batch)
-		if n == 0:
-			return
-		elif n == 1: # If there's one message, format it normally
-			asyncio.ensure_future(connection.ws.send(self.messages_in_batch[0]))
-		else:
-			asyncio.ensure_future(connection.ws.send("BAT "+"\n".join(self.messages_in_batch)))
-		# Clear out the batch
-		self.messages_in_batch = []
-
-	def disconnect(self, text=None, reason=''):
-		connection = self.connection()
-		if connection:
-			connection.disconnect(text=text, reason=reason)
 
 	def add_to_contents(self, item):
 		super().add_to_contents(item)
@@ -183,58 +153,42 @@ class Client(Entity):
 	def username_or_id(self):
 		return self.username or self.protocol_id()
 
-	def who(self):
-		w = super().who()
+	# Shared code for who() and remote_who()
+	def add_who_info(self, w):
 		w.update({
-			'username': self.username,
 			'status': self.status_type,
 			'status_message': self.status_message
 		})
-		if self.user_flags & userflag['bot']:
-			w['bot'] = True
+		connection = self.connection()
+		if connection != None:
+			w['username'] = connection.username
+			if connection.user_flags & userflag['bot']:
+				w['bot'] = True
 		return w
+
+	def who(self):
+		return self.add_who_info(super().who())
+
+	def remote_who(self):
+		return self.add_who_info(super().remote_who())
 
 	def save(self):
 		""" Save user information to the database """
 		super().save()
 		if self.db_id == None:
 			return
-
-		# Create new user if user doesn't already exist
-		c = Database.cursor()
-		c.execute('SELECT entity_id FROM User WHERE entity_id=?', (self.db_id,))
-		if c.fetchone() == None:
-			c.execute("INSERT INTO User (entity_id) VALUES (?)", (self.db_id,))
-			self.db_id = c.lastrowid
-			if self.db_id == None:
-				return
-
-		# Update the user
-		values = (self.username, dumps_if_not_empty(list(self.watch_list)), dumps_if_not_empty(list(self.ignore_list)), self.client_settings, datetime.datetime.now(), self.user_flags, self.db_id)
-		c.execute("UPDATE User SET username=?, watch=?, ignore=?, client_settings=?, last_seen_at=?, flags=? WHERE entity_id=?", values)
+		connection = self.connection()
+		if connection:
+			connection.save_settings(self.db_id)
 
 	def load(self, username, override_map=None):
 		""" Load an account from the database """
-		c = Database.cursor()
-		
-		c.execute('SELECT entity_id, watch, ignore, client_settings, flags FROM User WHERE username=?', (username,))
-		result = c.fetchone()
-		if result == None:
-			return None
-
-		# TODO
-
-		# If the password is good, copy the other stuff over
-		self.username = username
-		self.assign_db_id(result[0])
-		self.watch_list = set(json.loads(result[1] or "[]"))
-		self.ignore_list = set(json.loads(result[2] or "[]"))
-		self.client_settings = result[3]
-		self.user_flags = result[4]
-		if self.user_flags == None:
-			self.user_flags = 0
+		connection = self.connection()
+		if not connection or not connection.load_settings(username):
+			return False
+		self.assign_db_id(connection.db_id)
+	
 		# And copy over the base entity stuff
-
 		self.no_inventory_messages = True  # because load() will load in objects contained by this one
 		result = super().load(self.db_id, override_map=override_map)
 		self.no_inventory_messages = False
@@ -242,6 +196,78 @@ class Client(Entity):
 
 	def refresh_client_inventory(self):
 		self.send("BAG", {'list': [child.bag_info() for child in self.all_children()], 'clear': True})
+
+	def is_client(self):
+		return True
+
+class Connection(object):
+	def __init__(self, websocket, ip):
+		self.ws = websocket
+		self.ip = ip
+		self.entity = FakeClient(self)
+		self.identified = False
+		self.oper_override = False
+
+		self.client_settings = ""
+		self.ignore_list = set()
+		self.watch_list = set()
+		self.user_flags = 0
+
+		# Extra copy of these here for convenience
+		self.username = None
+		self.db_id = None
+
+		# "batch" extension variables
+		self.can_batch_messages = False
+		self.messages_in_batch = []
+		self.make_batch = 0 # Integer instead of bool. Allows layering batches on top of each other and waiting until the bottom level is done.
+
+		# "see_past_map_edge" variables
+		self.see_past_map_edge = False
+		self.loaded_maps = set() # maps the client should have loaded currently
+
+		# Other extensions
+		self.receive_build_messages = False
+		self.can_forward_messages_to = False
+		self.features = set() # list of feature names
+
+	def load_settings(self, username):
+		if username == None:
+			return
+		c = Database.cursor()
+		
+		c.execute('SELECT entity_id, watch, ignore, client_settings, flags FROM User WHERE username=?', (username,))
+		result = c.fetchone()
+		if result == None:
+			return False
+
+		# If the password is good, copy the other stuff over
+		self.username = username
+		self.db_id = result[0]
+		self.watch_list = set(json.loads(result[1] or "[]"))
+		self.ignore_list = set(json.loads(result[2] or "[]"))
+		self.client_settings = result[3]
+		self.user_flags = result[4]
+		if self.user_flags == None:
+			self.user_flags = 0
+		return True
+
+	def save_settings(self, db_id):
+		if db_id == None:
+			return
+
+		# Create new user if user doesn't already exist
+		c = Database.cursor()
+		c.execute('SELECT entity_id FROM User WHERE entity_id=?', (db_id,))
+		if c.fetchone() == None:
+			c.execute("INSERT INTO User (entity_id) VALUES (?)", (db_id,))
+			self.db_id = c.lastrowid
+			if self.db_id == None:
+				return
+
+		# Update the user
+		values = (self.username, dumps_if_not_empty(list(self.watch_list)), dumps_if_not_empty(list(self.ignore_list)), self.client_settings, datetime.datetime.now(), self.user_flags, db_id)
+		c.execute("UPDATE User SET username=?, watch=?, ignore=?, client_settings=?, last_seen_at=?, flags=? WHERE entity_id=?", values)
 
 	def changepass(self, password):
 		# Generate a random salt and append it to the password
@@ -258,23 +284,12 @@ class Client(Entity):
 		# User can't already exist
 		if find_db_id_by_username(username) != None:
 			return False
-		self.temporary = False
+		self.entity.temporary = False
 		self.username = username
-		self.save()
+		self.enity.save()
 		self.changepass(password)
-		# db_id will be set because of self.save()
+		# db_id will be set because of self.entity.save()
 		return True
-
-	def is_client(self):
-		return True
-
-class Connection(object):
-	def __init__(self, websocket, ip):
-		self.ws = websocket
-		self.ip = ip
-		self.entity = FakeClient(self)
-		self.identified = False
-		self.username = None
 
 	def send(self, command_type, command_params):
 		""" Send a command to the client """
@@ -282,11 +297,37 @@ class Connection(object):
 			return
 		self.send_string(make_protocol_message_string(command_type, command_params))
 
-	def send_string(self, raw):
+	def send_string(self, raw, is_chat=False):
 		""" Send a command to the client that's already in string form """
 		if self.ws == None:
 			return
-		asyncio.ensure_future(self.ws.send(raw))
+		if self.make_batch and self.can_batch_messages:
+			self.messages_in_batch.append(raw)
+		else:
+			asyncio.ensure_future(self.ws.send(raw))
+
+	def start_batch(self):
+		""" Start batching messages """
+		self.make_batch += 1 # Increase batch level
+
+	def finish_batch(self):
+		""" Send all of the queued messages and clear the queue """
+		if self.make_batch > 0:
+			self.make_batch -= 1
+			# If it's not the bottom layer yet, wait until it is
+			if self.make_batch > 0:
+				return
+		if self.ws == None:
+			return
+		n = len(self.messages_in_batch)
+		if n == 0:
+			return
+		elif n == 1: # If there's one message, format it normally
+			asyncio.ensure_future(self.ws.send(self.messages_in_batch[0]))
+		else:
+			asyncio.ensure_future(self.ws.send("BAT "+"\n".join(self.messages_in_batch)))
+		# Clear out the batch
+		self.messages_in_batch = []
 
 	def test_login(self, username, password):
 		c = Database.cursor()
@@ -326,10 +367,10 @@ class Connection(object):
 
 		if login_successful == True:
 			# Don't allow multiple connections to be tied to the same account at once
-			entity_id = find_db_id_by_username(username)
-			had_old_entity = entity_id in AllEntitiesByDB
+			self.db_id = find_db_id_by_username(username)
+			had_old_entity = self.db_id in AllEntitiesByDB
 			if had_old_entity:
-				old_entity = AllEntitiesByDB[entity_id]
+				old_entity = AllEntitiesByDB[self.db_id]
 				old_connection = old_entity.connection()
 				old_entity.save_on_clean_up = True
 				old_entity.clean_up()
@@ -340,6 +381,7 @@ class Connection(object):
 				del old_connection
 
 			self.username = username
+			ConnectionsByUsername[username] = self
 			client.load(username, override_map=override_map)
 
 			print("login: \"%s\" from %s" % (username, self.ip))
@@ -347,7 +389,7 @@ class Connection(object):
 
 			if client.map:
 				if announce_login:
-					client.map.broadcast("MSG", {'text': client.name+" has logged in ("+client.username+")"})
+					client.map.broadcast("MSG", {'text': client.name+" has logged in ("+username+")"})
 				client.map.broadcast("WHO", {'add': client.who()}, remote_category=botwatch_type['entry']) # update client view
 			else:
 				client.send("MSG", {'text': "Your last map wasn't saved correctly. Sending you to the default one..."})
@@ -426,31 +468,20 @@ class Connection(object):
 				self.send("ERR", {'text': text})
 			asyncio.ensure_future(self.ws.close(reason=reason))
 
-class FakeClient(object):
+class FakeClient(ClientMixin, object):
 	def __init__(self, connection):
 		self.connection = weakref.ref(connection)
 		self.map = None
+		self.map_id = None
 
 	def is_client(self):
 		return False
 
-	def send(self, command_type, command_params):
-		connection = self.connection()
-		if connection:
-			connection.send(command_type, command_params)
+	def protocol_id(self):
+		return self.connection_attr("db_id")
 
-	def send_string(self, raw, is_chat=False):
-		connection = self.connection()
-		if connection:
-			connection.send(raw, is_chat=is_chat)
+	def username_or_id(self):
+		return self.connection_attr("username")
 
-	def start_batch(self):
-		pass
-
-	def finish_batch(self):
-		pass
-
-	def disconnect(self, text=None, reason=''):
-		connection = self.connection()
-		if connection:
-			connection.disconnect(text=text, reason=reason)
+	def name_and_username(self):
+		return self.connection_attr("username")

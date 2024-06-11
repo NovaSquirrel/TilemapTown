@@ -405,6 +405,10 @@ function receiveServerMessage(cmd, arg) {
       NeedMapRedraw = true;
       break;
     case "WHO":
+      if(arg.type !== undefined && arg.type !== 'map')
+        break;
+      if("remote_map" in arg)
+        break;
       if(arg.you)
         PlayerYou = arg.you;
       if(arg.list) {

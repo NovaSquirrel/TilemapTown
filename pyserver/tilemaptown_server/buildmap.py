@@ -71,21 +71,24 @@ class Map(Entity):
 	def send_map_info(self, item):
 		if not item.is_client(): # Map info should only get sent to clients, but it doesn't hurt to be sure
 			return
+		connection = item.connection()
+		if connection == None:
+			return
 		if not self.map_data_loaded:
 			self.load_data()
 
 		# Always send MAI for the map you move to, because it's the formal signal that you entered a new map
-		item.send("MAI", self.map_info(user=item))
+		connection.send("MAI", self.map_info(user=item))
 		# Skip the map data if the client should already have it
-		if self.db_id not in item.loaded_maps:
-			item.send("MAP", self.map_section(0, 0, self.width-1, self.height-1))
+		if self.db_id not in connection.loaded_maps:
+			connection.send("MAP", self.map_section(0, 0, self.width-1, self.height-1))
 
-		if item.see_past_map_edge and self.edge_ref_links:
+		if connection.see_past_map_edge and self.edge_ref_links:
 			for linked_map in self.edge_ref_links:
 				if linked_map == None:
 					continue
 				# Only send the client maps they wouldn't have yet
-				if linked_map.db_id in item.loaded_maps:
+				if linked_map.db_id in connection.loaded_maps:
 					continue
 
 				# If map data is not loaded, it has to be read before MAI because MAI's edge_links comes from the map's data field
@@ -104,18 +107,18 @@ class Map(Entity):
 
 				info = linked_map.map_info(user=item)
 				info['remote_map'] = linked_map.db_id
-				item.send("MAI", info)
+				connection.send("MAI", info)
 
 				if linked_map.map_data_loaded:
 					section = linked_map.map_section(0, 0, linked_map.width-1, linked_map.height-1)
 				else:
 					section = {'pos': from_db['pos'], 'default': from_db['default'], 'turf': from_db['turf'], 'obj': from_db['obj']}
 				section['remote_map'] = linked_map.db_id
-				item.send("MAP", section)
+				connection.send("MAP", section)
 
-			item.loaded_maps = set([x.db_id for x in self.edge_ref_links if x != None] + [self.db_id])
-		if item.see_past_map_edge and not self.edge_ref_links:
-			item.loaded_maps = set([self.db_id])
+			connection.loaded_maps = set([x.db_id for x in self.edge_ref_links if x != None] + [self.db_id])
+		if connection.see_past_map_edge and not self.edge_ref_links:
+			connection.loaded_maps = set([self.db_id])
 
 	def resend_map_info_to_users(self):
 		for user in self.contents:

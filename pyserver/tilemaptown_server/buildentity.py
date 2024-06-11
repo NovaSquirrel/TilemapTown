@@ -89,8 +89,6 @@ class Entity(object):
 		self.temp_permissions_given_to = weakref.WeakSet()
 		self.temp_permissions = weakref.WeakKeyDictionary() # temp_permissions[subject] = permission bits
 
-		self.oper_override = False
-
 		# Save when clean_up() is called
 		self.save_on_clean_up = False
 		self.cleaned_up_already = False
@@ -149,17 +147,25 @@ class Entity(object):
 		# Normal entities don't get messages, but they can if there's a forward
 		if is_chat or (self.forward_messages_to != None and commandType in self.forward_message_types):
 			c = get_entity_by_id(self.forward_messages_to, load_from_db=False)
-			if c != None and c.can_forward_messages_to:
-				asyncio.ensure_future(c.ws.send("FWD %s %s" % (self.protocol_id(), make_protocol_message_string(commandType, commandParams))))
+			if c != None and c.is_client():
+				connection = c.connection()
+				if connection != None and connection.ws != None and connection.can_forward_messages_to:
+					asyncio.ensure_future(connection.ws.send("FWD %s %s" % (self.protocol_id(), make_protocol_message_string(commandType, commandParams))))
 
 	def send_string(self, raw, is_chat=False):
 		# Directly send a string, so you can json.dumps once and reuse it for everyone
+
+		# Treat chat as a separate pseudo message type
 		if is_chat and 'CHAT' not in self.forward_message_types:
 			return
+
+		# Normal entities don't get messages, but they can if there's a forward
 		if is_chat or (self.forward_messages_to != None and raw[0:3] in self.forward_message_types):
 			c = get_entity_by_id(self.forward_messages_to, load_from_db=False)
-			if c != None and c.can_forward_messages_to:
-				asyncio.ensure_future(c.ws.send("FWD %s %s" % (self.protocol_id(), raw)))
+			if c != None and c.is_client():
+				connection = c.connection()
+				if connection != None and connection.ws != None and connection.can_forward_messages_to:
+					asyncio.ensure_future(connection.ws.send("FWD %s %s" % (self.protocol_id(), raw)))
 
 	def start_batch(self):
 		# Only for clients
@@ -176,7 +182,9 @@ class Entity(object):
 			is_chat = command_type == 'MSG' and command_params and 'name' in command_params
 			send_me = make_protocol_message_string(command_type, command_params) # Get the string once and reuse it
 			for client in self.contents:
-				if require_extension == None or (client.is_client() and getattr(client, require_extension)):
+				if require_extension == None:
+					client.send_string(send_me, is_chat=is_chat)
+				elif client.is_client() and client.connection_attr(require_extension):
 					client.send_string(send_me, is_chat=is_chat)
 
 		# Add remote map on the params if needed
@@ -195,18 +203,20 @@ class Entity(object):
 				if linked_map == None:
 					continue
 				for client in linked_map.contents:
-					if not client.is_client() or not client.see_past_map_edge \
-					or (require_extension != None and (not client.is_client() or not getattr(client, require_extension))):
+					if not client.is_client():
+						continue
+					if not client.connection_attr('see_past_map_edge') or (require_extension != None and client.connection_attr(connection, require_extension)):
 						continue
 					client.send(command_type, command_params)
 
 		""" Also send it to any registered listeners """
 		if do_listeners:
-			for client in BotWatch[remote_category][self.db_id]:
+			for connection in BotWatch[remote_category][self.db_id]:
 				# don't send twice to people on the map
-				if ((client.map_id != self.db_id) or remote_only) \
-				and (require_extension == None or (client.is_client() and getattr(client, require_extension))):
-					client.send(command_type, command_params)
+				if not remote_only and (connection.map_id == self.db_id):
+					continue
+				if require_extension == None or getattr(connection, require_extension):
+					connection.send(command_type, command_params)
 
 	# Allow other classes to respond to having things added to them
 
@@ -359,7 +369,7 @@ class Entity(object):
 		map_value = default
 
 		# Oper override bypasses permission checks
-		if self.oper_override:
+		if hasattr(self, 'connection') and self.connection_attr('oper_override'):
 			return True
 
 		# If you pass in an ID, see if the entity with that ID is already loaded
@@ -742,6 +752,16 @@ class Entity(object):
 				out['chat_listener'] = True
 		return out
 
+	def remote_who(self):
+		""" Like who() but without map information """
+		out = {
+			'name': self.name,
+			'pic': self.pic,
+			'desc': self.desc,
+			'id': self.protocol_id()
+		}
+		return out
+
 	def bag_info(self):
 		""" Dictionary used to describe an object for a BAG protocol message """		
 		out = {
@@ -760,7 +780,7 @@ class Entity(object):
 			'temporary': self.temporary
 		}
 		if self.is_client():
-			out['username'] = self.username
+			out['username'] = self.connection_attr('username')
 		if self.owner_id:
 			owner_username = find_username_by_db_id(self.owner_id)
 			if owner_username:
