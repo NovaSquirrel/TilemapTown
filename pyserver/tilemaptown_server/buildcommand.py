@@ -770,6 +770,36 @@ def fn_unwatch(map, client, context, arg):
 def fn_watchlist(map, client, context, arg):
 	respond(context, 'Watch list: '+str(client.connection_attr('watch_list')))
 
+user_changeable_flags = ('bot', 'hide_location', 'hide_api', 'no_watch')
+@cmd_command(category="Settings", alias=['userflag'])
+def fn_userflags(map, client, context, arg):
+	connection = client.connection()
+	if connection == None:
+		return
+	def flags_list():
+		return ', '.join([key for key in userflag if ((userflag[key] & connection.user_flags) and (userflag[key].bit_count() == 1))])
+
+	arg = arg.lower()
+	if arg == "" or arg == "list":
+		respond(context, 'Your user flags: '+flags_list())
+		return
+	param = arg.lower().split(' ')
+	if len(param) >= 2:
+		if param[0] in ('add', 'set'):
+			for flag in param[1:]:
+				if flag in user_changeable_flags:
+					connection.user_flags |= userflag[flag]
+		elif param[0] == 'del':
+			for flag in param[1:]:
+				if flag in user_changeable_flags:
+					connection.user_flags &= ~userflag[flag]
+		else:
+			respond(context, 'Unrecognized subcommand "%s"' % param[0], code='invalid_subcommand', detail=subcommand, error=True)
+			return
+		respond(context, 'Your new user flags: '+flags_list())
+	else:
+		respond(context, 'Syntax: add/del list of flags', error=True)
+
 def permission_change(map, client, context, arg, command2):
 	# Check syntax
 	param = arg.lower().split(' ')

@@ -35,14 +35,19 @@ async def town_info(request):
 
 		map_users = []
 		for u in m.contents:
-			if u.is_client() and (u.user_flags & (userflag['hide_location'] | userflag['hide_api']) == 0):
-				map_users.append(u.protocol_id())
+			if u.is_client():
+				connection = u.connection()
+				if connection and (connection.user_flags & (userflag['hide_location'] | userflag['hide_api']) == 0):
+					map_users.append(u.protocol_id())
 		where_are[m.db_id] = {'name': m.name, 'desc': m.desc, 'user_count': user_count, 'id': m.db_id, 'users': map_users}
 	
 	stats = {}	
 	bot_count = 0
 	for c in AllClients:
-		if c.user_flags & userflag['bot']:
+		connection = u.connection()
+		if not connection:
+			continue
+		if connection.user_flags & userflag['bot']:
 			bot_count += 1
 	stats['user_count'] = (len(AllClients)-bot_count)
 	stats['bot_count'] = bot_count
@@ -51,10 +56,13 @@ async def town_info(request):
 
 	users = {}
 	for u in AllClients:
-		if (u.user_flags & userflag['hide_api'] != 0) or not u.identified:
+		connection = u.connection()
+		if not connection:
 			continue
-		user_data = {'name': u.name, 'username': u.username, 'id': u.protocol_id(), 'time_online': now - u.connected_time}
-		if u.user_flags & userflag['bot']:
+		if (connection.user_flags & userflag['hide_api'] != 0):
+			continue
+		user_data = {'name': u.name, 'username': u.username, 'id': u.protocol_id(), 'time_online': now - connection.connected_time}
+		if connection.user_flags & userflag['bot']:
 			user_data['bot'] = True
 		users[u.protocol_id()] = user_data
 

@@ -22,6 +22,11 @@ Send text marked as being out-of-character
 /ignorelist
 Manage ignore list
 
+/watch username
+/unwatch username
+/watchlist
+Manage watch list
+
 /away (message, optional)
 Set or clear away status
 
@@ -44,6 +49,7 @@ Clears the map's current topic
 /oops
 Put the most recent text you tried to send back into the chat bar, so that you can have another attempt at a command.
 
+
 ---Utility---
 /getturf
 Makes a map tile object that would recreate the turf you're standing on, and puts it into your inventory.
@@ -56,6 +62,7 @@ Undoes your most recent delete
 
 /releasekeys
 If a script is currently acting on your inputs, this command cancels out that mode
+
 
 ---Account/customization---
 /nick newname
@@ -102,6 +109,16 @@ Get the list of morphs in text form (just in case you're on a client that doesn'
 /register username password
 /changepass newpass
 Manage account
+
+/userflags
+/userflags add flag
+/userflags del flag
+Set, unset and view your user flags
+Flags available:
+	bot           : Marks this user as a bot
+	hide_location : Makes this user's location private, so they will not show up in /whereare
+	hide_api      : Makes this user not show up on the API
+	no_watch      : Prevents the watch feature from working on this user
 
 
 ---User information---

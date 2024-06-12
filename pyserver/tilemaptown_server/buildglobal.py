@@ -190,11 +190,12 @@ mapflag['no_build_logs'] = 4
 
 # User flags
 userflag = {}
-userflag['bot'] = 1
-userflag['file_uploads'] = 2
-userflag['no_build_logs'] = 4
-userflag['hide_location'] = 8 # Don't show in /whereare and such
-userflag['hide_api'] = 16 # Don't show in API
+userflag['bot']           = 0x01 # Is a bot
+userflag['file_uploads']  = 0x02 # Can upload files to the server (not implemented)
+userflag['no_build_logs'] = 0x04 # Don't log when this user builds
+userflag['hide_location'] = 0x08 # Don't show in /whereare and such
+userflag['hide_api']      = 0x10 # Don't show in API
+userflag['no_watch']      = 0x20 # Don't allow other users to have you on their watch list
 
 # Entity types
 entity_type = {}
