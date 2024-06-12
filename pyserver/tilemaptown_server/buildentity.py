@@ -205,7 +205,7 @@ class Entity(object):
 				for client in linked_map.contents:
 					if not client.is_client():
 						continue
-					if not client.connection_attr('see_past_map_edge') or (require_extension != None and client.connection_attr(connection, require_extension)):
+					if not client.connection_attr('see_past_map_edge') or (require_extension != None and not client.connection_attr(require_extension)):
 						continue
 					client.send(command_type, command_params)
 

@@ -867,7 +867,9 @@ def fn_WHO(map, client, arg, echo):
 
 @protocol_command(pre_identify=True)
 def fn_PIN(map, client, arg, echo):
-	client.ping_timer = 300
+	connection = client.connection()
+	if connection:
+		connection.ping_timer = 300
 
 @protocol_command(pre_identify=True)
 def fn_VER(map, client, arg, echo):

@@ -68,10 +68,6 @@ class Client(ClientMixin, Entity):
 		self.saved_pics = {}
 		self.morphs = {}
 
-		self.ping_timer = 180
-		self.idle_timer = 0
-		self.connected_time = int(time.time())
-		self.ip = None           # for IP ban purposes
 		self.build_count = 0     # Amount this person has built
 		self.delete_count = 0    # Amount this person has deleted
 
@@ -208,12 +204,17 @@ class Connection(object):
 		self.identified = False
 		self.oper_override = False
 
+		self.ping_timer = 180
+		self.idle_timer = 0
+		self.connected_time = int(time.time())
+
+		# Settings
 		self.client_settings = ""
 		self.ignore_list = set()
 		self.watch_list = set()
 		self.user_flags = 0
 
-		# Extra copy of these here for convenience
+		# Account info
 		self.username = None
 		self.db_id = None
 
@@ -286,7 +287,7 @@ class Connection(object):
 			return False
 		self.entity.temporary = False
 		self.username = username
-		self.enity.save()
+		self.entity.save()
 		self.changepass(password)
 		# db_id will be set because of self.entity.save()
 		return True
@@ -471,6 +472,12 @@ class Connection(object):
 class FakeClient(ClientMixin, object):
 	def __init__(self, connection):
 		self.connection = weakref.ref(connection)
+
+		# Also be able to store statuses
+		self.status_type = None
+		self.status_message = None
+
+		# Placeholder stuff that'll be here for things that check for it
 		self.map = None
 		self.map_id = None
 

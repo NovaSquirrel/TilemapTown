@@ -32,7 +32,7 @@ def main_timer():
 	global ServerShutdown
 	global loop
 
-	# Disconnect pinged-out users
+	# Let requests expire
 	for c in AllClients:
 		# Remove requests that time out
 		remove_requests = set()
@@ -43,21 +43,23 @@ def main_timer():
 		for r in remove_requests:
 			del c.requests[r]
 
-		c.idle_timer += 1
+	# Disconnect pinged-out users
+	for connection in AllConnections:
+		connection.idle_timer += 1
 
 		# Remove users that time out
-		c.ping_timer -= 1
-		if c.ping_timer == 60 or c.ping_timer == 30:
-			c.send("PIN", None)
-		elif c.ping_timer < 0:
-			c.disconnect()
+		connection.ping_timer -= 1
+		if connection.ping_timer == 60 or connection.ping_timer == 30:
+			connection.send("PIN", None)
+		elif connection.ping_timer < 0:
+			connection.disconnect(reason="PingTimeout")
 
 	# Run server shutdown timer, if it's running
 	if ServerShutdown[0] > 0:
 		ServerShutdown[0] -= 1
 		if ServerShutdown[0] == 1:
 			broadcast_to_all("Server is going down!")
-			for u in AllClients:
+			for u in AllConnections:
 				u.disconnect(reason='Restart' if ServerShutdown[1] else 'Shutdown')
 			save_everything()
 		elif ServerShutdown[0] == 0:
