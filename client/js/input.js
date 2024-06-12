@@ -163,7 +163,7 @@ function forceReleaseKeys() {
 
 function keyEventToTilemapTownKey(e) {
 	var e = e || window.event;
-	switch(e.code) {
+	switch(e.key) {
 		case "PageUp":
 			return e.shiftKey ? "turn-ne" : "move-ne";
 		case "PageDown":
@@ -180,6 +180,8 @@ function keyEventToTilemapTownKey(e) {
 		  return e.shiftKey ? "turn-n" : "move-n";
 		case "ArrowRight": case "KeyD":
 		  return e.shiftKey ? "turn-e" : "move-e";
+	}
+	switch(e.code) {
 		case "Space":  return "use-item";
 		case "Escape": return "cancel";
 		case "Digit1": return "hotbar-1";
@@ -318,38 +320,38 @@ function keyDownHandler(e) {
 		if (n < 0)
 			n = 9;
 		setHotbarIndex(n);
-	} else if (!CtrlPressed && (e.code == "ArrowUp" || e.code == "KeyW")) { // up/w
+	} else if (!CtrlPressed && (e.key == "ArrowUp" || e.code == "KeyW")) { // up/w
 		PlayerY--;
 		PlayerDir = Directions.NORTH;
 		e.preventDefault();
-	} else if (!CtrlPressed && (e.code == "ArrowDown" || e.code == "KeyS")) { // down/s
+	} else if (!CtrlPressed && (e.key == "ArrowDown" || e.code == "KeyS")) { // down/s
 		PlayerY++;
 		PlayerDir = Directions.SOUTH;
 		e.preventDefault();
-	} else if (!CtrlPressed && (e.code == "ArrowLeft" || e.code == "KeyA")) { // left/a
+	} else if (!CtrlPressed && (e.key == "ArrowLeft" || e.code == "KeyA")) { // left/a
 		PlayerX--;
 		PlayerDir = Directions.WEST;
 		e.preventDefault();
-	} else if (!CtrlPressed && (e.code == "ArrowRight" || e.code == "KeyD")) { // right/d
+	} else if (!CtrlPressed && (e.key == "ArrowRight" || e.code == "KeyD")) { // right/d
 		PlayerX++;
 		PlayerDir = Directions.EAST;
 		e.preventDefault();
-	} else if (e.code == "End") { // end
+	} else if (e.key == "End") { // end
 		PlayerX--;
 		PlayerY++;
 		PlayerDir = Directions.SOUTHWEST;
 		e.preventDefault();
-	} else if (e.code == "PageDown") { // pg down
+	} else if (e.key == "PageDown") { // pg down
 		PlayerX++;
 		PlayerY++;
 		PlayerDir = Directions.SOUTHEAST;
 		e.preventDefault();
-	} else if (e.code == "Home") { // home
+	} else if (e.key == "Home") { // home
 		PlayerX--;
 		PlayerY--;
 		PlayerDir = Directions.NORTHWEST;
 		e.preventDefault();
-	} else if (e.code == "PageUp") { // pg up
+	} else if (e.key == "PageUp") { // pg up
 		PlayerX++;
 		PlayerY--;
 		PlayerDir = Directions.NORTHEAST;
