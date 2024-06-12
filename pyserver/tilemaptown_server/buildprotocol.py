@@ -903,6 +903,7 @@ def fn_IDN(map, client, arg, echo):
 			had_old_entity = entity_id in AllEntitiesByDB
 
 	def login_successful():
+		# Will be sent within a batch
 		connection.identified = True
 		new_client.send("IDN", ack_info if ack_info != {} else None)
 
@@ -1071,6 +1072,19 @@ def bot_message_button(map, client, context, arg, name):
 	arg['name'] = client.name
 	arg['username'] = client.username_or_id()
 	e.send("EXT", {name: arg})
+
+@ext_protocol_command("typing")
+def pm_typing_notification(map, client, context, arg, name):
+	connection = find_connection_by_username(arg['username'])
+	if connection == None:
+		return
+	arg = remove_invalid_dict_fields(arg, {
+		"status":             bool,
+	})
+	arg['id'] = client.protocol_id()
+	arg['name'] = client.name
+	arg['username'] = client.username_or_id()
+	connection.send("EXT", {name: arg})
 
 @ext_protocol_command("list_available_ext_types")
 def list_available_ext_types(map, client, context, arg, name):

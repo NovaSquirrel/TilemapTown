@@ -211,7 +211,9 @@ def fn_userdesc(map, client, context, arg):
 
 @cmd_command(category="Settings", syntax="text", no_entity_needed=True)
 def fn_client_settings(map, client, context, arg):
-	client.client_settings = arg
+	connection = client.connection()
+	if connection:
+		connection.client_settings = arg
 
 @cmd_command(category="Communication")
 def fn_say(map, client, context, arg):
@@ -232,7 +234,7 @@ def fn_tell(map, client, context, arg):
 		if privtext.isspace() or privtext=="":
 			respond(context, 'Tell them what?', error=True)
 		else:
-			u = find_connection_by_username()
+			u = find_connection_by_username(username)
 			if u != None:
 				u = u.entity
 			else:

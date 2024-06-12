@@ -367,6 +367,8 @@ class Connection(object):
 		login_successful = self.test_login(username, password)
 
 		if login_successful == True:
+			self.start_batch()
+
 			# Don't allow multiple connections to be tied to the same account at once
 			self.db_id = find_db_id_by_username(username)
 			had_old_entity = self.db_id in AllEntitiesByDB
@@ -410,6 +412,18 @@ class Connection(object):
 			if len(mail):
 				self.send("EML", {'list': mail})
 
+			# Send the user's settings to them
+			settings = {}
+			if self.client_settings:
+				settings["client_settings"] = self.client_settings
+			if self.ignore_list:
+				settings["ignore_list"] = list(self.ignore_list)
+			if self.watch_list:
+				settings["watch_list"] = list(self.watch_list)
+			if settings != {}:
+				self.send("EXT", {"settings": settings})
+
+			self.finish_batch()
 			return True
 		elif login_successful == False:
 			self.send("ERR", {'text': 'Login fail, bad password for account'})

@@ -505,6 +505,13 @@ Key names:
 Message gets forwarded to the entity specified in "id", in order to tell it that a [bot-message-button] button was clicked on.
 The forwarded copy has additional fields for "name" and "username" as in PRI.
 
+--> EXT {"typing": {"username": username, "status": status}}
+<-- EXT {"typing": {"name": name, "id": id, "username": username, "status": status}}
+Message gets forwarded to the entity specified in "id" or "username". "status" should be treated the same way as the "typing" field in WHO.
+The message the other user receives will have the name, ID, and username added onto it.
+
+<-- EXT {"settings": {"client_settings": text, "watch_list": [list], "ignore_list": [list]}}
+Gives you the text you most recently put into the /client_settings command
 
 === Extension: bulk_build ===
 This extension allows a client to request multiple map changes in one message, including operations like copies.
