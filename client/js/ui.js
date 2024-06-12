@@ -1800,7 +1800,7 @@ function updateBuildToolCategoriesAvailable() {
 
 	// Empty out the list
 	while (categorySelect.childElementCount > 2) {
-		categorySelect.removeChild(ul.lastChild);
+		categorySelect.removeChild(categorySelect.lastChild);
 	}
 
 	for(let e of Object.keys(buildCategories)) {
