@@ -474,8 +474,8 @@ class FakeClient(ClientMixin, object):
 		self.map = None
 		self.map_id = None
 
-	def is_client(self):
-		return False
+	def is_client(self): # is_client_and_entity() will distinguish between this and a real Client
+		return True
 
 	def protocol_id(self):
 		return self.connection_attr("db_id")

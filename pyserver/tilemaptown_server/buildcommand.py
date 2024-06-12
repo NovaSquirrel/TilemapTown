@@ -17,7 +17,6 @@
 import json, random, datetime, time, ipaddress, hashlib, weakref
 from .buildglobal import *
 from .buildentity import Entity
-from .buildclient import FakeClient
 
 handlers = {}	# dictionary of functions to call for each command
 aliases = {}	# dictionary of commands to change to other commands
@@ -267,7 +266,7 @@ def send_request_to_user(client, context, arg, request_type, request_data, accep
 			respond(context, 'You\'ve already sent them a request', error=True)
 			u.requests[request_key][0] = 600
 			return		
-	if not u.is_client() or not in_blocked_username_list(client, u.connection_attr('ignore_list'), 'message %s' % u.name):
+	if not is_client_and_entity(u) or not in_blocked_username_list(client, u.connection_attr('ignore_list'), 'message %s' % u.name):
 		respond(context, you_message % arg)
 		u.send("MSG", {'text': them_message % client.name_and_username(), 'buttons': ['Accept', '%s %s %s %d' % (accept_command, my_username, request_type, next_request_id), 'Decline', '%s %s %s %d' % (decline_command, my_username, request_type, next_request_id)]})
 		u.requests[request_key] = [600, next_request_id, request_data]
@@ -1397,6 +1396,15 @@ def fn_ipwho(map, client, context, arg):
 		names += "%s [%s]" % (u.name_and_username(), ipaddress.ip_address(connection.ip).exploded or "?")
 	respond(context, 'List of users connected: '+names)
 
+@cmd_command(category="Server Admin", privilege_level="server_admin", no_entity_needed=True)
+def fn_ipwho2(map, client, context, arg):
+	names = ''
+	for u in AllConnections:
+		if len(names) > 0:
+			names += ', '
+		names += "%s [%s]" % (u.username, ipaddress.ip_address(u.ip).exploded or "?")
+	respond(context, 'List of connections: '+names)
+
 @cmd_command(category="Server Admin", privilege_level="server_admin", syntax="ip;reason;length", no_entity_needed=True)
 def fn_ipban(map, client, context, arg):
 	params = arg.split(';')
@@ -1913,6 +1921,11 @@ def fn_kill(map, client, context, arg):
 	if u != None:
 		respond(context, 'Kicked '+u.name_and_username())
 		u.disconnect('Kicked by '+client.name_and_username(), reason="Kick")
+	else:
+		u = find_connection_by_username(arg)
+		if u != None:
+			respond(context, 'Kicked connection '+arg)
+			u.disconnect('Kicked by '+client.name_and_username(), reason="Kick")
 
 @cmd_command(category="Server Admin", privilege_level="server_admin", syntax="cancel/seconds", no_entity_needed=True)
 def fn_shutdown(map, client, context, arg):
@@ -1948,7 +1961,7 @@ def fn_newgroup(map, client, context, arg):
 @cmd_command(category="Group", privilege_level="registered", syntax="group_id text", no_entity_needed=True)
 def fn_namegroup(map, client, context, arg):
 	groupid, name = separate_first_word(arg)
-	if not groupid.isdecimal() or not client.db_id or not len(name):
+	if not groupid.isdecimal() or not len(name):
 		return
 	c = Database.cursor()
 	c.execute('UPDATE Entity SET name=? WHERE id=? AND owner_id=? AND type=?', (name, int(groupid), client.db_id, entity_type['group']))
@@ -1957,7 +1970,7 @@ def fn_namegroup(map, client, context, arg):
 @cmd_command(category="Group", privilege_level="registered", syntax="group_id text", no_entity_needed=True)
 def fn_descgroup(map, client, context, arg):
 	groupid, desc = separate_first_word(arg)
-	if not groupid.isdecimal() or not client.username or not len(desc):
+	if not groupid.isdecimal() or not len(desc):
 		return
 	c = Database.cursor()
 	c.execute('UPDATE Entity SET desc=? WHERE id=? AND owner_id=? AND type=?', (desc, int(groupid), client.db_id, entity_type['group']))
@@ -1966,7 +1979,7 @@ def fn_descgroup(map, client, context, arg):
 @cmd_command(category="Group", privilege_level="registered", syntax="group_id new_owner", no_entity_needed=True)
 def fn_changegroupowner(map, client, context, arg):
 	groupid, owner = separate_first_word(arg)
-	if not groupid.isdecimal() or not client.username or not len(owner):
+	if not groupid.isdecimal() or not len(owner):
 		return
 	newowner = find_db_id_by_username(owner)
 	if newowner:
@@ -1979,7 +1992,7 @@ def fn_changegroupowner(map, client, context, arg):
 @cmd_command(category="Group", privilege_level="registered", syntax="group_id password", no_entity_needed=True)
 def fn_joinpassgroup(map, client, context, arg):
 	groupid, joinpass = separate_first_word(arg)
-	if not groupid.isdecimal() or not client.username or not len(joinpass):
+	if not groupid.isdecimal() or not len(joinpass):
 		return
 	c = Database.cursor()
 	c.execute('UPDATE Entity SET data=? WHERE id=? AND owner_id=? AND type=?', (joinpass, int(groupid), client.db_id, entity_type['group']))
@@ -2013,7 +2026,7 @@ def fn_joingroup(map, client, context, arg):
 
 @cmd_command(category="Group", privilege_level="registered", syntax="group_id", no_entity_needed=True)
 def fn_leavegroup(map, client, context, arg):
-	if not arg.isdecimal() or not client.connection_attr('username'):
+	if not arg.isdecimal():
 		return
 	c = Database.cursor()
 	c.execute('DELETE FROM Group_Member WHERE group_id=? AND member_id=?', (int(arg), client.db_id,))

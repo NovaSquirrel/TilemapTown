@@ -883,7 +883,7 @@ server_feature_attribute = {
 
 @protocol_command(pre_identify=True)
 def fn_IDN(map, client, arg, echo):
-	if client.is_client(): # Already identified
+	if is_client_and_entity(client): # Already identified
 		return
 	connection = client.connection()
 	if not connection:

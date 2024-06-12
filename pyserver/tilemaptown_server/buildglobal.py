@@ -231,6 +231,12 @@ global_entity_marker = "!"
 creatable_entity_types = ('text', 'image', 'map_tile', 'tileset', 'reference', 'folder', 'landmark', 'generic')
 
 # Important shared functions
+def is_entity(e):
+	return isinstance(e, Entity)
+
+def is_client_and_entity(e):
+	return isinstance(e, Entity) and e.is_client()
+
 def broadcast_to_all(text):
 	for u in AllConnections:
 		u.send("MSG", {'text': text, 'class': 'broadcast_message'})
@@ -447,8 +453,11 @@ def write_to_build_log(map, client, command, args, old_data = None):
 	# Get the IP, and determine if this client should not be logged
 	ip = None
 	if client.is_client():
-		ip = client.ip
-		if client.user_flags & userflag['no_build_logs']:
+		connection = client.connection()
+		if connection == None:
+			return
+		ip = connection.ip
+		if connection.user_flags & userflag['no_build_logs']:
 			return
 	else:
 		# TODO: Try to get the creator's ID if they're present, but right now non-clients can't build anyway
