@@ -1017,6 +1017,9 @@ class GenericEntity(Entity):
 			if 'forward_message_types' in data:
 				self.forward_message_types = set()
 			self.forward_messages_to = data.get('forward_messages_to', None)
+
+			self.status_type = data.get('status_type', None)
+			self.status_message = data.get('status_message', None)
 			return True
 		except:
 			return False
@@ -1027,6 +1030,10 @@ class GenericEntity(Entity):
 			data['forward_message_types'] = list(self.forward_message_types)
 		if self.forward_messages_to != None:
 			data['forward_messages_to'] = self.forward_messages_to
+		if self.status_type != None:
+			data['status_type'] = self.status_type
+		if self.status_message != None:
+			data['status_message'] = self.status_message
 		if not data:
 			data = None
 		self.save_data_as_text(dumps_if_not_none(data))
