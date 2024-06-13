@@ -633,12 +633,10 @@ def fn_time(map, client, context, arg):
 	respond(context, datetime.datetime.today().strftime("Now it's %m/%d/%Y, %I:%M %p"))
 
 def broadcast_status_change(map, client, status_type, message):
-	connection = client.connection()
-	if connection:
-		connection.status_type = status_type
-		connection.status_message = message
-		if map and map.is_map():
-			map.broadcast("WHO", {"update": {'id': client.protocol_id(), 'status': status_type, 'status_message': message}})
+	client.status_type = status_type
+	client.status_message = message
+	if map and map.is_map():
+		map.broadcast("WHO", {"update": {'id': client.protocol_id(), 'status': status_type, 'status_message': message}})
 
 @cmd_command(syntax="message", no_entity_needed=True)
 def fn_away(map, client, context, arg):
@@ -658,21 +656,16 @@ def fn_status(map, client, context, arg):
 		status_type, status_message = separate_first_word(arg)
 		broadcast_status_change(map, client, status_type[0:16], status_message if status_message != '' else None)
 
-		connection = client.connection()
-		if connection:
-			if connection.status_message:
-				respond(context, 'Your status is now \"%s\" ("%s")' % (connection.status_type, connection.status_message))
-			else:
-				respond(context, 'Your status is now \"%s\"' % (connection.status_type))
+		if client.status_message:
+			respond(context, 'Your status is now \"%s\" ("%s")' % (client.status_type, client.status_message))
+		else:
+			respond(context, 'Your status is now \"%s\"' % (client.status_type))
 
 @cmd_command(alias=['findrp'])
 def fn_findiic(map, client, context, arg):
 	names = ''
 	for u in AllClients:
-		connection = u.connection()
-		if not connection:
-			continue
-		if connection.status_type == None or connection.status_type.lower() not in ('iic', 'irp', 'lfrp'):
+		if client.status_type == None or client.status_type.lower() not in ('iic', 'irp', 'lfrp'):
 			continue
 		if len(names) > 0:
 			names += ', '
@@ -683,10 +676,7 @@ def fn_findiic(map, client, context, arg):
 def fn_findic(map, client, context, arg):
 	names = ''
 	for u in AllClients:
-		connection = u.connection()
-		if not connection:
-			continue
-		if connection.status_type == None or connection.status_type.lower() not in ('ic', 'rp'):
+		if client.status_type == None or client.status_type.lower() not in ('ic', 'rp'):
 			continue
 		if len(names) > 0:
 			names += ', '

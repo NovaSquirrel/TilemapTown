@@ -132,8 +132,6 @@ class Client(ClientMixin, Entity):
 		connection = self.connection()
 		if connection != None:
 			w.update({
-				'status': connection.status_type,
-				'status_message': connection.status_message,
 				'username': connection.username
 			})
 			if connection.user_flags & userflag['bot']:
@@ -185,9 +183,6 @@ class Connection(object):
 		self.connected_time = int(time.time())
 		self.sent_resources_yet = False
 		self.images_and_tilesets_received_so_far = set()
-
-		self.status_type = None
-		self.status_message = None
 
 		# Settings
 		self.client_settings = ""

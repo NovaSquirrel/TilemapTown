@@ -26,13 +26,14 @@ class Entity(object):
 
 		self.entity_type = entity_type
 
+		# Appearance
 		self.name = '?'
 		self.desc = None
-		self.dir = 2 # South
-		self.map_ref = None        # Storage for self.map, which is a property
-
 		self.pic = None
 
+		# Location
+		self.dir = 2 # South
+		self.map_ref = None        # Storage for self.map, which is a property
 		self.map_id = None         # Map the entity is currently on
 		self.x = 0
 		self.y = 0
@@ -55,16 +56,20 @@ class Entity(object):
 		self.contents = set() # Entities stored inside this one
 		self.flags = 0        # Entity flags, like "public"?
 
-		# temporary information
+		# Status
+		self.status_type = None
+		self.status_message = None
+
+		# Temporary information
 		self.requests = {} # Indexed by tuple: (username, type). Each item is an array with [timer, id, data]; data may be None. Timer decreases each second, then the request is deleted.
 		# valid types are "tpa", "tpahere", "carry", "followme"
 		self.tp_history = deque(maxlen=20)
 
-		# message forwarding; for bringing bot entities onto different maps, that can listen to messages
+		# Message forwarding; for bringing bot entities onto different maps, that can listen to messages
 		self.forward_message_types = set()
 		self.forward_messages_to = None
 
-		# riding information
+		# Riding information
 		self.vehicle = None     # User being ridden
 		self.passengers = set() # Users being carried
 		self.is_following = False # If true, follow behind instead of being carried
@@ -72,17 +77,17 @@ class Entity(object):
 		self.follow_map_vehicle = None
 		self.follow_map_passengers = set()
 
-		# permissions
+		# Permissions
 		self.creator_id = creator_id
 		self.owner_id = creator_id
 		self.creator_temp_id = None # Temporary ID of the creator of the object, for guests. Not saved to the database.
 
-		# default permissions for when entity is the subject
+		# Default permissions for when entity is the subject
 		self.allow = 0
 		self.deny = 0
 		self.guest_deny = 0
 
-		# permissions for when entity is the actor
+		# Permissions for when entity is the actor
 		self.map_allow = 0       # Used to cache the map allows and map denys to avoid excessive SQL queries
 		self.map_deny = 0
 
@@ -737,8 +742,11 @@ class Entity(object):
 			'vehicle': self.vehicle.protocol_id() if self.vehicle else None,
 			'is_following': self.is_following,
 			'type': entity_type_name[self.entity_type],
-			'in_user_list': self.is_client()
+			'in_user_list': self.is_client(),
+			'status': self.status_type,
+			'status_message': self.status_message
 		}
+
 		if hasattr(self, "mini_tilemap") and self.mini_tilemap != None:
 			out['mini_tilemap'] = self.mini_tilemap
 		if hasattr(self, "mini_tilemap_data") and self.mini_tilemap_data != None:
