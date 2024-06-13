@@ -111,13 +111,13 @@ async def client_handler(websocket, path):
 				if arg["remote_map"] in AllEntitiesByDB:
 					map = AllEntitiesByDB[arg["remote_map"]]
 					if map.has_permission(connection.entity, permission['map_bot'], False):
-						handle_protocol_command(map, connection.entity, command, arg, echo)
+						handle_protocol_command(connection, map, connection.entity, command, arg, echo)
 					else:
 						connection.entity.send("ERR", {'text': 'You do not have [tt]map_bot[/tt] permission on map %d' % arg["remote_map"], 'code':'missing_permission', 'detail':'map_bot', 'subject_id': arg["remote_map"], 'echo': echo})
 				else:
 					connection.entity.send("ERR", {'text': 'Map %d is not loaded' % arg["remote_map"], 'code': 'not_loaded', 'subject_id': arg["remote_map"], 'echo': echo})
 			else:
-				handle_protocol_command(connection.entity.map, connection.entity, command, arg, echo) # client.map may be None
+				handle_protocol_command(connection, connection.entity.map, connection.entity, command, arg, echo) # client.map may be None
 
 		except websockets.ConnectionClosed:
 			if isinstance(connection.entity, Client):
@@ -129,8 +129,8 @@ async def client_handler(websocket, path):
 
 				# Leave a note about what the user did while connected
 				disconnect_extra = ""
-				if connection.entity.build_count or connection.entity.delete_count:
-					disconnect_extra = " -  Built %d, Deleted %d" % (connection.entity.build_count, connection.entity.delete_count)
+				if connection.build_count or connection.delete_count:
+					disconnect_extra = " -  Built %d, Deleted %d" % (connection.build_count, connection.delete_count)
 				print("disconnected: %s (%s, \"%s\")%s" % (ip, connection.entity.username or "?", connection.entity.name, disconnect_extra))
 			elif connection.identified:
 				print("disconnected: %s (%s, logged in elsewhere)" % (ip, connection.username))
@@ -148,12 +148,16 @@ async def client_handler(websocket, path):
 			traceback.print_tb(sys.exc_info()[2])
 		#	raise
 
+	# Clean up connection
+	for p in connection.listening_maps:
+		BotWatch[p[0]][p[1]].remove(connection)
+	for e in connection.cleanup_entities_on_logout:
+		e.clean_up()
+
 	# Clean up the entity, if it isn't just a placeholder
 	if isinstance(connection.entity, Client):
 		if connection.entity.db_id:
 			connection.entity.save_on_clean_up = True
-		for e in connection.entity.cleanup_entities_on_logout:
-			e.clean_up()
 		connection.entity.clean_up()
 	if connection.entity != None:
 		del connection.entity

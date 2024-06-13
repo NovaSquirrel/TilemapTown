@@ -633,10 +633,12 @@ def fn_time(map, client, context, arg):
 	respond(context, datetime.datetime.today().strftime("Now it's %m/%d/%Y, %I:%M %p"))
 
 def broadcast_status_change(map, client, status_type, message):
-	client.status_type = status_type
-	client.status_message = message
-	if map and map.is_map():
-		map.broadcast("WHO", {"update": {'id': client.protocol_id(), 'status': status_type, 'status_message': message}})
+	connection = client.connection()
+	if connection:
+		connection.status_type = status_type
+		connection.status_message = message
+		if map and map.is_map():
+			map.broadcast("WHO", {"update": {'id': client.protocol_id(), 'status': status_type, 'status_message': message}})
 
 @cmd_command(syntax="message", no_entity_needed=True)
 def fn_away(map, client, context, arg):
@@ -656,16 +658,21 @@ def fn_status(map, client, context, arg):
 		status_type, status_message = separate_first_word(arg)
 		broadcast_status_change(map, client, status_type[0:16], status_message if status_message != '' else None)
 
-		if client.status_message:
-			respond(context, 'Your status is now \"%s\" ("%s")' % (client.status_type, client.status_message))
-		else:
-			respond(context, 'Your status is now \"%s\"' % (client.status_type))
+		connection = client.connection()
+		if connection:
+			if connection.status_message:
+				respond(context, 'Your status is now \"%s\" ("%s")' % (connection.status_type, connection.status_message))
+			else:
+				respond(context, 'Your status is now \"%s\"' % (connection.status_type))
 
 @cmd_command(alias=['findrp'])
 def fn_findiic(map, client, context, arg):
 	names = ''
 	for u in AllClients:
-		if u.status_type == None or u.status_type.lower() not in ('iic', 'irp', 'lfrp'):
+		connection = u.connection()
+		if not connection:
+			continue
+		if connection.status_type == None or connection.status_type.lower() not in ('iic', 'irp', 'lfrp'):
 			continue
 		if len(names) > 0:
 			names += ', '
@@ -676,7 +683,10 @@ def fn_findiic(map, client, context, arg):
 def fn_findic(map, client, context, arg):
 	names = ''
 	for u in AllClients:
-		if u.status_type == None or u.status_type.lower() not in ('ic', 'rp'):
+		connection = u.connection()
+		if not connection:
+			continue
+		if connection.status_type == None or connection.status_type.lower() not in ('ic', 'rp'):
 			continue
 		if len(names) > 0:
 			names += ', '
@@ -1290,6 +1300,9 @@ def fn_listeners(map, client, context, arg):
 
 @cmd_command(privilege_level="registered", syntax="category,category,category... id,id,id...", no_entity_needed=True)
 def fn_listen(map, client, context, arg):
+	connection = client.connection()
+	if not connection:
+		return
 	params = arg.split()
 	categories = set(params[0].split(','))
 	maps = set(int(x) for x in params[1].split(','))
@@ -1307,7 +1320,7 @@ def fn_listen(map, client, context, arg):
 			if m not in BotWatch[category]:
 				BotWatch[category][m] = set()
 			BotWatch[category][m].add(client)
-			client.listening_maps.add((category, m))
+			connection.listening_maps.add((category, m))
 
 			# Send initial data
 			if c == 'build':
@@ -1332,6 +1345,9 @@ def fn_listen(map, client, context, arg):
 
 @cmd_command(privilege_level="registered", syntax="category,category,category... id,id,id...", no_entity_needed=True)
 def fn_unlisten(map, client, context, arg):
+	connection = client.connection()
+	if not connection:
+		return
 	params = arg.split()
 	categories = set(params[0].split(','))
 	maps = [int(x) for x in params[1].split(',')]
@@ -1348,7 +1364,7 @@ def fn_unlisten(map, client, context, arg):
 				if not len(BotWatch[category][m]):
 					del BotWatch[category][m]
 			if (category, m) in client.listening_maps:
-				client.listening_maps.remove((category, m))
+				connection.listening_maps.remove((category, m))
 	respond(context, 'Stopped listening on maps: ' + str(client.listening_maps))
 
 def kick_and_ban(map, client, context, arg, ban):
@@ -2154,18 +2170,21 @@ def fn_whoami(map, client, context, arg):
 def fn_undodel(map, client, context, arg):
 	if not client.is_client() or not map.is_map():
 		return
-	if not client.undo_delete_data:
+	connection = client.connection()
+	if not connection:
+		return
+	if not connection.undo_delete_data:
 		respond(context, "There's nothing to undo")
 		return
-	if time.time() - client.undo_delete_when > 300: # 5 Minute limit
+	if time.time() - connection.undo_delete_when > 300: # 5 Minute limit
 		respond(context, "Last undo was more than 5 minutes ago")
 		return
-	pos = client.undo_delete_data["pos"]
+	pos = connection.undo_delete_data["pos"]
 	write_to_build_log(map, client, "DEL", "undo:%d,%d,%d,%d" % (pos[0], pos[1], pos[2], pos[3]))
 
-	map.apply_map_section(client.undo_delete_data)
-	map.broadcast("DEL", {"undo": True, "pos": client.undo_delete_data["pos"], "username": client.username_or_id()}, remote_only=True, remote_category=botwatch_type['build'])
-	client.undo_delete_data = None
+	map.apply_map_section(connection.undo_delete_data)
+	map.broadcast("DEL", {"undo": True, "pos": connection.undo_delete_data["pos"], "username": client.username_or_id()}, remote_only=True, remote_category=botwatch_type['build'])
+	connection.undo_delete_data = None
 
 	respond(context, "🐶 Undid the delete!")
 

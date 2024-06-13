@@ -610,13 +610,15 @@ class Entity(object):
 
 		self.save_on_clean_up = True
 		if self.is_client():
-			self.undo_delete_data = None
-			if not self.sent_resources_yet:
-				if self.login_successful_callback:
-					self.login_successful_callback()
-				self.sent_resources_yet = True
-				if LoadedAnyServerResources[0]:
-					self.send("RSC", ServerResources)
+			connection = self.connection()
+			if connection:
+				connection.undo_delete_data = None
+				if not connection.sent_resources_yet:
+					if connection.login_successful_callback:
+						connection.login_successful_callback()
+					connection.sent_resources_yet = True
+					if LoadedAnyServerResources[0]:
+						connection.send("RSC", ServerResources)
 
 		added_new_history = False
 		if update_history and self.map_id != None:

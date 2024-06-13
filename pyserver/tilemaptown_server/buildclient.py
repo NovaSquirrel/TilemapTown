@@ -65,33 +65,13 @@ class Client(ClientMixin, Entity):
 		self.name = 'Guest '+ str(userCounter)
 		userCounter += 1
 		self.pic = [0, 2, 25]
+
 		self.saved_pics = {}
 		self.morphs = {}
 
-		self.build_count = 0     # Amount this person has built
-		self.delete_count = 0    # Amount this person has deleted
-
-		self.status_type = None
-		self.status_message = None
-
-		self.sent_resources_yet = False
 		self.no_inventory_messages = False # don't send BAG updates when adding or removing items
 
-		# Information for /undodel
-		self.undo_delete_data = None
-		self.undo_delete_when = None
-
-		# Clients keep the entities they're using for message forwarding alive by keeping strong references to them in this set
-		self.keep_entities_loaded = set()
-
-		# Remove these entities when you log out
-		self.cleanup_entities_on_logout = weakref.WeakSet()
-
-		# Allow cleaning up BotWatch info
-		self.listening_maps = set() # tuples of (category, map)
-
 		self.temporary = True # Temporary entity until they identify
-		self.images_and_tilesets_received_so_far = set()
 
 		AllClients.add(self)
 
@@ -105,8 +85,6 @@ class Client(ClientMixin, Entity):
 
 	def clean_up(self):
 		AllClients.discard(self)
-		for p in self.listening_maps:
-			BotWatch[p[0]][p[1]].remove(self)
 		super().clean_up()
 
 	def add_to_contents(self, item):
@@ -151,13 +129,13 @@ class Client(ClientMixin, Entity):
 
 	# Shared code for who() and remote_who()
 	def add_who_info(self, w):
-		w.update({
-			'status': self.status_type,
-			'status_message': self.status_message
-		})
 		connection = self.connection()
 		if connection != None:
-			w['username'] = connection.username
+			w.update({
+				'status': connection.status_type,
+				'status_message': connection.status_message,
+				'username': connection.username
+			})
 			if connection.user_flags & userflag['bot']:
 				w['bot'] = True
 		return w
@@ -190,9 +168,6 @@ class Client(ClientMixin, Entity):
 		self.no_inventory_messages = False
 		return result
 
-	def refresh_client_inventory(self):
-		self.send("BAG", {'list': [child.bag_info() for child in self.all_children()], 'clear': True})
-
 	def is_client(self):
 		return True
 
@@ -203,10 +178,16 @@ class Connection(object):
 		self.entity = FakeClient(self)
 		self.identified = False
 		self.oper_override = False
+		self.mode = None # Full client or not
 
 		self.ping_timer = 180
 		self.idle_timer = 0
 		self.connected_time = int(time.time())
+		self.sent_resources_yet = False
+		self.images_and_tilesets_received_so_far = set()
+
+		self.status_type = None
+		self.status_message = None
 
 		# Settings
 		self.client_settings = ""
@@ -217,6 +198,23 @@ class Connection(object):
 		# Account info
 		self.username = None
 		self.db_id = None
+
+		# Connections keep the entities they're using for message forwarding alive by keeping strong references to them in this set
+		self.keep_entities_loaded = set()
+
+		# Remove these entities when you log out
+		self.cleanup_entities_on_logout = weakref.WeakSet()
+
+		# Allow cleaning up BotWatch info
+		self.listening_maps = set() # tuples of (category, map)
+
+		# Stats
+		self.build_count = 0     # Amount this person has built
+		self.delete_count = 0    # Amount this person has deleted
+
+		# Information for /undodel
+		self.undo_delete_data = None
+		self.undo_delete_when = None
 
 		# "batch" extension variables
 		self.can_batch_messages = False
@@ -399,7 +397,7 @@ class Connection(object):
 				client.switch_map(get_database_meta('default_map'))
 
 			# send the client their inventory
-			client.refresh_client_inventory()
+			self.refresh_client_inventory(client)
 
 			c = Database.cursor()
 			# send the client their mail
@@ -476,6 +474,26 @@ class Connection(object):
 					return True
 		return False
 
+	def refresh_client_inventory(self, entity):
+		self.send("BAG", {'list': [child.bag_info() for child in entity.all_children()], 'clear': True})
+
+	def protocol_error(self, echo, text=None, code=None, detail=None, subject_id=None):
+		out = {}
+		if text != None:
+			out['text'] = text
+		if code != None:
+			out['code'] = code
+		if detail != None:
+			out['detail'] = detail
+		if subject_id != None:
+			if isinstance(subject_id, Entity):
+				out['subject_id'] = subject_id.protocol_id()
+			else:
+				out['subject_id'] = subject_id
+		if echo != None:
+			out['echo'] = echo
+		self.send("ERR", out)
+
 	def disconnect(self, text=None, reason=''):
 		if self.ws != None:
 			if text != None:
@@ -486,10 +504,6 @@ class Connection(object):
 class FakeClient(ClientMixin, object):
 	def __init__(self, connection):
 		self.connection = weakref.ref(connection)
-
-		# Also be able to store statuses
-		self.status_type = None
-		self.status_message = None
 
 		# Placeholder stuff that'll be here for things that check for it
 		self.map = None
