@@ -20,7 +20,185 @@ from collections import deque
 
 entityCounter = 1
 
-class Entity(object):
+# Allow things that are not entities to do permission checking like entities (like FakeClient)
+class PermissionsMixin(object):
+	def get_allow_deny_for_other_entity(self, other_id):
+		allow = 0
+		deny = 0
+		# If a guest, don't bother looking up any queries
+		if self.db_id == None:
+			return (0, 0)
+
+		c = Database.cursor()
+		c.execute('SELECT allow, deny FROM Permission WHERE subject_id=? AND actor_id=?', (other_id, self.db_id,))
+		result = c.fetchone()
+		if result != None:
+			allow = result[0]
+			deny = result[1]
+
+		# Turn on permissions granted by groups too
+		for row in c.execute('SELECT p.allow FROM Permission p, Group_Member m\
+			WHERE m.member_id=? AND p.actor_id=m.group_id AND p.subject_id=? AND m.accepted_at IS NOT NULL', (self.db_id, other_id)):
+			allow |= row[0]
+		return (allow, deny)
+
+	# Check if this entity is specifically disallowed from doing something, rather than being disallowed because something uses an allowlist
+	def is_banned_from(self, other_id, perm):
+		# If an entity is passed in, get its ID
+		if isinstance(other_id, Entity):
+			other_id = other_id.db_id
+		if other_id == None:
+			return False
+
+		c = Database.cursor()
+		c.execute('SELECT deny FROM Permission WHERE subject_id=? AND actor_id=?', (other_id, self.db_id,))
+		result = c.fetchone()
+		return result != None and bool(result[0] & perm)
+
+	# Entity has permission to act on some other entity
+	def has_permission(self, other, perm=0, default=False):
+		if isinstance(perm, tuple):
+			return any(self.has_permission(other, x, default) for x in perm)
+		map_value = default
+
+		# Oper override bypasses permission checks
+		if hasattr(self, 'connection') and self.connection_attr('oper_override'):
+			return True
+
+		# If you pass in an ID, see if the entity with that ID is already loaded
+		if not isinstance(other, Entity):
+			try_load = get_entity_by_id(other, load_from_db=False)
+			if try_load != None:
+				other = try_load
+			elif isinstance(other, str):
+				other = find_db_id_by_str(other)
+				if other == None:
+					return False
+			elif not isinstance(other, int):
+				return None
+		
+		if isinstance(other, Entity):
+			# You have permission if the object is you
+			if isinstance(self, Entity):
+				if self is other or self.id == other.creator_temp_id:
+					return True
+				# Temporary permissions
+				if self.temp_permissions.get(other, 0) & perm:
+					return True
+			if self.db_id:
+				# If you're the owner, you automatically have permission
+				if self.db_id == other.owner_id:
+					return True
+				# Also if you're checking permission to act on yourself, it always works
+				if self.db_id == other.db_id:
+					return True
+			if perm == 0: # perm = 0 is an owner check
+				return False
+
+			# Let the entity override the default
+			if other.allow & perm:
+				map_value = True
+			if other.deny & perm:
+				map_value = False
+
+			# If guest, apply guest_deny
+			if self.db_id == None:
+				if other.guest_deny & perm:
+					return False
+				return map_value
+
+			# If user is on the map, use the user's cached value
+			if self.map_id == other.db_id:
+				if self.map_deny & perm:
+					return False
+				if self.map_allow & perm:
+					return True
+			else:
+				user_allow, user_deny = self.get_allow_deny_for_other_entity(other.db_id)
+				if user_deny & perm:
+					return False
+				if user_allow & perm:
+					return True
+			return map_value # Return default for the map
+
+		#############################################################
+		# If it's not loaded, a query is unavoidable
+		other_id = other
+
+		# Get the basic allow/deny/guest_deny
+		c = Database.cursor()
+		c.execute('SELECT allow, deny, guest_deny, owner_id FROM Entity WHERE id=?', (other_id,))
+		result = c.fetchone()
+		if result == None: # Oops, entity doen't even exist
+			return False
+		allow = result[0]
+		deny = result[1]
+		guest_deny = result[2]
+		owner_id = result[3]
+
+		# If you're the owner, you have permission
+		if self.db_id and self.db_id == owner_id:
+			return True
+		if perm == 0:
+			return False
+
+		# Let the entity override the default
+		if allow & perm:
+			map_value = True
+		if deny & perm:
+			map_value = False
+
+		# If guest, apply guest_deny
+		if self.db_id == None:
+			if guest_deny & perm:
+				map_value = False
+			return map_value
+
+		user_allow, user_deny = self.get_allow_deny_for_other_entity(other_id)
+		if user_deny & perm:
+			return False
+		if user_allow & perm:
+			return True
+		return map_value
+
+	def change_permission_for_entity(self, actor_id, perm, value):
+		if actor_id == None:
+			return
+		# Start blank
+		allow = 0
+		deny = 0
+
+		# Let the current database value override the that
+		c = Database.cursor()
+		c.execute('SELECT allow, deny FROM Permission WHERE subject_id=? AND actor_id=?', (self.db_id, actor_id,))
+		result = c.fetchone()
+		if result != None:
+			allow = result[0]
+			deny = result[1]
+
+		# Alter the permissions
+		if value == True:
+			allow |= perm
+			deny &= ~perm
+		elif value == False:
+			allow &= ~perm
+			deny |= perm
+		elif value == None:
+			allow &= ~perm
+			deny &= ~perm
+
+		# Delete if all permissions were removed
+		if not (allow | deny):
+			c.execute('DELETE FROM Permission WHERE subject_id=? AND actor_id=?', (self.db_id, actor_id,))
+			return
+
+		# Update or insert depending on needs
+		if result != None:
+			c.execute('UPDATE Permission SET allow=?, deny=? WHERE subject_id=? AND actor_id=?', (allow, deny, self.db_id, actor_id,))
+		else:
+			c.execute("INSERT INTO Permission (subject_id, actor_id, allow, deny) VALUES (?, ?, ?, ?)", (self.db_id, actor_id, allow, deny,))
+
+class Entity(PermissionsMixin, object):
 	def __init__(self, entity_type, creator_id=None):
 		global entityCounter
 
@@ -328,186 +506,11 @@ class Entity(object):
 
 		self.broadcast("MOV", {'id': item.protocol_id(), 'to': [random.randint(0, 9), random.randint(0, 9)]})
 
-	# Permission checking
-
-	def get_allow_deny_for_other_entity(self, other_id):
-		allow = 0
-		deny = 0
-		# If a guest, don't bother looking up any queries
-		if self.db_id == None:
-			return (0, 0)
-
-		c = Database.cursor()
-		c.execute('SELECT allow, deny FROM Permission WHERE subject_id=? AND actor_id=?', (other_id, self.db_id,))
-		result = c.fetchone()
-		if result != None:
-			allow = result[0]
-			deny = result[1]
-
-		# Turn on permissions granted by groups too
-		for row in c.execute('SELECT p.allow FROM Permission p, Group_Member m\
-			WHERE m.member_id=? AND p.actor_id=m.group_id AND p.subject_id=? AND m.accepted_at IS NOT NULL', (self.db_id, other_id)):
-			allow |= row[0]
-		return (allow, deny)
+	# Permissions
 
 	def update_map_permissions(self):
 		""" Searches PERMISSION table and update map_allow and map_deny for the entity, so SQL queries can be skipped for the map they're on """
 		self.map_allow, self.map_deny = self.get_allow_deny_for_other_entity(self.map_id)
-
-	# Check if this entity is specifically disallowed from doing something, rather than being disallowed because something uses an allowlist
-	def is_banned_from(self, other_id, perm):
-		# If an entity is passed in, get its ID
-		if isinstance(other_id, Entity):
-			other_id = other_id.db_id
-		if other_id == None:
-			return False
-
-		c = Database.cursor()
-		c.execute('SELECT deny FROM Permission WHERE subject_id=? AND actor_id=?', (other_id, self.db_id,))
-		result = c.fetchone()
-		return result != None and bool(result[0] & perm)
-
-	# Entity has permission to act on some other entity
-	def has_permission(self, other, perm=0, default=False):
-		if isinstance(perm, tuple):
-			return any(self.has_permission(other, x, default) for x in perm)
-		map_value = default
-
-		# Oper override bypasses permission checks
-		if hasattr(self, 'connection') and self.connection_attr('oper_override'):
-			return True
-
-		# If you pass in an ID, see if the entity with that ID is already loaded
-		if not isinstance(other, Entity):
-			try_load = get_entity_by_id(other, load_from_db=False)
-			if try_load != None:
-				other = try_load
-			elif isinstance(other, str):
-				other = find_db_id_by_str(other)
-				if other == None:
-					return False
-			elif not isinstance(other, int):
-				return None
-					
-		if isinstance(other, Entity):
-			# You have permission if the object is you
-			if self is other or self.id == other.creator_temp_id:
-				return True
-			# Temporary permissions
-			if self.temp_permissions.get(other, 0) & perm:
-				return True
-			if self.db_id:
-				# If you're the owner, you automatically have permission
-				if self.db_id == other.owner_id:
-					return True
-				# Also if you're checking permission to act on yourself, it always works
-				if self.db_id == other.db_id:
-					return True
-			if perm == 0: # perm = 0 is an owner check
-				return False
-
-			# Let the entity override the default
-			if other.allow & perm:
-				map_value = True
-			if other.deny & perm:
-				map_value = False
-
-			# If guest, apply guest_deny
-			if self.db_id == None:
-				if other.guest_deny & perm:
-					return False
-				return map_value
-
-			# If user is on the map, use the user's cached value
-			if self.map_id == other.db_id:
-				if self.map_deny & perm:
-					return False
-				if self.map_allow & perm:
-					return True
-			else:
-				user_allow, user_deny = self.get_allow_deny_for_other_entity(other.db_id)
-				if user_deny & perm:
-					return False
-				if user_allow & perm:
-					return True
-			return map_value # Return default for the map
-
-		#############################################################
-		# If it's not loaded, a query is unavoidable
-		other_id = other
-
-		# Get the basic allow/deny/guest_deny
-		c = Database.cursor()
-		c.execute('SELECT allow, deny, guest_deny, owner_id FROM Entity WHERE id=?', (other_id,))
-		result = c.fetchone()
-		if result == None: # Oops, entity doen't even exist
-			return False
-		allow = result[0]
-		deny = result[1]
-		guest_deny = result[2]
-		owner_id = result[3]
-
-		# If you're the owner, you have permission
-		if self.db_id and self.db_id == owner_id:
-			return True
-		if perm == 0:
-			return False
-
-		# Let the entity override the default
-		if allow & perm:
-			map_value = True
-		if deny & perm:
-			map_value = False
-
-		# If guest, apply guest_deny
-		if self.db_id == None:
-			if guest_deny & perm:
-				map_value = False
-			return map_value
-
-		user_allow, user_deny = self.get_allow_deny_for_other_entity(other_id)
-		if user_deny & perm:
-			return False
-		if user_allow & perm:
-			return True
-		return map_value
-
-	def change_permission_for_entity(self, actor_id, perm, value):
-		if actor_id == None:
-			return
-		# Start blank
-		allow = 0
-		deny = 0
-
-		# Let the current database value override the that
-		c = Database.cursor()
-		c.execute('SELECT allow, deny FROM Permission WHERE subject_id=? AND actor_id=?', (self.db_id, actor_id,))
-		result = c.fetchone()
-		if result != None:
-			allow = result[0]
-			deny = result[1]
-
-		# Alter the permissions
-		if value == True:
-			allow |= perm
-			deny &= ~perm
-		elif value == False:
-			allow &= ~perm
-			deny |= perm
-		elif value == None:
-			allow &= ~perm
-			deny &= ~perm
-
-		# Delete if all permissions were removed
-		if not (allow | deny):
-			c.execute('DELETE FROM Permission WHERE subject_id=? AND actor_id=?', (self.db_id, actor_id,))
-			return
-
-		# Update or insert depending on needs
-		if result != None:
-			c.execute('UPDATE Permission SET allow=?, deny=? WHERE subject_id=? AND actor_id=?', (allow, deny, self.db_id, actor_id,))
-		else:
-			c.execute("INSERT INTO Permission (subject_id, actor_id, allow, deny) VALUES (?, ?, ?, ?)", (self.db_id, actor_id, allow, deny,))
 
 	# Riding
 

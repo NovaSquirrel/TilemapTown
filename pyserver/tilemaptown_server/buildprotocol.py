@@ -250,6 +250,9 @@ def set_entity_params_from_dict(e, d, connection, client, echo):
 
 @protocol_command()
 def fn_MOV(connection, map, client, arg, echo):
+	if not map:
+		return
+
 	# Can control a different entity if you have permission
 	if 'rc' in arg:
 		id = arg['rc']
@@ -872,6 +875,7 @@ def fn_IDN(connection, map, client, arg, echo):
 	override_map = None
 	if "map" in arg:
 		override_map = arg["map"]
+	messaging_only_mode = "client_mode" in arg and arg["client_mode"] == "messaging"
 
 	# Check if an entity exists already; only used for the broadcasted connection message
 	had_old_entity = False
@@ -883,10 +887,10 @@ def fn_IDN(connection, map, client, arg, echo):
 	def login_successful():
 		# Will be sent within a batch
 		connection.identified = True
-		new_client.send("IDN", ack_info if ack_info != {} else None)
+		connection.send("IDN", ack_info if ack_info != {} else None)
 
 		if len(Config["Server"]["MOTD"]):
-			new_client.send("MSG", {'text': Config["Server"]["MOTD"]})
+			connection.send("MSG", {'text': Config["Server"]["MOTD"]})
 
 		if Config["Server"]["BroadcastConnects"]:
 			if had_old_entity:
@@ -908,12 +912,23 @@ def fn_IDN(connection, map, client, arg, echo):
 		for c in AllClients:
 			if (c.connection_attr('user_flags') or 0) & userflag['bot']:
 				bot_count += 1
-		new_client.send("MSG", {'text': 'Users connected: %d' % (len(AllClients)-bot_count) + ('' if bot_count == 0 else '. Bots connected: %d.' % bot_count)})
+		im_count = 0
+		for c in AllConnections:
+			if not isinstance(c.entity, Entity) and c.identified:
+				im_count += 1
+		user_count = len(AllClients)-bot_count
+		connected_text = 'Users connected: %d' % (user_count) + ('' if bot_count == 0 else '. Bots connected: %d.' % bot_count)
+		if user_count > 1:
+			connected_text += ('.' if bot_count == 0 else '') + ' Use the [tt]/wa[/tt] command to see where people are at!'
+		connection.send("MSG", {'text': connected_text})
 		connection.login_successful_callback = None
 
 	#######################################################
-	new_client = Client(connection)
-	connection.entity = new_client
+	if not messaging_only_mode:
+		new_client = Client(connection)
+		connection.entity = new_client
+	else:
+		new_client = connection.entity
 	connection.login_successful_callback = login_successful
 
 	# Check the features the client requested
@@ -938,6 +953,9 @@ def fn_IDN(connection, map, client, arg, echo):
 			connection.disconnect(reason="BadLogin")
 			entity_id.login_successful_callback = None
 			return
+	elif messaging_only_mode:
+		connection.disconnect("Messaging mode currently requires you to log into an account", reason="BadLogin")
+		return
 	else:
 		# Become a guest
 		if "name" in arg:

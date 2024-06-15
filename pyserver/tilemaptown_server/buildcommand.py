@@ -733,6 +733,8 @@ def fn_newmap(map, client, context, arg):
 @cmd_command(category="Settings", syntax="username", no_entity_needed=True)
 def fn_ignore(map, client, context, arg):
 	arg = arg.lower()
+	if not arg:
+		return
 	connection = client.connection()
 	if connection:
 		connection.ignore_list.add(arg)
@@ -741,6 +743,8 @@ def fn_ignore(map, client, context, arg):
 @cmd_command(category="Settings", syntax="username", no_entity_needed=True)
 def fn_unignore(map, client, context, arg):
 	arg = arg.lower()
+	if not arg:
+		return
 	connection = client.connection()
 	if connection and arg in connection.ignore_list:
 		connection.ignore_list.discard(arg)
@@ -753,6 +757,8 @@ def fn_ignorelist(map, client, context, arg):
 @cmd_command(category="Settings", syntax="username", no_entity_needed=True)
 def fn_watch(map, client, context, arg):
 	arg = arg.lower()
+	if not arg:
+		return
 	connection = client.connection()
 	if connection:
 		connection.watch_list.add(arg)
@@ -761,6 +767,8 @@ def fn_watch(map, client, context, arg):
 @cmd_command(category="Settings", syntax="username", no_entity_needed=True)
 def fn_unwatch(map, client, context, arg):
 	arg = arg.lower()
+	if not arg:
+		return
 	connection = client.connection()
 	if connection:
 		connection.watch_list.discard(arg)
@@ -1864,6 +1872,17 @@ def fn_gwho(map, client, context, arg):
 		names += u.name_and_username()
 	respond(context, 'List of users connected: '+names)
 
+@cmd_command(category="Who", no_entity_needed=True)
+def fn_imwho(map, client, context, arg):
+	names = ''
+	for c in AllConnections:
+		if isinstance(c.entity, Entity) and c.identified:
+			continue
+		if len(names) > 0:
+			names += ', '
+		names += c.username
+	respond(context, 'List of messaging users: '+names)
+
 @cmd_command(category="Who")
 def fn_who(map, client, context, arg):
 	names = ''
@@ -1913,7 +1932,7 @@ def fn_whereare(map, client, context, arg):
 			continue
 		names += '[li][b]%s[/b] (%d): ' % (m.name, user_count)
 		for u in m.contents:
-			if u.is_client() and (u.user_flags & userflag['hide_location'] == 0):
+			if u.is_client() and (u.connection_attr('user_flags') & userflag['hide_location'] == 0):
 				names += u.name_and_username()+', '
 		names = names.rstrip(', ') + ' | [command]map %d[/command]' % m.db_id
 		if m.topic:
@@ -2234,8 +2253,10 @@ def fn_debugkick(map, client, context, arg):
 	if e.db_id:
 		AllEntitiesByDB.pop(e.db_id, None)
 
-@cmd_command(alias=['e'])
+@cmd_command(alias=['e'], no_entity_needed=True)
 def fn_entity(map, client, context, arg):
+	self_is_entity = is_entity(client)
+
 	# Parse
 	provided_id, subcommand = separate_first_word(arg)
 	subcommand, subarg = separate_first_word(subcommand)
@@ -2244,7 +2265,7 @@ def fn_entity(map, client, context, arg):
 
 	# Can use "me" and "here" as special IDs
 	e = None
-	if provided_id == 'me':
+	if provided_id == 'me' and self_is_entity:
 		e = client
 	elif provided_id == 'here':
 		e = map
@@ -2303,7 +2324,7 @@ def fn_entity(map, client, context, arg):
 		respond(context, info)
 	elif subcommand == 'locate':
 		if e.is_client() and not client.oper_override and \
-			((e.user_flags & userflag['hide_location'] != 0) or (e.map and e.map.is_map() and (e.map.map_flags & mapflag['public'] == 0))):
+			((e.connection_attr('user_flags') & userflag['hide_location'] != 0) or (e.map and e.map.is_map() and (e.map.map_flags & mapflag['public'] == 0))):
 			respond(context, "That user's location is private")
 		else:
 			info = '[b]%s (%s)[/b]' % (e.name, e.protocol_id())
@@ -2333,11 +2354,11 @@ def fn_entity(map, client, context, arg):
 				respond(context, "Invalid picture", error=True)
 		save_entity = True
 
-	elif subcommand == 'take':
+	elif subcommand == 'take' and self_is_entity:
 		if permission_check(permission['move_new_map']):
 			e.switch_map(client, on_behalf_of=client)
 			save_entity = True
-	elif subcommand in ('drop', 'summon'):
+	elif subcommand in ('drop', 'summon') and self_is_entity:
 		if permission_check( (permission['move'], permission['move_new_map']) ):
 			if e.map_id is client.map_id or permission_check(permission['move_new_map']):
 				if not e.switch_map(client.map_id, new_pos=[client.x, client.y], on_behalf_of=client):

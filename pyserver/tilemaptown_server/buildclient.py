@@ -358,46 +358,47 @@ class Connection(object):
 		username = filter_username(username)
 
 		login_successful = self.test_login(username, password)
-
 		if login_successful == True:
 			self.start_batch()
+			self.username = username
+			self.db_id = find_db_id_by_username(username)
 
 			# Don't allow multiple connections to be tied to the same account at once
-			self.db_id = find_db_id_by_username(username)
-			had_old_entity = self.db_id in AllEntitiesByDB
-			if had_old_entity:
-				old_entity = AllEntitiesByDB[self.db_id]
-				old_connection = old_entity.connection()
-				old_entity.save_on_clean_up = True
-				old_entity.clean_up()
-				if old_connection:
-					old_connection.entity = None
-					old_connection.disconnect(reason="LoggedInElsewhere")
-				del old_entity
-				del old_connection
+			if isinstance(client, Client): # Only load if it's catually a Client
+				had_old_entity = self.db_id in AllEntitiesByDB
+				if had_old_entity:
+					old_entity = AllEntitiesByDB[self.db_id]
+					old_connection = old_entity.connection()
+					old_entity.save_on_clean_up = True
+					old_entity.clean_up()
+					if old_connection:
+						old_connection.entity = None
+						old_connection.disconnect(reason="LoggedInElsewhere")
+					del old_entity
+					del old_connection
+				client.load(username, override_map=override_map)
+				client.temporary = False
 
-			self.username = username
-			ConnectionsByUsername[username] = self
-			client.load(username, override_map=override_map)
+				if client.map:
+					if announce_login:
+						client.map.broadcast("MSG", {'text': client.name+" has logged in ("+username+")"})
+					client.map.broadcast("WHO", {'add': client.who()}, remote_category=botwatch_type['entry']) # update client view
+				else:
+					client.send("MSG", {'text': "Your last map wasn't saved correctly. Sending you to the default one..."})
+					client.switch_map(get_database_meta('default_map'))
 
-			print("login: \"%s\" from %s" % (username, self.ip))
-			client.temporary = False
-
-			if client.map:
-				if announce_login:
-					client.map.broadcast("MSG", {'text': client.name+" has logged in ("+username+")"})
-				client.map.broadcast("WHO", {'add': client.who()}, remote_category=botwatch_type['entry']) # update client view
+				# send the client their inventory
+				self.refresh_client_inventory(client)
+				print("login: \"%s\" from %s" % (username, self.ip))
 			else:
-				client.send("MSG", {'text': "Your last map wasn't saved correctly. Sending you to the default one..."})
-				client.switch_map(get_database_meta('default_map'))
+				print("login: \"%s\" from %s (messaging)" % (username, self.ip))
 
-			# send the client their inventory
-			self.refresh_client_inventory(client)
+			ConnectionsByUsername[username] = self
 
 			c = Database.cursor()
 			# send the client their mail
 			mail = []
-			for row in c.execute('SELECT id, sender_id, recipients, subject, contents, flags FROM Mail WHERE owner_id=?', (client.db_id,)):
+			for row in c.execute('SELECT id, sender_id, recipients, subject, contents, flags FROM Mail WHERE owner_id=?', (self.db_id,)):
 				item = {'id': row[0], 'from': find_username_by_db_id(row[1]),
 				'to': [find_username_by_db_id(int(x)) for x in row[2].split(',')],
 				'subject': row[3], 'contents': row[4], 'flags': row[5]}
@@ -496,7 +497,7 @@ class Connection(object):
 				self.send("ERR", {'text': text})
 			asyncio.ensure_future(self.ws.close(reason=reason))
 
-class FakeClient(ClientMixin, object):
+class FakeClient(PermissionsMixin, ClientMixin, object):
 	def __init__(self, connection):
 		self.connection = weakref.ref(connection)
 
@@ -515,3 +516,11 @@ class FakeClient(ClientMixin, object):
 
 	def name_and_username(self):
 		return self.connection_attr("username")
+
+	@property
+	def name(self):
+		return self.connection_attr("username")
+
+	@property
+	def db_id(self):
+		return self.connection_attr("db_id")

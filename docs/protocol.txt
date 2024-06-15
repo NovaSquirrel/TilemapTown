@@ -225,6 +225,10 @@ Can optionally start on a specific map, with optional map coordinates.
 Clients can request features and the server can confirm some amount of them.
 Clients can report what name and version they're running if they like.
 
+--> IDN {"username": username, "password": password, "client_mode": "messaging"}
+Experimental feature: If you specify a "client_mode" parameter and set it to "messaging", you'll log in but not be placed into the world as a character.
+This is for creating clients that treat Tilemap Town as an instant messaging platform. You can specify "normal" or leave client_mode unspecified for the regular mode.
+
 --> MSG {"text": "[text]"}
 --> MSG {"text": "[text]", "rc": id}
 Send a chat message to the current room.
