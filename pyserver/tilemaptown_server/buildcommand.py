@@ -683,6 +683,27 @@ def fn_findic(map, client, context, arg):
 		names += u.name_and_username()
 	respond(context, 'These users are currently in character (or roleplaying): '+names)
 
+@cmd_command(syntax="dice sides", no_entity_needed=True, alias=['proll'])
+def fn_privateroll(map, client, context, arg):
+	param = arg.split('d')
+	if len(param) != 2:
+		param = arg.split(' ')
+	if len(param) != 2 or (not param[0].isdecimal()) or (not param[1].isdecimal()):
+		respond(context, 'Syntax: /privateroll dice sides', error=True)
+	else:
+		dice = int(param[0])
+		sides = int(param[1])
+		sum = 0
+		if dice < 1 or dice > 1000:
+			respond(context, 'Bad number of dice', error=True)
+			return
+		if sides < 1 or sides > 1000000000:
+			respond(context, 'Bad number of sides', error=True)
+			return
+		for i in range(dice):
+			sum += random.randint(1, sides)
+		client.send("MSG", {'text': "You roll %dd%d and get %d"%(dice, sides, sum)})
+
 @cmd_command(syntax="dice sides")
 def fn_roll(map, client, context, arg):
 	param = arg.split('d')
@@ -701,7 +722,7 @@ def fn_roll(map, client, context, arg):
 			respond(context, 'Bad number of sides', error=True)
 			return
 		for i in range(dice):
-			sum += random.randint(1, sides)				
+			sum += random.randint(1, sides)
 		map.broadcast("MSG", {'text': client.name+" rolled %dd%d and got %d"%(dice, sides, sum)})
 
 @cmd_command(category="Map")

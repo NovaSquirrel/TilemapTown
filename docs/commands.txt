@@ -382,6 +382,9 @@ Display current date and time
 /disconnect
 Disconnect yourself from the server
 
+/privateroll dice sides
+Roll dice, but only show the result to you
+
 ---Bot commands---
 /listen category,category,... map_id,map_id,...
 /unlisten category,category,... map_id,map_id,...
