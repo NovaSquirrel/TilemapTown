@@ -162,11 +162,12 @@ def set_entity_params_from_dict(e, d, connection, client, echo):
 			if e.db_id != None and entity_type_name[e.entity_type] in ('image', 'tileset') and old_data != e.data:
 				is_tileset = entity_type_name[e.entity_type] == 'tileset'
 				for u in AllClients:
-					if e.db_id in u.images_and_tilesets_received_so_far:
+					connection = u.connection()
+					if connection and e.db_id in connection.images_and_tilesets_received_so_far:
 						if is_tileset:
-							u.send("TSD", {'id': e.db_id, 'data': e.data, 'update': True})
+							connection.send("TSD", {'id': e.db_id, 'data': e.data, 'update': True})
 						else:
-							u.send("IMG", {'id': e.db_id, 'url': e.data, 'update': True})
+							connection.send("IMG", {'id': e.db_id, 'url': e.data, 'update': True})
 
 	if 'owner_id' in d:
 		if e.owner_id != client.db_id:
