@@ -395,6 +395,17 @@ class Connection(object):
 				self.refresh_client_inventory(client)
 				print("login: \"%s\" from %s" % (username, self.ip))
 			else:
+				old_connection = ConnectionsByUsername.get(username, None)
+				if old_connection:
+					old_entity = old_connection.entity
+					if isinstance(old_entity, Entity):
+						old_entity.save_on_clean_up = True
+						old_entity.clean_up()
+					old_connection.entity = None
+					old_connection.disconnect(reason="LoggedInElsewhere")
+					del old_entity
+					del old_connection
+
 				self.load_settings(username)
 				print("login: \"%s\" from %s (messaging)" % (username, self.ip))
 
