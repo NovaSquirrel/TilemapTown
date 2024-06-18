@@ -154,11 +154,20 @@ async def client_handler(websocket, path):
 	for e in connection.cleanup_entities_on_logout:
 		e.clean_up()
 
+	# Let watchers know
+	if connection.db_id and connection.can_be_watched():
+		who_info = {"remove": connection.db_id, "type": "watch"}
+		for other in AllConnections:
+			if other.user_watch_with_who and connection.username in other.watch_list:
+				other.send("WHO", who_info)
+
 	# Clean up the entity, if it isn't just a placeholder
 	if isinstance(connection.entity, Client):
 		if connection.entity.db_id:
 			connection.entity.save_on_clean_up = True
 		connection.entity.clean_up()
+	elif connection.db_id:
+		connection.save_settings(connection.db_id)
 	if connection.entity != None:
 		del connection.entity
 

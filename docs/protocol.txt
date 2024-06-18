@@ -182,7 +182,7 @@ For WHO update, you can supply another ID instead of yours with the "rc" paramet
 A server-->client WHO may have a "type" parameter on it, which indicates which user list specifically is being managed here.
 If it's not present, treat it like it's "map"; values are:
 	"map" - User list for a map (usually the one the player is currently in; "remote_map" will be provided if not)
-	"watch" - Users in your watch list that are currently online
+	"watch" - Users in your watch list that are currently online; only received if you specify the extension "user_watch_with_who"
 
 Clients can send updates about themselves, but only keys that the servers knows to be OK, such as "typing".
 For client-to-server WHO updates, "id" is ignored if provided.
@@ -582,6 +582,10 @@ CMD {params}
 CMD {params}
 
 If an entity is forwarding messages, it will have a WHO field named "is_forwarding" that's set to true. If one of the forwarded types is "CHAT", then there will be another field named "chat_listener" which is also true.
+
+
+=== Extension: user_watch_with_who ===
+When enabled, you may receive WHO messages when users on your watch list log in, log out, or change status. All of the WHO messages will be labeled with "type": "watch" and the user information provided is a limited subset of what's usually there, consisting of "id", "username", "status", "status_message" and a new boolean named "in_world" which is true if the user is fully logged in rather than being in instant messaging mode.
 
 
 === WebSocket disconnect reasons ===

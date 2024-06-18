@@ -176,13 +176,16 @@ class Connection(object):
 		self.entity = FakeClient(self)
 		self.identified = False
 		self.oper_override = False
-		self.mode = None # Full client or not
 
 		self.ping_timer = 180
 		self.idle_timer = 0
 		self.connected_time = int(time.time())
 		self.sent_resources_yet = False
 		self.images_and_tilesets_received_so_far = set()
+
+		# For being able to hold statuses separately from entities? May change this later
+		self.status_type = None
+		self.status_message = None
 
 		# Settings
 		self.client_settings = ""
@@ -223,6 +226,7 @@ class Connection(object):
 		# Other extensions
 		self.receive_build_messages = False
 		self.can_forward_messages_to = False
+		self.user_watch_with_who = False
 		self.features = set() # list of feature names
 
 	def load_settings(self, username):
@@ -364,7 +368,7 @@ class Connection(object):
 			self.db_id = find_db_id_by_username(username)
 
 			# Don't allow multiple connections to be tied to the same account at once
-			if isinstance(client, Client): # Only load if it's catually a Client
+			if isinstance(client, Client): # Only load if it's actually a Client
 				had_old_entity = self.db_id in AllEntitiesByDB
 				if had_old_entity:
 					old_entity = AllEntitiesByDB[self.db_id]
@@ -391,9 +395,19 @@ class Connection(object):
 				self.refresh_client_inventory(client)
 				print("login: \"%s\" from %s" % (username, self.ip))
 			else:
+				self.load_settings(username)
 				print("login: \"%s\" from %s (messaging)" % (username, self.ip))
 
 			ConnectionsByUsername[username] = self
+			self.broadcast_who_to_watchers()
+			if self.user_watch_with_who:
+				users = {}
+				for u in self.watch_list:
+					other = ConnectionsByUsername.get(u, None)
+					if not other or not other.can_be_watched():
+						continue
+					users[str(other.db_id)] = other.watcher_who()
+				self.send("WHO", {"list": users, "type": "watch"})
 
 			c = Database.cursor()
 			# send the client their mail
@@ -469,6 +483,26 @@ class Connection(object):
 					self.disconnect('Banned from the server until %s (%s)' % (str(result[1]), result[2]), reason='Ban')
 					return True
 		return False
+
+	def watcher_who(self):
+		return {
+			'id': self.db_id,
+			'username': self.username,
+			'status': self.status_type,
+			'status_message': self.status_message,
+			'in_world': isinstance(self.entity, Entity),
+		}
+
+	def can_be_watched(self):
+		return self.user_flags & userflag['no_watch'] == 0
+
+	def broadcast_who_to_watchers(self):
+		if not self.can_be_watched():
+			return
+		who_info = {"add": self.watcher_who(), "type": "watch"}
+		for other in AllConnections:
+			if other.user_watch_with_who and self.username in other.watch_list:
+				other.send("WHO", who_info)
 
 	def refresh_client_inventory(self, entity):
 		self.send("BAG", {'list': [child.bag_info() for child in entity.all_children()], 'clear': True})

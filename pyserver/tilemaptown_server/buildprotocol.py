@@ -865,6 +865,7 @@ server_feature_attribute = {
 	"batch": "can_batch_messages",
 	"receive_build_messages": "receive_build_messages",
 	"entity_message_forwarding": "can_forward_messages_to",
+	"user_watch_with_who": "user_watch_with_who",
 }
 
 @protocol_command(pre_identify=True)

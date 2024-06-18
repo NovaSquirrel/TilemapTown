@@ -638,6 +638,14 @@ def broadcast_status_change(map, client, status_type, message):
 	if map and map.is_map():
 		map.broadcast("WHO", {"update": {'id': client.protocol_id(), 'status': status_type, 'status_message': message}})
 
+	# Let watchers know
+	if hasattr(client, 'connection'):
+		connection = client.connection()
+		if connection != None:
+			connection.status_type = status_type
+			connection.status_message = message
+			connection.broadcast_who_to_watchers()
+
 @cmd_command(syntax="message", no_entity_needed=True)
 def fn_away(map, client, context, arg):
 	if len(arg) < 1:
@@ -753,7 +761,7 @@ def fn_newmap(map, client, context, arg):
 # maybe combine the list add/remove/list commands together?
 @cmd_command(category="Settings", syntax="username", no_entity_needed=True)
 def fn_ignore(map, client, context, arg):
-	arg = arg.lower()
+	arg = arg.lower().strip()
 	if not arg:
 		return
 	connection = client.connection()
@@ -763,7 +771,7 @@ def fn_ignore(map, client, context, arg):
 
 @cmd_command(category="Settings", syntax="username", no_entity_needed=True)
 def fn_unignore(map, client, context, arg):
-	arg = arg.lower()
+	arg = arg.lower().strip()
 	if not arg:
 		return
 	connection = client.connection()
@@ -777,23 +785,45 @@ def fn_ignorelist(map, client, context, arg):
 
 @cmd_command(category="Settings", syntax="username", no_entity_needed=True)
 def fn_watch(map, client, context, arg):
-	arg = arg.lower()
-	if not arg:
-		return
 	connection = client.connection()
-	if connection:
-		connection.watch_list.add(arg)
-		respond(context, '\"%s\" added to watch list' % arg)
+	if connection == None:
+		return
+	arg = arg.lower().strip()
+	if not arg:
+		users = []
+		for other in connection.watch_list:
+			other_connection = ConnectionsByUsername.get(other, None)
+			if other_connection == None or not other_connection.can_be_watched():
+				continue
+			users.append(other_connection.username if isinstance(other_connection.entity, Entity) else (other_connection.username +"✉️"))
+		respond(context, 'Players currently online: %s' % ', '.join(users))
+		return
+
+	# Add to watch list
+	connection.watch_list.add(arg)
+	respond(context, '\"%s\" added to watch list' % arg)
+
+	# Update watch list
+	if connection.user_watch_with_who:
+		other = ConnectionsByUsername[arg]
+		if other.can_be_watched():
+			connection.send("WHO", {"add": other.watcher_who(), "type": "watch"})
 
 @cmd_command(category="Settings", syntax="username", no_entity_needed=True)
 def fn_unwatch(map, client, context, arg):
-	arg = arg.lower()
+	arg = arg.lower().strip()
 	if not arg:
 		return
 	connection = client.connection()
 	if connection:
 		connection.watch_list.discard(arg)
 		respond(context, '\"%s\" removed from watch list' % arg)
+
+		# Update watch list
+		if connection.user_watch_with_who:
+			other = ConnectionsByUsername[arg]
+			if other.can_be_watched():
+				connection.send("WHO", {"remove": other.db_id, "type": "watch"})
 
 @cmd_command(category="Settings", no_entity_needed=True)
 def fn_watchlist(map, client, context, arg):
