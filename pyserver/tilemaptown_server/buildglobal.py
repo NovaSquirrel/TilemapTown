@@ -55,7 +55,6 @@ def loadConfigJson():
 		print("Config file '%s' doesn't exist, using defaults" % ConfigFile)
 
 	# Set defaults for config items
-	setConfigDefault("Server",   "AlwaysLoadedMaps", [])
 	setConfigDefault("Server",   "Port",             12550)
 	setConfigDefault("Server",   "Name",             "Tilemap Town")
 	setConfigDefault("Server",   "MOTD",             "")

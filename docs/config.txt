@@ -1,5 +1,33 @@
-Server.AlwaysLoadedMaps
-Default: []
+.--------------------------------------------------------------------------------------------------
+| Sample config file
+'--------------------------------------------------------------------------------------------------
+This will set up the server similar to how the official server is set up; feel free to modify it as you need.
+You can name it config.json and put it in the same directory as runserver.py
+
+{
+  "Server": {
+    "Name": "Tilemap Town",
+    "Admins": ["nova"],
+    "MaxUsers": 100,
+    "MaxMaps": 100,
+    "MOTD": "Welcome to my [b]Tilemap Town[/b] server",
+    "ResourceFiles": ["server_resources.json", "server_resources2.json"],
+    "ResourceIMGBase": "https://novasquirrel.com/town/img/"
+  },
+  "Database": {
+    "File": "tilemaptown.db"
+  },
+  "Images": {
+    "URLWhitelist": ["https://i.imgur.com/", "https://i.postimg.cc/", "https://i.ibb.co/", "https://raw.githubusercontent.com/"]
+  },
+  "Logs": {
+    "BuildFile": "buildlog.txt"
+  }
+}
+
+.--------------------------------------------------------------------------------------------------
+| Config values
+'--------------------------------------------------------------------------------------------------
 
 Server.Port
 Default: 12550
@@ -15,7 +43,7 @@ Message displayed to a user upon connecting.
 
 Server.Admins
 Default: []
-List of usernames allowed to perform admin privileges.
+List of usernames allowed to perform admin actions.
 
 Server.MaxUsers
 Default: 200
@@ -34,6 +62,18 @@ Server.WSMaxQueue
 Default: 32
 Maximum number of incoming websocket messages allowed to queue up before the server stops processing incoming data.
 
+Server.BroadcastConnects
+Default: true
+If true, tell everyone on the server about users connecting
+
+Server.BroadcastDisconnects
+Default: true
+If true, tell everyone on the server about users disconnecting
+
+Server.MaxMapSize
+Default: 256
+Maximum width or height allowed to be used on a map
+
 Server.ResourceFiles
 Default: []
 Array of strings, containing the names of JSON files to read, in order.
@@ -45,6 +85,14 @@ Default: ""
 Prefix to add to images specified in resource files, if they do not start with http:// or https://
 The official server uses "https://novasquirrel.com/town/img/" for this, for example.
 
+API.Enabled
+Default: true
+If true, makes information about the world available through a web API
+
+API.Port
+Default: 12551
+Port to host the web API on
+
 Database.File
 Default: "town.db"
 Filename used for Tilemap Town's database.
@@ -54,18 +102,33 @@ Default: true
 Set up the database if needed. If false, skip this check.
 
 Images.URLWhitelist
-Default: ["https://i.imgur.com/"]
+Default: ["https://i.imgur.com/", "https://i.postimg.cc/", "https://i.ibb.co/"]
 Set a list of URL parts that are considered safe to start user-provided image URLs with.
 
----------------------------------------------------------------------------------------------------
-Resource files:
+Logs.BuildFile
+Default: ""
+If provided, this is the filename used for 
 
+Logs.BuildDefault
+Default: true
+
+.--------------------------------------------------------------------------------------------------
+| Resource files:
+'--------------------------------------------------------------------------------------------------
 These are JSON formatted files, which can contain images and tilesets.
 The client is given all of these upon connecting, with a "RSC" protocol message.
 
 Example:
 
 {
+	"build_categories": {
+		"Cool category": "food",
+		"Test category": ["purplesand", "brownsand"]
+	},
+	"image_names": {
+		"0": "Potluck",
+		"-1": "Extras"
+	},
 	"images": {
 		"0": "potluck.png",
 		"-1": "extra.png"
@@ -89,8 +152,10 @@ Example:
 	}
 }
 
-This tells the client to preload two tileset images (with IDs 0 and -1), and provides filenames for them. The server will prefix these names with the ResourceIMGBase string from the config file before sending them to the client.
+This tells the client to preload two tileset images (with IDs 0 and -1), and provides filenames for them. The server will prefix these names with the ResourceIMGBase string from the config file before sending them to the client. Friendly names are also provided for the tile editor menu.
 
 The resource file also defines two tilesets, named "" and "food", and defines one tile each in them. If the client already has built-in tilesets with these names, they are overwritten with the server-provided ones.
 
 The special tileset name "" corresponds to the set of predefined tiles that show up in the build menu. This means that this resource file will overwrite the default predefined tile list the client has and replace it with this list that just contains a tile with ID "grass".
+
+Finally, two build categories are defined in addition to the default "Global tiles" and "My inventory" ones. This shows two different methods of defining build categories, where you can just define a category to be an entrie tileset (in this case "food") or actually explicitly list out tile identifiers.

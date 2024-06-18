@@ -895,7 +895,7 @@ function editItemShared(item) {
 			}
 			// Probably also allow just typing in something?
 
-			document.getElementById('edittilemaptile').style.display = (item.type == "map_tile" || item.type == "map_tile_hotbar" || item.type == "map_tile_mapobj_edit") ? "block" : "none";
+			document.getElementById('edittilemaptile').style.display = (item.type == "map_tile" || item.type == "map_tile_hotbar" || item.type == "map_tile_mapobj_edit" || item.type == "map_tile_turf_edit") ? "block" : "none";
 			document.getElementById('edittileobject').style.display = "block";
 			document.getElementById('edittilesheet').value = "keep";
 			document.getElementById('edittilex').value = itemobj.pic[1];
@@ -1800,7 +1800,7 @@ function updateBuildToolCategoriesAvailable() {
 
 	// Empty out the list
 	while (categorySelect.childElementCount > 2) {
-		categorySelect.removeChild(ul.lastChild);
+		categorySelect.removeChild(categorySelect.lastChild);
 	}
 
 	for(let e of Object.keys(buildCategories)) {
