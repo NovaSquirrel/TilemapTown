@@ -28,6 +28,7 @@ available_server_features = {
 	"batch": {"version": "0.0.1", "minimum_version": "0.0.1"},
 	"receive_build_messages": {"version": "0.0.1", "minimum_version": "0.0.1"},
 	"entity_message_forwarding": {"version": "0.0.1", "minimum_version": "0.0.1"},
+	"user_watch_with_who": {"version": "0.0.1", "minimum_version": "0.0.1"},
 }
 server_software_name = "Tilemap Town server"
 server_software_version = "0.2.0"
@@ -118,10 +119,12 @@ if len(Config["Logs"]["BuildFile"]):
 
 # Important information shared by each module
 ServerShutdown = [-1, False] # First value is seconds left, second value is true for restarts but false for shutdowns
-AllClients      = weakref.WeakSet()
+AllClients      = weakref.WeakSet()             # All connections curently in the world
+AllConnections  = weakref.WeakSet()             # All connections, regardless of if they're in the world
 AllMaps         = weakref.WeakSet()             # Maps only; used by /whereare
 AllEntitiesByDB = weakref.WeakValueDictionary() # All entities (indexed by database ID)
 AllEntitiesByID = weakref.WeakValueDictionary() # All entities (indexed by temporary ID)
+ConnectionsByUsername = weakref.WeakValueDictionary() # Look up connections by lowercased username
 
 # Remote map-watching for bots
 botwatch_type = {}
@@ -187,11 +190,12 @@ mapflag['no_build_logs'] = 4
 
 # User flags
 userflag = {}
-userflag['bot'] = 1
-userflag['file_uploads'] = 2
-userflag['no_build_logs'] = 4
-userflag['hide_location'] = 8 # Don't show in /whereare and such
-userflag['hide_api'] = 16 # Don't show in API
+userflag['bot']           = 0x01 # Is a bot
+userflag['file_uploads']  = 0x02 # Can upload files to the server (not implemented)
+userflag['no_build_logs'] = 0x04 # Don't log when this user builds
+userflag['hide_location'] = 0x08 # Don't show in /whereare and such
+userflag['hide_api']      = 0x10 # Don't show in API
+userflag['no_watch']      = 0x20 # Don't allow other users to have you on their watch list
 
 # Entity types
 entity_type = {}
@@ -228,8 +232,14 @@ global_entity_marker = "!"
 creatable_entity_types = ('text', 'image', 'map_tile', 'tileset', 'reference', 'folder', 'landmark', 'generic')
 
 # Important shared functions
+def is_entity(e):
+	return isinstance(e, Entity)
+
+def is_client_and_entity(e):
+	return isinstance(e, Entity) and e.is_client()
+
 def broadcast_to_all(text):
-	for u in AllClients:
+	for u in AllConnections:
 		u.send("MSG", {'text': text, 'class': 'broadcast_message'})
 
 def find_client_by_db_id(id, inside=None):
@@ -248,6 +258,14 @@ def find_client_by_username(username, inside=None):
 		if username == u.username:
 			return u
 	return None
+
+def find_connection_by_username(username):
+	if valid_id_format(username):
+		e = get_entity_by_id(username, load_from_db=False)
+		if e != None and hasattr(e, "connection"):
+			return e.connection()
+		return None
+	return ConnectionsByUsername.get(username.lower(), None)
 
 def find_username_by_db_id(dbid):
 	c = Database.cursor()
@@ -441,8 +459,11 @@ def write_to_build_log(map, client, command, args, old_data = None):
 	# Get the IP, and determine if this client should not be logged
 	ip = None
 	if client.is_client():
-		ip = client.ip
-		if client.user_flags & userflag['no_build_logs']:
+		connection = client.connection()
+		if connection == None:
+			return
+		ip = connection.ip
+		if connection.user_flags & userflag['no_build_logs']:
 			return
 	else:
 		# TODO: Try to get the creator's ID if they're present, but right now non-clients can't build anyway

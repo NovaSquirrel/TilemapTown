@@ -20,301 +20,8 @@ from collections import deque
 
 entityCounter = 1
 
-class Entity(object):
-	def __init__(self, entity_type, creator_id=None):
-		global entityCounter
-
-		self.entity_type = entity_type
-
-		self.name = '?'
-		self.desc = None
-		self.dir = 2 # South
-		self.map_ref = None        # Storage for self.map, which is a property
-
-		self.pic = None
-
-		self.map_id = None         # Map the entity is currently on
-		self.x = 0
-		self.y = 0
-		self.offset = None         # Visual offset in pixels
-
-		self.home_id = None        # Map that is the entity's "home"
-		self.home_position = None
-
-		# Identification
-		self.id = entityCounter  # Temporary ID for referring to different objects in RAM
-		entityCounter += 1
-		self.db_id = None        # More persistent ID: the database key
-
-		self.temporary = False   # If true, don't save the entity to the database
-		self.delete_on_logout = False # If true, delete entity when the owner logs out
-
-		# Other info
-		self.tags = {}    # Description, species, gender and other things
-		self.data = None  # Data that gets stored in the database
-		self.contents = set() # Entities stored inside this one
-		self.flags = 0        # Entity flags, like "public"?
-
-		# temporary information
-		self.requests = {} # Indexed by tuple: (username, type). Each item is an array with [timer, id, data]; data may be None. Timer decreases each second, then the request is deleted.
-		# valid types are "tpa", "tpahere", "carry", "followme"
-		self.tp_history = deque(maxlen=20)
-
-		# message forwarding; for bringing bot entities onto different maps, that can listen to messages
-		self.forward_message_types = set()
-		self.forward_messages_to = None
-
-		# riding information
-		self.vehicle = None     # User being ridden
-		self.passengers = set() # Users being carried
-		self.is_following = False # If true, follow behind instead of being carried
-
-		self.follow_map_vehicle = None
-		self.follow_map_passengers = set()
-
-		# permissions
-		self.creator_id = creator_id
-		self.owner_id = creator_id
-		self.creator_temp_id = None # Temporary ID of the creator of the object, for guests. Not saved to the database.
-
-		# default permissions for when entity is the subject
-		self.allow = 0
-		self.deny = 0
-		self.guest_deny = 0
-
-		# permissions for when entity is the actor
-		self.map_allow = 0       # Used to cache the map allows and map denys to avoid excessive SQL queries
-		self.map_deny = 0
-
-		self.temp_permissions_given_to = weakref.WeakSet()
-		self.temp_permissions = weakref.WeakKeyDictionary() # temp_permissions[subject] = permission bits
-
-		self.oper_override = False
-
-		# Save when clean_up() is called
-		self.save_on_clean_up = False
-		self.cleaned_up_already = False
-
-		# Make this entity easy to find
-		AllEntitiesByID[self.id] = self
-
-	def __repr__(self):
-		return "%s(%r, type=%r, id=%r, db=%r)" % (self.__class__.__name__, self.name, self.entity_type, self.id, self.db_id)
-
-	def __del__(self):
-		#print("Unloading %r" % self)
-		self.clean_up()
-
-	# Non-client entities have a weak reference to their containers
-	@property
-	def map(self):
-		return self.map_ref() if self.map_ref != None else None
-	@map.setter
-	def map(self, value):
-		self.map_ref = weakref.ref(value) if value != None else None
-
-	def clean_up(self):
-		if not self.cleaned_up_already:
-
-			if self.save_on_clean_up and not self.temporary:
-				self.save_and_commit()
-				self.save_on_clean_up = False
-
-			# Remove from the container
-			if self.map != None:
-				self.map.remove_from_contents(self)
-
-			# Let go of all passengers
-			self.stop_current_ride()
-
-			# Get rid of any contents that don't have persistent_object_entry permission
-			if self.db_id != get_database_meta('default_map'):
-				temp = set(self.contents)
-				for u in temp:
-					if not u.is_client() \
-					and u.home_id != self.db_id \
-					and (u.owner_id != self.owner_id or u.owner_id == None) \
-					and u.map_id != u.owner_id \
-					and not u.has_permission(self, permission['persistent_object_entry'], False):
-						u.send_home()
-
-			self.cleaned_up_already = True
-
-	def send(self, commandType, commandParams):
-		# Treat chat as a separate pseudo message type
-		is_chat = commandType == 'MSG' and commandParams != None and ("name" in commandParams)
-		if is_chat and 'CHAT' not in self.forward_message_types:
-			return
-
-		# Normal entities don't get messages, but they can if there's a forward
-		if is_chat or (self.forward_messages_to != None and commandType in self.forward_message_types):
-			c = get_entity_by_id(self.forward_messages_to, load_from_db=False)
-			if c != None and c.can_forward_messages_to:
-				asyncio.ensure_future(c.ws.send("FWD %s %s" % (self.protocol_id(), make_protocol_message_string(commandType, commandParams))))
-
-	def send_string(self, raw, is_chat=False):
-		# Directly send a string, so you can json.dumps once and reuse it for everyone
-		if is_chat and 'CHAT' not in self.forward_message_types:
-			return
-		if is_chat or (self.forward_messages_to != None and raw[0:3] in self.forward_message_types):
-			c = get_entity_by_id(self.forward_messages_to, load_from_db=False)
-			if c != None and c.can_forward_messages_to:
-				asyncio.ensure_future(c.ws.send("FWD %s %s" % (self.protocol_id(), raw)))
-
-	def start_batch(self):
-		# Only for clients
-		pass
-
-	def finish_batch(self):
-		# Only for clients
-		pass
-
-	# Send a message to all contents
-	def broadcast(self, command_type, command_params, remote_category=None, remote_only=False, send_to_links=False, require_extension=None):
-		""" Send a message to everyone on the map """
-		if not remote_only and self.contents:
-			is_chat = command_type == 'MSG' and command_params and 'name' in command_params
-			send_me = make_protocol_message_string(command_type, command_params) # Get the string once and reuse it
-			for client in self.contents:
-				if require_extension == None or (client.is_client() and getattr(client, require_extension)):
-					client.send_string(send_me, is_chat=is_chat)
-
-		# Add remote map on the params if needed
-		do_linked = send_to_links and self.is_map() and self.edge_ref_links
-		do_listeners = remote_category != None and self.db_id in BotWatch[remote_category]
-		if do_linked or do_listeners:
-			if command_params == None:
-				command_params = {}
-			command_params['remote_map'] = self.db_id
-		else:
-			return
-
-		""" Send it to any maps linked from this one, if send_to_links """
-		if do_linked: # Assume it's a map if do_linked is true
-			for linked_map in self.edge_ref_links:
-				if linked_map == None:
-					continue
-				for client in linked_map.contents:
-					if not client.is_client() or not client.see_past_map_edge \
-					or (require_extension != None and (not client.is_client() or not getattr(client, require_extension))):
-						continue
-					client.send(command_type, command_params)
-
-		""" Also send it to any registered listeners """
-		if do_listeners:
-			for client in BotWatch[remote_category][self.db_id]:
-				# don't send twice to people on the map
-				if ((client.map_id != self.db_id) or remote_only) \
-				and (require_extension == None or (client.is_client() and getattr(client, require_extension))):
-					client.send(command_type, command_params)
-
-	# Allow other classes to respond to having things added to them
-
-	def add_to_contents(self, item):
-		if item.map and item.map is not self:
-			item.map.remove_from_contents(item)
-		self.contents.add(item)
-		item.map_id = self.db_id
-		item.map = self
-		item.update_map_permissions()
-
-		# Give the item a list of the other stuff in the container it was put in
-		if item.is_client():
-			item.send("WHO", {'list': self.who_contents(), 'you': item.protocol_id()})
-
-		# Tell everyone in the container that the new item was added
-		self.broadcast("WHO", {'add': item.who()}, remote_category=botwatch_type['entry'])
-
-		# Warn about chat listeners, if present
-		if item.is_client():
-			if self.db_id in BotWatch[botwatch_type['chat']]:
-				item.send("MSG", {'text': 'A bot has access to messages sent here ([command]listeners[/command])'})
-			self.send_map_info(item)
-
-		# Notify parents
-		for parent in self.all_parents():
-			parent.added_to_child_contents(item)
-
-	def remove_from_contents(self, item):
-		self.contents.discard(item)
-		item.map_id = None
-		item.map = None
-
-		# Tell everyone in the container that the item was removed
-		self.broadcast("WHO", {'remove': item.protocol_id()}, remote_category=botwatch_type['entry'])
-
-		# Notify parents
-		for parent in self.all_parents():
-			parent.removed_from_child_contents(item)
-
-	def added_to_child_contents(self, item):
-		""" Called on parents when add_to_contents is called here """
-		pass
-
-	def removed_from_child_contents(self, item):
-		""" Called on parents when remove_from_contents is called here """
-		pass
-
-	def has_in_contents_tree(self, other):
-		already_found = set()
-		current = other
-		while current:
-			already_found.add(current)
-			if current.map is self:
-				return True
-			if current.entity_type == entity_type['user']: # Don't return true for items in the inventory of another user, even if they're in your inventory
-				return False
-			if current.map in already_found:
-				return False
-			current = current.map
-		return False
-
-	def all_parents(self):
-		already_found = set()
-		current = self.map
-		while current:
-			yield current
-			already_found.add(current)
-			if current.map in already_found:
-				return
-			current = current.map
-
-	def all_children(self):
-		already_found = set()
-		queue = deque()
-		queue.append(self)
-		while queue:
-			item = queue.popleft()
-			for child in item.contents:
-				yield child
-				if child.id not in already_found:
-					already_found.add(child.id)
-					if len(child.contents):
-						queue.append(child)
-
-	def send_map_info(self, item):
-		item.send("MAI", {
-			'name': self.name,
-			'id': self.protocol_id(),
-			'owner_id': self.owner_id,
-			'owner_username': find_username_by_db_id(self.owner_id) or '?',
-			'default': 'colorfloor13',
-			'size': [10,10],
-			'build_enabled': False
-		})
-		item.send("MAP", {
-			'pos': [0, 0, 9, 9],
-			'default': 'colorfloor13',
-			'turf': [],
-			'obj': []
-		})
-
-		item.loaded_maps = set([self.db_id])
-
-		self.broadcast("MOV", {'id': item.protocol_id(), 'to': [random.randint(0, 9), random.randint(0, 9)]})
-
-	# Permission checking
-
+# Allow things that are not entities to do permission checking like entities (like FakeClient)
+class PermissionsMixin(object):
 	def get_allow_deny_for_other_entity(self, other_id):
 		allow = 0
 		deny = 0
@@ -334,10 +41,6 @@ class Entity(object):
 			WHERE m.member_id=? AND p.actor_id=m.group_id AND p.subject_id=? AND m.accepted_at IS NOT NULL', (self.db_id, other_id)):
 			allow |= row[0]
 		return (allow, deny)
-
-	def update_map_permissions(self):
-		""" Searches PERMISSION table and update map_allow and map_deny for the entity, so SQL queries can be skipped for the map they're on """
-		self.map_allow, self.map_deny = self.get_allow_deny_for_other_entity(self.map_id)
 
 	# Check if this entity is specifically disallowed from doing something, rather than being disallowed because something uses an allowlist
 	def is_banned_from(self, other_id, perm):
@@ -359,7 +62,7 @@ class Entity(object):
 		map_value = default
 
 		# Oper override bypasses permission checks
-		if self.oper_override:
+		if hasattr(self, 'connection') and self.connection_attr('oper_override'):
 			return True
 
 		# If you pass in an ID, see if the entity with that ID is already loaded
@@ -373,14 +76,15 @@ class Entity(object):
 					return False
 			elif not isinstance(other, int):
 				return None
-					
+		
 		if isinstance(other, Entity):
 			# You have permission if the object is you
-			if self is other or self.id == other.creator_temp_id:
-				return True
-			# Temporary permissions
-			if self.temp_permissions.get(other, 0) & perm:
-				return True
+			if isinstance(self, Entity):
+				if self is other or self.id == other.creator_temp_id:
+					return True
+				# Temporary permissions
+				if self.temp_permissions.get(other, 0) & perm:
+					return True
 			if self.db_id:
 				# If you're the owner, you automatically have permission
 				if self.db_id == other.owner_id:
@@ -494,6 +198,320 @@ class Entity(object):
 		else:
 			c.execute("INSERT INTO Permission (subject_id, actor_id, allow, deny) VALUES (?, ?, ?, ?)", (self.db_id, actor_id, allow, deny,))
 
+class Entity(PermissionsMixin, object):
+	def __init__(self, entity_type, creator_id=None):
+		global entityCounter
+
+		self.entity_type = entity_type
+
+		# Appearance
+		self.name = '?'
+		self.desc = None
+		self.pic = None
+
+		# Location
+		self.dir = 2 # South
+		self.map_ref = None        # Storage for self.map, which is a property
+		self.map_id = None         # Map the entity is currently on
+		self.x = 0
+		self.y = 0
+		self.offset = None         # Visual offset in pixels
+
+		self.home_id = None        # Map that is the entity's "home"
+		self.home_position = None
+
+		# Identification
+		self.id = entityCounter  # Temporary ID for referring to different objects in RAM
+		entityCounter += 1
+		self.db_id = None        # More persistent ID: the database key
+
+		self.temporary = False   # If true, don't save the entity to the database
+		self.delete_on_logout = False # If true, delete entity when the owner logs out
+
+		# Other info
+		self.tags = {}    # Description, species, gender and other things
+		self.data = None  # Data that gets stored in the database
+		self.contents = set() # Entities stored inside this one
+		self.flags = 0        # Entity flags, like "public"?
+
+		# Status
+		self.status_type = None
+		self.status_message = None
+
+		# Temporary information
+		self.requests = {} # Indexed by tuple: (username, type). Each item is an array with [timer, id, data]; data may be None. Timer decreases each second, then the request is deleted.
+		# valid types are "tpa", "tpahere", "carry", "followme"
+		self.tp_history = deque(maxlen=20)
+
+		# Message forwarding; for bringing bot entities onto different maps, that can listen to messages
+		self.forward_message_types = set()
+		self.forward_messages_to = None
+
+		# Riding information
+		self.vehicle = None     # User being ridden
+		self.passengers = set() # Users being carried
+		self.is_following = False # If true, follow behind instead of being carried
+
+		self.follow_map_vehicle = None
+		self.follow_map_passengers = set()
+
+		# Permissions
+		self.creator_id = creator_id
+		self.owner_id = creator_id
+		self.creator_temp_id = None # Temporary ID of the creator of the object, for guests. Not saved to the database.
+
+		# Default permissions for when entity is the subject
+		self.allow = 0
+		self.deny = 0
+		self.guest_deny = 0
+
+		# Permissions for when entity is the actor
+		self.map_allow = 0       # Used to cache the map allows and map denys to avoid excessive SQL queries
+		self.map_deny = 0
+
+		self.temp_permissions_given_to = weakref.WeakSet()
+		self.temp_permissions = weakref.WeakKeyDictionary() # temp_permissions[subject] = permission bits
+
+		# Save when clean_up() is called
+		self.save_on_clean_up = False
+		self.cleaned_up_already = False
+
+		# Make this entity easy to find
+		AllEntitiesByID[self.id] = self
+
+	def __repr__(self):
+		return "%s(%r, type=%r, id=%r, db=%r)" % (self.__class__.__name__, self.name, self.entity_type, self.id, self.db_id)
+
+	def __del__(self):
+		#print("Unloading %r" % self)
+		self.clean_up()
+
+	# Non-client entities have a weak reference to their containers
+	@property
+	def map(self):
+		return self.map_ref() if self.map_ref != None else None
+	@map.setter
+	def map(self, value):
+		self.map_ref = weakref.ref(value) if value != None else None
+
+	def clean_up(self):
+		if not self.cleaned_up_already:
+
+			if self.save_on_clean_up and not self.temporary:
+				self.save_and_commit()
+				self.save_on_clean_up = False
+
+			# Remove from the container
+			if self.map != None:
+				self.map.remove_from_contents(self)
+
+			# Let go of all passengers
+			self.stop_current_ride()
+
+			# Get rid of any contents that don't have persistent_object_entry permission
+			if self.db_id != get_database_meta('default_map'):
+				temp = set(self.contents)
+				for u in temp:
+					if not u.is_client() \
+					and u.home_id != self.db_id \
+					and (u.owner_id != self.owner_id or u.owner_id == None) \
+					and u.map_id != u.owner_id \
+					and not u.has_permission(self, permission['persistent_object_entry'], False):
+						u.send_home()
+
+			self.cleaned_up_already = True
+
+	def send(self, commandType, commandParams):
+		# Treat chat as a separate pseudo message type
+		is_chat = commandType == 'MSG' and commandParams != None and ("name" in commandParams)
+		if is_chat and 'CHAT' not in self.forward_message_types:
+			return
+
+		# Normal entities don't get messages, but they can if there's a forward
+		if is_chat or (self.forward_messages_to != None and commandType in self.forward_message_types):
+			c = get_entity_by_id(self.forward_messages_to, load_from_db=False)
+			if c != None and c.is_client():
+				connection = c.connection()
+				if connection != None and connection.ws != None and connection.can_forward_messages_to:
+					asyncio.ensure_future(connection.ws.send("FWD %s %s" % (self.protocol_id(), make_protocol_message_string(commandType, commandParams))))
+
+	def send_string(self, raw, is_chat=False):
+		# Directly send a string, so you can json.dumps once and reuse it for everyone
+
+		# Treat chat as a separate pseudo message type
+		if is_chat and 'CHAT' not in self.forward_message_types:
+			return
+
+		# Normal entities don't get messages, but they can if there's a forward
+		if is_chat or (self.forward_messages_to != None and raw[0:3] in self.forward_message_types):
+			c = get_entity_by_id(self.forward_messages_to, load_from_db=False)
+			if c != None and c.is_client():
+				connection = c.connection()
+				if connection != None and connection.ws != None and connection.can_forward_messages_to:
+					asyncio.ensure_future(connection.ws.send("FWD %s %s" % (self.protocol_id(), raw)))
+
+	def start_batch(self):
+		# Only for clients
+		pass
+
+	def finish_batch(self):
+		# Only for clients
+		pass
+
+	# Send a message to all contents
+	def broadcast(self, command_type, command_params, remote_category=None, remote_only=False, send_to_links=False, require_extension=None):
+		""" Send a message to everyone on the map """
+		if not remote_only and self.contents:
+			is_chat = command_type == 'MSG' and command_params and 'name' in command_params
+			send_me = make_protocol_message_string(command_type, command_params) # Get the string once and reuse it
+			for client in self.contents:
+				if require_extension == None:
+					client.send_string(send_me, is_chat=is_chat)
+				elif client.is_client() and client.connection_attr(require_extension):
+					client.send_string(send_me, is_chat=is_chat)
+
+		# Add remote map on the params if needed
+		do_linked = send_to_links and self.is_map() and self.edge_ref_links
+		do_listeners = remote_category != None and self.db_id in BotWatch[remote_category]
+		if do_linked or do_listeners:
+			if command_params == None:
+				command_params = {}
+			command_params['remote_map'] = self.db_id
+		else:
+			return
+
+		""" Send it to any maps linked from this one, if send_to_links """
+		if do_linked: # Assume it's a map if do_linked is true
+			for linked_map in self.edge_ref_links:
+				if linked_map == None:
+					continue
+				for client in linked_map.contents:
+					if not client.is_client():
+						continue
+					if not client.connection_attr('see_past_map_edge') or (require_extension != None and not client.connection_attr(require_extension)):
+						continue
+					client.send(command_type, command_params)
+
+		""" Also send it to any registered listeners """
+		if do_listeners:
+			for connection in BotWatch[remote_category][self.db_id]:
+				# don't send twice to people on the map
+				if not remote_only and (connection.map_id == self.db_id):
+					continue
+				if require_extension == None or getattr(connection, require_extension):
+					connection.send(command_type, command_params)
+
+	# Allow other classes to respond to having things added to them
+
+	def add_to_contents(self, item):
+		if item.map and item.map is not self:
+			item.map.remove_from_contents(item)
+		self.contents.add(item)
+		item.map_id = self.db_id
+		item.map = self
+		item.update_map_permissions()
+
+		# Give the item a list of the other stuff in the container it was put in
+		if item.is_client():
+			item.send("WHO", {'list': self.who_contents(), 'you': item.protocol_id()})
+
+		# Tell everyone in the container that the new item was added
+		self.broadcast("WHO", {'add': item.who()}, remote_category=botwatch_type['entry'])
+
+		# Warn about chat listeners, if present
+		if item.is_client():
+			if self.db_id in BotWatch[botwatch_type['chat']]:
+				item.send("MSG", {'text': 'A bot has access to messages sent here ([command]listeners[/command])'})
+			self.send_map_info(item)
+
+		# Notify parents
+		for parent in self.all_parents():
+			parent.added_to_child_contents(item)
+
+	def remove_from_contents(self, item):
+		self.contents.discard(item)
+		item.map_id = None
+		item.map = None
+
+		# Tell everyone in the container that the item was removed
+		self.broadcast("WHO", {'remove': item.protocol_id()}, remote_category=botwatch_type['entry'])
+
+		# Notify parents
+		for parent in self.all_parents():
+			parent.removed_from_child_contents(item)
+
+	def added_to_child_contents(self, item):
+		""" Called on parents when add_to_contents is called here """
+		pass
+
+	def removed_from_child_contents(self, item):
+		""" Called on parents when remove_from_contents is called here """
+		pass
+
+	def has_in_contents_tree(self, other):
+		already_found = set()
+		current = other
+		while current:
+			already_found.add(current)
+			if current.map is self:
+				return True
+			if current.entity_type == entity_type['user']: # Don't return true for items in the inventory of another user, even if they're in your inventory
+				return False
+			if current.map in already_found:
+				return False
+			current = current.map
+		return False
+
+	def all_parents(self):
+		already_found = set()
+		current = self.map
+		while current:
+			yield current
+			already_found.add(current)
+			if current.map in already_found:
+				return
+			current = current.map
+
+	def all_children(self):
+		already_found = set()
+		queue = deque()
+		queue.append(self)
+		while queue:
+			item = queue.popleft()
+			for child in item.contents:
+				yield child
+				if child.id not in already_found:
+					already_found.add(child.id)
+					if len(child.contents):
+						queue.append(child)
+
+	def send_map_info(self, item):
+		item.send("MAI", {
+			'name': self.name,
+			'id': self.protocol_id(),
+			'owner_id': self.owner_id,
+			'owner_username': find_username_by_db_id(self.owner_id) or '?',
+			'default': 'colorfloor13',
+			'size': [10,10],
+			'build_enabled': False
+		})
+		item.send("MAP", {
+			'pos': [0, 0, 9, 9],
+			'default': 'colorfloor13',
+			'turf': [],
+			'obj': []
+		})
+
+		item.loaded_maps = set([self.db_id])
+
+		self.broadcast("MOV", {'id': item.protocol_id(), 'to': [random.randint(0, 9), random.randint(0, 9)]})
+
+	# Permissions
+
+	def update_map_permissions(self):
+		""" Searches PERMISSION table and update map_allow and map_deny for the entity, so SQL queries can be skipped for the map they're on """
+		self.map_allow, self.map_deny = self.get_allow_deny_for_other_entity(self.map_id)
+
 	# Riding
 
 	def stop_current_ride(self):
@@ -600,13 +618,15 @@ class Entity(object):
 
 		self.save_on_clean_up = True
 		if self.is_client():
-			self.undo_delete_data = None
-			if not self.sent_resources_yet:
-				if self.login_successful_callback:
-					self.login_successful_callback()
-				self.sent_resources_yet = True
-				if LoadedAnyServerResources[0]:
-					self.send("RSC", ServerResources)
+			connection = self.connection()
+			if connection:
+				connection.undo_delete_data = None
+				if not connection.sent_resources_yet:
+					if connection.login_successful_callback:
+						connection.login_successful_callback()
+					connection.sent_resources_yet = True
+					if LoadedAnyServerResources[0]:
+						connection.send("RSC", ServerResources)
 
 		added_new_history = False
 		if update_history and self.map_id != None:
@@ -725,8 +745,11 @@ class Entity(object):
 			'vehicle': self.vehicle.protocol_id() if self.vehicle else None,
 			'is_following': self.is_following,
 			'type': entity_type_name[self.entity_type],
-			'in_user_list': self.is_client()
+			'in_user_list': self.is_client(),
+			'status': self.status_type,
+			'status_message': self.status_message
 		}
+
 		if hasattr(self, "mini_tilemap") and self.mini_tilemap != None:
 			out['mini_tilemap'] = self.mini_tilemap
 		if hasattr(self, "mini_tilemap_data") and self.mini_tilemap_data != None:
@@ -740,6 +763,16 @@ class Entity(object):
 			out['is_forwarding'] = True
 			if 'CHAT' in self.forward_message_types:
 				out['chat_listener'] = True
+		return out
+
+	def remote_who(self):
+		""" Like who() but without map information """
+		out = {
+			'name': self.name,
+			'pic': self.pic,
+			'desc': self.desc,
+			'id': self.protocol_id()
+		}
 		return out
 
 	def bag_info(self):
@@ -760,7 +793,7 @@ class Entity(object):
 			'temporary': self.temporary
 		}
 		if self.is_client():
-			out['username'] = self.username
+			out['username'] = self.connection_attr('username')
 		if self.owner_id:
 			owner_username = find_username_by_db_id(self.owner_id)
 			if owner_username:
@@ -987,6 +1020,9 @@ class GenericEntity(Entity):
 			if 'forward_message_types' in data:
 				self.forward_message_types = set()
 			self.forward_messages_to = data.get('forward_messages_to', None)
+
+			self.status_type = data.get('status_type', None)
+			self.status_message = data.get('status_message', None)
 			return True
 		except:
 			return False
@@ -997,6 +1033,10 @@ class GenericEntity(Entity):
 			data['forward_message_types'] = list(self.forward_message_types)
 		if self.forward_messages_to != None:
 			data['forward_messages_to'] = self.forward_messages_to
+		if self.status_type != None:
+			data['status_type'] = self.status_type
+		if self.status_message != None:
+			data['status_message'] = self.status_message
 		if not data:
 			data = None
 		self.save_data_as_text(dumps_if_not_none(data))

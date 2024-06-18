@@ -179,6 +179,11 @@ There may be an additional boolean field named "update" which is set to true whe
 "new_id" is mostly used when a temporary object gets saved to the database, 
 For WHO update, you can supply another ID instead of yours with the "rc" parameter, if you have "remote_command" permission for that entity.
 
+A server-->client WHO may have a "type" parameter on it, which indicates which user list specifically is being managed here.
+If it's not present, treat it like it's "map"; values are:
+	"map" - User list for a map (usually the one the player is currently in; "remote_map" will be provided if not)
+	"watch" - Users in your watch list that are currently online; only received if you specify the extension "user_watch_with_who"
+
 Clients can send updates about themselves, but only keys that the servers knows to be OK, such as "typing".
 For client-to-server WHO updates, "id" is ignored if provided.
 
@@ -219,6 +224,10 @@ Log into the server with or without an account. Server sends an acknowledgement 
 Can optionally start on a specific map, with optional map coordinates.
 Clients can request features and the server can confirm some amount of them.
 Clients can report what name and version they're running if they like.
+
+--> IDN {"username": username, "password": password, "client_mode": "messaging"}
+Experimental feature: If you specify a "client_mode" parameter and set it to "messaging", you'll log in but not be placed into the world as a character.
+This is for creating clients that treat Tilemap Town as an instant messaging platform. You can specify "normal" or leave client_mode unspecified for the regular mode.
 
 --> MSG {"text": "[text]"}
 --> MSG {"text": "[text]", "rc": id}
@@ -500,6 +509,13 @@ Key names:
 Message gets forwarded to the entity specified in "id", in order to tell it that a [bot-message-button] button was clicked on.
 The forwarded copy has additional fields for "name" and "username" as in PRI.
 
+--> EXT {"typing": {"username": username, "status": status}}
+<-- EXT {"typing": {"name": name, "id": id, "username": username, "status": status}}
+Message gets forwarded to the entity specified in "id" or "username". "status" should be treated the same way as the "typing" field in WHO.
+The message the other user receives will have the name, ID, and username added onto it.
+
+<-- EXT {"settings": {"client_settings": text, "watch_list": [list], "ignore_list": [list]}}
+Gives you the text you most recently put into the /client_settings command
 
 === Extension: bulk_build ===
 This extension allows a client to request multiple map changes in one message, including operations like copies.
@@ -568,6 +584,10 @@ CMD {params}
 If an entity is forwarding messages, it will have a WHO field named "is_forwarding" that's set to true. If one of the forwarded types is "CHAT", then there will be another field named "chat_listener" which is also true.
 
 
+=== Extension: user_watch_with_who ===
+When enabled, you may receive WHO messages when users on your watch list log in, log out, or change status. All of the WHO messages will be labeled with "type": "watch" and the user information provided is a limited subset of what's usually there, consisting of "id", "username", "status", "status_message" and a new boolean named "in_world" which is true if the user is fully logged in rather than being in instant messaging mode.
+
+
 === WebSocket disconnect reasons ===
 The server may send the following WebSocket disconnect reasons:
 	"Quit": User requested a disconnect
@@ -576,6 +596,8 @@ The server may send the following WebSocket disconnect reasons:
 	"Ban": User is banned from the server
 	"Kick": User's connection was terminated by another user
 	"BadLogin": User's login credentials are wrong
+	"LoggedInElsewhere": Disconnected because another client logged into the same account
+	"PingTimeout": Failed to respond to a server's PIN in time
 
 A client may choose to automatically reconnect in response to a "Restart" reason but should *not* automatically reconnect in response to the other reasons.
 There will probably be other reasons in the future for things like a private server, or the client's version being too old, or not supporting a required extension.

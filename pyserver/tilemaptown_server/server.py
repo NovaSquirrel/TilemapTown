@@ -32,7 +32,7 @@ def main_timer():
 	global ServerShutdown
 	global loop
 
-	# Disconnect pinged-out users
+	# Let requests expire
 	for c in AllClients:
 		# Remove requests that time out
 		remove_requests = set()
@@ -43,21 +43,23 @@ def main_timer():
 		for r in remove_requests:
 			del c.requests[r]
 
-		c.idle_timer += 1
+	# Disconnect pinged-out users
+	for connection in AllConnections:
+		connection.idle_timer += 1
 
 		# Remove users that time out
-		c.ping_timer -= 1
-		if c.ping_timer == 60 or c.ping_timer == 30:
-			c.send("PIN", None)
-		elif c.ping_timer < 0:
-			c.disconnect()
+		connection.ping_timer -= 1
+		if connection.ping_timer == 60 or connection.ping_timer == 30:
+			connection.send("PIN", None)
+		elif connection.ping_timer < 0:
+			connection.disconnect(reason="PingTimeout")
 
 	# Run server shutdown timer, if it's running
 	if ServerShutdown[0] > 0:
 		ServerShutdown[0] -= 1
 		if ServerShutdown[0] == 1:
 			broadcast_to_all("Server is going down!")
-			for u in AllClients:
+			for u in AllConnections:
 				u.disconnect(reason='Restart' if ServerShutdown[1] else 'Shutdown')
 			save_everything()
 		elif ServerShutdown[0] == 0:
@@ -73,24 +75,24 @@ def save_everything():
 
 # Websocket connection handler
 async def client_handler(websocket, path):
-	client = Client(websocket)
-	client.ip = websocket.remote_address[0]
+	ip = websocket.remote_address[0]
 
 	# If the local and remote addresses are the same, it's trusted
 	# and the server should look for the forwarded IP address
 	if websocket.local_address[0] == websocket.remote_address[0]:
 		if 'X-Real-IP' in websocket.request_headers:
-			client.ip = websocket.request_headers['X-Real-IP']
+			ip = websocket.request_headers['X-Real-IP']
 		else:
-			client.ip = ''
-
-	if client.test_server_banned():
+			ip = ''
+	connection = Connection(websocket, ip)
+	if connection.test_server_banned():
 		return
+	AllConnections.add(connection)
 
-	print("connected: %s %s" % (path, client.ip))
+	print("connected: %s %s" % (path, ip))
 	total_connections[0] += 1
 
-	while client.ws != None:
+	while connection.ws != None:
 		try:
 			# Read a message, make sure it's not too short
 			message = await websocket.recv()
@@ -103,48 +105,71 @@ async def client_handler(websocket, path):
 				arg = json.loads(message[4:])
 
 			# Process the command
-			client.idle_timer = 0
+			connection.idle_timer = 0
 			echo = arg.get("echo", None)
 			if "remote_map" in arg:
 				if arg["remote_map"] in AllEntitiesByDB:
 					map = AllEntitiesByDB[arg["remote_map"]]
-					if map.has_permission(client, permission['map_bot'], False):
-						handle_protocol_command(map, client, command, arg, echo)
+					if map.has_permission(connection.entity, permission['map_bot'], False):
+						handle_protocol_command(connection, map, connection.entity, command, arg, echo)
 					else:
-						client.send("ERR", {'text': 'You do not have [tt]map_bot[/tt] permission on map %d' % arg["remote_map"], 'code':'missing_permission', 'detail':'map_bot', 'subject_id': arg["remote_map"], 'echo': echo})
+						connection.entity.send("ERR", {'text': 'You do not have [tt]map_bot[/tt] permission on map %d' % arg["remote_map"], 'code':'missing_permission', 'detail':'map_bot', 'subject_id': arg["remote_map"], 'echo': echo})
 				else:
-					client.send("ERR", {'text': 'Map %d is not loaded' % arg["remote_map"], 'code': 'not_loaded', 'subject_id': arg["remote_map"], 'echo': echo})
+					connection.entity.send("ERR", {'text': 'Map %d is not loaded' % arg["remote_map"], 'code': 'not_loaded', 'subject_id': arg["remote_map"], 'echo': echo})
 			else:
-				handle_protocol_command(client.map, client, command, arg, echo) # client.map may be None
+				handle_protocol_command(connection, connection.entity.map, connection.entity, command, arg, echo) # client.map may be None
 
 		except websockets.ConnectionClosed:
-			if Config["Server"]["BroadcastDisconnects"] and client.identified:
-				text = '%s has disconnected!' % client.name_and_username()
-				for u in AllClients:
-					if u is not client:
-						u.send("MSG", {'text': text})
+			if isinstance(connection.entity, Client):
+				if Config["Server"]["BroadcastDisconnects"]:
+					text = '%s has disconnected!' % connection.entity.name_and_username()
+					for u in AllClients:
+						if u is not connection.entity:
+							u.send("MSG", {'text': text})
 
-			disconnect_extra = ""
-			if client.build_count or client.delete_count:
-				disconnect_extra = " -  Built %d, Deleted %d" % (client.build_count, client.delete_count)
-			print("disconnected: %s (%s, \"%s\")%s" % (client.ip, client.username or "?", client.name, disconnect_extra))
-			client.ws = None
+				# Leave a note about what the user did while connected
+				disconnect_extra = ""
+				if connection.build_count or connection.delete_count:
+					disconnect_extra = " -  Built %d, Deleted %d" % (connection.build_count, connection.delete_count)
+				print("disconnected: %s (%s, \"%s\")%s" % (ip, connection.entity.username or "?", connection.entity.name, disconnect_extra))
+			elif connection.identified:
+				print("disconnected: %s (%s, logged in elsewhere)" % (ip, connection.username))
+			else:
+				print("disconnected: %s (didn't identify)" % ip)
+			connection.ws = None
 		except:
 			exception_type = sys.exc_info()[0]
-			client.send("ERR", {'text': 'An exception was thrown: %s' % exception_type.__name__, 'code': 'exception', 'detail': exception_type.__name__})
-			while client.make_batch:
-				client.finish_batch()
+			connection.entity.send("ERR", {'text': 'An exception was thrown: %s' % exception_type.__name__, 'code': 'exception', 'detail': exception_type.__name__})
+			if isinstance(connection.entity, Client):
+				while connection.make_batch:
+					connection.finish_batch()
 			print("Unexpected error:", sys.exc_info()[0])
 			print(sys.exc_info()[1])
 			traceback.print_tb(sys.exc_info()[2])
 		#	raise
 
-	if client.db_id:
-		client.save_on_clean_up = True
-	for e in client.cleanup_entities_on_logout:
+	# Clean up connection
+	for p in connection.listening_maps:
+		BotWatch[p[0]][p[1]].remove(connection)
+	for e in connection.cleanup_entities_on_logout:
 		e.clean_up()
-	client.clean_up()
-	del client
+
+	# Let watchers know
+	if connection.db_id and connection.can_be_watched():
+		who_info = {"remove": connection.db_id, "type": "watch"}
+		for other in AllConnections:
+			if other.user_watch_with_who and connection.username in other.watch_list:
+				other.send("WHO", who_info)
+
+	# Clean up the entity, if it isn't just a placeholder
+	if isinstance(connection.entity, Client):
+		if connection.entity.db_id:
+			connection.entity.save_on_clean_up = True
+		connection.entity.clean_up()
+	elif connection.db_id:
+		connection.save_settings(connection.db_id)
+	if connection.entity != None:
+		del connection.entity
 
 global loop
 

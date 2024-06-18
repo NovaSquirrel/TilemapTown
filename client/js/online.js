@@ -405,6 +405,10 @@ function receiveServerMessage(cmd, arg) {
       NeedMapRedraw = true;
       break;
     case "WHO":
+      if(arg.type !== undefined && arg.type !== 'map')
+        break;
+      if("remote_map" in arg)
+        break;
       if(arg.you)
         PlayerYou = arg.you;
       if(arg.list) {
@@ -900,6 +904,8 @@ function ConnectToServer() {
 			display = "Connection closed because you're banned!! :(";
 		} else if(reason == "Kick") {
 			display = "Connection closed because you were kicked!";
+		} else if(reason == "LoggedInElsewhere") {
+			display = "Connection closed because you logged into this account somewhere else";
 		} else {
 			display = "Connection closed because: " + convertBBCode(reason);
 		}

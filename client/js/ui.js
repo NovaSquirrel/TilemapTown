@@ -1340,15 +1340,15 @@ XBBCODE.addTags({
 	"font": emptyTag,
 	"command": {
 		openTag: function (params, content) {
-		let filteredJS = content.replace(/\x22/g, '\\\x22');
-		let filteredHTML = content.replace(/\x22/g, '&quot;');
-		return '<input type="button" value="' + filteredHTML + '" onClick=\'offerCommand("' + filteredJS + '")\'></input>';
-	},
-	closeTag: function (params, content) {
-		return '';
-	},
-	displayContent: false
-	},
+			let filteredJS = content.replace(/\x22/g, '\\\x22');
+			let filteredHTML = content.replace(/\x22/g, '&quot;');
+			return '<input type="button" value="' + filteredHTML + '" onClick=\'offerCommand("' + filteredJS + '")\'></input>';
+		},
+		closeTag: function (params, content) {
+			return '';
+		},
+		displayContent: false
+		},
 	"copy2chat": {
 		openTag: function (params, content) {
 			let filteredJS = content.replace(/\x22/g, '\\\x22');
