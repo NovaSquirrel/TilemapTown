@@ -44,7 +44,7 @@ async def town_info(request):
 	stats = {}	
 	bot_count = 0
 	for c in AllClients:
-		connection = u.connection()
+		connection = c.connection()
 		if not connection:
 			continue
 		if connection.user_flags & userflag['bot']:
