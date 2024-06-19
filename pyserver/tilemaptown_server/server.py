@@ -169,7 +169,8 @@ async def client_handler(websocket, path):
 	elif connection.db_id:
 		connection.save_settings(connection.db_id)
 	if connection.entity != None:
-		del connection.entity
+		connection.entity = None
+	AllConnections.discard(connection)
 
 global loop
 

@@ -916,7 +916,7 @@ def fn_IDN(connection, map, client, arg, echo):
 				bot_count += 1
 		im_count = 0
 		for c in AllConnections:
-			if c is not connection and not isinstance(c.entity, Entity) and c.identified:
+			if c is not connection and c.hasinstance(c, 'entity') and not isinstance(c.entity, Entity) and c.identified:
 				im_count += 1
 		user_count = len(AllClients)-bot_count
 		connected_text = 'Users connected: %d' % (user_count) + ('' if bot_count == 0 else '. Bots connected: %d.' % bot_count)
