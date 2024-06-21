@@ -69,7 +69,7 @@ class Map(Entity):
 		super().add_to_contents(item)
 
 	def send_map_info(self, item):
-		if not item.is_client(): # Map info should only get sent to clients, but it doesn't hurt to be sure
+		if not hasattr(item, 'connection'): # Map info should only get sent to clients, but it doesn't hurt to be sure
 			return
 		connection = item.connection()
 		if connection == None:

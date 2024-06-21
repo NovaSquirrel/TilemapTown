@@ -486,7 +486,13 @@ class Entity(PermissionsMixin, object):
 						queue.append(child)
 
 	def send_map_info(self, item):
-		item.send("MAI", {
+		if not hasattr(item, 'connection'): # Map info should only get sent to clients, but it doesn't hurt to be sure
+			return
+		connection = item.connection()
+		if connection == None:
+			return
+
+		connection.send("MAI", {
 			'name': self.name,
 			'id': self.protocol_id(),
 			'owner_id': self.owner_id,
@@ -495,14 +501,14 @@ class Entity(PermissionsMixin, object):
 			'size': [10,10],
 			'build_enabled': False
 		})
-		item.send("MAP", {
+		connection.send("MAP", {
 			'pos': [0, 0, 9, 9],
 			'default': 'colorfloor13',
 			'turf': [],
 			'obj': []
 		})
 
-		item.loaded_maps = set([self.db_id])
+		connection.loaded_maps = set([self.db_id])
 
 		self.broadcast("MOV", {'id': item.protocol_id(), 'to': [random.randint(0, 9), random.randint(0, 9)]})
 
