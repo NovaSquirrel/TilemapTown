@@ -465,7 +465,6 @@ Get information about the entity, such as properties and contents.
 /entity id locate
 Find where this entity is
 
-/entity id move x y
 /entity id tags
 /entity id addtag      tag_group tag value 
 /entity id deltag      tag_group tag
@@ -492,6 +491,12 @@ Remove a temporary permission that has been given to this entity.
 
 /entity id summon
 Move entity to your position within the map you're on.
+
+/entity id move x y
+/entity id move x y direction
+/entity id rmove x y
+/entity id rmove x y direction
+Move entity to another location on the same map, with an optional field for direction. rmove uses relative coordinates. You can move an entity to a new map with "do" and the "map" command.
 
 /entity id do command_here
 Same as sending a CMD protocol message with the "rc" field set.

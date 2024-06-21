@@ -2457,11 +2457,33 @@ def fn_entity(map, client, context, arg):
 	elif subcommand == 'do':
 		if permission_check(permission['remote_command']):
 			handle_user_command(e.map, e, client, context[1], subarg)
+
+	elif subcommand == 'rmove':
+		if permission_check(permission['move']):
+			coords = subarg.split()
+			if len(coords) >= 2 and string_is_int(coords[0]) and string_is_int(coords[1]):
+				from_x = e.x
+				from_y = e.y	
+				new_x = e.x + int(coords[0])
+				new_y = e.y + int(coords[1])
+				if len(coords) >= 3 and string_is_int(coords[2]):
+					e.dir = int(coords[2])
+				e.move_to(new_x, new_y) # Will mark the entity for saving
+				if e.map:
+					e.map.broadcast("MOV", {'id': e.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e.dir}, remote_category=botwatch_type['move'])
 	elif subcommand == 'move':
 		if permission_check(permission['move']):
 			coords = subarg.split()
-			if len(coords) == 2 and coords[0].isdecimal() and coords[1].isdecimal():
-				e.move_to(int(coords[0]), int(coords[1])) # Will mark the entity for saving
+			if len(coords) >= 2 and string_is_int(coords[0]) and string_is_int(coords[1]):
+				from_x = e.x
+				from_y = e.y
+				new_x = int(coords[0])
+				new_y = int(coords[1])
+				if len(coords) >= 3 and string_is_int(coords[2]):
+					e.dir = int(coords[2])
+				e.move_to(new_x, new_y) # Will mark the entity for saving
+				if e.map:
+					e.map.broadcast("MOV", {'id': e.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e.dir}, remote_category=botwatch_type['move'])
 	elif subcommand == 'perms':
 		handlers['permlist'](e, client, context, subarg)
 	elif subcommand == 'permsfor':
