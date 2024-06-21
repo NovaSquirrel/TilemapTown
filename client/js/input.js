@@ -926,6 +926,8 @@ function initMouse() {
 
 	mapCanvas.addEventListener('wheel', function (event) {
 		event.preventDefault();
+		if(lockZoomLevel)
+			return;
 
 		CameraScale += event.deltaY * -0.01;
 

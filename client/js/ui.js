@@ -92,6 +92,7 @@ var GlobalTilesArray = [];
 var GlobalTilesArrayNames = [];
 
 let chatTimestamps = true;
+let lockZoomLevel = false;
 
 ///////////////////////////////////////////////////////////
 
@@ -129,6 +130,7 @@ function applyOptions() {
 	entityAnimationEnabled = document.getElementById("option-entity-animation").checked;
 	tileAnimationEnabled = document.getElementById("option-tile-animation").checked;
 	chatTimestamps = document.getElementById("chat-timestamp").checked;
+	lockZoomLevel = document.getElementById("lock-zoom-level").checked;
 
 	let saved_options = {
 		"always_center_camera": CameraAlwaysCenter,
@@ -137,6 +139,7 @@ function applyOptions() {
 		"entity_animation": entityAnimationEnabled,
 		"tile_animation": tileAnimationEnabled,
 		"chat_timestamps": chatTimestamps,
+		"lock-zoom-level": lockZoomLevel,
 	};
 	localStorage.setItem("options", JSON.stringify(saved_options));
 }
