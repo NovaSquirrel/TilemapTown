@@ -400,8 +400,11 @@ def dumps_if_condition(dump_me, condition):
 	return None
 
 def loads_if_not_none(load_me):
-	if load_me != None:
-		return json.loads(load_me)
+	try:
+		if load_me != None:
+			return json.loads(load_me)
+	except ValueError as err: # JSONDecodeError
+		print("Attempting to load Invalid JSON: %s" % load_me)
 	return None
 
 def get_database_meta(key, default=None):
