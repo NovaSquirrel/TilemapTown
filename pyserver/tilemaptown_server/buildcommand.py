@@ -855,12 +855,12 @@ def fn_userflags(map, client, context, arg):
 			for flag in param[1:]:
 				if flag in user_changeable_flags:
 					connection.user_flags |= userflag[flag]
-		elif param[0] == 'del':
+		elif param[0] in ('del', 'remove'):
 			for flag in param[1:]:
 				if flag in user_changeable_flags:
 					connection.user_flags &= ~userflag[flag]
 		else:
-			respond(context, 'Unrecognized subcommand "%s"' % param[0], code='invalid_subcommand', detail=subcommand, error=True)
+			respond(context, 'Unrecognized subcommand "%s"' % param[0], code='invalid_subcommand', detail=param[0], error=True)
 			return
 		respond(context, 'Your new user flags: '+flags_list())
 	else:
@@ -2390,7 +2390,7 @@ def fn_entity(map, client, context, arg):
 			info += '\n[b]Contents:[/b] %s' % ', '.join(c.name_and_username() for c in e.contents)
 		respond(context, info)
 	elif subcommand == 'locate':
-		if e.is_client() and not client.oper_override and \
+		if e.is_client() and not client.connection_attr('oper_override') and \
 			((e.connection_attr('user_flags') & userflag['hide_location'] != 0) or (e.map and e.map.is_map() and (e.map.map_flags & mapflag['public'] == 0))):
 			respond(context, "That user's location is private")
 		else:
@@ -2483,7 +2483,10 @@ def fn_entity(map, client, context, arg):
 					e.dir = int(coords[2])
 				e.move_to(new_x, new_y) # Will mark the entity for saving
 				if e.map:
-					e.map.broadcast("MOV", {'id': e.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e.dir}, remote_category=botwatch_type['move'])
+					if e.is_client():
+						e.map.broadcast("MOV", {'id': e.protocol_id(), 'to': [new_x, new_y], 'dir': e.dir}, remote_category=botwatch_type['move'])
+					else:
+						e.map.broadcast("MOV", {'id': e.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e.dir}, remote_category=botwatch_type['move'])
 	elif subcommand == 'move':
 		if permission_check(permission['move']):
 			coords = subarg.split()
@@ -2496,7 +2499,10 @@ def fn_entity(map, client, context, arg):
 					e.dir = int(coords[2])
 				e.move_to(new_x, new_y) # Will mark the entity for saving
 				if e.map:
-					e.map.broadcast("MOV", {'id': e.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e.dir}, remote_category=botwatch_type['move'])
+					if e.is_client():
+						e.map.broadcast("MOV", {'id': e.protocol_id(), 'to': [new_x, new_y], 'dir': e.dir}, remote_category=botwatch_type['move'])
+					else:
+						e.map.broadcast("MOV", {'id': e.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e.dir}, remote_category=botwatch_type['move'])
 	elif subcommand == 'perms':
 		handlers['permlist'](e, client, context, subarg)
 	elif subcommand == 'permsfor':
