@@ -717,7 +717,7 @@ function useItemAtXY(Placed, x, y) {
 			// place the item on the ground
 
 			// If it's a sign, offer to put text on it
-			if (ActualAtom.type == AtomTypes.SIGN) {
+			if (ActualAtom.type == AtomTypes.SIGN && !ActualAtom.message) {
 				MouseDown = false; // Don't keep placing signs
 				Placed = { data: CloneAtom(ActualAtom) };
 				Message = prompt("What should the sign say?");
