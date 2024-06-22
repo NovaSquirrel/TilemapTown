@@ -1289,14 +1289,15 @@ function logMessage(Message, Class, Params) {
 
 	let newMessage = document.createElement("div");
 	newMessage.className = Class;
-	newMessage.innerHTML = (timestampText.length ? (`<span class="timestamp">${timestampText}</span> `) : "") + Message;
 	if (Params.username) {
 		if (Params.rc_username) {
 			newMessage.title = `Username: ${Params.username} (controlled by ${Params.rc_username})`;
+			Message = "&#x1F4E1;" + Message;
 		} else {
 			newMessage.title = `Username: ${Params.username}`;
 		}
 	}
+	newMessage.innerHTML = (timestampText.length ? (`<span class="timestamp">${timestampText}</span> `) : "") + Message;
 	chatArea.append(newMessage);
 
 	if (OnlineMuWebview) {
