@@ -660,27 +660,33 @@ function receiveServerMessage(cmd, arg) {
         let no_space = new_text.startsWith("'s ") || new_text.startsWith("'d ") || new_text.startsWith("'ll ");
         if(arg.receive)
           logMessage(respond+"&larr;["+arg.name+"("+arg.username+")"+"] * <i>"+arg.name+(no_space?"":" ")+convertBBCode(new_text)+'</i></span>', 'private_message',
-            {'isPrivateChat': true, 'plainText': `<-- [${arg.name}(${arg.username})] * ${arg.name}${no_space?"":" "}${new_text}`});
+            {'isPrivateChat': true, 'plainText': `<-- [${arg.name}(${arg.username})] * ${arg.name}${no_space?"":" "}${new_text}`,
+            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
         else
           logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] * <i>"+PlayerWho[PlayerYou].name+(no_space?"":" ")+convertBBCode(new_text)+'</i></span>', 'private_message',
-            {'isPrivateChat': true, 'plainText': `--> [${arg.name}(${arg.username})] * ${PlayerWho[PlayerYou].name}${no_space?"":" "}${new_text}`});
+            {'isPrivateChat': true, 'plainText': `--> [${arg.name}(${arg.username})] * ${PlayerWho[PlayerYou].name}${no_space?"":" "}${new_text}`,
+            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
           break;
       } else if(arg.text.slice(0, 5) == "/ooc ") {
         var new_text = arg.text.slice(5);
         if(arg.receive)
           logMessage(respond+"&larr;["+arg.name+"("+arg.username+")"+"] [OOC] "+convertBBCode(new_text)+'</span>', 'private_message',
-            {'isPrivateChat': true, 'plainText': `<-- [${arg.name}(${arg.username})] [OOC] ${new_text}`});
+            {'isPrivateChat': true, 'plainText': `<-- [${arg.name}(${arg.username})] [OOC] ${new_text}`,
+            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
         else
           logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] [OOC] "+convertBBCode(new_text)+'</span>', 'private_message',
-            {'isPrivateChat': true, 'plainText': `--> [${arg.name}(${arg.username})] [OOC] ${new_text}`});
+            {'isPrivateChat': true, 'plainText': `--> [${arg.name}(${arg.username})] [OOC] ${new_text}`,
+            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
           break;
       } else {
         if(arg.receive)
           logMessage(respond+"&larr;["+arg.name+"("+arg.username+")"+"] "+convertBBCode(arg.text)+'</span>', 'private_message',
-            {'isPrivateChat': true, 'plainText': `<-- [${arg.name}(${arg.username})] ${arg.text}`});
+            {'isPrivateChat': true, 'plainText': `<-- [${arg.name}(${arg.username})] ${arg.text}`,
+            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
         else
           logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] "+convertBBCode(arg.text)+'</span>', 'private_message',
-            {'isPrivateChat': true, 'plainText': `--> [${arg.name}(${arg.username})] ${arg.text}`});
+            {'isPrivateChat': true, 'plainText': `--> [${arg.name}(${arg.username})] ${arg.text}`,
+            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
           break;
       }
     case "CMD":
@@ -691,16 +697,20 @@ function receiveServerMessage(cmd, arg) {
           let message = arg.text.slice(4);
           let no_space = message.startsWith("'s ") || message.startsWith("'d ") || message.startsWith("'ll ");
           logMessage("* <i>"+arg.name+(no_space?"":" ")+convertBBCode(message)+"</i>", 'user_message',
-            {'isChat': true, 'plainText': `* ${arg.name}${no_space?"":" "}${message}`, 'username': arg["username"] ?? arg["id"]});
+            {'isChat': true, 'plainText': `* ${arg.name}${no_space?"":" "}${message}`,
+            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
         } else if(arg.text.slice(0, 5).toLowerCase() == "/ooc ")
           logMessage("[OOC] "+arg.name+": "+convertBBCode(arg.text.slice(5)), 'ooc_message',
-            {'isChat': true, 'plainText': `[OOC] ${arg.name}: ${arg.text.slice(5)}`, 'username': arg["username"] ?? arg["id"]});
+            {'isChat': true, 'plainText': `[OOC] ${arg.name}: ${arg.text.slice(5)}`,
+            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
         else if(arg.text.slice(0, 7).toLowerCase() == "/spoof ")
           logMessage("* <i>"+convertBBCode(arg.text.slice(7)) + "</i> <span class=\"spoof_name\">(by "+arg.name+")</span>", 'spoof_message',
-            {'isChat': true, 'plainText': `* ${arg.text.slice(7)} (by ${arg.name})`, 'username': arg["username"] ?? arg["id"]});
+            {'isChat': true, 'plainText': `* ${arg.text.slice(7)} (by ${arg.name})`,
+            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
         else
           logMessage("&lt;"+arg.name+"&gt; "+convertBBCode(arg.text), 'user_message',
-            {'isChat': true, 'plainText': `<${arg.name}> ${arg.text}`, 'username': arg["username"] ?? arg["id"]});
+            {'isChat': true, 'plainText': `<${arg.name}> ${arg.text}`,
+            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
       } else
         if(arg.buttons) {
           let buttons = "";
@@ -712,10 +722,12 @@ function receiveServerMessage(cmd, arg) {
         } else {
           if(arg["class"])
             logMessage(arg.text, arg["class"],
-              {'isChat': false, 'plainText': arg.text, 'username': arg["username"]});
+              {'isChat': false, 'plainText': arg.text,
+              'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
           else
             logMessage("Server message: "+convertBBCode(arg.text), 'server_message',
-              {'isChat': false, 'plainText': "Server message: "+arg.text, 'username': arg["username"]});
+              {'isChat': false, 'plainText': "Server message: "+arg.text,
+              'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
         }
       break;
     case "IDN":

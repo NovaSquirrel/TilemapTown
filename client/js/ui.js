@@ -1291,7 +1291,11 @@ function logMessage(Message, Class, Params) {
 	newMessage.className = Class;
 	newMessage.innerHTML = (timestampText.length ? (`<span class="timestamp">${timestampText}</span> `) : "") + Message;
 	if (Params.username) {
-		newMessage.title = "Message from: " + Params.username;
+		if (Params.rc_username) {
+			newMessage.title = `Username: ${Params.username} (controlled by ${Params.rc_username})`;
+		} else {
+			newMessage.title = `Username: ${Params.username}`;
+		}
 	}
 	chatArea.append(newMessage);
 

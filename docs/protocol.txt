@@ -245,13 +245,15 @@ For "rc", you need to either be the owner or have "remote_command" permissions o
 
 <-- MSG {"text": "[text]", "name": speaker, "class": classname, "username": username, "id": id}
 <-- MSG {"text": "[text]", "name": speaker, "class": classname, "buttons": ["name 1", "command 1", "name 2", "command 2"]}
-display message in log.
+Display message in log.
 "class" is a CSS class to style the image with.
 "buttons" provides a list of choices to present that will execute commands.
+May contain "rc_username" and "rc_id" to indicate who is remote controlling the entity to send a chat message.
 
 <-- PRI {"text": "[text"], "name": display name, "id": id, "username": username, "receive": true/false}
-private message, displays in the log
-receive is false for sender, true for recipient
+Private message, displays in the log
+Receive is false for sender, true for recipient
+May contain "rc_username" and "rc_id" to indicate who is remote controlling the entity to send a private message.
 
 --> EML {"send": {"subject": subject, "contents": contents, "to": [username, ...]}}
 --> EML {"read": id}

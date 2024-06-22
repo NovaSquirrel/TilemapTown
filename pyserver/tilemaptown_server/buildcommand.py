@@ -217,18 +217,21 @@ def fn_client_settings(map, client, context, arg):
 
 @cmd_command(category="Communication")
 def fn_say(map, client, context, arg):
+	respond_to = context[0]
 	if arg != '':
-		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': escape_tags(arg)}
+		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': escape_tags(arg), 'rc_username': respond_to.username_or_id(), 'rc_id': respond_to.protocol_id()}
 		map.broadcast("MSG", fields, remote_category=botwatch_type['chat'])
 
 @cmd_command(category="Communication")
 def fn_me(map, client, context, arg):
+	respond_to = context[0]
 	if arg != '':
-		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': "/me "+escape_tags(arg)}
+		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': "/me "+escape_tags(arg), 'rc_username': respond_to.username_or_id(), 'rc_id': respond_to.protocol_id()}
 		map.broadcast("MSG", fields, remote_category=botwatch_type['chat'])
 
 @cmd_command(category="Communication", alias=['msg', 'p'], syntax="username message", no_entity_needed=True)
 def fn_tell(map, client, context, arg):
+	respond_to = context[0]
 	if arg != "":
 		username, privtext = separate_first_word(arg)
 		if privtext.isspace() or privtext=="":
@@ -243,7 +246,11 @@ def fn_tell(map, client, context, arg):
 				if u.is_client() or "PRI" in u.forward_message_types:
 					if not u.is_client() or not in_blocked_username_list(client, u.connection_attr('ignore_list'), 'message %s' % u.name):
 						client.send("PRI", {'text': privtext, 'name':u.name, 'id': u.protocol_id(), 'username': u.username_or_id(), 'receive': False})
-						u.send("PRI", {'text': privtext, 'name':client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'receive': True})
+						recipient_params = {'text': privtext, 'name':client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'receive': True}
+						if respond_to is not client:
+							recipient_params['rc_username'] = respond_to.username_or_id()
+							recipient_params['rc_id'] = respond_to.protocol_id()
+						u.send("PRI", recipient_params)
 				else:
 					respond(context, 'That entity isn\'t a user', error=True)
 			else:
@@ -2457,6 +2464,12 @@ def fn_entity(map, client, context, arg):
 	elif subcommand == 'do':
 		if permission_check(permission['remote_command']):
 			handle_user_command(e.map, e, client, context[1], subarg)
+	elif subcommand == 'say':
+		if permission_check(permission['remote_command']):
+			handle_user_command(e.map, e, client, context[1], "say "+subarg)
+	elif subcommand == 'me':
+		if permission_check(permission['remote_command']):
+			handle_user_command(e.map, e, client, context[1], "me "+subarg)
 
 	elif subcommand == 'rmove':
 		if permission_check(permission['move']):
