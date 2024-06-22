@@ -691,16 +691,16 @@ function receiveServerMessage(cmd, arg) {
           let message = arg.text.slice(4);
           let no_space = message.startsWith("'s ") || message.startsWith("'d ") || message.startsWith("'ll ");
           logMessage("* <i>"+arg.name+(no_space?"":" ")+convertBBCode(message)+"</i>", 'user_message',
-            {'isChat': true, 'plainText': `* ${arg.name}${no_space?"":" "}${message}`});
+            {'isChat': true, 'plainText': `* ${arg.name}${no_space?"":" "}${message}`, 'username': arg["username"] ?? arg["id"]});
         } else if(arg.text.slice(0, 5).toLowerCase() == "/ooc ")
           logMessage("[OOC] "+arg.name+": "+convertBBCode(arg.text.slice(5)), 'ooc_message',
-            {'isChat': true, 'plainText': `[OOC] ${arg.name}: ${arg.text.slice(5)}`});
+            {'isChat': true, 'plainText': `[OOC] ${arg.name}: ${arg.text.slice(5)}`, 'username': arg["username"] ?? arg["id"]});
         else if(arg.text.slice(0, 7).toLowerCase() == "/spoof ")
           logMessage("* <i>"+convertBBCode(arg.text.slice(7)) + "</i> <span class=\"spoof_name\">(by "+arg.name+")</span>", 'spoof_message',
-            {'isChat': true, 'plainText': `* ${arg.text.slice(7)} (by ${arg.name})`});
+            {'isChat': true, 'plainText': `* ${arg.text.slice(7)} (by ${arg.name})`, 'username': arg["username"] ?? arg["id"]});
         else
           logMessage("&lt;"+arg.name+"&gt; "+convertBBCode(arg.text), 'user_message',
-            {'isChat': true, 'plainText': `<${arg.name}> ${arg.text}`});
+            {'isChat': true, 'plainText': `<${arg.name}> ${arg.text}`, 'username': arg["username"] ?? arg["id"]});
       } else
         if(arg.buttons) {
           let buttons = "";
@@ -708,14 +708,14 @@ function receiveServerMessage(cmd, arg) {
             buttons += '<input type="button" value="'+arg.buttons[i*2]+'" onclick="sendChatCommand(\''+arg.buttons[i*2+1]+'\');"/>';
           }
           logMessage("! "+convertBBCode(arg.text)+" "+buttons, 'server_message',
-            {'isChat': false});
+            {'isChat': false, 'username': arg["username"]});
         } else {
           if(arg["class"])
             logMessage(arg.text, arg["class"],
-              {'isChat': false, 'plainText': arg.text});
+              {'isChat': false, 'plainText': arg.text, 'username': arg["username"]});
           else
             logMessage("Server message: "+convertBBCode(arg.text), 'server_message',
-              {'isChat': false, 'plainText': "Server message: "+arg.text});
+              {'isChat': false, 'plainText': "Server message: "+arg.text, 'username': arg["username"]});
         }
       break;
     case "IDN":

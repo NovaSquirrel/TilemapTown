@@ -1290,9 +1290,12 @@ function logMessage(Message, Class, Params) {
 	let newMessage = document.createElement("div");
 	newMessage.className = Class;
 	newMessage.innerHTML = (timestampText.length ? (`<span class="timestamp">${timestampText}</span> `) : "") + Message;
+	if (Params.username) {
+		newMessage.title = "Message from: " + Params.username;
+	}
 	chatArea.append(newMessage);
 
-	if(OnlineMuWebview) {
+	if (OnlineMuWebview) {
 		window.chrome.webview.hostObjects.client.Display(Params.plainText ?? Message);
 	}
 
