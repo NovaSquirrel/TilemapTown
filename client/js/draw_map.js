@@ -133,9 +133,9 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 	}
 	sortedPlayers.sort(
 		(a, b) => {
-			if (PlayerWho[a].passengers.includes(parseInt(b))) {
+			if (!PlayerWho[b].is_following && PlayerWho[a].passengers.includes(parseInt(b))) {
 				return -1;
-			} else if (PlayerWho[b].passengers.includes(parseInt(a))) {
+			} else if (!PlayerWho[a].is_following && PlayerWho[b].passengers.includes(parseInt(a))) {
 				return 1;
 			}
 			return (PlayerWho[a].y > PlayerWho[b].y) ? 1 : -1;
