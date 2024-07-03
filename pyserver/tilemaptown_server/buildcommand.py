@@ -1750,7 +1750,7 @@ def fn_userpic(map, client, context, arg):
 			client.pic = [0, int(arg[0]), int(arg[1])]
 			success = True
 	elif len(arg) == 3:
-		if arg[0].isdecimal() and arg[1].isdecimal() and arg[2].isdecimal():
+		if string_is_int(arg[0]) and arg[1].isdecimal() and arg[2].isdecimal():
 			client.pic = [int(arg[0]), int(arg[1]), int(arg[2])]
 			success = True
 	if success:
