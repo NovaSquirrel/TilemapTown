@@ -51,7 +51,7 @@ let CameraX = 0;
 let CameraY = 0;
 let CameraAlwaysCenter = true;
 
-let CameraScale = 1;
+let CameraScale = 3;
 const CameraScaleMin = 1;
 const CameraScaleMax = 8;
 
