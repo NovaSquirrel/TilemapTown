@@ -229,24 +229,22 @@ def fn_me(map, client, context, arg):
 		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': "/me "+escape_tags(arg), 'rc_username': respond_to.username_or_id(), 'rc_id': respond_to.protocol_id()}
 		map.broadcast("MSG", fields, remote_category=botwatch_type['chat'])
 
-@cmd_command(category="Communication", alias=['msg', 'p'], syntax="username message", no_entity_needed=True)
-def fn_tell(map, client, context, arg):
-	respond_to = context[0]
-	if arg != "":
-		username, privtext = separate_first_word(arg)
-		if privtext.isspace() or privtext=="":
+def send_private_message(client, context, recipient_username, text):
+	if recipient_username != "":
+		if text.isspace() or text=="":
 			respond(context, 'Tell them what?', error=True)
 		else:
-			u = find_connection_by_username(username)
+			u = find_connection_by_username(recipient_username)
 			if u != None:
 				u = u.entity
 			else:
-				u = find_client_by_username(username)
+				u = find_client_by_username(recipient_username)
 			if u:
 				if u.is_client() or "PRI" in u.forward_message_types:
+					respond_to = context[0]
 					if not u.is_client() or not in_blocked_username_list(client, u.connection_attr('ignore_list'), 'message %s' % u.name):
-						client.send("PRI", {'text': privtext, 'name':u.name, 'id': u.protocol_id(), 'username': u.username_or_id(), 'receive': False})
-						recipient_params = {'text': privtext, 'name':client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'receive': True}
+						client.send("PRI", {'text': text, 'name':u.name, 'id': u.protocol_id(), 'username': u.username_or_id(), 'receive': False})
+						recipient_params = {'text': text, 'name':client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'receive': True}
 						if respond_to is not client:
 							recipient_params['rc_username'] = respond_to.username_or_id()
 							recipient_params['rc_id'] = respond_to.protocol_id()
@@ -254,9 +252,14 @@ def fn_tell(map, client, context, arg):
 				else:
 					respond(context, 'That entity isn\'t a user', error=True)
 			else:
-				failed_to_find(context, username)
+				failed_to_find(context, recipient_username)
 	else:
 		respond(context, 'Private message who?', error=True)
+
+@cmd_command(category="Communication", alias=['msg', 'p'], syntax="username message", no_entity_needed=True)
+def fn_tell(map, client, context, arg):
+	username, privtext = separate_first_word(arg)
+	send_private_message(client, context, username, privtext)
 
 def send_request_to_user(client, context, arg, request_type, request_data, accept_command, decline_command, you_message, them_message):
 	global next_request_id

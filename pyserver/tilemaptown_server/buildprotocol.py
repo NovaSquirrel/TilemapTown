@@ -16,7 +16,7 @@
 
 import json, datetime, time, types, weakref
 from .buildglobal import *
-from .buildcommand import handle_user_command, escape_tags, tile_is_okay, data_disallowed_for_entity_type
+from .buildcommand import handle_user_command, escape_tags, tile_is_okay, data_disallowed_for_entity_type, send_private_message
 from .buildentity import Entity
 from .buildclient import Client
 
@@ -351,6 +351,15 @@ def fn_CMD(connection, map, client, arg, echo):
 			map = actor.map
 
 	handle_user_command(map, actor, client, echo, arg["text"])
+
+@protocol_command()
+def fn_PRI(connection, map, client, arg, echo):
+	actor = client
+	if 'rc' in arg:
+		actor = find_remote_control_entity(connection, client, arg['rc'], echo)
+		if actor == None:
+			return
+	send_private_message(actor, (client, echo), arg['username'], arg['text'])
 
 @protocol_command()
 def fn_BAG(connection, map, client, arg, echo):
