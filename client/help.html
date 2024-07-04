@@ -52,6 +52,8 @@ For the full list, see <a href="https://raw.githubusercontent.com/NovaSquirrel/T
 <p><span class="cmd_name">/gwho</span><br><span class="cmd_desc">List all users on the server.</span></p>
 <p><span class="cmd_name">/whereare</span><br><span class="cmd_desc">List public maps that have users on them.</span></p>
 <p><span class="cmd_name">/publicmaps</span><br><span class="cmd_desc">List all public maps.</span></p>
+<p><span class="cmd_name">/look user</span><br><span class="cmd_desc">Displays the description of another user on the map, if they have one set.</span></p>
+<p><span class="cmd_name">/userdesc text</span><br><span class="cmd_desc">Sets your description.</span></p>
 
 <p>
 <span class="cmd_name">/login username password</span><br>
@@ -59,7 +61,18 @@ For the full list, see <a href="https://raw.githubusercontent.com/NovaSquirrel/T
 <span class="cmd_name">/changepass password</span><br><span class="cmd_desc">Manage your account. A registered account is required for some things (like mail), but the main purpose is to save your character information and location for next time.</span></p>
 
 
+<center><span class="cmd_group">Setting up an avatar</span></center>
+<p>
+You can use custom avatars on Tilemap Town! Currently there's no way to upload them to the server so you will need to upload them to an image hosting site; currently the server is set up to accept images from <a href="https://imgur.com/">Imgur</a>, <a href="https://imgbb.com/">ImgBB</a> and <a href="https://postimages.org/">Postimages</a>.
+</p>
 
+<p>
+For creating the actual image you'll use for your character, there are templates available <a href="https://github.com/NovaSquirrel/TilemapTown/tree/main/docs/player%20templates">on GitHub</a>. Player animation frames are 32x32 the bottom center will be aligned with the bottom center of the tile you're standing on. The width and height of the image is used to determine how many animation frames and directions the player graphic has, so pick a template that matches your needs.
+</p>
+
+<p>
+Once you have an image uploaded to an allowed image hosting site, use <tt>/userpic your_image_url_here</tt>. Make sure this is actually a link to the PNG file itself, and not just to a webpage that has the image on it. On Imgur this can mean right clicking on the image and copying its link.
+</p>
 
 </div></div>
 
