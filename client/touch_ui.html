@@ -218,9 +218,21 @@
         <input type="button" value="&#x1F4CB;Copy Object"  onclick="copyObjFromSelection();">
       </span>
     </div>
-    Selected Entities:
-    <ul id="selectedobjectsul" class="itemsul unselectable">
-    </ul>
+    <span id="selectedentities_span">
+      Selected Entities:
+      <ul id="selectedentitiesul" class="itemsul unselectable">
+      </ul>
+    </span>
+    <span id="selectedfloor_span">
+      Selected Floor:
+      <ul id="selectedfloorul" class="itemsul unselectable">
+      </ul>
+    </span>
+    <span id="selectedobjects_span">
+      Selected Objects:
+      <ul id="selectedobjectsul" class="itemsul unselectable">
+      </ul>
+    </span>
   </div>
 </widget-window>
 
@@ -474,6 +486,25 @@
     <li onclick="sendPrivateMessageToItem(contextMenuItem)">Private message</li>
     <li onclick="deleteItem(contextMenuItem)">Delete</li>
     <!-- <li onclick="referenceItem(contextMenuItem)">Create Reference</li> -->
+  </ul>
+</widget-contextmenu>
+
+<widget-contextmenu id="mapobj-contextmenu" style="display: none;">
+  <ul slot="menu" id="mapobj-contextmenu-menu">
+    <li onclick="editMapObj()">Edit</li>
+    <li id="mapobj_movetop" onclick="moveTopMapObj()">Move to top</li>
+    <li id="mapobj_moveup" onclick="moveUpMapObj()">Move up</li>
+    <li id="mapobj_movedown" onclick="moveDownMapObj()">Move down</li>
+    <li id="mapobj_movebottom" onclick="moveBottomMapObj()">Move to bottom</li>
+    <li onclick="copyMapObjToHotbar()">Copy to hotbar</li>
+    <li onclick="deleteMapObj()">Delete</li>
+  </ul>
+</widget-contextmenu>
+
+<widget-contextmenu id="turf-contextmenu" style="display: none;">
+  <ul slot="menu" id="turf-contextmenu-menu">
+    <li onclick="editTurf()">Edit</li>
+    <li onclick="copyTurfToHotbar()">Copy to hotbar</li>
   </ul>
 </widget-contextmenu>
 

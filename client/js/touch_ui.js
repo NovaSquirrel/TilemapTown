@@ -27,12 +27,13 @@ function initTouchUI() {
 	updateZoomLevelDisplay();
 
 	// On-screen buttons ----------------------------------
-	function setupMoveButton(id, code) {
+	function setupMoveButton(id, code, key) {
 		let button = document.getElementById(id);
 		button.addEventListener('mousedown', function (evt) {
 			keyDownHandler({
 				'shiftKey': touchButtonsAreTurn,
 				'code': code,
+				'key': code,
 				'keyCode': null,
 				'preventDefault': function(){},
 			});
@@ -41,6 +42,7 @@ function initTouchUI() {
 			keyUpHandler({
 				'shiftKey': touchButtonsAreTurn,
 				'code': code,
+				'key': code,
 				'keyCode': null,
 				'preventDefault': function(){},
 			});
