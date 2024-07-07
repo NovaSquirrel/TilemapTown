@@ -1,0 +1,153 @@
+<html>
+  <head><title>Tilemap Town</title>
+  <style>
+.green1 {
+  background:#80ff80;border:8px outset #a0ffa0;color:black;
+}
+body {
+  font-size:16px;
+}
+.cmd_name {
+  font-size:20px;
+}
+.cmd_group {
+  font-size:24px;
+}
+.cmd_example {
+  font-size:14px;
+}
+.flextabs{
+  display: flex;
+  flex-direction: row;
+  min-height: 24px;
+}
+.tab {
+  font-size: 24px;
+  text-align: center;
+  border: 2px solid #80ff80;
+  border-top: none;
+  border-radius: 0px 0px 4px 4px;
+  flex-grow: 1;
+}
+.tab:hover{
+  background-color:#a0ffa0;
+  cursor: pointer;
+}
+.tabcontent{
+  border:dashed #80ff80 3px; 
+  padding: 10px 20px;
+  display: none;
+}
+.join{
+  font-size:24px;
+}
+.scrollbox{
+  overflow: auto;
+  white-space: nowrap;
+  padding: 10px;
+}
+.scrollbox img{
+  padding: 10px;
+  height: 320px;
+  width: 320px;
+}
+@media (max-width:1000px){
+  .flextabs{
+    flex-direction: column;
+  }
+}
+  </style>
+
+  <body>
+  <a href="https://github.com/NovaSquirrel/TilemapTown"><img decoding="async" loading="lazy" width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149" alt="Fork me on GitHub" data-recalc-dims="1" style="position: absolute; top: 0; right: 0; border: 0;"></a>
+
+  <div style="width:90%; margin-left: auto; margin-right: auto;">
+    <div class="green1">
+      <center><h1>Tilemap Town</h1></center>
+    </div>
+    <center><div style="background:black;color:white;">Collaborative map-building hangout</div></center>
+    <div class="flextabs">
+      <div class="tab" onclick="openTab('home')">Home</div>
+      <div class="tab" onclick="openTab('feature')">Features</div>
+      <div class="tab" onclick="openTab('contact')">Contact</div>
+      <div class="tab" onclick="openTab('credit')">Credits</div>
+      <div class="tab" style="flex-grow: 3;" onclick="playgame()">Play</div>
+    </div>
+    <br>
+    <div class="tabcontent" id="home" style="display: block;">
+      <p>Welcome to <b>Tilemap Town</b>! A town for adventurers, critters, and new friends who want to roleplay and let their imagination out. A place to build houses, castles, stores, and maps with others which then you can have fun in character between friends and visitors! A playground for building friendship as much as building... buildings! Tilemap Town is inspired by a lot. Significantly BYOND "building games" that used to be popular long ago as well as MUCKs and other text-based MMOs. It is also influenced by retro 16-bit games, RPGs, and fantasy elements.</p>
+      <p>"I'm hoping to build a lighthearted and whimsical space where people can drop in and be in-character here! I think it would be a lot of fun to treat this world in-universe as being some sort of digital world that people can explore and easily build on, and some sort of fantasy elements would be nice too. Of course if you're not interested in roleplaying you can just use Tilemap Town to chat and build. Just make sure to be considerate of other people." - <b style="color: #80ff80; text-shadow: 0px 0px 2px black;">Nova</b></p>
+      <center><div class="scrollbox"><img src="Novahouse.png"><img src="boardwalk.png"><img src="park.png"><img src="coworkingspace.png"></div></center>
+      <p>Come hangout. Join as a guest by loginning in with blank username & password (you can register afterwards if you want). There's also access to a basic mobile accessible option on login.</p>
+      <center><p><a href="world.html" class="join green1">Play Now</a></p></center>
+      <p>The HTML5 client will also work offline, if you just want to mess around on your own on a temporary map. There's also a very basic client for <a href="https://github.com/NovaSquirrel/TilemapTown3DS">the Nintendo 3DS</a> as a proof of concept, though some stuff currently needs fixed.</p>
+      <p><b>Please Note:</b> Tilemap Town is intended for safe and clean play between <i>adults</i>. Do not play unless you are 18+.</p>
+      <hr>
+    </div>
+    <div class="tabcontent" id="feature">
+      <p>Tilemap Town allows players to enjoy a visual roleplaying experience. Players are allowed to customize themselves with thier own custom 32x32px avatar or a premade one and explore. There's a nice chat client for contacting others in public or private, the ability to swap between characters on the fly, commands for teleporting, carrying, and even an inventory system. Players are heavily encouraged to get in character, either as something original in the town or to bring their own characters from other worlds. Although theming is around more fantasy and retro elements there's no restriction. Tilemap town is very open to all communities regardless of gender or race.</p>      
+      <p>However the town wouldn't be the same without a map. Players are given build tools to help build the world. There are public spaces for you to place tiles down and fill out in order to provide shops, services, or just chill at. Players can also generate their own maps to take control of and connect to the greater world at large. Allowing for interconnection between all sorts of areas.</p>
+      <p>Tilemap Town is in continuous development with more premade assets on the way and extra features. Like being able to make custom tilesets, more accessibility options, and so on. Some features, art, and maps are subject to changes. At present right now there is:</p>
+      <ul>
+        <li>Over 100 16x16px tiles to build with and more on the way</li>
+        <li>Tile property editing like solid obstacles, floating over players heads, or displaying messages</li>
+        <li>Import custom 32x32px avatar sprites with up to 4 frames of animation and 8 directional tracking</li>
+        <li>Private Messaging, markdown for posting, and several chat commands</li>
+        <li>Quickly morph or swap to alternative characters</li>
+        <li>Generate your own maps</li>
+        <li>Carrying or following other users</li>
+      </ul>
+      ... and more to come.
+    </div>
+    <div class="tabcontent" id="contact">
+      <p>Want to help or just looking to reach out? <a href="http://novasquirrel.com/#contact">Get in touch!</a> There's also a small <a href="https://discord.gg/N2Eqj2H">Discord server</a> for Tilemap Town and other projects being worked on. Or you can directly visit <a href="https://novasquirrel.com/">my website</a> for more cool stuff.</p>
+      <p>The server is written in Python, making things easy to modify and extend. This is one of the really great benefits from starting over and leaving codebases from the 90s behind. The database is SQLite rather than being a custom solution, making it easy to access the database with other programs or explore it with a database browser. It's <a href="https://github.com/NovaSquirrel/TilemapTown">open source</a> with a <a href="https://github.com/NovaSquirrel/TilemapTown/blob/main/docs/protocol.txt">documented protocol</a>. Custom clients are welcome and encouraged, as is <a href="https://gist.github.com/NovaSquirrel/39d72c1fe79f5c7bb68166b66f82df19">writing scripts and bots</a> that connect to Tilemap Town for fun things.</p>
+    </div>
+    <div class="tabcontent" id="credit">
+      <ul>
+        <li><b>Development</b></li>
+        <ul>
+          <li>NovaSquirrel : Main Programmer and Creator</li>
+          <li>JustthePulp : Homepage Assistant</li>
+        </ul>
+        <li><a href="https://github.com/patorjk/Extendible-BBCode-Parser">BBCode Parser</a></li>
+        <li><b>Tiles</b></li>
+        <ul>
+          <li><a href="https://opengameart.org/content/tiny-16-basic"><i>Art by Lanea Zimmerman</i></a></li>
+          <li><a href="https://opengameart.org/content/town-tiles "><i>Art by surt</i></a></li>
+          <li><a href="https://opengameart.org/content/16x16-town-remix"><i>Art by Lanea "Sharm" Zimmerman, Stephen "Redshrike" Challener, Carl "Surt" Olsson, and Jetrel</i></a> for <a href="http://opengameart.org">OpenGameArt.org</a></li>
+          <li><a href="https://opengameart.org/content/16x16-indoor-rpg-tileset-the-baseline"><i>Art by Stephen Challener (Redshrike).</i></a> for <a href="http://opengameart.org">OpenGameArt.org</a></li>
+          <li><a href="https://opengameart.org/content/16x16-overworld-tiles"><i>Art by Sharm</i></a></li>
+          <li><a href="https://opengameart.org/content/tiny-16-basic-add-ons"><i>Art by Lanea Zimmerman and R.Ferreira</i></a></li>
+          <li><a href="https://opengameart.org/content/16x16-rpg-items"><i>Art by Jetrel</i></a></li>
+          <li><a href="https://opengameart.org/content/food-items-16x16"><i>Art by Red_Voxel</i></a></li>
+          <li><a href="https://opengameart.org/content/gold-treasure-icons-16x16"><i>Art by Bonsaiheldin</i></a></li>
+          <li><a href="https://henrysoftware.itch.io/pixel-food"><i>Art by Henry Software</i></a></li>
+          <li><a href="https://opengameart.org/content/roguelike-dungeonworld-tiles"><i>Art by Joe Williamson</i></a> <a href="https://x.com/JoeCreates">(handle JoeCreates)</a></li>
+          <li><a href="https://opengameart.org/content/16x16-indoor-rpg-tileset"><i>Art by armisius</i></a> <a href="https://tilation.itch.io/">(itch.io)</a> </li>
+          <li><a href="https://opengameart.org/content/1616-block-textures"><i>Art by ARoachIFoundOnMyPillow</i></a></li>
+          <li><a href="https://gist.github.com/eevee/59012b2a3d4dcdb40b5247ecdc2cfb34"><i>Potluck Tileset Credits</i></a></li>
+          <li><a href="https://justthepulp.mooffee.net/"><i>Art by JustthePulp</i></a> (With specific permission and modifications for Tilemap Town)</li>
+        </ul>
+        <li><b>Additional Shoutouts</b></li>
+        <ul>
+          <li>Nell</li>
+        </ul>
+      </ul>
+    </div>
+  </div>
+  <script>
+    function openTab(tabid){
+      var i, tabs, target;
+      tabs = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabs.length; i++) {
+        tabs[i].style.display = "none";
+      }
+      document.getElementById(tabid).style.display = "block"
+    }
+    function playgame(){
+      window.location = "world.html";
+    }
+  </script>
+  </body>
+</html>
