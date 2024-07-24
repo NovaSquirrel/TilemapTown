@@ -961,7 +961,7 @@ def fn_IDN(connection, map, client, arg, echo):
 		if not connection.login(filter_username(arg["username"]), arg["password"], new_client, override_map=override_map, announce_login=False):
 			print("Failed login for "+filter_username(arg["username"]))
 			connection.disconnect(reason="BadLogin")
-			entity_id.login_successful_callback = None
+			connection.login_successful_callback = None
 			return
 	elif messaging_only_mode:
 		connection.disconnect("Messaging mode currently requires you to log into an account", reason="BadLogin")
