@@ -316,6 +316,7 @@ class Entity(PermissionsMixin, object):
 					and u.home_id != self.db_id \
 					and (u.owner_id != self.owner_id or u.owner_id == None) \
 					and u.map_id != u.owner_id \
+					and not (u.deny & permission['build'] == 0 and not u.is_banned_from(self, permission['persistent_object_entry'])) \
 					and not u.has_permission(self, permission['persistent_object_entry'], False):
 						u.send_home()
 
