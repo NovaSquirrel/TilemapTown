@@ -1735,7 +1735,7 @@ def fn_userpic(map, client, context, arg):
 	client.save_on_clean_up = True
 
 	if len(arg) == 1:
-		defaults = {'bunny': [0, 2, 25], 'cat': [0, 2, 26], 'hamster': [0, 8, 25], 'fire': [0, 4,26]}
+		defaults = {'bunny': [0, 2, 25], 'cat': [0, 2, 26], 'hamster': [0, 8, 25], 'fire': [0, 4,26], 'invisible': [-1, 3, 5], 'snail': [0, 6, 26], 'turtle': [0, 5, 25]}
 		if arg[0] in defaults:
 			client.pic = defaults[arg[0]];
 			success = True
