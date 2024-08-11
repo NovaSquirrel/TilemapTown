@@ -2622,121 +2622,145 @@
 			"canopy1a": {
 				"name": "canopy",
 				"pic": [-2, 15, 63],
+				"over": true,
 				"obj": true
 			},
 			"canopy1b": {
 				"name": "canopy",
 				"pic": [-2, 15, 64],
+				"over": true,
 				"obj": true
 			},
 			"canopy1c": {
 				"name": "canopy",
 				"pic": [-2, 15, 65],
+				"over": true,
 				"obj": true
 			},
 			"canopy2a": {
 				"name": "canopy",
 				"pic": [-2, 16, 63],
+				"over": true,
 				"obj": true
 			},
 			"canopy2b": {
 				"name": "canopy",
 				"pic": [-2, 16, 64],
+				"over": true,
 				"obj": true
 			},
 			"canopy2c": {
 				"name": "canopy",
 				"pic": [-2, 16, 65],
+				"over": true,
 				"obj": true
 			},
 			"canopy3a": {
 				"name": "canopy",
 				"pic": [-2, 17, 63],
+				"over": true,
 				"obj": true
 			},
 			"canopy3b": {
 				"name": "canopy",
 				"pic": [-2, 17, 64],
+				"over": true,
 				"obj": true
 			},
 			"canopy3c": {
 				"name": "canopy",
 				"pic": [-2, 17, 65],
+				"over": true,
 				"obj": true
 			},
 			"canopy4a": {
 				"name": "canopy",
 				"pic": [-2, 18, 63],
+				"over": true,
 				"obj": true
 			},
 			"canopy4b": {
 				"name": "canopy",
 				"pic": [-2, 18, 64],
+				"over": true,
 				"obj": true
 			},
 			"canopy4c": {
 				"name": "canopy",
 				"pic": [-2, 18, 65],
+				"over": true,
 				"obj": true
 			},
 			"canopy5a": {
 				"name": "canopy",
 				"pic": [-2, 19, 63],
+				"over": true,
 				"obj": true
 			},
 			"canopy5b": {
 				"name": "canopy",
 				"pic": [-2, 19, 64],
+				"over": true,
 				"obj": true
 			},
 			"canopy5c": {
 				"name": "canopy",
 				"pic": [-2, 19, 65],
+				"over": true,
 				"obj": true
 			},
 			"canopy6a": {
 				"name": "canopy",
 				"pic": [-2, 20, 63],
+				"over": true,
 				"obj": true
 			},
 			"canopy6b": {
 				"name": "canopy",
 				"pic": [-2, 20, 64],
+				"over": true,
 				"obj": true
 			},
 			"canopy6c": {
 				"name": "canopy",
 				"pic": [-2, 20, 65],
+				"over": true,
 				"obj": true
 			},
 			"canopy7a": {
 				"name": "canopy",
 				"pic": [-2, 21, 63],
+				"over": true,
 				"obj": true
 			},
 			"canopy7b": {
 				"name": "canopy",
 				"pic": [-2, 21, 64],
+				"over": true,
 				"obj": true
 			},
 			"canopy7c": {
 				"name": "canopy",
 				"pic": [-2, 21, 65],
+				"over": true,
 				"obj": true
 			},
 			"canopy8a": {
 				"name": "canopy",
 				"pic": [-2, 22, 63],
+				"over": true,
 				"obj": true
 			},
 			"canopy8b": {
 				"name": "canopy",
 				"pic": [-2, 22, 64],
+				"over": true,
 				"obj": true
 			},
 			"canopy8c": {
 				"name": "canopy",
 				"pic": [-2, 22, 65],
+				"over": true,
 				"obj": true
 			},
 			"clock": {
