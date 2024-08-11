@@ -589,6 +589,85 @@
 				"pic": [-2, 14, 61],
 				"obj": true
 			},
+			"forestvines": {
+				"name": "vines",
+				"pic": [-2, 24, 56],
+				"obj": true,
+				"autotile_layout": 11,
+				"over": true
+			},
+			"forestborder_top": {
+				"name": "border",
+				"pic": [-2, 2, 64],
+				"obj": true
+			},
+			"forestborder_bottom": {
+				"name": "border",
+				"pic": [-2, 1, 63],
+				"obj": true
+			},
+			"forestborder_left": {
+				"name": "border",
+				"pic": [-2, 2, 63],
+				"obj": true
+			},
+			"forestborder_right": {
+				"name": "border",
+				"pic": [-2, 1, 64],
+				"obj": true
+			},
+			"forestborder_top2": {
+				"name": "border",
+				"pic": [-2, 7, 64],
+				"obj": true
+			},
+			"forestborder_bottom2": {
+				"name": "border",
+				"pic": [-2, 6, 63],
+				"obj": true
+			},
+			"forestborder_left2": {
+				"name": "border",
+				"pic": [-2, 7, 63],
+				"obj": true
+			},
+			"forestborder_right2": {
+				"name": "border",
+				"pic": [-2, 6, 64],
+				"obj": true
+			},
+			"forestborder_top3": {
+				"name": "border",
+				"pic": [-2, 12, 64],
+				"obj": true
+			},
+			"forestborder_bottom3": {
+				"name": "border",
+				"pic": [-2, 11, 63],
+				"obj": true
+			},
+			"forestborder_left3": {
+				"name": "border",
+				"pic": [-2, 12, 63],
+				"obj": true
+			},
+			"forestborder_right3": {
+				"name": "border",
+				"pic": [-2, 11, 64],
+				"obj": true
+			},
+			"woodstick": {
+				"name": "wood stick",
+				"pic": [-2, 24, 61],
+				"obj": true,
+				"autotile_layout": 9
+			},
+			"stonestick": {
+				"name": "stone stick",
+				"pic": [-2, 20, 61],
+				"obj": true,
+				"autotile_layout": 9
+			},
 			"colorfloor1a": {
 				"name": "floor",
 				"pic": [-2, 0, 32]
@@ -1114,6 +1193,30 @@
 				"pic": [-2, 6, 53],
 				"obj": true
 			},
+			"sofa1": {
+				"name": "sofa",
+				"pic": [-2, 6, 50],
+				"obj": true,
+				"autotile_layout": 8
+			},
+			"sofa2": {
+				"name": "sofa",
+				"pic": [-2, 6, 51],
+				"obj": true,
+				"autotile_layout": 8
+			},
+			"sofa3": {
+				"name": "sofa",
+				"pic": [-2, 6, 52],
+				"obj": true,
+				"autotile_layout": 8
+			},
+			"sofa4": {
+				"name": "sofa",
+				"pic": [-2, 6, 53],
+				"obj": true,
+				"autotile_layout": 8
+			},
 			"stool1": {
 				"name": "stool",
 				"pic": [-2, 7, 47],
@@ -1142,6 +1245,46 @@
 			"stool6": {
 				"name": "stool",
 				"pic": [-2, 8, 49],
+				"obj": true
+			},
+			"cushion": {
+				"name": "cushion",
+				"pic": [-2, 0, 46],
+				"obj": true
+			},
+			"cushion2": {
+				"name": "cushion",
+				"pic": [-2, 0, 47],
+				"obj": true
+			},
+			"cushion3": {
+				"name": "cushion",
+				"pic": [-2, 0, 48],
+				"obj": true
+			},
+			"cushion4": {
+				"name": "cushion",
+				"pic": [-2, 0, 49],
+				"obj": true
+			},
+			"cushion5": {
+				"name": "cushion",
+				"pic": [-2, 0, 50],
+				"obj": true
+			},
+			"cushion6": {
+				"name": "cushion",
+				"pic": [-2, 0, 51],
+				"obj": true
+			},
+			"cushion7": {
+				"name": "cushion",
+				"pic": [-2, 0, 52],
+				"obj": true
+			},
+			"cushion8": {
+				"name": "cushion",
+				"pic": [-2, 0, 53],
 				"obj": true
 			},
 			"microwave": {
@@ -1219,6 +1362,30 @@
 				"name": "coaster orange",
 				"pic": [-2, 9, 102],
 				"autotile_layout": 2,
+				"obj": true
+			},
+			"coaster_support1": {
+				"name": "coaster support red",
+				"pic": [-2, 7, 98],
+				"autotile_layout": 9,
+				"obj": true
+			},
+			"coaster_support2": {
+				"name": "coaster support blue",
+				"pic": [-2, 15, 98],
+				"autotile_layout": 9,
+				"obj": true
+			},
+			"coaster_support3": {
+				"name": "coaster support green",
+				"pic": [-2, 7, 102],
+				"autotile_layout": 9,
+				"obj": true
+			},
+			"coaster_support4": {
+				"name": "coaster support orange",
+				"pic": [-2, 15, 102],
+				"autotile_layout": 9,
 				"obj": true
 			},
 			"mine_track": {
@@ -1378,6 +1545,11 @@
 			"cake2": {
 				"name": "cake",
 				"pic": [-2, 17, 78],
+				"obj": true
+			},
+			"pie": {
+				"name": "pie",
+				"pic": [-2, 9, 45],
 				"obj": true
 			},
 			"lollipop": {
@@ -1972,43 +2144,51 @@
 			},
 			"ladder": {
 				"name": "ladder",
-				"pic": [-2, 24, 88],
-				"obj": true
+				"pic": [-2, 24, 89],
+				"obj": true,
+				"autotile_layout": 10
 			},
 			"ladder2": {
 				"name": "ladder",
-				"pic": [-2, 25, 88],
-				"obj": true
+				"pic": [-2, 25, 89],
+				"obj": true,
+				"autotile_layout": 10
 			},
 			"ladder3": {
 				"name": "ladder",
-				"pic": [-2, 26, 88],
-				"obj": true
+				"pic": [-2, 26, 89],
+				"obj": true,
+				"autotile_layout": 10
 			},
 			"ladder4": {
 				"name": "ladder",
-				"pic": [-2, 27, 88],
-				"obj": true
+				"pic": [-2, 27, 89],
+				"obj": true,
+				"autotile_layout": 10
 			},
 			"horiz_ladder": {
 				"name": "ladder",
 				"pic": [-2, 29, 87],
-				"obj": true
+				"obj": true,
+				"autotile_layout": 7
 			},
 			"horiz_ladder2": {
 				"name": "ladder",
 				"pic": [-2, 29, 88],
-				"obj": true
+				"obj": true,
+				"autotile_layout": 7
 			},
 			"horiz_ladder3": {
 				"name": "ladder",
 				"pic": [-2, 29, 89],
-				"obj": true
+				"obj": true,
+				"autotile_layout": 7
 			},
 			"horiz_ladder4": {
 				"name": "ladder",
 				"pic": [-2, 29, 90],
-				"obj": true
+				"obj": true,
+				"autotile_layout": 7
 			},
 
 			"pastel1": {
@@ -2425,7 +2605,7 @@
 			},
 			"btile55": {
 				"name": "tile",
-				"pic": [-2, 12, 38]
+				"pic": [-2, 12, 83]
 			},
 			"btile56": {
 				"name": "tile",
@@ -2573,6 +2753,104 @@
 				"name": "machine",
 				"pic": [-2, 26, 62],
 				"obj": true
+			},
+			"poster": {
+				"name": "poster",
+				"pic": [-2, 28, 65],
+				"obj": true
+			},
+			"poster2": {
+				"name": "poster",
+				"pic": [-2, 27, 66],
+				"obj": true
+			},
+			"poster3": {
+				"name": "poster",
+				"pic": [-2, 27, 67],
+				"obj": true
+			},
+			"poster4": {
+				"name": "poster",
+				"pic": [-2, 22, 69],
+				"obj": true
+			},
+			"poster5": {
+				"name": "poster",
+				"pic": [-2, 22, 70],
+				"obj": true
+			},
+			"poster6": {
+				"name": "poster",
+				"pic": [-2, 23, 70],
+				"obj": true
+			},
+			"shopping_baskets": {
+				"name": "shopping baskets",
+				"pic": [-2, 31, 65],
+				"obj": true
+			},
+			"caution_tape": {
+				"name": "caution tape",
+				"pic": [-2, 29, 62],
+				"obj": true,
+				"autotile_layout": 7
+			},
+			"column": {
+				"name": "column",
+				"pic": [-2, 22, 67],
+				"obj": true,
+				"autotile_layout": 9,
+				"over": true
+			},
+			"column2": {
+				"name": "column",
+				"pic": [-2, 21, 67],
+				"obj": true,
+				"autotile_layout": 9,
+				"over": true
+			},
+			"grocerybox": {
+				"name": "grocery store box",
+				"pic": [-2, 26, 63],
+				"autotile_layout": 3,
+				"density": true
+			},
+			"grocerybox_h": {
+				"name": "grocery store box",
+				"pic": [-2, 26, 63],
+				"autotile_layout": 8,
+				"density": true
+			},
+			"grocerybox_v": {
+				"name": "grocery store box",
+				"pic": [-2, 26, 63],
+				"autotile_layout": 11,
+				"density": true
+			},
+			"grocerybox_wall": {
+				"name": "wall",
+				"pic": [-2, 25, 67],
+				"autotile_layout": 6,
+				"density": true,
+				"obj": true
+			},
+			"grocerybox_wall2": {
+				"name": "wall",
+				"pic": [-2, 23, 67],
+				"density": true,
+				"obj": true
+			},
+			"chest": {
+				"name": "chest",
+				"pic": [-2, 0, 42],
+				"obj": true,
+				"density": true
+			},
+			"chest2": {
+				"name": "chest",
+				"pic": [-2, 1, 42],
+				"obj": true,
+				"density": true
 			}
 		}
 	},

@@ -686,6 +686,12 @@
 				"density": true,
 				"obj": true
 			},
+			"pillar2": {
+				"name": "pillar2",
+				"pic": [-1, 26, 6],
+				"autotile_layout": 9, 
+				"obj": true
+			},
 			"drawers": {
 				"name": "drawers",
 				"pic": [-1, 14, 3],
@@ -1256,6 +1262,29 @@
 				"pic": [-1, 5, 15],
 				"density": true,
 				"obj": true
+			},
+			"conveyor": {
+				"name": "conveyer belt",
+				"pic": [0, 19, 19],
+				"density": true,
+				"anim_frames": 4,
+				"anim_speed": 1,
+				"autotile_layout": 6,
+				"obj": true
+			},
+			"pipes": {
+				"name": "pipes",
+				"pic": [-1, 13, 26],
+				"density": true,
+				"autotile_layout": 2,
+				"obj": true
+			},
+			"counter": {
+				"name": "counter",
+				"pic": [-1, 2, 18],
+				"autotile_layout": 7,
+				"obj": true,
+				"density": true
 			}
 		}
 	}

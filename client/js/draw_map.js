@@ -401,8 +401,54 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 				ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[1][0] * 8, picY * 16 + quarters[1][1] * 8, 8, 8, drawAtX + 8, drawAtY,   8, 8);
 				ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[2][0] * 8, picY * 16 + quarters[2][1] * 8, 8, 8, drawAtX,     drawAtY+8, 8, 8);
 				ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[3][0] * 8, picY * 16 + quarters[3][1] * 8, 8, 8, drawAtX + 8, drawAtY+8, 8, 8);
+			return; // Don't do the regular draw at the end
 		}
-		return;
+		case 6: // Horizontal-only autotiling
+		{
+			let autotileIndex = autotileIndexFunction(tile, map, mapCoordX, mapCoordY);
+			let right = (autotileIndex & 1) != 0;
+			let left = (autotileIndex & 2) != 0;
+			if(left && !right) picX--;
+			if(!left && right) picX++;
+			picX += animationFrame*3;
+			break;
+		}
+		case 7: // Horizontal-only autotiling, separate single, defaulting to middle
+		case 8: // Horizontal-only autotiling, separate single, defaulting to single
+		{
+			let autotileIndex = autotileIndexFunction(tile, map, mapCoordX, mapCoordY);
+			let right = (autotileIndex & 1) != 0;
+			let left = (autotileIndex & 2) != 0;
+			if(left && !right) picX--;
+			if(!left && right) picX++;
+			if(!left && !right) picX+=2;
+			if(autotileLayout == 8) picX-=2;
+			picX += animationFrame*4;
+			break;
+		}
+		case 9: // Vertical-only autotiling
+		{
+			let autotileIndex = autotileIndexFunction(tile, map, mapCoordX, mapCoordY);
+			let bottom = (autotileIndex & 4) != 0;
+			let top = (autotileIndex & 8) != 0;
+			if(top && !bottom) picY--;
+			if(!top && bottom) picY++;
+			picX += animationFrame;
+			break;
+		}
+		case 10: // Vertical-only autotiling, separate single, defaulting to middle
+		case 11: // Vertical-only autotiling, separate single, defaulting to single
+		{
+			let autotileIndex = autotileIndexFunction(tile, map, mapCoordX, mapCoordY);
+			let bottom = (autotileIndex & 4) != 0;
+			let top = (autotileIndex & 8) != 0;
+			if(top && !bottom) picY--;
+			if(!top && bottom) picY++;
+			if(!top && !bottom) picY-=2;
+			if(autotileLayout == 11) picY+=2;
+			picX += animationFrame;
+			break;
+		}
 	}
 	ctx.drawImage(IconSheets[tile.pic[0]], picX * 16, picY * 16, 16, 16, drawAtX, drawAtY, 16, 16);
 }

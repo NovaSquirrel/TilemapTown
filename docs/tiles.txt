@@ -116,6 +116,66 @@ Tiles are defined with a JSON object, which can have the following fields:
 		|~|
 		'-'
 
+	6 = Horizontal-only autotiling, where single just uses the middle tile
+
+		LPR
+
+		P = Pic; tile to use if there is a connection on both the left and right, OR if there is neither a connection on the left nor the right.
+		L = Tile to use if there is a connection on the right, but not the left
+		R = Tile to use if there is a connection on the left, but not the right
+
+	7 = Horizontal-only autotiling, separate single, defaulting to middle
+
+		-P-O
+
+		P = Pic; tile to use if there is a connection on both the left and right
+		L = Tile to use if there is a connection on the right, but not the left
+		R = Tile to use if there is a connection on the left, but not the right
+		O = Tile to use if there is not a connection on the left or the right
+
+	8 = Horizontal-only autotiling, separate single, defaulting to single
+
+		-#-P
+
+		# = Tile to use if there is a connection on both the left and right
+		L = Tile to use if there is a connection on the right, but not the left
+		R = Tile to use if there is a connection on the left, but not the right
+		P = Pic; tile to use if there is not a connection on the left or the right 
+
+	9 = Vertical-only autotiling, where single just uses the middle tile
+
+		U
+		P
+		D
+
+		P = Pic; tile to use if there is a connection on both the left and right, OR if there is neither a connection on the left nor the right.
+		U = Tile to use if there is a connection on the bottom, but not the top
+		D = Tile to use if there is a connection on the top, but not the bottom
+
+	10 = Vertical-only autotiling, separate single, defaulting to middle
+
+		O
+		U
+		P
+		D
+
+		P = Pic; tile to use if there is a connection on both the top and bottom
+		U = Tile to use if there is a connection on the bottom, but not the bottom
+		D = Tile to use if there is a connection on the top, but not the top
+		O = Tile to use if there is not a connection on the top or the bottom
+
+	11 = Vertical-only autotiling, separate single, defaulting to single
+
+		P
+		U
+		#
+		D
+
+		# = Tile to use if there is a connection on both the top and bottom
+		U = Tile to use if there is a connection on the bottom, but not the bottom
+		D = Tile to use if there is a connection on the top, but not the top
+		P = Pic; tile to use if there is not a connection on the top or the bottom
+
 "autotile_class"
 	When provided, the client will use this field for determining whether tiles should look connected to each other.
 
@@ -144,6 +204,12 @@ Tiles are defined with a JSON object, which can have the following fields:
 	3: 4
 	4: 3
 	5: 3
+	6: 3
+	7: 4
+	8: 4
+	9: 1
+	10: 1
+	11: 1
 
 "anim_offset"
 	Defaults to 0. Adds an offset to the timer used for animation (in 0.1 second units).
