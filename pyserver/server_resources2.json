@@ -1549,7 +1549,7 @@
 			},
 			"pie": {
 				"name": "pie",
-				"pic": [-2, 9, 45],
+				"pic": [-2, 9, 48],
 				"obj": true
 			},
 			"lollipop": {
