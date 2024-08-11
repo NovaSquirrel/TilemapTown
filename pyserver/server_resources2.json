@@ -1489,12 +1489,12 @@
 			},
 			"popcorn": {
 				"name": "popcorn",
-				"pic": [-2, 22, 67],
+				"pic": [-2, 22, 76],
 				"obj": true
 			},
 			"pancakes": {
 				"name": "pancakes",
-				"pic": [-2, 23, 67],
+				"pic": [-2, 23, 76],
 				"obj": true
 			},
 			"icecream1": {
