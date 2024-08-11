@@ -1947,27 +1947,27 @@
 			},
 			"ocarina": {
 				"name": "ocarina",
-				"pic": [-2, 27, 85],
+				"pic": [-2, 27, 86],
 				"obj": true
 			},
 			"microphone": {
 				"name": "microphone",
-				"pic": [-2, 28, 85],
+				"pic": [-2, 28, 86],
 				"obj": true
 			},
 			"guitar": {
 				"name": "guitar",
-				"pic": [-2, 29, 85],
+				"pic": [-2, 29, 86],
 				"obj": true
 			},
 			"guitar2": {
 				"name": "guitar",
-				"pic": [-2, 30, 85],
+				"pic": [-2, 30, 86],
 				"obj": true
 			},
 			"guitar3": {
 				"name": "guitar",
-				"pic": [-2, 31, 85],
+				"pic": [-2, 31, 86],
 				"obj": true
 			},
 			"tombstone": {
