@@ -632,6 +632,13 @@ function PlayersAroundTile(FindX, FindY, Radius) {
 // Helper function to get an element's exact position
 // from https://www.kirupa.com/html5/getting_mouse_click_position.htm
 function getExactPosition(el) {
+	// Actually maybe getBoundingClientRect() does what I want just fine
+	let rect = el.getBoundingClientRect();
+	return {
+		x: rect.left,
+		y: rect.top,
+	};
+	/*
 	let xPosition = 0;
 	let yPosition = 0;
 
@@ -654,6 +661,7 @@ function getExactPosition(el) {
 		x: xPosition,
 		y: yPosition
 	};
+	*/
 }
 
 function getMousePosRaw(canvas, evt) {
