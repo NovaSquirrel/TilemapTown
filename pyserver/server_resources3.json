@@ -115,6 +115,7 @@
 				"name": "dirt",
 				"pic": [-3, 1, 2],
 				"menu_pic": [-3, 2, 0],
+				"autotile_class_edge": "grass",
 				"autotile_layout": 4
 			},
 			"dirt!": {
@@ -124,6 +125,7 @@
 			"tallgrass": {
 				"name": "tall grass",
 				"pic": [-3, 4, 2],
+				"autotile_class_edge": "grass",
 				"menu_pic": [-3, 5, 0],
 				"autotile_layout": 4
 			},
@@ -146,6 +148,8 @@
 				"name": "sand",
 				"pic": [-3, 1, 6],
 				"menu_pic": [-3, 2, 4],
+				"autotile_class": "sand",
+				"autotile_class_edge": "grass",
 				"autotile_layout": 4
 			},
 			"sand!": {
@@ -156,11 +160,15 @@
 				"name": "grass",
 				"pic": [-3, 25, 10],
 				"menu_pic": [-3, 24, 8],
+				"autotile_class": "grass",
+				"autotile_class_edge": "sand",
 				"autotile_layout": 4
 			},
 			"browngrass_sand": {
 				"name": "brown grass",
 				"pic": [-3, 28, 10],
+				"autotile_class": "brown_grass",
+				"autotile_class_edge": "sand",
 				"autotile_layout": 4
 			},
 			"colorstone": {
@@ -178,24 +186,34 @@
 				"pic": [-3, 6, 4],
 				"autotile_layout": 5
 			},
+			"mountain": {
+				"name": "mountains",
+				"pic": [-3, 6, 8],
+				"autotile_class_edge": "grass",
+				"autotile_layout": 5
+			},
 			"snowmountain": {
 				"name": "mountains",
 				"pic": [-3, 12, 0],
+				"autotile_class_edge": "snow",
 				"autotile_layout": 5
 			},
 			"snowtrees": {
 				"name": "trees",
 				"pic": [-3, 12, 4],
+				"autotile_class_edge": "snow",
 				"autotile_layout": 5
 			},
 			"ice": {
 				"name": "ice",
 				"pic": [-3, 13, 10],
 				"menu_pic": [-3, 12, 8],
+				"autotile_class_edge": "snow",
 				"autotile_layout": 4
 			},
 			"ice!": {
 				"name": "ice",
+				"autotile_class_edge": "snow",
 				"pic": [-3, 13, 10]
 			},
 			"path": {
@@ -223,14 +241,16 @@
 				"autotile_layout": 4
 			},
 			"snow_grass": {
-				"name": "snow_grass",
+				"name": "snow grass",
 				"pic": [-3, 1, 10],
 				"menu_pic": [-3, 2, 8],
-				"autotile_category": "snow",
+				"autotile_class": "snow",
+				"autotile_class_edge": "grass",
 				"autotile_layout": 4
 			},
 			"snow": {
 				"name": "snow",
+				"autotile_class": "snow",
 				"pic": [-3, 0, 8]
 			},
 			"purple": {
@@ -242,6 +262,7 @@
 				"name": "lava",
 				"pic": [-3, 16, 10],
 				"menu_pic": [-3, 17, 8],
+				"autotile_class_edge": "lava_floor",
 				"autotile_layout": 4
 			},
 			"lava!": {
@@ -249,17 +270,15 @@
 				"pic": [-3, 16, 10]
 			},
 			"magma": {
-				"name": "floor",
+				"name": "magma",
 				"density": true,
+				"autotile_class_edge": "lava_floor",
 				"pic": [-3, 30, 10]
 			},
 			"magma2": {
-				"name": "floor",
+				"name": "magma",
+				"autotile_class_edge": "lava_floor",
 				"pic": [-3, 31, 10]
-			},
-			"lavafloor": {
-				"name": "lava floor",
-				"pic": [-3, 16, 8]
 			},
 			"carpet1": {
 				"name": "carpet",
@@ -301,6 +320,7 @@
 				"menu_pic": [-3, 0, 39],
 				"density": true,
 				"autotile_layout": 4,
+				"autotile_class_edge": "grass",
 				"anim_frames": 3,
 				"anim_mode": 2,
 				"anim_speed": 3
@@ -311,6 +331,7 @@
 				"menu_pic": [-3, 9, 39],
 				"density": true,
 				"autotile_layout": 4,
+				"autotile_class_edge": "snow",
 				"anim_frames": 3,
 				"anim_mode": 2,
 				"anim_speed": 3
@@ -321,6 +342,7 @@
 				"menu_pic": [-3, 18, 39],
 				"density": true,
 				"autotile_layout": 4,
+				"autotile_class_edge": "sand",
 				"anim_frames": 3,
 				"anim_mode": 2,
 				"anim_speed": 3
@@ -378,6 +400,7 @@
 				"name": "cliff top",
 				"pic": [-3, 21, 20],
 				"menu_pic": [-3, 20, 19],
+				"autotile_class": "lava_floor",
 				"autotile_layout": 1
 			},
 			"cliff_top1!": {
@@ -396,8 +419,8 @@
 			},
 			"cliff_top3": {
 				"name": "cliff top",
-				"pic": [-3, 21, 20],
-				"menu_pic": [-3, 20, 19],
+				"pic": [-3, 27, 20],
+				"menu_pic": [-3, 26, 19],
 				"autotile_layout": 1
 			},
 			"cliff_top3!": {
@@ -406,43 +429,31 @@
 			},
 			"cliff_top4": {
 				"name": "cliff top",
-				"pic": [-3, 27, 20],
-				"menu_pic": [-3, 26, 19],
+				"pic": [-3, 30, 20],
+				"menu_pic": [-3, 29, 19],
+				"autotile_class": "snow",
 				"autotile_layout": 1
-			},
-			"cliff_top4!": {
-				"name": "cliff top",
-				"pic": [-3, 27, 20]
 			},
 			"cliff_top5": {
 				"name": "cliff top",
 				"pic": [-3, 21, 26],
 				"menu_pic": [-3, 20, 25],
+				"autotile_class": "grass",
 				"autotile_layout": 1
-			},
-			"cliff_top5!": {
-				"name": "cliff top",
-				"pic": [-3, 21, 26]
 			},
 			"cliff_top6": {
 				"name": "cliff top",
 				"pic": [-3, 24, 26],
 				"menu_pic": [-3, 23, 25],
+				"autotile_class": "dirt",
 				"autotile_layout": 1
-			},
-			"cliff_top6!": {
-				"name": "cliff top",
-				"pic": [-3, 24, 26]
 			},
 			"cliff_top7": {
 				"name": "cliff top",
 				"pic": [-3, 27, 26],
 				"menu_pic": [-3, 26, 25],
+				"autotile_class": "snow",
 				"autotile_layout": 1
-			},
-			"cliff_top7!": {
-				"name": "cliff top",
-				"pic": [-3, 27, 26]
 			},
 			"cliff_wall1a": {
 				"name": "cliff wall",
@@ -1366,7 +1377,7 @@
 			},
 			"snowman": {
 				"name": "snowman",
-				"autotile_category": "snow",
+				"autotile_class_edge": "snow",
 				"density": true,
 				"pic": [-3, 31, 24]
 			},

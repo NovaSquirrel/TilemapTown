@@ -182,6 +182,9 @@ Tiles are defined with a JSON object, which can have the following fields:
 "autotile_class"
 	When provided, the client will use this field for determining whether tiles should look connected to each other.
 
+"autotile_class_edge"
+	When provided, tiles with the specified class will connect to this tile, but this tile will not use this when connecting back.
+
 --- Animation ---
 
 "anim_frames"

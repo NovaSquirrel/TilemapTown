@@ -48,6 +48,8 @@ function getForAutotile(t, map, x, y) {
 function isAutotileMatch(t, map, x, y) {
 	// Is the tile on the map at x,y the "same" as t for autotiling purposes?
 	let other = AtomFromName(getForAutotile(t, map, x, y));
+	if (t.autotile_class && other.autotile_class_edge && t.autotile_class == other.autotile_class_edge)
+		return true;
 	if (t.autotile_class)
 		return t.autotile_class == other.autotile_class;
 	if (t.name)
