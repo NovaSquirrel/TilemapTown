@@ -109,6 +109,7 @@
 			},
 			"grass": {
 				"name": "grass",
+				"autotile_class": "grass",
 				"pic": [-3, 1, 0]
 			},
 			"dirt": {
@@ -184,6 +185,7 @@
 			"trees": {
 				"name": "trees",
 				"pic": [-3, 6, 4],
+				"autotile_class_edge": "grass",
 				"autotile_layout": 5
 			},
 			"mountain": {
