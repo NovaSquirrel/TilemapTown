@@ -2,12 +2,14 @@
 	"images": {
 		"0": "potluck.png",
 		"-1": "extra.png",
-		"-2": "pulp.png"
+		"-2": "pulp.png",
+		"-3": "easyrpg.png"
 	},
 	"image_names": {
 		"0": "Potluck",
 		"-1": "Extra",
-		"-2": "Pulp"
+		"-2": "Pulp",
+		"-3": "EasyRPG RTP"
 	},
 	"tilesets": {
 		"": {
@@ -220,7 +222,7 @@
 				"obj": true
 			},
 			"rocks1": {
-				"name": "rocks",
+				"name": "mushrooms",
 				"pic": [0, 15, 16],
 				"density": true,
 				"obj": true

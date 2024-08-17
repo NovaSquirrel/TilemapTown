@@ -567,7 +567,9 @@ function itemIcon(key) {
 		src = PlayerImages[key].src;
 	}
 
-	if (item?.pic)
+	if (item?.menu_pic)
+		pic = item.menu_pic;
+	else if (item?.pic)
 		pic = item.pic;
 
 	if (IconSheets[pic[0]])
@@ -880,7 +882,7 @@ function editItemShared(item) {
 			sheetselect.appendChild(el);
 
 			// Display the global images; TODO: don't hardcode the amount of them
-			for(let i=0; i>=-2; i--) {
+			for(let i=0; i>=-3; i--) {
 				el = document.createElement("option");
 				el.textContent = GlobalImageNames[i];
 				el.value = i;
@@ -1482,7 +1484,8 @@ function drawHotbar() {
 		if(i < hotbarData.length) {
 			let item = AtomFromName(hotbarData[i]);
 			if(item) {
-				ctx.drawImage(IconSheets[item.pic[0]], item.pic[1]*16, item.pic[2]*16, 16, 16, i*oneWidth+12, 0, 16, 16);
+				let pic = item.menu_pic ?? item.pic;
+				ctx.drawImage(IconSheets[pic[0]], pic[1]*16, pic[2]*16, 16, 16, i*oneWidth+12, 0, 16, 16);
 			}
 		}
 		if(i == hotbarSelectIndex) {
@@ -1668,7 +1671,7 @@ function tickWorld() {
 						// allow for string data like "grass"
 						let temp = AtomFromName(updated.data);
 						if (temp && temp.pic) {
-							updated.pic = temp.pic;
+							updated.pic = temp.menu_pic ?? temp.pic;
 						} else {
 							updated.pic = [0, 8, 24];
 						}
@@ -1863,8 +1866,9 @@ function redrawBuildCanvas() {
 	let count = 0;
 	for (let i in currentBuildCategoryArrayNames) {
 		let item = AtomFromName(currentBuildCategoryArrayNames[i]);
-		if (item.pic[0] in IconSheets)
-			ctx.drawImage(IconSheets[item.pic[0]], item.pic[1] * 16, item.pic[2] * 16, 16, 16, (count % BuildWidth) * 16, Math.floor(count / BuildWidth) * 16, 16, 16);
+		let pic = item.menu_pic ?? item.pic;
+		if (pic[0] in IconSheets)
+			ctx.drawImage(IconSheets[pic[0]], pic[1] * 16, pic[2] * 16, 16, 16, (count % BuildWidth) * 16, Math.floor(count / BuildWidth) * 16, 16, 16);
 
 		if(i == buildMenuSelectIndex) {
 			ctx.beginPath();

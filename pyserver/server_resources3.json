@@ -1,0 +1,1516 @@
+{
+	"tilesets": {
+		"easyrpg": {
+			"floor1": {
+				"name": "floor",
+				"pic": [-3, 30, 0]
+			},
+			"floor2": {
+				"name": "floor",
+				"pic": [-3, 31, 0]
+			},
+			"floor3": {
+				"name": "floor",
+				"pic": [-3, 30, 1]
+			},
+			"floor4": {
+				"name": "floor",
+				"pic": [-3, 31, 1]
+			},
+			"floor5": {
+				"name": "floor",
+				"pic": [-3, 30, 2]
+			},
+			"floor6": {
+				"name": "floor",
+				"pic": [-3, 31, 2]
+			},
+			"floor7": {
+				"name": "floor",
+				"pic": [-3, 30, 3]
+			},
+			"floor8": {
+				"name": "floor",
+				"pic": [-3, 31, 3]
+			},
+			"floor9": {
+				"name": "floor",
+				"pic": [-3, 30, 4]
+			},
+			"floor10": {
+				"name": "floor",
+				"pic": [-3, 31, 4]
+			},
+			"floor11": {
+				"name": "floor",
+				"pic": [-3, 30, 5]
+			},
+			"floor12": {
+				"name": "floor",
+				"pic": [-3, 31, 5]
+			},
+			"floor13": {
+				"name": "floor",
+				"pic": [-3, 30, 6]
+			},
+			"floor14": {
+				"name": "floor",
+				"pic": [-3, 31, 6]
+			},
+			"floor15": {
+				"name": "floor",
+				"density": true,
+				"pic": [-3, 30, 7]
+			},
+			"ice2": {
+				"name": "ice",
+				"pic": [-3, 31, 7]
+			},
+			"floor17": {
+				"name": "floor",
+				"pic": [-3, 30, 8]
+			},
+			"floor18": {
+				"name": "floor",
+				"pic": [-3, 31, 8]
+			},
+			"floor19": {
+				"name": "floor",
+				"pic": [-3, 30, 9]
+			},
+			"floor20": {
+				"name": "floor",
+				"pic": [-3, 31, 9]
+			},
+			"floor21": {
+				"name": "floor",
+				"pic": [-3, 11, 16]
+			},
+			"floor22": {
+				"name": "floor",
+				"pic": [-3, 11, 17]
+			},
+			"woodfloor1": {
+				"name": "floor",
+				"pic": [-3, 30, 11]
+			},
+			"woodfloor2": {
+				"name": "floor",
+				"density": true,
+				"pic": [-3, 31, 11]
+			},
+			"woodfloor3": {
+				"name": "floor",
+				"pic": [-3, 30, 12]
+			},
+			"woodfloor4": {
+				"name": "floor",
+				"pic": [-3, 31, 12]
+			},
+			"grass": {
+				"name": "grass",
+				"pic": [-3, 1, 0]
+			},
+			"dirt": {
+				"name": "dirt",
+				"pic": [-3, 1, 2],
+				"menu_pic": [-3, 2, 0],
+				"autotile_layout": 4
+			},
+			"dirt!": {
+				"name": "dirt",
+				"pic": [-3, 0, 0]
+			},
+			"tallgrass": {
+				"name": "tall grass",
+				"pic": [-3, 4, 2],
+				"menu_pic": [-3, 5, 0],
+				"autotile_layout": 4
+			},
+			"tallgrass!": {
+				"name": "tall grass",
+				"pic": [-3, 4, 2]
+			},
+			"tallgrass_dirt": {
+				"name": "tall grass",
+				"pic": [-3, 19, 2],
+				"menu_pic": [-3, 20, 0],
+				"autotile_layout": 4
+			},
+			"farmland": {
+				"name": "farmland",
+				"pic": [-3, 7, 2],
+				"autotile_layout": 4
+			},
+			"sand": {
+				"name": "sand",
+				"pic": [-3, 1, 6],
+				"menu_pic": [-3, 2, 4],
+				"autotile_layout": 4
+			},
+			"sand!": {
+				"name": "sand",
+				"pic": [-3, 0, 4]
+			},
+			"grass_sand": {
+				"name": "grass",
+				"pic": [-3, 25, 10],
+				"menu_pic": [-3, 24, 8],
+				"autotile_layout": 4
+			},
+			"browngrass_sand": {
+				"name": "brown grass",
+				"pic": [-3, 28, 10],
+				"autotile_layout": 4
+			},
+			"colorstone": {
+				"name": "color stones",
+				"pic": [-3, 4, 6],
+				"menu_pic": [-3, 5, 4],
+				"autotile_layout": 4
+			},
+			"colorstone!": {
+				"name": "color stones",
+				"pic": [-3, 3, 4]
+			},
+			"trees": {
+				"name": "trees",
+				"pic": [-3, 6, 4],
+				"autotile_layout": 5
+			},
+			"snowmountain": {
+				"name": "mountains",
+				"pic": [-3, 12, 0],
+				"autotile_layout": 5
+			},
+			"snowtrees": {
+				"name": "trees",
+				"pic": [-3, 12, 4],
+				"autotile_layout": 5
+			},
+			"ice": {
+				"name": "ice",
+				"pic": [-3, 13, 10],
+				"menu_pic": [-3, 12, 8],
+				"autotile_layout": 4
+			},
+			"ice!": {
+				"name": "ice",
+				"pic": [-3, 13, 10]
+			},
+			"path": {
+				"name": "path",
+				"pic": [-3, 10, 2],
+				"menu_pic": [-3, 9, 2],
+				"autotile_layout": 4
+			},
+			"path2": {
+				"name": "path",
+				"pic": [-3, 10, 6],
+				"menu_pic": [-3, 9, 4],
+				"autotile_layout": 4
+			},
+			"path3": {
+				"name": "path",
+				"pic": [-3, 10, 10],
+				"menu_pic": [-3, 9, 8],
+				"autotile_layout": 4
+			},
+			"path4": {
+				"name": "path",
+				"pic": [-3, 28, 6],
+				"menu_pic": [-3, 27, 4],
+				"autotile_layout": 4
+			},
+			"snow_grass": {
+				"name": "snow_grass",
+				"pic": [-3, 1, 10],
+				"menu_pic": [-3, 2, 8],
+				"autotile_category": "snow",
+				"autotile_layout": 4
+			},
+			"snow": {
+				"name": "snow",
+				"pic": [-3, 0, 8]
+			},
+			"purple": {
+				"name": "purple",
+				"pic": [-3, 4, 10],
+				"autotile_layout": 4
+			},
+			"lava": {
+				"name": "lava",
+				"pic": [-3, 16, 10],
+				"menu_pic": [-3, 17, 8],
+				"autotile_layout": 4
+			},
+			"lava!": {
+				"name": "lava",
+				"pic": [-3, 16, 10]
+			},
+			"magma": {
+				"name": "floor",
+				"density": true,
+				"pic": [-3, 30, 10]
+			},
+			"magma2": {
+				"name": "floor",
+				"pic": [-3, 31, 10]
+			},
+			"lavafloor": {
+				"name": "lava floor",
+				"pic": [-3, 16, 8]
+			},
+			"carpet1": {
+				"name": "carpet",
+				"pic": [-3, 28, 2],
+				"menu_pic": [-3, 27, 0],
+				"autotile_layout": 4
+			},
+			"carpet_stairs": {
+				"name": "carpet stairs",
+				"pic": [-3, 25, 12],
+				"autotile_layout": 6
+			},
+			"carpet2": {
+				"name": "carpet",
+				"pic": [-3, 16, 6],
+				"menu_pic": [-3, 15, 4],
+				"autotile_layout": 4
+			},
+			"mat": {
+				"name": "mat",
+				"pic": [-3, 16, 20],
+				"autotile_layout": 1
+			},
+			"white": {
+				"name": "white",
+				"pic": [-3, 16, 2],
+				"menu_pic": [-3, 15, 0],
+				"autotile_layout": 4
+			},
+			"brown": {
+				"name": "brown",
+				"pic": [-3, 25, 2],
+				"menu_pic": [-3, 24, 0],
+				"autotile_layout": 4
+			},
+			"water": {
+				"name": "water",
+				"pic": [-3, 1, 41],
+				"menu_pic": [-3, 0, 39],
+				"density": true,
+				"autotile_layout": 4,
+				"anim_frames": 3,
+				"anim_mode": 2,
+				"anim_speed": 3
+			},
+			"water2": {
+				"name": "water",
+				"pic": [-3, 10, 41],
+				"menu_pic": [-3, 9, 39],
+				"density": true,
+				"autotile_layout": 4,
+				"anim_frames": 3,
+				"anim_mode": 2,
+				"anim_speed": 3
+			},
+			"water3": {
+				"name": "water",
+				"pic": [-3, 19, 41],
+				"menu_pic": [-3, 18, 39],
+				"density": true,
+				"autotile_layout": 4,
+				"anim_frames": 3,
+				"anim_mode": 2,
+				"anim_speed": 3
+			},
+			"water4": {
+				"name": "water",
+				"pic": [-3, 1, 45],
+				"menu_pic": [-3, 0, 43],
+				"density": true,
+				"autotile_layout": 4,
+				"anim_frames": 3,
+				"anim_mode": 2,
+				"anim_speed": 3
+			},
+			"rails": {
+				"name": "rails",
+				"pic": [-3, 29, 45],
+				"menu_pic": [-3, 31, 41],
+				"obj": true,
+				"autotile_layout": 2
+			},
+			"rails2": {
+				"name": "rails",
+				"pic": [-3, 29, 41],
+				"menu_pic": [-3, 31, 41],
+				"obj": true,
+				"autotile_layout": 2
+			},
+			"campfire": {
+				"name": "campfire",
+				"obj": true,
+				"anim_frames": 4,
+				"anim_speed": 2,
+				"pic": [-3, 4, 12]
+			},
+			"waterfall": {
+				"name": "waterfall",
+				"anim_frames": 4,
+				"anim_speed": 2,
+				"pic": [-3, 4, 13]
+			},
+			"whirlpool": {
+				"name": "whirlpool",
+				"anim_frames": 4,
+				"anim_speed": 2,
+				"pic": [-3, 4, 14]
+			},
+			"prism": {
+				"name": "prism",
+				"anim_frames": 4,
+				"anim_speed": 2,
+				"pic": [-3, 4, 15]
+			},
+			"cliff_top1": {
+				"name": "cliff top",
+				"pic": [-3, 21, 20],
+				"menu_pic": [-3, 20, 19],
+				"autotile_layout": 1
+			},
+			"cliff_top1!": {
+				"name": "cliff top",
+				"pic": [-3, 21, 20]
+			},
+			"cliff_top2": {
+				"name": "cliff top",
+				"pic": [-3, 24, 20],
+				"menu_pic": [-3, 23, 19],
+				"autotile_layout": 1
+			},
+			"cliff_top2!": {
+				"name": "cliff top",
+				"pic": [-3, 24, 20]
+			},
+			"cliff_top3": {
+				"name": "cliff top",
+				"pic": [-3, 21, 20],
+				"menu_pic": [-3, 20, 19],
+				"autotile_layout": 1
+			},
+			"cliff_top3!": {
+				"name": "cliff top",
+				"pic": [-3, 21, 20]
+			},
+			"cliff_top4": {
+				"name": "cliff top",
+				"pic": [-3, 27, 20],
+				"menu_pic": [-3, 26, 19],
+				"autotile_layout": 1
+			},
+			"cliff_top4!": {
+				"name": "cliff top",
+				"pic": [-3, 27, 20]
+			},
+			"cliff_top5": {
+				"name": "cliff top",
+				"pic": [-3, 21, 26],
+				"menu_pic": [-3, 20, 25],
+				"autotile_layout": 1
+			},
+			"cliff_top5!": {
+				"name": "cliff top",
+				"pic": [-3, 21, 26]
+			},
+			"cliff_top6": {
+				"name": "cliff top",
+				"pic": [-3, 24, 26],
+				"menu_pic": [-3, 23, 25],
+				"autotile_layout": 1
+			},
+			"cliff_top6!": {
+				"name": "cliff top",
+				"pic": [-3, 24, 26]
+			},
+			"cliff_top7": {
+				"name": "cliff top",
+				"pic": [-3, 27, 26],
+				"menu_pic": [-3, 26, 25],
+				"autotile_layout": 1
+			},
+			"cliff_top7!": {
+				"name": "cliff top",
+				"pic": [-3, 27, 26]
+			},
+			"cliff_wall1a": {
+				"name": "cliff wall",
+				"pic": [-3, 22, 15],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"cliff_wall1b": {
+				"name": "cliff wall",
+				"pic": [-3, 22, 16],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"cliff_wall2a": {
+				"name": "cliff wall",
+				"pic": [-3, 26, 15],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"cliff_wall2b": {
+				"name": "cliff wall",
+				"pic": [-3, 26, 16],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"cliff_wall3a": {
+				"name": "cliff wall",
+				"pic": [-3, 22, 17],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"cliff_wall3b": {
+				"name": "cliff wall",
+				"pic": [-3, 22, 18],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"cliff_wall4a": {
+				"name": "cliff wall",
+				"pic": [-3, 26, 17],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"cliff_wall4b": {
+				"name": "cliff wall",
+				"pic": [-3, 26, 18],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"cliff_stairs1": {
+				"name": "cliff stairs",
+				"pic": [-3, 30, 15],
+				"autotile_layout": 6
+			},
+			"cliff_stairs2": {
+				"name": "cliff stairs",
+				"pic": [-3, 30, 16],
+				"autotile_layout": 6
+			},
+			"cliff_stairs3": {
+				"name": "cliff stairs",
+				"pic": [-3, 30, 17],
+				"autotile_layout": 76
+			},
+			"cliff_stairs4": {
+				"name": "cliff stairs",
+				"pic": [-3, 30, 18],
+				"autotile_layout": 6
+			},
+			"stone_stairs": {
+				"name": "stone stairs",
+				"pic": [-3, 6, 22],
+				"autotile_layout": 6
+			},
+			"house_wall1a": {
+				"name": "house wall",
+				"pic": [-3, 1, 12],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall1b": {
+				"name": "house wall",
+				"pic": [-3, 1, 13],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall2a": {
+				"name": "house wall",
+				"pic": [-3, 1, 14],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall2b": {
+				"name": "house wall", 
+				"pic": [-3, 1, 15],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall3a": {
+				"name": "house wall",
+				"pic": [-3, 1, 16],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall3b": {
+				"name": "house wall",
+				"pic": [-3, 1, 17],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall3c": {
+				"name": "house wall",
+				"pic": [-3, 5, 17],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall4a": {
+				"name": "house wall",
+				"pic": [-3, 1, 18],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall4b": {
+				"name": "house wall",
+				"pic": [-3, 1, 19],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall5a": {
+				"name": "house wall",
+				"pic": [-3, 5, 18],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall5b": {
+				"name": "house wall",
+				"pic": [-3, 5, 19],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall6a": {
+				"name": "house wall",
+				"pic": [-3, 1, 20],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall6b": {
+				"name": "house wall",
+				"pic": [-3, 1, 21],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall7a": {
+				"name": "house wall",
+				"pic": [-3, 5, 18],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall7b": {
+				"name": "house wall",
+				"pic": [-3, 5, 19],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"bridge_v": {
+				"name": "bridge vertical",
+				"pic": [-3, 15, 18],
+				"menu_pic": [-3, 17, 18],
+				"autotile_layout": 7
+			},
+			"bridge_h": {
+				"name": "bridge horizontal",
+				"pic": [-3, 18, 20],
+				"menu_pic": [-3, 18, 18],
+				"autotile_layout": 10
+			},
+			"pier": {
+				"name": "pier",
+				"pic": [-3, 15, 22],
+				"obj": true,
+				"autotile_layout": 6,
+				"density": true
+			},
+			"pier2": {
+				"name": "pier",
+				"pic": [-3, 23, 36],
+				"obj": true,
+				"density": true
+			},
+			"pit": {
+				"name": "pit",
+				"density": true,
+				"pic": [-3, 22, 2],
+				"menu_pic": [-3, 21, 0],
+				"autotile_layout": 4
+			},
+			"pit2": {
+				"name": "pit",
+				"density": true,
+				"pic": [-3, 19, 6],
+				"menu_pic": [-3, 18, 4],
+				"autotile_layout": 4
+			},
+			"pit3": {
+				"name": "pit",
+				"density": true,
+				"pic": [-3, 22, 6],
+				"menu_pic": [-3, 21, 4],
+				"autotile_layout": 4
+			},
+			"pit4": {
+				"name": "pit",
+				"density": true,
+				"pic": [-3, 25, 6],
+				"menu_pic": [-3, 24, 4],
+				"autotile_layout": 4
+			},
+			"pit5": {
+				"name": "pit",
+				"density": true,
+				"pic": [-3, 19, 10],
+				"menu_pic": [-3, 18, 8],
+				"autotile_layout": 4
+			},
+			"pit6": {
+				"name": "pit",
+				"density": true,
+				"pic": [-3, 22, 10],
+				"menu_pic": [-3, 21, 8],
+				"autotile_layout": 4
+			},
+			"pit7": {
+				"name": "pit",
+				"density": true,
+				"pic": [-3, 16, 45],
+				"menu_pic": [-3, 15, 43],
+				"autotile_layout": 4
+			},
+			"pit8": {
+				"name": "pit",
+				"density": true,
+				"pic": [-3, 19, 45],
+				"menu_pic": [-3, 18, 43],
+				"autotile_layout": 4
+			},
+			"pit9": {
+				"name": "pit",
+				"density": true,
+				"pic": [-3, 22, 45],
+				"menu_pic": [-3, 21, 43],
+				"autotile_layout": 4
+			},
+			"pit10": {
+				"name": "pit",
+				"density": true,
+				"pic": [-3, 25, 45],
+				"menu_pic": [-3, 24, 43],
+				"autotile_layout": 4
+			},
+			"pit11": {
+				"name": "pit",
+				"density": true,
+				"pic": [-3, 30, 27],
+				"menu_pic": [-3, 29, 25],
+				"autotile_layout": 4
+			},
+			"sign": {
+				"name": "sign",
+				"pic": [-3, 22, 36],
+				"obj": true,
+				"density": true,
+				"type": "sign"
+			},
+			"sign2": {
+				"name": "sign",
+				"pic": [-3, 12, 38],
+				"obj": true,
+				"density": true,
+				"type": "sign"
+			},
+			"sign3": {
+				"name": "sign",
+				"pic": [-3, 13, 38],
+				"obj": true,
+				"density": true,
+				"type": "sign"
+			},
+			"bush": {
+				"name": "bush",
+				"pic": [-3, 20, 31],
+				"obj": true,
+				"density": true
+			},
+			"bush2": {
+				"name": "bush",
+				"pic": [-3, 21, 31],
+				"obj": true,
+				"density": true
+			},
+			"bush3": {
+				"name": "bush",
+				"pic": [-3, 21, 32],
+				"obj": true,
+				"density": true
+			},
+			"tree": {
+				"name": "tree",
+				"pic": [-3, 22, 32],
+				"obj": true,
+				"density": true
+			},
+			"tree_top": {
+				"name": "tree",
+				"pic": [-3, 22, 30],
+				"obj": true,
+				"over": true
+			},
+			"tree_bottom": {
+				"name": "tree",
+				"pic": [-3, 22, 31],
+				"obj": true,
+				"density": true
+			},
+			"stump": {
+				"name": "stump",
+				"pic": [-3, 21, 30],
+				"obj": true,
+				"density": true
+			},
+			"table": {
+				"name": "table",
+				"pic": [-3, 14, 27],
+				"obj": true,
+				"density": true
+			},
+			"table_h": {
+				"name": "table",
+				"pic": [-3, 12, 27],
+				"autotile_layout": 7,
+				"obj": true,
+				"density": true
+			},
+			"table_v": {
+				"name": "table",
+				"pic": [-3, 14, 29],
+				"autotile_layout": 10,
+				"obj": true,
+				"density": true
+			},
+			"table_broken": {
+				"name": "broken table",
+				"pic": [-3, 9, 30],
+				"obj": true,
+				"density": true
+			},
+			"table_round": {
+				"name": "round table",
+				"pic": [-3, 10, 30],
+				"obj": true,
+				"density": true
+			},
+			"chair1": {
+				"name": "chair",
+				"pic": [-3, 6, 30],
+				"obj": true
+			},
+			"chair2": {
+				"name": "chair",
+				"pic": [-3, 7, 30],
+				"obj": true
+			},
+			"chair3": {
+				"name": "chair",
+				"pic": [-3, 6, 31],
+				"obj": true
+			},
+			"chair4": {
+				"name": "chair",
+				"pic": [-3, 7, 31],
+				"obj": true
+			},
+			"stool": {
+				"name": "stool",
+				"pic": [-3, 8, 31],
+				"obj": true
+			},
+			"stool_toppled": {
+				"name": "toppled stool",
+				"pic": [-3, 9, 31],
+				"obj": true
+			},
+			"barrel": {
+				"name": "barrel",
+				"pic": [-3, 8, 32],
+				"obj": true,
+				"density": true
+			},
+			"bin": {
+				"name": "bin",
+				"pic": [-3, 8, 33],
+				"obj": true,
+				"density": true
+			},
+			"book": {
+				"name": "book",
+				"pic": [-3, 12, 31],
+				"obj": true
+			},
+			"book2": {
+				"name": "book",
+				"pic": [-3, 12, 32],
+				"obj": true
+			},
+			"sword": {
+				"name": "sword",
+				"pic": [-3, 12, 33],
+				"obj": true
+			},
+			"hammer": {
+				"name": "hammer",
+				"pic": [-3, 13, 33],
+				"obj": true
+			},
+			"shield": {
+				"name": "shield",
+				"pic": [-3, 14, 33],
+				"obj": true
+			},
+			"armor": {
+				"name": "armor",
+				"pic": [-3, 12, 34],
+				"obj": true
+			},
+			"armor2": {
+				"name": "armor",
+				"pic": [-3, 14, 34],
+				"obj": true
+			},
+			"helmet": {
+				"name": "helmet",
+				"pic": [-3, 13, 34],
+				"obj": true
+			},
+			"food": {
+				"name": "food",
+				"pic": [-3, 16, 35],
+				"obj": true
+			},
+			"food2": {
+				"name": "food",
+				"pic": [-3, 16, 36],
+				"obj": true
+			},
+			"cooking_pot": {
+				"name": "cooking pot",
+				"pic": [-3, 15, 35],
+				"obj": true
+			},
+			"bottle": {
+				"name": "bottle",
+				"pic": [-3, 14, 31],
+				"obj": true
+			},
+			"silverware": {
+				"name": "silverware",
+				"pic": [-3, 15, 31],
+				"obj": true
+			},
+			"spices": {
+				"name": "spices",
+				"pic": [-3, 12, 36],
+				"obj": true
+			},
+			"spices2": {
+				"name": "spices",
+				"pic": [-3, 12, 35],
+				"obj": true
+			},
+			"spices3": {
+				"name": "spices",
+				"pic": [-3, 19, 36],
+				"obj": true
+			},
+			"shoes": {
+				"name": "shoes",
+				"pic": [-3, 15, 36],
+				"obj": true
+			},
+			"feather": {
+				"name": "feather",
+				"pic": [-3, 14, 36],
+				"obj": true
+			},
+			"lantern": {
+				"name": "lantern",
+				"pic": [-3, 15, 32],
+				"obj": true
+			},
+			"candle": {
+				"name": "candle",
+				"pic": [-3, 15, 33],
+				"obj": true
+			},
+			"flowers": {
+				"name": "flowers",
+				"pic": [-3, 14, 32],
+				"obj": true
+			},
+			"flowers2": {
+				"name": "flowers",
+				"pic": [-3, 23, 33],
+				"obj": true
+			},
+			"flowers3": {
+				"name": "flowers",
+				"pic": [-3, 20, 33],
+				"obj": true
+			},
+			"counter": {
+				"name": "counter",
+				"pic": [-3, 18, 28],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"counter2": {
+				"name": "counter",
+				"pic": [-3, 18, 29],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"painting1": {
+				"name": "painting",
+				"pic": [-3, 3, 22],
+				"obj": true
+			},
+			"painting2": {
+				"name": "painting",
+				"pic": [-3, 4, 22],
+				"obj": true
+			},
+			"painting3": {
+				"name": "painting",
+				"pic": [-3, 3, 23],
+				"obj": true
+			},
+			"painting4": {
+				"name": "painting",
+				"pic": [-3, 4, 23],
+				"obj": true
+			},
+			"painting5": {
+				"name": "painting",
+				"pic": [-3, 3, 24],
+				"obj": true
+			},
+			"window": {
+				"name": "window",
+				"pic": [-3, 6, 27],
+				"obj": true
+			},
+			"window2": {
+				"name": "window",
+				"pic": [-3, 7, 27],
+				"obj": true
+			},
+			"window3": {
+				"name": "window",
+				"pic": [-3, 6, 28],
+				"obj": true
+			},
+			"window4": {
+				"name": "window",
+				"pic": [-3, 7, 28],
+				"obj": true
+			},
+			"window5": {
+				"name": "window",
+				"pic": [-3, 6, 29],
+				"obj": true
+			},
+			"window6": {
+				"name": "window",
+				"pic": [-3, 7, 29],
+				"obj": true
+			},
+			"window7": {
+				"name": "window",
+				"pic": [-3, 8, 29],
+				"obj": true
+			},
+			"window8": {
+				"name": "window",
+				"pic": [-3, 5, 27],
+				"obj": true
+			},
+			"chest": {
+				"name": "chest",
+				"pic": [-3, 8, 23],
+				"density": true,
+				"obj": true
+			},
+			"chest2": {
+				"name": "chest",
+				"pic": [-3, 9, 23],
+				"density": true,
+				"obj": true
+			},
+			"torch": {
+				"name": "torch",
+				"pic": [-3, 20, 32],
+				"obj": true
+			},
+			"torch_top": {
+				"name": "torch",
+				"pic": [-3, 4, 28],
+				"density": true,
+				"obj": true
+			},
+			"torch_bottom": {
+				"name": "torch",
+				"pic": [-3, 4, 29],
+				"density": true,
+				"obj": true
+			},
+			"rope": {
+				"name": "rope",
+				"pic": [-3, 23, 32],
+				"obj": true
+			},
+			"logs": {
+				"name": "logs",
+				"pic": [-3, 21, 33],
+				"density": true,
+				"obj": true
+			},
+			"mailbox": {
+				"name": "mailbox",
+				"pic": [-3, 22, 33],
+				"density": true,
+				"obj": true
+			},
+			"well": {
+				"name": "well",
+				"pic": [-3, 24, 33],
+				"density": true,
+				"obj": true
+			},
+			"pot": {
+				"name": "pot",
+				"pic": [-3, 24, 32],
+				"density": true,
+				"obj": true
+			},
+			"ladder": {
+				"name": "ladder",
+				"pic": [-3, 24, 31],
+				"obj": true
+			},
+			"tombstone": {
+				"name": "tombstone",
+				"pic": [-3, 25, 32],
+				"obj": true
+			},
+			"bones": {
+				"name": "bones",
+				"pic": [-3, 25, 33],
+				"obj": true
+			},
+			"chimney": {
+				"name": "chimney",
+				"pic": [-3, 28, 31],
+				"obj": true
+			},
+			"anchor": {
+				"name": "anchor",
+				"pic": [-3, 15, 26],
+				"obj": true
+			},
+			"swords": {
+				"name": "crossed swords",
+				"pic": [-3, 14, 26],
+				"obj": true
+			},
+			"swords_top": {
+				"name": "swords",
+				"pic": [-3, 5, 28],
+				"over": true,
+				"obj": true
+			},
+			"swords_bottom": {
+				"name": "swords",
+				"pic": [-3, 5, 29],
+				"density": true,
+				"obj": true
+			},
+			"rope2": {
+				"name": "rope",
+				"pic": [-3, 15, 27],
+				"obj": true
+			},
+			"glass": {
+				"name": "glass",
+				"pic": [-3, 16, 31],
+				"density": true,
+				"obj": true
+			},
+			"banner": {
+				"name": "banner",
+				"pic": [-3, 10, 32],
+				"obj": true
+			},
+			"banner2": {
+				"name": "banner",
+				"pic": [-3, 11, 31],
+				"obj": true
+			},
+			"banner3": {
+				"name": "banner",
+				"pic": [-3, 11, 32],
+				"obj": true
+			},
+			"banner4": {
+				"name": "banner",
+				"pic": [-3, 10, 33],
+				"obj": true
+			},
+			"banner5": {
+				"name": "banner",
+				"pic": [-3, 11, 33],
+				"obj": true
+			},
+			"arrow_l": {
+				"name": "arrow left",
+				"pic": [-3, 4, 20]
+			},
+			"arrow_r": {
+				"name": "arrow right",
+				"pic": [-3, 5, 20]
+			},
+			"arrow_u": {
+				"name": "arrow up",
+				"pic": [-3, 4, 21]
+			},
+			"arrow_d": {
+				"name": "arrow down",
+				"pic": [-3, 5, 21]
+			},
+			"spikes": {
+				"name": "spikes",
+				"pic": [-3, 23, 38],
+				"obj": true
+			},
+			"spikes2": {
+				"name": "spikes",
+				"pic": [-3, 24, 38],
+				"obj": true
+			},
+			"spikes3": {
+				"name": "spikes",
+				"pic": [-3, 25, 38],
+				"obj": true
+			},
+			"spikes4": {
+				"name": "spikes",
+				"pic": [-3, 30, 38],
+				"obj": true
+			},
+			"spikes5": {
+				"name": "spikes",
+				"pic": [-3, 26, 37],
+				"obj": true
+			},
+			"spikes6": {
+				"name": "spikes",
+				"pic": [-3, 26, 38],
+				"obj": true
+			},
+			"spikes7": {
+				"name": "spikes",
+				"pic": [-3, 27, 37],
+				"obj": true
+			},
+			"spikes8": {
+				"name": "spikes",
+				"pic": [-3, 27, 38],
+				"obj": true
+			},
+			"rocks": {
+				"name": "rocks",
+				"pic": [-3, 28, 37],
+				"density": true,
+				"obj": true
+			},
+			"rocks2": {
+				"name": "rocks",
+				"pic": [-3, 29, 37],
+				"density": true,
+				"obj": true
+			},
+			"rocks3": {
+				"name": "rocks",
+				"pic": [-3, 28, 38],
+				"density": true,
+				"obj": true
+			},
+			"rocks4": {
+				"name": "rocks",
+				"pic": [-3, 29, 38],
+				"density": true,
+				"obj": true
+			},
+			"rocks5": {
+				"name": "rocks",
+				"pic": [-3, 27, 39],
+				"density": true,
+				"obj": true
+			},
+			"rocks6": {
+				"name": "rocks",
+				"pic": [-3, 27, 40],
+				"density": true,
+				"obj": true
+			},
+			"crystal": {
+				"name": "crystal",
+				"pic": [-3, 30, 37],
+				"density": true,
+				"obj": true
+			},
+			"crystal2": {
+				"name": "crystal",
+				"pic": [-3, 31, 37],
+				"density": true,
+				"obj": true
+			},
+			"crystal3": {
+				"name": "crystal",
+				"pic": [-3, 31, 38],
+				"density": true,
+				"obj": true
+			},
+			"bookshelf_top": {
+				"name": "bookshelf",
+				"pic": [-3, 3, 30],
+				"density": true,
+				"obj": true
+			},
+			"bookshelf_bottom": {
+				"name": "bookshelf",
+				"pic": [-3, 3, 31],
+				"obj": true
+			},
+			"shelves_top": {
+				"name": "shelves",
+				"pic": [-3, 4, 30],
+				"density": true,
+				"obj": true
+			},
+			"shelves_bottom": {
+				"name": "shelves",
+				"pic": [-3, 4, 31],
+				"obj": true
+			},
+			"wardrobe_top": {
+				"name": "wardrobe",
+				"pic": [-3, 5, 30],
+				"density": true,
+				"obj": true
+			},
+			"wardrobe_bottom": {
+				"name": "wardrobe",
+				"pic": [-3, 5, 31],
+				"obj": true
+			},
+			"mirror_top": {
+				"name": "mirror",
+				"pic": [-3, 3, 28],
+				"density": true,
+				"obj": true
+			},
+			"mirror_bottom": {
+				"name": "mirror",
+				"pic": [-3, 3, 29],
+				"obj": true
+			},
+			"clock_top": {
+				"name": "clock",
+				"pic": [-3, 3, 26],
+				"obj": true
+			},
+			"clock_bottom": {
+				"name": "clock",
+				"pic": [-3, 3, 27],
+				"obj": true
+			},
+			"crystal_ball": {
+				"name": "crystal ball",
+				"pic": [-3, 26, 29],
+				"density": true,
+				"obj": true
+			},
+			"bed1": {
+				"name": "bed",
+				"pic": [-3, 17, 30],
+				"obj": true
+			},
+			"bed2": {
+				"name": "bed",
+				"pic": [-3, 17, 31],
+				"obj": true
+			},
+			"bed3": {
+				"name": "bed",
+				"pic": [-3, 18, 31],
+				"obj": true
+			},
+			"bed4": {
+				"name": "bed",
+				"pic": [-3, 19, 31],
+				"obj": true
+			},
+			"snowman": {
+				"name": "snowman",
+				"autotile_category": "snow",
+				"density": true,
+				"pic": [-3, 31, 24]
+			},
+			"vines": {
+				"name": "vines",
+				"pic": [-3, 27, 29],
+				"over": true,
+				"obj": true
+			},
+			"vines2": {
+				"name": "vines",
+				"pic": [-3, 27, 30],
+				"over": true,
+				"obj": true
+			},
+			"vines3": {
+				"name": "vines",
+				"pic": [-3, 27, 31],
+				"over": true,
+				"obj": true
+			},
+			"statue1": {
+				"name": "statue",
+				"pic": [-3, 16, 32],
+				"over": true,
+				"obj": true
+			},
+			"statue2": {
+				"name": "statue",
+				"pic": [-3, 16, 33],
+				"density": true,
+				"obj": true
+			},
+			"statue3": {
+				"name": "statue",
+				"pic": [-3, 18, 32],
+				"over": true,
+				"obj": true
+			},
+			"statue4": {
+				"name": "statue",
+				"pic": [-3, 18, 33],
+				"density": true,
+				"obj": true
+			},
+			"armorstand_top": {
+				"name": "armor stand",
+				"pic": [-3, 17, 32],
+				"over": true,
+				"obj": true
+			},
+			"armorstand_bottom": {
+				"name": "armor stand",
+				"pic": [-3, 17, 33],
+				"density": true,
+				"obj": true
+			},
+			"furnace_top": {
+				"name": "furnace",
+				"pic": [-3, 19, 32],
+				"over": true,
+				"obj": true
+			},
+			"furnace_bottom": {
+				"name": "furnace",
+				"pic": [-3, 19, 33],
+				"density": true,
+				"obj": true
+			},
+			"flag": {
+				"name": "flag",
+				"pic": [-3, 5, 23],
+				"obj": true
+			},
+			"flag2": {
+				"name": "flag",
+				"pic": [-3, 6, 23],
+				"obj": true,
+				"anim_frames": 2,
+				"anim_speed": 2
+			},
+			"cannon1": {
+				"name": "cannon",
+				"pic": [-3, 16, 26],
+				"density": true,
+				"obj": true
+			},
+			"cannon2": {
+				"name": "cannon",
+				"pic": [-3, 17, 26],
+				"density": true,
+				"obj": true
+			},
+			"cannon3": {
+				"name": "cannon",
+				"pic": [-3, 16, 27],
+				"density": true,
+				"obj": true
+			},
+			"cannon4": {
+				"name": "cannon",
+				"pic": [-3, 17, 27],
+				"density": true,
+				"obj": true
+			},
+			"cannon5": {
+				"name": "cannon",
+				"pic": [-3, 18, 26],
+				"density": true,
+				"obj": true
+			},
+			"cannon6": {
+				"name": "cannon",
+				"pic": [-3, 18, 27],
+				"density": true,
+				"obj": true
+			},
+			"cannon7": {
+				"name": "cannon",
+				"pic": [-3, 19, 26],
+				"density": true,
+				"obj": true
+			},
+			"cannon8": {
+				"name": "cannon",
+				"pic": [-3, 19, 27],
+				"density": true,
+				"obj": true
+			},
+			"shipwall1": {
+				"name": "ship wall",
+				"pic": [-3, 9, 43],
+				"density": true,
+				"autotile_layout": 5
+			},
+			"shipwall2": {
+				"name": "ship wall",
+				"pic": [-3, 12, 43],
+				"density": true,
+				"autotile_layout": 5
+			}
+		}
+	},
+	"build_categories": {
+		"EasyRPG": "easyrpg"
+	}
+}

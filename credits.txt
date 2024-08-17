@@ -40,6 +40,12 @@ https://opengameart.org/content/1616-block-textures
 Everything in pulp.png is by JustthePulp and is licensed for use in Tilemap Town only, unless further permission is asked
 They granted permission to modify the tiles, and some of them have been modified to autotile better
 
+https://github.com/EasyRPG/RTP - EasyRPG tileset
+	Art by JasonPerry - https://finalbossblues.itch.io/
+	Door by Tom Lemmens - https://github.com/lemtom
+	Chest by Blarumyrran
+	See https://github.com/EasyRPG/RTP/blob/master/AUTHORS.md
+
 Potluck tileset credits:
 https://gist.github.com/eevee/59012b2a3d4dcdb40b5247ecdc2cfb34
 

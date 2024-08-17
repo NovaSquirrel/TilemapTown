@@ -212,6 +212,7 @@ function initMap() {
 		IconSheets[0] = document.getElementById("potluck");
 		IconSheets[-1] = document.getElementById("extras");
 		IconSheets[-2] = document.getElementById("pulp");
+		IconSheets[-3] = document.getElementById("easyrpg");
 	}
 }
 

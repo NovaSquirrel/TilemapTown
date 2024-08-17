@@ -7,6 +7,9 @@ Tiles are defined with a JSON object, which can have the following fields:
 	Graphic to use for the tile.
 	Format is [sheet, x, y] where sheet may be an image URL directly, or it may be an ID that points to a tileset image indirectly (in which case you'll need to send the IMG protocol command to get the URL).
 
+"menu_pic":
+	Graphic to use for the tile in build menus and inventories specifically. Same format as "pic".
+
 "density":
 	Defaults to false. If true, users will be stopped when attempting to walk onto this tile.
 

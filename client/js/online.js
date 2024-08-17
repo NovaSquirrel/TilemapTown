@@ -30,7 +30,7 @@ let ShowProtocol = true;
 let DidConnectOnce = false; // A connection got an IDN from the server at least once, indicating the connection went all the way through
 let StatusOnDisconnect = null;
 let StatusMessageOnDisconnect = null;
-let GlobalImageNames = {"0": "Potluck", "-1": "Extra", "-2": "Pulp"};
+let GlobalImageNames = {"0": "Potluck", "-1": "Extra", "-2": "Pulp", "-3": "EasyRPG"};
 
 // URL param options
 let InstantCamera = false;
