@@ -111,7 +111,7 @@ body {
 	<div class="tab-content">
 		<p><b>Tilemap Town</b> is a multiplayer game/platform where you can build maps with your friends and roleplay and chat in the worlds you have created. It takes inspiration from BYOND "building games" that used to be popular long ago, as well as from MUCKs and other text-based platforms.</p>
 
-		<p>Currently you can walk around and chat, and place/remove tiles on an existing map, or make your own map if you register. You can use your own 16x16 (or 32x32) player avatar or use a premade one, and in the future there will be scripting and custom tilesets. Want to help? <a href="https://novasquirrel.com/contact.html">Get in touch!</a> 
+		<p>Currently you can walk around maps and chat, and place/remove tiles to build things. You can even make your own map if you register. You can use your own 16x16 (or 32x32) player avatar or use a premade one, and in the future there will be scripting and custom tilesets. Want to help? <a href="https://novasquirrel.com/contact.html">Get in touch!</a> 
 
 		<p><a href="world.html" class="join">Come visit the world!</a></p>
 
@@ -131,7 +131,7 @@ body {
 	<div class="tab-content">
 		<p>In <b>Tilemap Town</b>, you can wander around a top-down 2D pixel art world, and you can play as any character you like, as long as you can draw or find a 32x32 sprite of them! There is support for multiple directions and simple animation, and <a href="https://github.com/NovaSquirrel/TilemapTown/tree/main/docs/player%20templates">there are some templates</a> intended to help with this. The game picks up on how many frames and directions there are from the size of the image you use, so if you fill in your character's frames in the right places you're all set.</p>
 
-		<p>In the world, you can place tiles onto a map with other players to collaboratively make a map together, or if you register you can even create your own map. You can restrict building to yourself only, limit entry to specific users, and have a private space if you would like one.</p>
+		<p>In the world, you can place tiles onto a map with other players to collaboratively make a map together, or if you register then you can even create your own map. You can restrict building to yourself only, limit entry to specific users, and have a private space if you would like one.</p>
 
 		Features in more detail:
 		<ul>
@@ -172,7 +172,7 @@ body {
 
 		<p>The server is written in Python, so it's a lot easier to extend and change than the old MUCK codebases from the 90s. The database is SQLite so there's no setup, and you can use preexisting tools to browse and interface with the database.</p>
 
-		<p>Tilemap Town is designed with making your own clients and bots in mind, and that's encouraged! <a href="https://github.com/NovaSquirrel/TilemapTown/blob/main/docs/protocol.txt">The protocol</a> is built on top of WebSockets and JSON, which most language should be able to work with without too much trouble, and there's advice in the documentation about what a useful subset of the protocol would be. It's designed to degrade well and still work with a minimal client, while allowing more advanced clients to have access to fancy features.</p>
+		<p>Tilemap Town is designed with making your own clients and bots in mind, and that's encouraged! <a href="https://github.com/NovaSquirrel/TilemapTown/blob/main/docs/protocol.txt">The protocol</a> is built on top of WebSockets and JSON, which most languages should be able to use without too much trouble, and there's advice in the documentation about what a useful subset of the protocol would be. It's designed to degrade well and still work with a minimal client, while allowing more advanced clients to have access to fancy features.</p>
 
 		<p>In a way, Tilemap Town is sort of like IRC, in that it's decentralized and easy to connect to and interface with, but its design incorporates some modern features and leaves room for things like metadata and longer messages without needing that stuff to be in the form of extensions.</p>
 
@@ -193,6 +193,10 @@ body {
 			<li>NovaSquirrel : Main programmer and creator</li>
 			<li><a href="https://bittybunny.com/">Scout</a> : Lots of help on modernizing the web client, and some server help</li>
 		</ul>
+		<li><b>Webpage help</b></li>
+		<ul>
+			<li>JustthePulp : Layout ideas, lots of help with the help page</li>
+		</ul>
 		<li><a href="https://github.com/patorjk/Extendible-BBCode-Parser">BBCode Parser</a></li>
         <li><b>Tiles</b></li>
 			<ul>
@@ -211,10 +215,14 @@ body {
 				<li><a href="https://opengameart.org/content/16x16-indoor-rpg-tileset"><i>Art by armisius</i></a> <a href="https://tilation.itch.io/">(itch.io)</a> </li>
 				<li><a href="https://opengameart.org/content/1616-block-textures"><i>Art by ARoachIFoundOnMyPillow</i></a></li>
 				<li><a href="https://justthepulp.mooffee.net/"><i>Art by JustthePulp</i></a> (With specific permission and modifications for Tilemap Town)</li>
-			</ul>
-			<li><b>Other help</b></li>
-			<ul>
-				<li>JustthePulp : Some help with improving this homepage</li>
+				<li><a href="https://github.com/EasyRPG/RTP"><i>Easy RPG tileset</i></a>
+					<ul>
+					<li>Tiles by <a href="https://finalbossblues.itch.io/">JasonPerry</a></li>
+					<li>Door by <a href="https://github.com/lemtom">Tom Lemmens</a></li>
+					<li>Chest by Blarumyrran</li>
+					<li>See <a href="https://github.com/EasyRPG/RTP/blob/master/AUTHORS.md">https://github.com/EasyRPG/RTP/blob/master/AUTHORS.md</a></li>
+					</ul>
+				</li>
 			</ul>
 		</ul>
 	</div>

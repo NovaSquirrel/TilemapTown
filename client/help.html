@@ -5,74 +5,494 @@
   background:#80ff80;border:8px outset #a0ffa0;color:black;
 }
 body {
-  font-size:16px;
+	font-size: 16px;
 }
 .cmd_name {
-  font-size:20px;
+	font-size: 20px;
 }
 .cmd_group {
-  font-size:24px;
+	font-size: 24px;
 }
-.cmd_example {
-  font-size:14px;
+kbd {
+	font-size: 14px;
+	font-family: monospace;
+	color: #408040;
+}
+samp {
+	font-size: 14px;
+	font-family: monospace;
+	color: #404080;
+}
+.center {
+	text-align: center;
+}
+table, td, tr, th{
+	border: 2px solid #80ff80;
+	border-collapse: collapse;
+}
+
+/* From https://codepen.io/MPDoctor/pen/mpJdYe */
+.tabbed {
+	overflow-x: hidden; /* so we could easily hide the radio inputs */
+	margin: 0 0;
+	padding-bottom: 16px;
+	border-bottom: 1px solid #ccc;
+}
+.tabbed [type="radio"] {
+	/* hiding the inputs */
+	display: none;
+}
+.tabs {
+	display: flex;
+	align-items: stretch;
+	list-style: none;
+	padding: 0;
+	border-bottom: 1px solid #ccc;
+}
+.tab > label {
+	display: block;
+	margin-bottom: -1px;
+	padding: 12px 15px;
+	border: 1px solid #ccc;
+	background: #eee;
+	color: #666;
+	font-size: 12px; 
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	cursor: pointer;	
+	transition: all 0.3s;
+}
+.tab:hover label {
+	border-top-color: #333;
+	color: #333;
+}
+.tab-content {
+	display: none;
+	color: black;
+}
+/* As we cannot replace the numbers with variables or calls to element properties, the number of this selector parts is our tab count limit */
+.tabbed [type="radio"]:nth-of-type(1):checked ~ .tabs .tab:nth-of-type(1) label,
+.tabbed [type="radio"]:nth-of-type(2):checked ~ .tabs .tab:nth-of-type(2) label,
+.tabbed [type="radio"]:nth-of-type(3):checked ~ .tabs .tab:nth-of-type(3) label,
+.tabbed [type="radio"]:nth-of-type(4):checked ~ .tabs .tab:nth-of-type(4) label,
+.tabbed [type="radio"]:nth-of-type(5):checked ~ .tabs .tab:nth-of-type(5) label,
+.tabbed [type="radio"]:nth-of-type(6):checked ~ .tabs .tab:nth-of-type(6) label {
+	border-bottom-color: #fff;
+	border-top-color: #80C080;
+	background: #fff;
+	color: #222;
+}
+.tabbed [type="radio"]:nth-of-type(1):checked ~ .tab-content:nth-of-type(1),
+.tabbed [type="radio"]:nth-of-type(2):checked ~ .tab-content:nth-of-type(2),
+.tabbed [type="radio"]:nth-of-type(3):checked ~ .tab-content:nth-of-type(3),
+.tabbed [type="radio"]:nth-of-type(4):checked ~ .tab-content:nth-of-type(4),
+.tabbed [type="radio"]:nth-of-type(5):checked ~ .tab-content:nth-of-type(5),
+.tabbed [type="radio"]:nth-of-type(6):checked ~ .tab-content:nth-of-type(6) {
+	display: block;
 }
 </style>
 
 <body>
-<a href="https://github.com/NovaSquirrel/TilemapTown"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png" alt="Fork me on GitHub"></a>
+<a href="https://github.com/NovaSquirrel/TilemapTown"><img decoding="async" loading="lazy" width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149" alt="Fork me on GitHub" data-recalc-dims="1" style="position: absolute; top: 0; right: 0; border: 0;"></a>
 
 <div style="width:900px; margin-left:auto; margin-right:auto;">
 <div class="green1">
-<center><h1>Tilemap Town</h1></center>
+<span class="center"><h1>Tilemap Town</h1></span>
 </div>
-<div style="background:black;color:white;"><center>Collaborative map-building hangout</center></div>
+<div style="background:black;color:white;"><div class="center">Collaborative map building and hangout/roleplay</div></div>
 <br>
 
 <div style="border:dashed #80ff80 3px;"><div style="margin-left:100px; margin-right:100px;">
+<div class="tabbed">
+	<input type="radio" id="tab1" name="css-tabs" checked>
+	<input type="radio" id="tab2" name="css-tabs">
+	<input type="radio" id="tab3" name="css-tabs">
+	<input type="radio" id="tab4" name="css-tabs">
+	<input type="radio" id="tab5" name="css-tabs">
+	<input type="radio" id="tab6" name="css-tabs">
+	
+	<ul class="tabs">
+		<li class="tab"><label for="tab1">Basics</label></li>
+		<li class="tab"><label for="tab2">Chat</label></li>
+		<li class="tab"><label for="tab3">Avatar / Account</label></li>
+		<li class="tab"><label for="tab4">Maps / Teleports</label></li>
+		<li class="tab"><label for="tab5">Moderation</label></li>
+		<li class="tab"><label for="tab6">Other</label></li>
+	</ul>
+	
+	<div class="tab-content">
+		<p><div class="cmd_group">Controls</div>
+			<ul>
+			<li><b>Arrow Keys, WASD, Num Pad:</b> Movement. Supports 8 directions. Home, End, Page Up, Page Down also work for diagonal movement. Holding Shift will hold the player in place and rotate on the spot.</li>
+			<li><b>Mouse Left Click:</b> Varies depending on Build Setting. 'Select' can allow a tile or group of tiles to be selected. 'Draw' will place selected tile from build menu or hotbar. Many other features as well like menu navigation.</li>
+			<li><b>Mouse Right Click:</b> Opens a context menu when used on hotbar, entities, and objects in the 'selection info'</li>
+			<li><b>Numbers 0-9:</b> Shortcut to any hotbar item.</li>
+			<li><b>Spacebar:</b> Place selected hotbar item under you.</li>
+			<li><b>R:</b> Swap between 'Select' and 'Draw' modes.</li>
+			<li><b>F:</b> Copies tile mouse is hovering over ('Draw' mode only).</li>
+			<li><b>Ctrl + Z:</b> Undo last action such as drawing or deleting tiles.</li>
+			<li><b>Enter:</b> Selects the chat box, or sends a message.</li>
+			<li><b>Escape:</b> Deselect current selection or chat box.</li>
+			<li><b>Ctrl + Move:</b> Offsets your avatar from center. /offset can be used to reset.</li>
+			</ul>
+		</p>
+		<hr>
+		<p>
+			<div class="cmd_group">Useful Commands</div>
+			<br><span class="cmd_name">/me text</span><br><span class="cmd_desc">Sends text formatted as an action.<br>For example: "<kbd>/me waves hi</kbd>" becomes "<samp><i>* Player waves hi.</i></samp>"</span><br>
+			<br><span class="cmd_name">/ooc text</span><br><span class="cmd_desc">Posts a message that's marked as being out-of-character (OOC).<br>For example: "<kbd>/ooc Hello</kbd>" becomes "<samp>[OOC] Player: Hello</samp>"</span><br>
+			<br><span class="cmd_name">/spoof text</span><br><span class="cmd_desc">Sends text formatted to narrate something happening.</span><br>For example: "<kbd>/spoof A skeleton appears</kbd>" becomes "<samp><i>* A skeleton appears <small>(by Player)</small></i></samp>"<br>
+			<br><span class="cmd_name">/tell username text</span><br><span class="cmd_desc">Sends a private message to someone. You may click on a private message to reply to it quickly.</span><br>
+			<br><span class="cmd_name">/whereare , /wa</span><br><span class="cmd_desc">List public maps that have users on them, and topics if they are set. Also includes buttons to teleport to these locations.</span><br>
+			<br><span class="cmd_name">/nick name</span><br><span class="cmd_desc">Change your display name.</span><br>
+			<br><span class="cmd_name">/userdesc text , /look user</span><br><span class="cmd_desc">You can set a character description through <kbd>/userdesc text</kbd> which other players can read by using <kbd>/look name</kbd>. It's also possible to do by selecting and attempting to edit another player.</span><br>
+			<br><span class="cmd_name">/publicmaps</span><br><span class="cmd_desc">List all public maps. Also includes buttons to teleport to these locations.</span><br>
+			<br><span class="cmd_name">/who</span><br><span class="cmd_desc">List all users on the map.</span><br>
+			<br><span class="cmd_name">/sethome , /home</span><br><span class="cmd_desc">Allows you to set your current location as your "home", which you can teleport to with <kbd>/home</kbd>.</span><br>
+			<br><span class="cmd_name">/roll xdice ysides</span><br><span class="cmd_desc">Rolls x many dice each with y many sides then displays the total number.</span><br>
+			<br>There's many more commands documented <a href="https://github.com/NovaSquirrel/TilemapTown/blob/main/docs/commands.txt">on GitHub</a>, and in the other tabs. Don't worry though, you rarely need most of them.
+		</p>
+		<hr>
 
-<center><span class="cmd_group">Controls</span></center>
-<ul>
-<li><b>Movement</b>: Arrow keys/WASD</li>
-<li><b>Placing tiles</b>: click on "Inventory" to open it, and click on the tile you want to place.</li>
-<li><b>Selecting tiles</b>: click and drag on the map. You can then delete the selected area. <tt>Esc</tt> will cancel the selection.</li>
-</ul>
+		<div class="cmd_group">Registration & Account</div>
+		A registered account allows users to save character information and create maps, and more.<br>
+		<br><span class="cmd_name">/register username password</span><br><span class="cmd_desc">Registers your account under said username and password if not logged in.</span><br>
+		<br><span class="cmd_name">/login username password</span><br><span class="cmd_desc">Can be used as an alternative way to login.</span><br>
+		<br><span class="cmd_name">/changepass password</span><br><span class="cmd_desc">Changes password to new password if logged in.</span><br>
+	</div>
 
+	<div class="tab-content">
+		<div class="cmd_group">BBCode reference</div>
+		Tilemap Town uses BBCode for text formatting, just like many forums.
+		<table>
+		<tr>
+			<th>Style</th>
+			<th>Raw</th>
+			<th>Post</th>
+		</tr>
+		<tr>
+			<td>Plain</td>
+			<td><kbd>text</kbd></td>
+			<td><i>text</i></td>
+		</tr>
+		<tr>
+			<td>Italics</td>
+			<td><kbd>[i]text[/i]</kbd></td>
+			<td><i>text</i></td>
+		</tr>
+		<tr>
+			<td>Bold</td>
+			<td><kbd>[b]text[/b]</kbd></td>
+			<td><b>text</b></td>
+		</tr>
+		<tr>
+			<td>Underline</td>
+			<td><kbd>[u]text[/u]</kbd></td>
+			<td><u>text</u></td>
+		</tr>
+		<tr>
+			<td>Strikeout</td>
+			<td><kbd>[s]text[/s]</kbd></td>
+			<td><s>text</s></td>
+		</tr>
+		<tr>
+			<td>Superscript</td>
+			<td><kbd>x[sup]text[/sup]</kbd></td>
+			<td>x<sup>text</sup></td>
+		</tr>
+		<tr>
+			<td>Subscript</td>
+			<td><kbd>y[sub]text[/sub]</kbd></td>
+			<td>y<sub>text</sub></td>
+		</tr>
+		<tr>
+			<td>Large</td>
+			<td><kbd>[large]text[/large]</kbd></td>
+			<td><span style="font-size: 36px;">text</span></td>
+		</tr>
+		<tr>
+			<td>Small</td>
+			<td><kbd>[small]text[/small]</kbd></td>
+			<td><span style="font-size: 10px;">text</span></td>
+		</tr>
+		<tr>
+			<td>Monospace</td>
+			<td><kbd>[tt]text[/tt]</kbd> or <kbd>[code]text[/code]</kbd></td>
+			<td><code>text</code></td>
+		</tr>
+		<tr>
+			<td>No Parse</td>
+			<td><kbd>[noparse][b][i]text[/i][/b][/noparse]</kbd><br>Displays all bbcode in the tag as plain text.</td>
+			<td>[b][i]text[/i][/b]</td>
+		</tr>
+		<tr>
+			<td>Color</td>
+			<td><kbd>[color=#]text[/color]</kbd><br>Where # can be replaced by a color like red, pink, teal, etc.</td>
+			<td><span style="color: red;">red</span> <span style="color: pink;">pink</span> <span style="color: teal;">teal</span></td>
+		</tr>
+		<tr>
+			<td>Specific Size</td>
+			<td><kbd>[size=#]text[/size]</kbd><br>where # is text size in pixels. Must be a number from 4 to 40.</td>
+			<td><span style="font-size: 4px;">Smallest Size</span> to <span style="font-size: 40px;">Largest Size</span></td>
+		</tr>
+		<tr>
+			<td>Hyperlink</td>
+			<td><kbd>[url=<i>link</i>]text[/url]</kbd><br>Attaches the <i>link</i> to the text. Links open in new tabs.<br><kbd>[url]link[/url]</kbd> works too.</td>
+			<td><a href="https://example.com/">text</a></td>
+		</tr>
+		<tr>
+			<td>Command</td>
+			<td><kbd>[command]cmd[/command]</kbd><br>Given a valid command, it creates a button other users can click in chat. Commands do not use / at the start. Especially useful for creating signs that offer teleports, to act as warps.</td>
+			<td><kbd>[command]roll 2 2[/command]</kbd><br>This would create a button that upon clicked rolls 2 dice with 2 sides each.</td>
+		</tr>
+		</table>
 
-<center><span class="cmd_group">Commands</span></center>
-<p>
-For the full list, see <a href="https://raw.githubusercontent.com/NovaSquirrel/TilemapTown/master/docs/commands.txt">the repository</a>. This section will list common commands.
-</p>
-<p><span class="cmd_name">/me text</span><br><span class="cmd_desc">Do a pose/action in the area you're at.</span></p>
-<p><span class="cmd_name">/ooc text</span><br><span class="cmd_desc">Send a message that's explictly marked as being out-of-character..</span></p>
-<p><span class="cmd_name">/spoof text</span><br><span class="cmd_desc">Narrate something that happened in the area you're at.</span></p>
-<p><span class="cmd_name">/roll dice sides</span><br><span class="cmd_desc">Do a dice roll.</span></p>
-<p><span class="cmd_name">/nick newname</span><br><span class="cmd_desc">Change your nickname.</span></p>
-<p><span class="cmd_name">/tell user message</span><br><span class="cmd_desc">Private message a user. You may click on a private message to reply to it quickly.</span></p>
-<p><span class="cmd_name">/who</span><br><span class="cmd_desc">List all users on the map.</span></p>
-<p><span class="cmd_name">/gwho</span><br><span class="cmd_desc">List all users on the server.</span></p>
-<p><span class="cmd_name">/whereare</span><br><span class="cmd_desc">List public maps that have users on them.</span></p>
-<p><span class="cmd_name">/publicmaps</span><br><span class="cmd_desc">List all public maps.</span></p>
-<p><span class="cmd_name">/look user</span><br><span class="cmd_desc">Displays the description of another user on the map, if they have one set.</span></p>
-<p><span class="cmd_name">/userdesc text</span><br><span class="cmd_desc">Sets your description.</span></p>
+		<br><hr>
+		<div class="cmd_group">Chat commands</div>
+		<br><span class="cmd_name">/clear</span><br><span class="cmd_desc">Clears chat log.</span><br>
+		<br><span class="cmd_name">/tell username text</span><br><span class="cmd_desc">Sends a private message to someone. You may click on a private message to reply to it quickly.</span><br>
+		<br><span class="cmd_name">/roll xdice ysides</span><br><span class="cmd_desc">Rolls x many dice each with y many sides then displays the total number.</span><br>
+		<br><span class="cmd_name">/privateroll xdice ysides</span><br><span class="cmd_desc">Roll dice but results are shown just to you.</span><br>
 
-<p>
-<span class="cmd_name">/login username password</span><br>
-<span class="cmd_name">/register username password</span><br>
-<span class="cmd_name">/changepass password</span><br><span class="cmd_desc">Manage your account. A registered account is required for some things (like mail), but the main purpose is to save your character information and location for next time.</span></p>
+		<br><span class="cmd_name">/me text</span><br><span class="cmd_desc">Sends text formatted as an action.<br>For example: "<kbd>/me waves hi</kbd>" becomes "<samp><i>* Player waves hi.</i></samp>"</span><br>
+		<br><span class="cmd_name">/ooc text</span><br><span class="cmd_desc">Posts a message that's marked as being out-of-character (OOC).<br>For example: "<kbd>/ooc Hello</kbd>" becomes "<samp>[OOC] Player: Hello</samp>"</span><br>
+		<br><span class="cmd_name">/spoof text</span><br><span class="cmd_desc">Sends text formatted to narrate something happening.</span><br>For example: "<kbd>/spoof A skeleton appears</kbd>" becomes "<samp><i>* A skeleton appears <small>(by Player)</small></i></samp>"<br>
 
+		<br><span class="cmd_name">/status , /status name (desc), /away (desc)</span><br><span class="cmd_desc">Set your status, and you can provide an optional status message. You can use whatever word you want as a status, but the web client recognizes <kbd>away</kbd>, <kbd>busy</kbd>, <kbd>ic</kbd>, <kbd>rp</kbd>, <kbd>iic</kbd> (Interested in being In Character), <kbd>lfrp</kbd> (Looking For RolePlay), and <kbd>ooc</kbd>.<br><kbd>/away message</kbd> is a shortcut for <kbd>/status away message</kbd>.<br><kbd>/status</kbd> or <kbd>/away</kbd> on their own will clear your status.</span><br>
 
-<center><span class="cmd_group">Setting up an avatar</span></center>
-<p>
-You can use custom avatars on Tilemap Town! Currently there's no way to upload them to the server so you will need to upload them to an image hosting site; currently the server is set up to accept images from <a href="https://imgur.com/">Imgur</a>, <a href="https://imgbb.com/">ImgBB</a> and <a href="https://postimages.org/">Postimages</a>.
-</p>
+		<br><span class="cmd_name">/ignore user , /unignore user , /ignorelist</span><br><span class="cmd_desc">Can be used to add or remove users from your ignore list. Ignored users cannot send you direct messages or send requests. <kbd>/ignorelist</kbd> can be used to view the full list.</span><br>
+		<br><span class="cmd_name">/watch user , /unwatch user , /watchlist</span><br><span class="cmd_desc">Can be used to add or remove users from your watch list. This is sort of like a friends list, and future client versions will allow you to easily which of your friends are online. <kbd>/watchlist</kbd> can be used to view the full list.</span><br>
+		<br><span class="cmd_name">/topic message, /topic, /cleartopic</span><br><span class="cmd_desc">If allowed, sets a message as the current map's "topic", which can signal what people are currently talking about, or what event is going on, and this topic will show up when entering the map as well as in <kbd>/whereare</kbd>.<br><kbd>/topic</kbd> can be used to get the current topic. <kbd>/cleartopic</kbd> will manually clear the topic, and this will also happen automatically when no users are on the map.</span><br>
+		<br><span class="cmd_name">/exportlogs</span><br><span class="cmd_desc">Save a plain text file of your chat log.</span><br>
+		<br><span class="cmd_name">/oops</span><br><span class="cmd_desc"> Put the most recent text you tried to send back into the chat bar, so that you can have another attempt at a command.</span><br>
+		<br><span class="cmd_name">/time</span><br><span class="cmd_desc">Displays the server time and date.</span><br>
 
-<p>
-For creating the actual image you'll use for your character, there are templates available <a href="https://github.com/NovaSquirrel/TilemapTown/tree/main/docs/player%20templates">on GitHub</a>. Player animation frames are 32x32 and the bottom center will be aligned with the bottom center of the tile you're standing on. The width and height of the image is used to determine how many animation frames and directions the player graphic has, so pick a template that matches your needs.
-</p>
+		<br><hr><div class="cmd_group">Finding people</div>
+		<br><span class="cmd_name">/findiic</span><br><span class="cmd_desc"> Finds players with their status set to <kbd>iic</kbd> (Interested in being In Character) or <kbd>lfrp</kbd> (Looking for RolePlay).</span><br>
+		<br><span class="cmd_name">/who</span><br><span class="cmd_desc">Lists all users on the map.</span><br>
+		<br><span class="cmd_name">/entitywho</span><br><span class="cmd_desc">Lists all entities on the map, not just limited to users.</span><br>
+		<br><span class="cmd_name">/gwho</span><br><span class="cmd_desc">Lists all users on the server</span><br>
+		<br><span class="cmd_name">/whereare , /wa</span><br><span class="cmd_desc">List public maps that have users on them, and topics if they are set. Also includes buttons to teleport to these locations.</span><br>
+		<br><span class="cmd_name">/last username</span><br><span class="cmd_desc">Lists the last time the user logged in.</span><br>
+	</div>	
 
-<p>
-Once you have an image uploaded to an allowed image hosting site, use <tt>/userpic your_image_url_here</tt>. Make sure this is actually a link to the PNG file itself, and not just to a webpage that has the image on it. On Imgur this can mean right clicking on the image and copying its link.
-</p>
+	<div class="tab-content">
+		<span class="cmd_group">Setting up a custom player graphic</span>
+		<p>
+		You can use custom player graphics on Tilemap Town! Currently there's no way to upload them to the server, so you will need to upload them to an image hosting site; currently the server is set up to accept images from <a href="https://imgur.com/">Imgur</a>, <a href="https://imgbb.com/">ImgBB</a> and <a href="https://postimages.org/">Postimages</a>. Additional image hosts can be added on request, as long as they are set up properly.
+		</p>
+
+		<p>
+		For creating the actual image you'll use for your character, there are templates available <a href="https://github.com/NovaSquirrel/TilemapTown/tree/main/docs/player%20templates">on GitHub</a>. Player animation frames are 32x32 and the bottom center will be aligned with the bottom center of the tile you're standing on. The width and height of the image is used to determine how many animation frames and directions the player graphic has, so pick a template that matches your needs.
+		</p>
+
+		<p>
+		Once you have an image uploaded to an allowed image hosting site, use <tt>/userpic your_image_url_here</tt>. Make sure this is actually a link to the PNG file itself, and not just to a webpage that has the image on it. For example, you want <kbd>https://i.imgur.com/aQlAIjk.png</kbd> and not <kbd>https://imgur.com/aQlAIjk</kbd>. On Imgur this can be done by right-clicking on the image and copying its link.
+		</p>
+
+		<br><hr><div class="cmd_group">Player Customization</div>
+		<br><span class="cmd_name">/nick name</span><br><span class="cmd_desc">Change your display name.</span><br>
+		<br><span class="cmd_name">/userdesc text , /look user</span><br><span class="cmd_desc">You can set a character description through <kbd>/userdesc text</kbd> which other players can read by using <kbd>/look name</kbd>. It's also possible to do by selecting and attempting to edit another player.</span><br>
+
+		<br><span class="cmd_name">/userpic <i>preset</i></span><br><span class="cmd_desc">Sets your player graphic to one of the preset avatars. This includes: <kbd>bunny</kbd>, <kbd>cat</kbd>, <kbd>hamster<kbd>, <kbd>fire</kbd>, <kbd>snail</kbd>, <kbd>turtle</kbd>, and <kbd>invisible</kbd>.</span><br>
+		<br><span class="cmd_name">/userpic x y</span><br><span class="cmd_desc">Sets your player graphic to a tile (x,y) in the <a href="https://novasquirrel.com/town/img/potluck.png">potluck tileset</a>.</span><br>
+		<br><span class="cmd_name">/userpic tileset x y</span><br><span class="cmd_desc">Sets your player graphic to a tile (x,y) in any tileset you like.</a></span><br>
+		<br><span class="cmd_name">/userpic link</span><br><span class="cmd_desc">Sets your player graphic to an image link; must be a site that is specifically allowed by the server. See "Setting up a custom player graphic" above.</span><br>
+		<br><span class="cmd_name">/savedpiclist set name url</span><br><span class="cmd_desc">Sets up a shortcut to switch to a particular player image URL quickly.</span><br>
+		<br><span class="cmd_name">/savedpic name</span><br><span class="cmd_desc">Switch to a picture that was previously saved with <kbd>/savedpiclist set</kbd>.</span><br>
+		<br><span class="cmd_name">/savedpiclist del name , /savedpiclist clear</span><br><span class="cmd_desc">Deletes a saved player image shortcut. Using <kbd>/savedpiclist clear</kbd> will remove all saved shortcuts.</span><br>
+		<br><span class="cmd_name">/savedpic , /savedpiclist , /savedpiclist list2</span><br><span class="cmd_desc">Presents a bunch of buttons you can click on to switch between the different player image URLs you have saved. Using <kbd>list2</kbd> will list as text (for clients that can't use buttons)</span><br>
+
+		<br><span class="cmd_name">/offset x y , /roffset x y , /offset</span><br><span class="cmd_desc">Moves your avatar off-center horizontally right x pixels and vertically down y pixel. Values range from -32 to 32. <kbd>/roffset</kbd> is relative and will add the values to your current offset. <kbd>/offset 0 0</kbd> or <kbd>/offset</kbd> will reset your offset to (0,0)</span><br>
+		<br><span class="cmd_name">/userflags add flag , /userflags del flag, /userflags</span><br><span class="cmd_desc">Using <kbd>add</kbd> will add said flag, <kbd>del</kbd> will delete said flag, and <kbd>/userflags</kbd> by itself will list your current flags. Valid flags include:
+		<ul>
+			<li><kbd>bot</kbd>: Marks this user as a bot</li>
+			<li><kbd>hide_location</kbd>: Sets user's location to private so they will not show up in <kbd>/whereare</kbd> and similar commands.</li>
+			<li><kbd>hide_api</kbd>: User will not show up on the API, which includes the list for who's currently online on the main page.</li>
+			<li><kbd>no_watch</kbd>: Disables watching the user.</li>
+		</ul>
+		</span>
+
+		<br><hr><div class="cmd_group">Morphs</div>
+		Morphs let you store a name, player graphic, description, tags, and a collection of saved player images under a name, and quickly switch between these with a single command. This lets you store multiple characters or forms and swap between them easily.<br>
+		<br><span class="cmd_name">/morph name</span><br><span class="cmd_desc">Switches to a different morph.</span><br>
+		<br><span class="cmd_name">/morphlist set name</span><br><span class="cmd_desc">Stores all of your current information to a morph with a given name, overwriting it if it already exists..</span><br>
+		<br><span class="cmd_name">/morphlist del name , /morphlist clear</span><br><span class="cmd_desc">Deletes a morph with said name. Using <kbd>/morphlist clear</kbd> will remove all morphs.</span><br>
+		<br><span class="cmd_name">/morph , /morphlist , /morphlist list2</span><br><span class="cmd_desc">Lists all morphs as quickswap buttons. Using <kbd>list2</kbd> will list it as text (for clients that can't use buttons)</span><br>
+
+		<br><hr><div class="cmd_group">Registration & Account</div>
+		A registered account allows users to save character information and create maps, and more.<br>
+		<br><span class="cmd_name">/register username password</span><br><span class="cmd_desc">Registers your account under said username and password if not logged in.</span><br>
+		<br><span class="cmd_name">/login username password</span><br><span class="cmd_desc">Can be used as an alternative way to login.</span><br>
+		<br><span class="cmd_name">/changepass password</span><br><span class="cmd_desc">Changes password to new password if logged in.</span><br>
+	</div>
+
+	<div class="tab-content">
+		<div class="cmd_group">Teleport</div>
+		<br><span class="cmd_name">/coords</span><br><span class="cmd_desc">Display your coordinates.</span><br>
+		<br><span class="cmd_name">/tpa user , /mjoin user</span><br><span class="cmd_desc">Request to teleport to user.</span><br>
+		<br><span class="cmd_name">/tpahere user , /msummon user</span><br><span class="cmd_desc">Request a user teleport to you.</span><br>
+		<br><span class="cmd_name">/tpherecommand</span><br><span class="cmd_desc">Get a command you can paste to other people (or put on a sign) that will allow them to teleport to your current location.</span><br>
+
+		<br><span class="cmd_name">/tpaaccept user</span><br><span class="cmd_desc">Command to accept teleport requests. This command is also use for other kinds of requests, like giving someone items.</span><br>
+		<br><span class="cmd_name">/tpdeny user , /mdecline user</span><br><span class="cmd_desc">Command to decline teleport requests.</span><br>
+		<br><span class="cmd_name">/tpcancel user , /mcancel user</span><br><span class="cmd_desc">Cancels all teleport requests you made towards a specific user.</span><br>
+
+		<br><span class="cmd_name">/publicmaps</span><br><span class="cmd_desc">List all public maps. Also includes buttons to teleport to these locations.</span><br>
+		<br><span class="cmd_name">/defaultmap</span><br><span class="cmd_desc">Teleports you to the default map.</span><br>
+		<br><span class="cmd_name">/map mapID (x y)</span><br><span class="cmd_desc">Teleport to a specific map. X and Y are optional and will teleport you to a specific tile coordinate on said map.</span><br>
+		<br><span class="cmd_name">/goback</span><br><span class="cmd_desc">Go back to the ma pyou were previously on.</span><br>
+		<br><span class="cmd_name">/sethome , /home</span><br><span class="cmd_desc">Allows you to set your current location as your "home", which you can teleport to with <kbd>/home</kbd>.</span><br>
+
+		<br><hr><div class="cmd_group">Map management</div>
+		<br><span class="cmd_name">/mymaps</span><br><span class="cmd_desc">Lists all maps you are the owner of.</span><br>
+		<br><span class="cmd_name">/newmap</span><br><span class="cmd_desc">Generates a new map and map ID number (if registered).</span><br>
+		<br><span class="cmd_name">/mapid</span><br><span class="cmd_desc">Lists the map ID of the current map you are on.</span><br>
+		<br><span class="cmd_name">/mapname name</span><br><span class="cmd_desc">Renames the map you are on.</span><br>
+		<br><span class="cmd_name">/mapdesc text</span><br><span class="cmd_desc">Changes the description of the map.</span><br>
+		<br><span class="cmd_name">/mapowner user</span><br><span class="cmd_desc">Transfers ownership of the map to someone else.</span><br>
+		<br><span class="cmd_name">/mapsize x y</span><br><span class="cmd_desc">Resizes the map to be x tiles wide and y tiles high. Caution: extends/shrinks maps by moving the right and bottom edge of the map.</span><br>
+		<br><span class="cmd_name">/mapedgelink edge mapID</span><br><span class="cmd_desc">Allows maps to be linked to another. Edge should be a number from 0 to 7 indicating a direction starting from east and moving clockwise. <kbd>none</kbd> is a valid mapId and will remove the link.</span><br>
+		<br><span class="cmd_name">/mapspawn</span><br><span class="cmd_desc">Sets starting position to the tile you are on.</span><br>
+
+		<br><span class="cmd_name">/mapdefaultfloor tile</span><br><span class="cmd_desc">Sets default ground tile. Set to <kbd>grass</kbd> tile by default.</span><br>
+		<br><span class="cmd_name">/mapwallpaper url (<i>type</i>)</span><br><span class="cmd_desc">Sets a wallpaper for the map. Wallpapers are images overlaid on a map and replaces the default floor (unless <kbd>over_turf</kbd> is enabled, which makes the wallpaper overwrite all ground tiles). Multiple types can be accomplished by putting them in a line (example: <kbd>/mapwallpaper url center repeat repeatx repeaty offset=8,8</kbd>). Wallpaper options include: <kbd>absolute</kbd>, <kbd>center</kbd>, <kbd>repeat</kbd>, <kbd>repeatx</kbd>, <kbd>repeaty</kbd>, <kbd>over_turf</kbd>, <kbd>offset=x,y</kbd> (where x and y are the offset in pixels).</span><br>
+
+		<br><span class="cmd_name">/mapprivacy type</span><br><span class="cmd_desc">Sets map privacy. The types are:
+		<ul>
+			<li><kbd>public</kbd>: Map is listed publicly through commands like <kbd>/publicmaps</kbd>. Anyone can join by default.</li>
+			<li><kbd>unlisted</kbd>: Map is not listed publically but anyone can join by default.</li>
+			<li><kbd>private</kbd>: Map is not listed and users must be explicitly given permission to join.</li>
+		</ul></span>
+		<br><hr><div class="cmd_group">Map Permissions</div>
+		<br><span class="cmd_name">/permlist</span><br><span class="cmd_desc">Lists default and user permissions.</span><br>
+		<br><span class="cmd_name">/mapbuild on/off</span><br><span class="cmd_desc">Enables or disables building on the map by people who aren't the owner.</span><br>
+		<br><span class="cmd_name">/grant <i>permission</i> <u>target</u> , /deny <i>permission</i> <u>target</u> , /revoke <i>permission</i> <u>target</u></span><br><span class="cmd_desc">Adjust map premissions for a particular 'target'. Permissions can be set to allow (with grant), disallowed (with deny), or map default (with revoke). The 'target' can be:
+			<ul>
+			<li><kbd><i>user</i></kbd> : Changes permissions on that specific user.</li>
+			<li><kbd>!default</kbd> : Default map permissions. Any user who joins will have these permissions enabled (unless denied).</li>
+			<li><kbd>!guest</kbd> : Applies to all unregisted guests to add further restrictions. Works with Deny & Revoke only.</li>
+			<li><kbd>group:<i>groupid</i></kbd> : Applies to all members of a group. Works with Grant & Revoke only. (replace groupid with the ID number of said group)</li>
+			</ul>
+			The permissions that can be granted or denied include:
+			<ul>
+			<li><kbd>entry</kbd>: Allowed to teleport to the map</li>
+			<li><kbd>build</kbd>: Allowed to build</li>
+			<li><kbd>sandbox</kbd>: Allowed to edit or delete other peoples' objects freely ()</li>
+			<li><kbd>admin</kbd>: Allowed to use admin commands</li>
+			<li><kbd>map_bot</kbd>: Allowed to use /listen</li>
+			<li><kbd>bulk_build</kbd>: Allowed to use builk-build protocol commands (BLK)</li>
+			<li><kbd>object_entry</kbd>: Allowed to bring non-player entities here</li>
+			<li><kbd>persistent_object_entry</kbd> : Allowed to bring non-player entities here persistently (otherwise, they'll be sent home when the map unloads)</li>
+			<li><kbd>modify_properties</kbd>: Allowed to modify properties of the map or other enity</li>
+			<li><kbd>remote_command</kbd>: Allowed to make the entity do a command</li>
+			<li><kbd>modify_appearance</kbd>: Allowed to modify certain properties of the map</li>
+			<li><kbd>list_contents</kbd>: Allowed to get a list of the entities on the map remotely</li>
+			<li><kbd>set_owner_to_this</kbd>: Allowed to set the owner of their entities to this entity</li>
+			<li><kbd>set_topic</kbd>: Allowed to change the topic on this map</li>
+			</ul>
+		</span><br>
+		<hr><div class="cmd_group">Saving and Other Features</div>
+		<br><span class="cmd_name">/savemap</span><br><span class="cmd_desc">Saves any changes made to the map. Normally this happens automatically when the map is unloaded, but this guarantees the map changes are safe.</span><br>
+		<br><span class="cmd_name">/mapdisablesave on/off</span><br><span class="cmd_desc">Enable or disable map saving temporarily.</span><br>
+		<br><span class="cmd_name">/mapexport</span><br><span class="cmd_desc">Download the current map.</span><br>
+	</div>
+
+	<div class="tab-content">
+		<div class="cmd_group">Map Moderation</div>
+		<br><span class="cmd_name">/kick user</span><br><span class="cmd_desc">Kicks the user off the map.</span><br>
+		<br><span class="cmd_name">/kickallusers</span><br><span class="cmd_desc">Kicks all users off the map.</span><br>
+		<br><span class="cmd_name">/returnall user , /returnall</span><br><span class="cmd_desc">Returns/removes all entities belonging to that specific user from the map. Without a specific user, all <i>placed</i> entities that are not owned by the map owner will also be returned/removed.</span><br>
+
+		<br><hr><div class="cmd_group">Server Moderation</div>
+		<br><span class="cmd_name">/broadcast text</span><br><span class="cmd_desc">Sends a message to everyone on the server.</span><br>
+		<br><span class="cmd_name">/operoverride</span><br><span class="cmd_desc">Toggles whether or not you can bypass permissions.</span><br>
+		<br><span class="cmd_name">/ipwho</span><br><span class="cmd_desc">Lists all online users & matching IPs.</span><br>
+		<br><span class="cmd_name">/ipban ip;reason;<i>length</i></span><br><span class="cmd_desc">Bans a user from accessing the site from said IP. Reason will show up whenever the user tries to access the server. Length is specifed #units. Such as 1d (for 1 day) or 30m (for 30 minutes). For units:<br>m=minutes<br>h=hours<br>d=days<br>w=week<br>y=year<br>Blank=If length is left blank, the IP will be banned indefinitely unless unbanned.</span><br>
+		<br><span class="cmd_name">/ipunban ip</span><br><span class="cmd_desc">Removes all bans to an IP.</span><br>
+		<br><span class="cmd_name">/ipbanlist</span><br><span class="cmd_desc">Lists all IP bans.</span><br>
+		<br><span class="cmd_name">/resetpassfor user</span><br><span class="cmd_desc">Resets the password for a specific account.</span><br>
+		<br><span class="cmd_name">/rehash</span><br><span class="cmd_desc">Reloads the config file, including any resource files the config includes.</span><br>
+	</div>
+
+	<div class="tab-content">
+        <div class="cmd_group">Rides</div>
+        <br><span class="cmd_name">/carry user</span><br><span class="cmd_desc">Offer to carry a user. Carried users overlap and move on top of the user that's carrying them whenever the ride moves.</span><br>
+        <br><span class="cmd_name">/carryme user</span><br><span class="cmd_desc">Requests a user to carry you.</span><br>
+        <br><span class="cmd_name">/hopon user</span><br><span class="cmd_desc">Command to accept being carried.</span><br>
+        <br><span class="cmd_name">/carrywho</span><br><span class="cmd_desc">Lists who you are carrying.</span><br>
+        <br><span class="cmd_name">/ridewho</span><br><span class="cmd_desc">Shows who you are riding.</span><br>
+        <br><span class="cmd_name">/followme user</span><br><span class="cmd_desc">Offer for a user to follow you. The following user will move to the last tile the leading user was at.</span><br>
+        <br><span class="cmd_name">/followyou user</span><br><span class="cmd_desc">Request to follow another user.</span><br>
+        <br><span class="cmd_name">/followmap user , /followyoumap user</span><br><span class="cmd_desc">Offer to teleport to other maps when the other user does.</span><br>
+        <br><span class="cmd_name">/syncmove user</span><br><span class="cmd_desc">Offer to sync movement with a user. When synced, if either player moves then both move to the same position.</span><br>
+        <br><span class="cmd_name">/dropoff user , /rideend</span><br><span class="cmd_desc">Stops carrying, leading, or syncing with a specific user. <kbd>/rideend</kbd> will end all interactions at once.</span><br>
+        <br><span class="cmd_name">/hopoff</span><br><span class="cmd_desc">Stop riding, following, or syncing.</span><br>
+        <br><hr><div class="cmd_group">Inventory</div>
+        <br><span class="cmd_name">/giveitem user item <i>type</i></span><br><span class="cmd_desc">Offers a user an item from your inventory (or at the very least loaded somewhere). For give types there are:
+        <ul>
+          <li><kbd>transfer</kbd>: Moves the item to the user's inventory and assigns them as the owner.</li>
+          <li><kbd>move</kbd>: Moves the item to the user's inventory without changing ownership.</li>
+          <li><kbd>copy</kbd>: Puts a copy in the user's inventory without removing it from your inventory.</li>
+          <li><kbd>tempcopy</kbd>: Gives a copy that's marked as temporary (even if already marked)</li>
+        </ul></span>
+        <br><span class="cmd_name">/getturf</span><br><span class="cmd_desc">Creates an inventory item that is a copy of the ground tile you are on.</span><br>
+        <br><span class="cmd_name">/getobj</span><br><span class="cmd_desc">Creates inventory items that are copies of every object you are on.</span><br>
+        <br><hr><div class="cmd_group">Permissions</div>
+        <br><span class="cmd_name">/requestpermission user <i>permission</i></span><br><span class="cmd_desc">Requests that the user grants you a temporary permission(s). Permissions can be revoked manually or automatically revoked when either is logged out. Permissions include:
+        <ul>
+          <li><kbd>move: Teleport</kbd> user around the current map.</li>
+          <li><kbd>move_new_map</kbd>: Teleport user between maps.</li>
+          <li><kbd>minigame</kbd>: Act on your control inputs, and/or show you a custom hotbar</li>
+          <li><kbd>set_owner_to_this</kbd>: Set you as the owner of any inventory item belonging to the user.</li>
+          <li><kbd>modify_appearance</kbd>: Allows you to change the user's name, description, avatar, and/or tags</li>
+        </ul></span><br>
+	
+		<hr><div class="cmd_group">Miscellaneous</div>
+        <br><span class="cmd_name">/undodel</span><br><span class="cmd_desc">Undoes your most recent delete</span><br>
+        <br><span class="cmd_name">/releasekeys</span><br><span class="cmd_desc">If a script is currently acting on your inputs, this command will cancel it out.</span><br>
+		<br><span class="cmd_name">/disconnect</span><br><span class="cmd_desc">Disconnect yourself from the server.</span><br>
+
+		<br><hr><div class="cmd_group">Groups</div>The main purpose of groups is to allow granting a permission to every user within a group, and tie the permission to group membership.<br>
+		<br><span class="cmd_name">/newgroup</span><br><span class="cmd_desc">Creates a new group.</span><br>
+		<br><span class="cmd_name">/namegroup id text</span><br><span class="cmd_desc">Rename a group (owner only).</span><br>
+		<br><span class="cmd_name">/descgroup id text</span><br><span class="cmd_desc">Change the description of a group (owner only).</span><br>
+		<br><span class="cmd_name">/changegroupowner id user</span><br><span class="cmd_desc">Transfer ownership from you to another user.</span><br>
+		<br><span class="cmd_name">/deletegroup id</span><br><span class="cmd_desc">Deletes a group (owner only).</span><br>
+		<br><span class="cmd_name">/joingroup id (password)</span><br><span class="cmd_desc">Join a group. A password may be needed if set.</span><br>
+		<br><span class="cmd_name">/joinpassgroup id password</span><br><span class="cmd_desc">Sets a password for joining the group. If left blank, unsets the password.</span><br>
+		<br><span class="cmd_name">/ownedgroups</span><br><span class="cmd_desc">Displays all groups you own.</span><br>
+		<br><span class="cmd_name">/mygroups</span><br><span class="cmd_desc">Displays all groups you are a part of.</span><br>
+		<br><hr><div class="cmd_group">Entities</div>Entities are player objects, inventory items, and anything else that can exist on a map that isn't part of the map data itself. All players are considered entities and it's possible to make NPC entities that players can move and use commands on. There is a utility command name <kbd>/entity</kbd> which can do a variety of actions on entities, with <kbd>/e</kbd> as a shortcut.<br>
+		<br><span class="cmd_name">/e id, /e id info</span><br><span class="cmd_desc">Gets info of entity, such as properties and contents.</span><br>
+		<br><span class="cmd_name">/e id locate</span><br><span class="cmd_desc">Displays where the entity is.</span><br>
+		<br><span class="cmd_name">/e id tags</span><br><span class="cmd_desc">Displays tags associated with the entity.</span><br>
+		<br><span class="cmd_name">/e id addtag tag_group tag value , /e id addtag_root tag value</span><br><span class="cmd_desc">Add a tag to an entity.</span><br>
+		<br><span class="cmd_name">/e id deltag tag_group tag , /e id deltag_root tag</span><br><span class="cmd_desc">Delete a tag from an entity.</span><br>
+		<br><span class="cmd_name">/e id grant permission id , /e id deny permission id , /e id revoke permission id </span><br><span class="cmd_desc">Sets permissions (see Map section for info). There is also <kbd>tempgrant</kbd> & <kbd>temprevoke</kbd> to temporarily grant permissions that will be gone when either entity unloads.</span><br>
+		<br><span class="cmd_name">/e id temprevokeall</span><br><span class="cmd_desc">Revokes all temporary permissions given through tempgrant.</span><br>
+		<br><span class="cmd_name">/e id temprelease user</span><br><span class="cmd_desc">Remove a temp permission given to the entity/user.</span><br>
+		<br><span class="cmd_name">/e id summon</span><br><span class="cmd_desc">Teleports entity to the tile you are on.</span><br>
+		<br><span class="cmd_name">/e id move x y (direction), /e id rmove x y (direction)</span><br><span class="cmd_desc">Moves entity to tile (x,y) on the current map. Direction optional. Using <kbd>rmove</kbd> will relatively move it, adding x and y values to it's current coordinates.</span><br>
+		<br><span class="cmd_name">/e id do <i>command</i></span><br><span class="cmd_desc">Entity will be issued a command to use. For example <kbd>/e id do map mapnumber x y</kbd> will teleport the entity to tile (x,y) on the associated map with the corresponding mapnumber.</span><br>
+
+		<br><hr><div class="cmd_group">Bots</div>
+		Bots can listen to events happening on a map and receive messages as if they were there. See <a href="https://github.com/NovaSquirrel/TilemapTown/blob/main/docs/protocol.txt">the protocol document</a> for more info.<br>
+		<br><span class="cmd_name">/listen category,category,... map_id,map_id,... , /unlisten category,category,... map_id,map_id,... </span><br><span class="cmd_desc">Sets the bot to listen to a specific category of event on a given map id. Bot must have a registered account and have been granted the <kbd>map_bot</kbd> permission for the map in question. The categories to listen in on are:
+		<ul>
+			<li><kbd>move</kbd>: MOV</li>
+			<li><kbd>build</kbd>: PUT, DEL, BLK; will send an initial MAI and MAP</li>
+			<li><kbd>entry</kbd>: WHO; will send an initial WHO</li>
+			<li><kbd>chat</kbd>: MSG</li>
+		</ul>
+		<kbd>/unlisten</kbd> will make the bot stop listening.
+		</span><br>
+		<br><span class="cmd_name">/listeners</span><br><span class="cmd_desc">List all remote clients listening into the map.</span><br>
+		<br><span class="cmd_name">/keep_entities_loaded (id,id,id...)</span><br><span class="cmd_desc">Creates a list of enties to keep loaded. Using <kbd>/keep_entities_loaded</kbd> will reset the list.</span><br>
+		<br><span class="cmd_name">/test_entities_loaded id,id,id...</span><br><span class="cmd_desc">Tests if specific entities are loaded.</span><br>
+		<br><span class="cmd_name">/message_forwarding set entity_id,entity_id,entity_id... (MAP,MAI,PRI ...)</span><br><span class="cmd_desc">Sets messaging forwarding properties. See <a href="https://github.com/NovaSquirrel/TilemapTown/blob/main/docs/protocol.txt">the protocol document</a> for more info.</span><br>
+</div>
 
 </div></div>
 

@@ -344,8 +344,8 @@ bulk_build: Allowed to use builk-build protocol commands (BLK)
 object_entry            : Allowed to bring non-player entities here
 persistent_object_entry : Allowed to bring non-player entities here persistently (otherwise, they'll be sent home when the map unloads)
 modify_properties       : Allowed to modify properties of the map
-remote_command          : Allowed to make the command do a command
-modify_appearance       : Allowed to modify certain properties of the map
+remote_command          : Allowed to make the entity do a command
+modify_appearance       : Allowed to modify certain properties of the map or other entity
 list_contents           : Allowed to get a list of the entities on the map remotely
 set_owner_to_this       : Allowed to set the owner of their entities to this entity
 set_topic               : Allowed to change the topic on this map
@@ -390,7 +390,7 @@ Roll dice, but only show the result to you
 ---Bot commands---
 /listen category,category,... map_id,map_id,...
 /unlisten category,category,... map_id,map_id,...
-Start or stop listening in on a comma separated list of categories and maps. The client's account must be registered and have the map_bot permission granted for the map being listened in on.
+Start or stop listening in on a comma separated list of categories and maps. The client's account must be registered and have been granted the map_bot permission for the map being listened in on.
 
 Protocol messages relayed will have a "remote_map" parameter added to them, with the map ID.
 Messages will also have "username" and "user_id", for PUT, DEL and BLK.
