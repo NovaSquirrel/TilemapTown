@@ -625,7 +625,7 @@ def fn_TSD(connection, map, client, arg, echo):
 		if isinstance(t, str) and string_is_int(t):
 			t = int(t)
 		c = Database.cursor()
-		c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type('tileset'), t,))
+		c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type['tileset'], t,))
 		result = c.fetchone()
 		if result == None:
 			connection.protocol_error(echo, text='Invalid item ID', code='not_found', subject_id=t)
