@@ -126,13 +126,19 @@ AllEntitiesByDB = weakref.WeakValueDictionary() # All entities (indexed by datab
 AllEntitiesByID = weakref.WeakValueDictionary() # All entities (indexed by temporary ID)
 ConnectionsByUsername = weakref.WeakValueDictionary() # Look up connections by lowercased username
 
-# Remote map-watching for bots
-botwatch_type = {}
-botwatch_type['move']  = 0
-botwatch_type['build'] = 1
-botwatch_type['entry'] = 2
-botwatch_type['chat']  = 3
-BotWatch = [{}, {}, {}, {}] # Indexed by client.db_id
+# Remote map-watching for bots (and remote chat)
+maplisten_type = {}
+maplisten_type['move']  = 0
+maplisten_type['build'] = 1
+maplisten_type['entry'] = 2
+maplisten_type['chat']  = 3       # Listen to MSG
+maplisten_type['chat_listen'] = 4 # Listen to chat listens/unlistens
+
+maplisten_type_name = {}
+for k,v in maplisten_type.items():
+	maplisten_type_name[v] = k
+
+MapListens = [{}, {}, {}, {}, {}] # Key:Map ID, Value: A WeakSet of Connection objects
 
 # Entity permissions
 permission = {}                                    # (subject type)
@@ -141,7 +147,7 @@ permission['build']                   = 0x00000002 # (map) user can build on the
 permission['sandbox']                 = 0x00000004 # (map) users can delete any part of the map freely
 permission['admin']                   = 0x00000008 # (all) user is an admin on the map (also allows grant/revoke)
 permission['copy']                    = 0x00000010 # (all) user can make copies of this object
-permission['map_bot']                 = 0x00000020 # (map) user is given bot-related permissions
+permission['map_bot']                 = 0x00000020 # (all) user is given bot-related permissions
 permission['move']                    = 0x00000040 # (all) user can move this object around within the same container
 permission['move_new_map']            = 0x00000080 # (all) user can move this object to a new map
 permission['bulk_build']              = 0x00000100 # (map) user can use the builk building protocol commands
@@ -153,8 +159,7 @@ permission['modify_appearance']       = 0x00002000 # (all) user can modify visua
 permission['list_contents']           = 0x00004000 # (all) user can look at the contents of this entity
 permission['set_owner_to_this']       = 0x00008000 # (all) user can set change the owner of any of their entities to this entity
 permission['set_topic']               = 0x00010000 # (map) user can set the map's discussion topic
-                                    # = 0x00010000
-                                    # = 0x00020000
+permission['remote_chat']             = 0x00020000 # (all) user is allowed to send chat to this entity, and listen to chat in this entity
                                     # = 0x00040000
                                     # = 0x00080000
                                     # = 0x00100000
@@ -210,6 +215,7 @@ entity_type['reference'] = 8
 entity_type['folder'] = 9
 entity_type['landmark'] = 10
 entity_type['generic'] = 11
+entity_type['chatroom'] = 12
 
 # Make the reverse - put in the value, get the name
 entity_type_name = {}
@@ -229,7 +235,7 @@ temporary_id_marker = "~"
 # Used to mark IDs that belong to server-defined global entities (GLOBAL_ENTITY_KEY table)
 global_entity_marker = "!"
 
-creatable_entity_types = ('text', 'image', 'map_tile', 'tileset', 'reference', 'folder', 'landmark', 'generic')
+creatable_entity_types = ('text', 'image', 'map_tile', 'tileset', 'reference', 'folder', 'landmark', 'generic', 'chatroom')
 
 # Important shared functions
 def is_entity(e):
@@ -306,6 +312,23 @@ def find_db_id_by_str(id): # Generic; recognize and handle different prefixes
 	elif isinstance(id, str) and id.isdecimal():
 		return int(id)
 	return None
+
+def entity_id_exists(id):
+	if not valid_id_format(id):
+		return False
+
+	# Replace string with database ID if possible
+	if isinstance(id, str):
+		try_db_id = find_db_id_by_str(id)
+		if try_db_id != None:
+			id = try_db_id
+		if isinstance(id, str):
+			id = int_if_numeric(id)
+	if isinstance(id, int):
+		return get_entity_type_by_db_id(id) != None
+	if id[0] == temporary_id_marker and id[1:].isdecimal():
+		return int(id[1:]) in AllEntitiesByID
+	return False
 
 def get_entity_by_id(id, load_from_db=True):
 	# If it's temporary, get it if it still exists
@@ -441,6 +464,9 @@ def string_is_int(s):
 	if s[0] == '-':
 		return s[1:].isdecimal()
 	return s.isdecimal()
+
+def int_if_numeric(text):
+	return int(text) if string_is_int(text) else text
 
 def make_protocol_message_string(command, params):
 	if params != None:

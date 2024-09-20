@@ -123,10 +123,13 @@ class Map(Entity):
 	def resend_map_info_to_users(self):
 		for user in self.contents:
 			if user.is_client():
-				user.loaded_maps.discard(self.db_id)
-				user.start_batch()
+				connection = user.connection()
+				if not connection:
+					continue
+				connection.loaded_maps.discard(self.db_id)
+				connection.start_batch()
 				self.send_map_info(user)
-				user.finish_batch()
+				connection.finish_batch()
 
 	def remove_from_contents(self, item):
 		super().remove_from_contents(item)

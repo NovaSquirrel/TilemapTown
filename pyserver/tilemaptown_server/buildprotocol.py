@@ -320,7 +320,7 @@ def fn_MOV(connection, map, client, arg, echo):
 			data[valid_field] = arg[valid_field]
 	if not any_valid_fields:
 		return
-	map.broadcast("MOV", data, remote_category=botwatch_type['move'])
+	map.broadcast("MOV", data, remote_category=maplisten_type['move'])
 
 	if 'offset' in data:
 		offset = data['offset']
@@ -611,7 +611,7 @@ def fn_MSG(connection, map, client, arg, echo):
 		if 'rc' in arg:
 			fields['rc_id'] = client.protocol_id()
 			fields['rc_username'] = client.username_or_id()
-		map.broadcast("MSG", fields, remote_category=botwatch_type['chat'])
+		map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
 
 @protocol_command()
 def fn_TSD(connection, map, client, arg, echo):
@@ -691,7 +691,7 @@ def fn_DEL(connection, map, client, arg, echo):
 		# make username available to listeners
 		arg['username'] = client.username_or_id()
 		arg['id'] = client.protocol_id()
-		map.broadcast("DEL", arg, remote_only=True, remote_category=botwatch_type['build'])
+		map.broadcast("DEL", arg, remote_only=True, remote_category=maplisten_type['build'])
 		map.broadcast("DEL", arg, require_extension="receive_build_messages")
 
 		# send map update to everyone on the map
@@ -706,7 +706,7 @@ def fn_PUT(connection, map, client, arg, echo):
 		# make username available to listeners
 		arg['username'] = client.username_or_id()
 		arg['id'] = client.protocol_id()
-		map.broadcast("PUT", arg, remote_only=True, remote_category=botwatch_type['build'])
+		map.broadcast("PUT", arg, remote_only=True, remote_category=maplisten_type['build'])
 		map.broadcast("PUT", arg, require_extension="receive_build_messages")
 
 	temporary = arg.get('temp', False)
@@ -828,7 +828,7 @@ def fn_BLK(connection, map, client, arg, echo):
 			for w in range(width):
 				for h in range(height):
 					map.objs[x+w][y+h] = a
-		map.broadcast("BLK", arg, remote_category=botwatch_type['build'])
+		map.broadcast("BLK", arg, remote_category=maplisten_type['build'])
 	else:
 		connection.protocol_error(echo, text='Bulk building is disabled on this map', code='missing_permission', detail='bulk_build', subject_id=map)
 
@@ -1095,6 +1095,48 @@ def pm_typing_notification(connection, map, client, context, arg, name):
 @ext_protocol_command("list_available_ext_types")
 def list_available_ext_types(connection, map, client, context, arg, name):
 	client.send("EXT", {name: list(ext_handlers.keys())})
+
+def send_ext_listen_status(connection):
+	all_maps = {}
+	for category, map_id in connection.listening_maps:
+		if map_id not in all_maps:
+			all_maps[map_id] = []
+		all_maps[map_id].append(maplisten_type_name[category])
+	connection.send("EXT", {"listen_status": {"maps": all_maps}})
+
+@ext_protocol_command("listen")
+def ext_listen(connection, map, client, context, arg, name):
+	categories = arg["types"]
+	maps = set((int_if_numeric(x) if isinstance(x, str) else x) for x in arg["list"])
+
+	client.start_batch()
+	for category_name in categories:
+		# find category id from name
+		if category_name not in maplisten_type:
+			continue
+		category_id = maplisten_type[category_name]
+
+		for map_id in maps:
+			client.try_to_listen(map_id, category_id)
+	client.finish_batch()
+	send_ext_listen_status(connection)
+
+@ext_protocol_command("unlisten")
+def ext_unlisten(connection, map, client, context, arg, name):
+	categories = arg["types"]
+	maps = set((int_if_numeric(x) if isinstance(x, str) else x) for x in arg["list"])
+
+	client.start_batch()
+	for category_name in categories:
+		# find category id from name
+		if category_name not in maplisten_type:
+			continue
+		category_id = maplisten_type[category_name]
+
+		for map_id in maps:
+			client.unlisten(map_id, category_id)
+	client.finish_batch()
+	send_ext_listen_status(connection)
 
 @protocol_command()
 def fn_EXT(connection, map, client, arg, echo):

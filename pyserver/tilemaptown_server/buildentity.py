@@ -321,6 +321,10 @@ class Entity(PermissionsMixin, object):
 						u.send_home()
 
 			self.cleaned_up_already = True
+		if self.temporary:
+			protocol_id = self.protocol_id()
+			for category in MapListens:
+				category.pop(protocol_id, None)
 
 	def send(self, commandType, commandParams):
 		# Treat chat as a separate pseudo message type
@@ -360,24 +364,26 @@ class Entity(PermissionsMixin, object):
 		pass
 
 	# Send a message to all contents
-	def broadcast(self, command_type, command_params, remote_category=None, remote_only=False, send_to_links=False, require_extension=None):
+	def broadcast(self, command_type, command_params, remote_category=None, remote_only=False, send_to_links=False, require_extension=None, only_send_if=None):
 		""" Send a message to everyone on the map """
 		if not remote_only and self.contents:
 			is_chat = command_type == 'MSG' and command_params and 'name' in command_params
 			send_me = make_protocol_message_string(command_type, command_params) # Get the string once and reuse it
 			for client in self.contents:
+				if only_send_if and not only_send_if(client):
+					continue
 				if require_extension == None:
 					client.send_string(send_me, is_chat=is_chat)
 				elif client.is_client() and client.connection_attr(require_extension):
 					client.send_string(send_me, is_chat=is_chat)
 
-		# Add remote map on the params if needed
+		# Add remote map on the params if needed, so that linked maps and listeners can see where the message came from
 		do_linked = send_to_links and self.is_map() and self.edge_ref_links
-		do_listeners = remote_category != None and self.db_id in BotWatch[remote_category]
+		do_listeners = remote_category != None and self.protocol_id() in MapListens[remote_category]
 		if do_linked or do_listeners:
 			if command_params == None:
 				command_params = {}
-			command_params['remote_map'] = self.db_id
+			command_params['remote_map'] = self.protocol_id()
 		else:
 			return
 
@@ -389,15 +395,20 @@ class Entity(PermissionsMixin, object):
 				for client in linked_map.contents:
 					if not client.is_client():
 						continue
+					if only_send_if and not only_send_if(client):
+						continue
 					if not client.connection_attr('see_past_map_edge') or (require_extension != None and not client.connection_attr(require_extension)):
 						continue
 					client.send(command_type, command_params)
 
 		""" Also send it to any registered listeners """
 		if do_listeners:
-			for connection in BotWatch[remote_category][self.db_id]:
+			protocol_id = self.protocol_id()
+			for connection in MapListens[remote_category][protocol_id]:
 				# don't send twice to people on the map
-				if not remote_only and (connection.map_id == self.db_id):
+				if not remote_only and (connection.entity.map_id == protocol_id):
+					continue
+				if only_send_if and not only_send_if(connection.entity):
 					continue
 				if require_extension == None or getattr(connection, require_extension):
 					connection.send(command_type, command_params)
@@ -417,11 +428,11 @@ class Entity(PermissionsMixin, object):
 			item.send("WHO", {'list': self.who_contents(), 'you': item.protocol_id()})
 
 		# Tell everyone in the container that the new item was added
-		self.broadcast("WHO", {'add': item.who()}, remote_category=botwatch_type['entry'])
+		self.broadcast("WHO", {'add': item.who()}, remote_category=maplisten_type['entry'])
 
 		# Warn about chat listeners, if present
 		if item.is_client():
-			if self.db_id in BotWatch[botwatch_type['chat']]:
+			if self.db_id in MapListens[maplisten_type['chat']]:
 				item.send("MSG", {'text': 'A bot has access to messages sent here ([command]listeners[/command])'})
 			self.send_map_info(item)
 
@@ -435,7 +446,7 @@ class Entity(PermissionsMixin, object):
 		item.map = None
 
 		# Tell everyone in the container that the item was removed
-		self.broadcast("WHO", {'remove': item.protocol_id()}, remote_category=botwatch_type['entry'])
+		self.broadcast("WHO", {'remove': item.protocol_id()}, remote_category=maplisten_type['entry'])
 
 		# Notify parents
 		for parent in self.all_parents():
@@ -549,9 +560,9 @@ class Entity(PermissionsMixin, object):
 		other.passengers.add(self)
 
 		if self.map != None:
-			self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['move'])
+			self.map.broadcast("WHO", {'add': self.who()}, remote_category=maplisten_type['move'])
 		if other.map != None:
-			other.map.broadcast("WHO", {'add': other.who()}, remote_category=botwatch_type['move'])
+			other.map.broadcast("WHO", {'add': other.who()}, remote_category=maplisten_type['move'])
 
 		self.switch_map(other.map_id, new_pos=[other.x, other.y], on_behalf_of=other)
 		self.finish_batch()
@@ -579,9 +590,9 @@ class Entity(PermissionsMixin, object):
 
 			# Notify other people
 			if self.map != None:
-				self.map.broadcast("WHO", {'add': self.who()}, remote_category=botwatch_type['move'])
+				self.map.broadcast("WHO", {'add': self.who()}, remote_category=maplisten_type['move'])
 			if other.map != None:
-				other.map.broadcast("WHO", {'add': other.who()}, remote_category=botwatch_type['move'])
+				other.map.broadcast("WHO", {'add': other.who()}, remote_category=maplisten_type['move'])
 		elif not no_error:
 			self.send("ERR", {'text': 'You\'re not being carried'})
 
@@ -614,7 +625,7 @@ class Entity(PermissionsMixin, object):
 					u.move_to(old_x, old_y, old_dir if new_dir != None else None, already_moved=already_moved)
 				else:
 					u.move_to(x, y, new_dir, already_moved=already_moved)
-				u.map.broadcast("MOV", {'id': u.protocol_id(), 'to': [u.x, u.y], 'dir': u.dir}, remote_category=botwatch_type['move'])
+				u.map.broadcast("MOV", {'id': u.protocol_id(), 'to': [u.x, u.y], 'dir': u.dir}, remote_category=maplisten_type['move'])
 
 	# Other movement
 
@@ -683,10 +694,10 @@ class Entity(PermissionsMixin, object):
 			if edge_warp:
 				params['edge_warp'] = True
 				params['dir'] = self.dir
-			self.map.broadcast("MOV", params, remote_category=botwatch_type['move'])
+			self.map.broadcast("MOV", params, remote_category=maplisten_type['move'])
 		elif new_pos == None and goto_spawn and self.map.is_map():
 			self.move_to(self.map.start_pos[0], self.map.start_pos[1], is_teleport=True)
-			self.map.broadcast("MOV", {'id': self.protocol_id(), 'to': [self.x, self.y]}, remote_category=botwatch_type['move'])
+			self.map.broadcast("MOV", {'id': self.protocol_id(), 'to': [self.x, self.y]}, remote_category=maplisten_type['move'])
 
 		self.finish_batch()
 
@@ -857,7 +868,24 @@ class Entity(PermissionsMixin, object):
 		if self.db_id:
 			return
 		if self.map:
-			self.map.broadcast("WHO", {'new_id': {'id': self.protocol_id(), 'new_id': id}}, remote_category=botwatch_type['move'])
+			self.map.broadcast("WHO", {'new_id': {'id': self.protocol_id(), 'new_id': id}}, remote_category=maplisten_type['move'])
+
+		# If this client is listening to any map's chat, tell any clients listening to changes in the listener list that this ID has changed
+		if self.is_client():
+			listening_maps = self.connection_attr('listening_maps')
+			if listening_maps:
+				for category, map_id in listening_maps:
+					if category != maplisten_type['chat']:
+						continue
+					for other_connection in MapListens[maplisten_type['chat_listen']].get(map_id, tuple()):
+						other_connection.start_batch()
+						other_connection.send("WHO", {'type': 'chat_listeners', 'new_id': {'id': self.protocol_id(), 'new_id': id}, 'remote_map': map_id})
+						if hasattr(self, 'username'):
+							other_connection.send("WHO", {'type': 'chat_listeners', 'update': {'id': id, 'username': self.username}, 'remote_map': map_id})
+						other_connection.finish_batch()
+
+		# Don't need to update user watching because you can't watch someone who doesn't have a database ID
+
 		self.db_id = id
 		AllEntitiesByDB[self.db_id] = self
 

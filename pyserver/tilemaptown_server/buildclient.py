@@ -18,7 +18,7 @@ import asyncio, datetime, time, random, websockets, json, hashlib, ipaddress, we
 from .buildglobal import *
 from .buildentity import *
 
-userCounter = 1
+userEntityCounter = 1
 
 class ClientMixin(object):
 	def send(self, command_type, command_params):
@@ -52,6 +52,29 @@ class ClientMixin(object):
 			return getattr(connection, attribute)
 		return None
 
+	def try_to_listen(self, map_id, category_id, send_error=False):
+		connection = self.connection()
+		if not connection or not entity_id_exists(map_id):
+			print("Doesn't exist")
+			return False
+		# If map_id is an alias, try to turn it into a real database ID, otherwise leave it as a temporary ID
+		if isinstance(map_id, str):
+			map_id = find_db_id_by_str(map_id) or map_id
+		# Permission check
+		if not self.has_permission(map_id, permission['map_bot'], False) \
+		and not (category_id in (maplisten_type['chat'], maplisten_type['chat_listen']) and self.has_permission(map_id, permission['remote_chat'], False)):
+			return False
+		connection.listen(map_id, category_id)
+		return True
+
+	def unlisten(self, map_id, category_id):
+		connection = self.connection()
+		if not connection:
+			return
+		# If map_id is an alias, try to turn it into a real database ID, otherwise leave it as a temporary ID
+		map_id = find_db_id_by_str(map_id) or map_id
+		connection.unlisten(map_id, category_id)
+
 	@property
 	def username(self):
 		return self.connection_attr('username')
@@ -60,10 +83,10 @@ class Client(ClientMixin, Entity):
 	def __init__(self, connection):
 		super().__init__(entity_type['user'])
 
-		global userCounter
+		global userEntityCounter
 		self.connection = weakref.ref(connection)
-		self.name = 'Guest '+ str(userCounter)
-		userCounter += 1
+		self.name = 'Guest '+ str(userEntityCounter)
+		userEntityCounter += 1
 		self.pic = [0, 2, 25]
 
 		self.saved_pics = {}
@@ -203,7 +226,7 @@ class Connection(object):
 		# Remove these entities when you log out
 		self.cleanup_entities_on_logout = weakref.WeakSet()
 
-		# Allow cleaning up BotWatch info
+		# Allow cleaning up MapListens info
 		self.listening_maps = set() # tuples of (category, map)
 
 		# Stats
@@ -386,7 +409,7 @@ class Connection(object):
 				if client.map:
 					if announce_login:
 						client.map.broadcast("MSG", {'text': client.name+" has logged in ("+username+")"})
-					client.map.broadcast("WHO", {'add': client.who()}, remote_category=botwatch_type['entry']) # update client view
+					client.map.broadcast("WHO", {'add': client.who()}, remote_category=maplisten_type['entry']) # update client view
 				else:
 					client.send("MSG", {'text': "Your last map wasn't saved correctly. Sending you to the default one..."})
 					client.switch_map(get_database_meta('default_map'))
@@ -495,6 +518,13 @@ class Connection(object):
 					return True
 		return False
 
+	def listener_who(self):
+		return {
+			'id': self.entity.protocol_id(),
+			'name': self.entity.name if hasattr(self.entity, 'name') else None,
+			'username': self.username,
+		}
+
 	def watcher_who(self):
 		return {
 			'id': self.db_id,
@@ -541,6 +571,52 @@ class Connection(object):
 				# Does not actually seem to go through, might need some refactoring
 				self.send("ERR", {'text': text})
 			asyncio.ensure_future(self.ws.close(reason=reason))
+
+	def listen(self, map_id, category_id):
+		# Create if it doesn't already exist
+		if map_id not in MapListens[category_id]:
+			MapListens[category_id][map_id] = weakref.WeakSet()
+
+		MapListens[category_id][map_id].add(self)
+		self.listening_maps.add((category_id, map_id))
+
+		# Certain kinds of listens send initial data
+		if category_id == maplisten_type['build']:
+			if get_entity_type_by_db_id(m) == entity_type['map']:
+				self.start_batch()
+				map = get_entity_by_id(map_id)
+				data = map.map_info()
+				data['remote_map'] = map_id
+				self.send("MAI", data)
+
+				data = map.map_section(0, 0, map.width-1, map.height-1)
+				data['remote_map'] = map_id
+				self.send("MAP", data)
+				self.finish_batch()
+		elif category_id == maplisten_type['entry']:
+			if map_id in AllEntitiesByDB: # Entity currently loaded
+				self.send("WHO", {'list': AllEntitiesByDB[map_id].who_contents(), 'remote_map': map_id})
+			else:                         # Entity is not loaded
+				self.send("WHO", {'list': [], 'remote_map': map_id})
+		elif category_id == maplisten_type['chat']:
+			for connection in MapListens[maplisten_type['chat_listen']].get(map_id, tuple()):
+				connection.send("WHO", {'type': 'chat_listeners', 'add': self.listener_who(), 'remote_map': map_id})
+
+		elif category_id == maplisten_type['chat_listen']:
+			self.send("WHO", {'type': 'chat_listeners', 'list': [connection.listener_who() for connection in MapListens[maplisten_type['chat']].get(map_id, tuple())], 'remote_map': map_id})
+
+	def unlisten(self, map_id, category_id):
+		# If you stop listening on chat, that itself is an event someone may be listening on
+		if category_id == maplisten_type['chat']:
+			for connection in MapListens[maplisten_type['chat_listen']].get(map_id, tuple()):
+				connection.send("WHO", {'type': 'chat_listeners', 'remove': self.entity.protocol_id(), 'remote_map': map_id})
+
+		if (map_id in MapListens[category_id]) and (self in MapListens[category_id][map_id]):
+			MapListens[category_id][map_id].remove(self)
+			if not len(MapListens[category_id][map_id]):
+				del MapListens[category_id][map_id]
+
+		self.listening_maps.discard((category_id, map_id))
 
 class FakeClient(PermissionsMixin, ClientMixin, object):
 	def __init__(self, connection):

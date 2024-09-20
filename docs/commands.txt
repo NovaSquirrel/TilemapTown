@@ -390,7 +390,7 @@ Roll dice, but only show the result to you
 ---Bot commands---
 /listen category,category,... map_id,map_id,...
 /unlisten category,category,... map_id,map_id,...
-Start or stop listening in on a comma separated list of categories and maps. The client's account must be registered and have been granted the map_bot permission for the map being listened in on.
+Start or stop listening in on a comma separated list of categories and maps. The client's account must be registered and have been granted the map_bot permission for the map being listened in on. "chat" and "chat_listen" may alternatively be done through the remote_chat permission.
 
 Protocol messages relayed will have a "remote_map" parameter added to them, with the map ID.
 Messages will also have "username" and "user_id", for PUT, DEL and BLK.
@@ -400,9 +400,11 @@ move:  MOV
 build: PUT, DEL, BLK
 entry: WHO
 chat:  MSG
+chat_listen: sends WHO messages when users start and stop listening to chat on this entity
 
 "build" sends an initial MAI and MAP to the listener 
 "entry" sends an initial WHO to the listener
+"chat_listen" sends an initial WHO to the listener
 
 /listeners
 List all remote clients currently listening in on the map

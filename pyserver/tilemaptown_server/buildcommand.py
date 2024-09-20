@@ -203,7 +203,17 @@ def fn_nick(map, client, context, arg):
 	if len(arg) > 0 and not arg.isspace():
 		map.broadcast("MSG", {'text': "\""+client.name+"\" is now known as \""+escape_tags(arg)+"\""})
 		client.name = escape_tags(arg)
-		map.broadcast("WHO", {'add': client.who()}, remote_category=botwatch_type['entry']) # update client view
+		map.broadcast("WHO", {'add': client.who()}, remote_category=maplisten_type['entry']) # update client view
+
+	# If this client is listening to any map's chat, tell any clients listening to changes in the listener list the name has changed
+	if client.is_client():
+		listening_maps = client.connection_attr('listening_maps')
+		if listening_maps:
+			for category, map_id in listening_maps:
+				if category != maplisten_type['chat']:
+					continue
+				for other_connection in MapListens[maplisten_type['chat_listen']].get(map_id, tuple()):
+					other_connection.send("WHO", {'type': 'chat_listeners', 'add': client.connection_attr('listener_who')(), 'remote_map': map_id})
 
 @cmd_command(category="Settings", syntax="description")
 def fn_userdesc(map, client, context, arg):
@@ -220,14 +230,14 @@ def fn_say(map, client, context, arg):
 	respond_to = context[0]
 	if arg != '':
 		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': escape_tags(arg), 'rc_username': respond_to.username_or_id(), 'rc_id': respond_to.protocol_id()}
-		map.broadcast("MSG", fields, remote_category=botwatch_type['chat'])
+		map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
 
 @cmd_command(category="Communication")
 def fn_me(map, client, context, arg):
 	respond_to = context[0]
 	if arg != '':
 		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': "/me "+escape_tags(arg), 'rc_username': respond_to.username_or_id(), 'rc_id': respond_to.protocol_id()}
-		map.broadcast("MSG", fields, remote_category=botwatch_type['chat'])
+		map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
 
 def send_private_message(client, context, recipient_username, text):
 	if recipient_username != "":
@@ -546,9 +556,9 @@ def fn_tpaccept(map, client, context, arg):
 		subject.passengers.add(client)
 
 		if client.map != None:
-			client.map.broadcast("WHO", {'add': client.who()}, remote_category=botwatch_type['move'])
+			client.map.broadcast("WHO", {'add': client.who()}, remote_category=maplisten_type['move'])
 		if subject.map != None:
-			subject.map.broadcast("WHO", {'add': subject.who()}, remote_category=botwatch_type['move'])
+			subject.map.broadcast("WHO", {'add': subject.who()}, remote_category=maplisten_type['move'])
 
 		client.switch_map(subject.map_id, new_pos=[subject.x, subject.y], on_behalf_of=subject)
 		client.finish_batch()
@@ -919,7 +929,7 @@ def permission_change(map, client, context, arg, command2):
 		return
 
 	# Guest permissions
-	if param[1] == '!guest':
+	if param[1] == '!guest' or param[1] == '!guests':
 		if command2 == "deny":
 			map.guest_deny |= permission_value
 		elif command2 == "revoke":
@@ -1341,8 +1351,8 @@ def fn_listeners(map, client, context, arg):
 		return
 
 	out = ''
-	for i in botwatch_type.keys():
-		c = botwatch_type[i]
+	for i in maplisten_type.keys():
+		c = maplisten_type[i]
 		if map.db_id in BotWatch[c]:
 			for u in BotWatch[c][map.db_id]:
 				out += '%s (%s), ' % (u.username, i)
@@ -1360,74 +1370,43 @@ def fn_listeners(map, client, context, arg):
 		parts = ['Nothing is listening to this map']
 	respond(context, ' | '.join(parts))
 
-@cmd_command(privilege_level="registered", syntax="category,category,category... id,id,id...", no_entity_needed=True)
+@cmd_command(syntax="category,category,category... id,id,id...", no_entity_needed=True)
 def fn_listen(map, client, context, arg):
-	connection = client.connection()
-	if not connection:
-		return
 	params = arg.split()
 	categories = set(params[0].split(','))
-	maps = set(int(x) for x in params[1].split(','))
-	for c in categories:
-		# find category number from name
-		if c not in botwatch_type:
-			respond(context, 'Invalid listen category: %s' % c, error=True)
-			return
-		category = botwatch_type[c]
+	maps = set((int_if_numeric(x) if isinstance(x, str) else x) for x in params[1].split(','))
 
-		for m in maps:
-			if not client.has_permission(m, permission['map_bot'], False):
-				respond(context, 'Don\t have permission to listen on map: %d' % m, error=True)
-				return
-			if m not in BotWatch[category]:
-				BotWatch[category][m] = set()
-			BotWatch[category][m].add(client)
-			connection.listening_maps.add((category, m))
+	client.start_batch()
+	for category_name in categories:
+		# find category id from name
+		if category_name not in maplisten_type:
+			respond(context, 'Invalid listen category: %s' % category_name, error=True)
+			continue
+		category_id = maplisten_type[category_name]
 
-			# Send initial data
-			if c == 'build':
-				if get_entity_type_by_db_id(m) == entity_type['map']:
-					client.start_batch()
-					map = get_entity_by_id(m)
-					data = map.map_info()
-					data['remote_map'] = m
-					client.send("MAI", data)
+		for map_id in maps:
+			if not client.try_to_listen(map_id, category_id):
+				respond(context, 'Don\'t have permission to listen on "%s" in %s' % (category_name, map_id), error=True)
+				continue
+	client.finish_batch()
 
-					data = map.map_section(0, 0, map.width-1, map.height-1)
-					data['remote_map'] = mh
-					client.send("MAP", data)
-					client.finish_batch()
-			elif c == 'entry':
-				if m in AllEntitiesByDB:
-					client.send("WHO", {'list': AllEntitiesByDB[m].who_contents(), 'remote_map': m})
-				else:
-					client.send("WHO", {'list': [], 'remote_map': m})
-
-	respond(context, 'Listening on maps now: ' + str(client.listening_maps))
-
-@cmd_command(privilege_level="registered", syntax="category,category,category... id,id,id...", no_entity_needed=True)
+@cmd_command(syntax="category,category,category... id,id,id...", no_entity_needed=True)
 def fn_unlisten(map, client, context, arg):
-	connection = client.connection()
-	if not connection:
-		return
 	params = arg.split()
 	categories = set(params[0].split(','))
-	maps = [int(x) for x in params[1].split(',')]
-	for c in categories:
-		# find category number from name
-		if c not in botwatch_type:
-			respond(context, 'Invalid listen category: "%s"' % c, error=True)
-			return
-		category = botwatch_type[c]
+	maps = set((int_if_numeric(x) if isinstance(x, str) else x) for x in params[1].split(','))
 
-		for m in maps:
-			if (m in BotWatch[category]) and (client in BotWatch[category][m]):
-				BotWatch[category][m].remove(client)
-				if not len(BotWatch[category][m]):
-					del BotWatch[category][m]
-			if (category, m) in client.listening_maps:
-				connection.listening_maps.remove((category, m))
-	respond(context, 'Stopped listening on maps: ' + str(client.listening_maps))
+	client.start_batch()
+	for category_name in categories:
+		# find category id from name
+		if category_name not in maplisten_type:
+			respond(context, 'Invalid listen category: %s' % category_name, error=True)
+			continue
+		category_id = maplisten_type[category_name]
+
+		for map_id in maps:
+			client.unlisten(map_id, category_id)
+	client.finish_batch()
 
 def kick_and_ban(map, client, context, arg, ban):
 	arg = arg.lower()
@@ -1908,10 +1887,10 @@ def fn_offset(map, client, context, arg):
 	if len(arg) == 2:
 		offset_x, offset_y = min(32, max(-32, int(arg[0]))), min(32, max(-32, int(arg[1])))
 		client.offset = [offset_x, offset_y]
-		map.broadcast("MOV", {"id": client.protocol_id(), "offset": [offset_x, offset_y]}, remote_category=botwatch_type['move'])
+		map.broadcast("MOV", {"id": client.protocol_id(), "offset": [offset_x, offset_y]}, remote_category=maplisten_type['move'])
 	else:
 		client.offset = None
-		map.broadcast("MOV", {"id": client.protocol_id(), "offset": None}, remote_category=botwatch_type['move'])
+		map.broadcast("MOV", {"id": client.protocol_id(), "offset": None}, remote_category=maplisten_type['move'])
 
 @cmd_command(category="Settings", syntax='"x y"')
 def fn_roffset(map, client, context, arg):
@@ -1922,10 +1901,10 @@ def fn_roffset(map, client, context, arg):
 			offset = [0, 0]
 		offset_x, offset_y = min(32, max(-32, offset[0] + int(arg[0]))), min(32, max(-32, offset[1] + int(arg[1])))
 		client.offset = [offset_x, offset_y]
-		map.broadcast("MOV", {"id": client.protocol_id(), "offset": [offset_x, offset_y]}, remote_category=botwatch_type['move'])
+		map.broadcast("MOV", {"id": client.protocol_id(), "offset": [offset_x, offset_y]}, remote_category=maplisten_type['move'])
 	else:
 		client.offset = None
-		map.broadcast("MOV", {"id": client.protocol_id(), "offset": None}, remote_category=botwatch_type['move'])
+		map.broadcast("MOV", {"id": client.protocol_id(), "offset": None}, remote_category=maplisten_type['move'])
 
 @cmd_command(category="Who", no_entity_needed=True)
 def fn_gwho(map, client, context, arg):
@@ -2256,7 +2235,7 @@ def fn_undodel(map, client, context, arg):
 	write_to_build_log(map, client, "DEL", "undo:%d,%d,%d,%d" % (pos[0], pos[1], pos[2], pos[3]))
 
 	map.apply_map_section(connection.undo_delete_data)
-	map.broadcast("DEL", {"undo": True, "pos": connection.undo_delete_data["pos"], "username": client.username_or_id()}, remote_only=True, remote_category=botwatch_type['build'])
+	map.broadcast("DEL", {"undo": True, "pos": connection.undo_delete_data["pos"], "username": client.username_or_id()}, remote_only=True, remote_category=maplisten_type['build'])
 	connection.undo_delete_data = None
 
 	respond(context, "🐶 Undid the delete!")
@@ -2487,9 +2466,9 @@ def fn_entity(map, client, context, arg):
 				e.move_to(new_x, new_y) # Will mark the entity for saving
 				if e.map:
 					if e.is_client():
-						e.map.broadcast("MOV", {'id': e.protocol_id(), 'to': [new_x, new_y], 'dir': e.dir}, remote_category=botwatch_type['move'])
+						e.map.broadcast("MOV", {'id': e.protocol_id(), 'to': [new_x, new_y], 'dir': e.dir}, remote_category=maplisten_type['move'])
 					else:
-						e.map.broadcast("MOV", {'id': e.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e.dir}, remote_category=botwatch_type['move'])
+						e.map.broadcast("MOV", {'id': e.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e.dir}, remote_category=maplisten_type['move'])
 	elif subcommand == 'move':
 		if permission_check(permission['move']):
 			coords = subarg.split()
@@ -2503,9 +2482,9 @@ def fn_entity(map, client, context, arg):
 				e.move_to(new_x, new_y) # Will mark the entity for saving
 				if e.map:
 					if e.is_client():
-						e.map.broadcast("MOV", {'id': e.protocol_id(), 'to': [new_x, new_y], 'dir': e.dir}, remote_category=botwatch_type['move'])
+						e.map.broadcast("MOV", {'id': e.protocol_id(), 'to': [new_x, new_y], 'dir': e.dir}, remote_category=maplisten_type['move'])
 					else:
-						e.map.broadcast("MOV", {'id': e.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e.dir}, remote_category=botwatch_type['move'])
+						e.map.broadcast("MOV", {'id': e.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e.dir}, remote_category=maplisten_type['move'])
 	elif subcommand == 'perms':
 		handlers['permlist'](e, client, context, subarg)
 	elif subcommand == 'permsfor':

@@ -176,13 +176,16 @@ There may be an additional boolean field named "update" which is set to true whe
 "add" can be used to do an update too, where it will replace a whole entry with new data.
 "update" can be used for partial updates, where only the fields present in the message are updated and other fields are left alone.
 "remove" requests that a specific item be removed.
-"new_id" is mostly used when a temporary object gets saved to the database, 
+"new_id" is used when a temporary object gets saved to the database, or when a user logs in after starting as a guest.
 For WHO update, you can supply another ID instead of yours with the "rc" parameter, if you have "remote_command" permission for that entity.
 
 A server-->client WHO may have a "type" parameter on it, which indicates which user list specifically is being managed here.
 If it's not present, treat it like it's "map"; values are:
 	"map" - User list for a map (usually the one the player is currently in; "remote_map" will be provided if not)
 	"watch" - Users in your watch list that are currently online; only received if you specify the extension "user_watch_with_who"
+		Will contain "id", "username", "status", "stats_message", "in_world"
+	"chat_listeners" - User list currently listening in on chat on a map (which will be specified with "remote_map"); only received if you specifically opt into receiving this information with a /listen
+		Will contain "id", "name" and "username"
 
 Clients can send updates about themselves, but only keys that the servers knows to be OK, such as "typing".
 For client-to-server WHO updates, "id" is ignored if provided.
@@ -522,6 +525,14 @@ The message the other user receives will have the name, ID, and username added o
 
 <-- EXT {"settings": {"client_settings": text, "watch_list": [list], "ignore_list": [list]}}
 Gives you the text you most recently put into the /client_settings command
+
+--> EXT {"listen": {"types": ["move", "build", "entry", "chat", "chat_listen"], "list": [id, id, id...]}}
+<-- EXT {"listen_status": {"maps": {"map1": ["move", "build"], "map2": ["move", "build"], ...}}}
+
+--> EXT {"unlisten": {"types": ["move", "build", "entry", "chat", "chat_listen"], "list": [id, id, id...]}}
+<-- EXT {"listen_status": {"maps": {"map1": ["move", "build"], "map2": ["move", "build"], ...}}}
+These are alternatives to the /listen and /unlisten commands (described in the command document) that do not create ERR messages, and send a status messages with a complete list of listens.
+
 
 === Extension: bulk_build ===
 This extension allows a client to request multiple map changes in one message, including operations like copies.

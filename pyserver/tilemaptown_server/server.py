@@ -108,14 +108,21 @@ async def client_handler(websocket, path):
 			connection.idle_timer = 0
 			echo = arg.get("echo", None)
 			if "remote_map" in arg:
-				if arg["remote_map"] in AllEntitiesByDB:
-					map = AllEntitiesByDB[arg["remote_map"]]
-					if map.has_permission(connection.entity, permission['map_bot'], False):
+				map = get_entity_by_id(arg["remote_map"], load_from_db=False)
+				if map != None:
+					if connection.entity.has_permission(map, permission['map_bot'], False) \
+					or (command == 'MSG' and connection.entity.has_permission(map, permission['remote_chat'], False)):
 						handle_protocol_command(connection, map, connection.entity, command, arg, echo)
 					else:
-						connection.entity.send("ERR", {'text': 'You do not have [tt]map_bot[/tt] permission on map %d' % arg["remote_map"], 'code':'missing_permission', 'detail':'map_bot', 'subject_id': arg["remote_map"], 'echo': echo})
+						connection.entity.send("ERR", {
+							'text': 'You do not have [tt]%s[/tt] permission on map %d' % ('remote_chat' if command == 'MSG' else 'map_bot', arg["remote_map"]),
+							'code':'missing_permission',
+							'detail':'map_bot',
+							'subject_id': arg["remote_map"],
+							'echo': echo
+						})
 				else:
-					connection.entity.send("ERR", {'text': 'Map %d is not loaded' % arg["remote_map"], 'code': 'not_loaded', 'subject_id': arg["remote_map"], 'echo': echo})
+					connection.entity.send("ERR", {'text': 'Map %s is not loaded' % arg["remote_map"], 'code': 'not_loaded', 'subject_id': arg["remote_map"], 'echo': echo})
 			else:
 				handle_protocol_command(connection, connection.entity.map, connection.entity, command, arg, echo) # client.map may be None
 
@@ -148,9 +155,10 @@ async def client_handler(websocket, path):
 			traceback.print_tb(sys.exc_info()[2])
 		#	raise
 
-	# Clean up connection
-	for p in connection.listening_maps:
-		BotWatch[p[0]][p[1]].remove(connection)
+	# Clean up connection, including any listens the connection had
+	listens = set(connection.listening_maps)
+	for category, map_id in listens:
+		connection.unlisten(map_id, category)
 	for e in connection.cleanup_entities_on_logout:
 		e.clean_up()
 

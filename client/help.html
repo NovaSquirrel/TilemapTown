@@ -479,12 +479,13 @@ table, td, tr, th{
 
 		<br><hr><div class="cmd_group">Bots</div>
 		Bots can listen to events happening on a map and receive messages as if they were there. See <a href="https://github.com/NovaSquirrel/TilemapTown/blob/main/docs/protocol.txt">the protocol document</a> for more info.<br>
-		<br><span class="cmd_name">/listen category,category,... map_id,map_id,... , /unlisten category,category,... map_id,map_id,... </span><br><span class="cmd_desc">Sets the bot to listen to a specific category of event on a given map id. Bot must have a registered account and have been granted the <kbd>map_bot</kbd> permission for the map in question. The categories to listen in on are:
+		<br><span class="cmd_name">/listen category,category,... map_id,map_id,... , /unlisten category,category,... map_id,map_id,... </span><br><span class="cmd_desc">Sets the bot to listen to a specific category of event on a given map id. Bot must have been granted the <kbd>map_bot</kbd> permission for the map in question, though <kbd>remote_chat</kbd> is also acceptable for the <kbd>chat</kbd> and <kbd>chat_listen</kbd> categories specifically. The categories to listen in on are:
 		<ul>
 			<li><kbd>move</kbd>: MOV</li>
 			<li><kbd>build</kbd>: PUT, DEL, BLK; will send an initial MAI and MAP</li>
 			<li><kbd>entry</kbd>: WHO; will send an initial WHO</li>
 			<li><kbd>chat</kbd>: MSG</li>
+			<li><kbd>chat_listen</kbd>: sends WHO messages when users start and stop listening to chat on this entity; refer to the protocol document for more info</li>
 		</ul>
 		<kbd>/unlisten</kbd> will make the bot stop listening.
 		</span><br>

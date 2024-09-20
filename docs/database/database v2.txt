@@ -28,6 +28,7 @@ General:
 		9 folder     (for categorization; holds any number of other assets)
 		10 landmark  (holds a location and provides the ability to quickly teleport to it)
 		11 generic   (generic entity, used for things like props or puppets)
+		12 chatroom  (entity specifically made to be a chat)
 
 	name            - text    - name (for display and disambiguation purposes, not to persistently identify a specific entity)
 	desc            - text    - description of the entity
