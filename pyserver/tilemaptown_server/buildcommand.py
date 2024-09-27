@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2023 NovaSquirrel
+# Copyright (C) 2017-2024 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -849,7 +849,7 @@ def fn_unwatch(map, client, context, arg):
 def fn_watchlist(map, client, context, arg):
 	respond(context, 'Watch list: '+str(client.connection_attr('watch_list')))
 
-user_changeable_flags = ('bot', 'hide_location', 'hide_api', 'no_watch')
+user_changeable_flags = ('bot', 'hide_location', 'hide_api', 'no_watch', 'secret_pic')
 @cmd_command(category="Settings", alias=['userflag'])
 def fn_userflags(map, client, context, arg):
 	connection = client.connection()
@@ -1828,6 +1828,14 @@ def morph_shared(map, client, context, arg, quiet):
 		client.desc = morph.get('desc', None)
 		client.saved_pics = morph.get('saved_pics', None)
 		client.tags = morph.get('tags', {})
+
+		connection = client.connection()
+		if connection:
+			if morph.get('secret_pic', False):
+				connection.user_flags |= userflag['secret_pic']
+			else:
+				connection.user_flags &= ~userflag['secret_pic']
+
 		client.broadcast_who()
 		if client.name != old_name and not quiet:
 			map.broadcast("MSG", {'text': "\""+old_name+"\" switches to \""+client.name+"\""})
@@ -1858,7 +1866,8 @@ def fn_morphlist(map, client, context, arg):
 			'pic': client.pic,
 			'desc': client.desc,
 			'saved_pics': client.saved_pics,
-			'tags': client.tags
+			'tags': client.tags,
+			'secret_pic': bool(client.connection_attr('user_flags')),
 		}
 		respond(context, "Saved morph \"%s\"" % (subarg))
 	elif subcommand == 'list2': # Provide it as text just in case

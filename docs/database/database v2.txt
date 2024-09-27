@@ -85,6 +85,8 @@ Permissions:
 		0x00004000 allowed to look at the contents of the entity
 		0x00008000 user can set the owner of any of their entities to this entity
 		0x00010000 allowed to set a topic on this map
+		0x00020000 user is allowed to send chat to this entity, and listen to chat in this entity
+
 
 ---PERMISSION---
 subject_id      * integer - ENTITY that the permissions apply to
@@ -102,6 +104,7 @@ start_y         - integer - player starting Y
 width           - integer - map width
 height          - integer - map height
 default_turf    - text    - default map tile
+
 
 ---MAP_LOG--- (unimplemented, but tables are made for it)
 id              * integer - log item ID
@@ -130,6 +133,8 @@ flags           - integer - user-specific flags
 	0x0004 don't produce build logs when this user builds
 	0x0008 don't show this user's location in the API or /whereare
 	0x0010 don't show this user at all in the API
+	0x0020 don't allow adding this user to your watch list
+	0x0040 don't include this user's pic and desc when their information is viewed remotely (as in a BAG info message)
 
 ---MAIL---
 id              * integer - mail id
@@ -140,6 +145,7 @@ flags           - integer - flags (bit 0 = read)
 created_at      -timestamp- time the mail was sent
 subject         - text    - subject line of the mail
 contents        - text    - mail text
+
 
 ---SERVER_BAN---
 id              * integer - ban ID
@@ -154,6 +160,7 @@ created_at      -timestamp- time the ban was applied
 expires_at      -timestamp- when ban expires
 reason          - text    - ban reason
 
+
 ---GROUP_MEMBER---
 group_id        * integer - ENTITY id for the group
 member_id       * integer - entity ID of the player that's in the group
@@ -162,6 +169,7 @@ accepted_at     -timestamp- when the invite was accepted; null if it hasn't been
 flags           - integer - bitfield of group permissions
                             1:  can invite members
                             2:  can remove members
+
 
 ---GLOBAL_ENTITY_KEY--- (gives an entity a name that it can be referred to from anywhere)
 entity_id       * integer - ENTITY id that's being referred to here

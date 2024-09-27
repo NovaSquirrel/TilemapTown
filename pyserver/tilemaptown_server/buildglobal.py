@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2023 NovaSquirrel
+# Copyright (C) 2017-2024 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -201,6 +201,7 @@ userflag['no_build_logs'] = 0x04 # Don't log when this user builds
 userflag['hide_location'] = 0x08 # Don't show in /whereare and such
 userflag['hide_api']      = 0x10 # Don't show in API
 userflag['no_watch']      = 0x20 # Don't allow other users to have you on their watch list
+userflag['secret_pic']    = 0x40 # Hide your pic from remote view
 
 # Entity types
 entity_type = {}

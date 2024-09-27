@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2023 NovaSquirrel
+# Copyright (C) 2017-2024 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -535,6 +535,9 @@ def fn_BAG(connection, map, client, arg, echo):
 		bag_info = info_me.bag_info()
 		if info_me.is_client(): # No spying
 			del bag_info['folder']
+			if (info_me.connection_attr('user_flags') or 0) & userflag['secret_pic']:
+				bag_info.pop('pic', None)
+				bag_info.pop('desc', None)
 		client.send("BAG", {'info': bag_info})
 
 	elif "list_contents" in arg:

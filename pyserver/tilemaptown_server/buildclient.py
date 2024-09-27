@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2023 NovaSquirrel
+# Copyright (C) 2017-2024 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -165,7 +165,11 @@ class Client(ClientMixin, Entity):
 		return self.add_who_info(super().who())
 
 	def remote_who(self):
-		return self.add_who_info(super().remote_who())
+		out = self.add_who_info(super().remote_who())
+		if (self.connection_attr('user_flags') or 0) & userflag['secret_pic']:
+			out.pop('pic', None)
+			out.pop('desc', None)
+		return out
 
 	def save(self):
 		""" Save user information to the database """
