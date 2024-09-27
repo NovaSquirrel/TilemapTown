@@ -522,5 +522,13 @@ def decompress_entity_data(data, compressed_data):
 		return zlib.decompress(compressed_data).decode()
 	return None
 
+def send_ext_listen_status(connection):
+	all_maps = {}
+	for category, map_id in connection.listening_maps:
+		if map_id not in all_maps:
+			all_maps[map_id] = []
+		all_maps[map_id].append(maplisten_type_name[category])
+	connection.send("EXT", {"listen_status": {"maps": all_maps}})
+
 from .buildentity import Entity, EntityWithPlainData, GenericEntity
 from .buildmap import Map

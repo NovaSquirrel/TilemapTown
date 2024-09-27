@@ -70,10 +70,10 @@ class ClientMixin(object):
 	def unlisten(self, map_id, category_id):
 		connection = self.connection()
 		if not connection:
-			return
+			return False
 		# If map_id is an alias, try to turn it into a real database ID, otherwise leave it as a temporary ID
 		map_id = find_db_id_by_str(map_id) or map_id
-		connection.unlisten(map_id, category_id)
+		return connection.unlisten(map_id, category_id)
 
 	@property
 	def username(self):
@@ -615,12 +615,15 @@ class Connection(object):
 			for connection in MapListens[maplisten_type['chat_listen']].get(map_id, tuple()):
 				connection.send("WHO", {'type': 'chat_listeners', 'remove': self.entity.protocol_id(), 'remote_map': map_id})
 
+		removed = False
 		if (map_id in MapListens[category_id]) and (self in MapListens[category_id][map_id]):
+			removed = True
 			MapListens[category_id][map_id].remove(self)
 			if not len(MapListens[category_id][map_id]):
 				del MapListens[category_id][map_id]
 
 		self.listening_maps.discard((category_id, map_id))
+		return removed
 
 class FakeClient(PermissionsMixin, ClientMixin, object):
 	def __init__(self, connection):

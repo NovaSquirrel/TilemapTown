@@ -1099,14 +1099,6 @@ def pm_typing_notification(connection, map, client, context, arg, name):
 def list_available_ext_types(connection, map, client, context, arg, name):
 	client.send("EXT", {name: list(ext_handlers.keys())})
 
-def send_ext_listen_status(connection):
-	all_maps = {}
-	for category, map_id in connection.listening_maps:
-		if map_id not in all_maps:
-			all_maps[map_id] = []
-		all_maps[map_id].append(maplisten_type_name[category])
-	connection.send("EXT", {"listen_status": {"maps": all_maps}})
-
 @ext_protocol_command("listen")
 def ext_listen(connection, map, client, context, arg, name):
 	categories = arg["types"]

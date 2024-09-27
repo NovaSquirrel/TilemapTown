@@ -478,7 +478,7 @@ table, td, tr, th{
 		<br><span class="cmd_name">/e id move x y (direction), /e id rmove x y (direction)</span><br><span class="cmd_desc">Moves entity to tile (x,y) on the current map. Direction optional. Using <kbd>rmove</kbd> will relatively move it, adding x and y values to it's current coordinates.</span><br>
 		<br><span class="cmd_name">/e id do <i>command</i></span><br><span class="cmd_desc">Entity will be issued a command to use. For example <kbd>/e id do map mapnumber x y</kbd> will teleport the entity to tile (x,y) on the associated map with the corresponding mapnumber.</span><br>
 
-		<br><hr><div class="cmd_group">Bots</div>
+		<br><hr><div class="cmd_group">Bots and listening</div>
 		Bots can listen to events happening on a map and receive messages as if they were there. See <a href="https://github.com/NovaSquirrel/TilemapTown/blob/main/docs/protocol.txt">the protocol document</a> for more info.<br>
 		<br><span class="cmd_name">/listen category,category,... map_id,map_id,... , /unlisten category,category,... map_id,map_id,... </span><br><span class="cmd_desc">Sets the bot to listen to a specific category of event on a given map id. Bot must have been granted the <kbd>map_bot</kbd> permission for the map in question, though <kbd>remote_chat</kbd> is also acceptable for the <kbd>chat</kbd> and <kbd>chat_listen</kbd> categories specifically. The categories to listen in on are:
 		<ul>
@@ -490,6 +490,7 @@ table, td, tr, th{
 		</ul>
 		<kbd>/unlisten</kbd> will make the bot stop listening.
 		</span><br>
+		<br><span class="cmd_name">/kicklisten category,category,... map_id,map_id,... username,username,...</span><br><span class="cmd_desc">Makes some amount of users stop listening to some amount of categories on some amount of maps</span><br>
 		<br><span class="cmd_name">/listeners</span><br><span class="cmd_desc">List all remote clients listening into the map.</span><br>
 		<br><span class="cmd_name">/keep_entities_loaded (id,id,id...)</span><br><span class="cmd_desc">Creates a list of enties to keep loaded. Using <kbd>/keep_entities_loaded</kbd> will reset the list.</span><br>
 		<br><span class="cmd_name">/test_entities_loaded id,id,id...</span><br><span class="cmd_desc">Tests if specific entities are loaded.</span><br>

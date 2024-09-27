@@ -388,7 +388,7 @@ Disconnect yourself from the server
 /privateroll dice sides
 Roll dice, but only show the result to you
 
----Bot commands---
+---Bot/Listen commands---
 /listen category,category,... map_id,map_id,...
 /unlisten category,category,... map_id,map_id,...
 Start or stop listening in on a comma separated list of categories and maps. The client's account must be registered and have been granted the map_bot permission for the map being listened in on. "chat" and "chat_listen" may alternatively be done through the remote_chat permission.
@@ -409,6 +409,9 @@ chat_listen: sends WHO messages when users start and stop listening to chat on t
 
 /listeners
 List all remote clients currently listening in on the map
+
+/kicklisten category map_id username
+Makes an entity stop listening to a specific category
 
 /keep_entities_loaded
 /keep_entities_loaded id,id,id...

@@ -1370,6 +1370,46 @@ def fn_listeners(map, client, context, arg):
 		parts = ['Nothing is listening to this map']
 	respond(context, ' | '.join(parts))
 
+@cmd_command(no_entity_needed=True)
+def fn_kicklisten(map, client, context, arg):
+	params = arg.split()
+	if len(params) != 3:
+		return
+	categories = set(params[0].split(','))
+	maps = set((int_if_numeric(x) if isinstance(x, str) else x) for x in params[1].split(','))
+	kick_all = params[2] == '!all'
+	if not kick_all:
+		users = set(params[2].split(','))
+		users_to_notify = set()
+
+	client.start_batch()
+	kicked = 0
+	for category_name in categories:
+		# find category id from name
+		if category_name not in maplisten_type:
+			respond(context, 'Invalid listen category: %s' % category_name, error=True)
+			continue
+		category_id = maplisten_type[category_name]
+
+		for map_id in maps:
+			if not client.has_permission(map_id, permission['admin'], False):
+				respond(context, 'Don\'t have admin permission for %s' % map_id, error=True)
+				continue
+			for username in users:
+				user = find_client_by_username(username)
+				if user and hasattr(user, 'connection'):
+					if user.unlisten(map_id, category_id):
+						users_to_notify.add(user)
+						kicked += 1
+	respond(context, 'Kicked %d listens' % (kicked))
+
+	for user in users_to_notify:
+		connection = user.connection()
+		if connection:
+			send_ext_listen_status(connection)
+
+	client.finish_batch()
+
 @cmd_command(syntax="category,category,category... id,id,id...", no_entity_needed=True)
 def fn_listen(map, client, context, arg):
 	params = arg.split()
@@ -1388,6 +1428,11 @@ def fn_listen(map, client, context, arg):
 			if not client.try_to_listen(map_id, category_id):
 				respond(context, 'Don\'t have permission to listen on "%s" in %s' % (category_name, map_id), error=True)
 				continue
+
+	if hasattr(client, 'connection'):
+		connection = client.connection()
+		if connection:
+			send_ext_listen_status(connection)
 	client.finish_batch()
 
 @cmd_command(syntax="category,category,category... id,id,id...", no_entity_needed=True)
@@ -1406,6 +1451,11 @@ def fn_unlisten(map, client, context, arg):
 
 		for map_id in maps:
 			client.unlisten(map_id, category_id)
+
+	if hasattr(client, 'connection'):
+		connection = client.connection()
+		if connection:
+			send_ext_listen_status(connection)
 	client.finish_batch()
 
 def kick_and_ban(map, client, context, arg, ban):
