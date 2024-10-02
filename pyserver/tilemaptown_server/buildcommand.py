@@ -2345,9 +2345,16 @@ def fn_flushbuildlog(map, client, context, arg):
 @cmd_command(privilege_level="server_admin", alias=['connecthistory'], no_entity_needed=True)
 def fn_connectlog(map, client, context, arg):
 	if arg != 'c':
-		respond(context, "Connection log:[ul]%s[/ul]" % ''.join("[li]%s[/li]" % _ for _ in ConnectLog), class_type="secret_message")
+		respond(context, "Connection log (%d):[ul]%s[/ul]" % (len(ConnectLog), ''.join("[li]%s[/li]" % _ for _ in ConnectLog)), class_type="secret_message")
 	if arg != 'k':
 		ConnectLog.clear()
+
+@cmd_command(privilege_level="server_admin", no_entity_needed=True)
+def fn_buildlog(map, client, context, arg):
+	if arg != 'c':
+		respond(context, "Build log (%d):[ul]%s[/ul]" % (len(TempBuildLog), ''.join("[li]%s[/li]" % _ for _ in TempBuildLog)), class_type="secret_message")
+	if arg != 'k':
+		TempBuildLog.clear()
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True)
 def fn_rehash(map, client, context, arg):

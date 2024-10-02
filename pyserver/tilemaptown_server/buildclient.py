@@ -380,7 +380,7 @@ class Connection(object):
 				return False
 			return True
 
-		AddToConnectLog("Unrecognized password algorithm \"%s\" for \"%s\"" % (passalgo, username))
+		write_to_connect_log("Unrecognized password algorithm \"%s\" for \"%s\"" % (passalgo, username))
 		return False
 
 	def login(self, username, password, client, override_map=None, announce_login=True):
@@ -419,7 +419,7 @@ class Connection(object):
 
 				# send the client their inventory
 				self.refresh_client_inventory(client)
-				AddToConnectLog("login: \"%s\" from %s" % (username, self.ip))
+				write_to_connect_log("login: \"%s\" from %s" % (username, self.ip))
 			else:
 				old_connection = ConnectionsByUsername.get(username, None)
 				if old_connection:
@@ -433,7 +433,7 @@ class Connection(object):
 					del old_connection
 
 				self.load_settings(username)
-				AddToConnectLog("login: \"%s\" from %s (messaging)" % (username, self.ip))
+				write_to_connect_log("login: \"%s\" from %s (messaging)" % (username, self.ip))
 
 			ConnectionsByUsername[username] = self
 			self.broadcast_who_to_watchers()
@@ -484,7 +484,7 @@ class Connection(object):
 			try:
 				ip = ipaddress.ip_address(self.ip)
 			except:
-				AddToConnectLog("Bad IP: "+self.ip)
+				write_to_connect_log("Bad IP: "+self.ip)
 				return False
 			if ip.version == 4:
 				split = ip.exploded.split('.')
@@ -513,10 +513,10 @@ class Connection(object):
 			result = c.fetchone()
 			if result != None:
 				if result[1] != None and datetime.datetime.now() > result[1]:
-					AddToConnectLog("Ban expired for user %s" % self.ip)
+					write_to_connect_log("Ban expired for user %s" % self.ip)
 					c.execute('DELETE FROM Server_Ban WHERE id=?', (result[0],))
 				else:
-					AddToConnectLog("Denied access to banned user %s" % self.ip)
+					write_to_connect_log("Denied access to banned user %s" % self.ip)
 					self.disconnect('Banned from the server until %s (%s)' % (str(result[1]), result[2]), reason='Ban')
 					return True
 		return False

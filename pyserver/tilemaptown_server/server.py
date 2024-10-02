@@ -89,7 +89,7 @@ async def client_handler(websocket, path):
 		return
 	AllConnections.add(connection)
 
-	AddToConnectLog("connected: %s %s" % (path, ip))
+	write_to_connect_log("connected: %s %s" % (path, ip))
 	total_connections[0] += 1
 
 	while connection.ws != None:
@@ -138,11 +138,11 @@ async def client_handler(websocket, path):
 				disconnect_extra = ""
 				if connection.build_count or connection.delete_count:
 					disconnect_extra = " -  Built %d, Deleted %d" % (connection.build_count, connection.delete_count)
-				AddToConnectLog("disconnected: %s (%s, \"%s\")%s" % (ip, connection.entity.username or "?", connection.entity.name, disconnect_extra))
+				write_to_connect_log("disconnected: %s (%s, \"%s\")%s" % (ip, connection.entity.username or "?", connection.entity.name, disconnect_extra))
 			elif connection.identified:
-				AddToConnectLog("disconnected: %s (%s, logged in elsewhere)" % (ip, connection.username))
+				write_to_connect_log("disconnected: %s (%s, logged in elsewhere)" % (ip, connection.username))
 			else:
-				AddToConnectLog("disconnected: %s (didn't identify)" % ip)
+				write_to_connect_log("disconnected: %s (didn't identify)" % ip)
 			connection.ws = None
 		except:
 			exception_type = sys.exc_info()[0]
