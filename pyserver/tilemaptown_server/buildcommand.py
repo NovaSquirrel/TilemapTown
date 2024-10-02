@@ -108,7 +108,7 @@ def in_blocked_username_list(client, banlist, action):
 		return True
 	return False
 
-def respond(context, text, data=None, error=False, code=None, detail=None, subject_id=None, buttons=None):
+def respond(context, text, data=None, error=False, code=None, detail=None, subject_id=None, buttons=None, class_type=None):
 	args = {}
 	respond_to, echo = context
 	if echo:
@@ -125,7 +125,8 @@ def respond(context, text, data=None, error=False, code=None, detail=None, subje
 		args['subject_id'] = subject_id
 	if buttons:
 		args['buttons'] = buttons
-
+	if class_type:
+		args['class'] = class_type
 	respond_to.send('ERR' if error else 'CMD', args)
 
 def parse_equal_list(text):
@@ -2336,10 +2337,17 @@ def fn_pyexec(map, client, context, arg):
 		return
 	respond(context, str(exec(compile(arg.replace("✨", "\n"), "test", "exec"))))
 
-@cmd_command(privilege_level="server_admin")
+@cmd_command(privilege_level="server_admin", no_entity_needed=True)
 def fn_flushbuildlog(map, client, context, arg):
 	if BuildLog:
 		BuildLog.flush()
+
+@cmd_command(privilege_level="server_admin", alias=['connecthistory'], no_entity_needed=True)
+def fn_connectlog(map, client, context, arg):
+	if arg != 'c':
+		respond(context, "Connection log:[ul]%s[/ul]" % ''.join("[li]%s[/li]" % _ for _ in ConnectLog), class_type="secret_message")
+	if arg != 'k':
+		ConnectLog.clear()
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True)
 def fn_rehash(map, client, context, arg):

@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sqlite3, json, sys, os.path, weakref, datetime, zlib
+from collections import deque
 
 # Config information
 Config = {}
@@ -116,6 +117,13 @@ DatabaseMeta = {}
 BuildLog = None
 if len(Config["Logs"]["BuildFile"]):
 	BuildLog = open(Config["Logs"]["BuildFile"], 'a', encoding="utf-8")
+
+# Temporary log for moderation
+ConnectLog = deque(maxlen=30)
+def AddToConnectLog(text):
+	print(text)
+	now = datetime.datetime.today().strftime("(%Y-%m-%d) %I:%M %p")
+	ConnectLog.append(now + ": " + text)
 
 # Important information shared by each module
 ServerShutdown = [-1, False] # First value is seconds left, second value is true for restarts but false for shutdowns

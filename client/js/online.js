@@ -721,7 +721,7 @@ function receiveServerMessage(cmd, arg) {
             {'isChat': false, 'username': arg["username"]});
         } else {
           if(arg["class"])
-            logMessage(arg.text, arg["class"],
+            logMessage(convertBBCode(arg.text), arg["class"],
               {'isChat': false, 'plainText': arg.text,
               'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
           else

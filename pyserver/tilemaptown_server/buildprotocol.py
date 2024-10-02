@@ -934,6 +934,9 @@ def fn_IDN(connection, map, client, arg, echo):
 		if user_count > 1:
 			connected_text += ('.' if bot_count == 0 else '') + ' Use the [tt]/wa[/tt] command to see where people are at!'
 		connection.send("MSG", {'text': connected_text})
+
+		if connection.username in Config["Server"]["Admins"]:
+			connection.send("MSG", {'text': 'Connect log size: %d' % len(ConnectLog), 'class': 'secret_message'})
 		connection.login_successful_callback = None
 
 	#######################################################

@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2023 NovaSquirrel
+# Copyright (C) 2017-2024 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -38,7 +38,7 @@ def main_timer():
 		remove_requests = set()
 		for k,v in c.requests.items():
 			v[0] -= 1 # remove 1 from timer
-			if v[0] < 0: 
+			if v[0] < 0:
 				remove_requests.add(k)
 		for r in remove_requests:
 			del c.requests[r]
@@ -89,7 +89,7 @@ async def client_handler(websocket, path):
 		return
 	AllConnections.add(connection)
 
-	print("connected: %s %s" % (path, ip))
+	AddToConnectLog("connected: %s %s" % (path, ip))
 	total_connections[0] += 1
 
 	while connection.ws != None:
@@ -138,11 +138,11 @@ async def client_handler(websocket, path):
 				disconnect_extra = ""
 				if connection.build_count or connection.delete_count:
 					disconnect_extra = " -  Built %d, Deleted %d" % (connection.build_count, connection.delete_count)
-				print("disconnected: %s (%s, \"%s\")%s" % (ip, connection.entity.username or "?", connection.entity.name, disconnect_extra))
+				AddToConnectLog("disconnected: %s (%s, \"%s\")%s" % (ip, connection.entity.username or "?", connection.entity.name, disconnect_extra))
 			elif connection.identified:
-				print("disconnected: %s (%s, logged in elsewhere)" % (ip, connection.username))
+				AddToConnectLog("disconnected: %s (%s, logged in elsewhere)" % (ip, connection.username))
 			else:
-				print("disconnected: %s (didn't identify)" % ip)
+				AddToConnectLog("disconnected: %s (didn't identify)" % ip)
 			connection.ws = None
 		except:
 			exception_type = sys.exc_info()[0]

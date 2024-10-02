@@ -1278,6 +1278,7 @@ function convertBBCode(t) {
 }
 
 let dateFormat = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+let alreadyPlayedSound = false;
 function logMessage(Message, Class, Params) {
 	Params = Params ?? {};
 	let chatArea = document.getElementById("chatArea");
@@ -1299,7 +1300,7 @@ function logMessage(Message, Class, Params) {
 			newMessage.title = `Username: ${Params.username}`;
 		}
 	}
-	newMessage.innerHTML = (timestampText.length ? (`<span class="timestamp">${timestampText}</span> `) : "") + Message;
+	newMessage.innerHTML = (timestampText.length ? (`<span class="timestamp">${timestampText}</span> `) : "") + Message.replaceAll("\n", "<br>");
 	chatArea.append(newMessage);
 
 	if (OnlineMuWebview) {
@@ -1309,19 +1310,23 @@ function logMessage(Message, Class, Params) {
 	if (bottom)
 		chatArea.scrollTop = chatArea.scrollHeight;
 
-	if ((Params.isChat || Params.isPrivateChat) && AudioChatNotifications) {
-		if (!Params.isSilent) {
-			let audio = new Audio(Params.isPrivateChat ? 'img/notifyprivate.wav' : 'img/notifychat.wav');
-			audio.play();
-		}
-	} else if (!Params.isChat && AudioMiscNotifications) {
-		if (!Params.isSilent) {
-			let audio = new Audio('img/notifymisc.wav');
-			audio.play();
+	if (!alreadyPlayedSound) {
+		if ((Params.isChat || Params.isPrivateChat) && AudioChatNotifications) {
+			if (!Params.isSilent) {
+				let audio = new Audio(Params.isPrivateChat ? 'img/notifyprivate.wav' : 'img/notifychat.wav');
+				audio.play();
+				alreadyPlayedSound = true;
+			}
+		} else if (!Params.isChat && AudioMiscNotifications) {
+			if (!Params.isSilent) {
+				let audio = new Audio('img/notifymisc.wav');
+				audio.play();
+				alreadyPlayedSound = true;
+			}
 		}
 	}
 
-	if (Params.plainText) {
+	if (Params.plainText && Class !== "secret_message") {
 		chatLogForExport.push((timestampText.length ? (`[${timestampText}] `) : "") + Params.plainText);
 	}
 }
@@ -1803,6 +1808,7 @@ function tickWorld() {
 	if(!SlowAnimationTick || ((TickCounter & 7) == 0)) {
 		AnimationTick = (AnimationTick + 1) % 1000000;
 	}
+	alreadyPlayedSound = false;
 }
 
 ///////////////////////////////////////////////////////////

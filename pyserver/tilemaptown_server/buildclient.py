@@ -55,7 +55,6 @@ class ClientMixin(object):
 	def try_to_listen(self, map_id, category_id, send_error=False):
 		connection = self.connection()
 		if not connection or not entity_id_exists(map_id):
-			print("Doesn't exist")
 			return False
 		# If map_id is an alias, try to turn it into a real database ID, otherwise leave it as a temporary ID
 		if isinstance(map_id, str):
@@ -381,7 +380,7 @@ class Connection(object):
 				return False
 			return True
 
-		print("Unrecognized password algorithm \"%s\" for \"%s\"" % (passalgo, username))
+		AddToConnectLog("Unrecognized password algorithm \"%s\" for \"%s\"" % (passalgo, username))
 		return False
 
 	def login(self, username, password, client, override_map=None, announce_login=True):
@@ -420,7 +419,7 @@ class Connection(object):
 
 				# send the client their inventory
 				self.refresh_client_inventory(client)
-				print("login: \"%s\" from %s" % (username, self.ip))
+				AddToConnectLog("login: \"%s\" from %s" % (username, self.ip))
 			else:
 				old_connection = ConnectionsByUsername.get(username, None)
 				if old_connection:
@@ -434,7 +433,7 @@ class Connection(object):
 					del old_connection
 
 				self.load_settings(username)
-				print("login: \"%s\" from %s (messaging)" % (username, self.ip))
+				AddToConnectLog("login: \"%s\" from %s (messaging)" % (username, self.ip))
 
 			ConnectionsByUsername[username] = self
 			self.broadcast_who_to_watchers()
@@ -485,7 +484,7 @@ class Connection(object):
 			try:
 				ip = ipaddress.ip_address(self.ip)
 			except:
-				print("Bad IP: "+self.ip)
+				AddToConnectLog("Bad IP: "+self.ip)
 				return False
 			if ip.version == 4:
 				split = ip.exploded.split('.')
@@ -514,10 +513,10 @@ class Connection(object):
 			result = c.fetchone()
 			if result != None:
 				if result[1] != None and datetime.datetime.now() > result[1]:
-					print("Ban expired for user %s" % self.ip)
+					AddToConnectLog("Ban expired for user %s" % self.ip)
 					c.execute('DELETE FROM Server_Ban WHERE id=?', (result[0],))
 				else:
-					print("Denied access to banned user %s" % self.ip)
+					AddToConnectLog("Denied access to banned user %s" % self.ip)
 					self.disconnect('Banned from the server until %s (%s)' % (str(result[1]), result[2]), reason='Ban')
 					return True
 		return False

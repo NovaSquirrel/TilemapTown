@@ -31,6 +31,10 @@
   color: lime;
 }
 
+.secret_message {
+  color: DeepPink;
+}
+
 .status_change {
   color: silver;
 }
