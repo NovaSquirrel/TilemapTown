@@ -936,7 +936,7 @@ def fn_IDN(connection, map, client, arg, echo):
 		connection.send("MSG", {'text': connected_text})
 
 		if connection.username in Config["Server"]["Admins"]:
-			connection.send("MSG", {'text': 'Connect log size: %d' % len(ConnectLog), 'class': 'secret_message'})
+			connection.send("MSG", {'text': 'Connect log size: %d, build log size: %d' % (len(ConnectLog), len(TempBuildLog)), 'class': 'secret_message'})
 		connection.login_successful_callback = None
 
 	#######################################################
