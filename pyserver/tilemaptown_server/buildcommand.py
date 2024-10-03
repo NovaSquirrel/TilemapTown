@@ -548,8 +548,8 @@ def fn_tpaccept(map, client, context, arg):
 		subject.start_batch()
 		subject.stop_current_ride()
 
-		client.send("MSG", {'text': 'You start moving with %s ([command]rideend[/command] to stop)' % client.name_and_username()})
-		subject.send("MSG", {'text': 'You start moving with %s ([command]rideend[/command] to stop)' % subject.name_and_username()})
+		client.send("MSG", {'text': 'You start moving with %s ([command]rideend[/command] to stop)' % subject.name_and_username()})
+		subject.send("MSG", {'text': 'You start moving with %s ([command]rideend[/command] to stop)' % client.name_and_username()})
 
 		client.vehicle = subject
 		subject.vehicle = client
