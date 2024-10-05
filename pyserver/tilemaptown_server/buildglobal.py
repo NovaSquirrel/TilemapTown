@@ -22,6 +22,7 @@ Config = {}
 ConfigFile = 'config.json'
 ServerResources = {}
 LoadedAnyServerResources = [False]
+TempLogs = [None, None]
 
 # Information about the code itself
 available_server_features = {
@@ -76,6 +77,8 @@ def loadConfigJson():
 	setConfigDefault("Images",   "URLWhitelist",     ["https://i.imgur.com/", "https://i.postimg.cc/", "https://i.ibb.co/"])
 	setConfigDefault("Logs",     "BuildFile",        "")
 	setConfigDefault("Logs",     "BuildDefault",     True)
+	setConfigDefault("TempLogs", "ConnectSize",      100)
+	setConfigDefault("TempLogs", "BuildSize",        100)
 
 	LoadedAnyServerResources[0] = False
 	ServerResources.clear()
@@ -106,6 +109,8 @@ def loadConfigJson():
 				url = ServerResources["images"][i]
 				if not url.startswith("http://") and not url.startswith("https://"):
 					ServerResources["images"][i] = base + url
+	TempLogs[0] = deque(maxlen=Config["TempLogs"]["ConnectSize"])
+	TempLogs[1] = deque(maxlen=Config["TempLogs"]["BuildSize"])
 loadConfigJson()
 
 
@@ -117,14 +122,13 @@ DatabaseMeta = {}
 BuildLog = None
 if len(Config["Logs"]["BuildFile"]):
 	BuildLog = open(Config["Logs"]["BuildFile"], 'a', encoding="utf-8")
-TempBuildLog = deque(maxlen=50)
 
 # Temporary log for moderation
 ConnectLog = deque(maxlen=40)
 def write_to_connect_log(text):
 	print(text)
 	now = datetime.datetime.today().strftime("(%Y-%m-%d) %I:%M %p")
-	ConnectLog.append(now + ": " + text)
+	TempLogs[0].append(now + ": " + text)
 
 # Important information shared by each module
 ServerShutdown = [-1, False] # First value is seconds left, second value is true for restarts but false for shutdowns
@@ -516,7 +520,7 @@ def write_to_build_log(map, client, command, args, old_data = None):
 	now = datetime.datetime.today().strftime("%Y-%m-%d %I:%M %p")
 	message = '%s map=(%s, %s) ip=%s db=%s name=%s user=%s map=%d | %s %s%s\n' % (now, json.dumps(map.name), map.protocol_id(), ip, client.db_id if client.db_id != None else "", json.dumps(client.name), client.username if client.is_client() else "", map.db_id, command, json.dumps(args), old_data)
 	BuildLog.write(message)
-	TempBuildLog.append(message)
+	TempLogs[1].append(message)
 
 def map_id_exists(id):
 	if id in AllEntitiesByDB:

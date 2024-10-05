@@ -64,15 +64,15 @@ Maximum number of incoming websocket messages allowed to queue up before the ser
 
 Server.BroadcastConnects
 Default: true
-If true, tell everyone on the server about users connecting
+If true, tell everyone on the server about users connecting.
 
 Server.BroadcastDisconnects
 Default: true
-If true, tell everyone on the server about users disconnecting
+If true, tell everyone on the server about users disconnecting.
 
 Server.MaxMapSize
 Default: 256
-Maximum width or height allowed to be used on a map
+Maximum width or height allowed to be used on a map.
 
 Server.ResourceFiles
 Default: []
@@ -87,11 +87,11 @@ The official server uses "https://novasquirrel.com/town/img/" for this, for exam
 
 API.Enabled
 Default: true
-If true, makes information about the world available through a web API
+If true, makes information about the world available through a web API.
 
 API.Port
 Default: 12551
-Port to host the web API on
+Port to host the web API on.
 
 Database.File
 Default: "town.db"
@@ -107,10 +107,18 @@ Set a list of URL parts that are considered safe to start user-provided image UR
 
 Logs.BuildFile
 Default: ""
-If provided, this is the filename used for 
+If provided, this is the filename used for the build log.
 
 Logs.BuildDefault
 Default: true
+
+TempLogs.ConnectSize
+Default: 100
+Maximum number of connection/login messages to keep at once.
+
+TempLogs.BuildSize
+Default: 100
+Maximum number of build messages to keep at once.
 
 .--------------------------------------------------------------------------------------------------
 | Resource files:
