@@ -1,6 +1,10 @@
 Currently the server provides a few HTTP endpoints you can call to get basic information about the server.
 This is very experimental so it could change at any time.
 
+.----------------------------------------------------------
+| Public information; no credentials required
+'----------------------------------------------------------
+
 ----- /v1/town_info -----
 Gets information about the server's current status.
 
@@ -118,3 +122,227 @@ Example response:
 	"id": 1,
 	"url": "http://example.com"
 }
+
+
+.----------------------------------------------------------
+| File management; account required
+'----------------------------------------------------------
+Clients will receive a parameter named "api_key" in their IDN response.
+Supply this header to the API with an "Authorization" header, in the form:
+	Authorization: Bearer insert_api_key_here
+
+
+----- GET /v1/my_files -----
+Get a list of all files and folders this account currently has stored on the server.
+
+Response:
+	{
+		"files": {
+			"id": {
+				"name": User-provided name,
+				"desc": User-provided description,
+				"folder": Folder ID or null,
+				"created_at": UTC timestamp for when the file was created,
+				"updated_at": UTC timestamp for when the file was last modified,
+				"size": File size in bytes,
+				"url": Full url you can access to retrieve this file
+			}, ...
+		},
+		"folders": {
+			"id": {
+				"name": User-provided name,
+				"desc": User-provided description,
+				"folder": Folder ID or null
+			}
+		},
+		"info": {
+			"used_space": Space used in bytes,
+			"free_space": Space left in bytes
+		}
+	}
+
+Response codes:
+	200 OK
+	401 API key not valid
+	403 Account doesn't have file upload permissions
+
+
+----- GET /v1/my_files/file/FILE_ID
+Gets the information for a specific file the user has stored
+
+Response:
+	{
+		"id": ID for the file,
+		"name": User-provided name,
+		"desc": User-provided description,
+		"folder": User-provided folder name; can be anything, used to group files together,
+		"created_at": UTC timestamp for when the file was created,
+		"updated_at": UTC timestamp for when the file was last modified,
+		"size": File size in bytes,
+		"url": Full URL you can access to retrieve this file
+	}
+
+Response codes:
+	200 OK
+	401 API key not valid
+	403 Account doesn't have file upload permissions
+	404 File doesn't exist
+
+
+----- POST /v1/my_files/file -----
+Upload a new file to your storage space.
+
+Submit a form with the following fields (all optional except "file"):
+	name: Any text for the file's name
+	desc: Any text to describe the file in a wordier way than the name
+	folder: A folder ID
+	file: Binary data for the file
+
+Response:
+	{
+		"file": {
+			"id": ID for the file,
+			"name": Name that was provided,
+			"desc": Description that was provided,
+			"folder": Folder that was provided,
+			"size": Size of the uploaded file in bytes,
+			"url": Full URL you can access to retrieve this file,
+		},
+		"info": {
+			"used_space": Space used in bytes after this upload,
+			"free_space": Space left in bytes after this upload
+		}
+	}
+
+Response codes:
+	200 OK
+	400 Request format is bad
+	401 API key not valid
+	403 Account doesn't have file upload permissions
+	413 File you're attempting to upload is too big
+	507 Uploading this file would put you over the upload limit, whether your own or the global one
+
+
+----- PUT /v1/my_files/file/FILE_ID
+Replace some or all of the information on a file.
+
+Submit a form with the following fields (all optional):
+	name: Any text for the file's name
+	desc: Any text to describe the file in a wordier way than the name
+	folder: A folder ID
+	file: Binary data for the file
+	keep_url: Defaults to false, but if it's true then changing the file will not issue a new URL
+
+Fields that are omitted will be left as-is.
+
+Response:
+	{
+		"file": {
+			"id": ID for the file,
+			"url": Full URL you can access to retrieve this file,
+			"name": Name that was provided,
+			"desc": Description that was provided,
+			"folder": Folder that was provided
+		},
+		"info": {
+			"used_space": Space used in bytes after this upload,
+			"free_space": Space left in bytes after this upload
+		}
+	}
+
+Response codes:
+	200 OK
+	400 Request format is bad
+	401 API key not valid
+	403 Account doesn't have file upload permissions
+	404 File doesn't exist
+	413 File you're attempting to upload is too big
+	507 Uploading this file would put you over the upload limit, whether your own or the global one
+
+
+----- DELETE /v1/my_files/file/FILE_ID
+Delete one of your files.
+
+Response codes:
+	200 OK
+	401 API key not valid
+	403 Account doesn't have file upload permissions
+	404 File doesn't exist
+
+
+----- GET /v1/my_files/folder/FOLDER_ID
+Gets the information for a specific file the user has stored
+
+Response:
+	{
+		"id": ID for the folder
+		"name": User-provided name,
+		"desc": User-provided description,
+		"folder": Folder ID that this folder is inside, or null
+	}
+
+Response codes:
+	200 OK
+	401 API key not valid
+	403 Account doesn't have file upload permissions
+	404 File doesn't exist
+
+
+----- POST /v1/my_files/folder -----
+Creates a new folder in your storage space.
+
+Submit a form with the following fields (all optional):
+	name: Any text for the folder's name
+	desc: Any text to describe the folder in a wordier way than the name
+	folder: A folder name, for grouping related files together
+
+Response:
+	{
+		"id": ID for the folder
+		"name": User-provided name,
+		"desc": User-provided description,
+		"folder": Folder ID that this folder is inside, or null
+	}
+
+Response codes:
+	200 OK
+	400 Request format is bad
+	401 API key not valid
+	403 Account doesn't have file upload permissions
+
+
+----- PUT /v1/my_files/folder/FOLDER_ID
+Replace some or all of the information on a folder.
+
+Submit a form with the following fields (all optional):
+	name: Any text for the folder's name
+	desc: Any text to describe the folder in a wordier way than the name
+	folder: Folder to move this folder to
+
+Fields that are omitted will be left as-is.
+
+Response:
+	{
+		"id": ID for the folder
+		"name": User-provided name,
+		"desc": User-provided description,
+		"folder": Folder ID that this folder is inside, or null
+	}
+
+Response codes:
+	200 OK
+	400 Request format is bad
+	401 API key not valid
+	403 Account doesn't have file upload permissions
+	404 Folder doesn't exist
+
+
+----- DELETE /v1/my_files/folder/FOLDER_ID
+Delete one of your folders, moving everything that was in the folder to the folder's parent.
+
+Response codes:
+	200 OK
+	401 API key not valid
+	403 Account doesn't have file upload permissions
+	404 Folder doesn't exist
+

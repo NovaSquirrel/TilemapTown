@@ -2357,6 +2357,13 @@ def fn_buildlog(map, client, context, arg):
 		TempLogs[1].clear()
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True)
+def fn_uploadlog(map, client, context, arg):
+	if arg != 'c':
+		respond(context, "Upload log (%d):[ul]%s[/ul]" % (len(TempLogs[2]), ''.join("[li]%s[/li]" % _ for _ in TempLogs[2])), class_type="secret_message")
+	if arg != 'k':
+		TempLogs[2].clear()
+
+@cmd_command(privilege_level="server_admin", no_entity_needed=True)
 def fn_rehash(map, client, context, arg):
 	loadConfigJson()
 	respond(context, 'Reloaded the config file')
