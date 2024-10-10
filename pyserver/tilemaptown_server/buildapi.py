@@ -421,13 +421,13 @@ async def get_file(request):
 	result = c.fetchone()
 	if result != None:
 		return web.json_response({
-			"name": row[2],
-			"desc": row[3],
-			"folder": row[4],
-			"created_at": row[0].isoformat(),
-			"updated_at": row[1].isoformat(),
-			"size": row[6],
-			"url": url_for_user_file(row[5]),
+			"name": result[2],
+			"desc": result[3],
+			"folder": result[4],
+			"created_at": result[0].isoformat(),
+			"updated_at": result[1].isoformat(),
+			"size": result[6],
+			"url": url_for_user_file(db_id, result[5]),
 		}, headers=CORS_HEADERS)
 	else:
 		raise web.HTTPNotFound(text="File not found", headers=CORS_HEADERS)
@@ -612,9 +612,9 @@ async def get_folder(request):
 	if result != None:
 		return web.json_response({
 			"id": file_id,
-			"name": row[0],
-			"desc": row[1],
-			"folder": row[2],
+			"name": result[0],
+			"desc": result[1],
+			"folder": result[2],
 		}, headers=CORS_HEADERS)
 	else:
 		raise web.HTTPNotFound(text="Folder not found", headers=CORS_HEADERS)
