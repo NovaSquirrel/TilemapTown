@@ -138,6 +138,9 @@ DatabaseMeta = {}
 BuildLog = None
 if len(Config["Logs"]["BuildFile"]):
 	BuildLog = open(Config["Logs"]["BuildFile"], 'a', encoding="utf-8")
+UploadLog = None
+if len(Config["Logs"]["BuildFile"]):
+	UploadLog = open(Config["Logs"]["UploadFile"], 'a', encoding="utf-8")
 
 # Temporary log for moderation
 ConnectLog = deque(maxlen=40)

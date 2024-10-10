@@ -117,6 +117,10 @@ Logs.BuildDefault
 Default: true
 If on, default to logging all building by default.
 
+Logs.UploadFile
+Default: ""
+If provided, this is the filename used for the upload log.
+
 TempLogs.ConnectSize
 Default: 100
 Maximum number of connection/login messages to keep at once.

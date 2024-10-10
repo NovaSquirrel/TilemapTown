@@ -208,6 +208,8 @@ def main():
 
 		if BuildLog:
 			BuildLog.close()
+		if UploadLog:
+			UploadLog.close()
 
 if __name__ == "__main__":
 	main()

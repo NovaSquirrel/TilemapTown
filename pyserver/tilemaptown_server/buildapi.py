@@ -154,9 +154,14 @@ if Config["FileUpload"]["AllowCrossOrigin"]:
 else:
 	CORS_HEADERS = {}
 
-def write_to_file_log(text):
+def write_to_file_log(connection, text):
 	now = datetime.datetime.today().strftime("(%Y-%m-%d) %I:%M %p")
-	TempLogs[2].append(now + ": " + text)
+	message = (connection.ip if connection != None else "?") + " | " + now + ": " + text
+	TempLogs[2].append(message)
+
+	# Write to a file too
+	if UploadLog:
+		UploadLog.write(message + "\n")
 
 def get_connection_from_api_key(request):
 	if not Config["FileUpload"]["Enabled"]:
@@ -372,7 +377,7 @@ async def post_file(request):
 		connection.total_file_upload_size += len(file_data)
 		global_file_upload_size += len(file_data)
 	except:
-		write_to_file_log("Upload failed")
+		write_to_file_log(connection, "Upload failed")
 		raise web.HTTPInternalServerError(text="Couldn't write the file", headers=CORS_HEADERS)
 
 	if info.get("set_my_pic") and hasattr(connection.entity, 'pic'):
@@ -391,7 +396,7 @@ async def post_file(request):
 	# Add a database entry
 	c.execute("INSERT INTO User_File_Upload (user_id, created_at, updated_at, name, desc, location, size, filename) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (db_id, datetime.datetime.now(), datetime.datetime.now(), info.get("name"), info.get("desc"), folder, len(file_data), random_filename))
 	file_id = c.lastrowid
-	write_to_file_log("Upload %d by %s, (size=%d KiB, [url=%s]file[/url], name=%s)" % (file_id, connection.entity.name_and_username(), len(file_data)//1024, url_for_user_file(db_id, random_filename), info.get("name")))
+	write_to_file_log(connection, "Upload %d by %s, (size=%d KiB, [url=%s]file[/url], name=%s)" % (file_id, connection.entity.name_and_username(), len(file_data)//1024, url_for_user_file(db_id, random_filename), info.get("name")))
 
 	return web.json_response({
 		"file": {
@@ -480,9 +485,9 @@ async def put_file(request):
 				f.write(file_data)
 			connection.total_file_upload_size = connection.total_file_upload_size + new_size - original_size
 			global_file_upload_size = global_file_upload_size + new_size - original_size
-			write_to_file_log("Reupload %d by %s, (size=%d KiB, [url=%s]file[/url], name=%s)" % (file_id, connection.entity.name_and_username(), len(file_data)//1024, url_for_user_file(db_id, new_filename), name))
+			write_to_file_log(connection, "Reupload %d by %s, (size=%d KiB, [url=%s]file[/url], name=%s)" % (file_id, connection.entity.name_and_username(), len(file_data)//1024, url_for_user_file(db_id, new_filename), name))
 		except:
-			write_to_file_log("Reupload failed %d" % file_id)
+			write_to_file_log(connection, "Reupload failed %d" % file_id)
 			raise web.HTTPInternalServerError(text="Couldn't write the file", headers=CORS_HEADERS)
 
 		if info.get("set_my_pic") and hasattr(connection.entity, 'pic'):
@@ -528,7 +533,7 @@ def admin_delete_uploaded_file(file_id):
 	except:
 		return False
 	c.execute('DELETE FROM User_File_Upload WHERE file_id=?', (file_id,))
-	write_to_file_log("Admin delete %d (name=%s)" % (file_id, result[0]))
+	write_to_file_log(None, "Admin delete %d (name=%s)" % (file_id, result[0]))
 
 	# Should probably remove from user upload usage if they're online
 	global_file_upload_size -= result[4]
@@ -557,7 +562,7 @@ async def delete_file(request):
 	except:
 		pass
 	c.execute('DELETE FROM User_File_Upload WHERE file_id=?', (file_id,))
-	write_to_file_log("Delete %d by %s (name=%s)" % (file_id, connection.entity.name_and_username(), result[0]))
+	write_to_file_log(connection, "Delete %d by %s (name=%s)" % (file_id, connection.entity.name_and_username(), result[0]))
 
 	connection.total_file_upload_size -= result[4]
 	global_file_upload_size -= result[4]

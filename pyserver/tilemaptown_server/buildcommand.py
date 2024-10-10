@@ -2378,6 +2378,11 @@ def fn_flushbuildlog(map, client, context, arg):
 	if BuildLog:
 		BuildLog.flush()
 
+@cmd_command(privilege_level="server_admin", no_entity_needed=True)
+def fn_flushuploadlog(map, client, context, arg):
+	if UploadLog:
+		UploadLog.flush()
+
 @cmd_command(privilege_level="server_admin", alias=['connecthistory'], no_entity_needed=True)
 def fn_connectlog(map, client, context, arg):
 	if arg != 'c':
