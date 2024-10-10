@@ -22,7 +22,7 @@ Config = {}
 ConfigFile = 'config.json'
 ServerResources = {}
 LoadedAnyServerResources = [False]
-TempLogs = [None, None]
+TempLogs = [None, None, None]
 
 # Information about the code itself
 available_server_features = {
@@ -71,6 +71,7 @@ def loadConfigJson():
 
 	setConfigDefault("API",      "Port",             12551)
 	setConfigDefault("API",      "Enabled",          True)
+	setConfigDefault("API",      "URL",              "")
 
 	setConfigDefault("Database", "File",             "town.db")
 	setConfigDefault("Database", "Setup",            True)
@@ -79,6 +80,20 @@ def loadConfigJson():
 	setConfigDefault("Logs",     "BuildDefault",     True)
 	setConfigDefault("TempLogs", "ConnectSize",      100)
 	setConfigDefault("TempLogs", "BuildSize",        100)
+	setConfigDefault("TempLogs", "UploadSize",       100)
+
+	setConfigDefault("FileUpload", "Enabled",        False)
+	setConfigDefault("FileUpload", "URLPrefix",      "")
+	setConfigDefault("FileUpload", "StoragePath",    "")
+	setConfigDefault("FileUpload", "MaximumFileSize",      512)
+	setConfigDefault("FileUpload", "SizeLimitTotal",       102400)
+	setConfigDefault("FileUpload", "SizeLimitGuest",       0)
+	setConfigDefault("FileUpload", "SizeLimitUser",        128)
+	setConfigDefault("FileUpload", "SizeLimitTrustedUser", 5120)
+	setConfigDefault("FileUpload", "SizeLimitOverride",    {})
+	setConfigDefault("FileUpload", "AllowedFileCount",     100)
+	setConfigDefault("FileUpload", "AllowedFolderCount",   100)
+	setConfigDefault("FileUpload", "AllowCrossOrigin",     False)
 
 	LoadedAnyServerResources[0] = False
 	ServerResources.clear()
@@ -111,6 +126,7 @@ def loadConfigJson():
 					ServerResources["images"][i] = base + url
 	TempLogs[0] = deque(maxlen=Config["TempLogs"]["ConnectSize"])
 	TempLogs[1] = deque(maxlen=Config["TempLogs"]["BuildSize"])
+	TempLogs[2] = deque(maxlen=Config["TempLogs"]["UploadSize"])
 loadConfigJson()
 
 
@@ -122,6 +138,9 @@ DatabaseMeta = {}
 BuildLog = None
 if len(Config["Logs"]["BuildFile"]):
 	BuildLog = open(Config["Logs"]["BuildFile"], 'a', encoding="utf-8")
+UploadLog = None
+if len(Config["Logs"]["BuildFile"]):
+	UploadLog = open(Config["Logs"]["UploadFile"], 'a', encoding="utf-8")
 
 # Temporary log for moderation
 ConnectLog = deque(maxlen=40)
@@ -138,6 +157,7 @@ AllMaps         = weakref.WeakSet()             # Maps only; used by /whereare
 AllEntitiesByDB = weakref.WeakValueDictionary() # All entities (indexed by database ID)
 AllEntitiesByID = weakref.WeakValueDictionary() # All entities (indexed by temporary ID)
 ConnectionsByUsername = weakref.WeakValueDictionary() # Look up connections by lowercased username
+ConnectionsByApiKey = weakref.WeakValueDictionary() # Look up connections by API key (supplied to clients in IDN)
 
 # Remote map-watching for bots (and remote chat)
 maplisten_type = {}
@@ -209,7 +229,7 @@ mapflag['no_build_logs'] = 4
 # User flags
 userflag = {}
 userflag['bot']           = 0x01 # Is a bot
-userflag['file_uploads']  = 0x02 # Can upload files to the server (not implemented)
+userflag['file_uploads']  = 0x02 # Larger file upload limits
 userflag['no_build_logs'] = 0x04 # Don't log when this user builds
 userflag['hide_location'] = 0x08 # Don't show in /whereare and such
 userflag['hide_api']      = 0x10 # Don't show in API
@@ -403,6 +423,8 @@ def escape_tags(text):
 
 def image_url_is_okay(url):
 	if url == "":
+		return True
+	if Config["FileUpload"]["Enabled"] and len(Config["FileUpload"]["URLPrefix"]) and url.startswith(Config["FileUpload"]["URLPrefix"]):
 		return True
 	for w in Config["Images"]["URLWhitelist"]:
 		if url.startswith(w):

@@ -223,10 +223,12 @@ Other fields that may appear in WHO messages on the official server:
 --> IDN {"client_name": "name", "client_version": "1.0.0"}
 <-- IDN
 <-- IDN {"features": {"feature_name": {"version": "1.0.0"}}}
+<-- IDN {"api_key": key, "api_url": "https://novasquirrel.com/townapi/", "api_version": 1}
 Log into the server with or without an account. Server sends an acknowledgement if the IDN was accepted.
 Can optionally start on a specific map, with optional map coordinates.
 Clients can request features and the server can confirm some amount of them.
 Clients can report what name and version they're running if they like.
+The server may report back information for accessing a HTTP API. The version number is currently 1.
 
 --> IDN {"username": username, "password": password, "client_mode": "messaging"}
 Experimental feature: If you specify a "client_mode" parameter and set it to "messaging", you'll log in but not be placed into the world as a character.

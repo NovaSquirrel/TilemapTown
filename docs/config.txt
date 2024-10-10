@@ -93,6 +93,10 @@ API.Port
 Default: 12551
 Port to host the web API on.
 
+API.URL
+Default: ""
+URL to give clients for accessing the API.
+
 Database.File
 Default: "town.db"
 Filename used for Tilemap Town's database.
@@ -111,6 +115,11 @@ If provided, this is the filename used for the build log.
 
 Logs.BuildDefault
 Default: true
+If on, default to logging all building by default.
+
+Logs.UploadFile
+Default: ""
+If provided, this is the filename used for the upload log.
 
 TempLogs.ConnectSize
 Default: 100
@@ -119,6 +128,58 @@ Maximum number of connection/login messages to keep at once.
 TempLogs.BuildSize
 Default: 100
 Maximum number of build messages to keep at once.
+
+TempLogs.UploadSize
+Default: 100
+Maximum number of file upload messages to keep at once.
+
+FileUpload.Enabled
+Default: false
+Whether or not users should be able to upload files at all.
+
+FileUpload.URLPrefix
+Default: ""
+Prefix added to names to be able to retrieve an uploaded file through a web server.
+
+FileUpload.StoragePath
+Default: ""
+Directory where uploaded files are stored.
+
+FileUpload.MaximumFileSize
+Default: 512
+Total limit (in kibibytes) for a single file.
+
+FileUpload.SizeLimitTotal
+Default: 102400
+Total limit (in kibibytes) for all user-uploaded files combined.
+
+FileUpload.SizeLimitGuest
+Default: 128
+Total number of kibibytes an unregistered user can have uploaded.
+
+FileUpload.SizeLimitUser
+Default: 128
+Total number of kibibytes a user can have uploaded.
+
+FileUpload.SizeLimitTrustedUser
+Default: 5120
+Total number of kibibytes a trusted user can have uploaded.
+
+FileUpload.SizeLimitOverride
+Default: {}
+Dictionary where each key is a lowercased username, and each value is the total size in kibibytes that user can have uploaded.
+
+FileUpload.AllowedFileCount
+Default: 100
+Number of files each user is allowed to have uploaded at once.
+
+FileUpload.AllowedFolderCount
+Default: 100
+Number of folders each user is allowed to have at once.
+
+FileUpload.AllowCrossOrigin
+Default: False
+Add CORS headers to the file upload API in order to allow accessing it when testing locally.
 
 .--------------------------------------------------------------------------------------------------
 | Resource files:

@@ -123,7 +123,8 @@
   <li><a id="navmap"       href="#" >Map</a></li>
   <li><a id="navusers"     href="#" onclick="viewUsers();">Users</a></li>
   <li><a id="navmail"      href="#" onclick="viewMail();" title="Mail">Mail</a></li>
-  <li><a id="navchatlog" href="#" onclick="viewChatLog();" title="Chat Log">Chat Log</a></li>
+  <li><a id="navchatlog"   href="#" onclick="viewChatLog();" title="Chat Log">Chat Log</a></li>
+  <li><a id="navfiles"     href="#" onclick="viewFiles();" title="Files">Files</a></li>
   <li><a id="navcustomize" href="#" onclick="viewCustomize();" title="Customize"><div style="width:16px; height:16px; background: url(img/potluck.png) -32px -400px;"></div></a></li>
   <li><a id="navhelp"      href="help.html" target="_blank" title="Help">Help</a></li>
 </ul>
@@ -133,7 +134,7 @@
     <span class="modalclose">&times;</span>
     <p>
     <h1>Log into Tilemap Town</h1>
-    Leave username and password blank to sign in as a guest.<br>
+    Leave username and password blank to sign in as a guest.<br>You can register after you connect with <span class="xbbcode-code">/register username password</span> if you wish.<br>
     <input type="text" id="loginuser" placeholder="Username"> Username<br>
     <input type="password" id="loginpass" placeholder="Password"> Password<br>
     <input type="text" id="loginserver" value="novasquirrel.com/townws/" placeholder="Server"> Server<br>
@@ -196,10 +197,125 @@
     <input type="button" value="Folder" onclick="newItemCreate('folder');" />
     </p>
     <p>
+    <label class="unselectable"><input type="checkbox" id="createtempobject">Create as temporary entity</label>
+    </p>
+    <p>
     Map tiles are templates for tiles to place down on the map, like how the build menu works. Generic items are more like standard video game items, and you can drop them onto maps to have them act as props!
     </p>
     <p>
     <input type="button" value="Cancel" onclick="newItemCancel();" />
+    </p>
+  </div>
+</div>
+
+<div id="newFileWindow" class="modal">
+  <div class="modal-content">
+    <span class="modalclose">&times;</span>
+    <p>
+    <h1>New file</h1>
+
+    <p>
+    <input type="file" id="newfilefile" accept="image/png" />
+    </p>
+
+    <p>
+    <label for="newfilename" class="unselectable">File name</label><br>
+    <input type="text" id="newfilename" value="Image"/>
+    </p>
+
+    <p>
+    <label for="newfiledesc" class="unselectable">File description</label><br>
+    <textarea id="newfiledesc"></textarea>
+    </p>
+
+    <input type="button" value="Upload file" onclick="createNewFile(false, false);" /><br>
+    <input type="button" value="Upload and set appearance" onclick="createNewFile(true, false);" /><br>
+    <input type="button" value="Upload and create item" onclick="createNewFile(false, true);" />
+    </p>
+    <p>
+    <input type="button" value="Cancel" onclick="newFileCancel();" />
+    </p>
+  </div>
+</div>
+
+<div id="newFolderWindow" class="modal">
+  <div class="modal-content">
+    <span class="modalclose">&times;</span>
+    <p>
+    <h1>New folder</h1>
+
+    <p>
+    <label for="newfoldername" class="unselectable">Folder name</label><br>
+    <input type="text" id="newfoldername" value="new item"/>
+    </p>
+
+    <p>
+    <label for="newfolderdesc" class="unselectable">Folder description</label><br>
+    <textarea id="newfolderdesc"></textarea>
+    </p>
+
+    <input type="button" value="Create folder" onclick="createNewFolder();" />
+    </p>
+    <p>
+    <input type="button" value="Cancel" onclick="newFolderCancel();" />
+    </p>
+  </div>
+</div>
+
+<div id="editFileWindow" class="modal">
+  <div class="modal-content">
+    <span class="modalclose">&times;</span>
+    <p>
+    <h1>Edit file</h1>
+
+    <p>
+    <input type="file" id="editfilefile" accept="image/png" />
+    </p>
+
+    <p>
+    <label for="editfilename" class="unselectable">File name</label><br>
+    <input type="text" id="editfilename" value="Image"/>
+    </p>
+
+    <p>
+    <label for="editfiledesc" class="unselectable">File description</label><br>
+    <textarea id="editfiledesc"></textarea>
+    </p>
+
+	
+    <input type="button" value="Only edit name and description" onclick="doEditFile(false, false, false);" />
+	<p>
+    <input type="button" value="Reupload file" onclick="doEditFile(true, false, false);" /><br>
+    <input type="button" value="Reupload file and set appearance" onclick="doEditFile(true, true, false);" /><br>
+    <input type="button" value="Reupload file but keep URL" onclick="doEditFile(true, false, true);" />
+	</p>
+    </p>
+    <p>
+    <input type="button" value="Cancel" onclick="editFileCancel();" />
+    </p>
+  </div>
+</div>
+
+<div id="editFolderWindow" class="modal">
+  <div class="modal-content">
+    <span class="modalclose">&times;</span>
+    <p>
+    <h1>Edit folder</h1>
+
+    <p>
+    <label for="editfoldername" class="unselectable">Folder name</label><br>
+    <input type="text" id="editfoldername" value="new item"/>
+    </p>
+
+    <p>
+    <label for="editfolderdesc" class="unselectable">Folder description</label><br>
+    <textarea id="editfolderdesc"></textarea>
+    </p>
+
+    <input type="button" value="Edit folder" onclick="doEditFolder();" />
+    </p>
+    <p>
+    <input type="button" value="Cancel" onclick="editFolderCancel();" />
     </p>
   </div>
 </div>
@@ -210,8 +326,8 @@
     <div id="panel"></div>
     <div>
       <span id="deleteTurfObj">
-      <input type="checkbox" id="turfselect" checked="true"><label for="turfselect">Tiles</label></input>
-      <input type="checkbox" id="objselect" checked="true"><label for="objselect">Objects</label></input>
+      <label><input type="checkbox" id="turfselect" checked="true">Tiles</label>
+      <label><input type="checkbox" id="objselect" checked="true">Objects</label>
       <input type="button" value="&#x1F4A3;Delete" onclick="selectionDelete();">
       </span>
       <span id="getTileObjSpan">
@@ -240,7 +356,7 @@
 <widget-window id="users" style="display: none;">
   <span slot="title">Users</span>
   <div slot="contents">
-    <input type="checkbox" id="userlist_all_entities" onchange="updateUsersUL()"><label for="userlist_all_entities">All entities<label></input>
+    <label class="unselectable"><input type="checkbox" id="userlist_all_entities" onchange="updateUsersUL()">All entities</label>
     <span id="userlist_span">
       <hr><strong>Users</strong><br>
       <ul id="usersul" class="itemsul unselectable"></ul>
@@ -332,13 +448,15 @@
   <p>
     Preset player graphics<br>
     <input type="button" value="Bunny" onclick="sendChatCommand('userpic bunny');">
-    <input type="button" value="Cat" onclick="sendChatCommand('userpic cat');"><br>
-    <input type="button" value="Hamster" onclick="sendChatCommand('userpic hamster');");>
+    <input type="button" value="Cat" onclick="sendChatCommand('userpic cat');">
+    <input type="button" value="Hamster" onclick="sendChatCommand('userpic hamster');"><br>
     <input type="button" value="Fire" onclick="sendChatCommand('userpic fire');">
+    <input type="button" value="Snail" onclick="sendChatCommand('userpic snail');">
+    <input type="button" value="Turtle" onclick="sendChatCommand('userpic turtle');">
   </p>
 
   <p>
-    As a temporary measure,<br>custom pics go on imgur<br>
+    Registered users can <a href="#" onclick="viewFiles();">upload images</a><br>to use as avatars. Otherwise you may use<br><a href="https://imgur.com/">Imgur</a>, <a href="https://imgbb.com/">ImgBB</a> or <a href="https://postimages.org/">Postimages</a>.<br>More image hosts can be added on request.<br>
     <input type="text" placeholder="https://i.imgur.com/whatever.png" id="newcustompic">
     <input type="button" value="Custom pic" onclick="sendChatCommand('userpic '+document.getElementById('newcustompic').value);">
   </p>
@@ -349,6 +467,15 @@
         <input type="button" value="Use"><br>
 -->
         </div>
+</widget-window>
+
+<widget-window id="filelist" style="display: none;">
+  <span slot="title">File uploads</span>
+  <div slot="contents" id="filelist-contents">
+    <span id="filelist-status"></span>
+    <ul id="filesul" class="itemsul unselectable">
+    </ul>
+  </div>
 </widget-window>
 
 <widget-window id="tileset" style="display: none;">
@@ -394,9 +521,9 @@
 </widget-window>
 
 <widget-window id="moveItem" style="display: none;">
-  <span slot="title">Move Item</span>
+  <span slot="title" id="moveItemTitle">Move Item</span>
   <div slot="contents" id="inventory-contents">
-    Moving item:
+    Moving <span id="moveItemNoun">item</span>:
     <ul id="movesourceul" class="itemsul unselectable">
     </ul>
 
@@ -415,14 +542,15 @@
     <td><input type="text" id="edittilename"/></td>
     </tr>
     <tr>
-    <td><label for="edittiledesc" class="unselectable">Description</label></td>
+    <td><label for="edittiledesc" class="unselectable" id="description_or_message">Description</label></td>
     <td><textarea id="edittiledesc"></textarea></td>
     </tr>
 
     </table>
 
     <div id="edittileimage">
-    Image URL: <input type="text" id="edittileurl" />
+    Image URL: <input type="text" id="edittileurl" /><br>
+    This should an image on <a href="https://imgur.com/">Imgur</a>, <a href="https://imgbb.com/">ImgBB</a> or <a href="https://postimages.org/">Postimages</a>.<br>More image hosts can be added on request.
     </div>
 
     <div id="edittiletext">
@@ -437,11 +565,41 @@
       <option value="0">Potluck</option>
       <option value="-1">Extras</option>
       <option value="-2">Pulp</option>
+      <option value="-3">EasyRPG</option>
       <option value="custom">Custom</option>
     </select>
     <input type="number" value="0" id="edittilex" oninput="editItemUpdatePic();" size="4" />
-    <input type="number" value="0" id="edittiley" oninput="editItemUpdatePic();" size="4" />
-    <br/>
+    <input type="number" value="0" id="edittiley" oninput="editItemUpdatePic();" size="4" /><br >
+    <span id="edittileautotileoptions">
+	Autotiling: <select id="edittileautotile">
+		<option value="0">None</option>
+		<option value="1">9 slice</option>
+		<option value="2">4 directions - Middle</option>
+		<option value="3">4 directions - Single</option>
+		<option value="4">RPG - Middle</option>
+		<option value="5">RPG - Single</option>
+		<option value="6">Horizontal - Middle 3</option>
+		<option value="7">Horizontal - Middle 4</option>
+		<option value="8">Horizontal - Single 4</option>
+		<option value="9">Vertical - Middle 3</option>
+		<option value="10">Vertical - Middle 4</option>
+		<option value="11">Vertical - Single 4</option>
+	</select>
+    <input type="text" id="edittileautotileclass" placeholder="Autotile class" />
+    </span>
+    </p>
+
+    <p>
+    Animation: <select id="edittileanimationmode">
+        <option value="0">Forwards</option>
+        <option value="1">Backwards</option>
+        <option value="2">Ping-pong</option>
+        <option value="3">Ping-pong reverse</option>
+    </select>
+    <br>
+    Frames: <input type="number" value="0" size="4" id="edittileanimationframes" />
+    Speed: <input type="number" value="0"  size="4" id="edittileanimationspeed" />
+    Offset: <input type="number" value="0" size="4" id="edittileanimationoffset" />
     <div style="overflow:scroll; width:512px; height:128px;" id="edittilesheetcontainer">
     <img src="" id="edittilesheetselect">
     </div>
@@ -461,9 +619,9 @@
     </p>
 
     <p>
-    <input type="checkbox" id="edittiledensity"><label for="edittiledensity" class="unselectable">Item is an obstacle (dense)</label></input><br>
-    <input type="checkbox" id="edittileisobject"><label for="edittileisobject" class="unselectable">Item is a map tile (uncheck if it should go on top of the ground, instead of replacing it)</label></input><br>
-    <input type="checkbox" id="edittileover"><label for="edittileover" class="unselectable">Display above players, instead of underneath</label></input>
+    <label class="unselectable"><input type="checkbox" id="edittiledensity">Item is an obstacle (dense)</label><br>
+    <label class="unselectable"><input type="checkbox" id="edittileisobject">Item is a map tile (uncheck if it should go on top of the ground, instead of replacing it)</label><br>
+    <label class="unselectable"><input type="checkbox" id="edittileover">Display above players, instead of underneath</label>
     </p>
     </div>
     </div>
@@ -519,9 +677,9 @@
 <widget-contextmenu id="hotbar-contextmenu" style="display: none; z-index: 10;">
   <ul slot="menu" id="hotbar-contextmenu-menu">
     <li onclick="copyHotbarSlotToInventory();">Copy to inventory</li>
-    <li onclick="deleteHotbarSlot();">Delete</li>
     <li onclick="copyHereHotbarSlot();">Copy here</li>
     <li onclick="editHotbarSlot();">Edit</li>
+    <li onclick="deleteHotbarSlot();">Delete</li>
   </ul>
 </widget-contextmenu>
 
@@ -529,6 +687,24 @@
   <ul slot="menu" id="hotbar-no-item-contextmenu-menu">
     <li onclick="copyHereHotbarSlot();">Copy here</li>
     <li onclick="newTileHotbarSlot();">New tile</li>
+  </ul>
+</widget-contextmenu>
+
+<widget-contextmenu id="fileupload-contextmenu" style="display: none;">
+  <ul slot="menu" id="fileupload-contextmenu-menu">
+	<li onclick="fileUploadContextMenuEdit();">Edit image</li>
+	<li onclick="moveFileOrFolder(contextMenuFile, false);">Move image</li>
+	<li><a id="openFileInNewTabLink" href="https://example.com" target="_blank">Open image in new tab</a></li>
+	<li onclick="fileUploadContextMenuAppearance();">Set appearance to this</li>
+	<li onclick="fileUploadContextMenuDelete();">Delete image</li>
+  </ul>
+</widget-contextmenu>
+
+<widget-contextmenu id="filefolder-contextmenu" style="display: none;">
+  <ul slot="menu" id="filefolder-contextmenu-menu">
+	<li onclick="fileFolderContextMenuEdit();">Edit folder</li>
+	<li onclick="moveFileOrFolder(contextMenuFolder, true);">Move folder</li>
+	<li onclick="fileFolderContextMenuDelete();">Delete folder</li>
   </ul>
 </widget-contextmenu>
 

@@ -129,7 +129,7 @@ client_settings - text    - whatever the client wants to store (like settings)
 
 flags           - integer - user-specific flags
 	0x0001 is a bot
-	0x0002 can do file uploads
+	0x0002 larger file upload limits
 	0x0004 don't produce build logs when this user builds
 	0x0008 don't show this user's location in the API or /whereare
 	0x0010 don't show this user at all in the API
@@ -176,3 +176,24 @@ entity_id       * integer - ENTITY id that's being referred to here
 key             - text    - Name to refer to this entry with
 flags           - integer - Not used yet
 
+
+---USER_FILE_UPLOAD---
+file_id         * integer - ID for the file
+user_id         * integer - user who owns this file
+created_at      -timestamp- when the file was created
+updated_at      -timestamp- when the file was updated
+name            - text    - user-given name for the file
+desc            - text    - user-given description for the file
+location        - integer - user folder this file is stored in, or null
+size            - integer - size in bytes of the uploaded file
+filename        - text    - filename within the filesystem
+flags           - integer - currently not used
+
+
+---USER_FILE_FOLDER---
+folder_id       * integer - ID for the folder
+user_id         * integer - user who owns this file
+name            - text    - user-given name for the file
+desc            - text    - user-given description for the file
+location        - integer - folder this folder is stored in, or null
+flags           - integer - currently not used

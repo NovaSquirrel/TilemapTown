@@ -17,6 +17,7 @@
 import json, random, datetime, time, ipaddress, hashlib, weakref
 from .buildglobal import *
 from .buildentity import Entity
+from .buildapi import admin_delete_uploaded_file, fix_uploaded_file_sizes
 
 handlers = {}	# dictionary of functions to call for each command
 aliases = {}	# dictionary of commands to change to other commands
@@ -879,6 +880,41 @@ def fn_userflags(map, client, context, arg):
 		respond(context, 'Your new user flags: '+flags_list())
 	else:
 		respond(context, 'Syntax: add/del list of flags', error=True)
+
+
+admin_changeable_flags = ('bot', 'hide_location', 'hide_api', 'no_watch', 'secret_pic', 'file_uploads')
+@cmd_command(category="Settings", alias=['userflag'])
+def fn_adminuserflags(map, client, context, arg):
+	username, arg = separate_first_word(arg)
+	connection = find_connection_by_username(username)
+
+	if connection == None:
+		respond(context, 'User '+username+" not found", error=True)
+		return
+	def flags_list():
+		return ', '.join([key for key in userflag if ((userflag[key] & connection.user_flags) and (userflag[key].bit_count() == 1))])
+
+	arg = arg.lower()
+	if arg == "" or arg == "list":
+		respond(context, 'Their user flags: '+flags_list())
+		return
+	param = arg.lower().split(' ')
+	if len(param) >= 2:
+		if param[0] in ('add', 'set'):
+			for flag in param[1:]:
+				if flag in admin_changeable_flags:
+					connection.user_flags |= userflag[flag]
+		elif param[0] in ('del', 'remove'):
+			for flag in param[1:]:
+				if flag in admin_changeable_flags:
+					connection.user_flags &= ~userflag[flag]
+		else:
+			respond(context, 'Unrecognized subcommand "%s"' % param[0], code='invalid_subcommand', detail=param[0], error=True)
+			return
+		respond(context, 'Their new user flags: '+flags_list())
+	else:
+		respond(context, 'Syntax: username add/del list of flags', error=True)
+
 
 def permission_change(map, client, context, arg, command2):
 	# Check syntax
@@ -2342,6 +2378,11 @@ def fn_flushbuildlog(map, client, context, arg):
 	if BuildLog:
 		BuildLog.flush()
 
+@cmd_command(privilege_level="server_admin", no_entity_needed=True)
+def fn_flushuploadlog(map, client, context, arg):
+	if UploadLog:
+		UploadLog.flush()
+
 @cmd_command(privilege_level="server_admin", alias=['connecthistory'], no_entity_needed=True)
 def fn_connectlog(map, client, context, arg):
 	if arg != 'c':
@@ -2355,6 +2396,35 @@ def fn_buildlog(map, client, context, arg):
 		respond(context, "Build log (%d):[ul]%s[/ul]" % (len(TempLogs[1]), ''.join("[li]%s[/li]" % _ for _ in TempLogs[1])), class_type="secret_message")
 	if arg != 'k':
 		TempLogs[1].clear()
+
+@cmd_command(privilege_level="server_admin", no_entity_needed=True, alias=['filelog', 'fileuploadlog'])
+def fn_uploadlog(map, client, context, arg):
+	if arg != 'c':
+		respond(context, "Upload log (%d):[ul]%s[/ul]" % (len(TempLogs[2]), ''.join("[li]%s[/li]" % _ for _ in TempLogs[2])), class_type="secret_message")
+	if arg != 'k':
+		TempLogs[2].clear()
+
+@cmd_command(privilege_level="server_admin", no_entity_needed=True)
+def fn_deleteuserfile(map, client, context, arg):
+	if arg == "":
+		return
+	arg = int(arg)
+	result = admin_delete_uploaded_file(arg)
+	if result == True:
+		respond(context, "Deleted user file %d" % arg)
+	elif result == False:
+		respond(context, "Can't delete user file %d" % arg)
+	elif result == None:
+		respond(context, "Didn't find user file %d" % arg)
+
+@cmd_command(privilege_level="server_admin", no_entity_needed=True, alias=['fixuserfilesize'])
+def fn_fixuserfilesizes(map, client, context, arg):
+	if arg == "":
+		arg = None
+	else:
+		arg = int(arg)
+	fixed, removed = fix_uploaded_file_sizes(arg)
+	respond(context, "Fixed %d file sizes, removed %d files" % (fixed, removed))
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True)
 def fn_rehash(map, client, context, arg):
