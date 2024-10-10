@@ -366,6 +366,7 @@ function fileCardList(ul, folders_only, click_handler, contextmenu_handler) {
 					item.status = (metadata.size / 1024).toFixed(2) + " KiB";
 				}
 			} else {
+				item.id = "F"+(-id);
 				item.pic = FolderOpenPic;
 			}
 
@@ -1469,6 +1470,7 @@ async function moveFileOrFolder(move_id, isfolder) {
 	};
 	if(isfolder) {
 		item.pic = FolderOpenPic;
+		item.id = "F"+move_id;
 	} else {
 		item.pic = [metadata.url, 0, 0];
 		item.is_uploaded_image = true;
