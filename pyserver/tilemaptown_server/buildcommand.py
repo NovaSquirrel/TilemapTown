@@ -17,6 +17,7 @@
 import json, random, datetime, time, ipaddress, hashlib, weakref
 from .buildglobal import *
 from .buildentity import Entity
+from .buildapi import admin_delete_uploaded_file, fix_uploaded_file_sizes
 
 handlers = {}	# dictionary of functions to call for each command
 aliases = {}	# dictionary of commands to change to other commands
@@ -2362,6 +2363,28 @@ def fn_uploadlog(map, client, context, arg):
 		respond(context, "Upload log (%d):[ul]%s[/ul]" % (len(TempLogs[2]), ''.join("[li]%s[/li]" % _ for _ in TempLogs[2])), class_type="secret_message")
 	if arg != 'k':
 		TempLogs[2].clear()
+
+@cmd_command(privilege_level="server_admin", no_entity_needed=True)
+def fn_deleteuserfile(map, client, context, arg):
+	if arg == "":
+		return
+	arg = int(arg)
+	result = admin_delete_uploaded_file(arg)
+	if result == True:
+		respond(context, "Deleted user file %d" % arg)
+	elif result == False:
+		respond(context, "Can't delete user file %d" % arg)
+	elif result == None:
+		respond(context, "Didn't find user file %d" % arg)
+
+@cmd_command(privilege_level="server_admin", no_entity_needed=True, alias=['fixuserfilesize'])
+def fn_fixuserfilesizes(map, client, context, arg):
+	if arg == "":
+		arg = None
+	else:
+		arg = int(arg)
+	fixed, removed = fix_uploaded_file_sizes(arg)
+	respond(context, "Fixed %d file sizes, removed %d files" % (fixed, removed))
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True)
 def fn_rehash(map, client, context, arg):

@@ -165,6 +165,18 @@ FileUpload.SizeLimitOverride
 Default: {}
 Dictionary where each key is a lowercased username, and each value is the total size in kibibytes that user can have uploaded.
 
+FileUpload.AllowedFileCount
+Default: 100
+Number of files each user is allowed to have uploaded at once.
+
+FileUpload.AllowedFolderCount
+Default: 100
+Number of folders each user is allowed to have at once.
+
+FileUpload.AllowCrossOrigin
+Default: False
+Add CORS headers to the file upload API in order to allow accessing it when testing locally.
+
 .--------------------------------------------------------------------------------------------------
 | Resource files:
 '--------------------------------------------------------------------------------------------------

@@ -81,6 +81,7 @@ def loadConfigJson():
 	setConfigDefault("TempLogs", "ConnectSize",      100)
 	setConfigDefault("TempLogs", "BuildSize",        100)
 	setConfigDefault("TempLogs", "UploadSize",       100)
+
 	setConfigDefault("FileUpload", "Enabled",        False)
 	setConfigDefault("FileUpload", "URLPrefix",      "")
 	setConfigDefault("FileUpload", "StoragePath",    "")
@@ -90,6 +91,9 @@ def loadConfigJson():
 	setConfigDefault("FileUpload", "SizeLimitUser",        128)
 	setConfigDefault("FileUpload", "SizeLimitTrustedUser", 5120)
 	setConfigDefault("FileUpload", "SizeLimitOverride",    {})
+	setConfigDefault("FileUpload", "AllowedFileCount",     100)
+	setConfigDefault("FileUpload", "AllowedFolderCount",   100)
+	setConfigDefault("FileUpload", "AllowCrossOrigin",     False)
 
 	LoadedAnyServerResources[0] = False
 	ServerResources.clear()
@@ -416,6 +420,8 @@ def escape_tags(text):
 
 def image_url_is_okay(url):
 	if url == "":
+		return True
+	if Config["FileUpload"]["Enabled"] and len(Config["FileUpload"]["URLPrefix"]) and url.startswith(Config["FileUpload"]["URLPrefix"]):
 		return True
 	for w in Config["Images"]["URLWhitelist"]:
 		if url.startswith(w):

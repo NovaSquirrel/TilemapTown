@@ -163,6 +163,7 @@ Response:
 
 Response codes:
 	200 OK
+	400 File ID is bad
 	401 API key not valid
 	403 Account doesn't have file upload permissions
 
@@ -184,6 +185,7 @@ Response:
 
 Response codes:
 	200 OK
+	400 File ID is bad
 	401 API key not valid
 	403 Account doesn't have file upload permissions
 	404 File doesn't exist
@@ -197,6 +199,8 @@ Submit a form with the following fields (all optional except "file"):
 	desc: Any text to describe the file in a wordier way than the name
 	folder: A folder ID
 	file: Binary data for the file
+	set_my_pic: Defaults to false, but if it's tue, then your entity's pic will be set to the new file
+	create_entity: Defaults to false, but if it's true then a new image entity will be created and put into your inventory
 
 Response:
 	{
@@ -232,6 +236,7 @@ Submit a form with the following fields (all optional):
 	folder: A folder ID
 	file: Binary data for the file
 	keep_url: Defaults to false, but if it's true then changing the file will not issue a new URL
+	set_my_pic: Defaults to false, but if it's tue, then your entity's pic will be set to the new file
 
 Fields that are omitted will be left as-is.
 
@@ -264,7 +269,7 @@ Response codes:
 Delete one of your files.
 
 Response codes:
-	200 OK
+	204 OK, no content
 	401 API key not valid
 	403 Account doesn't have file upload permissions
 	404 File doesn't exist
@@ -283,6 +288,7 @@ Response:
 
 Response codes:
 	200 OK
+	400 Folder ID is bad
 	401 API key not valid
 	403 Account doesn't have file upload permissions
 	404 File doesn't exist
@@ -338,10 +344,11 @@ Response codes:
 
 
 ----- DELETE /v1/my_files/folder/FOLDER_ID
-Delete one of your folders, moving everything that was in the folder to the folder's parent.
+Delete one of your folders, moving everything that was in the folder to the root.
 
 Response codes:
-	200 OK
+	204 OK, no content
+	400 Folder ID is bad
 	401 API key not valid
 	403 Account doesn't have file upload permissions
 	404 Folder doesn't exist

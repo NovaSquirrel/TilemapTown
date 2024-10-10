@@ -94,6 +94,8 @@ var GlobalTilesArrayNames = [];
 let chatTimestamps = true;
 let lockZoomLevel = false;
 
+let FileStorageInfo = null;
+
 ///////////////////////////////////////////////////////////
 
 function getRandomInt(min, max) {
@@ -184,6 +186,7 @@ function viewOptions() {
 
 function toggleDisplay(element) {
 	element.style.display = element.style.display == 'block' ? 'none' : 'block';
+	return element.style.display == 'block';
 }
 
 function updateUsersUL() {
@@ -237,10 +240,10 @@ function updateUsersUL() {
 
 function viewUsers() {
 	let users = document.getElementById('users');
-	toggleDisplay(users);
-
-	let ul = document.getElementById('usersul');
-	updateUsersUL();
+	if(toggleDisplay(users)) {
+		let ul = document.getElementById('usersul');
+		updateUsersUL();
+	}
 }
 
 function viewChatLog() {
@@ -252,10 +255,10 @@ function viewChatLog() {
 
 function viewInventory() {
 	let inventory = document.getElementById('inventory');
-	toggleDisplay(inventory);
-
-	let ul = document.getElementById('inventoryul');
-	updateInventoryUL();
+	if(toggleDisplay(inventory)) {
+		let ul = document.getElementById('inventoryul');
+		updateInventoryUL();
+	}
 }
 
 function viewBuild() {
@@ -267,6 +270,190 @@ function viewCustomize() {
 	let Hidden = (options.style.display == 'none');
 	document.getElementById("navcustomize").setAttribute("class", Hidden ? "navactive" : "");
 	options.style.display = Hidden ? 'block' : 'none';
+}
+
+function updateFileList() {
+	document.getElementById("filelist-status").innerHTML = "";
+	let ul = document.getElementById('filesul');
+	if (!ul) return;
+
+	// Each index is a folder ID; each positive item within is a file, each negative item within is a folder
+	let DisplayFiles = { null: [] };
+
+	for(let key in FileStorageInfo.files) {
+		let file_info = FileStorageInfo.files[key];
+		if (file_info.folder in DisplayFiles) {
+			DisplayFiles[file_info.folder].push(key);
+		} else {
+			DisplayFiles[file_info.folder] = [key];
+		}
+	}
+	for(let key in FileStorageInfo.folders) {
+		let folder_info = FileStorageInfo.folders[key];
+		if (folder_info.folder in DisplayFiles) {
+			DisplayFiles[folder_info.folder].push(-key);
+		} else {
+			DisplayFiles[folder_info.folder] = [-key];
+		}
+	}
+	// sort by name or date later
+	for (let key in DisplayFiles) {
+		DisplayFiles[key].sort(function (a, b) { return a - b });
+	}
+
+	let lis = [];
+	let openFolders = [];
+
+	// Empty out the list
+	while (ul.firstChild) {
+		ul.removeChild(ul.firstChild);
+	}
+
+	function expandFolder(list, id) {
+		openFolders[id] = true;
+
+		// Empty out the list
+		while (list.firstChild) {
+			list.removeChild(list.firstChild);
+		}
+
+		// Add its sub-items
+		addItems(list, DisplayFiles[id]);
+
+		// Add the "collapse folder" item
+		let newitem = document.createElement("li");
+		newitem.appendChild(document.createTextNode("hide contents"));
+		newitem.classList.add('inventoryli', 'inventorymeta');
+		newitem.onclick = function () {
+			collapseFolder(list, id);
+			setItemCardImage(list.previousSibling, picIcon(FolderClosedPic));
+		};
+		list.appendChild(newitem);
+	}
+
+	function collapseFolder(list, id) {
+		openFolders[id] = false;
+
+		// Empty out the list
+		while (list.firstChild) {
+			list.removeChild(list.firstChild);
+		}
+
+		// Add the "expand folder" item
+		let newitem = document.createElement("li");
+		newitem.appendChild(document.createTextNode("show contents"));
+		newitem.classList.add('inventoryli', 'inventorymeta');
+		newitem.onclick = function () {
+			expandFolder(list, id);
+			setItemCardImage(list.previousSibling, picIcon(FolderOpenPic));
+		};
+		list.appendChild(newitem);
+	}
+
+	// Recursively make the tree with unordered lists
+	function addItems(list, ids) {
+		for (let id of ids) {
+			let is_file = id > 0;
+			let is_folder = id < 0;
+			let metadata = is_file ? FileStorageInfo.files[id] : FileStorageInfo.folders[-id];
+			let item = {
+				name: metadata.name,
+				desc: metadata.desc,
+			};
+			if(is_file) {
+				item.pic = [metadata.url, 0, 0];
+				item.is_uploaded_image = true;
+				item.id = id;
+			} else {
+				item.pic = FolderOpenPic;
+			}
+
+			let li = itemCard(item);
+			li.addEventListener('contextmenu', function (e) {
+				if(is_file)
+					openFileContextMenu(id, e.clientX, e.clientY);
+				else
+					openFolderContextMenu(-id, e.clientX, e.clientY);
+				e.preventDefault();
+			});
+			list.appendChild(li);
+
+			// For empty folders which won't go into
+			// the second conditional, just show them open
+			if (is_folder) {
+				setItemCardImage(li, picIcon(FolderOpenPic));
+			}
+
+			// If the item itself has sub-items
+			if (is_folder && (-id in DisplayFiles)) {
+				let inner = document.createElement("ul");
+				list.appendChild(inner);
+
+				// on "use" for folder items
+				if (is_folder) {
+					li.addEventListener("click", function (e) {
+						if (openFolders[id]) {
+							collapseFolder(inner, -id);
+							setItemCardImage(li, picIcon(FolderClosedPic));
+						} else {
+							expandFolder(inner, -id);
+							setItemCardImage(li, picIcon(FolderOpenPic));
+						}
+					})
+
+					expandFolder(inner, -id);
+				}
+			}
+		}
+	}
+
+	addItems(ul, DisplayFiles[null]);
+
+	// Add the "new item" item
+	let newitem = document.createElement("li");
+	newitem.appendChild(document.createTextNode("+File"));
+	newitem.classList.add('inventoryli');
+	newitem.id = "fileadd"
+	newitem.onclick = function () { document.getElementById('newFileWindow').style.display = "block"; };
+	ul.appendChild(newitem);
+
+	// Add the "new item" item
+	newitem = document.createElement("li");
+	newitem.appendChild(document.createTextNode("+Folder"));
+	newitem.classList.add('inventoryli');
+	newitem.id = "fileadd"
+	newitem.onclick = function () { document.getElementById('newFolderWindow').style.display = "block"; };
+	ul.appendChild(newitem);
+}
+
+async function viewFiles() {
+	let files = document.getElementById('filelist');
+	if(toggleDisplay(files)) {
+		if(!API_URL) {
+			document.getElementById("filelist-status").innerHTML = "Server has its API disabled";
+			return;
+		}
+
+		// Clean up
+		document.getElementById("filelist-status").innerHTML = "Checking status...";
+		let ul = document.getElementById('filesul');
+		if (!ul) return;
+		while (ul.firstChild) {
+			ul.removeChild(ul.firstChild);
+		}
+
+		let response = await fetch(API_URL + "/v1/my_files" , {
+			headers: {'Authorization': 'Bearer ' + API_Key},
+			method: "GET"});
+		if(response.status == 200) {
+			FileStorageInfo = await response.json();
+			updateFileList();
+		} else if (response.status == 403) {
+			document.getElementById("filelist-status").innerHTML = "You need an account for this.";
+		} else {
+			document.getElementById("filelist-status").innerHTML = "Error accessing file upload API.";
+		}
+	}
 }
 
 function loginButton() {
@@ -557,8 +744,10 @@ function itemIcon(key) {
 	// as well as built-in ones
 	pic = [0, 8, 24];
 
-	let user = PlayerWho[key];
-	if (key in PlayerImages) {
+	if (item.is_uploaded_image) {
+		img.style.width = "32px";
+		img.style.height = "32px";
+	} else 	if (key in PlayerImages) {
 		if (PlayerImages[key].naturalWidth != 16 || PlayerImages[key].naturalHeight != 16) {
 			img.style.width = "32px";
 			img.style.height = "32px";
@@ -1106,6 +1295,134 @@ function newItemCancel() {
 	document.getElementById('newItemWindow').style.display = "none";
 }
 
+///////////////////////////////////////////////////////////
+// File management
+///////////////////////////////////////////////////////////
+
+async function createNewFile(set_my_pic, create_entity) {
+	const formData = new FormData();
+	formData.append("name", document.getElementById("newfilename").value);
+	formData.append("desc", document.getElementById("newfiledesc").value);
+	formData.append("set_my_pic", set_my_pic);
+	formData.append("create_entity", create_entity);
+	formData.append('file', document.getElementById("newfilefile").files[0]);
+
+	let response = await fetch(API_URL + "/v1/my_files/file" , {
+		headers: {'Authorization': 'Bearer ' + API_Key},
+		body: formData,
+		method: "POST"});
+	if(response.status == 200) {
+		let j = await response.json();
+		let file_info = j.file;
+		FileStorageInfo.files[file_info.id] = file_info;
+		updateFileList();
+	} else {
+		console.log("Error "+response.status);
+	}
+	newFileCancel();
+}
+
+async function createNewFolder() {
+	const formData = new FormData();
+	formData.append("name", document.getElementById("newfoldername").value);
+	formData.append("desc", document.getElementById("newfolderdesc").value);
+
+	let response = await fetch(API_URL + "/v1/my_files/folder" , {
+		headers: {'Authorization': 'Bearer ' + API_Key},
+		body: formData,
+		method: "POST"});
+	if(response.status == 200) {
+		let j = await response.json()
+		let folder_info = j.folder;
+		FileStorageInfo.folders[folder_info.id] = folder_info;
+		updateFileList();
+	} else {
+		console.log("Error "+response.status);
+	}
+	newFolderCancel();
+}
+
+
+function newFileCancel() {
+	document.getElementById('newFileWindow').style.display = "none";
+}
+
+function newFolderCancel() {
+	document.getElementById('newFolderWindow').style.display = "none";
+}
+
+let contextMenuFile = 0;
+function openFileContextMenu(id, x, y) {
+	let menu = document.querySelector('#fileupload-contextmenu');
+	menu.style.left = (x) + "px";
+	menu.style.top = (y) + "px";
+	menu.style.display = "block";
+	contextMenuFile = id;
+	document.getElementById("openFileInNewTabLink").href = FileStorageInfo.files[id].url;
+}
+
+let contextMenuFolder = 0;
+function openFolderContextMenu(id, x, y) {
+	let menu = document.querySelector('#filefolder-contextmenu');
+	menu.style.left = (x) + "px";
+	menu.style.top = (y) + "px";
+	menu.style.display = "block";
+	contextMenuFolder = id;
+}
+
+function fileUploadEdit() {
+	let file = FileStorageInfo.files[contextMenuFile];
+
+}
+function fileUploadMove() {
+	let file = FileStorageInfo.files[contextMenuFile];
+
+}
+function fileUploadAppearance() {
+	let file = FileStorageInfo.files[contextMenuFile];
+	sendChatCommand('userpic '+file.url);
+}
+async function fileUploadDelete() {
+	let file = FileStorageInfo.files[contextMenuFile];
+	if (
+		confirm(`Really delete file "${file.name}" with ID ${contextMenuFile}?`)
+	) {
+		let response = await fetch(API_URL + "/v1/my_files/file/"+contextMenuFile, {
+			headers: {'Authorization': 'Bearer ' + API_Key},
+			method: "DELETE"});
+		if(response.status == 204) {
+			delete FileStorageInfo.files[contextMenuFile];
+			updateFileList();
+		} else {
+			console.log("Error "+response.status);
+		}
+	}
+}
+
+function fileFolderEdit() {
+	let folder = FileStorageInfo.folders[contextMenuFolder];
+
+}
+function fileFolderMove() {
+	let folder = FileStorageInfo.folders[contextMenuFolder];
+
+}
+async function fileFolderDelete() {
+	let folder = FileStorageInfo.folders[contextMenuFolder];
+	if (
+		confirm(`Really delete folder "${folder.name}" with ID ${contextMenuFolder}?`)
+	) {
+		let response = await fetch(API_URL + "/v1/my_files/folder/"+contextMenuFolder, {
+			headers: {'Authorization': 'Bearer ' + API_Key},
+			method: "DELETE"});
+		if(response.status == 204) {
+			delete FileStorageInfo.folders[contextMenuFolder];
+			updateFileList();
+		} else {
+			console.log("Error "+response.status);
+		}
+	}
+}
 
 
 ///////////////////////////////////////////////////////////

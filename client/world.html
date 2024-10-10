@@ -120,7 +120,8 @@
   <li><a id="navmap"       href="#" >Map</a></li>
   <li><a id="navusers"     href="#" onclick="viewUsers();">Users</a></li>
   <li><a id="navmail"      href="#" onclick="viewMail();" title="Mail">Mail</a></li>
-  <li><a id="navchatlog" href="#" onclick="viewChatLog();" title="Chat Log">Chat Log</a></li>
+  <li><a id="navchatlog"   href="#" onclick="viewChatLog();" title="Chat Log">Chat Log</a></li>
+  <li><a id="navfiles"     href="#" onclick="viewFiles();" title="Files">Files</a></li>
   <li><a id="navcustomize" href="#" onclick="viewCustomize();" title="Customize"><div style="width:16px; height:16px; background: url(img/potluck.png) -32px -400px;"></div></a></li>
   <li><a id="navhelp"      href="help.html" target="_blank" title="Help">Help</a></li>
 </ul>
@@ -203,6 +204,60 @@
     </p>
     <p>
     <input type="button" value="Cancel" onclick="newItemCancel();" />
+    </p>
+  </div>
+</div>
+
+<div id="newFileWindow" class="modal">
+  <div class="modal-content">
+    <span class="modalclose">&times;</span>
+    <p>
+    <h1>New file</h1>
+
+    <p>
+    <input type="file" id="newfilefile" accept="image/png" />
+    </p>
+
+    <p>
+    <label for="newfilename" class="unselectable">File name</label><br>
+    <input type="text" id="newfilename" value="Image"/>
+    </p>
+
+    <p>
+    <label for="newfiledesc" class="unselectable">File description</label><br>
+    <textarea id="newfiledesc"></textarea>
+    </p>
+
+    <input type="button" value="Upload file" onclick="createNewFile(false, false);" /><br>
+    <input type="button" value="Upload and set appearance" onclick="createNewFile(true, false);" /><br>
+    <input type="button" value="Upload and create item" onclick="createNewFile(false, true);" />
+    </p>
+    <p>
+    <input type="button" value="Cancel" onclick="newFileCancel();" />
+    </p>
+  </div>
+</div>
+
+<div id="newFolderWindow" class="modal">
+  <div class="modal-content">
+    <span class="modalclose">&times;</span>
+    <p>
+    <h1>New folder</h1>
+
+    <p>
+    <label for="newfoldername" class="unselectable">Folder name</label><br>
+    <input type="text" id="newfoldername" value="new item"/>
+    </p>
+
+    <p>
+    <label for="newfolderdesc" class="unselectable">Folder description</label><br>
+    <textarea id="newfolderdesc"></textarea>
+    </p>
+
+    <input type="button" value="Create folder" onclick="createNewFolder();" />
+    </p>
+    <p>
+    <input type="button" value="Cancel" onclick="newFolderCancel();" />
     </p>
   </div>
 </div>
@@ -335,13 +390,15 @@
   <p>
     Preset player graphics<br>
     <input type="button" value="Bunny" onclick="sendChatCommand('userpic bunny');">
-    <input type="button" value="Cat" onclick="sendChatCommand('userpic cat');"><br>
-    <input type="button" value="Hamster" onclick="sendChatCommand('userpic hamster');">
+    <input type="button" value="Cat" onclick="sendChatCommand('userpic cat');">
+    <input type="button" value="Hamster" onclick="sendChatCommand('userpic hamster');"><br>
     <input type="button" value="Fire" onclick="sendChatCommand('userpic fire');">
+    <input type="button" value="Snail" onclick="sendChatCommand('userpic snail');">
+    <input type="button" value="Turtle" onclick="sendChatCommand('userpic turtle');">
   </p>
 
   <p>
-    As a temporary measure, custom pics<br>go on <a href="https://imgur.com/">Imgur</a>, <a href="https://imgbb.com/">ImgBB</a> or <a href="https://postimages.org/">Postimages</a>.<br>More image hosts can be added on request.<br>
+    Registered users can <a href="#" onclick="viewFiles();">upload images</a><br>to use as avatars. Otherwise you may use<br><a href="https://imgur.com/">Imgur</a>, <a href="https://imgbb.com/">ImgBB</a> or <a href="https://postimages.org/">Postimages</a>.<br>More image hosts can be added on request.<br>
     <input type="text" placeholder="https://i.imgur.com/whatever.png" id="newcustompic">
     <input type="button" value="Custom pic" onclick="sendChatCommand('userpic '+document.getElementById('newcustompic').value);">
   </p>
@@ -352,6 +409,15 @@
         <input type="button" value="Use"><br>
 -->
         </div>
+</widget-window>
+
+<widget-window id="filelist" style="display: none;">
+  <span slot="title">File uploads</span>
+  <div slot="contents" id="filelist-contents">
+    <span id="filelist-status"></span>
+    <ul id="filesul" class="itemsul unselectable">
+    </ul>
+  </div>
 </widget-window>
 
 <widget-window id="tileset" style="display: none;">
@@ -553,9 +619,9 @@
 <widget-contextmenu id="hotbar-contextmenu" style="display: none; z-index: 10;">
   <ul slot="menu" id="hotbar-contextmenu-menu">
     <li onclick="copyHotbarSlotToInventory();">Copy to inventory</li>
-    <li onclick="deleteHotbarSlot();">Delete</li>
     <li onclick="copyHereHotbarSlot();">Copy here</li>
     <li onclick="editHotbarSlot();">Edit</li>
+    <li onclick="deleteHotbarSlot();">Delete</li>
   </ul>
 </widget-contextmenu>
 
@@ -563,6 +629,24 @@
   <ul slot="menu" id="hotbar-no-item-contextmenu-menu">
     <li onclick="copyHereHotbarSlot();">Copy here</li>
     <li onclick="newTileHotbarSlot();">New tile</li>
+  </ul>
+</widget-contextmenu>
+
+<widget-contextmenu id="fileupload-contextmenu" style="display: none;">
+  <ul slot="menu" id="fileupload-contextmenu-menu">
+	<li onclick="fileUploadEdit();">Edit image</li>
+	<li onclick="fileUploadMove();">Move image</li>
+	<li><a id="openFileInNewTabLink" href="https://example.com" target="_blank">Open image in new tab</a></li>
+	<li onclick="fileUploadAppearance();">Set appearance to this</li>
+	<li onclick="fileUploadDelete();">Delete image</li>
+  </ul>
+</widget-contextmenu>
+
+<widget-contextmenu id="filefolder-contextmenu" style="display: none;">
+  <ul slot="menu" id="filefolder-contextmenu-menu">
+	<li onclick="fileFolderEdit();">Edit folder</li>
+	<li onclick="fileFolderMove();">Move folder</li>
+	<li onclick="fileFolderDelete();">Delete folder</li>
   </ul>
 </widget-contextmenu>
 

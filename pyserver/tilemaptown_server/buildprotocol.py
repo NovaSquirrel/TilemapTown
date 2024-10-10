@@ -514,7 +514,8 @@ def fn_BAG(connection, map, client, arg, echo):
 		# Move everything inside to the parent
 		for child in delete_me.contents.copy():
 			delete_me.remove_from_contents(child)
-			delete_me.map.add_to_contents(child)
+			if delete_me.map:
+				delete_me.map.add_to_contents(child)
 
 		# Delete from the database too
 		if delete_me.db_id:
@@ -977,7 +978,7 @@ def fn_IDN(connection, map, client, arg, echo):
 	if arg != {} and "username" in arg and "password" in arg:
 		# Log into an existing account
 		if not connection.login(filter_username(arg["username"]), arg["password"], new_client, override_map=override_map, announce_login=False):
-			print("Failed login for "+filter_username(arg["username"]))
+			write_to_connect_log("Failed login for "+filter_username(arg["username"]))
 			connection.disconnect(reason="BadLogin")
 			connection.login_successful_callback = None
 			return

@@ -31,6 +31,9 @@ let DidConnectOnce = false; // A connection got an IDN from the server at least 
 let StatusOnDisconnect = null;
 let StatusMessageOnDisconnect = null;
 let GlobalImageNames = {"0": "Potluck", "-1": "Extra", "-2": "Pulp", "-3": "EasyRPG"};
+let API_Key = null;
+let API_Version = null;
+let API_URL = null;
 
 // URL param options
 let InstantCamera = false;
@@ -733,6 +736,10 @@ function receiveServerMessage(cmd, arg) {
     case "IDN":
       ReconnectAttempts = 0;
       DidConnectOnce = true;
+
+      API_Key = arg.api_key;
+      API_Version = arg.api_version;
+      API_URL = arg.api_url;
 
       if(StatusOnDisconnect) {
         if(StatusMessageOnDisconnect && StatusMessageOnDisconnect != '') {
