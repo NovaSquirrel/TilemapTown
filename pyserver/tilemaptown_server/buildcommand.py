@@ -881,6 +881,41 @@ def fn_userflags(map, client, context, arg):
 	else:
 		respond(context, 'Syntax: add/del list of flags', error=True)
 
+
+admin_changeable_flags = ('bot', 'hide_location', 'hide_api', 'no_watch', 'secret_pic', 'file_uploads')
+@cmd_command(category="Settings", alias=['userflag'])
+def fn_adminuserflags(map, client, context, arg):
+	username, arg = separate_first_word(arg)
+	connection = find_connection_by_username(username)
+
+	if connection == None:
+		respond(context, 'User '+username+" not found", error=True)
+		return
+	def flags_list():
+		return ', '.join([key for key in userflag if ((userflag[key] & connection.user_flags) and (userflag[key].bit_count() == 1))])
+
+	arg = arg.lower()
+	if arg == "" or arg == "list":
+		respond(context, 'Their user flags: '+flags_list())
+		return
+	param = arg.lower().split(' ')
+	if len(param) >= 2:
+		if param[0] in ('add', 'set'):
+			for flag in param[1:]:
+				if flag in admin_changeable_flags:
+					connection.user_flags |= userflag[flag]
+		elif param[0] in ('del', 'remove'):
+			for flag in param[1:]:
+				if flag in admin_changeable_flags:
+					connection.user_flags &= ~userflag[flag]
+		else:
+			respond(context, 'Unrecognized subcommand "%s"' % param[0], code='invalid_subcommand', detail=param[0], error=True)
+			return
+		respond(context, 'Their new user flags: '+flags_list())
+	else:
+		respond(context, 'Syntax: username add/del list of flags', error=True)
+
+
 def permission_change(map, client, context, arg, command2):
 	# Check syntax
 	param = arg.lower().split(' ')

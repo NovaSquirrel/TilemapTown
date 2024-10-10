@@ -197,7 +197,7 @@ Upload a new file to your storage space.
 Submit a form with the following fields (all optional except "file"):
 	name: Any text for the file's name
 	desc: Any text to describe the file in a wordier way than the name
-	folder: A folder ID
+	folder: A folder ID, or 0 for no folder
 	file: Binary data for the file
 	set_my_pic: Defaults to false, but if it's tue, then your entity's pic will be set to the new file
 	create_entity: Defaults to false, but if it's true then a new image entity will be created and put into your inventory
@@ -234,7 +234,7 @@ Replace some or all of the information on a file.
 Submit a form with the following fields (all optional):
 	name: Any text for the file's name
 	desc: Any text to describe the file in a wordier way than the name
-	folder: A folder ID
+	folder: A folder ID, or 0 for no folder
 	file: Binary data for the file
 	keep_url: Defaults to false, but if it's true then changing the file will not issue a new URL
 	set_my_pic: Defaults to false, but if it's tue, then your entity's pic will be set to the new file
@@ -302,7 +302,7 @@ Creates a new folder in your storage space.
 Submit a form with the following fields (all optional):
 	name: Any text for the folder's name
 	desc: Any text to describe the folder in a wordier way than the name
-	folder: A folder name, for grouping related files together
+	folder: A folder ID, or 0 for no folder
 
 Response:
 	{
@@ -325,7 +325,7 @@ Replace some or all of the information on a folder.
 Submit a form with the following fields (all optional):
 	name: Any text for the folder's name
 	desc: Any text to describe the folder in a wordier way than the name
-	folder: Folder to move this folder to
+	folder: A folder ID, or 0 for no folder
 
 Fields that are omitted will be left as-is.
 
