@@ -233,11 +233,9 @@ def update_image_url_everywhere(connection, old_url, new_url):
 	c = Database.cursor()
 	for row in c.execute('SELECT id FROM Entity WHERE data=? AND type=?', (json.dumps(old_url), entity_type['image'])):
 		img_id = row[0]
-		print("Found " + str(img_id))
 
 		img_entity = get_entity_by_id(img_id)
 		if img_entity != None:
-			print("Entity found")
 			img_entity.data = new_url
 			if not img_entity.temporary:
 				img_entity.save()
@@ -245,7 +243,6 @@ def update_image_url_everywhere(connection, old_url, new_url):
 
 		for c in AllConnections:
 			if img_id in c.images_and_tilesets_received_so_far:
-				print("Sending update to client")
 				c.send("IMG", {'id': img_id, 'url': new_url, 'update': True})
 
 	# Update all of the loaded entities that are using this URL as a pic
