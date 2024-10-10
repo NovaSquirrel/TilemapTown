@@ -262,6 +262,64 @@
   </div>
 </div>
 
+<div id="editFileWindow" class="modal">
+  <div class="modal-content">
+    <span class="modalclose">&times;</span>
+    <p>
+    <h1>Edit file</h1>
+
+    <p>
+    <input type="file" id="editfilefile" accept="image/png" />
+    </p>
+
+    <p>
+    <label for="editfilename" class="unselectable">File name</label><br>
+    <input type="text" id="editfilename" value="Image"/>
+    </p>
+
+    <p>
+    <label for="editfiledesc" class="unselectable">File description</label><br>
+    <textarea id="editfiledesc"></textarea>
+    </p>
+
+	
+    <input type="button" value="Only edit name and description" onclick="doEditFile(false, false, false);" />
+	<p>
+    <input type="button" value="Reupload file" onclick="doEditFile(true, false, false);" /><br>
+    <input type="button" value="Reupload file and set appearance" onclick="doEditFile(true, true, false);" /><br>
+    <input type="button" value="Reupload file but keep URL" onclick="doEditFile(true, false, true);" />
+	</p>
+    </p>
+    <p>
+    <input type="button" value="Cancel" onclick="editFileCancel();" />
+    </p>
+  </div>
+</div>
+
+<div id="editFolderWindow" class="modal">
+  <div class="modal-content">
+    <span class="modalclose">&times;</span>
+    <p>
+    <h1>Edit folder</h1>
+
+    <p>
+    <label for="editfoldername" class="unselectable">Folder name</label><br>
+    <input type="text" id="editfoldername" value="new item"/>
+    </p>
+
+    <p>
+    <label for="editfolderdesc" class="unselectable">Folder description</label><br>
+    <textarea id="editfolderdesc"></textarea>
+    </p>
+
+    <input type="button" value="Edit folder" onclick="doEditFolder();" />
+    </p>
+    <p>
+    <input type="button" value="Cancel" onclick="editFolderCancel();" />
+    </p>
+  </div>
+</div>
+
 <widget-window id="selectionInfo" style="display: none;">
   <span slot="title">Selection Info</span>
   <div slot="contents">
@@ -634,19 +692,19 @@
 
 <widget-contextmenu id="fileupload-contextmenu" style="display: none;">
   <ul slot="menu" id="fileupload-contextmenu-menu">
-	<li onclick="fileUploadEdit();">Edit image</li>
+	<li onclick="fileUploadContextMenuEdit();">Edit image</li>
 	<li onclick="moveFileOrFolder(contextMenuFile, false);">Move image</li>
 	<li><a id="openFileInNewTabLink" href="https://example.com" target="_blank">Open image in new tab</a></li>
-	<li onclick="fileUploadAppearance();">Set appearance to this</li>
-	<li onclick="fileUploadDelete();">Delete image</li>
+	<li onclick="fileUploadContextMenuAppearance();">Set appearance to this</li>
+	<li onclick="fileUploadContextMenuDelete();">Delete image</li>
   </ul>
 </widget-contextmenu>
 
 <widget-contextmenu id="filefolder-contextmenu" style="display: none;">
   <ul slot="menu" id="filefolder-contextmenu-menu">
-	<li onclick="fileFolderEdit();">Edit folder</li>
+	<li onclick="fileFolderContextMenuEdit();">Edit folder</li>
 	<li onclick="moveFileOrFolder(contextMenuFolder, true);">Move folder</li>
-	<li onclick="fileFolderDelete();">Delete folder</li>
+	<li onclick="fileFolderContextMenuDelete();">Delete folder</li>
   </ul>
 </widget-contextmenu>
 

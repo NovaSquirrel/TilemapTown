@@ -224,6 +224,7 @@ Response codes:
 	401 API key not valid
 	403 Account doesn't have file upload permissions
 	413 File you're attempting to upload is too big
+	415 File you're trying to upload is not acceptable
 	507 Uploading this file would put you over the upload limit, whether your own or the global one
 
 
@@ -262,6 +263,7 @@ Response codes:
 	403 Account doesn't have file upload permissions
 	404 File doesn't exist
 	413 File you're attempting to upload is too big
+	415 File you're trying to upload is not acceptable
 	507 Uploading this file would put you over the upload limit, whether your own or the global one
 
 

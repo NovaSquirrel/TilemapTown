@@ -357,11 +357,14 @@ function fileCardList(ul, folders_only, click_handler, contextmenu_handler) {
 				desc: metadata.desc,
 			};
 			if(is_file) {
+				if(folders_only)
+					continue;
 				item.pic = [metadata.url, 0, 0];
 				item.is_uploaded_image = true;
 				item.id = id;
-				if(folders_only)
-					continue;
+				if(metadata.size) {
+					item.status = (metadata.size / 1024).toFixed(2) + " KiB";
+				}
 			} else {
 				item.pic = FolderOpenPic;
 			}
@@ -394,7 +397,7 @@ function fileCardList(ul, folders_only, click_handler, contextmenu_handler) {
 				// on "use" for folder items
 				if (is_folder) {
 					li.addEventListener("click", function (e) {
-						if (openFolders[id]) {
+						if (openFolders[-id]) {
 							collapseFolder(inner, -id);
 							setItemCardImage(li, picIcon(FolderClosedPic));
 						} else {
@@ -403,7 +406,7 @@ function fileCardList(ul, folders_only, click_handler, contextmenu_handler) {
 						}
 					})
 
-					expandFolder(inner, -id);
+					collapseFolder(inner, -id);
 				}
 			}
 		}
@@ -413,7 +416,8 @@ function fileCardList(ul, folders_only, click_handler, contextmenu_handler) {
 }
 
 function updateFileList() {
-	document.getElementById("filelist-status").textContent = "";
+	document.getElementById("filelist-status").innerHTML = (FileStorageInfo.info.used_space / 1024).toFixed(2) + " KiB used, " + (FileStorageInfo.info.free_space / 1024).toFixed(2) + " KiB free";
+
 	let ul = document.getElementById('filesul');
 	if (!ul) return;
 
@@ -446,12 +450,12 @@ async function viewFiles() {
 	let files = document.getElementById('filelist');
 	if(toggleDisplay(files)) {
 		if(!API_URL) {
-			document.getElementById("filelist-status").innerHTML = "Server has its API disabled";
+			document.getElementById("filelist-status").textContent = "Server has its API disabled";
 			return;
 		}
 
 		// Clean up
-		document.getElementById("filelist-status").innerHTML = "Checking status...";
+		document.getElementById("filelist-status").textContent = "Checking status...";
 		let ul = document.getElementById('filesul');
 		if (!ul) return;
 		while (ul.firstChild) {
@@ -465,9 +469,9 @@ async function viewFiles() {
 			FileStorageInfo = await response.json();
 			updateFileList();
 		} else if (response.status == 403) {
-			document.getElementById("filelist-status").innerHTML = "You need an account for this.";
+			document.getElementById("filelist-status").textContent = "You need an account for this.";
 		} else {
-			document.getElementById("filelist-status").innerHTML = "Error accessing file upload API.";
+			document.getElementById("filelist-status").textContent = "Error accessing file upload API.";
 		}
 	}
 }
@@ -1334,9 +1338,19 @@ async function createNewFile(set_my_pic, create_entity) {
 		let j = await response.json();
 		let file_info = j.file;
 		FileStorageInfo.files[file_info.id] = file_info;
+		FileStorageInfo.info.used_space = j.info.used_space;
+		FileStorageInfo.info.free_space = j.info.free_space;
 		updateFileList();
 	} else {
-		console.log("Error "+response.status);
+		if (response.status == 413) {
+			alert("That file is too big to upload");
+		} else if(response.status == 415) {
+			alert("File is not a valid image; please make sure it's a PNG");
+		} else if(response.status == 507) {
+			alert("Not enough storage space to upload that");
+		} else {
+			alert("Encountered an error; code "+response.status);
+		}
 	}
 	newFileCancel();
 }
@@ -1370,6 +1384,14 @@ function newFolderCancel() {
 	document.getElementById('newFolderWindow').style.display = "none";
 }
 
+function editFileCancel() {
+	document.getElementById('editFileWindow').style.display = "none";
+}
+
+function editFolderCancel() {
+	document.getElementById('editFolderWindow').style.display = "none";
+}
+
 let contextMenuFile = 0;
 function openFileContextMenu(id, x, y) {
 	let menu = document.querySelector('#fileupload-contextmenu');
@@ -1389,15 +1411,11 @@ function openFolderContextMenu(id, x, y) {
 	contextMenuFolder = id;
 }
 
-function fileUploadEdit() {
-	let file = FileStorageInfo.files[contextMenuFile];
-
-}
-function fileUploadAppearance() {
+function fileUploadContextMenuAppearance() {
 	let file = FileStorageInfo.files[contextMenuFile];
 	sendChatCommand('userpic '+file.url);
 }
-async function fileUploadDelete() {
+async function fileUploadContextMenuDelete () {
 	let file = FileStorageInfo.files[contextMenuFile];
 	if (
 		confirm(`Really delete file "${file.name}" with ID ${contextMenuFile}?`)
@@ -1414,12 +1432,7 @@ async function fileUploadDelete() {
 	}
 }
 
-function fileFolderEdit() {
-	let folder = FileStorageInfo.folders[contextMenuFolder];
-
-}
-
-async function fileFolderDelete() {
+async function fileFolderContextMenuDelete() {
 	let folder = FileStorageInfo.folders[contextMenuFolder];
 	if (
 		confirm(`Really delete folder "${folder.name}" with ID ${contextMenuFolder}?`)
@@ -1512,6 +1525,81 @@ async function moveFileOrFolderTo(move_id, destination_id, isfolder) {
 			console.log("Error "+response.status);
 		}
 	}
+}
+
+let editedFileID = null;
+function fileUploadContextMenuEdit() {
+	editedFileID = contextMenuFile;
+	let file = FileStorageInfo.files[editedFileID];
+	document.getElementById('editfilename').value = file.name;
+	document.getElementById('editfiledesc').value = file.desc;
+
+	document.getElementById('editFileWindow').style.display = "block";
+}
+
+let editedFolderID = null;
+function fileFolderContextMenuEdit() {
+	editedFolderID = contextMenuFolder;
+	let folder = FileStorageInfo.folders[editedFolderID];
+	document.getElementById('editfoldername').value = folder.name;
+	document.getElementById('editfolderdesc').value = folder.desc;
+
+	document.getElementById('editFolderWindow').style.display = "block";
+}
+
+async function doEditFile(reupload, set_my_pic, keep_url) {
+	const formData = new FormData();
+	formData.append("name", document.getElementById("editfilename").value);
+	formData.append("desc", document.getElementById("editfiledesc").value);
+	formData.append("set_my_pic", set_my_pic);
+	formData.append("keep_url", keep_url);
+	if(reupload) {
+		formData.append('file', document.getElementById("editfilefile").files[0]);
+	}
+
+	let response = await fetch(API_URL + "/v1/my_files/file/"+(editedFileID) , {
+		headers: {'Authorization': 'Bearer ' + API_Key},
+		body: formData, method: "PUT"});
+	if(response.status == 200) {
+		let j = await response.json();
+		let file_info = j.file;
+		FileStorageInfo.files[file_info.id] = file_info;
+		FileStorageInfo.info.used_space = j.info.used_space;
+		FileStorageInfo.info.free_space = j.info.free_space;
+		updateFileList();
+	} else {
+		if (response.status == 413) {
+			alert("That file is too big to upload");
+		} else if(response.status == 415) {
+			alert("File is not a valid image; please make sure it's a PNG");
+		} else if(response.status == 507) {
+			alert("Not enough storage space to upload that");
+		} else {
+			alert("Encountered an error; code "+response.status);
+		}
+	}
+
+	editFileCancel();
+}
+
+async function doEditFolder() {
+	const formData = new FormData();
+	formData.append("name", document.getElementById("editfoldername").value);
+	formData.append("desc", document.getElementById("editfolderdesc").value);
+
+	let response = await fetch(API_URL + "/v1/my_files/folder/"+(editedFolderID) , {
+		headers: {'Authorization': 'Bearer ' + API_Key},
+		body: formData, method: "PUT"});
+	if(response.status == 200) {
+		let j = await response.json();
+		let folder_info = j.folder;
+		FileStorageInfo.folders[folder_info.id] = folder_info;
+		updateFileList();
+	} else {
+		alert("Encountered an error; code "+response.status);
+	}
+
+	editFolderCancel();
 }
 
 ///////////////////////////////////////////////////////////

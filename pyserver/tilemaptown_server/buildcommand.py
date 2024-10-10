@@ -2357,7 +2357,7 @@ def fn_buildlog(map, client, context, arg):
 	if arg != 'k':
 		TempLogs[1].clear()
 
-@cmd_command(privilege_level="server_admin", no_entity_needed=True)
+@cmd_command(privilege_level="server_admin", no_entity_needed=True, alias=['filelog', 'fileuploadlog'])
 def fn_uploadlog(map, client, context, arg):
 	if arg != 'c':
 		respond(context, "Upload log (%d):[ul]%s[/ul]" % (len(TempLogs[2]), ''.join("[li]%s[/li]" % _ for _ in TempLogs[2])), class_type="secret_message")
