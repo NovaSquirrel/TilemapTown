@@ -463,9 +463,9 @@
 </widget-window>
 
 <widget-window id="moveItem" style="display: none;">
-  <span slot="title">Move Item</span>
+  <span slot="title" id="moveItemTitle">Move Item</span>
   <div slot="contents" id="inventory-contents">
-    Moving item:
+    Moving <span id="moveItemNoun">item</span>:
     <ul id="movesourceul" class="itemsul unselectable">
     </ul>
 
@@ -635,7 +635,7 @@
 <widget-contextmenu id="fileupload-contextmenu" style="display: none;">
   <ul slot="menu" id="fileupload-contextmenu-menu">
 	<li onclick="fileUploadEdit();">Edit image</li>
-	<li onclick="fileUploadMove();">Move image</li>
+	<li onclick="moveFileOrFolder(contextMenuFile, false);">Move image</li>
 	<li><a id="openFileInNewTabLink" href="https://example.com" target="_blank">Open image in new tab</a></li>
 	<li onclick="fileUploadAppearance();">Set appearance to this</li>
 	<li onclick="fileUploadDelete();">Delete image</li>
@@ -645,7 +645,7 @@
 <widget-contextmenu id="filefolder-contextmenu" style="display: none;">
   <ul slot="menu" id="filefolder-contextmenu-menu">
 	<li onclick="fileFolderEdit();">Edit folder</li>
-	<li onclick="fileFolderMove();">Move folder</li>
+	<li onclick="moveFileOrFolder(contextMenuFolder, true);">Move folder</li>
 	<li onclick="fileFolderDelete();">Delete folder</li>
   </ul>
 </widget-contextmenu>

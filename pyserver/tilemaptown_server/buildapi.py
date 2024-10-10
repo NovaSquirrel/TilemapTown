@@ -367,6 +367,8 @@ async def post_file(request):
 	if random_filename == None:
 		raise web.HTTPInternalServerError(headers=CORS_HEADERS)
 	folder = int_if_numeric(info.get("folder")) if info.get("folder") != None else None
+	if folder == 0:
+		folder = None
 
 	# Save to the storage
 	try:
@@ -494,6 +496,8 @@ async def put_file(request):
 		desc = info["desc"]
 	if "folder" in info:
 		location = int_if_numeric(info["folder"]) if info.get("folder") != None else None
+		if location == 0:
+			location = None
 
 	c = Database.cursor()
 	c.execute('UPDATE User_File_Upload SET updated_at=?, name=?, desc=?, location=?, filename=?, size=? WHERE file_id=?', (datetime.datetime.now(), name, desc, location, new_filename, new_size, file_id))
@@ -508,7 +512,7 @@ async def put_file(request):
 			"url": url_for_user_file(db_id, new_filename),
 		},
 		"info": storage_info_for_connection(connection),
-	})
+	}, headers=CORS_HEADERS)
 
 def admin_delete_uploaded_file(file_id):
 	global global_file_upload_size
@@ -575,6 +579,8 @@ async def post_folder(request):
 
 	info = await get_info_from_multipart(request)
 	folder = int_if_numeric(info.get("folder")) if info.get("folder") != None else None
+	if folder == 0:
+		folder = None
 
 	c.execute("INSERT INTO User_File_Folder (user_id, name, desc, location) VALUES (?, ?, ?, ?)", (db_id, info.get("name"), info.get("desc"), folder))
 	folder_id = c.lastrowid
@@ -621,7 +627,7 @@ async def put_folder(request):
 	folder_id = request.match_info['id']
 	if not folder_id.isdecimal():
 		raise web.HTTPBadRequest(text="Folder ID is invalid", headers=CORS_HEADERS)
-	folder_id = int(file_id)
+	folder_id = int(folder_id)
 
 	info = await get_info_from_multipart(request)
 
@@ -638,9 +644,11 @@ async def put_folder(request):
 		desc = info["desc"]
 	if "folder" in info:
 		location = int_if_numeric(info["folder"]) if info.get("folder") != None else None
+		if location == 0:
+			location = None
 
 	c = Database.cursor()
-	c.execute('UPDATE User_File_Folder SET name=?, desc=?, location=? WHERE file_id=?', (name, desc, location, file_id))
+	c.execute('UPDATE User_File_Folder SET name=?, desc=?, location=? WHERE folder_id=?', (name, desc, location, folder_id))
 	return web.json_response({
 		"folder": {
 			"id": folder_id,
@@ -648,7 +656,7 @@ async def put_folder(request):
 			"desc": desc,
 			"folder": location,
 		},
-	})
+	}, headers=CORS_HEADERS)
 
 @routes.delete('/v1/my_files/folder/{id}')
 async def delete_folder(request):
