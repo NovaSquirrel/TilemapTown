@@ -261,6 +261,12 @@ widget-contextmenu li:hover {
     justify-content: center;
 }
 
+#fileadd {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .inventory-info-detail {
     color: grey;
     font-size: 0.8em;

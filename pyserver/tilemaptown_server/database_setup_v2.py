@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2023 NovaSquirrel
+# Copyright (C) 2017-2024 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -224,6 +224,35 @@ key text,
 flags integer,
 primary key(entity_id),
 foreign key(entity_id) references Entity(id) on delete cascade
+)""")
+
+
+c.execute("""create table if not exists User_File_Folder (
+folder_id integer,
+user_id integer,
+name text,
+desc text,
+location integer,
+flags integer,
+primary key(folder_id),
+foreign key(user_id) references Entity(id) on delete cascade,
+foreign key(location) references User_File_Folder(folder_id) on delete set null
+)""")
+
+c.execute("""create table if not exists User_File_Upload (
+file_id integer,
+user_id integer,
+created_at timestamp,
+updated_at timestamp,
+name text,
+desc text,
+location integer,
+size integer,
+filename text,
+flags integer,
+primary key(file_id),
+foreign key(user_id) references Entity(id) on delete cascade,
+foreign key(location) references User_File_Folder(folder_id) on delete set null
 )""")
 
 if upgrade_from_v1:

@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import json, datetime, time, types, weakref
+import json, datetime, time, types, weakref, secrets
 from .buildglobal import *
 from .buildcommand import handle_user_command, escape_tags, tile_is_okay, data_disallowed_for_entity_type, send_private_message
 from .buildentity import Entity
@@ -514,7 +514,8 @@ def fn_BAG(connection, map, client, arg, echo):
 		# Move everything inside to the parent
 		for child in delete_me.contents.copy():
 			delete_me.remove_from_contents(child)
-			delete_me.map.add_to_contents(child)
+			if delete_me.map:
+				delete_me.map.add_to_contents(child)
 
 		# Delete from the database too
 		if delete_me.db_id:
@@ -936,7 +937,7 @@ def fn_IDN(connection, map, client, arg, echo):
 		connection.send("MSG", {'text': connected_text})
 
 		if connection.username in Config["Server"]["Admins"]:
-			connection.send("MSG", {'text': 'Connect log size: %d, build log size: %d' % (len(TempLogs[0]), len(TempLogs[1])), 'class': 'secret_message'})
+			connection.send("MSG", {'text': 'Connect log size: %d, build log size: %d, file log size: %d' % (len(TempLogs[0]), len(TempLogs[1]), len(TempLogs[2])), 'class': 'secret_message'})
 		connection.login_successful_callback = None
 
 	#######################################################
@@ -960,12 +961,24 @@ def fn_IDN(connection, map, client, arg, echo):
 				# Add it to the set and acknowledge it too
 				connection.features.add(key)
 				ack_info["features"][key] = {"version": available_server_features[key]["version"]}
+	
+	# Pick a secure API key, if the API is enabled
+	if Config["API"]["Enabled"]:
+		while True:
+			api_key = secrets.token_urlsafe(40)
+			if api_key not in ConnectionsByApiKey:
+				break
+		ConnectionsByApiKey[api_key] = connection
+		connection.api_key = api_key
+		ack_info["api_key"] = api_key
+		ack_info["api_url"] = Config["API"]["URL"]
+		ack_info["api_version"] = 1
 
 	# Now check the username and password and actually log in
 	if arg != {} and "username" in arg and "password" in arg:
 		# Log into an existing account
 		if not connection.login(filter_username(arg["username"]), arg["password"], new_client, override_map=override_map, announce_login=False):
-			print("Failed login for "+filter_username(arg["username"]))
+			write_to_connect_log("Failed login for "+filter_username(arg["username"]))
 			connection.disconnect(reason="BadLogin")
 			connection.login_successful_callback = None
 			return

@@ -223,6 +223,9 @@ class Connection(object):
 		self.username = None
 		self.db_id = None
 
+		# File upload information
+		self.total_file_upload_size = 0
+
 		# Connections keep the entities they're using for message forwarding alive by keeping strong references to them in this set
 		self.keep_entities_loaded = set()
 
@@ -274,6 +277,12 @@ class Connection(object):
 		self.user_flags = result[4]
 		if self.user_flags == None:
 			self.user_flags = 0
+
+		# Avoid having to do a query every time the limit needs to be checked
+		c.execute('SELECT SUM(size) FROM User_File_Upload WHERE user_id=?', (self.db_id,))
+		result = c.fetchone()
+		if result != None:
+			self.total_file_upload_size = result[0] or 0
 		return True
 
 	def save_settings(self, db_id):
