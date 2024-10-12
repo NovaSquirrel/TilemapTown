@@ -639,19 +639,22 @@ function drawMap() {
 
 function drawText(ctx, x, y, text) {
 	let chicago = document.getElementById("chicago");
+	text = text.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&");
+
 	for (let i = 0; i < text.length; i++) {
 		let chr = text.charCodeAt(i) - 0x20;
-		if(chr < 0x20 || chr > 0x7E)
-			chr = 0x3F; // ?
+		if(chr < 0x00 || chr > 0x5E)
+			chr = 0x1F; // ?
 		let srcX = chr & 15;
 		let srcY = chr >> 4;
 		ctx.drawImage(chicago, srcX * 8, srcY * 8, 8, 8, x + i * 8, y, 8, 8);
 	}
 }
 
-const proportionalTextWidth = [3, 6, 8, 10, 7, 10, 9, 4, 5, 5, 10, 10, 4, 8, 4, 8, 8, 6, 7, 7, 8, 7, 8, 7, 8, 8, 4, 4, 8, 8, 8, 8, 12, 8, 8, 8, 9, 7, 7, 7, 8, 6, 6, 8, 7, 11, 9, 8, 8, 8, 8, 7, 8, 9, 8, 11, 8, 7, 7, 5, 8, 5, 8, 8, 4, 8, 8, 8, 8, 8, 8, 8, 8, 6, 4, 8, 5, 13, 9, 8, 8, 8, 7, 7, 8, 9, 8, 13, 8, 8, 7, 5, 4, 5, 8, 13];
+const proportionalTextWidth = [3, 6, 8, 10, 7, 10, 9, 4, 5, 5, 10, 12, 4, 10, 4, 8, 8, 6, 7, 7, 8, 7, 8, 7, 8, 8, 4, 4, 9, 10, 9, 8, 12, 8, 8, 8, 9, 7, 7, 8, 8, 6, 6, 8, 7, 11, 9, 8, 8, 8, 8, 7, 8, 9, 8, 11, 8, 7, 7, 5, 8, 5, 8, 8, 4, 8, 8, 8, 8, 8, 8, 8, 8, 6, 4, 8, 5, 13, 9, 8, 8, 8, 7, 7, 8, 9, 8, 12, 8, 8, 7, 5, 3, 5, 8, 13];
 function drawTextProportional(ctx, x, y, centered, text) {
 	let tilemap_sans = document.getElementById("tilemapsans");
+	text = text.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&");
 
 	if (centered) {
 		let total_width = 0;
@@ -677,8 +680,12 @@ function drawTextProportional(ctx, x, y, centered, text) {
 
 function drawTextSmall(ctx, x, y, text) {
 	let tomthumb = document.getElementById("tomthumb");
+	text = text.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&");
+
 	for (let i = 0; i < text.length; i++) {
 		let chr = text.charCodeAt(i) - 0x20;
+		if(chr < 0x00 || chr > 0x5E)
+			chr = 0x1F; // ?
 		let srcX = chr & 15;
 		let srcY = chr >> 4;
 		ctx.drawImage(tomthumb, srcX * 4, srcY * 6, 4, 6, x + i * 4, y, 4, 6);
