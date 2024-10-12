@@ -9,6 +9,7 @@ def process_font(filename):
 	BORDER_PIXEL = (0, 255, 0)
 	PAPER_PIXEL = (255, 255, 255)
 	INK_PIXEL = (0, 0, 0)
+	BORDER_AND_PAPER = (0, 128, 0)
 
 	im = Image.open(filename)
 
@@ -30,7 +31,7 @@ def process_font(filename):
 			for pixel_y in range(glyph_height):
 				for pixel_x in range(glyph_width):
 					pixel = glyph_pixels[pixel_y*glyph_width+pixel_x]
-					if pixel == PAPER_PIXEL or pixel == INK_PIXEL:
+					if pixel == PAPER_PIXEL or pixel == INK_PIXEL or pixel == BORDER_AND_PAPER:
 						leftmost_x = min(pixel_x, leftmost_x)
 						rightmost_x = max(pixel_x, rightmost_x)
 			width_per_character.append(rightmost_x-leftmost_x+1)
@@ -39,4 +40,4 @@ def process_font(filename):
 
 	im.close()
 
-process_font("tilemap_sans_bold_case_sensitive.png")
+process_font("tilemap_sans_bold.png")
