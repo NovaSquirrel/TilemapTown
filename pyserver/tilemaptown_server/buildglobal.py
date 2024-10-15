@@ -77,6 +77,7 @@ def loadConfigJson():
 	setConfigDefault("Database", "Setup",            True)
 	setConfigDefault("Images",   "URLWhitelist",     ["https://i.imgur.com/", "https://i.postimg.cc/", "https://i.ibb.co/"])
 	setConfigDefault("Logs",     "BuildFile",        "")
+	setConfigDefault("Logs",     "UploadFile",       "")
 	setConfigDefault("Logs",     "BuildDefault",     True)
 	setConfigDefault("TempLogs", "ConnectSize",      100)
 	setConfigDefault("TempLogs", "BuildSize",        100)
@@ -139,7 +140,7 @@ BuildLog = None
 if len(Config["Logs"]["BuildFile"]):
 	BuildLog = open(Config["Logs"]["BuildFile"], 'a', encoding="utf-8")
 UploadLog = None
-if len(Config["Logs"]["BuildFile"]):
+if len(Config["Logs"]["UploadFile"]):
 	UploadLog = open(Config["Logs"]["UploadFile"], 'a', encoding="utf-8")
 
 # Temporary log for moderation
