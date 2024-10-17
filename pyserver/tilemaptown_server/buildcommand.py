@@ -1154,7 +1154,7 @@ def fn_mapedgelink(map, client, context, arg):
 		if map.edge_id_links == None:
 			map.edge_id_links = [None] * 8
 		if map.edge_ref_links == None:
-			map.edge_ref_links = [None] * 8
+			map.edge_ref_links = [(get_entity_by_id(x) if x != None else None) for x in map.edge_id_links]
 		map.edge_id_links[edge] = map_id
 		map.edge_ref_links[edge] = get_entity_by_id(map_id) if map_id != None else None
 
