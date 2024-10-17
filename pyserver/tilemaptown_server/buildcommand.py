@@ -1065,6 +1065,39 @@ def fn_findmyitems(map, client, context, arg):
 	maps += "[/ul]"
 	respond(context, maps)
 
+@cmd_command()
+def fn_deletemytempitems(map, client, context, arg):
+	arg = arg.lower()
+	if arg == 'all' or arg == '':
+		where = AllEntitiesByID.values()
+	elif arg == 'here' and map:
+		where = map.contents
+	elif arg == 'inventory':
+		where = client.contents
+	else:
+		respond(context, 'Valid options are: all, here, inventory', error=True)
+		return
+
+	deleted = 0
+	for e in where.copy():
+		if e.db_id or e.is_client():
+			continue
+		elif e.creator_temp_id == client.id:
+			pass
+		elif e.owner_id == None or e.owner_id != client.db_id:
+			continue
+
+		# Move everything inside to the parent
+		for child in e.contents.copy():
+			e.remove_from_contents(child)
+			if e.map:
+				e.map.add_to_contents(child)
+
+		if e.map:
+			e.map.remove_from_contents(e)
+		e.save_on_clean_up = False
+		e.clean_up()
+
 @cmd_command(category="Map", privilege_level="registered", no_entity_needed=True)
 def fn_mymaps(map, client, context, arg):
 	connection = client.connection()

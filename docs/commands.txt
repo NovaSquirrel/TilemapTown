@@ -421,6 +421,12 @@ Test if specific entities are loaded
 /message_forwarding set entity_id,entity_id,entity_id... MAP,MAI,PRI ...
 See the message forwarding section in protocol.txt
 
+/deletemytempitems
+/deletemytempitems all
+/deletemytempitems here
+/deletemytempitems inventory
+Delete all of the temporary entities that you created within a given area. If that's not specified, it will default to "all".
+
 ---Group commands---
 /newgroup
 Create a new group

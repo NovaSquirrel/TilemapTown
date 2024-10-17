@@ -480,6 +480,9 @@ table, td, tr, th{
 		<br><span class="cmd_name">/e id save</span><br><span class="cmd_desc">Saves any changes that have happened to the entity. Normally this happens automatically, but this is provided just in case.</span><br>
 		<br><span class="cmd_name">/e id delete</span><br><span class="cmd_desc">Delete an entity that belongs to you.</span><br>
 
+		<br><span class="cmd_name">/deletemytempitems</span><br><span class="cmd_desc">Deletes all temporary entities that belong to you.</span><br>
+		<br><span class="cmd_name">/deletemytempitems all/here/inventory</span><br><span class="cmd_desc">Deletes all temporary entities that belong to you, in a specific area.</span><br>
+
 		<br><hr><div class="cmd_group">Bots and listening</div>
 		Bots can listen to events happening on a map and receive messages as if they were there. See <a href="https://github.com/NovaSquirrel/TilemapTown/blob/main/docs/protocol.txt">the protocol document</a> for more info.<br>
 		<br><span class="cmd_name">/listen category,category,... map_id,map_id,... , /unlisten category,category,... map_id,map_id,... </span><br><span class="cmd_desc">Sets the bot to listen to a specific category of event on a given map id. Bot must have been granted the <kbd>map_bot</kbd> permission for the map in question, though <kbd>remote_chat</kbd> is also acceptable for the <kbd>chat</kbd> and <kbd>chat_listen</kbd> categories specifically. The categories to listen in on are:
