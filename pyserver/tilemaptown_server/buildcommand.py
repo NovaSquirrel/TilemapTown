@@ -2683,6 +2683,34 @@ def fn_entity(map, client, context, arg):
 				actor.temp_permissions_given_to.discard(e)
 				e.temp_permissions.pop(actor, None)
 
+	elif subcommand == 'delete':
+		if e.is_client():
+			respond(context, 'Can\'t delete "%s"' % provided_id, error=True)
+			return
+		elif client.connection_attr('oper_override'):
+			pass
+		elif e.owner_id == None and e.creator_temp_id and e.creator_temp_id not in AllEntitiesByID:
+			pass
+		elif e.creator_temp_id == client.id:
+			pass
+		elif e.owner_id == None or e.owner_id != client.db_id:
+			respond(context, 'You don\'t have permission to deletes "%s"' % provided_id, error=True)
+			return
+
+		# Move everything inside to the parent
+		for child in e.contents.copy():
+			e.remove_from_contents(child)
+			if e.map:
+				e.map.add_to_contents(child)
+
+		# Delete from the database too
+		if e.db_id:
+			c.execute('DELETE FROM Entity WHERE owner_id=? AND id=?', (client.db_id, e.db_id))
+		if e.map:
+			e.map.remove_from_contents(e)
+		e.save_on_clean_up = False
+		e.clean_up()
+
 	elif subcommand == 'save':
 		if permission_check(permission['remote_command']) and not e.temporary: # Maybe use a different permission? Or none
 			e.save()

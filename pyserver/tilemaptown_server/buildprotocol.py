@@ -519,12 +519,15 @@ def fn_BAG(connection, map, client, arg, echo):
 
 		# Delete from the database too
 		if delete_me.db_id:
-			c.execute('DELETE FROM Entity WHERE owner_id=? AND id=?', (client.db_id, delete['id']))
+			c.execute('DELETE FROM Entity WHERE owner_id=? AND id=?', (client.db_id, delete_me.db_id))
 		if delete_me.map and delete_me.map != client:
 			client.send("BAG", {'remove': {'id': delete['id']}})
 		if delete_me.map:
 			delete_me.map.remove_from_contents(delete_me)
 		client.send("BAG", {'delete': delete})
+
+		delete_me.save_on_clean_up = False
+		delete_me.clean_up()
 
 	elif "info" in arg:
 		info = arg['info']

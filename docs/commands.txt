@@ -504,6 +504,12 @@ Move entity to another location on the same map, with an optional field for dire
 /entity id do command_here
 Same as sending a CMD protocol message with the "rc" field set.
 
+/entity id delete
+Delete an entity that you own.
+
+/entity id save
+Save any changes to an entity.
+
 /e is an alias for /entity
 
 
