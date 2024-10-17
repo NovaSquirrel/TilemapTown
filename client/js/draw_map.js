@@ -267,7 +267,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 
 			// typing indicators
 			if (Mob.typing) {
-				ctx.drawImage(IconSheets[0], 0, 24 * 16, 16, 16, (Mob.x * 16) - pixelCameraX + MobOffset[0], (Mob.y * 16) - pixelCameraY - heightForPlayerStatus + MobOffset[1], 16, 16);
+				ctx.drawImage(IconSheets[0], 0, 24 * 16, 16, 16, (Mob.x * 16) - pixelCameraX + MobOffset[0], (Mob.y * 16) - pixelCameraY - heightForPlayerStatus + MobOffset[1] + 6, 16, 16);
 			}
 
 			// carry text and nametags
