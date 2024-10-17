@@ -193,7 +193,7 @@
     <input type="button" value="Generic" onclick="newItemCreate('generic');" />
     <input type="button" value="Map tile" onclick="newItemCreate('map_tile');" />
     <input type="button" value="Text" onclick="newItemCreate('text');" />
-    <input type="button" value="Image" onclick="newItemCreate('image');" />
+    <input type="button" value="Image link" onclick="newItemCreate('image');" />
     <input type="button" value="Tileset" onclick="newItemCreate('tileset');" />
     <input type="button" value="Folder" onclick="newItemCreate('folder');" />
     </p>
@@ -201,7 +201,11 @@
     <label class="unselectable"><input type="checkbox" id="createtempobject">Create as temporary entity</label>
     </p>
     <p>
-    Map tiles are templates for tiles to place down on the map, like how the build menu works. Generic items are more like standard video game items, and you can drop them onto maps to have them act as props!
+	<ul>
+	<li>Map tiles are templates for tiles to place down on the map, like how the build menu works.</li>
+	<li>Generic items are more like standard video game items, and you can drop them onto maps to have them act as props!</li>
+	<li>Image link items add additional tileset images you can pick when editing tiles. If you delete an image link, tiles referencing it will lose their appearance.</li>
+	</ul>
     </p>
     <p>
     <input type="button" value="Cancel" onclick="newItemCancel();" />
@@ -457,7 +461,7 @@
   </p>
 
   <p>
-    Registered users can <a href="#" onclick="viewFiles();">upload images</a><br>to use as avatars. Otherwise you may use<br><a href="https://imgur.com/">Imgur</a>, <a href="https://imgbb.com/">ImgBB</a> or <a href="https://postimages.org/">Postimages</a>.<br>More image hosts can be added on request.<br>
+    Registered users can <a href="#" onclick="viewFiles();">upload images</a><br>to use as avatars. Otherwise you may use<br><a href="https://imgur.com/" target="_blank">Imgur</a>, <a href="https://imgbb.com/" target="_blank">ImgBB</a> or <a href="https://postimages.org/" target="_blank">Postimages</a>.<br>More image hosts can be added on request.<br>
     <input type="text" placeholder="https://i.imgur.com/whatever.png" id="newcustompic">
     <input type="button" value="Custom pic" onclick="sendChatCommand('userpic '+document.getElementById('newcustompic').value);">
   </p>
@@ -551,7 +555,7 @@
 
     <div id="edittileimage">
     Image URL: <input type="text" id="edittileurl" /><br>
-    This should an image on <a href="https://imgur.com/">Imgur</a>, <a href="https://imgbb.com/">ImgBB</a> or <a href="https://postimages.org/">Postimages</a>.<br>More image hosts can be added on request.
+    This should an image uploaded to this server, or on<br><a href="https://imgur.com/" target="_blank">Imgur</a>, <a href="https://imgbb.com/" target="_blank">ImgBB</a> or <a href="https://postimages.org/" target="_blank">Postimages</a>.<br>More image hosts can be added on request.
     </div>
 
     <div id="edittiletext">
