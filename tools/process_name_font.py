@@ -13,8 +13,8 @@ def process_font(filename):
 	pixels = list(im.getdata())
 	image_width, image_height = im.size
 
-	glyph_width = 14
-	glyph_height = 16
+	glyph_width = 18
+	glyph_height = 21
 	tiles_across = image_width // glyph_width
 	tiles_down = image_height // glyph_height
 
