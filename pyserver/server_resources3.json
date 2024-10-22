@@ -64,7 +64,8 @@
 			},
 			"ice2": {
 				"name": "ice",
-				"pic": [-3, 31, 7]
+				"pic": [-3, 31, 7],
+				"type": "ice"
 			},
 			"floor17": {
 				"name": "floor",
@@ -211,12 +212,14 @@
 				"pic": [-3, 13, 10],
 				"menu_pic": [-3, 12, 8],
 				"autotile_class_edge": "snow",
-				"autotile_layout": 4
+				"autotile_layout": 4,
+				"type": "ice"
 			},
 			"ice!": {
 				"name": "ice",
 				"autotile_class_edge": "snow",
-				"pic": [-3, 13, 10]
+				"pic": [-3, 13, 10],
+				"type": "ice"
 			},
 			"path": {
 				"name": "path",
@@ -323,6 +326,7 @@
 				"density": true,
 				"autotile_layout": 4,
 				"autotile_class_edge": "grass",
+				"type": "water",
 				"anim_frames": 3,
 				"anim_mode": 2,
 				"anim_speed": 3
@@ -334,6 +338,7 @@
 				"density": true,
 				"autotile_layout": 4,
 				"autotile_class_edge": "snow",
+				"type": "water",
 				"anim_frames": 3,
 				"anim_mode": 2,
 				"anim_speed": 3
@@ -345,6 +350,7 @@
 				"density": true,
 				"autotile_layout": 4,
 				"autotile_class_edge": "sand",
+				"type": "water",
 				"anim_frames": 3,
 				"anim_mode": 2,
 				"anim_speed": 3
@@ -355,6 +361,7 @@
 				"menu_pic": [-3, 0, 43],
 				"density": true,
 				"autotile_layout": 4,
+				"type": "water",
 				"anim_frames": 3,
 				"anim_mode": 2,
 				"anim_speed": 3

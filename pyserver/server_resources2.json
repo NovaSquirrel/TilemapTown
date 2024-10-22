@@ -51,7 +51,8 @@
 			},
 			"cold": {
 				"name": "cold",
-				"pic": [-2, 0, 3]
+				"pic": [-2, 0, 3],
+				"type": "water"
 			},
 			"ice": {
 				"name": "ice",
@@ -84,22 +85,24 @@
 				"name": "water",
 				"pic": [-2, 5, 6],
 				"autotile_layout": 2,
-				"density": true
+				"density": true,
+				"type": "water"
 			},
 			"water2": {
 				"name": "water",
 				"pic": [-2, 1, 6],
 				"autotile_layout": 2,
-				"density": true
+				"density": true,
+				"type": "water"
 			},
 			"lava": {
-				"name": "water",
+				"name": "lava",
 				"pic": [-2, 13, 6],
 				"autotile_layout": 2,
 				"density": true
 			},
 			"lava2": {
-				"name": "water",
+				"name": "lava",
 				"pic": [-2, 9, 6],
 				"autotile_layout": 2,
 				"density": true
