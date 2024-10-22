@@ -1874,7 +1874,8 @@ function logMessage(Message, Class, Params) {
 
 function offerCommand(t) {
 	if (confirm('Run command "' + t + '"?')) {
-		sendChatCommand(t);
+		if (runLocalCommand("/"+t));
+		else sendChatCommand(t);
 	}
 }
 
