@@ -50,6 +50,7 @@ class Map(Entity):
 		self.edge_ref_links = None
 
 		self.map_wallpaper = None
+		self.map_music = None
 
 		# map scripting
 		self.has_script = False
@@ -198,6 +199,8 @@ class Map(Entity):
 					self.edge_ref_links = [(get_entity_by_id(x) if x != None else None) for x in self.edge_id_links]
 				if "wallpaper" in d:
 					self.map_wallpaper = d["wallpaper"]
+				if "music" in d:
+					self.map_music = d["music"]
 			else:
 				self.blank_map(self.width, self.height)
 			self.map_data_loaded = True
@@ -230,6 +233,8 @@ class Map(Entity):
 				data["edge_links"] = self.edge_id_links
 			if self.map_wallpaper != None:
 				data["wallpaper"] = self.map_wallpaper
+			if self.map_music != None:
+				data["music"] = self.map_music
 			self.save_data_as_text(json.dumps(data))
 			self.map_data_modified = False
 
@@ -287,6 +292,8 @@ class Map(Entity):
 			out['topic_username'] = self.topic_username
 		if self.map_wallpaper:
 			out['wallpaper'] = self.map_wallpaper
+		if self.map_music:
+			out['music'] = self.map_music
 		return out
 
 	def count_users_inside(self, recursive=True):

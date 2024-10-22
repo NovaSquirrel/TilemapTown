@@ -1310,6 +1310,42 @@ def fn_mapwallpaper(map, client, context, arg):
 					user.send("MAI", map.map_info(user=user))
 			respond(context, 'Wallpaper changed to "%s"' % arg[0])
 		else:
+			respond(context, 'URL doesn\'t match any allowlisted sites, or is not a PNG', error=True)
+	else:
+		respond(context, 'Please provide a URL', error=True)
+
+@cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="url")
+def fn_mapmusic(map, client, context, arg):
+	arg = arg.split(' ')
+	if len(arg) == 0:
+		return
+	if arg[0].lower() in ("none", "off"):
+		if map.map_music != None:
+			map.map_music = None
+			map.map_data_modified = True # Because music gets saved in with the rest of the data
+			map.save_on_clean_up = True
+			for user in map.contents:
+				if user.is_client():
+					user.send("MAI", map.map_info(user=user))
+			respond(context, 'Music removed')
+		else:
+			respond(context, 'No music to remove', error=True)
+	elif arg[0].startswith("http"):
+		if user_file_url_is_ok(arg[0]):
+			lower = arg[0].lower()
+			if lower.endswith(".mod") or lower.endswith(".s3m") or lower.endswith(".xm") or lower.endswith(".it") or lower.endswith(".mptm"):
+				music = {"url": arg[0]}
+				map.map_music = music
+				map.map_data_modified = True # Because music gets saved in with the rest of the data
+				map.save_on_clean_up = True
+
+				for user in map.contents:
+					if user.is_client():
+						user.send("MAI", map.map_info(user=user))
+				respond(context, 'Music changed to "%s"' % arg[0])
+			else:
+				respond(context, 'Allowed music formats are MOD, S3M, XM, IT, MPTM', error=True)
+		else:
 			respond(context, 'URL doesn\t match any allowlisted sites', error=True)
 	else:
 		respond(context, 'Please provide a URL', error=True)

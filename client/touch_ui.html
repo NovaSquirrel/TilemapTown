@@ -220,7 +220,7 @@
     <h1>New file</h1>
 
     <p>
-    <input type="file" id="newfilefile" accept="image/png" />
+    <input type="file" id="newfilefile" accept="image/png,.mod,.s3m,.xm,.it,.mptm" />
     </p>
 
     <p>
@@ -422,6 +422,7 @@
     <label class="unselectable"><input type="checkbox" id="alwayscenter" checked="true"><label for="alwayscenter" class="unselectable">Always center camera</label><br>
     <label class="unselectable"><input type="checkbox" id="audiochatnotify" checked>Notify when people talk</label><br>
     <label class="unselectable"><input type="checkbox" id="audiomiscnotify">Notify on other messages</label><br>
+    <label class="unselectable"><input type="checkbox" id="audiomapmusic">Play map background music</label><br>
     <label class="unselectable"><input type="checkbox" id="option-fly">Walk through walls</label><br>
     <label class="unselectable"><input type="checkbox" id="option-entity-animation" checked>Entity animation</label><br>
     <label class="unselectable"><input type="checkbox" id="option-tile-animation" checked>Tile animation</label><br>
@@ -695,13 +696,24 @@
   </ul>
 </widget-contextmenu>
 
-<widget-contextmenu id="fileupload-contextmenu" style="display: none;">
+<widget-contextmenu id="fileupload-contextmenu-image" style="display: none;">
   <ul slot="menu" id="fileupload-contextmenu-menu">
 	<li onclick="fileUploadContextMenuEdit();">Edit image</li>
 	<li onclick="moveFileOrFolder(contextMenuFile, false);">Move image</li>
 	<li><a id="openFileInNewTabLink" href="https://example.com" target="_blank">Open image in new tab</a></li>
 	<li onclick="fileUploadContextMenuAppearance();">Set appearance to this</li>
 	<li onclick="fileUploadContextMenuDelete();">Delete image</li>
+  </ul>
+</widget-contextmenu>
+
+<widget-contextmenu id="fileupload-contextmenu-music" style="display: none;">
+  <ul slot="menu" id="fileupload-contextmenu-menu">
+	<li onclick="fileUploadPlayMusic();">Play music</li>
+	<li onclick="fileUploadContextMenuEdit();">Edit music</li>
+	<li onclick="moveFileOrFolder(contextMenuFile, false);">Move music</li>
+	<li><a id="openMusicInNewTabLink" href="https://example.com" target="_blank">Open music in new tab</a></li>
+	<li onclick="fileUploadSetMapMusic();">Set map music to this</li>
+	<li onclick="fileUploadContextMenuDelete();">Delete music</li>
   </ul>
 </widget-contextmenu>
 

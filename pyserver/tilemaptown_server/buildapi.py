@@ -144,6 +144,7 @@ async def get_img(request):
 
 # ---------------------------------------------------------
 global_file_upload_size = 0
+allowed_file_extensions = {".png", ".mod", ".s3m", ".xm", ".it", ".mptm"}
 
 if Config["FileUpload"]["AllowCrossOrigin"]:
 	CORS_HEADERS = {
@@ -189,8 +190,8 @@ def storage_limit_for_connection(connection):
 		return Config["FileUpload"]["SizeLimitUser"]*1024
 	return Config["FileUpload"]["SizeLimitGuest"]*1024
 
-def uploaded_file_is_ok(data):
-	return data.startswith(bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])) # Magic number for PNG files
+def file_is_probably_png(data):
+	return data.startswith(bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]))
 
 multipart_text_names = {"name", "desc", "folder"}
 multipart_bool_names = {"keep_url", "set_my_pic", "create_entity"}
@@ -217,9 +218,13 @@ async def get_info_from_multipart(request):
 			if len(data) >= max_size+1:
 				raise web.HTTPRequestEntityTooLarge(text="Files may be %d KiB at most" % Config["FileUpload"]["MaximumFileSize"], max_size=Config["FileUpload"]["MaximumFileSize"], actual_size=content_length, headers=CORS_HEADERS) # actual_size isn't going to be correct but that's OK for now
 			out[field.name] = data
-			out[field.name + "name"] = field.filename
-
-			if not uploaded_file_is_ok(data):
+			base_name, file_extension = os.path.splitext(field.filename)
+			file_extension = file_extension.lower()
+			out[field.name + "_name"]      = base_name
+			out[field.name + "_extension"] = file_extension
+			if file_extension not in allowed_file_extensions:
+				raise web.HTTPUnsupportedMediaType(text="Uploaded file is not an allowed type", headers=CORS_HEADERS)
+			if file_extension == 'png' and not file_is_probably_png(data):
 				raise web.HTTPUnsupportedMediaType(text="Uploaded file is not a valid image", headers=CORS_HEADERS)
 	return out
 
@@ -354,6 +359,7 @@ async def post_file(request):
 	if "file" not in info:
 		raise web.HTTPBadRequest(text="Must include a file to upload", headers=CORS_HEADERS)
 	file_data = info["file"]
+	file_extension = info["file_extension"]
 
 	# Check the size of the file
 	if len(file_data) + connection.total_file_upload_size > storage_limit_for_connection(connection):
@@ -361,7 +367,7 @@ async def post_file(request):
 	if len(file_data) + global_file_upload_size > Config["FileUpload"]["SizeLimitTotal"]*1024:
 		raise web.HTTPInsufficientStorage(text="This upload would put the server over its storage limit", headers=CORS_HEADERS)
 
-	random_filename = generate_filename(db_id)
+	random_filename = generate_filename(db_id, extension=file_extension)
 	if random_filename == None:
 		print("Failed to generate a filename for post_file")
 		raise web.HTTPInternalServerError(headers=CORS_HEADERS)
@@ -380,18 +386,19 @@ async def post_file(request):
 		write_to_file_log(connection, "Upload failed")
 		raise web.HTTPInternalServerError(text="Couldn't write the file", headers=CORS_HEADERS)
 
-	if info.get("set_my_pic") and hasattr(connection.entity, 'pic'):
-		connection.entity.pic = [url_for_user_file(db_id, random_filename), 0, 0]
-		connection.entity.save_on_clean_up = True
-		connection.entity.broadcast_who()
-	if info.get("create_entity") and is_client_and_entity(connection.entity):
-		e = Entity(entity_type['image'], creator_id=db_id)
-		e.name = info.get('name') or "Image"
-		e.map_id = db_id
-		e.creator_temp_id = connection.entity.id
-		e.data = url_for_user_file(db_id, random_filename)
-		e.save()
-		connection.entity.add_to_contents(e)
+	if random_filename.endswith(".png"):
+		if info.get("set_my_pic") and hasattr(connection.entity, 'pic'):
+			connection.entity.pic = [url_for_user_file(db_id, random_filename), 0, 0]
+			connection.entity.save_on_clean_up = True
+			connection.entity.broadcast_who()
+		if info.get("create_entity") and is_client_and_entity(connection.entity):
+			e = Entity(entity_type['image'], creator_id=db_id)
+			e.name = info.get('name') or "Image"
+			e.map_id = db_id
+			e.creator_temp_id = connection.entity.id
+			e.data = url_for_user_file(db_id, random_filename)
+			e.save()
+			connection.entity.add_to_contents(e)
 
 	# Add a database entry
 	c.execute("INSERT INTO User_File_Upload (user_id, created_at, updated_at, name, desc, location, size, filename) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (db_id, datetime.datetime.now(), datetime.datetime.now(), info.get("name"), info.get("desc"), folder, len(file_data), random_filename))
@@ -462,13 +469,14 @@ async def put_file(request):
 
 	if "file" in info:
 		file_data = info["file"]
+		file_extension = info["file_extension"]
 		new_size = len(file_data)
 		if (-original_size + new_size + connection.total_file_upload_size) > storage_limit_for_connection(connection):
 			raise web.HTTPInsufficientStorage(text="This upload would put you over your storage limit", headers=CORS_HEADERS)
 		if (-original_size + new_size + global_file_upload_size) > Config["FileUpload"]["SizeLimitTotal"]*1024:
 			raise web.HTTPInsufficientStorage(text="This upload would put the server over its storage limit", headers=CORS_HEADERS)
 		if not info.get("keep_url"):
-			random_filename = generate_filename(db_id)
+			random_filename = generate_filename(db_id, extension=file_extension)
 			if random_filename == None:
 				print("Failed to generate a filename for put_file")
 				raise web.HTTPInternalServerError(headers=CORS_HEADERS)
@@ -490,11 +498,12 @@ async def put_file(request):
 			write_to_file_log(connection, "Reupload failed %d" % file_id)
 			raise web.HTTPInternalServerError(text="Couldn't write the file", headers=CORS_HEADERS)
 
-		if info.get("set_my_pic") and hasattr(connection.entity, 'pic'):
-			connection.entity.pic = [url_for_user_file(db_id, new_filename), 0, 0]
-			connection.entity.save_on_clean_up = True
-			connection.entity.broadcast_who()
-		update_image_url_everywhere(connection, url_for_user_file(db_id, original_filename), url_for_user_file(db_id, new_filename))
+		if new_filename.endswith(".png"):
+			if info.get("set_my_pic") and hasattr(connection.entity, 'pic'):
+				connection.entity.pic = [url_for_user_file(db_id, new_filename), 0, 0]
+				connection.entity.save_on_clean_up = True
+				connection.entity.broadcast_who()
+			update_image_url_everywhere(connection, url_for_user_file(db_id, original_filename), url_for_user_file(db_id, new_filename))
 
 	if "name" in info:
 		name = info["name"]

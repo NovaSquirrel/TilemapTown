@@ -58,6 +58,7 @@ const CameraScaleMax = 8;
 // Audio settings
 let AudioChatNotifications = true;
 let AudioMiscNotifications = false;
+let mapMusicEnabled = false;
 
 // document elements
 let mapCanvas = null; // main map view
@@ -134,10 +135,21 @@ function applyOptions() {
 	chatTimestamps = document.getElementById("chat-timestamp").checked;
 	lockZoomLevel = document.getElementById("lock-zoom-level").checked;
 
+	let mapMusicPreviouslyEnabled = mapMusicEnabled;
+	mapMusicEnabled = document.getElementById("audiomapmusic").checked;
+	if(!mapMusicEnabled) {
+		if (chiptunejsPlayerObject !== undefined) {
+			chiptunejsPlayerObject.stop();
+		}
+	} else if(mapMusicEnabled && !mapMusicPreviouslyEnabled && currentlyPlayingURL) {
+		playMusic(currentlyPlayingURL);
+	}
+
 	let saved_options = {
 		"always_center_camera": CameraAlwaysCenter,
 		"audio_chat_notify": AudioChatNotifications,
 		"audio_misc_notify": AudioMiscNotifications,
+		"audio_map_music": mapMusicEnabled,
 		"entity_animation": entityAnimationEnabled,
 		"tile_animation": tileAnimationEnabled,
 		"chat_timestamps": chatTimestamps,
@@ -359,8 +371,11 @@ function fileCardList(ul, folders_only, click_handler, contextmenu_handler) {
 			if(is_file) {
 				if(folders_only)
 					continue;
-				item.pic = [metadata.url, 0, 0];
-				item.is_uploaded_image = true;
+				if(metadata.url.toLowerCase().endsWith(".png")) {
+					item.pic = [metadata.url, 0, 0];
+					item.is_uploaded_image = true;
+				} else
+					item.pic = [0, 19, 30];
 				item.id = id;
 				if(metadata.size) {
 					item.status = (metadata.size / 1024).toFixed(2) + " KiB";
@@ -760,6 +775,10 @@ function itemIcon(key) {
 	let src = "";
 
 	let item = (typeof key === 'object') ? key : (DBInventory[key] || PlayerWho[key]);
+	if (item === undefined) {
+		console.log("Tried to get icon for "+key+" which doesn't exist");
+		item = {"name": "?"};
+	}
 
 	// allow custom avatars
 	// as well as built-in ones
@@ -1395,12 +1414,25 @@ function editFolderCancel() {
 
 let contextMenuFile = 0;
 function openFileContextMenu(id, x, y) {
-	let menu = document.querySelector('#fileupload-contextmenu');
+	let url = FileStorageInfo.files[id]?.url;
+	let isMusic = false;
+
+	if(url) {
+		let lowered = url.toLowerCase();
+		if(lowered.endsWith(".mod") || lowered.endsWith(".s3m") || lowered.endsWith(".xm") || lowered.endsWith(".it") || lowered.endsWith(".mptm")) {
+			isMusic = true;
+		}
+	}
+
+	let menu = isMusic ? document.querySelector('#fileupload-contextmenu-music') : document.querySelector('#fileupload-contextmenu-image');
 	menu.style.left = (x) + "px";
 	menu.style.top = (y) + "px";
 	menu.style.display = "block";
 	contextMenuFile = id;
-	document.getElementById("openFileInNewTabLink").href = FileStorageInfo.files[id].url;
+	if(isMusic)
+		document.getElementById("openMusicInNewTabLink").href = url;
+	else
+		document.getElementById("openFileInNewTabLink").href = url;
 }
 
 let contextMenuFolder = 0;
@@ -1410,6 +1442,16 @@ function openFolderContextMenu(id, x, y) {
 	menu.style.top = (y) + "px";
 	menu.style.display = "block";
 	contextMenuFolder = id;
+}
+
+function fileUploadPlayMusic() {
+	let file = FileStorageInfo.files[contextMenuFile];
+	playMusic(file.url, true);
+}
+
+function fileUploadSetMapMusic() {
+	let file = FileStorageInfo.files[contextMenuFile];
+	sendChatCommand('mapmusic '+file.url);
 }
 
 function fileUploadContextMenuAppearance() {
@@ -1472,8 +1514,11 @@ async function moveFileOrFolder(move_id, isfolder) {
 		item.pic = FolderOpenPic;
 		item.id = "F"+move_id;
 	} else {
-		item.pic = [metadata.url, 0, 0];
-		item.is_uploaded_image = true;
+		if(metadata.url.toLowerCase().endsWith(".png")) {
+			item.pic = [metadata.url, 0, 0];
+			item.is_uploaded_image = true;
+		} else
+			item.pic = [0, 19, 30];
 		item.id = move_id;
 	}
 	source.appendChild(itemCard(item));
@@ -2308,6 +2353,58 @@ function tickWorld() {
 }
 
 ///////////////////////////////////////////////////////////
+// Music
+///////////////////////////////////////////////////////////
+
+let libopenmptLoaded = false;
+let chiptunejsPlayerObject = undefined;
+let currentlyPlayingURL = null;
+window['libopenmpt'] = {
+	"locateFile": function (filename) {
+		return "/js/libopenmpt/" + filename;
+	}
+};
+
+function initMusic() {
+	if (chiptunejsPlayerObject === undefined) {
+		chiptunejsPlayerObject = new ChiptuneJsPlayer(new ChiptuneJsConfig(-1));
+	} else {
+		chiptunejsPlayerObject.stop();
+	}
+}
+
+function playMusic(url, force) {
+	currentlyPlayingURL = url;
+	if (!mapMusicEnabled && !force)
+		return;
+
+	function play() {
+		initMusic();
+		chiptunejsPlayerObject.load(url, function(buffer){chiptunejsPlayerObject.play(buffer);});
+	}
+
+	if(libopenmptLoaded) {
+		play();
+	} else {
+		libopenmptLoaded = true;
+		libopenmpt.onRuntimeInitialized = function () {
+			play();
+		};
+
+		let script = document.createElement("script");
+		script.src = "js/libopenmpt/libopenmpt.js";
+		document.head.appendChild(script);
+	}
+}
+
+function stopMusic() {
+	currentlyPlayingURL = null;
+	if (chiptunejsPlayerObject !== undefined) {
+		chiptunejsPlayerObject.stop();
+	}
+}
+
+///////////////////////////////////////////////////////////
 // Initial setup
 ///////////////////////////////////////////////////////////
 
@@ -2464,6 +2561,7 @@ function initWorld() {
 		document.getElementById("alwayscenter").checked = saved_options.always_center_camera ?? false;
 		document.getElementById("audiochatnotify").checked = saved_options.audio_chat_notify ?? true;
 		document.getElementById("audiomiscnotify").checked = saved_options.audio_misc_notify ?? false;
+		document.getElementById("audiomapmusic").checked = saved_options.audio_map_music ?? false;
 		document.getElementById("option-entity-animation").checked = saved_options.entity_animation ?? true;
 		document.getElementById("option-tile-animation").checked = saved_options.tile_animation ?? true;
 		document.getElementById("chat-timestamp").checked = saved_options.chat_timestamps ?? true;
@@ -2486,6 +2584,10 @@ function initWorld() {
 		let itemmodal = document.getElementById('editItemWindow');
 		let newitemmodal = document.getElementById('newItemWindow');
 		let mapmodal = document.getElementById('mapOptionsWindow');
+		let newfilemodal = document.getElementById('newFileWindow');
+		let newfoldermodal = document.getElementById('newFolderWindow');
+		let editfilemodal = document.getElementById('editFileWindow');
+		let editfoldermodal = document.getElementById('editFolderWindow');
 
 		let btn = document.getElementById("navlogin");
 		let mapbtn = document.getElementById("navmap");
@@ -2511,18 +2613,28 @@ function initWorld() {
 				newitemmodal.style.display = "none";
 				itemmodal.style.display = "none";
 				mapmodal.style.display = "none";
+				newfilemodal.style.display = "none";
+				newfoldermodal.style.display = "none";
+				editfilemodal.style.display = "none";
+				editfoldermodal.style.display = "none";
 			}
 		}
 
 		window.onclick = function (event) {
 			if (event.target == loginmodal) {
 				loginmodal.style.display = "none";
-			}
-			if (event.target == newitemmodal) {
+			} else if (event.target == newitemmodal) {
 				newitemmodal.style.display = "none";
-			}
-			if (event.target == mapmodal) {
+			} else if (event.target == mapmodal) {
 				mapmodal.style.display = "none";
+			} else if (event.target == newfilemodal) {
+				newfilemodal.style.display = "none";
+			} else if (event.target == newfoldermodal) {
+				newfoldermodal.style.display = "none";
+			} else if (event.target == editfilemodal) {
+				editfilemodal.style.display = "none";
+			} else if (event.target == editfoldermodal) {
+				editfoldermodal.style.display = "none";
 			}
 		}
 

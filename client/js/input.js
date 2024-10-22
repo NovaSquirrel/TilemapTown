@@ -73,6 +73,12 @@ function runLocalCommand(t) {
 		element.click();
 		document.body.removeChild(element);
 		return true;
+	} else if (t.toLowerCase().startsWith("/playmusic ")) {
+		playMusic(t.trim().slice(11), true);
+		return true;
+	} else if (t.toLowerCase() == "/stopmusic") {
+		stopMusic();
+		return true;
 	} else if (t.toLowerCase() == "/releasekeys") {
 		forceReleaseKeys();
 		return true;

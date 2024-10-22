@@ -422,7 +422,7 @@ def filter_username(text):
 def escape_tags(text):
 	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
-def image_url_is_okay(url):
+def user_file_url_is_ok(url):
 	if url == "":
 		return True
 	if Config["FileUpload"]["Enabled"] and len(Config["FileUpload"]["URLPrefix"]) and url.startswith(Config["FileUpload"]["URLPrefix"]):
@@ -431,6 +431,9 @@ def image_url_is_okay(url):
 		if url.startswith(w):
 			return True
 	return False
+
+def image_url_is_okay(url):
+	return user_file_url_is_ok(url) and url.lower().endswith(".png")
 
 def pic_is_okay(pic):
 	if not isinstance(pic, list) and not isinstance(pic, tuple):

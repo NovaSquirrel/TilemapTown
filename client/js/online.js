@@ -295,6 +295,16 @@ function receiveServerMessage(cmd, arg) {
           logMessage(logText, 'server_message', {'plainText': plainText});
         }
 
+        // Start playing music if enabled
+        let music = MyMap.Info['music']?.url;
+        if (music) {
+          if (music != currentlyPlayingURL) {
+            playMusic(music);
+          }
+        } else if (mapMusicEnabled) {
+          stopMusic();
+        }
+
         NeedMapRedraw = true;
       }
       break;

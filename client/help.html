@@ -359,6 +359,7 @@ table, td, tr, th{
 
 		<br><span class="cmd_name">/mapdefaultfloor tile</span><br><span class="cmd_desc">Sets default ground tile. Set to <kbd>grass</kbd> tile by default.</span><br>
 		<br><span class="cmd_name">/mapwallpaper url (<i>type</i>)</span><br><span class="cmd_desc">Sets a wallpaper for the map. Wallpapers are images overlaid on a map and replaces the default floor (unless <kbd>over_turf</kbd> is enabled, which makes the wallpaper overwrite all ground tiles). Multiple types can be accomplished by putting them in a line (example: <kbd>/mapwallpaper url center repeat repeatx repeaty offset=8,8</kbd>). Wallpaper options include: <kbd>absolute</kbd>, <kbd>center</kbd>, <kbd>repeat</kbd>, <kbd>repeatx</kbd>, <kbd>repeaty</kbd>, <kbd>over_turf</kbd>, <kbd>offset=x,y</kbd> (where x and y are the offset in pixels).</span><br>
+		<br><span class="cmd_name">/mapmusic url</span><br><span class="cmd_desc">Sets background music for the map. You can use MOD, S3M, XM, IT, or MPTM formats. <kbd>/mapmusic none</kbd> will remove music that was previously set.</span><br>
 
 		<br><span class="cmd_name">/mapprivacy type</span><br><span class="cmd_desc">Sets map privacy. The types are:
 		<ul>
@@ -451,6 +452,8 @@ table, td, tr, th{
         </ul></span><br>
 	
 		<hr><div class="cmd_group">Miscellaneous</div>
+        <br><span class="cmd_name">/playmusic url</span><br><span class="cmd_desc">Starts playing tracker music from a given URL</span><br>
+        <br><span class="cmd_name">/stopmusic</span><br><span class="cmd_desc">Stops whatever music is currently playing</span><br>
         <br><span class="cmd_name">/undodel</span><br><span class="cmd_desc">Undoes your most recent delete</span><br>
         <br><span class="cmd_name">/releasekeys</span><br><span class="cmd_desc">If a script is currently acting on your inputs, this command will cancel it out.</span><br>
 		<br><span class="cmd_name">/disconnect</span><br><span class="cmd_desc">Disconnect yourself from the server.</span><br>
