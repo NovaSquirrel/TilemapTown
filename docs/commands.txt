@@ -578,7 +578,7 @@ Deletes a file someone uploaded
 Goes through all uploaded files and updates their size to match the real files
 Also removes files that no longer exist but are still in the database
 
-/adminuserflags
-/adminuserflags add flag
-/adminuserflags del flag
+/adminuserflags username
+/adminuserflags username add flag
+/adminuserflags username del flag
 Change someone else's user flags; can additionally set the "file_uploads" flag to give someone higher limits

@@ -105,7 +105,21 @@ async def map_info(request):
 		data["info"] = map.map_info()
 	try:
 		if int(request.query.get('data', 0)):
-			data["data"] = map.map_section(0, 0, map.width-1, map.height-1)
+			if map.map_data_loaded:
+				data["data"] = map.map_section(0, 0, map.width-1, map.height-1)
+			else:
+				from_db = map.load_data_as_text()
+				if from_db != None:
+					from_db = json.loads(from_db)
+
+					# Patch in the edge ID links and wallpaper so map.map_info() can include them
+					if "edge_links" in from_db:
+						map.edge_id_links = from_db["edge_links"]
+					if "wallpaper" in from_db:
+						map.wallpaper = from_db["wallpaper"]
+
+					data["info"] = map.map_info()
+					data["data"] = {'pos': from_db['pos'], 'default': from_db['default'], 'turf': from_db['turf'], 'obj': from_db['obj']}
 	except:
 		pass
 	return web.json_response(data)
