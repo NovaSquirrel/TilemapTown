@@ -402,7 +402,7 @@ function fileCardList(ul, folders_only, click_handler, contextmenu_handler) {
 			// For empty folders which won't go into
 			// the second conditional, just show them open
 			if (is_folder) {
-				setItemCardImage(li, picIcon(FolderOpenPic));
+				setItemCardImage(li, picIcon(FolderClosedPic));
 			}
 
 			// If the item itself has sub-items
