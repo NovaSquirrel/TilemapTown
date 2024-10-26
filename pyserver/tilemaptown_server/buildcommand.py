@@ -883,7 +883,7 @@ def fn_userflags(map, client, context, arg):
 
 
 admin_changeable_flags = ('bot', 'hide_location', 'hide_api', 'no_watch', 'secret_pic', 'file_uploads')
-@cmd_command(category="Settings", alias=['userflag'])
+@cmd_command(category="Settings", alias=['adminuserflag'])
 def fn_adminuserflags(map, client, context, arg):
 	username, arg = separate_first_word(arg)
 	connection = find_connection_by_username(username)
