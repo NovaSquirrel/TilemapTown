@@ -234,6 +234,7 @@ async def get_info_from_multipart(request):
 			out[field.name] = data
 			base_name, file_extension = os.path.splitext(field.filename)
 			file_extension = file_extension.lower()
+			out[field.name + "_original"]  = field.filename
 			out[field.name + "_name"]      = base_name
 			out[field.name + "_extension"] = file_extension
 			if file_extension not in allowed_file_extensions:
@@ -417,7 +418,7 @@ async def post_file(request):
 	# Add a database entry
 	c.execute("INSERT INTO User_File_Upload (user_id, created_at, updated_at, name, desc, location, size, filename) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (db_id, datetime.datetime.now(), datetime.datetime.now(), info.get("name"), info.get("desc"), folder, len(file_data), random_filename))
 	file_id = c.lastrowid
-	write_to_file_log(connection, "Upload %d by %s, (size=%d KiB, [url=%s]file[/url], name=%s)" % (file_id, connection.entity.name_and_username(), len(file_data)//1024, url_for_user_file(db_id, random_filename), info.get("name")))
+	write_to_file_log(connection, "Upload %d by %s, (size=%d KiB, [url=%s]file[/url], name=%s, original=%s)" % (file_id, connection.entity.name_and_username(), len(file_data)//1024, url_for_user_file(db_id, random_filename), info.get("name"), info.get("file_original")))
 
 	return web.json_response({
 		"file": {
@@ -507,7 +508,7 @@ async def put_file(request):
 				f.write(file_data)
 			connection.total_file_upload_size = connection.total_file_upload_size + new_size - original_size
 			global_file_upload_size = global_file_upload_size + new_size - original_size
-			write_to_file_log(connection, "Reupload %d by %s, (size=%d KiB, [url=%s]file[/url], name=%s)" % (file_id, connection.entity.name_and_username(), len(file_data)//1024, url_for_user_file(db_id, new_filename), name))
+			write_to_file_log(connection, "Reupload %d by %s, (size=%d KiB, [url=%s]file[/url], name=%s, original=%s)" % (file_id, connection.entity.name_and_username(), len(file_data)//1024, url_for_user_file(db_id, new_filename), name, info.get("file_original")))
 		except:
 			write_to_file_log(connection, "Reupload failed %d" % file_id)
 			raise web.HTTPInternalServerError(text="Couldn't write the file", headers=CORS_HEADERS)
