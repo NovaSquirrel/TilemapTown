@@ -50,6 +50,7 @@ let PlayerBuildMarkers = {}; // EntityID: {pos: [x,y], name: string, timer: tick
 let CameraX = 0;
 let CameraY = 0;
 let CameraAlwaysCenter = true;
+let InstantCamera = false;
 
 let CameraScale = 3;
 const CameraScaleMin = 1;

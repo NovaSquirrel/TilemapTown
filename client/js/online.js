@@ -36,7 +36,6 @@ let API_Version = null;
 let API_URL = null;
 
 // URL param options
-let InstantCamera = false;
 let SlowAnimationTick = false;
 
 function readURLParams() {
@@ -105,26 +104,38 @@ function SendCmd(commandType, commandArgs) {
   if(ShowProtocol)
     console.log(">> "+commandType+" "+JSON.stringify(commandArgs));
   if(!OnlineMode) {
-    if(commandType == "BAG") {
+    if(commandType == "CMD" || commandType == "MSG") {
+        receiveServerMessage("ERR",
+         {"text": "You're not connected to a server! Press the login button to connect."}
+        );
+    } else if(commandType == "BAG") {
       if(commandArgs.create) {
-        receiveServerMessage({data: "BAG "+JSON.stringify(
-          {"update": {"id": TickCounter,
+        receiveServerMessage("BAG",
+          {"list": [{"id": TickCounter,
                       "name": commandArgs.create.name,
                       "type": commandArgs.create.type,
-                      "data": null
-                     }
-          })});
+                      "data": null,
+                      "folder": PlayerYou,
+                     }]
+          }
+        );
       }
       if(commandArgs.update) {
-        receiveServerMessage({data: "BAG "+JSON.stringify({"update": commandArgs["update"]})});
+        receiveServerMessage("BAG",
+          {"update": commandArgs["update"]}
+        );
       }
       if(commandArgs.clone) {
         newitem = CloneAtom(DBInventory[commandArgs.clone]["id"]);
         newitem.id = TickCounter; // pick new ID
-        receiveServerMessage({data: "BAG "+JSON.stringify({"update": newitem})});
+        receiveServerMessage("BAG",
+          {"update": newitem}
+        );
       }
       if(commandArgs["delete"]) {
-        receiveServerMessage({data: "BAG "+JSON.stringify({"remove": commandArgs["delete"]["id"]})});
+        receiveServerMessage("BAG",
+          {"remove": commandArgs["delete"]["id"]}
+        );
       }
     }
     return;
