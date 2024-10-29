@@ -407,22 +407,20 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 		}
 		case 6: // Horizontal-only autotiling
 		{
-			let autotileIndex = autotileIndexFunction(tile, map, mapCoordX, mapCoordY);
-			let right = (autotileIndex & 1) != 0;
-			let left = (autotileIndex & 2) != 0;
-			if(left && !right) picX--;
-			if(!left && right) picX++;
+			let left = autotileMatchFunction(tile, map, mapCoordX-1, mapCoordY);
+			let right = autotileMatchFunction(tile, map, mapCoordX+1, mapCoordY);
+			if(!left && right) picX--;
+			if(left && !right) picX++;
 			picX += animationFrame*3;
 			break;
 		}
 		case 7: // Horizontal-only autotiling, separate single, defaulting to middle
 		case 8: // Horizontal-only autotiling, separate single, defaulting to single
 		{
-			let autotileIndex = autotileIndexFunction(tile, map, mapCoordX, mapCoordY);
-			let right = (autotileIndex & 1) != 0;
-			let left = (autotileIndex & 2) != 0;
-			if(left && !right) picX--;
-			if(!left && right) picX++;
+			let left = autotileMatchFunction(tile, map, mapCoordX-1, mapCoordY);
+			let right = autotileMatchFunction(tile, map, mapCoordX+1, mapCoordY);
+			if(!left && right) picX--;
+			if(left && !right) picX++;
 			if(!left && !right) picX+=2;
 			if(autotileLayout == 8) picX-=2;
 			picX += animationFrame*4;
@@ -430,22 +428,20 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 		}
 		case 9: // Vertical-only autotiling
 		{
-			let autotileIndex = autotileIndexFunction(tile, map, mapCoordX, mapCoordY);
-			let bottom = (autotileIndex & 4) != 0;
-			let top = (autotileIndex & 8) != 0;
-			if(top && !bottom) picY--;
-			if(!top && bottom) picY++;
+			let top = autotileMatchFunction(tile, map, mapCoordX, mapCoordY-1);
+			let bottom = autotileMatchFunction(tile, map, mapCoordX, mapCoordY+1);
+			if(top && !bottom) picY++;
+			if(!top && bottom) picY--;
 			picX += animationFrame;
 			break;
 		}
 		case 10: // Vertical-only autotiling, separate single, defaulting to middle
 		case 11: // Vertical-only autotiling, separate single, defaulting to single
 		{
-			let autotileIndex = autotileIndexFunction(tile, map, mapCoordX, mapCoordY);
-			let bottom = (autotileIndex & 4) != 0;
-			let top = (autotileIndex & 8) != 0;
-			if(top && !bottom) picY--;
-			if(!top && bottom) picY++;
+			let top = autotileMatchFunction(tile, map, mapCoordX, mapCoordY-1);
+			let bottom = autotileMatchFunction(tile, map, mapCoordX, mapCoordY+1);
+			if(top && !bottom) picY++;
+			if(!top && bottom) picY--;
 			if(!top && !bottom) picY-=2;
 			if(autotileLayout == 11) picY+=2;
 			picX += animationFrame;
