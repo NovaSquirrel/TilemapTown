@@ -1,9 +1,9 @@
 {
 	"images": {
-		"0": "potluck.png",
-		"-1": "extra.png",
-		"-2": "pulp.png",
-		"-3": "easyrpg.png"
+		"0": "tileset/potluck.png",
+		"-1": "tileset/extra.png",
+		"-2": "tileset/pulp.png",
+		"-3": "tileset/easyrpg.png"
 	},
 	"image_names": {
 		"0": "Potluck",

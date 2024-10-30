@@ -1855,13 +1855,13 @@ function logMessage(Message, Class, Params) {
 	if (!alreadyPlayedSound) {
 		if ((Params.isChat || Params.isPrivateChat) && AudioChatNotifications) {
 			if (!Params.isSilent) {
-				let audio = new Audio(Params.isPrivateChat ? 'img/notifyprivate.wav' : 'img/notifychat.wav');
+				let audio = new Audio(Params.isPrivateChat ? 'img/audio/notifyprivate.wav' : 'img/audio/notifychat.wav');
 				audio.play();
 				alreadyPlayedSound = true;
 			}
 		} else if (!Params.isChat && AudioMiscNotifications) {
 			if (!Params.isSilent) {
-				let audio = new Audio('img/notifymisc.wav');
+				let audio = new Audio('img/audio/notifymisc.wav');
 				audio.play();
 				alreadyPlayedSound = true;
 			}
