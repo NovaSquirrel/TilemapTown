@@ -119,6 +119,7 @@ function sendChatCommand(the_text) {
 }
 
 function sendTyping(isTyping) {
+	markNotIdle();
 	if (PlayerWho[PlayerYou].typing != isTyping) {
 		SendCmd("WHO", { update: { id: PlayerYou, typing: isTyping } });
 		PlayerWho[PlayerYou].typing = isTyping;
@@ -129,6 +130,22 @@ function sendTyping(isTyping) {
 ///////////////////////////////////////////////////////////
 // Keys
 ///////////////////////////////////////////////////////////
+
+function markNotIdle() {
+	timeOfLastInput = Date.now();
+	if (PlayerWho?.[PlayerYou]?.status == "idle" && OnlineMode) {
+		if (statusBeforeIdle) {
+			if (statusMessageBeforeIdle) {
+				SendCmd("CMD", {text: "status "+statusBeforeIdle+" "+statusMessageBeforeIdle});
+			} else {
+				SendCmd("CMD", {text: "status "+statusBeforeIdle});
+			}
+		} else {
+			SendCmd("CMD", {text: "status"});
+		}		
+		PlayerWho[PlayerYou].status = statusBeforeIdle; // Don't send it again
+	}
+}
 
 function movePlayer(id, x, y, dir, already_moved) {
 	already_moved.add(id);
@@ -205,6 +222,7 @@ function keyEventToTilemapTownKey(e) {
 }
 
 function keyUpHandler(e) {
+	markNotIdle();
 	var e = e || window.event;
 	ShiftPressed = e.shiftKey;
 	CtrlPressed = e.ctrlKey;
@@ -230,6 +248,7 @@ function bump_into_atom(atom) {
 }
 
 function keyDownHandler(e) {
+	markNotIdle();
 	function ClampPlayerPos() {
 		PlayerX = Math.min(Math.max(PlayerX, 0), MyMap.Width - 1);
 		PlayerY = Math.min(Math.max(PlayerY, 0), MyMap.Height - 1);
@@ -838,6 +857,7 @@ function initMouse() {
 	}, false);
 
 	mapCanvas.addEventListener('mousedown', function (evt) {
+		markNotIdle();
 		if (evt.button != 0)
 			return;
 		if (MousedOverEntityClickAvailable && !ShiftPressed) {
@@ -939,6 +959,7 @@ function initMouse() {
 	}, false);
 
 	mapCanvas.addEventListener('wheel', function (event) {
+		markNotIdle();
 		event.preventDefault();
 		if(lockZoomLevel)
 			return;
@@ -953,6 +974,7 @@ function initMouse() {
 	}, false);
 
 	mapCanvas.addEventListener('mousemove', function (evt) {
+		markNotIdle();
 		let pos = getTilePos(evt);
 		let pixelPos = getMousePos(mapCanvas, evt); // Pixel position, for finding click position within a mini tilemap
 		MouseRawPos = pixelPos;

@@ -61,6 +61,10 @@ let AudioChatNotifications = true;
 let AudioMiscNotifications = false;
 let mapMusicEnabled = false;
 
+// Idle settings
+let minutesUntilIdle = 60;
+let minutesUntilDisconnect = 1440;
+
 // document elements
 let mapCanvas = null; // main map view
 let selCanvas = null; // selector
@@ -71,6 +75,10 @@ let NeedMapRedraw = false;
 let NeedInventoryUpdate = false;
 let TickCounter = 0;   // Goes up every 20ms, wraps at 0x1000000 (hex)
 let AnimationTick = 0; // Goes up every 20ms, wraps at 1000000 (decimal)
+let timeOfLastInput = Date.now();
+let statusBeforeIdle = null;
+let statusMessageBeforeIdle = null;
+
 let DisplayInventory = { null: [] }; // Indexed by folder
 let DBInventory = {}; // Indexed by ID
 
@@ -130,6 +138,11 @@ function applyOptions() {
 	CameraAlwaysCenter = document.getElementById("alwayscenter").checked;
 	AudioChatNotifications = document.getElementById("audiochatnotify").checked;
 	AudioMiscNotifications = document.getElementById("audiomiscnotify").checked;
+	minutesUntilIdle = parseInt(document.getElementById("minutes-until-idle").value);
+	if (minutesUntilIdle === NaN) minutesUntilIdle = 0;
+	minutesUntilDisconnect = parseInt(document.getElementById("minutes-until-disconnect").value);
+	if (minutesUntilDisconnect === NaN) minutesUntilDisconnect = 0;
+
 	Fly = document.getElementById("option-fly").checked;
 	entityAnimationEnabled = document.getElementById("option-entity-animation").checked;
 	tileAnimationEnabled = document.getElementById("option-tile-animation").checked;
@@ -155,6 +168,8 @@ function applyOptions() {
 		"tile_animation": tileAnimationEnabled,
 		"chat_timestamps": chatTimestamps,
 		"lock-zoom-level": lockZoomLevel,
+		"minutes_until_idle": minutesUntilIdle,
+		"minutes_until_disconnect": minutesUntilDisconnect,
 	};
 	localStorage.setItem("options", JSON.stringify(saved_options));
 }
@@ -2348,10 +2363,28 @@ function tickWorld() {
 
 	NeedMapRedraw = false;
 	TickCounter = (TickCounter + 1) & 0xffffff;
-	if(!SlowAnimationTick || ((TickCounter & 7) == 0)) {
+	if (!SlowAnimationTick || ((TickCounter & 7) == 0)) {
 		AnimationTick = (AnimationTick + 1) % 1000000;
 	}
 	alreadyPlayedSound = false;
+
+	let minutesSinceLastInput = (Date.now() - timeOfLastInput) / 60000;
+	let myStatus = PlayerWho?.[PlayerYou]?.status;
+	if (myStatus != null) myStatus = myStatus.toLowerCase();
+	if (OnlineMode) {
+		if (minutesUntilIdle > 0 && minutesSinceLastInput >= minutesUntilIdle && [null, "ic", "ooc", "rp"].includes(myStatus)) {
+			statusBeforeIdle = PlayerWho[PlayerYou]?.status;
+			statusMessageBeforeIdle = PlayerWho[PlayerYou]?.status_message;
+			if(PlayerWho?.[PlayerYou]?.status)
+				SendCmd("CMD", {text: "status idle "+PlayerWho[PlayerYou].status});
+			else
+				SendCmd("CMD", {text: "status idle"});
+			PlayerWho[PlayerYou].status = "idle"; 
+		}
+		if (minutesUntilDisconnect > 0 && minutesSinceLastInput >= minutesUntilDisconnect) {
+			SendCmd("CMD", {text: "disconnect"});
+		}
+	}
 }
 
 ///////////////////////////////////////////////////////////
@@ -2567,6 +2600,8 @@ function initWorld() {
 		document.getElementById("option-entity-animation").checked = saved_options.entity_animation ?? true;
 		document.getElementById("option-tile-animation").checked = saved_options.tile_animation ?? true;
 		document.getElementById("chat-timestamp").checked = saved_options.chat_timestamps ?? true;
+		document.getElementById("minutes-until-idle").value = saved_options.minutes_until_idle ?? 60;
+		document.getElementById("minutes-until-disconnect").value = saved_options.minutes_until_disconnect ?? 1440;
 	}
 	applyOptions();
 	changeBuildTool();

@@ -439,6 +439,12 @@
       </li>
     </ul>
 
+    <p>
+    <label class="unselectable">Mark self as idle after <input type="number" id="minutes-until-idle" size="4" value="60"> minutes</label><br>
+    <label class="unselectable">Disconnect after <input type="number" id="minutes-until-disconnect" size="4" value="1440"> minutes</label><br>
+    Disable by entering 0
+    </p>
+
     <input type="button" onclick="applyOptions(); viewOptions();" value="OK">
     <input type="button" onclick="applyOptions();" value="Apply changes">
     <input type="button" onclick="viewOptions();" value="Close options">

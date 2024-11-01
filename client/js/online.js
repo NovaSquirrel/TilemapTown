@@ -474,7 +474,7 @@ function receiveServerMessage(cmd, arg) {
         NeedMapRedraw = true;
       } else if(arg.update) {
         if("status" in arg.update && ((arg.update["status"] !== PlayerWho[arg.update.id]["status"]) || (("status_message" in arg.update) && arg.update["status_message"] !== PlayerWho[arg.update.id]["status_message"]))) {
-          if(arg.update["status"]) {
+          if(arg.update["status"] && arg.update.id != PlayerYou) {
             if(arg.update["status"] == "." && arg.update["status_message"]) {
               let message = PlayerWho[arg.update.id].name + "'s status is now \"" + convertBBCode(arg.update["status_message"]) + "\"";
               let plain_message = PlayerWho[arg.update.id].name + "'s status is now \"" + arg.update["status_message"] + "\"";
@@ -483,10 +483,11 @@ function receiveServerMessage(cmd, arg) {
               let status_name = '"' + escape_tags(arg.update["status"]) + '"';
               let plain_status_name = '"' + arg.update["status"] + '"';
               switch(arg.update["status"].toLowerCase()) {
+                case "idle": status_name = "idle"; break;
                 case "away": status_name = "away"; break;
                 case "busy": status_name = "busy"; break;
                 case "ic": status_name = "in character"; break;
-                case "ooc": status_name =  "out of character"; break;
+                case "ooc": status_name = "out of character"; break;
                 case "iic": status_name = "looking to be in-character"; break;
                 case "rp": status_name = "in a roleplay"; break;
                 case "lfrp": case "irp": status_name = "looking to roleplay"; break;
@@ -503,7 +504,7 @@ function receiveServerMessage(cmd, arg) {
 
               logMessage(message, 'status_change', {'isSilent': true, 'plainText': plain_message});
            }
-          } else {
+          } else if(arg.update.id != PlayerYou) {
             logMessage(PlayerWho[arg.update.id].name + " cleared their status", 'status_change', {'isSilent': true, 'plainText': PlayerWho[arg.update.id].name + " cleared their status"});
           }
         }
