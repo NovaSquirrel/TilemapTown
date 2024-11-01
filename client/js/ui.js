@@ -63,7 +63,7 @@ let mapMusicEnabled = false;
 
 // Idle settings
 let minutesUntilIdle = 60;
-let minutesUntilDisconnect = 1440;
+let minutesUntilDisconnect = 720;
 
 // document elements
 let mapCanvas = null; // main map view
@@ -2601,7 +2601,7 @@ function initWorld() {
 		document.getElementById("option-tile-animation").checked = saved_options.tile_animation ?? true;
 		document.getElementById("chat-timestamp").checked = saved_options.chat_timestamps ?? true;
 		document.getElementById("minutes-until-idle").value = saved_options.minutes_until_idle ?? 60;
-		document.getElementById("minutes-until-disconnect").value = saved_options.minutes_until_disconnect ?? 1440;
+		document.getElementById("minutes-until-disconnect").value = saved_options.minutes_until_disconnect ?? 720;
 	}
 	applyOptions();
 	changeBuildTool();
