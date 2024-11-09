@@ -84,6 +84,10 @@ async def client_handler(websocket, path):
 			ip = websocket.request_headers['X-Real-IP']
 		else:
 			ip = ''
+	elif Config["Server"]["ProxyOnly"]:
+		asyncio.ensure_future(websocket.close(reason="ProxyOnly"))
+		return
+
 	connection = Connection(websocket, ip)
 	if connection.test_server_banned():
 		return
