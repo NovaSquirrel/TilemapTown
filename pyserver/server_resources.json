@@ -11,6 +11,20 @@
 		"-2": "Pulp",
 		"-3": "EasyRPG RTP"
 	},
+	"sample_avatars": {
+		"White bunny": "userpic/bunny.png",
+		"Black bunny": "userpic/bunny2.png",
+		"Cat": "userpic/cat.png",
+		"Gray cat": "userpic/cat2.png",
+		"Orange fire": "userpic/fire.png",
+		"Purple fire": "userpic/fire2.png",
+		"Snail": "userpic/snail.png",
+		"Green snail": "userpic/snail2.png",
+		"Hamster": "userpic/hamster.png",
+		"Hamster2": "userpic/hamster2.png",
+		"Blue butterfly": "userpic/butterfly.png",
+		"Red butterfly": "userpic/butterfly2.png"
+	},
 	"tilesets": {
 		"": {
 			"grass": {
