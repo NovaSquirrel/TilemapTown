@@ -89,6 +89,20 @@ Server.ProxyOnly
 Default: false
 If true, server will reject connections made from IP addresses that do not match the server's own IP
 
+Server.AllowedOrigins
+Default: null
+If not null, it's a list of strings, and a connection will be rejected if the client does not send in an HTTP "Origin" header equaling one of these strings. You can include null (the JSON value null, not a string of the word null) in the list to mark that the lack of an "origin" header is OK. Confusingly, the *text* null may be sent when using a client through a HTML file on your computer.
+If this config value is null, this feature is disabled and all origins are allowed.
+When you put a script on a webpage and it connects to Tilemap Town, the HTTP "Origin" header will be a value like "http://localhost:8000" or "https://novasquirrel.com", indicating the domain that page is on.
+
+Server.AllowedOrigins2
+Default: null
+Checked at an earlier stage, before the connection is even allowed to happen. Requires a restart to take effect.
+
+Server.BannedOrigins
+Default: []
+A list of origins that are *not* allowed to connect; if a connection has an Origin header containing any string in this list, that user will be disconnected.
+
 API.Enabled
 Default: true
 If true, makes information about the world available through a web API.

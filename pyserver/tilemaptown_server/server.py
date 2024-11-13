@@ -25,7 +25,7 @@ else:
 	reload_database_meta()
 
 # To share with API
-total_connections = [0]
+total_connections = [0, 0, 0]
 
 # Timer that runs and performs background tasks
 def main_timer():
@@ -88,12 +88,25 @@ async def client_handler(websocket, path):
 		asyncio.ensure_future(websocket.close(reason="ProxyOnly"))
 		return
 
+	if Config["Server"]["AllowedOrigins"]:
+		if not any(_ == websocket.request_headers['Origin'] for _ in Config["Server"]["AllowedOrigins"]):
+			print("Origin \"%s\" from IP %s not allowlisted" % (websocket.request_headers['Origin'], ip))
+			asyncio.ensure_future(websocket.close(reason="BadOrigin"))
+			total_connections[2] += 1 # Prevented connections
+			return
+	if Config["Server"]["BannedOrigins"] and websocket.request_headers['Origin'] and any(_ in websocket.request_headers['Origin'] for _ in Config["Server"]["BannedOrigins"]):
+		print("Banned origin \"%s\" from IP %s" % (websocket.request_headers['Origin'], ip))
+		asyncio.ensure_future(websocket.close(reason="BadOrigin"))
+		total_connections[2] += 1
+		return
+
 	connection = Connection(websocket, ip)
 	if connection.test_server_banned():
+		total_connections[1] += 1
 		return
 	AllConnections.add(connection)
 
-	write_to_connect_log("connected: %s %s" % (path, ip))
+	write_to_connect_log("connected: %s, %s, %s" % (path, ip, websocket.request_headers['Origin']))
 	total_connections[0] += 1
 
 	while connection.ws != None:
@@ -188,7 +201,7 @@ global loop
 
 def main():
 	global loop
-	start_server = websockets.serve(client_handler, None, Config["Server"]["Port"], max_size=Config["Server"]["WSMaxSize"], max_queue=Config["Server"]["WSMaxQueue"])
+	start_server = websockets.serve(client_handler, None, Config["Server"]["Port"], max_size=Config["Server"]["WSMaxSize"], max_queue=Config["Server"]["WSMaxQueue"], origins=Config["Server"]["AllowedOrigins2"])
 
 	# Start the event loop
 	loop = asyncio.get_event_loop()

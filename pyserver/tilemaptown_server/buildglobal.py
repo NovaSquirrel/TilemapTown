@@ -69,6 +69,9 @@ def loadConfigJson():
 	setConfigDefault("Server",   "BroadcastDisconnects", True)
 	setConfigDefault("Server",   "MaxMapSize",       256)
 	setConfigDefault("Server",   "ProxyOnly",        False)
+	setConfigDefault("Server",   "AllowedOrigins",   None)
+	setConfigDefault("Server",   "AllowedOrigins2",  None)
+	setConfigDefault("Server",   "BannedOrigins",    None)
 
 	setConfigDefault("API",      "Port",             12551)
 	setConfigDefault("API",      "Enabled",          True)

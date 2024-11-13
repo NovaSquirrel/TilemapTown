@@ -621,6 +621,7 @@ The server may send the following WebSocket disconnect reasons:
 	"LoggedInElsewhere": Disconnected because another client logged into the same account
 	"PingTimeout": Failed to respond to a server's PIN in time
 	"ProxyOnly": Server only allows connecting through a reverse proxy
+	"BadOrigin": Disallowed "Origin" header.
 
 A client may choose to automatically reconnect in response to a "Restart" reason but should *not* automatically reconnect in response to the other reasons.
 There will probably be other reasons in the future for things like a private server, or the client's version being too old, or not supporting a required extension.
