@@ -129,6 +129,12 @@ def loadConfigJson():
 				url = ServerResources["images"][i]
 				if not url.startswith("http://") and not url.startswith("https://"):
 					ServerResources["images"][i] = base + url
+		if "ResourceIMGBase" in Config["Server"] and "sample_avatars" in ServerResources:
+			base = Config["Server"]["ResourceIMGBase"]
+			for i in ServerResources["sample_avatars"]:
+				url = ServerResources["sample_avatars"][i]
+				if not url.startswith("http://") and not url.startswith("https://"):
+					ServerResources["sample_avatars"][i] = base + url
 	TempLogs[0] = deque(maxlen=Config["TempLogs"]["ConnectSize"])
 	TempLogs[1] = deque(maxlen=Config["TempLogs"]["BuildSize"])
 	TempLogs[2] = deque(maxlen=Config["TempLogs"]["UploadSize"])

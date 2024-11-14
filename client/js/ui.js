@@ -105,6 +105,7 @@ let chatTimestamps = true;
 let lockZoomLevel = false;
 
 let FileStorageInfo = null;
+let sampleAvatarList = {};
 
 ///////////////////////////////////////////////////////////
 
@@ -298,6 +299,27 @@ function viewCustomize() {
 	let Hidden = (options.style.display == 'none');
 	document.getElementById("navcustomize").setAttribute("class", Hidden ? "navactive" : "");
 	options.style.display = Hidden ? 'block' : 'none';
+}
+
+function morePresetAvatars() {
+	let ul = document.getElementById("premadeavatarul");
+	while (ul.firstChild) {
+		ul.removeChild(ul.firstChild);
+	}
+	for(let name in sampleAvatarList) {
+		let item = {
+			name: name,
+			pic: [sampleAvatarList[name], 0, 0],
+            is_uploaded_image: true, // Force 32x32
+		};
+		let li = itemCard(item);
+		li.addEventListener('click', function (e) {
+			sendChatCommand('userpic '+sampleAvatarList[name]);
+		});
+		ul.appendChild(li);
+	}
+	let avatars = document.getElementById("premadeavatarlist");
+	avatars.style.display = 'block';
 }
 
 function fileCardList(ul, folders_only, click_handler, contextmenu_handler) {
@@ -2194,6 +2216,68 @@ function startPlayerWalkAnim(id) {
 	NeedMapRedraw = true;
 }
 
+function apply_default_pic_for_type(item) {
+	if (!item)
+		return;
+	switch (item.type) {
+		default: // dummy
+			item.pic = [0, 8, 24];
+			break;
+		case "user":
+			// make sure a custom pic is in PlayerImages
+			// (it won't be for players in other maps)
+			let is_custom = item.pic != null && typeof item.pic[0] == "string";
+			if ((!(item.id in PlayerImages) && is_custom) ||
+				(item.id in PlayerImages && PlayerImages[item.id].src != item.pic[0] && is_custom)) {
+				let img = new Image();
+				img.src = pic[0];
+				PlayerImages[key] = img;
+			}
+			break;
+		case "generic":
+			if (item.pic == null)
+				item.pic = [0, 8, 24];
+			break;
+		case "map_tile": // object
+			// allow for string data like "grass"
+			let temp = AtomFromName(item.data);
+			if (temp && temp.pic) {
+				item.pic = temp.menu_pic ?? temp.pic;
+			} else {
+				item.pic = [0, 8, 24];
+			}
+			break;
+		case "text":
+			if (item.pic == null)
+				item.pic = [0, 0, 24];
+			break;
+		case "image":
+			if (item.pic == null)
+				item.pic = [0, 11, 20];
+			break;
+		case "tileset":
+			if (item.pic == null)
+				item.pic = [0, 19, 18];
+			break;
+		case "reference":
+			if (item.pic == null)
+				item.pic = [0, 9, 20];
+			break;
+		case "landmark":
+			if (item.pic == null)
+				item.pic = [0, 7, 22];
+			break;
+		case "gadget":
+			if (item.pic == null)
+				item.pic = [0, 18, 7];
+			break;
+		case "folder":
+			if (item.pic == null)
+				item.pic = FolderClosedPic;
+			break;
+	}
+}
+
 function tickWorld() {
 	if (NeedInventoryUpdate) {
 		DisplayInventory = { null: [] };
@@ -2211,51 +2295,7 @@ function tickWorld() {
 
 			// always reload the picture, for now
 			if (true) {
-				switch (updated.type) {
-					default: // dummy
-						updated.pic = [0, 8, 24];
-						break;
-					case "user":
-						// make sure a custom pic is in PlayerImages
-						// (it won't be for players in other maps)
-						let is_custom = updated.pic != null && typeof updated.pic[0] == "string";
-						if ((!(updated.id in PlayerImages) && is_custom) ||
-							(updated.id in PlayerImages && PlayerImages[updated.id].src != updated.pic[0] && is_custom)) {
-							let img = new Image();
-							img.src = pic[0];
-							PlayerImages[key] = img;
-						}
-						break;
-					case "generic":
-						if (updated.pic == null)
-							updated.pic = [0, 8, 24];
-						break;
-					case "map_tile": // object
-						// allow for string data like "grass"
-						let temp = AtomFromName(updated.data);
-						if (temp && temp.pic) {
-							updated.pic = temp.menu_pic ?? temp.pic;
-						} else {
-							updated.pic = [0, 8, 24];
-						}
-						break;
-					case "text":
-						if (updated.pic == null)
-							updated.pic = [0, 0, 24];
-						break;
-					case "image":
-						if (updated.pic == null)
-							updated.pic = [0, 11, 20];
-						break;
-					case "tileset":
-						if (updated.pic == null)
-							updated.pic = [0, 19, 18];
-						break;
-					case "reference":
-						if (updated.pic == null)
-							updated.pic = [0, 9, 22];
-						break;
-				}
+				apply_default_pic_for_type(updated);
 			}
 
 			// add to DisplayInventory

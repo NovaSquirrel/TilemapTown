@@ -446,6 +446,7 @@ function receiveServerMessage(cmd, arg) {
         for (var id in arg.list) {
           initPlayerIfNeeded(id);
           updateDirectionForAnim(id);
+          apply_default_pic_for_type(PlayerWho[id]);
         }
       } else if(arg.add) {
         if(!PlayerWho[arg.add.id] && (arg.add.in_user_list || arg.add.chat_listener)) { // if player isn't already in the list
@@ -455,6 +456,7 @@ function receiveServerMessage(cmd, arg) {
         PlayerWho[arg.add.id] = arg.add;
         initPlayerIfNeeded(arg.add.id);
         updateDirectionForAnim(arg.add.id);
+        apply_default_pic_for_type(PlayerWho[arg.add.id]);
         NeedMapRedraw = true;
       } else if(arg.remove) {
         if(PlayerWho[arg.remove].in_user_list) {
@@ -636,6 +638,9 @@ function receiveServerMessage(cmd, arg) {
       if('build_categories' in arg) {
         buildCategories = arg['build_categories'];
         updateBuildToolCategoriesAvailable();
+      }
+      if('sample_avatars' in arg) {
+        sampleAvatarList = arg['sample_avatars'];
       }
       changedBuildToolCategory();
       break;

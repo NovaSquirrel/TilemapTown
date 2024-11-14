@@ -454,22 +454,27 @@
 <widget-window id="character" style="display: none;">
   <span slot="title">Character Settings</span>
   <div slot="contents">
+  <strong>Name:</strong><br>
   <input type="text" placeholder="New name" id="newnick">
   <input type="button" value="Rename" onclick="sendChatCommand('nick '+document.getElementById('newnick').value);"><br>
 
+  <hr>
   <p>
-    Preset player graphics<br>
+    <strong>Preset avatars:</strong><br>
     <input type="button" value="Bunny" onclick="sendChatCommand('userpic bunny');">
     <input type="button" value="Cat" onclick="sendChatCommand('userpic cat');">
-    <input type="button" value="Hamster" onclick="sendChatCommand('userpic hamster');"><br>
+    <input type="button" value="Hamster" onclick="sendChatCommand('userpic hamster');">
     <input type="button" value="Fire" onclick="sendChatCommand('userpic fire');">
     <input type="button" value="Snail" onclick="sendChatCommand('userpic snail');">
     <input type="button" value="Turtle" onclick="sendChatCommand('userpic turtle');">
+    <input type="button" value="More!" onclick="morePresetAvatars();">
   </p>
 
   <p>
-    Registered users can <a href="#" onclick="viewFiles();">upload images</a><br>to use as avatars. Otherwise you may use<br><a href="https://imgur.com/" target="_blank">Imgur</a>, <a href="https://imgbb.com/" target="_blank">ImgBB</a> or <a href="https://postimages.org/" target="_blank">Postimages</a>.<br>More image hosts can be added on request.<br>
-    <input type="text" placeholder="https://i.imgur.com/whatever.png" id="newcustompic">
+    <strong>Custom avatar:</strong><br>
+    Paste a link to a PNG here to use a custom avatar.<br>
+    Registered users can <a href="#" onclick="viewFiles();">upload images</a> to the server.<br>Otherwise you may use <a href="https://imgur.com/" target="_blank">Imgur</a>, <a href="https://imgbb.com/" target="_blank">ImgBB</a> or <a href="https://postimages.org/" target="_blank">Postimages</a>.<br>More image hosts can be added on request.<br>
+    <input type="text" placeholder="https://i.imgur.com/whatever.png" size="40" id="newcustompic">
     <input type="button" value="Custom pic" onclick="sendChatCommand('userpic '+document.getElementById('newcustompic').value);">
   </p>
 
@@ -496,6 +501,15 @@
     <canvas class="unselectable" id="tilesetCanvas'+Item.id+'" width="256" height="16" oncontextmenu="return false;" imageSmoothingEnabled="false"></canvas>
     <br>
     <button>Add tile</button>
+  </div>
+</widget-window>
+
+<widget-window id="premadeavatarlist" style="display: none;">
+  <span slot="title">Premade avatars</span>
+  <div slot="contents" id="premadeavatarlist-contents">
+	Click an avatar to switch to it:<br>
+    <ul id="premadeavatarul" class="itemsul unselectable">
+    </ul>
   </div>
 </widget-window>
 
