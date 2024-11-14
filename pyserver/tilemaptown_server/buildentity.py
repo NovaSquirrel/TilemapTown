@@ -970,7 +970,7 @@ class Entity(PermissionsMixin, object):
 		""" Save entity information to the database """
 		if self.temporary:
 			return
-		save_on_clean_up = False
+		self.save_on_clean_up = False
 		c = Database.cursor()
 
 		if self.db_id == None:
@@ -1042,6 +1042,24 @@ class EntityWithPlainData(Entity):
 		""" Save the entity's data to the database, using plain text """
 		self.save_data_as_text(self.data)
 
+def save_generic_data(self, data):
+	if len(self.forward_message_types):
+		data['forward_message_types'] = list(self.forward_message_types)
+	if self.forward_messages_to != None:
+		data['forward_messages_to'] = self.forward_messages_to
+	if self.status_type != None:
+		data['status_type'] = self.status_type
+	if self.status_message != None:
+		data['status_message'] = self.status_message
+
+def load_generic_data(self, data):
+	if 'forward_message_types' in data:
+		self.forward_message_types = set()
+	self.forward_messages_to = data.get('forward_messages_to', None)
+
+	self.status_type = data.get('status_type', None)
+	self.status_message = data.get('status_message', None)
+
 # If the entity is truly generic, then use the data field (when it would've otherwise gone unused) in a useful way
 class GenericEntity(Entity):
 	def __init__(self,websocket):
@@ -1052,26 +1070,14 @@ class GenericEntity(Entity):
 			data = loads_if_not_none(self.load_data_as_text())
 			if data == None:
 				return True
-			if 'forward_message_types' in data:
-				self.forward_message_types = set()
-			self.forward_messages_to = data.get('forward_messages_to', None)
-
-			self.status_type = data.get('status_type', None)
-			self.status_message = data.get('status_message', None)
+			load_generic_data(self, data)
 			return True
 		except:
 			return False
 
 	def save_data(self):
 		data = {}
-		if len(self.forward_message_types):
-			data['forward_message_types'] = list(self.forward_message_types)
-		if self.forward_messages_to != None:
-			data['forward_messages_to'] = self.forward_messages_to
-		if self.status_type != None:
-			data['status_type'] = self.status_type
-		if self.status_message != None:
-			data['status_message'] = self.status_message
+		save_generic_data(self, data)
 		if not data:
 			data = None
 		self.save_data_as_text(dumps_if_not_none(data))

@@ -17,6 +17,7 @@ import asyncio, datetime, random, websockets, json, sys, traceback, weakref
 from .buildglobal import *
 from .buildmap import *
 from .buildclient import *
+from .buildgadget import *
 from .buildprotocol import handle_protocol_command
 from .buildapi import start_api
 if Config["Database"]["Setup"]:

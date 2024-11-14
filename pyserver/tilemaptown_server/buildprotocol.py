@@ -19,6 +19,7 @@ from .buildglobal import *
 from .buildcommand import handle_user_command, escape_tags, tile_is_okay, data_disallowed_for_entity_type, send_private_message
 from .buildentity import Entity
 from .buildclient import Client
+from .buildgadget import Gadget
 
 handlers = {}
 command_privilege_level = {} # minimum required privilege level required for the command; see user_privilege in buildglobal.py
@@ -112,6 +113,7 @@ CLIENT_WHO_WHITELIST = {
 	"clickable": bool,
 	"mini_tilemap": who_mini_tilemap,
 	"mini_tilemap_data": who_mini_tilemap_data,
+	"usable": bool,
 }
 
 def validate_client_who(id, data):
@@ -376,7 +378,10 @@ def fn_BAG(connection, map, client, arg, echo):
 		if create['type'] not in creatable_entity_types:
 			connection.protocol_error(echo, text='Invalid type of item to create (%s)' % create['type'])
 			return
-		e = Entity(entity_type[arg['create']['type']], creator_id=client.db_id)
+		c = Entity
+		if create['type'] == 'gadget':
+			c = Gadget
+		e = c(entity_type[create['type']], creator_id=client.db_id)
 		e.name = "New item" # Default that will probably be overridden
 		e.map_id = client.db_id
 		e.creator_temp_id = client.id
@@ -957,7 +962,6 @@ def fn_IDN(connection, map, client, arg, echo):
 		ack_info["features"] = {}
 		for key, value in arg["features"].items():
 			if key in available_server_features: # TODO: check if specified version is >= minimum version
-				# TODO: Probably migrate these all to the connection, instead of the entity?
 				if key in server_feature_attribute:
 					setattr(connection, server_feature_attribute[key], True)
 
@@ -997,6 +1001,22 @@ def fn_IDN(connection, map, client, arg, echo):
 
 	if connection.login_successful_callback: # Make sure this gets called even if the map switch fails
 		connection.login_successful_callback()
+
+@protocol_command()
+def fn_USE(connection, map, client, arg, echo):
+	actor = client
+	if 'rc' in arg:
+		actor = find_remote_control_entity(connection, client, arg['rc'], echo)
+		if actor == None:
+			return
+		else:
+			map = actor.map
+
+	if 'id' not in arg:
+		return
+	e = get_entity_by_id(arg['id'], load_from_db=False)
+	if e != None and e.entity_type == entity_type['gadget']:
+		e.receive_use(client)
 
 # -------------------------------------
 
@@ -1043,7 +1063,11 @@ def entity_click(connection, map, client, context, arg, name):
 		"target":           lambda x: x in (None, "entity", "mini_tilemap"),
 	})
 	arg['id'] = client.protocol_id()
-	e.send("EXT", {name: arg})
+
+	if e.entity_type == entity_type['gadget']:
+		e.receive_entity_click(client, arg)
+	else:
+		e.send("EXT", {name: arg})
 
 @ext_protocol_command("key_press")
 def key_press(connection, map, client, context, arg, name):
@@ -1086,7 +1110,11 @@ def took_controls(connection, map, client, context, arg, name):
 		"accept":           bool,
 	})
 	arg['id'] = client.protocol_id()
-	e.send("EXT", {name: arg})
+
+	if e.entity_type == entity_type['gadget']:
+		e.receive_took_controls(client, arg)
+	else:
+		e.send("EXT", {name: arg})
 
 @ext_protocol_command("bot_message_button")
 def bot_message_button(connection, map, client, context, arg, name):
@@ -1099,7 +1127,11 @@ def bot_message_button(connection, map, client, context, arg, name):
 	arg['id'] = client.protocol_id()
 	arg['name'] = client.name
 	arg['username'] = client.username_or_id()
-	e.send("EXT", {name: arg})
+
+	if e.entity_type == entity_type['gadget']:
+		e.receive_bot_message_button(client, arg)
+	else:
+		e.send("EXT", {name: arg})
 
 @ext_protocol_command("typing")
 def pm_typing_notification(connection, map, client, context, arg, name):

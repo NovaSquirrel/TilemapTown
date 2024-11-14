@@ -261,6 +261,7 @@ entity_type['folder'] = 9
 entity_type['landmark'] = 10
 entity_type['generic'] = 11
 entity_type['chatroom'] = 12
+entity_type['gadget'] = 13
 
 # Make the reverse - put in the value, get the name
 entity_type_name = {}
@@ -280,7 +281,7 @@ temporary_id_marker = "~"
 # Used to mark IDs that belong to server-defined global entities (GLOBAL_ENTITY_KEY table)
 global_entity_marker = "!"
 
-creatable_entity_types = ('text', 'image', 'map_tile', 'tileset', 'reference', 'folder', 'landmark', 'generic', 'chatroom')
+creatable_entity_types = ('text', 'image', 'map_tile', 'tileset', 'reference', 'folder', 'landmark', 'generic', 'chatroom', 'gadget')
 
 # Important shared functions
 def is_entity(e):
@@ -415,6 +416,11 @@ def get_entity_by_id(id, load_from_db=True):
 		return None
 	if t == entity_type['generic']:
 		e = GenericEntity(t)
+		if e.load(id):
+			return e
+		return None
+	if t == entity_type['gadget']:
+		e = Gadget(t)
 		if e.load(id):
 			return e
 		return None

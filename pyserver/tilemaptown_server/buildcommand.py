@@ -134,8 +134,14 @@ def parse_equal_list(text):
 	return (x.split('=') for x in text.split())
 
 def data_disallowed_for_entity_type(type, data):
-	if entity_type_name[type] not in ('text', 'image', 'map_tile', 'tileset', 'landmark'):
+	if entity_type_name[type] not in ('text', 'image', 'map_tile', 'tileset', 'landmark', 'gadget'):
 		return 'Not a valid type to change data for'
+	if type == entity_type['gadget']:
+		if not isinstance(data, list):
+			return 'Invalid gadget data'
+		for step in data:
+			if not isinstance(step, list) or len(step) != 2 or not isinstance(step[0], str):
+				return 'Invalid gadget step'
 	if type == entity_type['image'] and not image_url_is_okay(data):
 		return 'Image asset URL doesn\'t match any allowlisted sites'
 	if type == entity_type['map_tile']:
@@ -252,11 +258,13 @@ def send_private_message(client, context, recipient_username, text):
 			else:
 				u = find_client_by_username(recipient_username)
 			if u:
-				if u.is_client() or "PRI" in u.forward_message_types:
+				if u.entity_type == entity_type['gadget']:
+					u.receive_tell(client, text)
+				elif u.is_client() or "PRI" in u.forward_message_types:
 					respond_to = context[0]
 					if not u.is_client() or not in_blocked_username_list(client, u.connection_attr('ignore_list'), 'message %s' % u.name):
-						client.send("PRI", {'text': text, 'name':u.name, 'id': u.protocol_id(), 'username': u.username_or_id(), 'receive': False})
-						recipient_params = {'text': text, 'name':client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'receive': True}
+						client.send("PRI", {'text': text, 'name': u.name, 'id': u.protocol_id(), 'username': u.username_or_id(), 'receive': False})
+						recipient_params = {'text': text, 'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'receive': True}
 						if respond_to is not client:
 							recipient_params['rc_username'] = respond_to.username_or_id()
 							recipient_params['rc_id'] = respond_to.protocol_id()
@@ -289,10 +297,13 @@ def send_request_to_user(client, context, arg, request_type, request_data, accep
 			# Renew it
 			respond(context, 'You\'ve already sent them a request', error=True)
 			u.requests[request_key][0] = 600
-			return		
+			return
 	if not is_client_and_entity(u) or not in_blocked_username_list(client, u.connection_attr('ignore_list'), 'message %s' % u.name):
 		respond(context, you_message % arg)
-		u.send("MSG", {'text': them_message % client.name_and_username(), 'buttons': ['Accept', '%s %s %s %d' % (accept_command, my_username, request_type, next_request_id), 'Decline', '%s %s %s %d' % (decline_command, my_username, request_type, next_request_id)]})
+		if u.entity_type == entity_type['gadget']:
+			u.receive_request(client, request_type, request_data, accept_command, decline_command)
+		else:
+			u.send("MSG", {'text': them_message % client.name_and_username(), 'buttons': ['Accept', '%s %s %s %d' % (accept_command, my_username, request_type, next_request_id), 'Decline', '%s %s %s %d' % (decline_command, my_username, request_type, next_request_id)]})
 		u.requests[request_key] = [600, next_request_id, request_data]
 		next_request_id += 1
 
@@ -1875,7 +1886,7 @@ def fn_userpic(map, client, context, arg):
 		if arg[0] in defaults:
 			client.pic = defaults[arg[0]];
 			success = True
-		# temporary thing to allow custom avatars
+		# Allow custom avatars
 		else:
 			if arg[0].startswith("http"):
 				if image_url_is_okay(arg[0]):

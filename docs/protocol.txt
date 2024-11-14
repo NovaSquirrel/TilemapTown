@@ -28,6 +28,8 @@ List of entity types:
 	folder      Holds other entities. Any entity can hold other entities, so this is more of a UI hint.
 	landmark    Holds a location, allowing a user to teleport to it easily.
 	generic     No special behavior.
+	chatroom    Entity is supposed to function as a chatroom.
+	gadget      Has special built-in behavior and likely has some sort of action where you can "use" it.
 
 List of permissions:
 	build                       user can build on the map
@@ -214,6 +216,8 @@ Other fields that may appear in WHO messages on the official server:
 	"offset": [x,y]; Offset in pixels away from where this entity would normally be drawn
 	"is_forwarding": boolean; If true, this entity is not a user, but some events that happen on the map this entity is on are being forwarded to a user
 	"chat_listener": boolean; If true, this entity is not a user, but chat messages that are sent to this entity's map are being forwarded to a user
+	"verbs": list of strings; This is a list of commands that you can /tell this entity
+	"usable": boolean; if True, you can send USE messages at this entity
 	Most important fields to support are "id", "name", "pic", "x", "y", "dir" and ideally "offset" too.
 
 
@@ -323,8 +327,6 @@ Move something else within the same container as you, if you are allowed to
 
 --> USE {"id": id}
 Use item
-(not implemented)
-
 
 --> BAG {"create": {"name": name, "type": type}}
 --> BAG {"create": {"name": name, "type": type, "temp": true/false}}

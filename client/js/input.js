@@ -30,6 +30,7 @@ let MousedOverPlayers = [];
 let MousedOverEntityClickAvailable = false;
 let MousedOverEntityClickId = null;
 let MousedOverEntityClickIsTilemap = false;
+let MousedOverEntityClickIsUse = false;
 let MousedOverEntityClickX = undefined;
 let MousedOverEntityClickY = undefined;
 let MouseRawPos = null;
@@ -741,11 +742,11 @@ function useItemAtXY(Placed, x, y) {
 	let old = null;
 
 	switch (Placed.type) {
-		case "tileset": // tileset
+		case "tileset":
 			viewTileset(Placed);
 			console.log("Open tileset thing");
 			break;
-		case "map_tile": // object
+		case "map_tile":
 			let ActualAtom = AtomFromName(Placed.data);
 			// place the item on the ground
 
@@ -769,6 +770,10 @@ function useItemAtXY(Placed, x, y) {
 				SendCmd("PUT", { pos: [x, y], obj: false, atom: MyMap.Tiles[x][y] });
 			}
 			drawMap();
+			break;
+		case "gadget":
+			SendCmd("USE", { id: Placed.id });
+			break;
 		}
 		return old;
 }
@@ -861,9 +866,12 @@ function initMouse() {
 		if (evt.button != 0)
 			return;
 		if (MousedOverEntityClickAvailable && !ShiftPressed) {
-			SendCmd("EXT", { "entity_click":
-				{"id": MousedOverEntityClickId, "x": MousedOverEntityClickX, "y": MousedOverEntityClickY, "target": MousedOverEntityClickIsTilemap ? "mini_tilemap" : "entity"}
-		});
+			if(MousedOverEntityClickIsUse)
+				SendCmd("USE", { "id": MousedOverEntityClickId })
+			else
+				SendCmd("EXT", { "entity_click":
+					{"id": MousedOverEntityClickId, "x": MousedOverEntityClickX, "y": MousedOverEntityClickY, "target": MousedOverEntityClickIsTilemap ? "mini_tilemap" : "entity"}
+				});
 		return;
 	}
 
@@ -1033,12 +1041,13 @@ function initMouse() {
 					MousedOverEntityClickAvailable = true;
 					MousedOverEntityClickId = index;
 					MousedOverEntityClickIsTilemap = true;
+					MousedOverEntityClickIsUse = false;
 					MousedOverEntityClickX = Math.floor(pixelPos.x - start_pixel_x);
 					MousedOverEntityClickY = Math.floor(pixelPos.y - start_pixel_y);
 				}
 			}
 			// Maybe you can click on the entity itself then?
-			if(!MousedOverEntityClickAvailable && Mob.clickable) {
+			if(!MousedOverEntityClickAvailable && (Mob.clickable || Mob.usable)) {
 				// Determine where the entity would even be drawn
 				let playerIs16x16 = true;
 				if (index in PlayerImages) {
@@ -1062,6 +1071,7 @@ function initMouse() {
 				MousedOverEntityClickAvailable = true;
 				MousedOverEntityClickId = index;
 				MousedOverEntityClickIsTilemap = false;
+				MousedOverEntityClickIsUse = !Mob.clickable && Mob.usable;
 				MousedOverEntityClickX = Math.floor(pixelPos.x - entityPixelX);
 				MousedOverEntityClickY = Math.floor(pixelPos.y - entityPixelY);
 			}
