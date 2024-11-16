@@ -259,6 +259,7 @@ def send_private_message(client, context, recipient_username, text):
 				u = find_client_by_username(recipient_username)
 			if u:
 				if u.entity_type == entity_type['gadget']:
+					client.send("PRI", {'text': text, 'name': u.name, 'id': u.protocol_id(), 'username': u.username_or_id(), 'receive': False})
 					u.receive_tell(client, text)
 				elif u.is_client() or "PRI" in u.forward_message_types:
 					respond_to = context[0]
@@ -300,11 +301,14 @@ def send_request_to_user(client, context, arg, request_type, request_data, accep
 			return
 	if not is_client_and_entity(u) or not in_blocked_username_list(client, u.connection_attr('ignore_list'), 'message %s' % u.name):
 		respond(context, you_message % arg)
+
+		u.requests[request_key] = [600 if u.is_client() else 60, next_request_id, request_data]
+		AllEntitiesWithRequests.add(u)
+
 		if u.entity_type == entity_type['gadget']:
 			u.receive_request(client, request_type, request_data, accept_command, decline_command)
 		else:
 			u.send("MSG", {'text': them_message % client.name_and_username(), 'buttons': ['Accept', '%s %s %s %d' % (accept_command, my_username, request_type, next_request_id), 'Decline', '%s %s %s %d' % (decline_command, my_username, request_type, next_request_id)]})
-		u.requests[request_key] = [600, next_request_id, request_data]
 		next_request_id += 1
 
 @cmd_command(category="Follow", syntax="username")
@@ -2677,6 +2681,9 @@ def fn_entity(map, client, context, arg):
 	elif subcommand == 'me':
 		if permission_check(permission['remote_command']):
 			handle_user_command(e.map, e, client, context[1], "me "+subarg)
+	elif subcommand == 'use':
+		if e != None and e.entity_type == entity_type['gadget']:
+			e.receive_use(client)
 
 	elif subcommand == 'rmove':
 		if permission_check(permission['move']):

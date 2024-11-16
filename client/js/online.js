@@ -34,6 +34,7 @@ let GlobalImageNames = {"0": "Potluck", "-1": "Extra", "-2": "Pulp", "-3": "Easy
 let API_Key = null;
 let API_Version = null;
 let API_URL = null;
+const SupportedTakeControlsKeys = ["turn-ne", "move-ne", "turn-se", "move-se", "turn-nw", "move-nw", "turn-sw", "move-sw", "turn-w", "move-w", "turn-s", "move-s", "turn-n", "move-n", "turn-e", "move-e", "use-item", "cancel", "hotbar-1", "hotbar-2", "hotbar-3", "hotbar-4", "hotbar-5", "hotbar-6", "hotbar-7", "hotbar-8", "hotbar-9", "hotbar-10"];
 
 // URL param options
 let SlowAnimationTick = false;
@@ -802,7 +803,7 @@ function receiveServerMessage(cmd, arg) {
       {
         if(arg.take_controls) {
           let take_controls = arg.take_controls;
-          let supported_controls = take_controls.keys.filter((key) => SupportedTakeControlsKeys.has(key));
+          let supported_controls = take_controls.keys.filter((key) => SupportedTakeControlsKeys.includes(key));
           takeControlsPassOn = take_controls.pass_on ?? false;
           takeControlsKeyUp  = take_controls.key_up ?? false;
           takeControlsId     = take_controls.id;

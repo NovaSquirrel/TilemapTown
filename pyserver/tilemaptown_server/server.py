@@ -34,7 +34,11 @@ def main_timer():
 	global loop
 
 	# Let requests expire
-	for c in AllClients:
+	removeFromAllEntitiesWithRequests = set()
+	for c in AllEntitiesWithRequests:
+		if c.requests == {}:
+			removeFromAllEntitiesWithRequests.add(c)
+			continue
 		# Remove requests that time out
 		remove_requests = set()
 		for k,v in c.requests.items():
@@ -43,6 +47,8 @@ def main_timer():
 				remove_requests.add(k)
 		for r in remove_requests:
 			del c.requests[r]
+	for c in removeFromAllEntitiesWithRequests:
+		AllEntitiesWithRequests.discard(c)
 
 	# Disconnect pinged-out users
 	for connection in AllConnections:

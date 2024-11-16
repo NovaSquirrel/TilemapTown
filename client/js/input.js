@@ -737,6 +737,11 @@ function drawingTooFar(x, y, maxDistance) {
 ///////////////////////////////////////////////////////////
 
 function useItemAtXY(Placed, x, y) {
+	if (typeof Placed === 'string' || typeof Placed === 'number') {
+		Placed = DBInventory[Placed] || PlayerWho[Placed];
+		if (!Placed)
+			return;
+	}
 	if(x < 0 || y < 0 || x >= MyMap.Width || y >= MyMap.Height)
 		return undefined;
 	let old = null;

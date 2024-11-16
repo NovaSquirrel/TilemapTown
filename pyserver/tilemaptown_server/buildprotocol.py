@@ -169,7 +169,8 @@ def set_entity_params_from_dict(e, d, connection, client, echo):
 							c.send("TSD", {'id': e.db_id, 'data': e.data, 'update': True})
 						else:
 							c.send("IMG", {'id': e.db_id, 'url': e.data, 'update': True})
-
+			if isinstance(e, Gadget):
+				e.reload_traits()
 	if 'owner_id' in d:
 		if e.owner_id != client.db_id:
 			connection.protocol_error(echo, text='Can only reassign ownership on entities you own', code='owner_only', subject_id=e)
@@ -1081,7 +1082,11 @@ def key_press(connection, map, client, context, arg, name):
 		"down":             bool,
 	})
 	arg['id'] = client.protocol_id()
-	e.send("EXT", {name: arg})
+
+	if e.entity_type == entity_type['gadget']:
+		e.receive_key_press(client, arg.get("key"), arg.get("down", False))
+	else:
+		e.send("EXT", {name: arg})
 
 @ext_protocol_command("take_controls")
 def take_controls(connection, map, client, context, arg, name):

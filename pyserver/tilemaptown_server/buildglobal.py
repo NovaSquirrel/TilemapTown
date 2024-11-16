@@ -167,6 +167,7 @@ AllConnections  = weakref.WeakSet()             # All connections, regardless of
 AllMaps         = weakref.WeakSet()             # Maps only; used by /whereare
 AllEntitiesByDB = weakref.WeakValueDictionary() # All entities (indexed by database ID)
 AllEntitiesByID = weakref.WeakValueDictionary() # All entities (indexed by temporary ID)
+AllEntitiesWithRequests = weakref.WeakSet()     # All entities with active requests
 ConnectionsByUsername = weakref.WeakValueDictionary() # Look up connections by lowercased username
 ConnectionsByApiKey = weakref.WeakValueDictionary() # Look up connections by API key (supplied to clients in IDN)
 
@@ -588,4 +589,5 @@ def send_ext_listen_status(connection):
 	connection.send("EXT", {"listen_status": {"maps": all_maps}})
 
 from .buildentity import Entity, EntityWithPlainData, GenericEntity
+from .buildgadget import Gadget
 from .buildmap import Map
