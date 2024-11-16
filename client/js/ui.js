@@ -1123,6 +1123,7 @@ function editItemShared(item) {
 			break;
 
 		case "generic":
+		case "gadget":
 		case "map_tile_hotbar":
 		case "map_tile_mapobj_edit":
 		case "map_tile_turf_edit":
@@ -1261,6 +1262,7 @@ function editItemApply() {
 		case "map_tile_hotbar":
 		case "map_tile":
 		case "generic":
+		case "gadget":
 			// Gather item info
 			let sheet = document.getElementById('edittilesheet').value;
 			if (sheet == "keep") {
@@ -1334,7 +1336,7 @@ function editItemApply() {
 				}
 			}
 
-			if(editItemType === "map_tile" || editItemType === "generic") {
+			if(editItemType === "map_tile" || editItemType === "generic" || editItemType === "gadget") {
 				SendCmd("BAG", { update: updates });
 			}
 			break;
