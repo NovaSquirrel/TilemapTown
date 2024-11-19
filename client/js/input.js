@@ -312,6 +312,7 @@ function keyDownHandler(e) {
 				});
 			}
 			if(!takeControlsPassOn) {
+				e.preventDefault();
 				return;
 			}
 		}    
