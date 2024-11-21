@@ -330,7 +330,7 @@ class GadgetRCCar(GadgetTrait):
 			old_dir = self.gadget.dir
 			self.gadget.move_to(self.gadget.x + offset[0], self.gadget.y + offset[1], new_dir=offset[2])
 			if self.gadget.map and (self.gadget.x != old_x or self.gadget.y != old_y or self.gadget.dir != old_dir):
-				self.gadget.map.broadcast("MOV", {'id': self.gadget.protocol_id(), 'to': [self.gadget.x, self.gadget.y], 'dir': self.gadget.dir}, remote_category=maplisten_type['move'])
+				self.gadget.map.broadcast("MOV", {'id': self.gadget.protocol_id(), 'from': [old_x, old_y], 'to': [self.gadget.x, self.gadget.y], 'dir': self.gadget.dir}, remote_category=maplisten_type['move'])
 			return True
 
 	def keep_moving(self):
