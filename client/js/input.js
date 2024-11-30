@@ -68,20 +68,35 @@ function runLocalCommand(t) {
 		//from https://ourcodeworld.com/articles/read/189/how-to-create-a-file-and-generate-a-download-with-javascript-in-the-browser-without-a-server
 		let element = document.createElement('a');
 		element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(exportMap()));
-		element.setAttribute('download', "map.txt");
+		element.setAttribute('download', "map.json");
 		element.style.display = 'none';
 		document.body.appendChild(element);
 		element.click();
 		document.body.removeChild(element);
 		return true;
 	} else if (t.toLowerCase().startsWith("/playmusic ")) {
-		playMusic(t.trim().slice(11), true);
+		playMusic(t.slice(11), true);
 		return true;
 	} else if (t.toLowerCase() == "/stopmusic") {
 		stopMusic();
 		return true;
 	} else if (t.toLowerCase() == "/releasekeys") {
 		forceReleaseKeys();
+		return true;
+	} else if (t.toLowerCase() == "/cameraxy") {
+		CameraOverrideX = null;
+		CameraOverrideY = null;
+		return true;
+	} else if (t.toLowerCase().startsWith("/cameraxy ")) {
+		let arg = t.slice(10).split(' ');
+		if(arg.length == 2) {
+			CameraOverrideX = parseInt(arg[0]);
+			if (Number.isNaN(CameraOverrideX))
+				CameraOverrideX = null;
+			CameraOverrideY = parseInt(arg[1]);
+			if (Number.isNaN(CameraOverrideY))
+				CameraOverrideY = null;
+		}
 		return true;
 	} else if (t.toLowerCase() == "/exportlogs" || t.toLowerCase() == "/exportlog") {
 		// https://stackoverflow.com/a/4929629

@@ -220,21 +220,21 @@ function initMap() {
 function exportMap() {
 	let turfs = [];
 	let objs = [];
-	let default_turf_json = JSON.stringify(AtomFromName(MapInfo['default']));
+	let default_turf_json = JSON.stringify(AtomFromName(MyMap.Info['default']));
 
 	// Make a list of all objects
-	for(let x=0; x<MapWidth; x++) {
-		for(let y=0; y<MapHeight; y++) {
-			if(MapTiles[x][y] && MapTiles[x][y] != MapInfo['default']
-				&& JSON.stringify(MapTiles[x][y]) != default_turf_json) {
-				turfs.push([x, y, MapTiles[x][y]]);
+	for(let x=0; x<MyMap.Width; x++) {
+		for(let y=0; y<MyMap.Height; y++) {
+			if(MyMap.Tiles[x][y] && MyMap.Tiles[x][y] != MyMap.Info['default']
+				&& JSON.stringify(MyMap.Tiles[x][y]) != default_turf_json) {
+				turfs.push([x, y, MyMap.Tiles[x][y]]);
 			}
-			if(MapObjs[x][y].length) {
-				objs.push([x, y, MapObjs[x][y]]);
+			if(MyMap.Objs[x][y].length) {
+				objs.push([x, y, MyMap.Objs[x][y]]);
 			}
 		}
 	}
 
-	let map = {'default': MapInfo['default'], 'obj': objs, 'turf': turfs, 'pos': [0, 0, MapWidth-1, MapHeight-1]};
-	return "MAI\n"+JSON.stringify(MapInfo)+"\nMAP\n"+JSON.stringify(map)+"\n";
+	let map = {'default': MyMap.Info['default'], 'obj': objs, 'turf': turfs, 'pos': [0, 0, MyMap.Width-1, MyMap.Height-1]};
+	return "MAI\n"+JSON.stringify(MyMap.Info)+"\nMAP\n"+JSON.stringify(map)+"\n";
 }

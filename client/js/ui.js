@@ -50,6 +50,8 @@ let PlayerBuildMarkers = {}; // EntityID: {pos: [x,y], name: string, timer: tick
 let CameraX = 0;
 let CameraY = 0;
 let CameraAlwaysCenter = true;
+let CameraOverrideX = null;
+let CameraOverrideY = null;
 let InstantCamera = false;
 
 let CameraScale = 3;
@@ -291,6 +293,7 @@ function viewInventory() {
 }
 
 function viewBuild() {
+	redrawBuildCanvas();
 	toggleDisplay(document.getElementById('build'));
 }
 
@@ -2344,8 +2347,8 @@ function tickWorld() {
 		delete PlayerBuildMarkers[removeMarkers[id]];
 	}
 
-	let TargetCameraX = (PlayerWho[PlayerYou].x * 16 + 8);
-	let TargetCameraY = (PlayerWho[PlayerYou].y * 16 + 8);
+	let TargetCameraX = ((CameraOverrideX !== null ? CameraOverrideX : PlayerWho[PlayerYou].x) * 16 + 8);
+	let TargetCameraY = ((CameraOverrideY !== null ? CameraOverrideY : PlayerWho[PlayerYou].y) * 16 + 8);
 	let CameraDifferenceX = TargetCameraX - CameraX;
 	let CameraDifferenceY = TargetCameraY - CameraY;
 	let CameraDistance = Math.sqrt(CameraDifferenceX * CameraDifferenceX + CameraDifferenceY * CameraDifferenceY);
