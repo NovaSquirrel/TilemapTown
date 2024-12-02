@@ -95,14 +95,16 @@ async def client_handler(websocket, path):
 		asyncio.ensure_future(websocket.close(reason="ProxyOnly"))
 		return
 
+	origin = websocket.request_headers.get('Origin')
+
 	if Config["Server"]["AllowedOrigins"]:
-		if not any(_ == websocket.request_headers['Origin'] for _ in Config["Server"]["AllowedOrigins"]):
-			print("Origin \"%s\" from IP %s not allowlisted" % (websocket.request_headers['Origin'], ip))
+		if not any(_ == origin for _ in Config["Server"]["AllowedOrigins"]):
+			print("Origin \"%s\" from IP %s not allowlisted" % (origin, ip))
 			asyncio.ensure_future(websocket.close(reason="BadOrigin"))
 			total_connections[2] += 1 # Prevented connections
 			return
-	if Config["Server"]["BannedOrigins"] and websocket.request_headers['Origin'] and any(_ in websocket.request_headers['Origin'] for _ in Config["Server"]["BannedOrigins"]):
-		print("Banned origin \"%s\" from IP %s" % (websocket.request_headers['Origin'], ip))
+	if Config["Server"]["BannedOrigins"] and websocket.request_headers['Origin'] and any(_ in origin for _ in Config["Server"]["BannedOrigins"]):
+		print("Banned origin \"%s\" from IP %s" % (origin, ip))
 		asyncio.ensure_future(websocket.close(reason="BadOrigin"))
 		total_connections[2] += 1
 		return
@@ -113,7 +115,7 @@ async def client_handler(websocket, path):
 		return
 	AllConnections.add(connection)
 
-	write_to_connect_log("connected: %s, %s, %s" % (path, ip, websocket.request_headers['Origin']))
+	write_to_connect_log("connected: %s, %s, %s" % (path, ip, origin))
 	total_connections[0] += 1
 
 	while connection.ws != None:
