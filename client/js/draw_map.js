@@ -32,7 +32,6 @@ let edgeMapLookupTable = [
 ];
 let tileAnimationEnabled = true;
 let entityAnimationEnabled = true;
-let tenthOfSecondTimer = 0;
 
 ///////////////////////////////////////////////////////////
 // Autotile related functions
@@ -177,7 +176,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 					playerIs16x16 = true;
 				} else {
 					let frameX = 0, frameY = 0;
-					let frameCountFromAnimationTick = entityAnimationEnabled ? tenthOfSecondTimer : 0;
+					let frameCountFromAnimationTick = entityAnimationEnabled ? (tenthOfSecondTimer/2) : 0;
 					let isWalking = PlayerAnimation[index].walkTimer != 0;
 
 					switch (tilesetHeight / 32) { // Directions
@@ -468,7 +467,6 @@ function wrapWithin(value, max) {
 function drawMap() {
 	let canvas = mapCanvas;
 	let ctx = canvas.getContext("2d");
-	tenthOfSecondTimer = Math.floor(AnimationTick / 5); // Increases every 0.1 seconds
 
 	// Clear to black
 	ctx.fillStyle = "black";

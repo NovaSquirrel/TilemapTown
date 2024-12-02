@@ -329,7 +329,7 @@
 				"type": "water",
 				"anim_frames": 3,
 				"anim_mode": 2,
-				"anim_speed": 3
+				"anim_speed": 5
 			},
 			"water2": {
 				"name": "water",
@@ -341,7 +341,7 @@
 				"type": "water",
 				"anim_frames": 3,
 				"anim_mode": 2,
-				"anim_speed": 3
+				"anim_speed": 5
 			},
 			"water3": {
 				"name": "water",
@@ -353,7 +353,7 @@
 				"type": "water",
 				"anim_frames": 3,
 				"anim_mode": 2,
-				"anim_speed": 3
+				"anim_speed": 5
 			},
 			"water4": {
 				"name": "water",
@@ -364,7 +364,7 @@
 				"type": "water",
 				"anim_frames": 3,
 				"anim_mode": 2,
-				"anim_speed": 3
+				"anim_speed": 5
 			},
 			"rails": {
 				"name": "rails",
@@ -384,25 +384,25 @@
 				"name": "campfire",
 				"obj": true,
 				"anim_frames": 4,
-				"anim_speed": 2,
+				"anim_speed": 3,
 				"pic": [-3, 4, 12]
 			},
 			"waterfall": {
 				"name": "waterfall",
 				"anim_frames": 4,
-				"anim_speed": 2,
+				"anim_speed": 3,
 				"pic": [-3, 4, 13]
 			},
 			"whirlpool": {
 				"name": "whirlpool",
 				"anim_frames": 4,
-				"anim_speed": 2,
+				"anim_speed": 3,
 				"pic": [-3, 4, 14]
 			},
 			"prism": {
 				"name": "prism",
 				"anim_frames": 4,
-				"anim_speed": 2,
+				"anim_speed": 3,
 				"pic": [-3, 4, 15]
 			},
 			"cliff_top1": {
@@ -1466,7 +1466,7 @@
 				"pic": [-3, 6, 23],
 				"obj": true,
 				"anim_frames": 2,
-				"anim_speed": 2
+				"anim_speed": 3
 			},
 			"cannon1": {
 				"name": "cannon",

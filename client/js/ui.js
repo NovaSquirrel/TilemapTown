@@ -76,7 +76,7 @@ let panel = null;
 let NeedMapRedraw = false;
 let NeedInventoryUpdate = false;
 let TickCounter = 0;   // Goes up every 20ms, wraps at 0x1000000 (hex)
-let AnimationTick = 0; // Goes up every 20ms, wraps at 1000000 (decimal)
+let tenthOfSecondTimer = 0; // Goes up every 0.1 seconds
 let timeOfLastInput = Date.now();
 let statusBeforeIdle = null;
 let statusMessageBeforeIdle = null;
@@ -2217,7 +2217,7 @@ function updateDirectionForAnim(id) {
 }
 
 function startPlayerWalkAnim(id) {
-	PlayerAnimation[id].walkTimer = 25 + 1; // 25*(20ms/1000) = 0.5
+	PlayerAnimation[id].walkTimer = 5 + 1; // 5*100ms
 	NeedMapRedraw = true;
 }
 
@@ -2283,7 +2283,9 @@ function apply_default_pic_for_type(item) {
 	}
 }
 
-function tickWorld() {
+let previousTimestamp;
+let tileAnimationTickTimer = 0; // Counts up until it's been a tenth of a second
+function runAnimation(timestamp) {
 	if (NeedInventoryUpdate) {
 		DisplayInventory = { null: [] };
 
@@ -2324,27 +2326,44 @@ function tickWorld() {
 		NeedInventoryUpdate = false;
 	}
 
-	// Tick each player's animation timer
-	for (let id in PlayerAnimation) {
-		if (PlayerAnimation[id].walkTimer) {
-			PlayerAnimation[id].walkTimer--;
-			if (!PlayerAnimation[id].walkTimer) {
-				needMapRedraw = true;
+	if (previousTimestamp === undefined) {
+		previousTimestamp = timestamp;
+	}
+	const deltaTime = timestamp - previousTimestamp;
+	previousTimestamp = timestamp;
+
+	tileAnimationTickTimer += deltaTime;
+	let tileAnimationTicked = tileAnimationTickTimer >= 100;
+
+	if (tileAnimationTickTimer > 500) // Limit how many times the loop below can go
+		tileAnimationTickTimer = 500;
+	while (tileAnimationTickTimer >= 100) {
+		tileAnimationTickTimer -= 100;
+
+		tenthOfSecondTimer = (tenthOfSecondTimer + 1) % 0x1000000;
+
+		// Tick each player's animation timer
+		for (let id in PlayerAnimation) {
+			if (PlayerAnimation[id].walkTimer) {
+				PlayerAnimation[id].walkTimer--;
+				if (!PlayerAnimation[id].walkTimer) {
+					needMapRedraw = true;
+				}
 			}
 		}
-	}
 
-	// Tick the player build markers
-	let removeMarkers = [];
-	for (let id in PlayerBuildMarkers) {
-		let marker = PlayerBuildMarkers[id];
-		marker.timer--;
-		if(marker.timer <= 0) {
-			removeMarkers.push(id);
+		// Tick the player build markers
+		let removeMarkers = [];
+		for (let id in PlayerBuildMarkers) {
+			let marker = PlayerBuildMarkers[id];
+			marker.timer--;
+			if(marker.timer <= 0) {
+				removeMarkers.push(id);
+			}
 		}
-	}
-	for (let id in removeMarkers) {
-		delete PlayerBuildMarkers[removeMarkers[id]];
+		for (let id in removeMarkers) {
+			delete PlayerBuildMarkers[removeMarkers[id]];
+		}
 	}
 
 	let TargetCameraX = ((CameraOverrideX !== null ? CameraOverrideX : PlayerWho[PlayerYou].x) * 16 + 8);
@@ -2354,14 +2373,21 @@ function tickWorld() {
 	let CameraDistance = Math.sqrt(CameraDifferenceX * CameraDifferenceX + CameraDifferenceY * CameraDifferenceY);
 
 	if (CameraDistance > 0.5) {
-		let DivideBy = InstantCamera ? 1 : 16;
-		let AdjustX = (TargetCameraX - CameraX) / DivideBy;
-		let AdjustY = (TargetCameraY - CameraY) / DivideBy;
+		if(InstantCamera) {
+			CameraX = TargetCameraX;
+			CameraY = TargetCameraY;
+		} else {
+			let multiplyBy = deltaTime/300;
+			if (multiplyBy > 1)
+				multiplyBy = 1;
+			let AdjustX = (TargetCameraX - CameraX) * multiplyBy;
+			let AdjustY = (TargetCameraY - CameraY) * multiplyBy;
 
-		if (Math.abs(AdjustX) > 0.1)
-			CameraX += AdjustX;
-		if (Math.abs(AdjustY) > 0.1)
-			CameraY += AdjustY;
+			if (Math.abs(AdjustX) > 0.1)
+				CameraX += AdjustX;
+			if (Math.abs(AdjustY) > 0.1)
+				CameraY += AdjustY;
+		}
 
 		if (!CameraAlwaysCenter) {
 			let EdgeLinks = null;
@@ -2400,7 +2426,7 @@ function tickWorld() {
 		}
 
 		drawMap();
-	} else if (AnimationTick % 5 == 0) { // every 0.1 seconds
+	} else if (tileAnimationTicked) { // every 0.1 seconds
 		drawMap();
 	} else if (NeedMapRedraw) {
 		drawMap();
@@ -2408,9 +2434,6 @@ function tickWorld() {
 
 	NeedMapRedraw = false;
 	TickCounter = (TickCounter + 1) & 0xffffff;
-	if (!SlowAnimationTick || ((TickCounter & 7) == 0)) {
-		AnimationTick = (AnimationTick + 1) % 1000000;
-	}
 	alreadyPlayedSound = false;
 
 	let minutesSinceLastInput = (Date.now() - timeOfLastInput) / 60000;
@@ -2430,6 +2453,8 @@ function tickWorld() {
 			SendCmd("CMD", {text: "disconnect"});
 		}
 	}
+
+	window.requestAnimationFrame(runAnimation);
 }
 
 ///////////////////////////////////////////////////////////
@@ -2654,7 +2679,7 @@ function initWorld() {
 
 	initBuild();
 
-	window.setInterval(tickWorld, 20);
+	window.requestAnimationFrame(runAnimation);
 	if (OnlineServer) {
 		ConnectToServer();
 	}

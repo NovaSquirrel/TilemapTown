@@ -786,7 +786,7 @@ function receiveServerMessage(cmd, arg) {
         if (id === PlayerYou)
           break;
         if(id in PlayerWho)
-          PlayerBuildMarkers[id] = {pos: arg.pos, name: PlayerWho[id].name, timer: 100, del: false};
+          PlayerBuildMarkers[id] = {pos: arg.pos, name: PlayerWho[id].name, timer: 25, del: false};
       }
       break;
     case "DEL":
@@ -795,7 +795,7 @@ function receiveServerMessage(cmd, arg) {
         if (id === PlayerYou)
           break;
         if (id in PlayerWho)
-          PlayerBuildMarkers[id] = {pos: [(arg.pos[0]+arg.pos[2])/2, (arg.pos[1]+arg.pos[3])/2], name: PlayerWho[id].name, timer: 300, del: true};
+          PlayerBuildMarkers[id] = {pos: [(arg.pos[0]+arg.pos[2])/2, (arg.pos[1]+arg.pos[3])/2], name: PlayerWho[id].name, timer: 50, del: true};
       }
       break;
 
