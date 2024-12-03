@@ -2433,9 +2433,13 @@ function runAnimation(timestamp) {
 	}
 
 	NeedMapRedraw = false;
-	TickCounter = (TickCounter + 1) & 0xffffff;
+	TickCounter = (TickCounter + 1) & 0xffffff; // Currently only used for offline mode simulation of BAG
 	alreadyPlayedSound = false;
 
+	window.requestAnimationFrame(runAnimation);
+}
+
+function idleChecker() {
 	let minutesSinceLastInput = (Date.now() - timeOfLastInput) / 60000;
 	let myStatus = PlayerWho?.[PlayerYou]?.status;
 	if (myStatus != null) myStatus = myStatus.toLowerCase();
@@ -2453,8 +2457,6 @@ function runAnimation(timestamp) {
 			SendCmd("CMD", {text: "disconnect"});
 		}
 	}
-
-	window.requestAnimationFrame(runAnimation);
 }
 
 ///////////////////////////////////////////////////////////
@@ -2680,6 +2682,7 @@ function initWorld() {
 	initBuild();
 
 	window.requestAnimationFrame(runAnimation);
+	window.setInterval(idleChecker, 1000);
 	if (OnlineServer) {
 		ConnectToServer();
 	}
