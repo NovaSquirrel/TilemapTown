@@ -2234,11 +2234,14 @@ def fn_restartserver(map, client, context, arg):
 @cmd_command(category="Server Admin", privilege_level="server_admin", syntax="text", no_entity_needed=True)
 def fn_parktext(map, client, context, arg):
 	GlobalData['park_text'] = arg
+	if not len(arg):
+		GlobalData['park_map'] = None
+		GlobalData['park_map_button'] = None
 	respond(context, 'Park text="%s"' % (GlobalData.get('park_text')))
 
 @cmd_command(category="Server Admin", privilege_level="server_admin", syntax="text")
 def fn_parkhere(map, client, context, arg):
-	GlobalData['park_map_button'] = arg if len(arg) else "Go!"
+	GlobalData['park_map_button'] = arg if len(arg) else None
 	GlobalData['park_map'] = "map %d %d %d" % (client.map_id, client.x, client.y)
 	respond(context, 'Park map="%s"' % (GlobalData.get('park_map')))
 
@@ -2252,7 +2255,7 @@ def fn_parkmap(map, client, context, arg):
 
 @cmd_command(category="Server Admin", privilege_level="server_admin", syntax="text", no_entity_needed=True)
 def fn_parkmapbutton(map, client, context, arg):
-	GlobalData['park_map_button'] = arg or "Go!"
+	GlobalData['park_map_button'] = arg or None
 	respond(context, 'Park map button="%s"' % (GlobalData.get('park_map_button')))
 
 # Group commands

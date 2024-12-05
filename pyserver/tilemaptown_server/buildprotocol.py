@@ -918,7 +918,7 @@ def fn_IDN(connection, map, client, arg, echo):
 		park_map = GlobalData.get('park_map')
 		if park_text and len(park_text):
 			if park_map and len(park_map):
-				connection.send("MSG", {'text': park_text, 'class': 'event_notice', 'buttons': [GlobalData.get('park_map_button', 'Go!'), park_map]})
+				connection.send("MSG", {'text': park_text, 'class': 'event_notice', 'buttons': [GlobalData.get('park_map_button') or 'Go!', park_map]})
 			else:
 				connection.send("MSG", {'text': park_text, 'class': 'event_notice'})
 
