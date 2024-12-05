@@ -139,7 +139,7 @@ def loadConfigJson():
 	TempLogs[1] = deque(maxlen=Config["TempLogs"]["BuildSize"])
 	TempLogs[2] = deque(maxlen=Config["TempLogs"]["UploadSize"])
 loadConfigJson()
-
+GlobalData = {}
 
 # Open database connection
 Database = sqlite3.connect(Config["Database"]["File"], detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)

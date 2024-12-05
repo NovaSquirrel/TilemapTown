@@ -2230,6 +2230,31 @@ def fn_restartserver(map, client, context, arg):
 		ServerShutdown[1] = True
 		broadcast_to_all("Server restarting in %d seconds! (started by %s)" % (ServerShutdown[0], client.name))
 
+# Experimental
+@cmd_command(category="Server Admin", privilege_level="server_admin", syntax="text", no_entity_needed=True)
+def fn_parktext(map, client, context, arg):
+	GlobalData['park_text'] = arg
+	respond(context, 'Park text="%s"' % (GlobalData.get('park_text')))
+
+@cmd_command(category="Server Admin", privilege_level="server_admin", syntax="text")
+def fn_parkhere(map, client, context, arg):
+	GlobalData['park_map_button'] = arg if len(arg) else "Go!"
+	GlobalData['park_map'] = "map %d %d %d" % (client.map_id, client.x, client.y)
+	respond(context, 'Park map="%s"' % (GlobalData.get('park_map')))
+
+@cmd_command(category="Server Admin", privilege_level="server_admin", syntax="text", no_entity_needed=True)
+def fn_parkmap(map, client, context, arg):
+	if len(arg):
+		GlobalData['park_map'] = "map "+arg
+	else:
+		GlobalData['park_map'] = None
+	respond(context, 'Park map="%s"' % (GlobalData.get('park_map')))
+
+@cmd_command(category="Server Admin", privilege_level="server_admin", syntax="text", no_entity_needed=True)
+def fn_parkmapbutton(map, client, context, arg):
+	GlobalData['park_map_button'] = arg or "Go!"
+	respond(context, 'Park map button="%s"' % (GlobalData.get('park_map_button')))
+
 # Group commands
 @cmd_command(category="Group", privilege_level="registered", no_entity_needed=True)
 def fn_newgroup(map, client, context, arg):

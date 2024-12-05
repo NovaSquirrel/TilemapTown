@@ -582,3 +582,17 @@ Also removes files that no longer exist but are still in the database
 /adminuserflags username add flag
 /adminuserflags username del flag
 Change someone else's user flags; can additionally set the "file_uploads" flag to give someone higher limits
+
+/parktext text
+Sets a message to display upon login, to notify about an event going on. If no text is given, go back to not displaying a message.
+
+/parkmap map x y
+Optionally add a map to offer a teleport to in said message. This can be a map number and optionally also have coordinates.
+If no text is given, remove the teleport offer.
+
+/parkmapbutton button_text
+Set text for the teleport offer button.
+
+/parkhere button_text
+Same as above, but use your current coordinates.
+If text is given, the server will use that, otherwise it'll be "Go!".

@@ -914,6 +914,13 @@ def fn_IDN(connection, map, client, arg, echo):
 
 		if len(Config["Server"]["MOTD"]):
 			connection.send("MSG", {'text': Config["Server"]["MOTD"]})
+		park_text = GlobalData.get('park_text')
+		park_map = GlobalData.get('park_map')
+		if park_text and len(park_text):
+			if park_map and len(park_map):
+				connection.send("MSG", {'text': park_text, 'class': 'event_notice', 'buttons': [GlobalData.get('park_map_button', 'Go!'), park_map]})
+			else:
+				connection.send("MSG", {'text': park_text, 'class': 'event_notice'})
 
 		if Config["Server"]["BroadcastConnects"]:
 			if had_old_entity:
@@ -943,7 +950,7 @@ def fn_IDN(connection, map, client, arg, echo):
 		connected_text = 'Users connected: %d' % (user_count) + ('' if bot_count == 0 else '. Bots connected: %d.' % bot_count)
 		if user_count > 1:
 			connected_text += ('.' if bot_count == 0 else '') + ' Use the [tt]/wa[/tt] command to see where people are at!'
-		connection.send("MSG", {'text': connected_text})
+		connection.send("MSG", {'text': connected_text, 'class': 'server_stats'})
 
 		if connection.username in Config["Server"]["Admins"]:
 			connection.send("MSG", {'text': '[command]connectlog[/command] size: %d, [command]buildlog[/command] size: %d, [command]filelog[/command] size: %d' % (len(TempLogs[0]), len(TempLogs[1]), len(TempLogs[2])), 'class': 'secret_message'})

@@ -19,6 +19,14 @@
   color: pink;
 }
 
+.server_stats {
+  color: pink;
+}
+
+.event_notice {
+  color: HotPink;
+}
+
 .error_message {
   color: red;
 }

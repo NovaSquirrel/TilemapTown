@@ -748,7 +748,7 @@ function receiveServerMessage(cmd, arg) {
           for(let i=0; i<arg.buttons.length/2; i++) {
             buttons += '<input type="button" value="'+arg.buttons[i*2]+'" onclick="sendChatCommand(\''+arg.buttons[i*2+1]+'\');"/>';
           }
-          logMessage("! "+convertBBCode(arg.text)+" "+buttons, 'server_message',
+          logMessage("! "+convertBBCode(arg.text)+" "+buttons, arg["class"] ?? 'server_message',
             {'isChat': false, 'username': arg["username"]});
         } else {
           if(arg["class"])
