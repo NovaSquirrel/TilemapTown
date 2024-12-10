@@ -136,6 +136,7 @@ flags           - integer - user-specific flags
 	0x0010 don't show this user at all in the API
 	0x0020 don't allow adding this user to your watch list
 	0x0040 don't include this user's pic and desc when their information is viewed remotely (as in a BAG info message)
+	0x0080 user is a trusted builder, and will still be able to build if building is locked down
 
 ---MAIL---
 id              * integer - mail id

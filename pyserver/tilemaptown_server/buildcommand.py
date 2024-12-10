@@ -17,6 +17,7 @@
 import json, random, datetime, time, ipaddress, hashlib, weakref
 from .buildglobal import *
 from .buildentity import Entity
+from .buildmap import Map
 from .buildapi import admin_delete_uploaded_file, fix_uploaded_file_sizes
 
 handlers = {}	# dictionary of functions to call for each command
@@ -776,6 +777,13 @@ def fn_mapid(map, client, context, arg):
 
 @cmd_command(category="Map", privilege_level="registered")
 def fn_newmap(map, client, context, arg):
+	level = Config["Security"]["TrustedOnlyMapCreation"]
+	if (level == 2 and ((client.connection_attr("user_flags") or 0) & userflag['trusted_builder'] == 0 ) \
+		and client.connection_attr('username') not in Config["Server"]["Admins"]) \
+		or (level == 3 and client.connection_attr('username') not in Config["Server"]["Admins"]):
+		respond(context, 'Map creation is currently disabled', error=True)
+		return
+
 	c = Database.cursor()
 	c.execute('SELECT COUNT(*) from Map')
 	result = c.fetchone()
@@ -897,39 +905,55 @@ def fn_userflags(map, client, context, arg):
 		respond(context, 'Syntax: add/del list of flags', error=True)
 
 
-admin_changeable_flags = ('bot', 'hide_location', 'hide_api', 'no_watch', 'secret_pic', 'file_uploads')
+admin_changeable_flags = ('bot', 'hide_location', 'hide_api', 'no_watch', 'secret_pic', 'file_uploads', 'trusted_builder')
 @cmd_command(category="Settings", alias=['adminuserflag'])
 def fn_adminuserflags(map, client, context, arg):
 	username, arg = separate_first_word(arg)
 	connection = find_connection_by_username(username)
 
-	if connection == None:
-		respond(context, 'User '+username+" not found", error=True)
-		return
-	def flags_list():
-		return ', '.join([key for key in userflag if ((userflag[key] & connection.user_flags) and (userflag[key].bit_count() == 1))])
+	def flags_list(flags):
+		return ', '.join([key for key in userflag if ((userflag[key] & flags) and (userflag[key].bit_count() == 1))])
 
-	arg = arg.lower()
-	if arg == "" or arg == "list":
-		respond(context, 'Their user flags: '+flags_list())
-		return
-	param = arg.lower().split(' ')
-	if len(param) >= 2:
-		if param[0] in ('add', 'set'):
-			for flag in param[1:]:
-				if flag in admin_changeable_flags:
-					connection.user_flags |= userflag[flag]
-		elif param[0] in ('del', 'remove'):
-			for flag in param[1:]:
-				if flag in admin_changeable_flags:
-					connection.user_flags &= ~userflag[flag]
+	def apply_arg(flags, arg):
+		arg = arg.lower()
+		if arg == "" or arg == "list":
+			respond(context, 'Their user flags: '+flags_list(flags))
+			return None
+		param = arg.lower().split(' ')
+		if len(param) >= 2:
+			if param[0] in ('add', 'set'):
+				for flag in param[1:]:
+					if flag in admin_changeable_flags:
+						flags |= userflag[flag]
+			elif param[0] in ('del', 'remove'):
+				for flag in param[1:]:
+					if flag in admin_changeable_flags:
+						flags &= ~userflag[flag]
+			else:
+				respond(context, 'Unrecognized subcommand "%s"' % param[0], code='invalid_subcommand', detail=param[0], error=True)
+				return None
+			respond(context, 'Their new user flags: '+flags_list(flags))
+			return flags
 		else:
-			respond(context, 'Unrecognized subcommand "%s"' % param[0], code='invalid_subcommand', detail=param[0], error=True)
-			return
-		respond(context, 'Their new user flags: '+flags_list())
-	else:
-		respond(context, 'Syntax: username add/del list of flags', error=True)
+			respond(context, 'Syntax: username add/del list of flags', error=True)
+			return None
 
+	if connection == None:
+		# Do it directly on the database then
+		c = Database.cursor()
+		c.execute('SELECT flags FROM User WHERE username=?', (username.lower(),))
+		result = c.fetchone()
+		if result == None:
+			respond(context, 'User '+username+" not found", error=True)
+			return
+		new_flags = apply_arg(result[0], arg)
+		if new_flags != None:
+			c.execute('UPDATE User SET flags=? WHERE username=?', (new_flags, username.lower(),))
+		return
+
+	new_flags = apply_arg(connection.user_flags, arg)
+	if new_flags != None:
+		connection.user_flags = new_flags
 
 def permission_change(map, client, context, arg, command2):
 	# Check syntax

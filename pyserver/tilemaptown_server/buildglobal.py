@@ -68,10 +68,14 @@ def loadConfigJson():
 	setConfigDefault("Server",   "BroadcastConnects", True)
 	setConfigDefault("Server",   "BroadcastDisconnects", True)
 	setConfigDefault("Server",   "MaxMapSize",       256)
-	setConfigDefault("Server",   "ProxyOnly",        False)
-	setConfigDefault("Server",   "AllowedOrigins",   None)
-	setConfigDefault("Server",   "AllowedOrigins2",  None)
-	setConfigDefault("Server",   "BannedOrigins",    None)
+
+	setConfigDefault("Security", "ProxyOnly",        False)
+	setConfigDefault("Security", "AllowedOrigins",   None)
+	setConfigDefault("Security", "AllowedOrigins2",  None)
+	setConfigDefault("Security", "BannedOrigins",    None)
+	setConfigDefault("Security", "DefaultBuildingPermission",  0)
+	setConfigDefault("Security", "TrustedOnlyBuilding",        0)
+	setConfigDefault("Security", "TrustedOnlyMapCreation",     1)
 
 	setConfigDefault("API",      "Port",             12551)
 	setConfigDefault("API",      "Enabled",          True)
@@ -240,13 +244,14 @@ mapflag['no_build_logs'] = 4
 
 # User flags
 userflag = {}
-userflag['bot']           = 0x01 # Is a bot
-userflag['file_uploads']  = 0x02 # Larger file upload limits
-userflag['no_build_logs'] = 0x04 # Don't log when this user builds
-userflag['hide_location'] = 0x08 # Don't show in /whereare and such
-userflag['hide_api']      = 0x10 # Don't show in API
-userflag['no_watch']      = 0x20 # Don't allow other users to have you on their watch list
-userflag['secret_pic']    = 0x40 # Hide your pic from remote view
+userflag['bot']             = 0x01 # Is a bot
+userflag['file_uploads']    = 0x02 # Larger file upload limits
+userflag['no_build_logs']   = 0x04 # Don't log when this user builds
+userflag['hide_location']   = 0x08 # Don't show in /whereare and such
+userflag['hide_api']        = 0x10 # Don't show in API
+userflag['no_watch']        = 0x20 # Don't allow other users to have you on their watch list
+userflag['secret_pic']      = 0x40 # Hide your pic from remote view
+userflag['trusted_builder'] = 0x80 # User can still build when building is locked down
 
 # Entity types
 entity_type = {}

@@ -132,6 +132,28 @@ def must_be_map_owner(connection, client, echo, admin_okay, give_error=True):
 		connection.protocol_error(echo, text='You don\'t have permission to do that', code='missing_permission', detail='admin' if admin_okay else None, subject_id=client.map)
 	return False
 
+def default_build_permission_for_connection(connection):
+	level = Config["Security"]["DefaultBuildingPermission"]
+	if level == 0:
+		return True
+	if level == 1:
+		return connection.db_id != None
+	if level == 2:
+		return (connection.user_flags & userflag['trusted_builder']) != 0
+	if level == 3:
+		return False
+
+def check_trusted_only_building(connection, map):
+	level = Config["Security"]["TrustedOnlyBuilding"]
+	if level == 0:
+		return True
+	if level == 1:
+		return (connection.db_id != None and connection.db_id == map.owner_id) or (connection.user_flags & userflag['trusted_builder']) != 0 or connection.username in Config["Server"]["Admins"]
+	if level == 2:
+		return (connection.user_flags & userflag['trusted_builder']) != 0 or connection.username in Config["Server"]["Admins"]
+	if level == 3:
+		return connection.username in Config["Server"]["Admins"]
+
 # Not used?
 """
 def must_be_server_admin(client, echo, give_error=True):
@@ -679,7 +701,11 @@ def fn_DEL(connection, map, client, arg, echo):
 	y1 = arg["pos"][1]
 	x2 = arg["pos"][2]
 	y2 = arg["pos"][3]
-	if client.has_permission(map, permission['build'], True) or must_be_map_owner(connection, client, echo, True, give_error=False):
+	if not check_trusted_only_building(connection, map):
+		client.send("MAP", map.map_section(x1, y1, x2, y2))
+		connection.protocol_error(echo, text='Building is currently disabled on this server', code='disabled_feature', detail='build', subject_id=map)
+		return
+	if client.has_permission(map, permission['build'], default_build_permission_for_connection(connection)) or must_be_map_owner(connection, client, echo, True, give_error=False):
 		if not map.map_data_loaded:
 			connection.protocol_error(echo, text='Map isn\'t loaded, so it can\'t be modified', code='not_loaded', subject_id=map)
 			return
@@ -725,7 +751,11 @@ def fn_PUT(connection, map, client, arg, echo):
 	temporary = arg.get('temp', False)
 	x = arg["pos"][0]
 	y = arg["pos"][1]
-	if client.has_permission(map, permission['build'], True) or must_be_map_owner(connection, client, echo, True, give_error=False):
+	if not check_trusted_only_building(connection, map):
+		client.send("MAP", map.map_section(x, y, x, y))
+		connection.protocol_error(echo, text='Building is currently disabled on this server', code='disabled_feature', detail='build', subject_id=map)
+		return
+	if client.has_permission(map, permission['build'], default_build_permission_for_connection(connection)) or must_be_map_owner(connection, client, echo, True, give_error=False):
 		if not map.map_data_loaded:
 			connection.protocol_error(echo, text='Map isn\'t loaded, so it can\'t be modified', code='not_loaded', subject_id=map)
 			return
@@ -761,6 +791,9 @@ def fn_PUT(connection, map, client, arg, echo):
 
 @protocol_command(map_only=True)
 def fn_BLK(connection, map, client, arg, echo):
+	if not check_trusted_only_building(connection, map):
+		connection.protocol_error(echo, text='Building is currently disabled on this server', code='disabled_feature', detail='build', subject_id=map)
+		return
 	if client.has_permission(map, permission['bulk_build'], False) or must_be_map_owner(connection, client, echo, True, give_error=False):
 		if not map.map_data_loaded:
 			connection.protocol_error(echo, text='Map isn\'t loaded, so it can\'t be modified', code='not_loaded', subject_id=map)

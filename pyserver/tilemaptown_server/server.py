@@ -91,19 +91,19 @@ async def client_handler(websocket, path):
 			ip = websocket.request_headers['X-Real-IP']
 		else:
 			ip = ''
-	elif Config["Server"]["ProxyOnly"]:
+	elif Config["Security"]["ProxyOnly"]:
 		asyncio.ensure_future(websocket.close(reason="ProxyOnly"))
 		return
 
 	origin = websocket.request_headers.get('Origin')
 
-	if Config["Server"]["AllowedOrigins"]:
-		if not any(_ == origin for _ in Config["Server"]["AllowedOrigins"]):
+	if Config["Security"]["AllowedOrigins"]:
+		if not any(_ == origin for _ in Config["Security"]["AllowedOrigins"]):
 			print("Origin \"%s\" from IP %s not allowlisted" % (origin, ip))
 			asyncio.ensure_future(websocket.close(reason="BadOrigin"))
 			total_connections[2] += 1 # Prevented connections
 			return
-	if Config["Server"]["BannedOrigins"] and websocket.request_headers['Origin'] and any(_ in origin for _ in Config["Server"]["BannedOrigins"]):
+	if Config["Security"]["BannedOrigins"] and websocket.request_headers['Origin'] and any(_ in origin for _ in Config["Security"]["BannedOrigins"]):
 		print("Banned origin \"%s\" from IP %s" % (origin, ip))
 		asyncio.ensure_future(websocket.close(reason="BadOrigin"))
 		total_connections[2] += 1
@@ -210,7 +210,7 @@ global loop
 
 def main():
 	global loop
-	start_server = websockets.serve(client_handler, None, Config["Server"]["Port"], max_size=Config["Server"]["WSMaxSize"], max_queue=Config["Server"]["WSMaxQueue"], origins=Config["Server"]["AllowedOrigins2"])
+	start_server = websockets.serve(client_handler, None, Config["Server"]["Port"], max_size=Config["Server"]["WSMaxSize"], max_queue=Config["Server"]["WSMaxQueue"], origins=Config["Security"]["AllowedOrigins2"])
 
 	# Start the event loop
 	loop = asyncio.get_event_loop()
