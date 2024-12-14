@@ -255,6 +255,34 @@ foreign key(user_id) references Entity(id) on delete cascade,
 foreign key(location) references User_File_Folder(folder_id) on delete set null
 )""")
 
+c.execute("""create table if not exists User_Profile (
+user_id integer,
+updated_at timestamp,
+name text,
+text text,
+pronouns text,
+picture_url text,
+birthday text,
+home_location integer,
+home_position text,
+
+interests text,
+interest_flags integer,
+interest_flags2 integer,
+looking_for text,
+
+email text,
+website text,
+contact text,
+
+extra_fields text,
+flags integer,
+more_data text,
+
+foreign key(user_id) references Entity(id) on delete cascade,
+foreign key(home_location) references Entity(id) on delete set null
+)""")
+
 if upgrade_from_v1:
 	def create_entity(created_at, creator_id, etype, name, desc, pic, location, position, home_location, home_position, tags, owner_id, allow, deny, guest_deny, data):
 		c.execute("INSERT INTO Entity (created_at, creator_id, type, name, desc, pic, location, position, home_location, home_position, tags, owner_id, allow, deny, guest_deny, data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (created_at, creator_id, etype, name, desc, pic, location, position, home_location, home_position, tags, owner_id, allow, deny, guest_deny, data))

@@ -444,6 +444,9 @@ def filter_username(text):
 def escape_tags(text):
 	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
+def unescape_tags(text):
+	return text.replace("&gt;", ">").replace("&lt;", "<").replace("&amp;", "&")
+
 def user_file_url_is_ok(url):
 	if url == "":
 		return True
@@ -528,6 +531,8 @@ def string_is_int(s):
 	return s.isdecimal()
 
 def int_if_numeric(text):
+	if isinstance(text, int):
+		return text
 	return int(text) if string_is_int(text) else text
 
 def make_protocol_message_string(command, params):

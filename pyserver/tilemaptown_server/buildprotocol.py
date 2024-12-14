@@ -1229,6 +1229,148 @@ def ext_unlisten(connection, map, client, context, arg, name):
 	client.finish_batch()
 	send_ext_listen_status(connection)
 
+def get_user_profile_data(user_id):
+	c = Database.cursor()
+	c.execute('SELECT user_id, updated_at, name, text, pronouns, picture_url, birthday, home_location, home_position, interests, looking_for, email, website, contact, extra_fields, flags, more_data FROM User_Profile WHERE user_id=?', (user_id,))
+	result = c.fetchone()
+	if result == None:
+		return None
+	else:
+		flags = result[15] or 0
+		more_data = result[16]
+		out = {
+			"id": result[0],
+			"username": find_username_by_db_id(user_id),
+			"name": result[2],
+			"text": result[3],
+			"pronouns": result[4],
+			"picture_url": result[5],
+			"birthday": result[6],
+			"home": [result[7]] + (loads_if_not_none(result[8]) or []),
+			"email": result[11],
+			"website": result[12],
+			"contact": loads_if_not_none(result[13]),
+			"fields": loads_if_not_none(result[14]),
+			"looking_for": result[10],
+			"interests": result[9],
+			"hide_birthday": (flags & 1) != 0,
+			"hide_email": (flags & 2) != 0,
+			"updated_at": result[1].isoformat() if result[1] != None else None,
+		}
+
+		entity = get_entity_by_id(user_id, load_from_db=False)
+		if entity:
+			out['entity_name'] = unescape_tags(entity.name)
+			out['entity_desc'] = entity.desc
+		else:
+			c.execute('SELECT name, desc FROM Entity WHERE id=?', (user_id,))
+			result = c.fetchone()
+			if result != None:
+				out['entity_name'] = unescape_tags(result[0])
+				out['entity_desc'] = result[1]
+		return out
+
+@ext_protocol_command("set_user_profile")
+def ext_set_user_profile(connection, map, client, context, arg, name):
+	if connection.db_id == None:
+		connection.send("EXT", {name: False})
+		return
+
+	# Create new user if user doesn't already exist
+	c = Database.cursor()
+	c.execute('SELECT user_id FROM User_Profile WHERE user_id=?', (connection.db_id,))
+	if c.fetchone() == None:
+		c.execute("INSERT INTO User_Profile (user_id) VALUES (?)", (connection.db_id,))
+
+	data = get_user_profile_data(connection.db_id)
+	if data == None:
+		data = {
+			"name": None,
+			"text": None,
+			"pronouns": None,
+			"picture_url": None,
+			"birthday": None,
+			"home": None,
+			"email": None,
+			"website": None,
+			"contact": None,
+			"fields": None,
+			"looking_for": None,
+			"interests": None,
+			"hide_birthday": False,
+			"hide_email": False,
+			"extra_fields": None,
+		}
+	if arg.get('picture_url') and not image_url_is_okay(arg['picture_url']):
+		del arg['picture_url']
+	if 'entity_desc' in arg:
+		client.desc = arg['entity_desc']
+	if 'entity_name' in arg and escape_tags(arg['entity_name']) != client.name:
+		handle_user_command(client.map, client, client, None, "nick "+arg['entity_name'])
+
+	def fallback(name, c):
+		value = arg.get(name, data[name])
+		if value != None and isinstance(value, c):
+			return value
+		return None
+
+	# Update the profile
+	home = arg.get("home", data["home"])
+	if isinstance(home, list):
+		home_location = home[0] if len(home) >= 1 else None
+		home_position = home[1:] if len(home) == 3 else None
+	flags = int((arg.get('hide_birthday', data['hide_birthday']) * 1) + (arg.get('hide_email', data['hide_email']) * 2))
+	values = (datetime.datetime.now(), fallback('name', str), fallback('text', str), fallback('pronouns', str), fallback('picture_url', str), fallback('birthday', str), home_location, dumps_if_not_empty(home_position), fallback('interests', str), fallback('looking_for', str), fallback('email', str), fallback('website', str), dumps_if_not_empty(fallback('contact', list)), dumps_if_not_empty(fallback('fields', list)), flags, connection.db_id)
+	c.execute("UPDATE User_Profile SET updated_at=?, name=?, text=?, pronouns=?, picture_url=?, birthday=?, home_location=?, home_position=?, interests=?, looking_for=?, email=?, website=?, contact=?, extra_fields=?, flags=? WHERE user_id=?", values)
+	connection.send("EXT", {name: True})
+
+@ext_protocol_command("get_user_profile")
+def ext_get_user_profile(connection, map, client, context, arg, name):
+	db_id = int_if_numeric(arg['username'])
+	if isinstance(db_id, str):
+		db_id = find_db_id_by_username(db_id)
+	if db_id == None:
+		connection.send("EXT", {name: {'username': arg['username'], 'not_found': True}})
+		return
+
+	data = get_user_profile_data(db_id)
+	if data == None:
+		connection.send("EXT", {name: {'id': db_id, 'username': arg['username'], 'not_found': True}})
+		return
+
+	getting_own_profile = db_id == connection.db_id
+	if data.get('birthday'):
+		try:
+			birthday = datetime.datetime.strptime(data['birthday'], '%Y-%m-%d')
+			today = datetime.date.today()
+			years = today.year - birthday.year
+			if today.month < birthday.month or (today.month == birthday.month and today.day < birthday.day):
+				years -= 1
+			data['age'] = years
+		except:
+			pass
+	if data.get('hide_birthday') and not getting_own_profile:
+		data['birthday'] = None
+	if data.get('hide_email') and not getting_own_profile:
+		data['email'] = None
+	if data.get('home'):
+		map_id = data['home'][0]
+		c = Database.cursor()
+		c.execute('SELECT name FROM Entity WHERE id=?', (map_id,))
+		result = c.fetchone()
+		if result != None:
+			data['home_name'] = result[0]
+
+	connection.send("EXT", {name: data})
+
+@ext_protocol_command("delete_user_profile")
+def ext_delete_user_profile(connection, map, client, context, arg, name):
+	if connection.db_id == None:
+		return
+	c = Database.cursor()
+	c.execute('DELETE FROM User_Profile WHERE user_id=?', (connection.db_id,))
+	connection.send("EXT", {name: True})
+
 @protocol_command()
 def fn_EXT(connection, map, client, arg, echo):
 	actor = client
@@ -1248,7 +1390,7 @@ def fn_EXT(connection, map, client, arg, echo):
 # -------------------------------------
 
 def handle_protocol_command(connection, map, client, command, arg, echo):
-	if not isinstance(client, Client) and not client.connection_attr('username') and command not in pre_identify_commands:
+	if not isinstance(client, Client) and not connection.username and command not in pre_identify_commands:
 		connection.protocol_error(echo, text='Protocol command requires identifying first: %s' % command, code='identify')
 		return
 

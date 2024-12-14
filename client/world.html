@@ -660,9 +660,146 @@
   </div>
 </widget-window>
 
+<widget-window id="viewUserProfileWindow" style="display: none;">
+	<span slot="title">User profile</span>
+	<div slot="contents">
+		<strong id="userProfileName"></strong> (<span id="userProfileUsername"></span>) <span id="userProfilePronounsDot">&#8226;</span> <span id="userProfilePronouns"></span><br>
+		<span id="userProfileBirthdaySpan">&#x1F382; <span id="userProfileBirthday"></span><br></span>
+		Last updated <span id="userProfileUpdatedAt"></span>
+		<button id="userProfileEditButton" onclick="userProfileEdit()">Edit</button>
+		<hr>
+		<button onclick="profileTabAbout()">About</button><button id="profileTabPictureButton" onclick="profileTabPicture()">Picture</button><button id="profileTabInterestsButton" onclick="profileTabInterests()">Interests</button><button id="profileTabContactButton" onclick="profileTabContact()">Contact</button><button id="profileTabHomeButton"onclick="profileTabHome()">Home</button>
+		<div id="userProfileAbout">
+			<p>&#x1F407; <strong id="userProfileCharacterName"></strong><br><span id="userProfileCharacterDescription" class="column-of-text-in-window"></span><p>
+			<hr>
+			<p>
+				<table border="1" id="userProfileExtraFields">
+				</table>
+			</p>
+			<p id="userProfileAboutText" class="column-of-text-in-window"></p>
+		</div>
+		<div id="userProfilePicture" style="display: none;">
+			<p>
+				<img id="userProfilePicturePicture" style="max-width: 512px; max-height: 512px;">
+			</p>
+		</div>
+		<div id="userProfileInterests" style="display: none;">
+			<p>
+				<strong>Interests</strong><br><span id="userProfileInterestsInterests" class="column-of-text-in-window"></span>
+			</p>
+			<p>
+				<strong>Looking for</strong><br><span id="userProfileInterestsLookingFor" class="column-of-text-in-window"></span>
+			</p>
+		</div>
+		<div id="userProfileContact" style="display: none;">
+			<p>
+				<strong>Email</strong><br><span id="userProfileContactEmail" class="column-of-text-in-window"></span>
+			</p>
+			<p>
+				<strong>Website</strong><br><span id="userProfileContactWebsite" class="column-of-text-in-window"></span>
+			</p>
+			<p>
+				<table border="1" id="userProfileContactTable">
+				</table>
+			</p>
+		</div>
+		<div id="userProfileHome" style="display: none;">
+			<p>
+				<strong>Home</strong><br><span id="userProfileHomeName"></span>
+			</p>
+			<p>
+				<button onclick="userProfileGoToHome()" id="userProfileHomeButton">Visit</button>
+			</p>
+		</div>
+	</div>
+</widget-window>
+
+<widget-window id="viewMiniUserProfileWindow" style="display: none;">
+	<span slot="title">User profile</span>
+	<div slot="contents">
+		<p>This user doesn't have a user profile yet</p>
+		<p>&#x1F407; <strong id="userMiniProfileCharacterName"></strong><br><span id="userMiniProfileCharacterDescription" class="column-of-text-in-window"></span><p>
+	</div>
+</widget-window>
+
+<widget-window id="editUserProfileWindow" style="display: none;">
+	<span slot="title">Edit user profile</span>
+	<div slot="contents">
+		<button onclick="editUserProfileUpdate()">Update</button>
+		<button onclick="editUserProfileDeleteProfile()">Delete profile</button>
+		<hr>
+		<p>
+			<table border="1">
+			<tr><th>Character name</th><td><input id="editUserProfileCharacterName"></td></tr>
+			<tr><th>Character description</th><td><textarea id="editUserProfileCharacterDesc"></textarea></td></tr>
+			</table>
+		</p>
+		<hr>
+		<p>
+			<table border="1">
+				<tr><th>Name</th><td><input id="editUserProfileName"></td></tr>
+				<tr><th>Pronouns</th><td><input id="editUserProfilePronouns"></td></tr>
+				<tr><th>Picture URL</th><td><input id="editUserProfilePictureUrl"></td></tr>
+				<tr><th>Birthday<br>(YYYY-MM-DD format)</th><td><input id="editUserProfileBirthday"></td></tr>
+				<tr><th>Email</th><td><input id="editUserProfileEmail"></td></tr>
+				<tr><th>Website</th><td><input id="editUserProfileWebsite"></td></tr>
+				<tr><th>Interests<br>(comma separated)</th><td><input id="editUserProfileInterests"></td></tr>
+				<tr><th>Looking for</th><td><input id="editUserProfileLookingFor"></td></tr>
+				<tr><th>Hide birthday<br>(only show age)</th><td><input type="checkbox" id="editUserProfileHideBirthday"></td></tr>
+				<tr><th>Hide email<br>(only visible to admin)</th><td><input type="checkbox" id="editUserProfileHideEmail"></td></tr>
+			</table>
+		</p>
+		<hr>
+		<p><strong>About me</strong><br><textarea style="width: 100%;" rows="5" id="editUserProfileAbout"></textarea></p>
+		<hr>
+		<p><strong>Home</strong> <button onclick="editUserProfileSetHomeHere()">Set home to here</button><br>
+			<table border="1">
+				<tr><th>Home map</th><td><input id="editUserProfileHomeMap"></td></tr>
+				<tr><th>Home X</th><td><input id="editUserProfileHomeX"></td></tr>
+				<tr><th>Home Y</th><td><input id="editUserProfileHomeY"></td></tr>
+			</table>
+		<hr>
+		<p>
+			<strong>Extra "about" fields</strong>
+			<table border="1">
+				<tr><th><input id="editUserProfileExtraAboutKey0"></th><td><input id="editUserProfileExtraAboutValue0"></td></tr>
+				<tr><th><input id="editUserProfileExtraAboutKey1"></th><td><input id="editUserProfileExtraAboutValue1"></td></tr>
+				<tr><th><input id="editUserProfileExtraAboutKey2"></th><td><input id="editUserProfileExtraAboutValue2"></td></tr>
+				<tr><th><input id="editUserProfileExtraAboutKey3"></th><td><input id="editUserProfileExtraAboutValue3"></td></tr>
+				<tr><th><input id="editUserProfileExtraAboutKey4"></th><td><input id="editUserProfileExtraAboutValue4"></td></tr>
+				<tr><th><input id="editUserProfileExtraAboutKey5"></th><td><input id="editUserProfileExtraAboutValue5"></td></tr>
+				<tr><th><input id="editUserProfileExtraAboutKey6"></th><td><input id="editUserProfileExtraAboutValue6"></td></tr>
+				<tr><th><input id="editUserProfileExtraAboutKey7"></th><td><input id="editUserProfileExtraAboutValue7"></td></tr>
+				<tr><th><input id="editUserProfileExtraAboutKey8"></th><td><input id="editUserProfileExtraAboutValue8"></td></tr>
+				<tr><th><input id="editUserProfileExtraAboutKey9"></th><td><input id="editUserProfileExtraAboutValue9"></td></tr>
+			</table>
+		</p>
+		<hr>
+		<p>
+			<strong>Extra "contact" fields</strong>
+			<table border="1">
+				<tr><th><input id="editUserProfileExtraContactKey0"></th><td><input id="editUserProfileExtraContactValue0"></td></tr>
+				<tr><th><input id="editUserProfileExtraContactKey1"></th><td><input id="editUserProfileExtraContactValue1"></td></tr>
+				<tr><th><input id="editUserProfileExtraContactKey2"></th><td><input id="editUserProfileExtraContactValue2"></td></tr>
+				<tr><th><input id="editUserProfileExtraContactKey3"></th><td><input id="editUserProfileExtraContactValue3"></td></tr>
+				<tr><th><input id="editUserProfileExtraContactKey4"></th><td><input id="editUserProfileExtraContactValue4"></td></tr>
+				<tr><th><input id="editUserProfileExtraContactKey5"></th><td><input id="editUserProfileExtraContactValue5"></td></tr>
+				<tr><th><input id="editUserProfileExtraContactKey6"></th><td><input id="editUserProfileExtraContactValue6"></td></tr>
+				<tr><th><input id="editUserProfileExtraContactKey7"></th><td><input id="editUserProfileExtraContactValue7"></td></tr>
+				<tr><th><input id="editUserProfileExtraContactKey8"></th><td><input id="editUserProfileExtraContactValue8"></td></tr>
+				<tr><th><input id="editUserProfileExtraContactKey9"></th><td><input id="editUserProfileExtraContactValue9"></td></tr>
+			</table>
+		</p>
+		<hr>
+		<button onclick="editUserProfileUpdate()">Update</button>
+		<button onclick="editUserProfileDeleteProfile()">Delete profile</button>
+	</div>
+</widget-window>
+
 <!-- context menus -->
 <widget-contextmenu id="item-contextmenu" style="display: none;">
   <ul slot="menu" id="item-contextmenu-menu">
+    <li id="viewUserProfileLi" onclick="requestViewUserProfile(contextMenuItem)">View user profile</li>
     <li onclick="editItem(contextMenuItem)">Edit</li>
     <li id="droptakeitem" onclick="dropTakeItem(contextMenuItem)">Drop</li>
     <li onclick="moveItem(contextMenuItem)">Move to...</li>

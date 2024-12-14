@@ -822,6 +822,19 @@ function receiveServerMessage(cmd, arg) {
             takeControlsEnabled = false;
           }
         }
+        if(arg.get_user_profile) {
+          if(arg.get_user_profile.not_found) {
+            if(arg.get_user_profile?.id == PlayerYou) {
+              userProfileEdit(true);
+            } else if(arg.get_user_profile?.username in PlayerWho) {
+              openMiniUserProfileWindow(arg.get_user_profile.username);
+            } else if(arg.get_user_profile?.id in PlayerWho) {
+              openMiniUserProfileWindow(arg.get_user_profile.id);
+            }
+          } else {
+            openUserProfileWindow(arg.get_user_profile);
+          }
+        }
       }
   }
 }

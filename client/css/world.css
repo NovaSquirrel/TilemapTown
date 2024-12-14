@@ -94,6 +94,7 @@ body {
     left: 8px;
     bottom: 32px;
     width: 40%;
+    word-wrap: break-word;
 }
 
 #chat-container.pinned {
@@ -321,4 +322,10 @@ widget-contextmenu li:hover {
 
 #touch-button-container td:hover {
     background-color: lightpink;
+}
+
+.column-of-text-in-window {
+	display: block;
+	max-width: 400px;
+	overflow: auto;
 }

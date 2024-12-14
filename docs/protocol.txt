@@ -203,6 +203,7 @@ Fields you can update with client-->server WHO update:
 
 Other fields that may appear in WHO messages on the official server:
 	"name": string; Name of the entity
+	"username": string; This use's username
 	"pic": [sprite sheet ID or URL, x, y]; Entity appearance
 	"x": integer; X coordinate on the map
 	"y": integer; Y coordinate on the map
@@ -212,6 +213,7 @@ Other fields that may appear in WHO messages on the official server:
 	"vehicle": integer or string; ID of the entity this entity is being carried by
 	"is_following": boolean; If true, entity is following behind its vehicle, instead of being carried
 	"type": string; Entity type, like "user" or "generic"
+	"bot": boolean; If true, entity is a bot
 	"in_user_list": boolean; True if this entity is a real user, and should therefore go in the user list
 	"offset": [x,y]; Offset in pixels away from where this entity would normally be drawn
 	"is_forwarding": boolean; If true, this entity is not a user, but some events that happen on the map this entity is on are being forwarded to a user
@@ -276,8 +278,8 @@ May contain "rc_username" and "rc_id" to indicate who is remote controlling the 
 --> EML {"delete": id}
 send mail or manipulate your inbox
 
-<-- EML {"receive": {"id": id, "subject": subject, "contents": contents, "to": [username, ...], "from": username, "flags": flags}}
-<-- EML {"list": [{"id": id, "subject": subject, "contents": contents, "to": [username, ...], "from": username, "flags": flags}]}
+<-- EML {"receive": {"id": id, "subject": subject, "contents": contents, "to": [username, ...], "from": username, "flags": flags},}
+<-- EML {"list": [{"id": id, "subject": subject, "contents": contents, "to": [username, ...], "from": username, "flags": flags, "timestamp": ISO 8601 timestamp}]}
 <-- EML {"sent": {"subject", subject}}
 receive mail from someone, or get a list upon logging in. "sent" acknowledges mail was successfully sent
 
@@ -539,6 +541,46 @@ Gives you the text you most recently put into the /client_settings command
 --> EXT {"unlisten": {"types": ["move", "build", "entry", "chat", "chat_listen"], "list": [id, id, id...]}}
 <-- EXT {"listen_status": {"maps": {"map1": ["move", "build"], "map2": ["move", "build"], ...}}}
 These are alternatives to the /listen and /unlisten commands (described in the command document) that do not create ERR messages, and send a status messages with a complete list of listens.
+
+--> EXT {"set_user_profile": {info...}}
+--> EXT {"get_user_profile": {"username": "username"}}
+<-- EXT {"get_user_profile": {"username": "username", info...}}
+Change your own profile information, or look up someone else's.
+"username" can be an actual username, or an entity ID.
+
+Profile fields (can read and write):
+	"name": Display name for the user, separate from the current character's name and username
+	"text": Profile text (with bbcode support)
+	"pronouns": string; User's pronouns
+	"picture_url": string; URL for an avatar of the user
+	"birthday": string; YYYY-MM-DD format; may just be YYYY-MM or YYYY
+	"home": [map_id, x, y]; public home location
+
+	"email": string; email address
+	"website": string; URL of the user's website
+	"contact": ["site", "value", "site", "value", ...]; additional contact details
+	"fields": ["name", "value", "name", "value", ...]; additional profile fields to be displayed as-is
+
+	"looking_for": string; arbitrary text for what you're looking to do or find
+	"interests": string; comma separated interest list, arbitrary text
+	interest flags not available here yet
+
+	"hide_birthday": boolean
+	"hide_email": boolean
+
+	"entity_name": string; alternative way to access the name of the user's entity
+	"entity_desc": string; alternative way to access the description of the user's entity
+
+Profile fields (can read):
+	"updated_at": string; ISO 8601 format timestamp
+	"username": string; User's username
+	"id": integer; User's entity ID
+	"age": integer; Calculated from the birthday
+	"home_name": string; Name of the map the user picked as their home
+
+--> EXT {"delete_user_profile": {}}
+<-- EXT {"delete_user_profile": true}
+Deletes your user profile.
 
 
 === Extension: bulk_build ===

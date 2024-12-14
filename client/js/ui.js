@@ -1027,8 +1027,11 @@ function openTurfContextMenu(map_x, map_y, x, y) {
 
 let contextMenuItem = 0;
 function openItemContextMenu(id, x, y) {
-	let drop = document.querySelector('#droptakeitem');
+	let viewProfileLi = document.querySelector('#viewUserProfileLi');
+	let item = DBInventory[id] || PlayerWho[id];
+	viewProfileLi.style.display = (item?.in_user_list) ? "block" : "none";
 
+	let drop = document.querySelector('#droptakeitem');
 	copyItemToHotbarLi.style.display = "none";
 	if (id in DBInventory) {
 		drop.innerText = "Drop";
@@ -2509,6 +2512,276 @@ function stopMusic() {
 	if (chiptunejsPlayerObject !== undefined) {
 		chiptunejsPlayerObject.stop();
 	}
+}
+
+///////////////////////////////////////////////////////////
+// User profiles
+///////////////////////////////////////////////////////////
+
+function requestViewUserProfile(contextMenuItem) {
+	SendCmd("EXT", { "get_user_profile": {"username": contextMenuItem} });
+}
+
+function openMiniUserProfileWindow(id) {
+	const player = PlayerWho[id];
+	document.getElementById('userMiniProfileCharacterName').textContent = player.name;
+	document.getElementById('userMiniProfileCharacterDescription').textContent = player.desc;
+	document.getElementById('viewMiniUserProfileWindow').style.display = "block";
+}
+
+let userProfileInformation;
+function openUserProfileWindow(info) {
+	userProfileInformation = info;
+
+	function empty(s) {
+		if (!s)
+			return true;
+		if (typeof s !== 'string')
+			return true;
+		if (s.trim().length === 0)
+			return true;
+		return false;
+	}
+
+	function fill_out_table(table, data) {
+		while (table.firstChild) {
+			table.removeChild(table.firstChild);
+		}
+		if (!data || data == []) {
+			table.style.display = "none";
+			return;
+		}
+		table.style.display = "table";
+
+		for(let i = 0; i<data.length/2; i++) {
+			let tr = document.createElement('tr');
+			let th = document.createElement('th');
+			let td = document.createElement('td');
+			th.textContent = data[i*2+0];
+			td.textContent = data[i*2+1];
+			tr.appendChild(th);
+			tr.appendChild(td);
+			table.appendChild(tr);
+		}
+	}
+
+	profileTabAbout();
+	document.getElementById('profileTabPictureButton').disabled = empty(info.picture_url);
+	document.getElementById('profileTabInterestsButton').disabled = empty(info.interests) && empty(info.looking_for);
+	document.getElementById('profileTabContactButton').disabled = empty(info.email) && empty(info.website) && !info.contact;
+	document.getElementById('profileTabHomeButton').disabled = empty(info.home_name);
+
+	document.getElementById('userProfileName').textContent = info.name || "";
+	document.getElementById('userProfileUsername').textContent = info.username || "";
+	document.getElementById('userProfilePronouns').textContent = info.pronouns || "";
+	document.getElementById('userProfilePronounsDot').style.display = (info.pronouns || "").length ? "compact": "none";
+	document.getElementById('userProfileCharacterName').textContent = info.entity_name || "";
+	document.getElementById('userProfileCharacterDescription').textContent = info.entity_desc || "";
+	const birthday = info.birthday;
+	document.getElementById('userProfileBirthdaySpan').style.display = "inline";
+	if (birthday) {
+		const birthdate = new Date(birthday);
+		if(birthdate instanceof Date && !isNaN(birthdate)) {
+			document.getElementById('userProfileBirthday').textContent = info.birthday + " ("+info.age+" years old)";
+		} else {
+			document.getElementById('userProfileBirthday').textContent = info.birthday;
+		}
+	} else if(info.age) {
+		document.getElementById('userProfileBirthday').textContent = info.age + " years old";
+	} else {
+		document.getElementById('userProfileBirthday').textContent = "???";
+		document.getElementById('userProfileBirthdaySpan').style.display = "none";
+	}
+	fill_out_table(document.getElementById('userProfileExtraFields'), info.fields);
+	document.getElementById('userProfileAboutText').innerHTML = convertBBCode(info.text || "");
+	document.getElementById('userProfilePicturePicture').src = info.picture_url || "";
+	document.getElementById('userProfileInterestsInterests').textContent = (info.interests || "").split(',').join(', ');
+	document.getElementById('userProfileInterestsLookingFor').innerHTML = convertBBCode(info.looking_for || "");
+	fill_out_table(document.getElementById('userProfileContactTable'), info.contact);
+	document.getElementById('userProfileContactEmail').textContent = info.email || "";
+	if (info.website)
+		document.getElementById('userProfileContactWebsite').innerHTML = convertBBCode("[url]"+(info.website || "")+"[/url]");
+	else
+		document.getElementById('userProfileContactWebsite').textContent = "";
+	document.getElementById('userProfileHomeName').textContent = info.home_name + " (ID: " + info.home[0] + ")";
+	document.getElementById('userProfileHomeButton').style.display = info.home ? "block" : "none";
+	document.getElementById('userProfileUpdatedAt').textContent = new Date(Date.parse(info.updated_at)).toLocaleDateString();
+	document.getElementById('userProfileEditButton').style.display = (PlayerYou == info.id) ? "compact" : "none";
+
+	document.getElementById('viewUserProfileWindow').style.display = "block";
+}
+
+function userProfileEdit(new_profile) {
+	document.getElementById('viewUserProfileWindow').style.display = "none";
+
+	document.getElementById('editUserProfileCharacterName').value = "";
+	document.getElementById('editUserProfileCharacterDesc').value = "";
+	document.getElementById('editUserProfileName').value = "";
+	document.getElementById('editUserProfilePronouns').value = "";
+	document.getElementById('editUserProfilePictureUrl').value = "";
+	document.getElementById('editUserProfileBirthday').value = "";
+	document.getElementById('editUserProfileEmail').value = "";
+	document.getElementById('editUserProfileWebsite').value = "";
+	document.getElementById('editUserProfileInterests').value = "";
+	document.getElementById('editUserProfileLookingFor').value = "";
+	document.getElementById('editUserProfileHideBirthday').checked = "";
+	document.getElementById('editUserProfileHideEmail').checked = "";
+	document.getElementById('editUserProfileAbout').value = "";
+	document.getElementById('editUserProfileHomeMap').value = "";
+	document.getElementById('editUserProfileHomeX').value = "";
+	document.getElementById('editUserProfileHomeY').value = "";
+
+	for(let i=0; i<10; i++) {
+		document.getElementById('editUserProfileExtraAboutKey'+i).value = "";
+		document.getElementById('editUserProfileExtraAboutValue'+i).value = "";
+		document.getElementById('editUserProfileExtraContactKey'+i).value = "";
+		document.getElementById('editUserProfileExtraContactValue'+i).value = "";
+	}
+
+	if (new_profile) {
+		document.getElementById('editUserProfileCharacterName').value = PlayerWho[PlayerYou]?.name || "";
+		document.getElementById('editUserProfileCharacterDesc').value = PlayerWho[PlayerYou]?.desc || "";
+	} else if(userProfileInformation.id == PlayerYou) {
+		let info = userProfileInformation;
+		document.getElementById('editUserProfileCharacterName').value = info.entity_name || "";
+		document.getElementById('editUserProfileCharacterDesc').value = info.entity_desc || "";
+		document.getElementById('editUserProfileName').value = info.name || "";
+		document.getElementById('editUserProfilePronouns').value = info.pronouns || "";
+		document.getElementById('editUserProfilePictureUrl').value = info.picture_url || "";
+		document.getElementById('editUserProfileBirthday').value = info.birthday || "";
+		document.getElementById('editUserProfileEmail').value = info.email || "";
+		document.getElementById('editUserProfileWebsite').value = info.website || "";
+		document.getElementById('editUserProfileInterests').value = info.interests || "";
+		document.getElementById('editUserProfileLookingFor').value = info.looking_for || "";
+		document.getElementById('editUserProfileHideBirthday').checked = info.hide_birthday;
+		document.getElementById('editUserProfileHideEmail').checked = info.hide_email;
+		document.getElementById('editUserProfileAbout').value = info.text;
+		if(info.home && info.home.length >= 1) {
+			document.getElementById('editUserProfileHomeMap').value = info.home[0];
+			if(info.home.length >= 3) {
+				document.getElementById('editUserProfileHomeX').value = info.home[1];
+				document.getElementById('editUserProfileHomeY').value = info.home[2];
+			}
+		}
+
+		if(info.fields) {
+			for(let i = 0; i<info.fields.length/2; i++) {
+				document.getElementById('editUserProfileExtraAboutKey'+i).value = info.fields[i*2+0];
+				document.getElementById('editUserProfileExtraAboutValue'+i).value = info.fields[i*2+1];
+			}
+		}
+		if(info.contact) {
+			for(let i = 0; i<info.contact.length/2; i++) {
+				document.getElementById('editUserProfileExtraContactKey'+i).value = info.contact[i*2+0];
+				document.getElementById('editUserProfileExtraContactValue'+i).value = info.contact[i*2+1];
+			}
+		}
+	}
+
+	document.getElementById('editUserProfileWindow').style.display = "block";
+}
+
+function editUserProfileSetHomeHere() {
+	document.getElementById('editUserProfileHomeMap').value = MyMap.Info.id ;
+	document.getElementById('editUserProfileHomeX').value = PlayerWho[PlayerYou].x;
+	document.getElementById('editUserProfileHomeY').value = PlayerWho[PlayerYou].y;
+}
+
+function editUserProfileUpdate() {
+	function nullIfEmpty(t) {
+		t = t.trim();
+		if (t === '')
+			return null;
+		return t;
+	}
+	const data = {
+		"entity_name": document.getElementById('editUserProfileCharacterName').value,
+		"entity_desc": document.getElementById('editUserProfileCharacterDesc').value,
+		"name": nullIfEmpty(document.getElementById('editUserProfileName').value),
+		"pronouns": nullIfEmpty(document.getElementById('editUserProfilePronouns').value), 
+		"picture_url": nullIfEmpty(document.getElementById('editUserProfilePictureUrl').value),
+		"birthday": nullIfEmpty(document.getElementById('editUserProfileBirthday').value),
+		"email": nullIfEmpty(document.getElementById('editUserProfileEmail').value),
+		"website": nullIfEmpty(document.getElementById('editUserProfileWebsite').value),
+		"interests": nullIfEmpty(document.getElementById('editUserProfileInterests').value),
+		"looking_for": nullIfEmpty(document.getElementById('editUserProfileLookingFor').value),
+		"text": nullIfEmpty(document.getElementById('editUserProfileAbout').value),
+		"hide_birthday": document.getElementById('editUserProfileHideBirthday').checked,
+		"hide_email": document.getElementById('editUserProfileHideEmail').checked,
+	};
+	const home = parseInt(document.getElementById('editUserProfileHomeMap').value);
+	const homeX = parseInt(document.getElementById('editUserProfileHomeX').value);
+	const homeY = parseInt(document.getElementById('editUserProfileHomeY').value);
+	if(!Number.isNaN(home) && (Number.isNaN(homeX) || Number.isNaN(homeY)))
+		data.home = [home];
+	if(!Number.isNaN(home) && !Number.isNaN(homeX) && !Number.isNaN(homeY))
+		data.home = [home, homeX, homeY];
+	const fields = [];
+	const contact = [];
+	for(let i=0; i<10; i++) {
+		let key1 = document.getElementById('editUserProfileExtraAboutKey'+i).value.trim();
+		let val1 = document.getElementById('editUserProfileExtraAboutValue'+i).value.trim();
+		let key2 = document.getElementById('editUserProfileExtraContactKey'+i).value.trim();
+		let val2 = document.getElementById('editUserProfileExtraContactValue'+i).value.trim();
+		if(key1 && val1) {
+			fields.push(key1);
+			fields.push(val1);
+		}
+		if(key2 && val2) {
+			contact.push(key2);
+			contact.push(val2);
+		}
+	}
+	data["fields"] = fields;
+	data["contact"] = contact;
+	SendCmd("EXT", { "set_user_profile": data });
+	document.getElementById('editUserProfileWindow').style.display = "none";
+}
+
+function editUserProfileDeleteProfile() {
+	if(confirm("Really delete your user profile?")) {
+		SendCmd("EXT", { "delete_user_profile": {} });
+		document.getElementById('editUserProfileWindow').style.display = "none";
+	}
+}
+
+function profileTabAbout() {
+	document.getElementById('userProfileAbout').style.display = "block";
+	document.getElementById('userProfilePicture').style.display = "none";
+	document.getElementById('userProfileInterests').style.display = "none";
+	document.getElementById('userProfileContact').style.display = "none";
+	document.getElementById('userProfileHome').style.display = "none";
+}
+function profileTabPicture() {
+	document.getElementById('userProfileAbout').style.display = "none";
+	document.getElementById('userProfilePicture').style.display = "block";
+	document.getElementById('userProfileInterests').style.display = "none";
+	document.getElementById('userProfileContact').style.display = "none";
+	document.getElementById('userProfileHome').style.display = "none";
+}
+function profileTabInterests() {
+	document.getElementById('userProfileAbout').style.display = "none";
+	document.getElementById('userProfilePicture').style.display = "none";
+	document.getElementById('userProfileInterests').style.display = "block";
+	document.getElementById('userProfileContact').style.display = "none";
+	document.getElementById('userProfileHome').style.display = "none";
+}
+function profileTabContact() {
+	document.getElementById('userProfileAbout').style.display = "none";
+	document.getElementById('userProfilePicture').style.display = "none";
+	document.getElementById('userProfileInterests').style.display = "none";
+	document.getElementById('userProfileContact').style.display = "block";
+	document.getElementById('userProfileHome').style.display = "none";
+}
+function profileTabHome() {
+	document.getElementById('userProfileAbout').style.display = "none";
+	document.getElementById('userProfilePicture').style.display = "none";
+	document.getElementById('userProfileInterests').style.display = "none";
+	document.getElementById('userProfileContact').style.display = "none";
+	document.getElementById('userProfileHome').style.display = "block";
+}
+function userProfileGoToHome() {
+	SendCmd("CMD", {"text": "map "+userProfileInformation.home.join(" ")});
 }
 
 ///////////////////////////////////////////////////////////

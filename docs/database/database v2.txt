@@ -199,3 +199,56 @@ name            - text    - user-given name for the file
 desc            - text    - user-given description for the file
 location        - integer - folder this folder is stored in, or null
 flags           - integer - currently not used
+
+
+---USER_PROFILE---
+user_id         * integer - user this profile is for
+updated_at      -timestamp- last time this profile was updated
+name            - text    - display name for the user, separate from the current character's name
+text            - text    - profile text (with bbcode support)
+pronouns        - text    - user's own pronouns, which may be different from their current character's
+picture_url     - text    - URL for an avatar of the user
+birthday        - text    - YYYY-MM-DD format; may just be YYYY-MM or YYYY
+
+interests       - text    - comma separated interests list (arbitrary text)
+interest_flags  - integer - bitfield of things that the user likes to do, relating to Tilemap Town (tentative)
+                            0x00000001: Building
+                            0x00000002: Exploring
+                            0x00000004: Creating maps
+                            0x00000008: Chatting
+                            0x00000010: Event planning
+                            0x00000020: Pixel art (general)
+                            0x00000040: Pixel art (characters)
+                            0x00000080: Pixel art (tiles)
+                            0x00000100: Roleplaying (general)
+                            0x00000200: Roleplaying (hanging out in-character)
+                            0x00000400: Roleplaying (elaborate ongoing stories)
+                            0x00000800: Roleplaying (freeform)
+                            0x00001000: Roleplaying (with an RPG system)
+                            0x00002000: Roleplaying (game mastering)
+                            0x00004000: Roleplaying (adult)
+                            0x00008000: Playing minigames
+                            0x00010000: Making minigames
+                            0x00020000: Development (general)
+                            0x00040000: Development (scripting)
+                            0x00080000: Development (bots)
+                            0x00100000: Development (custom clients)
+                            0x00200000: Development (Tilemap Town itself)
+                            0x00400000: Creating music
+                            0x00800000: DJing
+interest_flags2 - integer - more flags, if needed
+
+looking_for     - text    - what the user is currently looking for (arbitrary text)
+
+email           - text    - email address
+website         - text    - URL of the user's website
+contact         - text    - JSON list; additional contact details; alternating key/value
+
+home_location   - integer - entity ID of whatever is this entity's public home location
+home_position   - text    - JSON position within the container. [x,y]
+
+more_data       - text    - JSON object; place to add additional fields without needing to change the database table yet
+extra_fields    - text    - JSON list; additional custom text fields to display as-is, like Mastodon; alternating key/value
+flags           - integer - bitfield
+                            1: hide birthday except age
+                            2: hide email

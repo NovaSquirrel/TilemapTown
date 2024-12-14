@@ -20,6 +20,11 @@ from .buildentity import Entity
 
 start_time = int(time.time())
 
+MAIN_API_CORS_HEADERS = {
+	"Access-Control-Allow-Origin": "*",
+	"Access-Control-Allow-Methods": "GET"
+}
+
 routes = web.RouteTableDef()
 @routes.get('/v1/town_info')
 async def town_info(request):
@@ -69,36 +74,43 @@ async def town_info(request):
 
 	server = {'name': Config['Server']['Name'], 'motd': Config['Server']['MOTD'], 'default_map': get_database_meta('default_map')}
 
+	park_text = GlobalData.get('park_text')
+	park_map = GlobalData.get('park_map')
+	if park_text and len(park_text):
+		server['park_text'] = park_text
+		if park_map and len(park_map):
+			server['park_map'] = park_map
+
 	data = {}
 	data['stats']  = stats
 	data['users']  = users
 	data['maps']   = where_are
 	data['server'] = server
-	return web.json_response(data)
+	return web.json_response(data, headers=MAIN_API_CORS_HEADERS)
 
 @routes.get('/v1/server_version')
 async def server_version(request):
-	return web.json_response(server_version_dict)
+	return web.json_response(server_version_dict, headers=MAIN_API_CORS_HEADERS)
 
 @routes.get('/v1/server_resources')
 async def server_resources(request):
-	return web.json_response(ServerResources)
+	return web.json_response(ServerResources, headers=MAIN_API_CORS_HEADERS)
 
 @routes.get('/v1/map/{map_id}')
 async def map_info(request):
 	map_id = request.match_info['map_id']
 	if not map_id.isdecimal():
-		return web.Response(status=400, text="Map ID is invalid")
+		return web.Response(status=400, text="Map ID is invalid", headers=MAIN_API_CORS_HEADERS)
 	map_id = int(map_id)
 
 	if not map_id_exists(map_id):
-		return web.Response(status=404, text="Couldn't find map")
+		return web.Response(status=404, text="Couldn't find map", headers=MAIN_API_CORS_HEADERS)
 	map = get_entity_by_id(map_id)
 
 	if map == None:
-		return web.Response(status=400, text="Couldn't load map")
+		return web.Response(status=400, text="Couldn't load map", headers=MAIN_API_CORS_HEADERS)
 	if map.map_flags & mapflag['public'] == 0:
-		return web.Response(status=401, text="Map isn't public")
+		return web.Response(status=401, text="Map isn't public", headers=MAIN_API_CORS_HEADERS)
 
 	data = {}
 	if int(request.query.get('info', 1)):
@@ -122,13 +134,13 @@ async def map_info(request):
 					data["data"] = {'pos': from_db['pos'], 'default': from_db['default'], 'turf': from_db['turf'], 'obj': from_db['obj']}
 	except:
 		pass
-	return web.json_response(data)
+	return web.json_response(data, headers=MAIN_API_CORS_HEADERS)
 
 @routes.get('/v1/tsd/{id}')
 async def get_tsd(request):
 	entity_id = request.match_info['id']
 	if not entity_id.isdecimal():
-		return web.Response(status=400, text="Tileset ID is invalid")
+		return web.Response(status=400, text="Tileset ID is invalid", headers=MAIN_API_CORS_HEADERS)
 	entity_id = int(entity_id)
 
 	# Get and return the data
@@ -136,15 +148,15 @@ async def get_tsd(request):
 	c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type('tileset'), entity_id,))
 	result = c.fetchone()
 	if result == None:
-		return web.Response(status=404, text="Couldn't find tileset")
+		return web.Response(status=404, text="Couldn't find tileset", headers=MAIN_API_CORS_HEADERS)
 	else:
-		return web.json_response({'id': entity_id, 'data': decompress_entity_data(result[0], result[1])})
+		return web.json_response({'id': entity_id, 'data': decompress_entity_data(result[0], result[1])}, headers=MAIN_API_CORS_HEADERS)
 
 @routes.get('/v1/img/{id}')
 async def get_img(request):
 	entity_id = request.match_info['id']
 	if not entity_id.isdecimal():
-		return web.Response(status=400, text="Image ID is invalid")
+		return web.Response(status=400, text="Image ID is invalid", headers=MAIN_API_CORS_HEADERS)
 	entity_id = int(entity_id)
 
 	# Get and return the data
@@ -152,9 +164,9 @@ async def get_img(request):
 	c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type['image'], entity_id,))
 	result = c.fetchone()
 	if result == None:
-		return web.Response(status=404, text="Couldn't find image")
+		return web.Response(status=404, text="Couldn't find image", headers=MAIN_API_CORS_HEADERS)
 	else:
-		return web.json_response({'id': entity_id, 'url': loads_if_not_none(decompress_entity_data(result[0], result[1]))})
+		return web.json_response({'id': entity_id, 'url': loads_if_not_none(decompress_entity_data(result[0], result[1]))}, headers=MAIN_API_CORS_HEADERS)
 
 # ---------------------------------------------------------
 global_file_upload_size = 0
