@@ -2579,7 +2579,7 @@ function openUserProfileWindow(info) {
 	document.getElementById('userProfilePronouns').textContent = info.pronouns || "";
 	document.getElementById('userProfilePronounsDot').style.display = (info.pronouns || "").length ? "compact": "none";
 	document.getElementById('userProfileCharacterName').textContent = info.entity_name || "";
-	document.getElementById('userProfileCharacterDescription').textContent = info.entity_desc || "";
+	document.getElementById('userProfileCharacterDescription').innerHTML = convertBBCode(info.entity_desc || "").replaceAll("\n", "<br>");;
 	const birthday = info.birthday;
 	document.getElementById('userProfileBirthdaySpan').style.display = "inline";
 	if (birthday) {
@@ -2596,10 +2596,10 @@ function openUserProfileWindow(info) {
 		document.getElementById('userProfileBirthdaySpan').style.display = "none";
 	}
 	fill_out_table(document.getElementById('userProfileExtraFields'), info.fields);
-	document.getElementById('userProfileAboutText').innerHTML = convertBBCode(info.text || "");
+	document.getElementById('userProfileAboutText').innerHTML = convertBBCode(info.text || "").replaceAll("\n", "<br>");;
 	document.getElementById('userProfilePicturePicture').src = info.picture_url || "";
 	document.getElementById('userProfileInterestsInterests').textContent = (info.interests || "").split(',').join(', ');
-	document.getElementById('userProfileInterestsLookingFor').innerHTML = convertBBCode(info.looking_for || "");
+	document.getElementById('userProfileInterestsLookingFor').innerHTML = convertBBCode(info.looking_for || "").replaceAll("\n", "<br>");
 	fill_out_table(document.getElementById('userProfileContactTable'), info.contact);
 	document.getElementById('userProfileContactEmail').textContent = info.email || "";
 	if (info.website)
