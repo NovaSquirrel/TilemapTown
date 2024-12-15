@@ -2558,7 +2558,7 @@ function openUserProfileWindow(info) {
 			let th = document.createElement('th');
 			let td = document.createElement('td');
 			th.textContent = data[i*2+0];
-			if(data[1*2+1].startsWith("https://") || data[1*2+1].startsWith("http://"))
+			if(data[i*2+1].startsWith("https://") || data[i*2+1].startsWith("http://"))
 				td.innerHTML = convertBBCode("[url]"+(data[i*2+1] || "")+"[/url]");
 			else
 				td.innerHTML = convertBBCode(data[i*2+1]);
