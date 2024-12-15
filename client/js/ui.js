@@ -2525,7 +2525,7 @@ function requestViewUserProfile(contextMenuItem) {
 function openMiniUserProfileWindow(id) {
 	const player = PlayerWho[id];
 	document.getElementById('userMiniProfileCharacterName').textContent = player.name;
-	document.getElementById('userMiniProfileCharacterDescription').textContent = player.desc;
+	document.getElementById('userMiniProfileCharacterDescription').innerHTML = convertBBCode(player.desc).replaceAll("\n", "<br>");
 	document.getElementById('viewMiniUserProfileWindow').style.display = "block";
 }
 
@@ -2579,7 +2579,7 @@ function openUserProfileWindow(info) {
 	document.getElementById('userProfilePronouns').textContent = info.pronouns || "";
 	document.getElementById('userProfilePronounsDot').style.display = (info.pronouns || "").length ? "compact": "none";
 	document.getElementById('userProfileCharacterName').textContent = info.entity_name || "";
-	document.getElementById('userProfileCharacterDescription').innerHTML = convertBBCode(info.entity_desc || "").replaceAll("\n", "<br>");;
+	document.getElementById('userProfileCharacterDescription').innerHTML = convertBBCode(info.entity_desc || "").replaceAll("\n", "<br>");
 	const birthday = info.birthday;
 	document.getElementById('userProfileBirthdaySpan').style.display = "inline";
 	if (birthday) {
