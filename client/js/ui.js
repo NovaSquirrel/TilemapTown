@@ -2525,7 +2525,7 @@ function requestViewUserProfile(contextMenuItem) {
 function openMiniUserProfileWindow(id) {
 	const player = PlayerWho[id];
 	document.getElementById('userMiniProfileCharacterName').textContent = player.name;
-	document.getElementById('userMiniProfileCharacterDescription').innerHTML = convertBBCode(player.desc).replaceAll("\n", "<br>");
+	document.getElementById('userMiniProfileCharacterDescription').innerHTML = convertBBCode(player.desc || "").replaceAll("\n", "<br>");
 	document.getElementById('viewMiniUserProfileWindow').style.display = "block";
 }
 
