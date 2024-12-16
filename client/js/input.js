@@ -77,7 +77,7 @@ function runLocalCommand(t) {
 	} else if (t.toLowerCase().startsWith("/playmusic ")) {
 		playMusic(t.slice(11), true);
 		return true;
-	} else if (t.toLowerCase().startsWith("/openprofile ")) {
+	} else if (t.toLowerCase().startsWith("/openprofile ") || t.toLowerCase().startsWith("/userprofile ")) {
 		SendCmd("EXT", { "get_user_profile": {"username": t.slice(13)} });
 		return true;
 	} else if (t.toLowerCase() == "/stopmusic") {

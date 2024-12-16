@@ -826,10 +826,14 @@ function receiveServerMessage(cmd, arg) {
           if(arg.get_user_profile.not_found) {
             if(arg.get_user_profile?.id == PlayerYou) {
               userProfileEdit(true);
+            } else if(arg.get_user_profile && "entity_name" in arg.get_user_profile && "entity_desc" in arg.get_user_profile) {
+              openMiniUserProfileWindow(arg.get_user_profile.username, arg.get_user_profile.entity_name, arg.get_user_profile.entity_desc);
             } else if(arg.get_user_profile?.username in PlayerWho) {
               openMiniUserProfileWindow(arg.get_user_profile.username);
             } else if(arg.get_user_profile?.id in PlayerWho) {
               openMiniUserProfileWindow(arg.get_user_profile.id);
+            } else {
+              logMessage('User '+arg.get_user_profile.username+' not found', 'error_message',   {'isChat': false});
             }
           } else {
             openUserProfileWindow(arg.get_user_profile);

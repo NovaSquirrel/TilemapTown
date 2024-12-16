@@ -1229,6 +1229,19 @@ def ext_unlisten(connection, map, client, context, arg, name):
 	client.finish_batch()
 	send_ext_listen_status(connection)
 
+def get_entity_name_and_desc(user_id, out):
+	entity = get_entity_by_id(user_id, load_from_db=False)
+	if entity:
+		out['entity_name'] = unescape_tags(entity.name)
+		out['entity_desc'] = entity.desc
+	else:
+		c = Database.cursor()
+		c.execute('SELECT name, desc FROM Entity WHERE id=?', (user_id,))
+		result = c.fetchone()
+		if result != None:
+			out['entity_name'] = unescape_tags(result[0])
+			out['entity_desc'] = result[1]
+
 def get_user_profile_data(user_id):
 	c = Database.cursor()
 	c.execute('SELECT user_id, updated_at, name, text, pronouns, picture_url, birthday, home_location, home_position, interests, looking_for, email, website, contact, extra_fields, flags, more_data FROM User_Profile WHERE user_id=?', (user_id,))
@@ -1257,17 +1270,7 @@ def get_user_profile_data(user_id):
 			"hide_email": (flags & 2) != 0,
 			"updated_at": result[1].isoformat() if result[1] != None else None,
 		}
-
-		entity = get_entity_by_id(user_id, load_from_db=False)
-		if entity:
-			out['entity_name'] = unescape_tags(entity.name)
-			out['entity_desc'] = entity.desc
-		else:
-			c.execute('SELECT name, desc FROM Entity WHERE id=?', (user_id,))
-			result = c.fetchone()
-			if result != None:
-				out['entity_name'] = unescape_tags(result[0])
-				out['entity_desc'] = result[1]
+		get_entity_name_and_desc(user_id, out)
 		return out
 
 @ext_protocol_command("set_user_profile")
@@ -1335,7 +1338,9 @@ def ext_get_user_profile(connection, map, client, context, arg, name):
 
 	data = get_user_profile_data(db_id)
 	if data == None:
-		connection.send("EXT", {name: {'id': db_id, 'username': arg['username'], 'not_found': True}})
+		out = {'id': db_id, 'username': arg['username'], 'not_found': True}
+		get_entity_name_and_desc(db_id, out)
+		connection.send("EXT", {name: out})
 		return
 
 	getting_own_profile = db_id == connection.db_id

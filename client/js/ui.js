@@ -2522,10 +2522,10 @@ function requestViewUserProfile(contextMenuItem) {
 	SendCmd("EXT", { "get_user_profile": {"username": contextMenuItem} });
 }
 
-function openMiniUserProfileWindow(id) {
-	const player = PlayerWho[id];
-	document.getElementById('userMiniProfileCharacterName').textContent = player.name;
-	document.getElementById('userMiniProfileCharacterDescription').innerHTML = convertBBCode(player.desc || "").replaceAll("\n", "<br>");
+function openMiniUserProfileWindow(id, name, desc) {
+	const player = PlayerWho[id] || {};
+	document.getElementById('userMiniProfileCharacterName').textContent = name || player.name;
+	document.getElementById('userMiniProfileCharacterDescription').innerHTML = convertBBCode(desc || player.desc || "").replaceAll("\n", "<br>");
 	document.getElementById('viewMiniUserProfileWindow').style.display = "block";
 }
 
