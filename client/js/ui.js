@@ -2577,7 +2577,7 @@ function openUserProfileWindow(info) {
 	document.getElementById('userProfileName').textContent = info.name || "";
 	document.getElementById('userProfileUsername').textContent = info.username || "";
 	document.getElementById('userProfilePronouns').textContent = info.pronouns || "";
-	document.getElementById('userProfilePronounsDot').style.display = (info.pronouns || "").length ? "compact": "none";
+	document.getElementById('userProfilePronounsDot').style.display = (info.pronouns || "").length ? "inline": "none";
 	document.getElementById('userProfileCharacterName').textContent = info.entity_name || "";
 	document.getElementById('userProfileCharacterDescription').innerHTML = convertBBCode(info.entity_desc || "").replaceAll("\n", "<br>");
 	const birthday = info.birthday;
@@ -2609,7 +2609,7 @@ function openUserProfileWindow(info) {
 	document.getElementById('userProfileHomeName').textContent = info.home_name + " (ID: " + info.home[0] + ")";
 	document.getElementById('userProfileHomeButton').style.display = info.home ? "block" : "none";
 	document.getElementById('userProfileUpdatedAt').textContent = new Date(Date.parse(info.updated_at)).toLocaleDateString();
-	document.getElementById('userProfileEditButton').style.display = (PlayerYou == info.id) ? "compact" : "none";
+	document.getElementById('userProfileEditButton').style.display = (PlayerYou == info.id) ? "inline" : "none";
 
 	document.getElementById('viewUserProfileWindow').style.display = "block";
 }
