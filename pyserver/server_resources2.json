@@ -397,6 +397,51 @@
 				"autotile_layout": 3,
 				"obj": true
 			},
+			"forestwoodfloor1": {
+				"name": "wood floor",
+				"autotile_class": 2,
+				"pic": [-2, 29, 50]
+			},
+			"forestwoodfloor2": {
+				"name": "wood floor",
+				"autotile_class": 2,
+				"pic": [-2, 29, 54]
+			},
+			"forestwoodfloor3": {
+				"name": "wood floor",
+				"autotile_class": 2,
+				"pic": [-2, 29, 58]
+			},
+			"forestwoodwall1": {
+				"name": "wood wall",
+				"density": true,
+				"autotile_class": 3,
+				"pic": [-2, 15, 48]
+			},
+			"forestwoodwall2": {
+				"name": "wood wall",
+				"density": true,
+				"autotile_class": 3,
+				"pic": [-2, 19, 48]
+			},
+			"forestwoodwall3": {
+				"name": "wood wall",
+				"density": true,
+				"autotile_class": 3,
+				"pic": [-2, 23, 48]
+			},
+			"forestwoodwall4": {
+				"name": "wood wall",
+				"density": true,
+				"autotile_class": 3,
+				"pic": [-2, 27, 48]
+			},
+			"forestwoodwall5": {
+				"name": "wood wall",
+				"density": true,
+				"autotile_class": 3,
+				"pic": [-2, 31, 44]
+			},
 			"forest1grass": {
 				"name": "grass",
 				"pic": [-2, 9, 54]
@@ -573,12 +618,37 @@
 			},
 			"foresttwigs2": {
 				"name": "twigs",
+				"pic": [-2, 12, 61],
+				"obj": true
+			},
+			"foresttwigs3": {
+				"name": "twigs",
 				"pic": [-2, 13, 61],
 				"obj": true
 			},
 			"foresttwigs3": {
 				"name": "twigs",
 				"pic": [-2, 13, 61],
+				"obj": true
+			},
+			"forestpath1_h": {
+				"name": "path",
+				"pic": [-2, 10, 58],
+				"obj": true
+			},
+			"forestpath1_v": {
+				"name": "path",
+				"pic": [-2, 10, 59],
+				"obj": true
+			},
+			"forestpath2_h": {
+				"name": "path",
+				"pic": [-2, 11, 58],
+				"obj": true
+			},
+			"forestpath2_v": {
+				"name": "path",
+				"pic": [-2, 11, 59],
 				"obj": true
 			},
 			"forestcampfire": {
