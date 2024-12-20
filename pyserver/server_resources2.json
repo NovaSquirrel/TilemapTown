@@ -399,47 +399,47 @@
 			},
 			"forestwoodfloor1": {
 				"name": "wood floor",
-				"autotile_class": 2,
+				"autotile_layout": 2,
 				"pic": [-2, 29, 50]
 			},
 			"forestwoodfloor2": {
 				"name": "wood floor",
-				"autotile_class": 2,
+				"autotile_layout": 2,
 				"pic": [-2, 29, 54]
 			},
 			"forestwoodfloor3": {
 				"name": "wood floor",
-				"autotile_class": 2,
+				"autotile_layout": 2,
 				"pic": [-2, 29, 58]
 			},
 			"forestwoodwall1": {
 				"name": "wood wall",
 				"density": true,
-				"autotile_class": 3,
+				"autotile_layout": 3,
 				"pic": [-2, 15, 48]
 			},
 			"forestwoodwall2": {
 				"name": "wood wall",
 				"density": true,
-				"autotile_class": 3,
+				"autotile_layout": 3,
 				"pic": [-2, 19, 48]
 			},
 			"forestwoodwall3": {
 				"name": "wood wall",
 				"density": true,
-				"autotile_class": 3,
+				"autotile_layout": 3,
 				"pic": [-2, 23, 48]
 			},
 			"forestwoodwall4": {
 				"name": "wood wall",
 				"density": true,
-				"autotile_class": 3,
+				"autotile_layout": 3,
 				"pic": [-2, 27, 48]
 			},
 			"forestwoodwall5": {
 				"name": "wood wall",
 				"density": true,
-				"autotile_class": 3,
+				"autotile_layout": 3,
 				"pic": [-2, 31, 44]
 			},
 			"forest1grass": {
