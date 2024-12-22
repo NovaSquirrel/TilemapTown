@@ -920,8 +920,12 @@ function ConnectToServer() {
 		};
 
 		if(OnlineUsername != "") {
-			idn_args["username"] = OnlineUsername;
-			idn_args["password"] = OnlinePassword
+			if(OnlinePassword != "") {
+				idn_args["username"] = OnlineUsername;
+				idn_args["password"] = OnlinePassword
+			} else {
+				idn_args["name"] = OnlineUsername;
+			}
 		};
 		idn_args["client_name"] = "Tilemap Town Web Client";
 

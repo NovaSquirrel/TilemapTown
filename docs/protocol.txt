@@ -226,6 +226,7 @@ Other fields that may appear in WHO messages on the official server:
 === Miscellaneous ===
 --> IDN
 --> IDN {"username": username, "password": password}
+--> IDN {"name": display name}
 --> IDN {"map" [map_id]}
 --> IDN {"map" [map_id, x, y]}
 --> IDN {"features": {"feature_name": {"version": "1.0.0"}}}
