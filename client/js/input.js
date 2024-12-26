@@ -50,6 +50,7 @@ let hotbarDragging = false;
 let ctrlZUndoType = null;
 
 let lastChatUsed = "";
+let alreadyShowedSign = false;
 
 const OK_DRAW_DISTANCE = 5;
 
@@ -241,6 +242,7 @@ function keyEventToTilemapTownKey(e) {
 }
 
 function keyUpHandler(e) {
+	alreadyShowedSign = false;
 	markNotIdle();
 	var e = e || window.event;
 	ShiftPressed = e.shiftKey;
@@ -259,10 +261,13 @@ function keyUpHandler(e) {
 	}
 }
 
+let lastSignMessage = undefined;
 function bump_into_atom(atom) {
-	if (atom.type == AtomTypes.SIGN && atom.message) {
+	if (atom.type == AtomTypes.SIGN && atom.message && (!alreadyShowedSign || atom.message != lastSignMessage)) {
 		logMessage(((atom.name != "sign" && atom.name != "") ? escape_tags(atom.name) + " says: " : "The sign says: ") + convertBBCode(atom.message), "server_message",
 		  {'plainText': (atom.name != "sign" && atom.name != "") ? atom.name + " says: " + atom.message : "The sign says: " + atom.message});
+		lastSignMessage = atom.message;
+		alreadyShowedSign = true;
 	}
 }
 
