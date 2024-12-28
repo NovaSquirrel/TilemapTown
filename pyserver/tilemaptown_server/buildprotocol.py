@@ -16,7 +16,7 @@
 
 import json, datetime, time, types, weakref, secrets
 from .buildglobal import *
-from .buildcommand import handle_user_command, escape_tags, tile_is_okay, data_disallowed_for_entity_type, send_private_message
+from .buildcommand import handle_user_command, tile_is_okay, data_disallowed_for_entity_type, send_private_message
 from .buildentity import Entity
 from .buildclient import Client
 from .buildgadget import Gadget
@@ -642,7 +642,7 @@ def fn_MSG(connection, map, client, arg, echo):
 
 	if map:
 		text = arg["text"]
-		fields = {'name': actor.name, 'id': actor.protocol_id(), 'username': actor.username_or_id(), 'text': escape_tags(text)}
+		fields = {'name': actor.name, 'id': actor.protocol_id(), 'username': actor.username_or_id(), 'text': text}
 		if 'rc' in arg:
 			fields['rc_id'] = client.protocol_id()
 			fields['rc_username'] = client.username_or_id()
@@ -1036,7 +1036,7 @@ def fn_IDN(connection, map, client, arg, echo):
 	else:
 		# Become a guest
 		if "name" in arg:
-			new_client.name = escape_tags(arg["name"])
+			new_client.name = arg["name"]
 		if not override_map or not new_client.switch_map(override_map[0], new_pos=None if (len(override_map) == 1) else (override_map[1:])):
 			connection.entity.switch_map(get_database_meta('default_map'))
 
@@ -1232,14 +1232,14 @@ def ext_unlisten(connection, map, client, context, arg, name):
 def get_entity_name_and_desc(user_id, out):
 	entity = get_entity_by_id(user_id, load_from_db=False)
 	if entity:
-		out['entity_name'] = unescape_tags(entity.name)
+		out['entity_name'] = entity.name
 		out['entity_desc'] = entity.desc
 	else:
 		c = Database.cursor()
 		c.execute('SELECT name, desc FROM Entity WHERE id=?', (user_id,))
 		result = c.fetchone()
 		if result != None:
-			out['entity_name'] = unescape_tags(result[0])
+			out['entity_name'] = result[0]
 			out['entity_desc'] = result[1]
 
 def get_user_profile_data(user_id):
@@ -1308,7 +1308,7 @@ def ext_set_user_profile(connection, map, client, context, arg, name):
 		del arg['picture_url']
 	if 'entity_desc' in arg:
 		client.desc = arg['entity_desc']
-	if 'entity_name' in arg and escape_tags(arg['entity_name']) != client.name:
+	if 'entity_name' in arg and arg['entity_name'] != client.name:
 		handle_user_command(client.map, client, client, None, "nick "+arg['entity_name'])
 
 	def fallback(name, c):

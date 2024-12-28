@@ -294,14 +294,14 @@ function receiveServerMessage(cmd, arg) {
 
         // Give a notice about a new map
         if(OldMapID != CurrentMapID) {
-          let logText = "Now entering: <b>"+MyMap.Info['name']+"</b>";
+          let logText = "Now entering: <b>"+escape_tags(MyMap.Info['name'])+"</b>";
           let plainText = `Now entering: ${MyMap.Info['name']}`;
           if(MyMap.Info['desc']) {
-            logText += ' - "'+MyMap.Info['desc']+'"';
+            logText += ' - "'+convertBBCode(MyMap.Info['desc'])+'"';
             plainText += ' - "'+MyMap.Info['desc']+'"';
           }
           if(MyMap.Info['topic']) {
-            logText += `<br>Current topic: "${MyMap.Info['topic']}" (set by ${MyMap.Info['topic_username']})`;
+            logText += `<br>Current topic: "${convertBBCode(MyMap.Info['topic'])}" (set by ${escape_tags(MyMap.Info['topic_username'])})`;
             plainText += ` | Current topic: "${MyMap.Info['topic']}" (set by ${MyMap.Info['topic_username']})`;
           }
           logMessage(logText, 'server_message', {'plainText': plainText});
@@ -452,7 +452,7 @@ function receiveServerMessage(cmd, arg) {
       } else if(arg.add) {
         if(!PlayerWho[arg.add.id] && (arg.add.in_user_list || arg.add.chat_listener)) { // if player isn't already in the list
           let isForwarding = arg.add.chat_listener ? " &#x1F916;" : "";
-          logMessage("Joining: "+arg.add.name + isForwarding, 'server_message', {'plainText': `Joining: ${arg.add.name}${arg.add.chat_listener ? "(bot)" : ""}`});
+          logMessage("Joining: "+escape_tags(arg.add.name) + isForwarding, 'server_message', {'plainText': `Joining: ${arg.add.name}${arg.add.chat_listener ? "(bot)" : ""}`});
         }
         PlayerWho[arg.add.id] = arg.add;
         initPlayerIfNeeded(arg.add.id);
@@ -462,7 +462,7 @@ function receiveServerMessage(cmd, arg) {
       } else if(arg.remove) {
         if(PlayerWho[arg.remove].in_user_list) {
           let isForwarding = PlayerWho[arg.remove].chat_listener ? " &#x1F916;" : "";
-          logMessage("Leaving: "+PlayerWho[arg.remove].name, 'server_message', {'plainText': `Leaving: ${PlayerWho[arg.remove].name}${PlayerWho[arg.remove].chat_listener ? "(bot)" : ""}`});
+          logMessage("Leaving: "+escape_tags(PlayerWho[arg.remove].name), 'server_message', {'plainText': `Leaving: ${PlayerWho[arg.remove].name}${PlayerWho[arg.remove].chat_listener ? "(bot)" : ""}`});
         }
         // unload image if needed
         if (arg.remove in PlayerImages)
@@ -479,7 +479,7 @@ function receiveServerMessage(cmd, arg) {
         if("status" in arg.update && ((arg.update["status"] !== PlayerWho[arg.update.id]["status"]) || (("status_message" in arg.update) && arg.update["status_message"] !== PlayerWho[arg.update.id]["status_message"]))) {
           if(arg.update["status"] && arg.update.id != PlayerYou) {
             if(arg.update["status"] == "." && arg.update["status_message"]) {
-              let message = PlayerWho[arg.update.id].name + "'s status is now \"" + convertBBCode(arg.update["status_message"]) + "\"";
+              let message = escape_tags(PlayerWho[arg.update.id].name) + "'s status is now \"" + convertBBCode(arg.update["status_message"]) + "\"";
               let plain_message = PlayerWho[arg.update.id].name + "'s status is now \"" + arg.update["status_message"] + "\"";
               logMessage(message, 'status_change', {'isSilent': true, 'plainText': plain_message});
             } else {
@@ -508,7 +508,7 @@ function receiveServerMessage(cmd, arg) {
               logMessage(message, 'status_change', {'isSilent': true, 'plainText': plain_message});
            }
           } else if(arg.update.id != PlayerYou) {
-            logMessage(PlayerWho[arg.update.id].name + " cleared their status", 'status_change', {'isSilent': true, 'plainText': PlayerWho[arg.update.id].name + " cleared their status"});
+            logMessage(escape_tags(PlayerWho[arg.update.id].name) + " cleared their status", 'status_change', {'isSilent': true, 'plainText': PlayerWho[arg.update.id].name + " cleared their status"});
           }
         }
         PlayerWho[arg.update.id] = Object.assign(
@@ -660,7 +660,7 @@ function receiveServerMessage(cmd, arg) {
 
     case "EML":
       if(arg['receive']) {
-          logMessage("You've got mail! (from "+arg.receive['from']+")", 'server_message', {'plainText': `You've got mail! (from: ${arg.receive['from']})`});
+          logMessage("You've got mail! (from "+escape_tags(arg.receive['from'])+")", 'server_message', {'plainText': `You've got mail! (from: ${arg.receive['from']})`});
           Mail.push(arg['receive']);
       } else if(arg['list']) {
           Mail = arg['list'];
@@ -685,37 +685,40 @@ function receiveServerMessage(cmd, arg) {
       break;
     case "PRI":
       senderIdForBbcode = arg.id ?? null;
+      let escapedName = escape_tags(arg.name || "");
+      let escapedUsername = escape_tags(arg.username || "");
+
       let respond = '<span onclick="setChatInput(\'/tell '+arg.username+' \')">';
       if(arg.text.slice(0, 4) == "/me ") {
         let new_text = arg.text.slice(4);
         let no_space = new_text.startsWith("'s ") || new_text.startsWith("'d ") || new_text.startsWith("'ll ");
         if(arg.receive)
-          logMessage(respond+"&larr;["+arg.name+"("+arg.username+")"+"] * <i>"+arg.name+(no_space?"":" ")+convertBBCode(new_text)+'</i></span>', 'private_message',
-            {'isPrivateChat': true, 'plainText': `<-- [${arg.name}(${arg.username})] * ${arg.name}${no_space?"":" "}${new_text}`,
+          logMessage(respond+"&larr;["+escapedName+"("+escapedUsername+")"+"] * <i>"+escape_tags(arg.name)+(no_space?"":" ")+convertBBCode(new_text)+'</i></span>', 'private_message',
+            {'isPrivateChat': true, 'plainText': `<-- [${escapedName}(${arg.username})] * ${arg.name}${no_space?"":" "}${new_text}`,
             'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
         else
-          logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] * <i>"+PlayerWho[PlayerYou].name+(no_space?"":" ")+convertBBCode(new_text)+'</i></span>', 'private_message',
+          logMessage(respond+"&rarr;["+escapedName+"("+escapedUsername+")"+"] * <i>"+escape_tags(PlayerWho[PlayerYou].name)+(no_space?"":" ")+convertBBCode(new_text)+'</i></span>', 'private_message',
             {'isPrivateChat': true, 'plainText': `--> [${arg.name}(${arg.username})] * ${PlayerWho[PlayerYou].name}${no_space?"":" "}${new_text}`,
             'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
           break;
       } else if(arg.text.slice(0, 5) == "/ooc ") {
         var new_text = arg.text.slice(5);
         if(arg.receive)
-          logMessage(respond+"&larr;["+arg.name+"("+arg.username+")"+"] [OOC] "+convertBBCode(new_text)+'</span>', 'private_message',
+          logMessage(respond+"&larr;["+escapedName+"("+escapedUsername+")"+"] [OOC] "+convertBBCode(new_text)+'</span>', 'private_message',
             {'isPrivateChat': true, 'plainText': `<-- [${arg.name}(${arg.username})] [OOC] ${new_text}`,
             'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
         else
-          logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] [OOC] "+convertBBCode(new_text)+'</span>', 'private_message',
+          logMessage(respond+"&rarr;["+escapedName+"("+escapedUsername+")"+"] [OOC] "+convertBBCode(new_text)+'</span>', 'private_message',
             {'isPrivateChat': true, 'plainText': `--> [${arg.name}(${arg.username})] [OOC] ${new_text}`,
             'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
           break;
       } else {
         if(arg.receive)
-          logMessage(respond+"&larr;["+arg.name+"("+arg.username+")"+"] "+convertBBCode(arg.text)+'</span>', 'private_message',
+          logMessage(respond+"&larr;["+escapedName+"("+escapedUsername+")"+"] "+convertBBCode(arg.text)+'</span>', 'private_message',
             {'isPrivateChat': true, 'plainText': `<-- [${arg.name}(${arg.username})] ${arg.text}`,
             'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
         else
-          logMessage(respond+"&rarr;["+arg.name+"("+arg.username+")"+"] "+convertBBCode(arg.text)+'</span>', 'private_message',
+          logMessage(respond+"&rarr;["+escapedName+"("+escapedUsername+")"+"] "+convertBBCode(arg.text)+'</span>', 'private_message',
             {'isPrivateChat': true, 'plainText': `--> [${arg.name}(${arg.username})] ${arg.text}`,
             'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
           break;
@@ -724,22 +727,24 @@ function receiveServerMessage(cmd, arg) {
     case "MSG":
       senderIdForBbcode = arg.id ?? null;
       if(arg.name) {
+        let escapedName = escape_tags(arg.name || "");
+
         if(arg.text.slice(0, 4).toLowerCase() == "/me ") {
           let message = arg.text.slice(4);
           let no_space = message.startsWith("'s ") || message.startsWith("'d ") || message.startsWith("'ll ");
-          logMessage("* <i>"+arg.name+(no_space?"":" ")+convertBBCode(message)+"</i>", 'user_message',
-            {'isChat': true, 'plainText': `* ${arg.name}${no_space?"":" "}${message}`,
+          logMessage("* <i>"+escapedName+(no_space?"":" ")+convertBBCode(message)+"</i>", 'user_message',
+            {'isChat': true, 'plainText': `* ${escapedName}${no_space?"":" "}${message}`,
             'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
         } else if(arg.text.slice(0, 5).toLowerCase() == "/ooc ")
-          logMessage("[OOC] "+arg.name+": "+convertBBCode(arg.text.slice(5)), 'ooc_message',
-            {'isChat': true, 'plainText': `[OOC] ${arg.name}: ${arg.text.slice(5)}`,
+          logMessage("[OOC] "+escapedName+": "+convertBBCode(arg.text.slice(5)), 'ooc_message',
+            {'isChat': true, 'plainText': `[OOC] ${escapedName}: ${arg.text.slice(5)}`,
             'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
         else if(arg.text.slice(0, 7).toLowerCase() == "/spoof ")
-          logMessage("* <i>"+convertBBCode(arg.text.slice(7)) + "</i> <span class=\"spoof_name\">(by "+arg.name+")</span>", 'spoof_message',
+          logMessage("* <i>"+convertBBCode(arg.text.slice(7)) + "</i> <span class=\"spoof_name\">(by "+escapedName+")</span>", 'spoof_message',
             {'isChat': true, 'plainText': `* ${arg.text.slice(7)} (by ${arg.name})`,
             'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
         else
-          logMessage("&lt;"+arg.name+"&gt; "+convertBBCode(arg.text), 'user_message',
+          logMessage("&lt;"+escapedName+"&gt; "+convertBBCode(arg.text), 'user_message',
             {'isChat': true, 'plainText': `<${arg.name}> ${arg.text}`,
             'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
       } else
@@ -833,7 +838,7 @@ function receiveServerMessage(cmd, arg) {
             } else if(arg.get_user_profile?.id in PlayerWho) {
               openMiniUserProfileWindow(arg.get_user_profile.id);
             } else {
-              logMessage('User '+arg.get_user_profile.username+' not found', 'error_message',   {'isChat': false});
+              logMessage('User '+escape_tags(arg.get_user_profile.username)+' not found', 'error_message',   {'isChat': false});
             }
           } else {
             openUserProfileWindow(arg.get_user_profile);

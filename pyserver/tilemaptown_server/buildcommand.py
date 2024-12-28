@@ -210,8 +210,8 @@ def find_local_entity_by_name(map, name):
 @cmd_command(category="Settings", syntax="newname")
 def fn_nick(map, client, context, arg):
 	if len(arg) > 0 and not arg.isspace():
-		map.broadcast("MSG", {'text': "\""+client.name+"\" is now known as \""+escape_tags(arg)+"\""})
-		client.name = escape_tags(arg)
+		map.broadcast("MSG", {'text': "\""+client.name+"\" is now known as \""+arg+"\""})
+		client.name = arg
 		map.broadcast("WHO", {'add': client.who()}, remote_category=maplisten_type['entry']) # update client view
 
 	# If this client is listening to any map's chat, tell any clients listening to changes in the listener list the name has changed
@@ -238,14 +238,14 @@ def fn_client_settings(map, client, context, arg):
 def fn_say(map, client, context, arg):
 	respond_to = context[0]
 	if arg != '':
-		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': escape_tags(arg), 'rc_username': respond_to.username_or_id(), 'rc_id': respond_to.protocol_id()}
+		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': arg, 'rc_username': respond_to.username_or_id(), 'rc_id': respond_to.protocol_id()}
 		map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
 
 @cmd_command(category="Communication")
 def fn_me(map, client, context, arg):
 	respond_to = context[0]
 	if arg != '':
-		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': "/me "+escape_tags(arg), 'rc_username': respond_to.username_or_id(), 'rc_id': respond_to.protocol_id()}
+		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': "/me "+arg, 'rc_username': respond_to.username_or_id(), 'rc_id': respond_to.protocol_id()}
 		map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
 
 def send_private_message(client, context, recipient_username, text):

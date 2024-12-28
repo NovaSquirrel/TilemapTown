@@ -15,6 +15,7 @@ For a basic graphical client, a good minimal set of message types to support are
 	MOV (entity movement)
 Building, mail, inventory management, and all extensions are optional.
 PNG is the only officially supported image format, so clients only need to be able to handle PNG.
+If you are making a web client, you are responsible for escaping text when inserting it into something like innerHTML.
 
 List of entity types:
 	user        An entity controlled by a client.
