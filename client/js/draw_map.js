@@ -633,7 +633,6 @@ function drawMap() {
 
 function drawText(ctx, x, y, text) {
 	let chicago = document.getElementById("chicago");
-	text = text.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&");
 
 	for (let i = 0; i < text.length; i++) {
 		let chr = text.charCodeAt(i) - 0x20;
@@ -659,7 +658,6 @@ const unicodeBlocks = [
 
 function drawTextProportional(ctx, x, y, centered, text) {
 	let tilemap_sans = document.getElementById("tilemapsans");
-	text = text.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&");
 
 	function translate(code) {
 		let height = 0;
@@ -697,7 +695,6 @@ function drawTextProportional(ctx, x, y, centered, text) {
 
 function drawTextSmall(ctx, x, y, text) {
 	let tomthumb = document.getElementById("tomthumb");
-	text = text.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&");
 
 	for (let i = 0; i < text.length; i++) {
 		let chr = text.charCodeAt(i) - 0x20;
