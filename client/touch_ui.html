@@ -29,7 +29,7 @@
 <img src="img/font/tilemapsans.png" style="display: none;" id="tilemapsans">
 </head>
 <body onLoad="initTouchUI();" ondragstart="return false;" ondrop="return false;">
-
+<noscript>The Tilemap Town web client requires JavaScript</noscript>
 <template id="widget-window-template">
   <style>
     #container {
@@ -694,10 +694,10 @@
 			</p>
 		</div>
 		<div id="userProfileContact" style="display: none;">
-			<p>
+			<p id="userProfileContactEmailParagraph">
 				<strong>Email</strong><br><span id="userProfileContactEmail" class="column-of-text-in-window"></span>
 			</p>
-			<p>
+			<p id="userProfileContactWebsiteParagraph">
 				<strong>Website</strong><br><span id="userProfileContactWebsite" class="column-of-text-in-window"></span>
 			</p>
 			<p>

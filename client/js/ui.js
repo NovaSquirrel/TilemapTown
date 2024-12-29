@@ -2554,6 +2554,8 @@ function openUserProfileWindow(info) {
 		table.style.display = "table";
 
 		for(let i = 0; i<data.length/2; i++) {
+			if (data[i*2+0].startsWith("_"))
+				continue;
 			let tr = document.createElement('tr');
 			let th = document.createElement('th');
 			let td = document.createElement('td');
@@ -2605,11 +2607,14 @@ function openUserProfileWindow(info) {
 		document.getElementById('userProfileContactEmail').innerHTML = convertBBCode("[email]"+(info.email || "")+"[/email]");
 	else
 		document.getElementById('userProfileContactEmail').textContent = info.email || "";
+	document.getElementById('userProfileContactEmailParagraph').style.display = empty(info.email) ? "none" : "block";
 
 	if (info.website)
 		document.getElementById('userProfileContactWebsite').innerHTML = convertBBCode("[url]"+(info.website || "")+"[/url]");
 	else
 		document.getElementById('userProfileContactWebsite').textContent = "";
+	document.getElementById('userProfileContactWebsiteParagraph').style.display = empty(info.website) ? "none" : "block";
+
 	document.getElementById('userProfileHomeName').textContent = info.home_name + " (ID: " + info.home[0] + ")";
 	document.getElementById('userProfileHomeButton').style.display = info.home ? "block" : "none";
 	document.getElementById('userProfileUpdatedAt').textContent = new Date(Date.parse(info.updated_at)).toLocaleDateString();
