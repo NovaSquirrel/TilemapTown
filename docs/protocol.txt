@@ -1,7 +1,11 @@
-Uses websockets and JSON. WIP.
+Tilemap Town's protocol is built around WebSocket and JSON. Each message consists of a 3-character message type, a space, then a JSON formatted object. Unrecognized message types and unrecognized fields in messages should be ignored.
 
---> send to server
-<-- receive from server
+This document covers messages sent by clients as well as messages sent by servers, so these are differentiated as follows:
+"-->" means that the message would be sent by a client, and received by a server
+"<--" means that the message would be sent by a server, and received by a client
+
+This protocol was designed with the goal of making it easy to extend while also allowing clients with fewer features to provide a meaningfully useful experience (progressive enhancement).
+It's also designed so that extensions that come from different places can avoid interfering with each other. One of the ways this is done is through using short names to differentiate between different types of things rather than magic numbers. Names allow for prefixes, and prefixes allow for for multiple people defining their own values to avoid conflicts.
 
 For a basic graphical client, a good minimal set of message types to support are:
 	IDN (logging in)
@@ -97,20 +101,25 @@ Indicates a character was put into this position via moving off the edge of a ma
 
 
 === Map contents ===
---> PUT {"pos": [x,y], "atom": {atom}}
-<-- PUT {"pos": [x,y], "atom": {atom}, "username": username, "remote_map": map} (for listeners)
-<-- MAP {updated map}
+When a client enters into a map, it will receive a MAI, MAP, and WHO. MAP will be omitted when using the "see_past_map_edge" extension, when the map you enter is linked to the edge of the one you were previously in. This saves on bandwidth.
+
+--> PUT {"pos": [x,y], "atom": {tile definition}}
+--> PUT {"pos": [x,y], "atom": "global_tileset_tile"}
+--> PUT {"pos": [x,y], "atom": "tileset:tile_name"}
+<-- PUT {"pos": [x,y], "atom": {tile definition}, "username": username, "remote_map": map} (for listeners)
+<-- MAP {"pos": [x, y, x, y], "default": default_turf, "turf": [turfs], "obj": [objs]}
 Place a tile on the map.
-Can use string instead of atom definition if it's predefined.
+"atom" is the tile to place, and it may be a whole tile definition itself, or a reference to the main global tileset, or a reference to a tile within a tileset.
+The terminology "atom", "turf" and "obj" is taken from BYOND.
 
 Optional fields:
-	"obj": If present and true, "atom" is an array of tiles, which go onto the map's object layer
+	"obj": If present and true, "atom" is an array of tiles, which go onto the map's object layer at the given coordinate
 
 --> MAP - requests the whole thing
 --> MAP {"pos":[x1, y1, x2, y2]}
 <-- MAP {"pos":[x1, y1, x2, y2], "default": default_turf, "turf": [turfs], "obj": [objs]}
-get a partial (or complete) copy of the map
-(currently server-->client only)
+Get a partial (or complete) copy of the map
+Currently clients can not request the map from the server, and must hold onto the copy of the map they received when entering the map.
 
 --> MAI
 <-- MAI {parameters that describe the map}
@@ -143,11 +152,12 @@ Fields that may appear in MAI on the official server:
 		"repeat_y": boolean; if true, the wallpaper repeats across the map vertically
 		"over_turf": boolean; if true, draw over all turf, not just default turf
 		"offset": 2-element list; [x,y]. Number of pixels to shift the image horizontally and vertically from the default spot it would be at
-	Most important fields to support are "id", "name", "desc", "default" and "size". Most of the others are just informational.
+	Most important fields to support are "id", "name", "desc", "default", "size" and "remote_map". Most of the others are just informational.
+	"remote_map" can be supported by just discarding the entire message when it's present.
 
 --> DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true}
 <-- DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true, "username":username, "remote_map": map} (for listeners)
-<-- MAP {updated map}
+<-- MAP {"pos": [x1, y1, x2, y2], "default": default_turf, "turf": [turfs], "obj": [objs]}
 Delete a section of map.
 
 
@@ -155,21 +165,22 @@ Delete a section of map.
 --> IMG {"id": number}
 --> IMG {"id": [number, number, number...]}
 Request an image asset's URL.
-Can request multiple image assets at once.
+Can request multiple image assets at once. When this is done, the client will receive multiple IMG messages in response.
 
 <-- IMG {"id": number, "url": string}
 Have the client load an image, for tilesets or avatars or other purposes.
-There may be an additional boolean field named "update" which is set to true when the IMG message is sent as a result of an image item being updated.
+There may be an additional boolean field named "update" which is set to true when the IMG message was sent because the image was previously requested during the client's current session, but the image has been updated to point at a new URL.
 
 --> TSD {"id": number}
 --> TSD {"id": [number, number, number]}
 Request tileset data from the server.
-Can request multiple tilesets at once.
+Can request multiple tilesets at once. When this is done, the client will receive multiple TSD messages in response.
 
-<-- TSD {"id": number, "data": "[id, info, id, info, id, info, ...]"}
+<-- TSD {"id": number, "data": "{\"id\": {info}, \"id\": {info}, \"id\": {info}...}"}
 Tileset received from the server.
 Received data may be in string format, which would require parsing into JSON.
-There may be an additional boolean field named "update" which is set to true when the IMG message is sent as a result of an image item being updated.
+There may be an additional boolean field named "update" which is set to true when the TSD message was sent because the tileset was previously requested during the client's current session, but the tileset has been updated.
+
 
 === People on the map ===
 --> WHO
@@ -201,7 +212,7 @@ Fields you can update with client-->server WHO update:
 	"typing": boolean, shows a currently-typing marker above your character if true
 	"mini_tilemap": null, or an object (see Mini Tilemap section)
 	"mini_tilemap_data": null, or object (see Mini Tilemap section)
-	"clickable": boolean; If true, clicking this entity will send a notification to it that the entity can act on
+	"clickable": boolean; If true, clicking this entity will send the entity a notification it can act on
 
 Other fields that may appear in WHO messages on the official server:
 	"name": string; Name of the entity
@@ -325,6 +336,7 @@ version information for client and server
 Resources for the client to preload.
 Allows servers to explicitly provide tilesets, both to allow for custom ones and to make it so that clients don't need to include a copy of the default tilesets.
 
+
 === Items ===
 --> MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "rc": 0}
 <-- MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "rc": 0}
@@ -404,7 +416,7 @@ Item info fields:
 
 === Optional features ===
 Clients and servers can advertise having extra features on top of the basic ones.
-VER will tell the client what features are available, and the client can request specific features with IDN, which the server will acknowledge.
+VER will tell the client what features are available. A VER message can be sent before IDN, so a client can check out what's available before making its own decisions about what to request.
 
 --> VER {
 	"name": client_name,
@@ -476,12 +488,12 @@ When a client moves to a new map, the server will send a MAI for the new map, bu
 
 
 === EXT messages ===
-Experimental feature: There's a protocol message type "EXT" which is used for sending protocol messages with a type that's longer than three characters. (EXTended type names?)
+There's a protocol message type "EXT" which is used for sending protocol messages with a type that's longer than three characters. (EXTended type names?)
 This is especially helpful for Tilemap Town forks or other extensions (EXTensions?) that want to define their own protocol message types and want to avoid any potential conflicts with later versions of the official protocol. For this kind of usage, it could be a good idea to prefix the message type name with something specific to the thing you're making. Something like "tilemap_town:key_press".
 Sending an unrecognized type currently does not result in an error, and you can request a list of the types that are recognized.
 You can add an "rc" parameter just like on WHO, CMD, MOV, etc. and it will act as if the specified entity sent the EXT message.
 
-Here are the currently supported types:
+Here are the currently official types, supported by the official server:
 
 --> EXT {"list_available_ext_types": true}
 <-- EXT {"list_available_ext_types": ["entity_click", "key_press", "take_controls", "took_controls", "list_available_ext_types"]}
@@ -521,7 +533,7 @@ Key names:
 	Other actions
 		"use-item" "cancel"
 	Miscellaneous action buttons
-	1 2 3 4 could be Z X C V potentially? Maybe it'd be best if the client let you configure it
+	1 2 3 4 could be Z X C V potentially? Maybe it'd be best if the client lets you configure it
 		"action-1", "action-2", "action-3", "action-4"
 	Miscellaneous action buttons, but referenced by the physical layout on the controller (if that makes sense for the client's input method)
 		"action-n", "action-e", "action-s", "action-w"

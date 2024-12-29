@@ -120,18 +120,23 @@ function FetchTilesetImage(id, url) {
 
 // Add a new tileset to the list
 function InstallTileset(name, list) {
-	let new_set = {};
 
 	// Unpack each item
-	for(let i=0; i<list.length/2; i++) {
-		let tile = list[i*2+1];
-		if(Array.isArray(tile)) // If it's an array, assume it needs to be unpacked
-			new_set[list[i*2]] = AtomCompact2JSON(tile);
-		else
-			new_set[list[i*2]] = tile;
+	if(Array.isArray(list)) { // It probably *should* not be an array; this was an early protocol design thing
+		let new_set = {};
+
+		for(let i=0; i<list.length/2; i++) {
+			let tile = list[i*2+1];
+			if(Array.isArray(tile)) // If it's an array, assume it needs to be unpacked
+				new_set[list[i*2]] = AtomCompact2JSON(tile);
+			else
+				new_set[list[i*2]] = tile;
+		}
+		Tilesets[name] = new_set;
+	} else if(typeof list === 'object') {
+		Tilesets[name] = list;
 	}
 
-	Tilesets[name] = new_set;
 }
 
 // Make a separate copy of an atom's object

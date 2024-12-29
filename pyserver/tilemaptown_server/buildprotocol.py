@@ -352,7 +352,7 @@ def fn_MOV(connection, map, client, arg, echo):
 		if offset == None:
 			client.offset = None
 		else:
-			offset_x, offset_y = min(16, max(-16, offset[0])), min(16, max(-16, offset[1]))
+			offset_x, offset_y = min(32, max(-32, offset[0])), min(32, max(-32, offset[1]))
 			client.offset = [offset_x, offset_y]
 
 	# Update this entity's position

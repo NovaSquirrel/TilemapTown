@@ -651,7 +651,7 @@ function receiveServerMessage(cmd, arg) {
       break;
 
     case "TSD":
-      if(typeof(arg.data) == 'string')
+      if(typeof(arg.data) === 'string')
         InstallTileset(arg.id, JSON.parse(arg.data));
       else
         InstallTileset(arg.id, arg.data);
