@@ -2918,13 +2918,11 @@ function initWorld() {
 	mapCanvas = document.getElementById("map");
 
 	chatInput.addEventListener('input', function (evt) {
-		if (this.value.length > 0) {
-			sendTyping(true);
-		}
+		sendTyping();
 	});
 
 	chatInput.addEventListener('blur', function (evt) {
-		sendTyping(false);
+		sendTyping();
 	});
 
 	viewInit();

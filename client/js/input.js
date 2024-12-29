@@ -131,15 +131,19 @@ function runLocalCommand(t) {
 function setChatInput(the_text) {
 	chatInput.value = the_text;
 	chatInput.focus();
-	sendTyping(true);
+	sendTyping();
 }
 
 function sendChatCommand(the_text) {
 	SendCmd("CMD", { text: the_text });
 }
 
-function sendTyping(isTyping) {
+function sendTyping() {
 	markNotIdle();
+
+	let lowercase = chatInput.value.trimStart();
+	const isTyping = document.activeElement === chatInput && chatInput.value.length > 0 && (!lowercase.startsWith("/") || lowercase.startsWith("/me ") || lowercase.startsWith("/ooc ") || lowercase.startsWith("/spoof "));
+
 	if (PlayerWho[PlayerYou].typing != isTyping) {
 		SendCmd("WHO", { update: { id: PlayerYou, typing: isTyping } });
 		PlayerWho[PlayerYou].typing = isTyping;
@@ -290,8 +294,8 @@ function keyDownHandler(e) {
 			return;
 		} else if (document.activeElement == chatInput && e.keyCode == 13) {
 			if (chatInput.value.toLowerCase().trim() == "/oops") {
-				sendTyping(false);
 				chatInput.value = lastChatUsed;
+				sendTyping();
 				return;
 			}
 			if (chatInput.value.length > 5)
@@ -312,9 +316,9 @@ function keyDownHandler(e) {
 				chatInput.blur();
 			}
 
-			sendTyping(false);
-
 			chatInput.value = "";
+
+			sendTyping();
 		} else if (document.activeElement == chatInput && e.keyCode == 27) {
 			// escape press
 			chatInput.blur();
