@@ -2601,7 +2601,10 @@ function openUserProfileWindow(info) {
 	document.getElementById('userProfileAboutText').innerHTML = convertBBCode(info.text || "").replaceAll("\n", "<br>");;
 	document.getElementById('userProfilePicturePicture').src = info.picture_url || "";
 	document.getElementById('userProfileInterestsInterests').textContent = (info.interests || "").split(',').join(', ');
+	document.getElementById('userProfileInterestsInterestsParagraph').style.display = empty(info.interests) ? "none" : "block";
 	document.getElementById('userProfileInterestsLookingFor').innerHTML = convertBBCode(info.looking_for || "").replaceAll("\n", "<br>");
+	document.getElementById('userProfileInterestsLookingForParagraph').style.display = empty(info.looking_for) ? "none" : "block";
+
 	fill_out_table(document.getElementById('userProfileContactTable'), info.contact);
 	if((info.email || "").includes("@"))
 		document.getElementById('userProfileContactEmail').innerHTML = convertBBCode("[email]"+(info.email || "")+"[/email]");
