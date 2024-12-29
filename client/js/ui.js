@@ -2601,7 +2601,11 @@ function openUserProfileWindow(info) {
 	document.getElementById('userProfileInterestsInterests').textContent = (info.interests || "").split(',').join(', ');
 	document.getElementById('userProfileInterestsLookingFor').innerHTML = convertBBCode(info.looking_for || "").replaceAll("\n", "<br>");
 	fill_out_table(document.getElementById('userProfileContactTable'), info.contact);
-	document.getElementById('userProfileContactEmail').textContent = info.email || "";
+	if((info.email || "").includes("@"))
+		document.getElementById('userProfileContactEmail').innerHTML = convertBBCode("[email]"+(info.email || "")+"[/email]");
+	else
+		document.getElementById('userProfileContactEmail').textContent = info.email || "";
+
 	if (info.website)
 		document.getElementById('userProfileContactWebsite').innerHTML = convertBBCode("[url]"+(info.website || "")+"[/url]");
 	else
