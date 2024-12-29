@@ -2181,7 +2181,10 @@ def fn_whereare(map, client, context, arg):
 		names += '[li][b]%s[/b] (%d): ' % (m.name, user_count)
 		for u in m.contents:
 			if u.is_client() and (u.connection_attr('user_flags') & userflag['hide_location'] == 0):
-				names += u.name_and_username()+', '
+				if arg == 'c' or arg == 'C':
+					names += '%s<%d,%d>, ' % (u.name_and_username(), u.x, u.y)
+				else:
+					names += u.name_and_username()+', '
 		names = names.rstrip(', ') + ' | [command]map %d[/command]' % m.db_id
 		if m.topic:
 			names += ' (📅[i]"%s" by %s[/i])' % (m.topic, m.topic_username)

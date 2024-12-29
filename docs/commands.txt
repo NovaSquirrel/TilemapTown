@@ -137,6 +137,7 @@ List all entities on the map, not just users
 /whereare (alias: wa)
 Display a list of public maps that have users
 If these maps also have topics set, they are displayed too
+Tentative feature: You can use "/wa c" to show coordinates of the found players
 
 /gwho
 List all users on the server
