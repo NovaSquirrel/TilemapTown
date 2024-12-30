@@ -499,7 +499,11 @@ var XBBCODE = (function() {
                     myUrl = "#";
                 }
 
-                return '<a href="' + myUrl + '" target="_blank">'; // Edit by NovaSquirrel
+                // Edit by NovaSquirrel: open in new window, if not #
+                if (myUrl === "#")
+                    return '<a href="' + myUrl + '">';
+                else
+                    return '<a href="' + myUrl + '" target="_blank">';
             },
             closeTag: function(params,content) {
                 return '</a>';
