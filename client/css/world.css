@@ -95,7 +95,6 @@ body {
     bottom: 32px;
     width: 40%;
     word-wrap: break-word;
-    list-style-position: inside;
 }
 
 #chat-container.pinned {
