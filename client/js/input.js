@@ -268,7 +268,7 @@ function keyUpHandler(e) {
 let lastSignMessage = undefined;
 function bump_into_atom(atom) {
 	if (atom.type == AtomTypes.SIGN && atom.message && (!alreadyShowedSign || atom.message != lastSignMessage)) {
-		logMessage(((atom.name != "sign" && atom.name != "") ? escape_tags(atom.name) + " says: " : "The sign says: ") + convertBBCode(atom.message), "server_message",
+		logMessage(((atom.name != "sign" && atom.name != "") ? escape_tags(atom.name) + " says: " : "The sign says: ") + convertBBCodeChat(atom.message), "server_message",
 		  {'plainText': (atom.name != "sign" && atom.name != "") ? atom.name + " says: " + atom.message : "The sign says: " + atom.message});
 		lastSignMessage = atom.message;
 		alreadyShowedSign = true;
@@ -292,7 +292,7 @@ function keyDownHandler(e) {
 			if(chatInput.value.length == 0)
 				chatInput.value = lastChatUsed;
 			return;
-		} else if (document.activeElement == chatInput && e.keyCode == 13) {
+		} else if (document.activeElement == chatInput && e.keyCode == 13 && !e.shiftKey) {
 			if (chatInput.value.toLowerCase().trim() == "/oops") {
 				chatInput.value = lastChatUsed;
 				sendTyping();
@@ -302,6 +302,7 @@ function keyDownHandler(e) {
 				lastChatUsed = chatInput.value;
 
 			// First, check for commands that are local to the client
+			const startsWithNewline = chatInput.value.startsWith("\n");
 			let trimmedChatText = chatInput.value.trimStart();
 			if (runLocalCommand(trimmedChatText));
 				// commands are CMD while regular room messages are MSG. /me is a room message.
@@ -311,11 +312,12 @@ function keyDownHandler(e) {
 			trimmedChatText.toLowerCase().slice(0, 7) != "/spoof ") {
 				SendCmd("CMD", { text: trimmedChatText.slice(1) }); // remove the /
 			} else if (trimmedChatText.length > 0) {
-				SendCmd("MSG", { text: trimmedChatText });
+				SendCmd("MSG", { text: (startsWithNewline?"\n":"") + trimmedChatText });
 			} else {
 				chatInput.blur();
 			}
 
+			e.preventDefault();
 			chatInput.value = "";
 
 			sendTyping();

@@ -1864,6 +1864,15 @@ function convertBBCode(t) {
 	return result.html;
 }
 
+function convertBBCodeChat(t) {
+	let result = XBBCODE.process({
+		text: t,
+		removeMisalignedTags: false,
+		addInLineBreaks: false
+	});
+	return result.html.replaceAll("\n", "<br>&emsp;");
+}
+
 let dateFormat = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
 let alreadyPlayedSound = false;
 function logMessage(Message, Class, Params) {
