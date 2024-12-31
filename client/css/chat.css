@@ -1,3 +1,7 @@
+.log_line {
+  padding: 4px;
+}
+
 .user_message {
   color: white;
 }

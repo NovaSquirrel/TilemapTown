@@ -1870,7 +1870,7 @@ function convertBBCodeChat(t) {
 		removeMisalignedTags: false,
 		addInLineBreaks: false
 	});
-	return result.html.replaceAll("\n", "<br>&emsp;");
+	return result.html.replaceAll("\n", "<br>");
 }
 
 let dateFormat = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
@@ -1887,7 +1887,7 @@ function logMessage(Message, Class, Params) {
 	}
 
 	let newMessage = document.createElement("div");
-	newMessage.className = Class;
+	newMessage.className = Class + " log_line";
 	if (Params.username) {
 		if (Params.rc_username) {
 			newMessage.title = `Username: ${Params.username} (controlled by ${Params.rc_username})`;
