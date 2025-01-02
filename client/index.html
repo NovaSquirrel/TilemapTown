@@ -36,7 +36,7 @@ body {
 	display: none;
 }
 .tabs {
-	display: flex;
+	display: none; /* Will override this to flex if supported */
 	align-items: stretch;
 	list-style: none;
 	padding: 0;
@@ -60,10 +60,29 @@ body {
 	border-top-color: #333;
 	color: #333;
 }
+
+/* Some browsers like Netsurf don't seem to support fancy CSS */
 .tab-content {
-	display: none;
+	display: block;
 	color: black;
 }
+.tab-fallback-heading {
+	display: block;
+	text-align: center;
+}
+@supports selector(:nth-of-type(1)) {
+	.tab-content {
+		display: none;
+		color: black;
+	}
+	.tab-fallback-heading {
+		display: none;
+	}
+	.tabs {
+		display: flex;
+	}
+}
+
 /* As we cannot replace the numbers with variables or calls to element properties, the number of this selector parts is our tab count limit */
 .tabbed [type="radio"]:nth-of-type(1):checked ~ .tabs .tab:nth-of-type(1) label,
 .tabbed [type="radio"]:nth-of-type(2):checked ~ .tabs .tab:nth-of-type(2) label,
@@ -82,6 +101,7 @@ body {
 .tabbed [type="radio"]:nth-of-type(5):checked ~ .tab-content:nth-of-type(5) {
 	display: block;
 }
+
 </style>
 
 <body>
@@ -109,15 +129,16 @@ body {
 		<li class="tab"><label for="tab4">Open platform</label></li>
 		<li class="tab"><label for="tab5">Credits</label></li>
 	</ul>
-	
+
 	<div class="tab-content">
+		<h1 class="tab-fallback-heading">About</h1>
 		<p><b>Tilemap Town</b> is a multiplayer game/platform where you can build maps with your friends and roleplay and chat in the worlds you have created. It takes inspiration from BYOND "building games" that used to be popular long ago, as well as from MUCKs and other text-based platforms.</p>
 
 		<p>Currently you can walk around maps and chat, and place/remove tiles to build things. You can even make your own map if you register. You can use your own 16x16 (or 32x32) player avatar or use a premade one, and in the future there will be scripting and custom tilesets. Want to help? <a href="https://novasquirrel.com/contact.html">Get in touch!</a> 
 
-		<p><a href="world.html" class="join">Come visit the world!</a></p>
+		<p><a href="world.html" class="join">Come visit the world!</a><noscript><br>Though maybe not with this browser, because the web client requires JavaScript.</noscript></p>
 
-		<p>Login with a blank username and password to join as a guest (you can register once you're in, if you want). There's a bunch of stuff built that you can explore, and add your own mark to the world if you like.</p>
+		<p><strong>If you don't have an account, don't enter in a password.</strong> Once you're in you can register an account, though it's not needed to explore or build. There's a bunch of stuff built that you can explore, and add your own mark to the world if you like.</p>
 
 		<p>The HTML5 client will also work offline, if you just want to mess around on your own on a temporary map.</p>
 
@@ -131,6 +152,7 @@ body {
 	</div>
 	
 	<div class="tab-content">
+		<h1 class="tab-fallback-heading">Features</h1>
 		<p>In <b>Tilemap Town</b>, you can wander around a top-down 2D pixel art world, and you can play as any character you like, as long as you can draw or find a 32x32 sprite of them! There is support for multiple directions and simple animation, and <a href="https://github.com/NovaSquirrel/TilemapTown/tree/main/docs/player%20templates">there are some templates</a> intended to help with this. The game picks up on how many frames and directions there are from the size of the image you use, so if you fill in your character's frames in the right places you're all set.</p>
 
 		<p>In the world, you can place tiles onto a map with other players to collaboratively make a map together, or if you register then you can even create your own map. You can restrict building to yourself only, limit entry to specific users, and have a private space if you would like one.</p>
@@ -138,23 +160,32 @@ body {
 		Features in more detail:
 		<ul>
 		<li>You can use your own graphics for the tiles you draw onto maps!</li>
+		<li>Small amount of space to upload your own graphics and music to</li>
 		<li>Tons of premade tiles available to build with</li>
 		<li>Autotiling and animation support</li>
-		<li>Maps can be linked to each other, so that you can pass over the edge of one and end up on another, to make a big connected world</li>
 		<li>Make objects and place them in the world to act as props</li>
 		<li>An inventory system, allowing you to hold onto objects and keep notes for yourself</li>
 		<li>A simple mail feature</li>
-		<li>BBCode for chat messages</li>
+		<li>A profile feature where you can write about yourself</li>
+		<li>BBCode for chat messages, with support for multiple lines of text</li>
 		<li>Commands for things like dice rolls and teleport requests</li>
 		<li>Multiple commands to help with roleplaying: /me /ooc /spoof</li>
-		<li>An elaborate permission system, including the ability to grant permissions to someone temporarily</li>
 		<li>Save multiple characters and swap between them easily with commands</li>
 		<li>Can directly click and edit the properties of tiles directly on the map</li>
+		</ul>
+
+		Some advanced features:
+		<ul>
+		<li>Documented protocol, with an open source client and server</li>
+		<li>Maps can be linked to each other, so that you can pass over the edge of one and end up on another, to make a big connected world</li>
+		<li>An elaborate permission system, including the ability to grant permissions to someone temporarily</li>
+		<li>Features intended to make bots easier, where you can remotely interact with other maps (if granted permission to)</li>
 		<li>There's support to let bots run their own little minigames directly on the map, with their own screens you can click on</li>
 		</ul>
 	</div>
 	
 	<div class="tab-content">
+		<h1 class="tab-fallback-heading">Community</h1>
 		<p>There is an official server that's been running since 2017, and it's not especially lively but there is quite a lot to explore. You're welcome to come visit and check it out, and even leave your own mark on the world by building something nice if you like. The official server is the default one on <a href="world.html">the web client</a>!</p>
 
 		<p>The community is pro-LGBT+ and is meant to be a safe space to hang out. Be kind to the other people you meet here.</p>
@@ -170,11 +201,12 @@ body {
 	</div>
 
 	<div class="tab-content">
+		<h1 class="tab-fallback-heading">Open platform</h1>
 		<p>Tilemap Town is an open source project, and you can find the web client, server, and documentation <a href="https://github.com/NovaSquirrel/TilemapTown">on GitHub</a>. Anyone can host their own server or make their own client, or customize the official server or client to their liking. It could even be a good head start if you're trying to make your own online game.</p>
 
 		<p>The server is written in Python, so it's a lot easier to extend and change than the old MUCK codebases from the 90s. The database is SQLite so there's no setup, and you can use preexisting tools to browse and interface with the database.</p>
 
-		<p>Tilemap Town is designed with making your own clients and bots in mind, and that's encouraged! <a href="https://github.com/NovaSquirrel/TilemapTown/blob/main/docs/protocol.txt">The protocol</a> is built on top of WebSockets and JSON, which most languages should be able to use without too much trouble, and there's advice in the documentation about what a useful subset of the protocol would be. It's designed to degrade well and still work with a minimal client, while allowing more advanced clients to have access to fancy features.</p>
+		<p>Tilemap Town is designed with making your own clients and bots in mind, and that's encouraged! <a href="https://github.com/NovaSquirrel/TilemapTown/blob/main/docs/protocol.txt">The protocol</a> is built on top of WebSockets and JSON, which most languages should be able to use without too much trouble, and there's advice in the documentation about what a useful subset of the protocol would be. It's designed with the idea of <em>progressive enhancement</em> and is meant to work well with a minimal client, while allowing more advanced clients to have access to fancy features.</p>
 
 		<p>In a way, Tilemap Town is sort of like IRC, in that it's decentralized and easy to connect to and interface with, but its design incorporates some modern features and leaves room for things like metadata and longer messages without needing that stuff to be in the form of extensions.</p>
 
@@ -189,6 +221,7 @@ body {
 	</div>
 
 	<div class="tab-content">
+      <h1 class="tab-fallback-heading">Credits</h1>
       <ul>
 		<li><b>Development</b></li>
 		<ul>

@@ -45,7 +45,7 @@ table, td, tr, th{
 	display: none;
 }
 .tabs {
-	display: flex;
+	display: none; /* Will override this to flex if supported */
 	align-items: stretch;
 	list-style: none;
 	padding: 0;
@@ -69,10 +69,29 @@ table, td, tr, th{
 	border-top-color: #333;
 	color: #333;
 }
+
+/* Some browsers like Netsurf don't seem to support fancy CSS */
 .tab-content {
-	display: none;
+	display: block;
 	color: black;
 }
+.tab-fallback-heading {
+	display: block;
+	text-align: center;
+}
+@supports selector(:nth-of-type(1)) {
+	.tab-content {
+		display: none;
+		color: black;
+	}
+	.tab-fallback-heading {
+		display: none;
+	}
+	.tabs {
+		display: flex;
+	}
+}
+
 /* As we cannot replace the numbers with variables or calls to element properties, the number of this selector parts is our tab count limit */
 .tabbed [type="radio"]:nth-of-type(1):checked ~ .tabs .tab:nth-of-type(1) label,
 .tabbed [type="radio"]:nth-of-type(2):checked ~ .tabs .tab:nth-of-type(2) label,
@@ -124,6 +143,7 @@ table, td, tr, th{
 	</ul>
 	
 	<div class="tab-content">
+		<h1 class="tab-fallback-heading">Basics</h1>
 		<p><div class="cmd_group">Controls</div>
 			<ul>
 			<li><b>Arrow Keys, WASD, Num Pad:</b> Movement. Supports 8 directions. Home, End, Page Up, Page Down also work for diagonal movement. Holding Shift will hold the player in place and rotate on the spot.</li>
@@ -165,6 +185,7 @@ table, td, tr, th{
 	</div>
 
 	<div class="tab-content">
+		<h1 class="tab-fallback-heading">Chat</h1>
 		<div class="cmd_group">BBCode reference</div>
 		Tilemap Town uses BBCode for text formatting, just like many forums.
 		<table>
@@ -280,6 +301,7 @@ table, td, tr, th{
 	</div>	
 
 	<div class="tab-content">
+		<h1 class="tab-fallback-heading">Avatar / Account</h1>
 		<span class="cmd_group">Setting up a custom player graphic</span>
 		<p>
 		You can use custom player graphics on Tilemap Town! If you register an account you can upload PNGs directly to the server (click the Files button) but an alternative is to use an image hosting site. Currently the server is set up to accept images from <a href="https://imgur.com/">Imgur</a>, <a href="https://imgbb.com/">ImgBB</a> and <a href="https://postimages.org/">Postimages</a>. Additional image hosts can be added on request, as long as they are set up properly.
@@ -297,7 +319,7 @@ table, td, tr, th{
 		<br><span class="cmd_name">/nick name</span><br><span class="cmd_desc">Change your display name.</span><br>
 		<br><span class="cmd_name">/userdesc text , /look user</span><br><span class="cmd_desc">You can set a character description through <kbd>/userdesc text</kbd> which other players can read by using <kbd>/look name</kbd>. It's also possible to do by selecting and attempting to edit another player.</span><br>
 
-		<br><span class="cmd_name">/userpic <i>preset</i></span><br><span class="cmd_desc">Sets your player graphic to one of the preset avatars. This includes: <kbd>bunny</kbd>, <kbd>cat</kbd>, <kbd>hamster<kbd>, <kbd>fire</kbd>, <kbd>snail</kbd>, <kbd>turtle</kbd>, and <kbd>invisible</kbd>.</span><br>
+		<br><span class="cmd_name">/userpic <i>preset</i></span><br><span class="cmd_desc">Sets your player graphic to one of the preset avatars. This includes: <kbd>bunny</kbd>, <kbd>cat</kbd>, <kbd>hamster</kbd>, <kbd>fire</kbd>, <kbd>snail</kbd>, <kbd>turtle</kbd>, and <kbd>invisible</kbd>.</span><br>
 		<br><span class="cmd_name">/userpic x y</span><br><span class="cmd_desc">Sets your player graphic to a tile (x,y) in the <a href="https://novasquirrel.com/town/img/potluck.png">potluck tileset</a>.</span><br>
 		<br><span class="cmd_name">/userpic tileset x y</span><br><span class="cmd_desc">Sets your player graphic to a tile (x,y) in any tileset you like.</a></span><br>
 		<br><span class="cmd_name">/userpic link</span><br><span class="cmd_desc">Sets your player graphic to an image link; must be a site that is specifically allowed by the server. See "Setting up a custom player graphic" above.</span><br>
@@ -332,6 +354,7 @@ table, td, tr, th{
 	</div>
 
 	<div class="tab-content">
+		<h1 class="tab-fallback-heading">Map / Teleports</h1>
 		<div class="cmd_group">Teleport</div>
 		<br><span class="cmd_name">/coords</span><br><span class="cmd_desc">Display your coordinates.</span><br>
 		<br><span class="cmd_name">/tpa user , /mjoin user</span><br><span class="cmd_desc">Request to teleport to user.</span><br>
@@ -404,6 +427,7 @@ table, td, tr, th{
 	</div>
 
 	<div class="tab-content">
+		<h1 class="tab-fallback-heading">Moderation</h1>
 		<div class="cmd_group">Map Moderation</div>
 		<br><span class="cmd_name">/kick user</span><br><span class="cmd_desc">Kicks the user off the map.</span><br>
 		<br><span class="cmd_name">/kickallusers</span><br><span class="cmd_desc">Kicks all users off the map.</span><br>
@@ -421,6 +445,7 @@ table, td, tr, th{
 	</div>
 
 	<div class="tab-content">
+        <h1 class="tab-fallback-heading">Other</h1>
         <div class="cmd_group">Rides</div>
         <br><span class="cmd_name">/carry user</span><br><span class="cmd_desc">Offer to carry a user. Carried users overlap and move on top of the user that's carrying them whenever the ride moves.</span><br>
         <br><span class="cmd_name">/carryme user</span><br><span class="cmd_desc">Requests a user to carry you.</span><br>
