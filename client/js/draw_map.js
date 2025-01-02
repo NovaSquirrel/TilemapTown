@@ -49,6 +49,8 @@ function isAutotileMatch(t, map, x, y) {
 	let other = AtomFromName(getForAutotile(t, map, x, y));
 	if (t.autotile_class && other.autotile_class_edge && t.autotile_class == other.autotile_class_edge)
 		return true;
+	if (t.name && other.autotile_class_edge && t.name == other.autotile_class_edge) // Not sure if I want this behavior, though it seems helpful
+		return true;
 	if (t.autotile_class)
 		return t.autotile_class == other.autotile_class;
 	if (t.name)

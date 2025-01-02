@@ -1184,6 +1184,7 @@ function editItemShared(item) {
 			document.getElementById('edittiley').value = itemobj.pic[2];
 			document.getElementById('edittileautotile').value = (itemobj.autotile_layout ?? 0).toString();
 			document.getElementById('edittileautotileclass').value = itemobj.autotile_class ?? "";
+			document.getElementById('edittileautotileclassedge').value = itemobj.autotile_class_edge ?? "";
 
 			document.getElementById('edittileanimationmode').value = (itemobj.anim_mode ?? 0).toString();
 			document.getElementById('edittileanimationframes').value = itemobj.anim_frames ?? 1;
@@ -1286,6 +1287,7 @@ function editItemApply() {
 			let edittileover = document.getElementById('edittileover').checked;
 			let edittileautotile = parseInt(document.getElementById('edittileautotile').value);
 			let edittileautotileclass = document.getElementById('edittileautotileclass').value;
+			let edittileautotileclassedge = document.getElementById('edittileautotileclassedge').value;
 
 			let edittileanimationmode = parseInt(document.getElementById('edittileanimationmode').value);
 			let edittileanimationframes = parseInt(document.getElementById('edittileanimationframes').value);
@@ -1311,6 +1313,8 @@ function editItemApply() {
 					data["autotile_layout"] = edittileautotile;
 				if(edittileautotileclass)
 					data["autotile_class"] = edittileautotileclass;
+				if(edittileautotileclassedge)
+					data["autotile_class_edge"] = edittileautotileclassedge;
 				if(edittileanimationmode)
 					data["anim_mode"] = edittileanimationmode;
 				if(edittileanimationframes != NaN && edittileanimationframes > 1)
