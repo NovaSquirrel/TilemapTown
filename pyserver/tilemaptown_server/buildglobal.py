@@ -450,7 +450,7 @@ def unescape_tags(text):
 def noparse(text):
 	text = text.replace("\n", "\\n")
 	if "[" in text:
-		return "[noparse]"+text.replace("[/noparse]", "")+"[/noparse]"
+		return "[noparse]"+text.replace("[noparse]", "").replace("[/noparse]", "")+"[/noparse]"
 	return text
 
 def user_file_url_is_ok(url):
