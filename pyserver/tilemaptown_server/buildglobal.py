@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sqlite3, json, sys, os.path, weakref, datetime, zlib
+import sqlite3, json, sys, os.path, weakref, datetime, zlib, re
 from collections import deque
 
 # Config information
@@ -447,10 +447,11 @@ def escape_tags(text):
 def unescape_tags(text):
 	return text.replace("&gt;", ">").replace("&lt;", "<").replace("&amp;", "&")
 
+remove_noparse = re.compile("\\[/?noparse\\]", re.IGNORECASE)
 def noparse(text):
 	text = text.replace("\n", "\\n")
 	if "[" in text:
-		return "[noparse]"+text.replace("[noparse]", "").replace("[/noparse]", "")+"[/noparse]"
+		return "[noparse]"+remove_noparse.sub("", text)+"[/noparse]"
 	return text
 
 def user_file_url_is_ok(url):
