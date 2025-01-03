@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2024 NovaSquirrel
+# Copyright (C) 2017-2025 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -210,7 +210,8 @@ def find_local_entity_by_name(map, name):
 @cmd_command(category="Settings", syntax="newname")
 def fn_nick(map, client, context, arg):
 	if len(arg) > 0 and not arg.isspace():
-		map.broadcast("MSG", {'text': "\""+client.name+"\" is now known as \""+arg+"\""})
+		arg = arg.replace('\n', '')
+		map.broadcast("MSG", {'text': "\""+client.name+"\" is now known as \""+noparse(arg)+"\""})
 		client.name = arg
 		map.broadcast("WHO", {'add': client.who()}, remote_category=maplisten_type['entry']) # update client view
 
@@ -1062,7 +1063,7 @@ def fn_permlist(map, client, context, arg):
 	# User permissions
 	perms += "[ul]"
 	for row in c.execute('SELECT username, allow, deny FROM Permission mp, User u WHERE mp.subject_id=? AND mp.actor_id=u.entity_id', (map.db_id,)):
-		perms += "[li][b]"+row[0] + "[/b]: "
+		perms += "[li][b]"+noparse(row[0]) + "[/b]: "
 		for k,v in permission.items():
 			if (row[1] & v) == v: # allow
 				perms += "+"+k+" "
@@ -1072,7 +1073,7 @@ def fn_permlist(map, client, context, arg):
 
 	# Group (or anything that isn't a user) permissions
 	for row in c.execute('SELECT u.name, u.type, mp.allow, mp.deny, u.id FROM Permission mp, Entity u WHERE mp.subject_id=? AND mp.actor_id=u.id AND u.type != ?', (map.db_id, entity_type['user'])):
-		perms += "[li][b]%s: %s(%s) [/b]: " % (entity_type_name[row[1]].title(), row[4], row[0])
+		perms += "[li][b]%s: %s(%s) [/b]: " % (entity_type_name[row[1]].title(), row[4], noparse(row[0]))
 		for k,v in permission.items():
 			if (row[2] & v) == v: # allow
 				perms += "+"+k+" "
@@ -1082,7 +1083,7 @@ def fn_permlist(map, client, context, arg):
 
 	# Temporary
 	for v in map.temp_permissions_given_to:
-		perms += "[li][b]Temp: %s(%s)[/b]" % (v.name, v.protocol_id())
+		perms += "[li][b]Temp: %s(%s)[/b]" % (noparse(v.name), v.protocol_id())
 		perm_bits = v.temp_permissions.get(map)
 		for k,v in permission.items():
 			if (perm_bits & v) == v: # allow
@@ -1100,7 +1101,7 @@ def fn_findmyitems(map, client, context, arg):
 	c = Database.cursor()
 	maps = "My items: [ul]"
 	for row in c.execute('SELECT m.id, m.name, m.type FROM Entity m WHERE m.owner_id=? AND m.type != ? AND m.type != ? AND m.location == NULL', (connection.db_id, entity_type['map'], entity_type['group'])):
-		maps += "[li][b]%s[/b] (%s) [command]e %d take[/command][/li]" % (row[1], entity_type_name[row[2]], row[0])
+		maps += "[li][b]%s[/b] (%s) [command]e %d take[/command][/li]" % (row[1], noparse(entity_type_name[row[2]]), row[0])
 	maps += "[/ul]"
 	respond(context, maps)
 
@@ -1169,7 +1170,7 @@ def fn_publicmaps(map, client, context, arg):
 
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="newname")
 def fn_mapname(map, client, context, arg):
-	map.name = arg
+	map.name = arg.replace('\n', '')
 	map.save_on_clean_up = True
 	respond(context, 'Map name set to \"%s\"' % map.name)
 
@@ -1766,7 +1767,7 @@ def fn_ipbanlist(map, client, context, arg):
 	c = Database.cursor()
 	results = "IP bans: [ul]"
 	for row in c.execute('SELECT b.ip, b.reason, b.time, b.expiry, a.username FROM Server_Ban b, USER a WHERE a.uid = b.admin'):
-		results += "[li][b]%s[/b] banned by [tt]%s[/tt] for \"%s\" at [tt]%s[/tt] until [tt]%s[/tt] [command]ipunban %s[/command][/li]" % (row[0], row[4], row[1], row[2], row[3] or 'never', row[0])
+		results += "[li][b]%s[/b] banned by [tt]%s[/tt] for \"%s\" at [tt]%s[/tt] until [tt]%s[/tt] [command]ipunban %s[/command][/li]" % (noparse(row[0]), noparse(row[4]), row[1], row[2], row[3] or 'never', row[0])
 	results += "[/ul]"
 	respond(context, results)
 
@@ -2131,6 +2132,27 @@ def fn_imwho(map, client, context, arg):
 		names += c.username
 	respond(context, 'List of messaging users: '+names)
 
+@cmd_command(category="Who", no_entity_needed=True)
+def fn_clientwho(map, client, context, arg):
+	all_client_names = {}
+	for u in AllClients:
+		client_name = u.connection_attr('client_name')
+		if client_name not in all_client_names:
+			all_client_names[client_name] = set()
+		all_client_names[client_name].add(u)
+
+	out = ''
+	for k,v in all_client_names.items():
+		out += "[li][b]%s[/b]: " % noparse(k or "?")
+
+		users = ''
+		for u in v:
+			if len(users) > 0:
+				users += ', '
+			users += u.name_and_username()
+		out += users+"[/li]"
+	respond(context, 'List of clients in use: [ul]'+out+'[/ul]')
+
 @cmd_command(category="Who")
 def fn_who(map, client, context, arg):
 	names = ''
@@ -2178,7 +2200,7 @@ def fn_whereare(map, client, context, arg):
 		user_count = m.count_users_inside()
 		if user_count == 0:
 			continue
-		names += '[li][b]%s[/b] (%d): ' % (m.name, user_count)
+		names += '[li][b]%s[/b] (%d): ' % (noparse(m.name), user_count)
 		for u in m.contents:
 			if u.is_client() and (u.connection_attr('user_flags') & userflag['hide_location'] == 0):
 				if arg == 'c' or arg == 'C':
@@ -2388,7 +2410,7 @@ def fn_ownedgroups(map, client, context, arg):
 	c = Database.cursor()
 	groups = "Groups you are own: [ul]"
 	for row in c.execute('SELECT g.id, g.name FROM Entity g WHERE g.owner_id=? AND type=?', (client.db_id, entity_type['group'])):
-		groups += "[li][b]%s[/b] (%d)[/li]" % (row[1], row[0])
+		groups += "[li][b]%s[/b] (%d)[/li]" % (noparse(row[1]), row[0])
 	groups += "[/ul]"
 	respond(context, groups)
 
@@ -2398,9 +2420,9 @@ def fn_mygroups(map, client, context, arg):
 	groups = "Groups you are in: [ul]"
 	for row in c.execute('SELECT g.id, g.name, m.accepted_at FROM Entity g, Group_Member m WHERE g.id=m.group_id AND m.member_id=?', (client.db_id,)):
 		if row[2]:
-			groups += "[li][b]%s[/b] (%d)[/li]" % (row[1], row[0])
+			groups += "[li][b]%s[/b] (%d)[/li]" % (noparse(row[1]), row[0])
 		else:
-			groups += "[li][b]%s[/b] (%d)[/li] - Invited" % (row[1], row[0])
+			groups += "[li][b]%s[/b] (%d)[/li] - Invited" % (noparse(row[1]), row[0])
 	groups += "[/ul]"
 	respond(context, groups)
 
@@ -2526,14 +2548,14 @@ def fn_flushuploadlog(map, client, context, arg):
 @cmd_command(privilege_level="server_admin", alias=['connecthistory'], no_entity_needed=True)
 def fn_connectlog(map, client, context, arg):
 	if arg != 'c':
-		respond(context, "Connection log (%d):[ul]%s[/ul]" % (len(TempLogs[0]), ''.join("[li]%s[/li]" % _ for _ in TempLogs[0])), class_type="secret_message")
+		respond(context, "Connection log (%d):[ul]%s[/ul]" % (len(TempLogs[0]), ''.join("[li]%s[/li]" % noparse(_) for _ in TempLogs[0])), class_type="secret_message")
 	if arg != 'k':
 		TempLogs[0].clear()
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True)
 def fn_buildlog(map, client, context, arg):
 	if arg != 'c':
-		respond(context, "Build log (%d):[ul]%s[/ul]" % (len(TempLogs[1]), ''.join("[li]%s[/li]" % _ for _ in TempLogs[1])), class_type="secret_message")
+		respond(context, "Build log (%d):[ul]%s[/ul]" % (len(TempLogs[1]), ''.join("[li]%s[/li]" % noparse(_) for _ in TempLogs[1])), class_type="secret_message")
 	if arg != 'k':
 		TempLogs[1].clear()
 
@@ -2670,7 +2692,7 @@ def fn_entity(map, client, context, arg):
 			respond(context, info)
 	elif subcommand == 'name':
 		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
-			e.name = subarg
+			e.name = subarg.replace('\n', '')
 			e.broadcast_who()
 		save_entity = True
 	elif subcommand == 'desc':

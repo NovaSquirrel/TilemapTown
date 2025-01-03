@@ -447,6 +447,12 @@ def escape_tags(text):
 def unescape_tags(text):
 	return text.replace("&gt;", ">").replace("&lt;", "<").replace("&amp;", "&")
 
+def noparse(text):
+	text = text.replace("\n", "\\n")
+	if "[" in text:
+		return "[noparse]"+text.replace("[/noparse]", "")+"[/noparse]"
+	return text
+
 def user_file_url_is_ok(url):
 	if url == "":
 		return True

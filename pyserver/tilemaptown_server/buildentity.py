@@ -826,7 +826,7 @@ class Entity(PermissionsMixin, object):
 		return self.protocol_id()
 
 	def name_and_username(self):
-		return '%s (%s)' % (self.name, self.username_or_id())
+		return '%s (%s)' % (noparse(self.name), self.username_or_id())
 
 	def set_tag(self, group, name, value):
 		if self.tags == None:

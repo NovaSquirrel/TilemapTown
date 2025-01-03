@@ -202,6 +202,7 @@ class Connection(object):
 		self.entity = FakeClient(self)
 		self.identified = False
 		self.oper_override = False
+		self.client_name = None
 
 		self.ping_timer = 180
 		self.idle_timer = 0

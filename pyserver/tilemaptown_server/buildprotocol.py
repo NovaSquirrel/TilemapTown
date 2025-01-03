@@ -244,7 +244,7 @@ def set_entity_params_from_dict(e, d, connection, client, echo):
 	if 'home_position' in d and len(d['home_position']) == 2:
 		e.home_position = d['home_position']
 	if 'name' in d:
-		e.name = d['name']
+		e.name = d['name'].replace('\n', '')
 	if 'desc' in d:
 		e.desc = d['desc']
 	if 'pic' in d:
@@ -944,6 +944,7 @@ def fn_IDN(connection, map, client, arg, echo):
 		# Will be sent within a batch
 		connection.identified = True
 		connection.send("IDN", ack_info if ack_info != {} else None)
+		connection.client_name = arg.get("client_name")
 
 		if len(Config["Server"]["MOTD"]):
 			connection.send("MSG", {'text': Config["Server"]["MOTD"]})
@@ -1036,7 +1037,7 @@ def fn_IDN(connection, map, client, arg, echo):
 	else:
 		# Become a guest
 		if "name" in arg:
-			new_client.name = arg["name"]
+			new_client.name = arg["name"].replace('\n', '')
 		if not override_map or not new_client.switch_map(override_map[0], new_pos=None if (len(override_map) == 1) else (override_map[1:])):
 			connection.entity.switch_map(get_database_meta('default_map'))
 
