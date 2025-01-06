@@ -51,6 +51,7 @@ let ctrlZUndoType = null;
 
 let lastChatUsed = "";
 let alreadyShowedSign = false;
+let alreadyBumped = false;
 
 const OK_DRAW_DISTANCE = 5;
 
@@ -247,6 +248,7 @@ function keyEventToTilemapTownKey(e) {
 
 function keyUpHandler(e) {
 	alreadyShowedSign = false;
+	alreadyBumped = false;
 	markNotIdle();
 	var e = e || window.event;
 	ShiftPressed = e.shiftKey;
@@ -546,7 +548,10 @@ function keyDownHandler(e) {
 				Params['from'] = [OldPlayerX, OldPlayerY];
 				Params['to'] = [PlayerX, PlayerY];
 			}
-			SendCmd("MOV", Params);
+			if (!Bumped || !alreadyBumped) {
+				SendCmd("MOV", Params);
+				alreadyBumped = Bumped;
+			}
 			movePlayer(PlayerYou, PlayerX, PlayerY, PlayerDir, new Set([PlayerYou]));
 		}
 	}

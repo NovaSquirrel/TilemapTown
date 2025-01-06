@@ -317,6 +317,7 @@ function receiveServerMessage(cmd, arg) {
           stopMusic();
         }
 
+        alreadyBumped = false;
         NeedMapRedraw = true;
       }
       break;
