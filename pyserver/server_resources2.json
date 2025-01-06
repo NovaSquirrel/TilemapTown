@@ -2952,6 +2952,172 @@
 				"pic": [-2, 1, 42],
 				"obj": true,
 				"density": true
+			},
+			"bench_h": {
+				"name": "bench",
+				"pic": [-2, 7, 123],
+				"autotile_layout": 8,
+				"obj": true
+			},
+			"bench_ht": {
+				"name": "table",
+				"pic": [-2, 7, 124],
+				"autotile_layout": 8,
+				"obj": true,
+				"density": true
+			},
+			"bench_vr": {
+				"name": "bench",
+				"pic": [-2, 5, 119],
+				"autotile_layout": 11,
+				"obj": true
+			},
+			"bench_vt": {
+				"name": "bench",
+				"pic": [-2, 6, 119],
+				"autotile_layout": 11,
+				"obj": true,
+				"density": true
+			},
+			"bench_vl": {
+				"name": "bench",
+				"pic": [-2, 7, 119],
+				"autotile_layout": 11,
+				"obj": true
+			},
+			"queue1": {
+				"name": "queue",
+				"pic": [-2, 15, 115],
+				"autotile_layout": 4
+			},
+			"queue2": {
+				"name": "queue",
+				"pic": [-2, 21, 115],
+				"autotile_layout": 4
+			},
+			"queue3": {
+				"name": "queue",
+				"pic": [-2, 27, 115],
+				"autotile_layout": 4
+			},
+			"queue4": {
+				"name": "queue",
+				"pic": [-2, 15, 120],
+				"autotile_layout": 4
+			},
+			"queue5": {
+				"name": "queue",
+				"pic": [-2, 21, 120],
+				"autotile_layout": 4
+			},
+			"queue6": {
+				"name": "queue",
+				"pic": [-2, 27, 120],
+				"autotile_layout": 4
+			},
+			"queue1_s": {
+				"name": "queue",
+				"pic": [-2, 15, 117]
+			},
+			"queue1_sb": {
+				"name": "queue",
+				"pic": [-2, 14, 117]
+			},
+			"queue2_s": {
+				"name": "queue",
+				"pic": [-2, 21, 117]
+			},
+			"queue2_sb": {
+				"name": "queue",
+				"pic": [-2, 20, 117]
+			},
+			"queue3_s": {
+				"name": "queue",
+				"pic": [-2, 27, 117]
+			},
+			"queue3_sb": {
+				"name": "queue",
+				"pic": [-2, 26, 117]
+			},
+			"queue4_s": {
+				"name": "queue",
+				"pic": [-2, 15, 122]
+			},
+			"queue4_sb": {
+				"name": "queue",
+				"pic": [-2, 14, 122]
+			},
+			"queue5_s": {
+				"name": "queue",
+				"pic": [-2, 21, 122]
+			},
+			"queue5_sb": {
+				"name": "queue",
+				"pic": [-2, 20, 122]
+			},
+			"queue6_s": {
+				"name": "queue",
+				"pic": [-2, 27, 122]
+			},
+			"queue6_sb": {
+				"name": "queue",
+				"pic": [-2, 26, 122]
+			},
+			"queueborder": {
+				"name": "queue border",
+				"pic": [-2, 9, 115],
+				"menu_pic": [-2, 8, 113],
+				"autotile_layout": 4,
+				"obj": true
+			},
+			"queueborder2": {
+				"name": "queue border",
+				"pic": [-2, 12, 115],
+				"menu_pic": [-2, 11, 113],
+				"autotile_layout": 4,
+				"obj": true
+			},
+			"queueborder3": {
+				"name": "queue border",
+				"pic": [-2, 9, 120],
+				"menu_pic": [-2, 8, 118],
+				"autotile_layout": 4,
+				"obj": true
+			},
+			"queueborder4": {
+				"name": "queue border",
+				"pic": [-2, 12, 120],
+				"menu_pic": [-2, 11, 118],
+				"autotile_layout": 4,
+				"obj": true
+			},
+			"lamppost": {
+				"name": "lamppost",
+				"pic": [-2, 3, 119],
+				"autotile_layout": 11,
+				"obj": true,
+				"over": true
+			},
+			"lamppost2": {
+				"name": "lamppost",
+				"pic": [-2, 4, 119],
+				"autotile_layout": 11,
+				"obj": true,
+				"over": true
+			},
+			"railing": {
+				"name": "railing",
+				"pic": [-2, 1, 111],
+				"autotile_layout": 2,
+				"obj": true,
+				"density": true
+			},
+			"railing2": {
+				"name": "railing",
+				"pic": [-2, 5, 111],
+				"autotile_layout": 2,
+				"obj": true,
+				"density": true
 			}
 		}
 	},
