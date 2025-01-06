@@ -1527,6 +1527,20 @@
 				"pic": [-3, 12, 43],
 				"density": true,
 				"autotile_layout": 5
+			},
+			"fence": {
+				"name": "fence",
+				"pic": [-1, 7, 24],
+				"obj": true,
+				"density": true,
+				"autotile_layout": 3
+			},
+			"fence2": {
+				"name": "fence",
+				"pic": [-1, 11, 24],
+				"obj": true,
+				"density": true,
+				"autotile_layout": 3
 			}
 		}
 	},
