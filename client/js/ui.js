@@ -1,7 +1,7 @@
 /*
  * Tilemap Town
  *
- * Copyright (C) 2017-2024 NovaSquirrel
+ * Copyright (C) 2017-2025 NovaSquirrel
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -130,7 +130,7 @@ function resizeCanvas() {
 
 
 ///////////////////////////////////////////////////////////
-// Button handlers ??
+// Button handlers 🦨
 ///////////////////////////////////////////////////////////
 
 function sendPrivateMessageToItem(id) {
@@ -282,6 +282,11 @@ function viewChatLog() {
 	chat.classList.toggle('pinned');
 	chatArea.scrollTop = chatArea.scrollHeight;
 	resizeCanvas();
+
+	let touch = document.getElementById('touch-button-container');
+	if (touch) {
+		touch.classList.toggle('flipped');
+	}
 }
 
 function viewInventory() {
