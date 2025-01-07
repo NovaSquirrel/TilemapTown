@@ -20,8 +20,9 @@
 let touchButtonsAreTurn = false;
 
 let stopTouchRepeat = false;
-let touchRepeatTime = 0;;
+let touchRepeatTime = 0;
 let touchRepeatInterval = undefined;
+let hadTouchEvent = false;
 
 function touchButtonRepeat() {
 	if (stopTouchRepeat || touchButtonsAreTurn) {
@@ -49,7 +50,7 @@ function initTouchUI() {
 	// On-screen buttons ----------------------------------
 	function setupMoveButton(id, code, key) {
 		let button = document.getElementById(id);
-		button.addEventListener('mousedown', function (evt) {
+		function touchHandler(evt) {
 			stopTouchRepeat = false;
 			touchRepeatTime = 0;
 			keyDownHandler({
@@ -62,7 +63,13 @@ function initTouchUI() {
 			if (touchRepeatInterval)
 				clearInterval(touchRepeatInterval);
 			touchRepeatInterval = window.setInterval(touchButtonRepeat.bind({id, code}), 200);
-		}, false);
+		};
+		function mouseHandler(evt) {
+			if (!hadTouchEvent)
+				touchHandler(evt);
+		}
+		button.addEventListener('mousedown', mouseHandler, false);
+		button.addEventListener('touchstart', touchHandler, false);
 		button.addEventListener('mouseup', function (evt) {
 			stopTouchRepeat = true;
 			keyUpHandler({
@@ -90,6 +97,7 @@ function initTouchUI() {
 	}, false);
 }
 
-window.addEventListener('mouseup', function (evt) {
-	stopTouchRepeat = true;
-});
+window.addEventListener('touchstart', function (evt) {hadTouchEvent = true;});
+window.addEventListener('mouseup', function (evt) {stopTouchRepeat = true;});
+window.addEventListener('touchend', function (evt) {stopTouchRepeat = true;});
+window.addEventListener('touchcancel', function (evt) {stopTouchRepeat = true;});
