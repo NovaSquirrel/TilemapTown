@@ -1,7 +1,7 @@
 /*
  * Tilemap Town
  *
- * Copyright (C) 2017-2024 NovaSquirrel
+ * Copyright (C) 2017-2025 NovaSquirrel
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -19,6 +19,26 @@
 
 let touchButtonsAreTurn = false;
 
+let stopTouchRepeat = false;
+let touchRepeatTime = 0;;
+let touchRepeatInterval = undefined;
+
+function touchButtonRepeat() {
+	if (stopTouchRepeat || touchButtonsAreTurn) {
+		clearInterval(touchRepeatInterval);
+		return;
+	}
+	if (touchRepeatTime++ > 2) {
+		keyDownHandler({
+			'shiftKey': touchButtonsAreTurn,
+			'code': this.code,
+			'key': this.code,
+			'keyCode': null,
+			'preventDefault': function(){},
+		});
+	}
+}
+
 function initTouchUI() {
 	initWorld();
 
@@ -30,6 +50,8 @@ function initTouchUI() {
 	function setupMoveButton(id, code, key) {
 		let button = document.getElementById(id);
 		button.addEventListener('mousedown', function (evt) {
+			stopTouchRepeat = false;
+			touchRepeatTime = 0;
 			keyDownHandler({
 				'shiftKey': touchButtonsAreTurn,
 				'code': code,
@@ -37,8 +59,12 @@ function initTouchUI() {
 				'keyCode': null,
 				'preventDefault': function(){},
 			});
+			if (touchRepeatInterval)
+				clearInterval(touchRepeatInterval);
+			touchRepeatInterval = window.setInterval(touchButtonRepeat.bind({id, code}), 200);
 		}, false);
 		button.addEventListener('mouseup', function (evt) {
+			stopTouchRepeat = true;
 			keyUpHandler({
 				'shiftKey': touchButtonsAreTurn,
 				'code': code,
@@ -63,3 +89,7 @@ function initTouchUI() {
 		touchButtonMiddle.innerHTML = touchButtonsAreTurn ? "&#x1F504;" : "&#x1F6B6;";
 	}, false);
 }
+
+window.addEventListener('mouseup', function (evt) {
+	stopTouchRepeat = true;
+});

@@ -51,8 +51,8 @@ customElements.define(
         dy = event.clientY - container.offsetTop;
 
         document.onmousemove = function(event) {
-          container.style.left = (event.clientX - dx) + "px";
-          container.style.top = (event.clientY - dy) + "px";
+          container.style.left = Math.max(16, event.clientX - dx) + "px";
+          container.style.top = Math.max(32, event.clientY - dy) + "px";
         }
 
         document.onmouseup = function (event) {
@@ -64,6 +64,11 @@ customElements.define(
       var minimize = shadowRoot.querySelector('#minimize');
       minimize.onmouseup = function(event) {
         self.style.display = "none";
+        if (self.id === 'selectionInfo') {
+          MouseActive = false;
+          MouseDown = false;
+          NeedMapRedraw = true;
+        }
       }
     }
   }
