@@ -44,6 +44,6 @@
   "start_url": "https://tilemap.town/touch_ui",
   "display": "standalone",
   "theme_color": "#80FF80",
-  "background_color": "#FFFFFF",
+  "background_color": "#6abe30",
   "orientation": "any"
 }
