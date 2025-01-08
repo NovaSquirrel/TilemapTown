@@ -254,11 +254,13 @@ def send_private_message(client, context, recipient_username, text):
 		if text.isspace() or text=="":
 			respond(context, 'Tell them what?', error=True)
 		else:
-			u = find_connection_by_username(recipient_username)
-			if u != None:
-				u = u.entity
+			recipient_connection = find_connection_by_username(recipient_username)
+			u = None
+			if recipient_connection != None:
+				u = recipient_connection.entity
 			else:
 				u = find_client_by_username(recipient_username)
+
 			if u:
 				if u.entity_type == entity_type['gadget']:
 					client.send("PRI", {'text': text, 'name': u.name, 'id': u.protocol_id(), 'username': u.username_or_id(), 'receive': False})

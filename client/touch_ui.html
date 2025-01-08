@@ -423,7 +423,7 @@
 <widget-window id="options" style="display: none;">
   <span slot="title">Options</span>
   <div slot="contents">
-    <label class="unselectable"><input type="checkbox" id="alwayscenter" checked="true"><label for="alwayscenter" class="unselectable">Always center camera</label><br>
+    <label class="unselectable"><input type="checkbox" id="alwayscenter" checked="true">Always center camera</label><br>
     <label class="unselectable"><input type="checkbox" id="audiochatnotify" checked>Notify when people talk</label><br>
     <label class="unselectable"><input type="checkbox" id="audiomiscnotify">Notify on other messages</label><br>
     <label class="unselectable"><input type="checkbox" id="audiomapmusic">Play map background music</label><br>
@@ -520,7 +520,7 @@
 <widget-window id="mail" style="display: none;">
   <span slot="title">Mail</span>
   <div slot="contents">
-    <button onclick="viewCompose();">Compose</button>
+    <button class="spaced_buttons" onclick="viewCompose();">Compose</button>
     <ul id="mailul" class="unselectable">
     </ul>
   </div>
@@ -530,7 +530,7 @@
   <span slot="title">Compose</span>
   <div slot="contents">
     <table border="0">
-      <tr><td><input type="submit" onclick="sendMail();" value="Send!" /></td><td><button onclick="previewMail();">Preview</button></td></tr>
+      <tr><td><input class="spaced_buttons" type="submit" onclick="sendMail();" value="Send!" /></td><td><button class="spaced_buttons" onclick="previewMail();">Preview</button></td></tr>
       <tr><td>To</td><td><input type="text" id="mailsendto" /></td></tr>
       <tr><td>Subject</td><td><input type="text" id="mailsendsubject" /></td></tr>
     </table>

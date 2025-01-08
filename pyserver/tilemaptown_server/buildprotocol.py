@@ -614,6 +614,11 @@ def fn_EML(connection, map, client, arg, echo):
 
 				# is that person online? tell them!
 				find = find_client_by_db_id(id)
+				if not find:
+					for connection in AllConnections:
+						if connection.db_id == id:
+							find = connection
+							break
 				if find:
 					arg['send']['id'] = c.execute('SELECT last_insert_rowid()').fetchone()[0]
 					find.send("EML", {'receive': arg['send']})

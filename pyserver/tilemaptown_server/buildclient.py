@@ -641,6 +641,7 @@ class FakeClient(PermissionsMixin, ClientMixin, object):
 		# Placeholder stuff that'll be here for things that check for it
 		self.map = None
 		self.map_id = None
+		self.entity_type = entity_type['user']
 
 	def is_client(self): # is_client_and_entity() will distinguish between this and a real Client
 		return True

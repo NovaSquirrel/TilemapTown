@@ -662,6 +662,8 @@ function receiveServerMessage(cmd, arg) {
     case "EML":
       if(arg['receive']) {
           logMessage("You've got mail! (from "+escape_tags(arg.receive['from'])+")", 'server_message', {'plainText': `You've got mail! (from: ${arg.receive['from']})`});
+          if(!('timestamp' in arg['receive']))
+            arg['receive'].timestamp = new Date(Date.now()).toISOString();
           Mail.push(arg['receive']);
       } else if(arg['list']) {
           Mail = arg['list'];
@@ -673,7 +675,14 @@ function receiveServerMessage(cmd, arg) {
           }
           logMessage("You've got mail! ("+Mail.length+" messages, "+unread+" unread)", 'server_message');
       } else if(arg['sent']) {
-        closeWindow("mailcompose");
+        if (messaging_mode) {
+          if (document.getElementById('mailDivCompose').style.display === "block") {
+            document.getElementById('mailDivCompose').style.display = "none";
+            document.getElementById('mailDivMain').style.display = "block";
+          }
+        } else {
+          document.getElementById('compose').style.display = "none";
+        }
       }
       updateMailUL();
       break;
@@ -770,6 +779,10 @@ function receiveServerMessage(cmd, arg) {
     case "IDN":
       ReconnectAttempts = 0;
       DidConnectOnce = true;
+      if(messaging_mode) {
+        document.getElementById('onlineStatus').style.backgroundColor = "green";
+        document.getElementById('onlineStatus').textContent = "Connected and logged in!";
+      }
 
       API_Key = arg.api_key;
       API_Version = arg.api_version;
@@ -893,10 +906,16 @@ function AttemptReconnect() {
 	}
 }
 function CancelReconnect() {
-	if(ReconnectTimeout != null) {
-		logMessage("Press the Login button when you want to try again.", 'server_message');
+	if (ReconnectTimeout != null) {
+		if (!messaging_mode) {
+			logMessage("Press the Login button when you want to try again.", 'server_message');
+		}
 		clearTimeout(ReconnectTimeout);
 		ReconnectTimeout = null;
+	}
+	if (messaging_mode) {
+		document.getElementById('onlineStatus').innerHTML = "Not connected";
+		document.getElementById('onlineStatus').style.backgroundColor = "gray";
 	}
 }
 
@@ -911,10 +930,20 @@ function ConnectToServer() {
 	OnlineIsConnected = false;
 
 	OnlineSocket = new WebSocket((OnlineSSL?"wss://":"ws://")+OnlineServer+":"+OnlinePort);
-	logMessage("Attempting to connect", 'server_message');
+	if (messaging_mode) {
+		document.getElementById('onlineStatus').textContent = "Attempting to connect"
+		document.getElementById('onlineStatus').style.backgroundColor = "gray";
+	} else {
+		logMessage("Attempting to connect", 'server_message');
+	}
 
 	OnlineSocket.onopen = function (event) {
-		logMessage("Connected! Now logging in...", 'server_message');
+		if (messaging_mode) {
+			document.getElementById('onlineStatus').textContent = "Connected! Now logging in...";
+			document.getElementById('onlineStatus').style.backgroundColor = "green";
+		} else {
+			logMessage("Connected! Now logging in...", 'server_message');
+		}
 
 		// Log in with the server
 		let idn_args = {};
@@ -934,6 +963,13 @@ function ConnectToServer() {
 			}
 		};
 		idn_args["client_name"] = "Tilemap Town Web Client";
+		if (messaging_mode) {
+			idn_args["client_name"] = "Tilemap Town Web Client (messaging)";
+			idn_args["client_mode"] = "messaging";
+		}
+		if (touch_mode) {
+			idn_args["client_name"] = "Tilemap Town Web Client (touch)";
+		}
 
 		SendCmd("IDN", idn_args);
 		OnlineIsConnected = true;
@@ -995,18 +1031,29 @@ function ConnectToServer() {
 			// Don't keep retrying the connection forever
 			if(ReconnectAttempts < 10) {
 				ReconnectAttempts++;
-				display+= "<br>Will try to reconnect in "+(ReconnectAttempts*10)+" seconds...";
+
+				let seconds = ReconnectAttempts*10;
+				if (messaging_mode) {
+					seconds = Math.pow(2, ReconnectAttempts);
+				}
+				display+= "<br>Will try to reconnect in "+seconds+" seconds...";
 				if(ReconnectAttempts == 1) {
 					display += " <button onclick=\"CancelReconnect();\">Cancel</button>";
 				}
-				ReconnectTimeout = setTimeout(AttemptReconnect, 1000 * 10 * ReconnectAttempts);
+				let timeoutAmount = 1000 * seconds;
+				ReconnectTimeout = setTimeout(AttemptReconnect, timeoutAmount);
 			} else {
 				display+= "<br>Press the Login button when you want to try again.";
 			}
 		} else {
 			StatusOnDisconnect = null;
 		}
-		logMessage(display, 'error_message');
+		if (messaging_mode) {
+			document.getElementById('onlineStatus').innerHTML = display.replaceAll("<br>", " | ");
+			document.getElementById('onlineStatus').style.backgroundColor = "red";
+		} else {
+			logMessage(display, 'error_message');
+		}
 
 		OnlineIsConnected = false;
 	}

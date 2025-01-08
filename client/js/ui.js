@@ -21,6 +21,9 @@
 // Global variables
 ///////////////////////////////////////////////////////////
 
+messaging_mode = false;
+touch_mode = false;
+
 // The client's entity ID
 let PlayerYou = "me";
 
@@ -137,6 +140,22 @@ function sendPrivateMessageToItem(id) {
   setChatInput("/tell "+id+" ");
 }
 
+function loadOptions() {
+	let saved_options = localStorage.getItem("options");
+	if (saved_options) {
+		saved_options = JSON.parse(saved_options);
+		document.getElementById("alwayscenter").checked = saved_options.always_center_camera ?? false;
+		document.getElementById("audiochatnotify").checked = saved_options.audio_chat_notify ?? true;
+		document.getElementById("audiomiscnotify").checked = saved_options.audio_misc_notify ?? false;
+		document.getElementById("audiomapmusic").checked = saved_options.audio_map_music ?? false;
+		document.getElementById("option-entity-animation").checked = saved_options.entity_animation ?? true;
+		document.getElementById("option-tile-animation").checked = saved_options.tile_animation ?? true;
+		document.getElementById("chat-timestamp").checked = saved_options.chat_timestamps ?? true;
+		document.getElementById("minutes-until-idle").value = saved_options.minutes_until_idle ?? 60;
+		document.getElementById("minutes-until-disconnect").value = saved_options.minutes_until_disconnect ?? 720;
+	}
+}
+
 function applyOptions() {
 	CameraAlwaysCenter = document.getElementById("alwayscenter").checked;
 	AudioChatNotifications = document.getElementById("audiochatnotify").checked;
@@ -209,10 +228,9 @@ function updateZoomLevelDisplay() {
 }
 
 function viewOptions() {
-	let options = document.getElementById("options");
-	let Hidden = (options.style.display == 'none');
-	document.getElementById("navoptions").setAttribute("class", Hidden ? "navactive" : "");
-	options.style.display = Hidden ? 'block' : 'none';
+	let visible = toggleDisplay(document.getElementById("options"));
+	if (!messaging_mode)
+		document.getElementById("navoptions").setAttribute("class", visible ? "navactive" : "");
 }
 
 function toggleDisplay(element) {
@@ -1711,7 +1729,14 @@ async function doEditFolder() {
 let Mail = [];
 
 function viewCompose() {
-	document.getElementById('compose').style.display = 'block';
+	if (messaging_mode) {
+		document.getElementById('mailDivMain').style.display = "none";
+		document.getElementById('mailDivView').style.display = "none";
+		document.getElementById('mailDivCompose').style.display = "block";
+		document.getElementById('mailDivPreview').style.display = "none";
+	} else {
+		document.getElementById('compose').style.display = 'block';
+	}
 }
 
 function updateMailUL() {
@@ -1739,14 +1764,20 @@ function updateMailUL() {
 			Mail[i].flags |= 1; // mark as read locally
 			updateMailUL(); // show it as read locally
 
-			document.getElementById('mail-view').style.display = 'block';
+			if (messaging_mode) {
+				document.getElementById('mailDivView').style.display = 'block';
+				document.getElementById('mailDivMain').style.display = 'none';
+			} else {
+				document.getElementById('mail-view').style.display = 'block';
+			}
 			document.getElementById('mail-view-title').innerHTML = `Mail: ${convertBBCode(letter.subject)}`;
-			document.getElementById('mail-view-contents').innerHTML = '<button onclick="replyMail(' + letter.id + ')">Reply</button>'
-				+ '<button onclick="replyAllMail(' + letter.id + ')">Reply all</button>'
-				+ '<button onclick="deleteMail(' + letter.id + ')">Delete</button><br>'
+			document.getElementById('mail-view-contents').innerHTML = '<button class="spaced_buttons" onclick="replyMail(' + letter.id + ')">Reply</button>'
+				+ '<button class="spaced_buttons" onclick="replyAllMail(' + letter.id + ')">Reply all</button>'
+				+ '<button class="spaced_buttons" onclick="deleteMail(' + letter.id + ')">Delete</button><br>'
 				+ '<table border="0">'
 				+ '<tr><td>From</td><td>' + letter.from + '</td></tr>'
 				+ '<tr><td>To</td><td>' + letter.to.join(",") + '</td></tr>'
+				+ (letter.timestamp?('<tr><td>Date</td><td>' + new Date(letter.timestamp).toLocaleDateString() + '</td></tr>'):'')
 				+ '</table><hr>'
 				+ convertBBCodeMultiline(letter.contents);
 		};
@@ -1763,7 +1794,15 @@ function previewMail() {
 	let contents = document.getElementById('mailsendtext').value;
 	let to = document.getElementById('mailsendto').value;
 
-	document.getElementById('mail-preview').style.display = 'block';
+	if (messaging_mode) {
+		document.getElementById('mailDivMain').style.display = "none";
+		document.getElementById('mailDivView').style.display = "none";
+		document.getElementById('mailDivCompose').style.display = "none";
+		document.getElementById('mailDivPreview').style.display = "block";
+	} else {
+		document.getElementById('mail-preview').style.display = 'block';
+	}
+
 	document.getElementById('mail-preview-title').innerHTML = `Mail preview: ${convertBBCode(subject)}`;
 	document.getElementById('mail-preview-contents').innerHTML = convertBBCodeMultiline(contents);
 }
@@ -1830,16 +1869,28 @@ function deleteMail(id) {
   Mail = newMail;
   updateMailUL();
   SendCmd("EML", { "delete": id });
-  closeWindow("mail" + id);
+  if (messaging_mode) {
+    document.getElementById('mailDivView').style.display = "none";
+    document.getElementById('mailDivMain').style.display = "block";
+  } else {
+    document.getElementById('mail-view').style.display = "none";
+  }
 }
 
 function viewMail() {
   var mail = document.getElementById('mail');
-  toggleDisplay(mail);
-
-  var ul = document.getElementById('mailul');
-  if (!ul) {
-    newWindow("Mail", '<button onclick="viewCompose();">Compose</button><br/><ul id="mailul" class="unselectable"></ul>', null);
+  if(!toggleDisplay(mail))
+    return;
+  if (messaging_mode) {
+    document.getElementById('mailDivMain').style.display = "block";
+    document.getElementById('mailDivView').style.display = "none";
+    document.getElementById('mailDivCompose').style.display = "none";
+    document.getElementById('mailDivPreview').style.display = "none";
+  } else {
+    var ul = document.getElementById('mailul');
+    if (!ul) {
+      newWindow("Mail", '<button onclick="viewCompose();">Compose</button><br/><ul id="mailul" class="unselectable"></ul>', null);
+    }
   }
   updateMailUL();
 }
@@ -2966,19 +3017,7 @@ function initWorld() {
 	resizeCanvas();
 
 	// applies saved options from browser form fill (or from local storage)
-	let saved_options = localStorage.getItem("options");
-	if (saved_options) {
-		saved_options = JSON.parse(saved_options);
-		document.getElementById("alwayscenter").checked = saved_options.always_center_camera ?? false;
-		document.getElementById("audiochatnotify").checked = saved_options.audio_chat_notify ?? true;
-		document.getElementById("audiomiscnotify").checked = saved_options.audio_misc_notify ?? false;
-		document.getElementById("audiomapmusic").checked = saved_options.audio_map_music ?? false;
-		document.getElementById("option-entity-animation").checked = saved_options.entity_animation ?? true;
-		document.getElementById("option-tile-animation").checked = saved_options.tile_animation ?? true;
-		document.getElementById("chat-timestamp").checked = saved_options.chat_timestamps ?? true;
-		document.getElementById("minutes-until-idle").value = saved_options.minutes_until_idle ?? 60;
-		document.getElementById("minutes-until-disconnect").value = saved_options.minutes_until_disconnect ?? 720;
-	}
+	loadOptions();
 	applyOptions();
 	changeBuildTool();
 	changedBuildToolCategory();

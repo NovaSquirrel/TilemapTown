@@ -286,6 +286,7 @@ Can take "echo" and "rc" like CMD can.
 Private message, displays in the log
 Receive is false for sender, true for recipient. You will get a PRI acknowledging a private message you sent, just like with MSG.
 May contain "rc_username" and "rc_id" to indicate who is remote controlling the entity to send a private message.
+May contain "timestamp", which is an ISO 8601 timestamp for when the message was sent (if the sending and receiving times are different).
 
 --> EML {"send": {"subject": subject, "contents": contents, "to": [username, ...]}}
 --> EML {"read": id}

@@ -303,6 +303,18 @@ widget-contextmenu li:hover {
     margin: 0.5em 0;
 }
 
+.column-of-text-in-window {
+	display: block;
+	max-width: 400px;
+	overflow: auto;
+}
+
+.spaced_buttons {
+	padding: 5px;
+	margin: 5px;
+}
+
+
 /* Touch UI buttons */
 #touch-button-container {
 	position: absolute;
@@ -332,10 +344,4 @@ widget-contextmenu li:hover {
 
 #touch-button-container td:hover {
     background-color: lightpink;
-}
-
-.column-of-text-in-window {
-	display: block;
-	max-width: 400px;
-	overflow: auto;
 }

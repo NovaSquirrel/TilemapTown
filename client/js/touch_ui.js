@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+touch_mode = true;
 let touchButtonsAreTurn = false;
 
 let stopTouchRepeat = false;
