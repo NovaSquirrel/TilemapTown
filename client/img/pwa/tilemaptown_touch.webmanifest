@@ -11,6 +11,12 @@
       "purpose": "any"
     },
     {
+      "src": "https://tilemap.town/img/pwa/icon-32.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "https://tilemap.town/img/pwa/icon-48.png",
       "sizes": "48x48",
       "type": "image/png",
