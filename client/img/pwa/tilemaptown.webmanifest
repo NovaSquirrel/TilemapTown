@@ -1,0 +1,43 @@
+{
+  "name": "Tilemap Town",
+  "short_name": "Tilemap Town",
+  "categories": ["games", "social"],
+  "description": "Collaboratively build a 2D pixel art world to chat and roleplay in",
+  "icons": [
+    {
+      "src": "https://tilemap.town/img/pwa/icon-16.png",
+      "sizes": "16x16",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://tilemap.town/img/pwa/icon-48.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://tilemap.town/img/pwa/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://tilemap.town/img/pwa/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://tilemap.town/img/pwa/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "https://tilemap.town/world",
+  "display": "standalone",
+  "theme_color": "#80FF80",
+  "background_color": "#FFFFFF",
+  "orientation": "any"
+}
