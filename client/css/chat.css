@@ -1,5 +1,6 @@
 .log_line {
   padding: 4px;
+  color: silver; /* Fallback for if the class isn't known */
 }
 
 .user_message {
@@ -19,11 +20,7 @@
   color: silver;
 }
 
-.server_message {
-  color: pink;
-}
-
-.server_stats {
+.server_message, .server_stats, .server_motd {
   color: pink;
 }
 

@@ -952,7 +952,7 @@ def fn_IDN(connection, map, client, arg, echo):
 		connection.client_name = arg.get("client_name")
 
 		if len(Config["Server"]["MOTD"]):
-			connection.send("MSG", {'text': Config["Server"]["MOTD"]})
+			connection.send("MSG", {'text': Config["Server"]["MOTD"], 'class': 'server_motd'})
 		park_text = GlobalData.get('park_text')
 		park_map = GlobalData.get('park_map')
 		if park_text and len(park_text):
@@ -961,7 +961,7 @@ def fn_IDN(connection, map, client, arg, echo):
 			else:
 				connection.send("MSG", {'text': park_text, 'class': 'event_notice'})
 
-		if Config["Server"]["BroadcastConnects"]:
+		if Config["Server"]["BroadcastConnects"] and not messaging_only_mode:
 			if had_old_entity:
 				text = '[small](switching %s over to a new connection)[/small]' % new_client.name_and_username()
 			else:

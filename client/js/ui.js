@@ -1947,6 +1947,8 @@ function logMessage(Message, Class, Params) {
 	}
 
 	let newMessage = document.createElement("div");
+	if (Class !== "server_message" && Class !== "server_motd" && Class !== "server_stats" && Class.startsWith("server_")) // Color it server color even if the specific class is unknown
+		Class = "server_message";
 	newMessage.className = Class + " log_line";
 	if (Params.username) {
 		if (Params.rc_username) {

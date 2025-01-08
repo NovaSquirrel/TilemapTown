@@ -153,7 +153,7 @@ async def client_handler(websocket, path):
 				handle_protocol_command(connection, connection.entity.map, connection.entity, command, arg, echo) # client.map may be None
 
 		except websockets.ConnectionClosed:
-			if isinstance(connection.entity, Client) and connection.identified:
+			if isinstance(connection.entity, Client) and connection.identified: # Only announce if they're actually in the world as an entity
 				if Config["Server"]["BroadcastDisconnects"]:
 					text = '%s has disconnected!' % connection.entity.name_and_username()
 					for u in AllClients:
