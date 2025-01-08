@@ -562,6 +562,12 @@ function loginButton() {
 	ReconnectAttempts = 0;
 	StatusOnDisconnect = null;
 
+	// Reset the "already seen" variables
+	alreadySeenStats = false;
+	alreadySeenMOTD = undefined;
+	alreadySeenEvent = undefined;
+	alreadySeenMail = undefined;
+
 	OnlineUsername = document.getElementById("loginuser").value;
 	OnlinePassword = document.getElementById("loginpass").value;
 	OnlineServer = document.getElementById("loginserver").value;

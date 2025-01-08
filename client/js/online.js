@@ -36,6 +36,13 @@ let API_Version = null;
 let API_URL = null;
 const SupportedTakeControlsKeys = ["turn-ne", "move-ne", "turn-se", "move-se", "turn-nw", "move-nw", "turn-sw", "move-sw", "turn-w", "move-w", "turn-s", "move-s", "turn-n", "move-n", "turn-e", "move-e", "use-item", "cancel", "hotbar-1", "hotbar-2", "hotbar-3", "hotbar-4", "hotbar-5", "hotbar-6", "hotbar-7", "hotbar-8", "hotbar-9", "hotbar-10"];
 
+// For messaging mode
+let alreadySeenStats = false;
+// For all modes
+let alreadySeenMOTD = undefined;
+let alreadySeenEvent = undefined;
+let alreadySeenMail = undefined;
+
 // URL param options
 let SlowAnimationTick = false;
 
@@ -673,7 +680,13 @@ function receiveServerMessage(cmd, arg) {
               unread++;
             }
           }
-          logMessage("You've got mail! ("+Mail.length+" messages, "+unread+" unread)", 'server_message');
+
+          let mailText = "You've got mail! ("+Mail.length+" messages, "+unread+" unread)";
+          if (alreadySeenMail === mailText)
+            break;
+          else
+            alreadySeenMail = mailText;
+          logMessage(mailText, 'server_message');
       } else if(arg['sent']) {
         if (messaging_mode) {
           if (document.getElementById('mailDivCompose').style.display === "block") {
@@ -766,11 +779,29 @@ function receiveServerMessage(cmd, arg) {
           logMessage("! "+convertBBCodeChat(arg.text)+" "+buttons, arg["class"] ?? 'server_message',
             {'isChat': false, 'username': arg["username"]});
         } else {
-          if(arg["class"])
+          if(arg["class"]) {
+            if (arg["class"] == "server_motd")
+              if (alreadySeenMOTD === arg["text"])
+                break;
+              else
+                alreadySeenMOTD = arg["text"];
+            if (arg["class"] == "event_notice")
+              if (alreadySeenEvent === arg["text"])
+                break;
+              else
+                alreadySeenEvent = arg["text"];
+            if (messaging_mode) {
+              if (arg["class"] == "server_stats") {
+                if (alreadySeenStats)
+                  break;
+                else
+                  alreadySeenStats = true;
+              }
+            }
             logMessage(convertBBCodeChat(arg.text), arg["class"],
               {'isChat': false, 'plainText': arg.text,
               'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
-          else
+          } else
             logMessage("Server message: "+convertBBCodeChat(arg.text), 'server_message',
               {'isChat': false, 'plainText': "Server message: "+arg.text,
               'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
