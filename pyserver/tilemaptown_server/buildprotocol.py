@@ -1029,14 +1029,17 @@ def fn_IDN(connection, map, client, arg, echo):
 		ack_info["api_version"] = 1
 
 	# Now check the username and password and actually log in
+	connection.start_batch()
 	if arg != {} and "username" in arg and "password" in arg:
 		# Log into an existing account
 		if not connection.login(filter_username(arg["username"]), arg["password"], new_client, override_map=override_map, announce_login=False):
 			write_to_connect_log("Failed login for "+filter_username(arg["username"]))
+			connection.finish_batch()
 			connection.disconnect(reason="BadLogin")
 			connection.login_successful_callback = None
 			return
 	elif messaging_only_mode:
+		connection.finish_batch()
 		connection.disconnect("Messaging mode currently requires you to log into an account", reason="BadLogin")
 		return
 	else:
@@ -1048,6 +1051,7 @@ def fn_IDN(connection, map, client, arg, echo):
 
 	if connection.login_successful_callback: # Make sure this gets called even if the map switch fails
 		connection.login_successful_callback()
+	connection.finish_batch()
 
 @protocol_command()
 def fn_USE(connection, map, client, arg, echo):
