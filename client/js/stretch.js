@@ -46,6 +46,22 @@ customElements.define(
       var dx = 0;
       var dy = 0;
 
+      handle.ontouchstart = function(event) {
+        dx = event.changedTouches[0].pageX - container.offsetLeft;
+        dy = event.changedTouches[0].pageY - container.offsetTop;
+
+        document.ontouchmove = function(event) {
+          container.style.left = Math.max(16, event.changedTouches[0].pageX - dx) + "px";
+          container.style.top = Math.max(32, event.changedTouches[0].pageY - dy) + "px";
+
+        }
+
+        document.ontouchend = function (event) {
+          document.ontouchmove = null;
+          document.ontouchend = null;
+        }
+      }
+
       handle.onmousedown = function(event) {
         dx = event.clientX - container.offsetLeft;
         dy = event.clientY - container.offsetTop;
