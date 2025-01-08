@@ -1,7 +1,6 @@
 html, body {
   font-size: 16px;
   touch-action: none;
-  overscroll-behavior: none; 
 }
 
 #chat-container {
