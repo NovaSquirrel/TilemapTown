@@ -294,6 +294,14 @@ def send_private_message(client, context, recipient_username, text):
 					if respond_to is not client:
 						respond(context, 'You can\'t send offline messages via remote control', error=True)
 						return
+
+					c = Database.cursor()
+					c.execute('SELECT ignore FROM User WHERE entity_id=?', (recipient_db_id,))
+					result = c.fetchone()
+					if result != None and (client.username in json.loads(result[0] or "[]")):
+						respond(context, 'You can\'t message that person', error=True)
+						return False
+
 					if recipient_db_id not in OfflineMessages:
 						OfflineMessages[recipient_db_id] = {}
 					if client.db_id not in OfflineMessages[recipient_db_id]:
