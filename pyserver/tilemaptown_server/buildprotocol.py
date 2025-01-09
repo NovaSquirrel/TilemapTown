@@ -1190,16 +1190,26 @@ def bot_message_button(connection, map, client, context, arg, name):
 
 @ext_protocol_command("typing")
 def pm_typing_notification(connection, map, client, context, arg, name):
-	target = find_connection_by_username(arg['username'])
-	if target == None:
-		return
-	arg = remove_invalid_dict_fields(arg, {
-		"status":             bool,
-	})
-	arg['id'] = client.protocol_id()
-	arg['name'] = client.name
-	arg['username'] = client.username_or_id()
-	target.send("EXT", {name: arg})
+	# Primary purpose is to let you send a typing notice related to private messages
+	if "username" in arg:
+		target = find_connection_by_username(arg['username'])
+		if target == None:
+			return
+		arg = remove_invalid_dict_fields(arg, {
+			"status":             bool,
+		})
+		arg['id'] = client.protocol_id()
+		arg['name'] = client.name
+		arg['username'] = client.username_or_id()
+		target.send("EXT", {name: arg})
+
+	# Can also send a typing notification to the people listening for chat on a map (as long as you are also listening for chat on a map)
+	elif "map" in arg:
+		map_id = arg["map"]
+		if (maplisten_type['chat_listen'], map_id) not in connection.listening_maps:
+			return
+		for other_connection in MapListens[maplisten_type['chat_listen']].get(map_id, tuple()):
+			other_connection.send("WHO", {'type': 'chat_listeners', 'update': {'id': client.protocol_id(), 'typing': arg['status']}, 'remote_map': map_id})
 
 @ext_protocol_command("list_available_ext_types")
 def list_available_ext_types(connection, map, client, context, arg, name):

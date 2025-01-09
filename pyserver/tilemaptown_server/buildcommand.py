@@ -1626,6 +1626,8 @@ def fn_kicklisten(map, client, context, arg):
 
 @cmd_command(syntax="category,category,category... id,id,id...", no_entity_needed=True)
 def fn_listen(map, client, context, arg):
+	if arg == "":
+		return
 	params = arg.split()
 	categories = set(params[0].split(','))
 	maps = set((int_if_numeric(x) if isinstance(x, str) else x) for x in params[1].split(','))

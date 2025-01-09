@@ -548,8 +548,12 @@ The forwarded copy has additional fields for "name" and "username" as in PRI.
 
 --> EXT {"typing": {"username": username, "status": status}}
 <-- EXT {"typing": {"name": name, "id": id, "username": username, "status": status}}
-Message gets forwarded to the entity specified in "id" or "username". "status" should be treated the same way as the "typing" field in WHO.
+Message gets forwarded to the entity specified in "username". "status" should be treated the same way as the "typing" field in WHO (true if typing, false if not typing).
 The message the other user receives will have the name, ID, and username added onto it.
+
+--> EXT {"typing": {"map": ID, "status": status}}
+<-- WHO {"update": {"id": user ID, "typing": status}, "remote_map": ID, "type": "chat_listeners"}
+For notifying the people listening to chat within an entity that you are typing.
 
 <-- EXT {"settings": {"client_settings": text, "watch_list": [list], "ignore_list": [list]}}
 Gives you the text you most recently put into the /client_settings command
