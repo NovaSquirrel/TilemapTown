@@ -1209,7 +1209,7 @@ def pm_typing_notification(connection, map, client, context, arg, name):
 		if (maplisten_type['chat_listen'], map_id) not in connection.listening_maps:
 			return
 		for other_connection in MapListens[maplisten_type['chat_listen']].get(map_id, tuple()):
-			other_connection.send("WHO", {'type': 'chat_listeners', 'update': {'id': client.protocol_id(), 'typing': arg['status']}, 'remote_map': map_id})
+			other_connection.send("WHO", {'type': 'chat_listeners', 'update': {'id': client.protocol_id(), 'typing': bool(arg['status']) }, 'remote_map': map_id})
 
 @ext_protocol_command("list_available_ext_types")
 def list_available_ext_types(connection, map, client, context, arg, name):
