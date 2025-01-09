@@ -672,11 +672,28 @@ function receiveServerMessage(cmd, arg) {
           if(!('timestamp' in arg['receive']))
             arg['receive'].timestamp = new Date(Date.now()).toISOString();
           Mail.push(arg['receive']);
+      } else if(arg['sent']) {
+          if (messaging_mode) {
+            if (document.getElementById('mailDivCompose').style.display === "block") {
+              document.getElementById('mailDivCompose').style.display = "none";
+              document.getElementById('mailDivMain').style.display = "block";
+            }
+          } else {
+            document.getElementById('compose').style.display = "none";
+          }
+
+          if(!('timestamp' in arg['sent']))
+            arg['sent'].timestamp = new Date(Date.now()).toISOString();
+          if(!arg['sent'].flags)
+            arg['sent'].flags = ['sent'];
+          else if(!arg['sent'].flags.includes('sent'))
+            arg['sent'].flags.push('sent');
+          Mail.push(arg['sent']);
       } else if(arg['list']) {
           Mail = arg['list'];
           let unread = 0;
           for(let i=0; i<Mail.length; i++) {
-            if(!(Mail[i].flags & 1)) {
+            if(Mail[i].flags.length == 0) {
               unread++;
             }
           }
@@ -687,15 +704,6 @@ function receiveServerMessage(cmd, arg) {
           else
             alreadySeenMail = mailText;
           logMessage(mailText, 'server_message');
-      } else if(arg['sent']) {
-        if (messaging_mode) {
-          if (document.getElementById('mailDivCompose').style.display === "block") {
-            document.getElementById('mailDivCompose').style.display = "none";
-            document.getElementById('mailDivMain').style.display = "block";
-          }
-        } else {
-          document.getElementById('compose').style.display = "none";
-        }
       }
       updateMailUL();
       break;

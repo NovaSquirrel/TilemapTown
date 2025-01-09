@@ -478,7 +478,7 @@ class Connection(object):
 			for row in c.execute('SELECT id, sender_id, recipients, subject, contents, flags, created_at FROM Mail WHERE owner_id=?', (self.db_id,)):
 				item = {'id': row[0], 'from': find_username_by_db_id(row[1]),
 				'to': [find_username_by_db_id(int(x)) for x in row[2].split(',')],
-				'subject': row[3], 'contents': row[4], 'flags': row[5], 'timestamp': row[6].isoformat()}
+				'subject': row[3], 'contents': row[4], 'flags': ['read'] if row[5] == 1 else (['sent'] if row[5] == 2 else []), 'timestamp': row[6].isoformat()}
 				mail.append(item)
 			if len(mail):
 				self.send("EML", {'list': mail})

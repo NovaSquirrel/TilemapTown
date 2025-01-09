@@ -292,14 +292,17 @@ Possible fields:
 	"offline": boolean; if true and receive is false, the message will be stored temporarily and sent to the person when they're online. If true and receive is true, the message you're receiving was stored temporarily while you were offline.
 
 --> EML {"send": {"subject": subject, "contents": contents, "to": [username, ...]}}
+<-- EML {"sent": {"subject": subject, "contents": contents, "to": [username, ...]}}
 --> EML {"read": id}
 --> EML {"delete": id}
-send mail or manipulate your inbox
+Send mail or manipulate your inbox
 
-<-- EML {"receive": {"id": id, "subject": subject, "contents": contents, "to": [username, ...], "from": username, "flags": flags},}
+<-- EML {"receive": {"id": id, "subject": subject, "contents": contents, "to": [username, ...], "from": username}}
 <-- EML {"list": [{"id": id, "subject": subject, "contents": contents, "to": [username, ...], "from": username, "flags": flags, "timestamp": ISO 8601 timestamp}]}
-<-- EML {"sent": {"subject", subject}}
-receive mail from someone, or get a list upon logging in. "sent" acknowledges mail was successfully sent
+Receive mail from someone, or get a list upon logging in.
+Flags is an array of strings, which may contain one or more of the following:
+	"read": You have already read this mail
+	"sent": You sent this mail, and this is your copy of it
 
 <-- ERR {"text": "[text]"}
 Receive an error.

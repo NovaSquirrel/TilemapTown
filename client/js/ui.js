@@ -1760,14 +1760,22 @@ function updateMailUL() {
 		let li = document.createElement("li");
 		let letter = Mail[i];
 
-		li.appendChild(document.createTextNode("\"" + letter.subject + "\" from " + letter.from));
-		if (!(letter.flags & 1)) {
+		if (letter.flags === undefined)
+			letter.flags = [];
+		if (letter.flags.includes('sent')) {
+			li.appendChild(document.createTextNode(String.fromCharCode(8594) + "\"" + letter.subject + "\" to " + letter.to.join(', ')));
+		} else {
+			li.appendChild(document.createTextNode(String.fromCharCode(8592) + "\"" + letter.subject + "\" from " + letter.from));
+		}
+
+		if (letter.flags.length == 0) {
 			li.appendChild(document.createTextNode(" (NEW)"));
 		}
 
 		li.onclick = function () {
 			SendCmd("EML", { read: letter.id });
-			Mail[i].flags |= 1; // mark as read locally
+			if(!Mail[i].flags.includes('read'))
+				Mail[i].flags.push('read'); // mark as read locally
 			updateMailUL(); // show it as read locally
 
 			if (messaging_mode) {
@@ -1832,35 +1840,42 @@ function replyMail(id) {
 	if (index == -1)
 		return;
 
-	viewCompose();
-	document.getElementById('mailsendsubject').value = "RE: " + Mail[index].subject;
+
+	const yourUsername = PlayerWho[PlayerYou].username;
+
+	document.getElementById('mailsendsubject').value = ((Mail[index]["from"] != yourUsername)?"RE: ":"") + Mail[index].subject;
 	document.getElementById('mailsendtext').value = "";
-	document.getElementById('mailsendto').value = Mail[index]["from"];
+	document.getElementById('mailsendto').value = (Mail[index]["from"] == yourUsername) ? Mail[index]["to"] : Mail[index]["from"];
+
+	viewCompose();
 }
 
 function replyAllMail(id) {
-  // find mail by ID
-  let index = -1;
-  for (let i = 0; i < Mail.length; i++) {
-    if (Mail[i].id == id) {
-      index = i;
-      break;
-    }
-  }
-  if (index == -1)
-    return;
+	// find mail by ID
+	let index = -1;
+	for (let i = 0; i < Mail.length; i++) {
+		if (Mail[i].id == id) {
+			index = i;
+			break;
+		}
+	}
+	if (index == -1)
+		return;
 
-  viewCompose();
-  document.getElementById('mailsendsubject').value = "RE: " + Mail[index].subject;
-  document.getElementById('mailsendtext').value = "";
+	const yourUsername = PlayerWho[PlayerYou].username;
+	
+	document.getElementById('mailsendsubject').value = ((Mail[index]["from"] != yourUsername)?"RE: ":"") + Mail[index].subject;
+	document.getElementById('mailsendtext').value = "";
 
-  // add everyone to the list except yourself
-  let to_list = [Mail[index]["from"]];
-  for (let i = 0; i < Mail[index]["to"].length; i++) {
-    if (Mail[index]["to"][i] != PlayerWho[PlayerYou].username)
-      to_list.push(Mail[index]["to"][i]);
-  }
-  document.getElementById('mailsendto').value = to_list.join(",");
+	// add everyone to the list except yourself
+	let to_list = (Mail[index]["from"] == yourUsername) ? [] : [Mail[index]["from"]];
+	for (let i = 0; i < Mail[index]["to"].length; i++) {
+	if (Mail[index]["to"][i] != yourUsername)
+		to_list.push(Mail[index]["to"][i]);
+	}
+	document.getElementById('mailsendto').value = to_list.join(",");
+
+	viewCompose();
 }
 
 function deleteMail(id) {
@@ -2297,6 +2312,8 @@ function updateDirectionForAnim(id) {
 	if(!PlayerWho[id])
 		return;
 	let dir = PlayerWho[id].dir;
+	if (dir == undefined)
+		return;
 	if ((dir & 1) == 0) {
 		PlayerAnimation[id].lastDirection4 = dir;
 	}
@@ -2633,7 +2650,7 @@ function openUserProfileWindow(info) {
 		while (table.firstChild) {
 			table.removeChild(table.firstChild);
 		}
-		if (!data || data == []) {
+		if (!data || (Array.isArray(data) && data.length == [])) {
 			table.style.display = "none";
 			return;
 		}
@@ -2646,7 +2663,7 @@ function openUserProfileWindow(info) {
 			let th = document.createElement('th');
 			let td = document.createElement('td');
 			th.textContent = data[i*2+0];
-			if(data[i*2+1].startsWith("https://") || data[i*2+1].startsWith("http://"))
+			if(data[i*2+1].startsWith("https://") || data[i*2+1].startsWith("http://") || data[i*2+1].startsWith("gemini://") || data[i*2+1].startsWith("secondlife://"))
 				td.innerHTML = convertBBCode("[url]"+(data[i*2+1] || "")+"[/url]");
 			else
 				td.innerHTML = convertBBCode(data[i*2+1]);

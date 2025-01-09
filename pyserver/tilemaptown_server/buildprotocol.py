@@ -595,24 +595,31 @@ def fn_EML(connection, map, client, arg, echo):
 		if "send" in arg:
 			# todo: definitely needs some limits in place to prevent abuse!
 
-			# get a list of all the people to mail
-			recipient_id = set(find_db_id_by_username(x) for x in arg['send']['to'])
-			recipient_string = ','.join([str(x) for x in recipient_id])
+			# Get a list of all the people to mail
+			recipient_ids = set(find_db_id_by_username(x) for x in arg['send']['to'])
+			recipient_string = ','.join([str(x) for x in recipient_ids])
+			arg["send"] = remove_invalid_dict_fields(arg["send"], {
+				"to":       str,
+				"subject":  str,
+				"contents": str,
+			})
+			arg["send"]["to"] = [find_username_by_db_id(x) for x in recipient_ids]
 
-			if any(x == None for x in recipient_id):
+			if any(x == None for x in recipient_ids):
 				connection.protocol_error(echo, text='Couldn\'t find one or more users you wanted to mail', code='not_found')
 				return
 
-			# let the client know who sent it, since the 'send' argument will get passed along directly
-			arg['send']['from'] = client.username
+			# Let the client know who sent it, since the 'send' argument will get passed along directly
+			arg["send"]["from"] = client.username
+			arg["send"]["timestamp"] = datetime.datetime.now().isoformat()
 
-			# send everyone their mail
-			for id in recipient_id:
+			# Send everyone their mail
+			for id in recipient_ids:
 				if id == None:
 					continue
 				c.execute("INSERT INTO Mail (owner_id, sender_id, recipients, subject, contents, created_at, flags) VALUES (?, ?, ?, ?, ?, ?, ?)", (id, client.db_id, recipient_string, arg['send']['subject'], arg['send']['contents'], datetime.datetime.now(), 0))
 
-				# is that person online? tell them!
+				# Is that person online? tell them!
 				find = find_client_by_db_id(id)
 				if not find:
 					for connection in AllConnections:
@@ -623,11 +630,15 @@ def fn_EML(connection, map, client, arg, echo):
 					arg['send']['id'] = c.execute('SELECT last_insert_rowid()').fetchone()[0]
 					find.send("EML", {'receive': arg['send']})
 
-			client.send("EML", {'sent': {'subject': arg['send']['subject']}}) #acknowledge
-			client.send("MSG", {'text': 'Sent mail to %d users' % len(recipient_id)})
+			# Give the sender a copy of the mail that was sent, and tell them about it
+			c.execute("INSERT INTO Mail (owner_id, sender_id, recipients, subject, contents, created_at, flags) VALUES (?, ?, ?, ?, ?, ?, ?)", (client.db_id, client.db_id, recipient_string, arg['send']['subject'], arg['send']['contents'], datetime.datetime.now(), 2))
+			arg['send']['id'] = c.execute('SELECT last_insert_rowid()').fetchone()[0]
+			client.send("EML", {'sent': arg["send"] }) # Tell the sender their mail sent
+
+			client.send("MSG", {'text': 'Sent mail to %d user%s' % (len(recipient_ids), "s" if len(recipient_ids) != 1 else "")})
 
 		elif "read" in arg:
-			c.execute('UPDATE Mail SET flags=1 WHERE owner_id=? AND id=?', (client.db_id, arg['read']))
+			c.execute('UPDATE Mail SET flags=1 WHERE owner_id=? AND id=? AND flags=0', (client.db_id, arg['read']))
 		elif "delete" in arg:
 			c.execute('DELETE FROM Mail WHERE owner_id=? AND id=?', (client.db_id, arg['delete']))
 
@@ -990,6 +1001,10 @@ def fn_IDN(connection, map, client, arg, echo):
 		if user_count > 1:
 			connected_text += ('.' if bot_count == 0 else '') + ' Use the [tt]/wa[/tt] command to see where people are at!'
 		connection.send("MSG", {'text': connected_text, 'class': 'server_stats'})
+
+		# Tell messaging clients their username and protocol
+		if messaging_only_mode:
+			connection.send("WHO", {'list': {connection.db_id: {'name': get_entity_name_by_db_id(connection.db_id), 'username': arg["username"]}}, 'you': connection.db_id})
 
 		if connection.username in Config["Server"]["Admins"]:
 			connection.send("MSG", {'text': '[command]connectlog[/command] size: %d, [command]buildlog[/command] size: %d, [command]filelog[/command] size: %d' % (len(TempLogs[0]), len(TempLogs[1]), len(TempLogs[2])), 'class': 'secret_message'})
