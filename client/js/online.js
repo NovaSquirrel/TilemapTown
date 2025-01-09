@@ -709,7 +709,8 @@ function receiveServerMessage(cmd, arg) {
     case "PRI":
       senderIdForBbcode = arg.id ?? null;
       let escapedName = escape_tags(arg.name || "");
-      let escapedUsername = escape_tags(arg.username || "");
+      let typeMarker = arg.offline ? "&#x2709;" : "";
+      let escapedUsername = escape_tags(arg.username || "") + typeMarker;
 
       let respond = '<span onclick="setChatInput(\'/tell '+arg.username+' \')">';
       if(arg.text.slice(0, 4) == "/me ") {
@@ -717,33 +718,33 @@ function receiveServerMessage(cmd, arg) {
         let no_space = new_text.startsWith("'s ") || new_text.startsWith("'d ") || new_text.startsWith("'ll ");
         if(arg.receive)
           logMessage(respond+"&larr;["+escapedName+"("+escapedUsername+")"+"] * <i>"+escape_tags(arg.name)+(no_space?"":" ")+convertBBCodeChat(new_text)+'</i></span>', 'private_message',
-            {'isPrivateChat': true, 'plainText': `<-- [${escapedName}(${arg.username})] * ${arg.name}${no_space?"":" "}${new_text}`,
-            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
+            {'isPrivateChat': true, 'plainText': `<-- [${escapedName}(${arg.username + typeMarker})] * ${arg.name}${no_space?"":" "}${new_text}`,
+            'timestamp': arg.timestamp, 'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
         else
           logMessage(respond+"&rarr;["+escapedName+"("+escapedUsername+")"+"] * <i>"+escape_tags(PlayerWho[PlayerYou].name)+(no_space?"":" ")+convertBBCodeChat(new_text)+'</i></span>', 'private_message',
-            {'isPrivateChat': true, 'plainText': `--> [${arg.name}(${arg.username})] * ${PlayerWho[PlayerYou].name}${no_space?"":" "}${new_text}`,
-            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
+            {'isPrivateChat': true, 'plainText': `--> [${arg.name}(${arg.username + typeMarker})] * ${PlayerWho[PlayerYou].name}${no_space?"":" "}${new_text}`,
+            'timestamp': arg.timestamp, 'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
           break;
       } else if(arg.text.slice(0, 5) == "/ooc ") {
         var new_text = arg.text.slice(5);
         if(arg.receive)
           logMessage(respond+"&larr;["+escapedName+"("+escapedUsername+")"+"] [OOC] "+convertBBCodeChat(new_text)+'</span>', 'private_message',
-            {'isPrivateChat': true, 'plainText': `<-- [${arg.name}(${arg.username})] [OOC] ${new_text}`,
-            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
+            {'isPrivateChat': true, 'plainText': `<-- [${arg.name}(${arg.username + typeMarker})] [OOC] ${new_text}`,
+            'timestamp': arg.timestamp, 'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
         else
           logMessage(respond+"&rarr;["+escapedName+"("+escapedUsername+")"+"] [OOC] "+convertBBCodeChat(new_text)+'</span>', 'private_message',
-            {'isPrivateChat': true, 'plainText': `--> [${arg.name}(${arg.username})] [OOC] ${new_text}`,
-            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
+            {'isPrivateChat': true, 'plainText': `--> [${arg.name}(${arg.username + typeMarker})] [OOC] ${new_text}`,
+            'timestamp': arg.timestamp, 'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
           break;
       } else {
         if(arg.receive)
           logMessage(respond+"&larr;["+escapedName+"("+escapedUsername+")"+"] "+convertBBCodeChat(arg.text)+'</span>', 'private_message',
-            {'isPrivateChat': true, 'plainText': `<-- [${arg.name}(${arg.username})] ${arg.text}`,
-            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
+            {'isPrivateChat': true, 'plainText': `<-- [${arg.name}(${arg.username + typeMarker})] ${arg.text}`,
+            'timestamp': arg.timestamp, 'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
         else
           logMessage(respond+"&rarr;["+escapedName+"("+escapedUsername+")"+"] "+convertBBCodeChat(arg.text)+'</span>', 'private_message',
-            {'isPrivateChat': true, 'plainText': `--> [${arg.name}(${arg.username})] ${arg.text}`,
-            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
+            {'isPrivateChat': true, 'plainText': `--> [${arg.name}(${arg.username + typeMarker})] ${arg.text}`,
+            'timestamp': arg.timestamp, 'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
           break;
       }
     case "CMD":

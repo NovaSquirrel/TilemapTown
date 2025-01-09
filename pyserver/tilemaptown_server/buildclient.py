@@ -431,6 +431,8 @@ class Connection(object):
 				self.refresh_client_inventory(client)
 				write_to_connect_log("login: \"%s\" from %s" % (username, self.ip))
 			else:
+				client.name = get_entity_name_by_db_id(self.db_id)
+
 				old_connection = ConnectionsByUsername.get(username, None)
 				if old_connection:
 					old_entity = old_connection.entity
@@ -456,16 +458,8 @@ class Connection(object):
 					users[str(other.db_id)] = other.watcher_who()
 				self.send("WHO", {"list": users, "type": "watch"})
 
-			c = Database.cursor()
-			# send the client their mail
-			mail = []
-			for row in c.execute('SELECT id, sender_id, recipients, subject, contents, flags, created_at FROM Mail WHERE owner_id=?', (self.db_id,)):
-				item = {'id': row[0], 'from': find_username_by_db_id(row[1]),
-				'to': [find_username_by_db_id(int(x)) for x in row[2].split(',')],
-				'subject': row[3], 'contents': row[4], 'flags': row[5], 'timestamp': row[6].isoformat()}
-				mail.append(item)
-			if len(mail):
-				self.send("EML", {'list': mail})
+			if self.login_successful_callback: # Make sure this gets called even if the map switch didn't happen
+				self.login_successful_callback()
 
 			# Send the user's settings to them
 			settings = {}
@@ -477,6 +471,25 @@ class Connection(object):
 				settings["watch_list"] = list(self.watch_list)
 			if settings != {}:
 				self.send("EXT", {"settings": settings})
+
+			c = Database.cursor()
+			# send the user their mail
+			mail = []
+			for row in c.execute('SELECT id, sender_id, recipients, subject, contents, flags, created_at FROM Mail WHERE owner_id=?', (self.db_id,)):
+				item = {'id': row[0], 'from': find_username_by_db_id(row[1]),
+				'to': [find_username_by_db_id(int(x)) for x in row[2].split(',')],
+				'subject': row[3], 'contents': row[4], 'flags': row[5], 'timestamp': row[6].isoformat()}
+				mail.append(item)
+			if len(mail):
+				self.send("EML", {'list': mail})
+
+			# Send the user any offline messages meant for them
+			if self.db_id in OfflineMessages:
+				for sender_db_id, queue in OfflineMessages[self.db_id].items():
+					for item in queue:
+						text, time, sender_name, sender_username = item
+						self.send("PRI", {'text': text, 'name': sender_name, 'id': sender_db_id, 'username': sender_username, 'receive': True, 'offline': True, 'timestamp': time.isoformat()})
+				del OfflineMessages[self.db_id]
 
 			self.finish_batch()
 			return True
@@ -643,6 +656,8 @@ class FakeClient(PermissionsMixin, ClientMixin, object):
 		self.map_id = None
 		self.entity_type = entity_type['user']
 
+		self.name = "?"
+
 	def is_client(self): # is_client_and_entity() will distinguish between this and a real Client
 		return True
 
@@ -655,9 +670,9 @@ class FakeClient(PermissionsMixin, ClientMixin, object):
 	def name_and_username(self):
 		return self.connection_attr("username")
 
-	@property
-	def name(self):
-		return self.connection_attr("username")
+	#@property
+	#def name(self):
+	#	return self.connection_attr("username")
 
 	@property
 	def db_id(self):

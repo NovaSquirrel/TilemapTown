@@ -1049,7 +1049,7 @@ def fn_IDN(connection, map, client, arg, echo):
 		if not override_map or not new_client.switch_map(override_map[0], new_pos=None if (len(override_map) == 1) else (override_map[1:])):
 			connection.entity.switch_map(get_database_meta('default_map'))
 
-	if connection.login_successful_callback: # Make sure this gets called even if the map switch fails
+	if connection.login_successful_callback: # Be 100% sure this gets called
 		connection.login_successful_callback()
 	connection.finish_batch()
 

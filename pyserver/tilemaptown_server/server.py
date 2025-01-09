@@ -80,6 +80,16 @@ def save_everything():
 			e.save()
 			e.save_on_clean_up = False
 
+	# Convert offline messages to mail
+	c = Database.cursor()
+	for recipient_db_id, senders in OfflineMessages.items():
+		print("Converting offline messages for %d into mail" % recipient_db_id)
+		for sender_db_id, queue in senders.items():
+			messages_in_queue = ''.join(["[li]%s: %s[/li]" % (_[1].strftime("%Y-%m-%d"), _[0]) for _ in queue])
+			subject = "(Automatic mail) %d offline message%s" % (len(queue), "s" if len(queue) != 1 else "")
+			contents = "The server restarted while you had messages waiting for you, so the following offline messages were converted to mail: [ul]"+messages_in_queue+"[/ul]"
+			c.execute("INSERT INTO Mail (owner_id, sender_id, recipients, subject, contents, created_at, flags) VALUES (?, ?, ?, ?, ?, ?, ?)", (recipient_db_id, sender_db_id, str(recipient_db_id), subject, contents, datetime.datetime.now(), 0))
+
 # Websocket connection handler
 async def client_handler(websocket, path):
 	ip = websocket.remote_address[0]

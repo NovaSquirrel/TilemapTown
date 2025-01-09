@@ -174,6 +174,7 @@ AllEntitiesByID = weakref.WeakValueDictionary() # All entities (indexed by tempo
 AllEntitiesWithRequests = weakref.WeakSet()     # All entities with active requests
 ConnectionsByUsername = weakref.WeakValueDictionary() # Look up connections by lowercased username
 ConnectionsByApiKey = weakref.WeakValueDictionary() # Look up connections by API key (supplied to clients in IDN)
+OfflineMessages = {} # OfflineMessages[recipient_id][sender_id][index]
 
 # Remote map-watching for bots (and remote chat)
 maplisten_type = {}
@@ -345,6 +346,14 @@ def find_db_id_by_username(username):
 def get_entity_type_by_db_id(id):
 	c = Database.cursor()
 	c.execute('SELECT type FROM Entity WHERE id=?', (id,))
+	result = c.fetchone()
+	if result == None:
+		return None
+	return result[0]
+
+def get_entity_name_by_db_id(id):
+	c = Database.cursor()
+	c.execute('SELECT name FROM Entity WHERE id=?', (id,))
 	result = c.fetchone()
 	if result == None:
 		return None

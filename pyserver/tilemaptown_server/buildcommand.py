@@ -207,23 +207,31 @@ def find_local_entity_by_name(map, name):
 
 # -------------------------------------
 
-@cmd_command(category="Settings", syntax="newname")
+@cmd_command(category="Settings", syntax="newname", no_entity_needed=True)
 def fn_nick(map, client, context, arg):
-	if len(arg) > 0 and not arg.isspace():
-		arg = arg.replace('\n', '')
-		map.broadcast("MSG", {'text': "\""+client.name+"\" is now known as \""+noparse(arg)+"\""})
+	arg = arg[:50].replace('\n', '')
+	if len(arg) == 0 or arg.isspace():
+		return
+
+	if is_entity(client):
+		map.broadcast("MSG", {'text': "\""+noparse(client.name)+"\" is now known as \""+noparse(arg)+"\""})
 		client.name = arg
 		map.broadcast("WHO", {'add': client.who()}, remote_category=maplisten_type['entry']) # update client view
 
-	# If this client is listening to any map's chat, tell any clients listening to changes in the listener list the name has changed
-	if client.is_client():
-		listening_maps = client.connection_attr('listening_maps')
-		if listening_maps:
-			for category, map_id in listening_maps:
-				if category != maplisten_type['chat']:
-					continue
-				for other_connection in MapListens[maplisten_type['chat_listen']].get(map_id, tuple()):
-					other_connection.send("WHO", {'type': 'chat_listeners', 'add': client.connection_attr('listener_who')(), 'remote_map': map_id})
+		# If this client is listening to any map's chat, tell any clients listening to changes in the listener list the name has changed
+		if client.is_client():
+			listening_maps = client.connection_attr('listening_maps')
+			if listening_maps:
+				for category, map_id in listening_maps:
+					if category != maplisten_type['chat']:
+						continue
+					for other_connection in MapListens[maplisten_type['chat_listen']].get(map_id, tuple()):
+						other_connection.send("WHO", {'type': 'chat_listeners', 'add': client.connection_attr('listener_who')(), 'remote_map': map_id})
+	elif hasattr(client, 'connection') and client.db_id: # If it's a fake client, just update it in the database
+		client.send("MSG", {'text': "\""+noparse(client.name)+"\" is now known as \""+noparse(arg)+"\""})
+		client.name = arg
+		c = Database.cursor()
+		c.execute("UPDATE Entity SET name=? WHERE id=?", (arg, client.db_id))
 
 @cmd_command(category="Settings", syntax="description")
 def fn_userdesc(map, client, context, arg):
@@ -277,6 +285,30 @@ def send_private_message(client, context, recipient_username, text):
 				else:
 					respond(context, 'That entity isn\'t a user', error=True)
 			else:
+				recipient_db_id = find_db_id_by_username(recipient_username)
+				if recipient_db_id:
+					if not client.db_id:
+						respond(context, 'You can\'t send offline messages as a guest', error=True)
+						return
+					respond_to = context[0]
+					if respond_to is not client:
+						respond(context, 'You can\'t send offline messages via remote control', error=True)
+						return
+					if recipient_db_id not in OfflineMessages:
+						OfflineMessages[recipient_db_id] = {}
+					if client.db_id not in OfflineMessages[recipient_db_id]:
+						OfflineMessages[recipient_db_id][client.db_id] = []
+					queue = OfflineMessages[recipient_db_id][client.db_id]
+					if len(queue) >= 10:
+						respond(context, 'You have too many messages queued up for \"%s\" already' % recipient_username, error=True)
+						return
+					queue.append((text, datetime.datetime.now(), client.name, client.username))
+
+					# Notify the sender
+					recipient_name = get_entity_name_by_db_id(recipient_db_id) or find_username_by_db_id(recipient_db_id) or "?"
+					client.send("PRI", {'text': text, 'name': recipient_name, 'id': recipient_db_id, 'username': find_username_by_db_id(recipient_db_id), 'receive': False, 'offline': True})
+					return
+
 				failed_to_find(context, recipient_username)
 	else:
 		respond(context, 'Private message who?', error=True)
@@ -285,6 +317,31 @@ def send_private_message(client, context, recipient_username, text):
 def fn_tell(map, client, context, arg):
 	username, privtext = separate_first_word(arg)
 	send_private_message(client, context, username, privtext)
+
+@cmd_command(category="Communication", alias=['oq'], privilege_level="registered", no_entity_needed=True)
+def fn_offlinequeue(map, client, context, arg):
+	if arg == "":
+		return
+	recipient_username, arg = separate_first_word(arg)
+	recipient_db_id = find_db_id_by_username(recipient_username)
+	if recipient_db_id == None:
+		failed_to_find(context, recipient_username)
+		return
+	queue = OfflineMessages.get(recipient_db_id)
+	if queue:
+		queue = queue.get(client.db_id)
+	if queue == None or len(queue) == 0:
+		respond(context, 'You don\'t have any messages queued for "%s"' % recipient_username)
+		return
+
+	if arg.lower() == "clear":
+		count = len(queue)
+		del OfflineMessages[recipient_db_id][client.db_id]
+		if len(OfflineMessages[recipient_db_id]) == 0:
+			del OfflineMessages[recipient_db_id]
+		respond(context, 'Cleared %d messages queued for "%s"' % (count, recipient_username))
+		return
+	respond(context, '%d message%s queued for "%s": [ul]%s[/ul]' % (len(queue), "s" if len(queue) != 1 else "", recipient_username, ''.join(["[li]%s: %s[/li]" % (_[1].strftime("%Y-%m-%d"), _[0]) for _ in queue])))
 
 def send_request_to_user(client, context, arg, request_type, request_data, accept_command, decline_command, you_message, them_message):
 	global next_request_id
@@ -671,7 +728,7 @@ def fn_rideend(map, client, context, arg):
 
 @cmd_command(no_entity_needed=True)
 def fn_time(map, client, context, arg):
-	respond(context, datetime.datetime.today().strftime("Now it's %m/%d/%Y, %I:%M %p"))
+	respond(context, datetime.datetime.today().strftime("Now it's %Y-%m-%d, %I:%M %p"))
 
 def broadcast_status_change(map, client, status_type, message):
 	client.status_type = status_type
@@ -2186,12 +2243,18 @@ def fn_last(map, client, context, arg):
 		if id in AllEntitiesByDB:
 			respond(context, '%s is online right now!' % arg)
 		else:
+			on_messaging = False
+			for connection in AllConnections:
+				if connection.db_id == id:
+					on_messaging = True
+					break
+
 			c = Database.cursor()
 			c.execute('SELECT last_seen_at FROM User WHERE entity_id=?', (id,))
 			result = c.fetchone()
 			if result == None:
 				return
-			respond(context, '%s last seen at %s' % (arg, result[0].strftime("%m/%d/%Y, %I:%M %p") ))
+			respond(context, '%s last seen at %s%s' % (arg, result[0].strftime("%Y-%m-%d, %I:%M %p"), " (but is connected)" if on_messaging else "" ))
 
 @cmd_command(category="Who", alias=['wa'], no_entity_needed=True)
 def fn_whereare(map, client, context, arg):

@@ -1939,7 +1939,7 @@ function convertBBCodeChat(t) {
 	return result.html.replaceAll("\n", "<br>");
 }
 
-let dateFormat = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+let timeFormat = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
 let alreadyPlayedSound = false;
 function logMessage(Message, Class, Params) {
 	Params = Params ?? {};
@@ -1948,8 +1948,17 @@ function logMessage(Message, Class, Params) {
 
 	let timestampText = "";
 	if (chatTimestamps) {
-		let currentDate = new Date();
-		timestampText = dateFormat.format(currentDate);
+		if (Params.timestamp) {
+			let date = new Date(Date.parse(Params.timestamp));
+			let now = new Date();
+			if (date.getMonth() !== now.getMonth() || date.getDay() !== now.getDay())
+				timestampText = date.toLocaleDateString() + " " + timeFormat.format(date);
+			else
+				timestampText = timeFormat.format(date);
+		} else {
+			let currentDate = new Date();
+			timestampText = timeFormat.format(currentDate);
+		}
 	}
 
 	let newMessage = document.createElement("div");
@@ -2662,8 +2671,7 @@ function openUserProfileWindow(info) {
 	const birthday = info.birthday;
 	document.getElementById('userProfileBirthdaySpan').style.display = "inline";
 	if (birthday) {
-		const birthdate = new Date(birthday);
-		if(birthdate instanceof Date && !isNaN(birthdate)) {
+		if(info.age) {
 			document.getElementById('userProfileBirthday').textContent = info.birthday + " ("+info.age+" years old)";
 		} else {
 			document.getElementById('userProfileBirthday').textContent = info.birthday;
