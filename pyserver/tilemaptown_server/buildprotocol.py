@@ -616,29 +616,48 @@ def fn_EML(connection, map, client, arg, echo):
 			arg["send"]["from"] = client.username
 			arg["send"]["timestamp"] = datetime.datetime.now().isoformat()
 
+			failed_count = 0
+
 			# Send everyone their mail
 			for id in recipient_ids:
 				if id == None:
 					continue
+
+				recipient_connection = None
+				for find_connection in AllConnections:
+					if find_connection.db_id == id:
+						recipient_connection = find_connection
+						break
+
+				# Drop mail sent to people who have you ignored
+				if recipient_connection:
+					if client.username in recipient_connection.ignore_list:
+						connection.protocol_error(echo, text='You cannot mail '+recipient_connection.username)
+						print("Dropping mail sent to "+str(id))
+						failed_count += 1
+						continue
+				else:
+					c.execute('SELECT ignore FROM User WHERE entity_id=?', (id,))
+					result = c.fetchone()
+					if result != None and (client.username in json.loads(result[0] or "[]")):
+						connection.protocol_error(echo, text='You cannot mail '+find_username_by_db_id(id))
+						print("Dropping mail sent to "+str(id))
+						failed_count += 1
+						continue
+
 				c.execute("INSERT INTO Mail (owner_id, sender_id, recipients, subject, contents, created_at, flags) VALUES (?, ?, ?, ?, ?, ?, ?)", (id, client.db_id, recipient_string, arg['send']['subject'], arg['send']['contents'], datetime.datetime.now(), 0))
 
 				# Is that person online? tell them!
-				find = find_client_by_db_id(id)
-				if not find:
-					for connection in AllConnections:
-						if connection.db_id == id:
-							find = connection
-							break
-				if find:
+				if recipient_connection:
 					arg['send']['id'] = c.execute('SELECT last_insert_rowid()').fetchone()[0]
-					find.send("EML", {'receive': arg['send']})
+					recipient_connection.send("EML", {'receive': arg['send']})
 
 			# Give the sender a copy of the mail that was sent, and tell them about it
 			c.execute("INSERT INTO Mail (owner_id, sender_id, recipients, subject, contents, created_at, flags) VALUES (?, ?, ?, ?, ?, ?, ?)", (client.db_id, client.db_id, recipient_string, arg['send']['subject'], arg['send']['contents'], datetime.datetime.now(), 2))
 			arg['send']['id'] = c.execute('SELECT last_insert_rowid()').fetchone()[0]
 			client.send("EML", {'sent': arg["send"] }) # Tell the sender their mail sent
 
-			client.send("MSG", {'text': 'Sent mail to %d user%s' % (len(recipient_ids), "s" if len(recipient_ids) != 1 else "")})
+			client.send("MSG", {'text': 'Sent mail to %d user%s' % (len(recipient_ids)-failed_count, "s" if (len(recipient_ids)-failed_count) != 1 else "")})
 
 		elif "read" in arg:
 			c.execute('UPDATE Mail SET flags=1 WHERE owner_id=? AND id=? AND flags=0', (client.db_id, arg['read']))
