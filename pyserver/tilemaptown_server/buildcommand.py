@@ -246,6 +246,10 @@ def fn_client_settings(map, client, context, arg):
 @cmd_command(category="Communication")
 def fn_say(map, client, context, arg):
 	respond_to = context[0]
+	if len(arg) > Config["MaxProtocolSize"]["Chat"]:
+		if hasattr(respond_to, 'connection') and respond_to.connection():
+			respond_to.connection().protocol_error(context[1], text='Tried to send chat message that was too big: (%d, max is %d)' % (len(arg), Config["MaxProtocolSize"]["Chat"]), code='chat_too_big', detail=Config["MaxProtocolSize"]["Chat"])
+		return
 	if arg != '':
 		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': arg, 'rc_username': respond_to.username_or_id(), 'rc_id': respond_to.protocol_id()}
 		map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
@@ -253,13 +257,19 @@ def fn_say(map, client, context, arg):
 @cmd_command(category="Communication")
 def fn_me(map, client, context, arg):
 	respond_to = context[0]
+	if len(arg) > Config["MaxProtocolSize"]["Chat"]:
+		if hasattr(respond_to, 'connection') and respond_to.connection():
+			respond_to.connection().protocol_error(context[1], text='Tried to send chat message that was too big: (%d, max is %d)' % (len(arg), Config["MaxProtocolSize"]["Chat"]), code='chat_too_big', detail=Config["MaxProtocolSize"]["Chat"])
+		return
 	if arg != '':
 		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': "/me "+arg, 'rc_username': respond_to.username_or_id(), 'rc_id': respond_to.protocol_id()}
 		map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
 
 def send_private_message(client, context, recipient_username, text):
+	respond_to = context[0]
 	if len(text) > Config["MaxProtocolSize"]["Private"]:
-		connection.protocol_error(echo, text='Tried to send private message that was too big: (%d, max is %d)' % (len(text), Config["MaxProtocolSize"]["Private"]), code='private_too_big', detail=Config["MaxProtocolSize"]["Private"])
+		if hasattr(respond_to, 'connection') and respond_to.connection():
+			respond_to.connection().protocol_error(context[1], text='Tried to send private message that was too big: (%d, max is %d)' % (len(text), Config["MaxProtocolSize"]["Private"]), code='private_too_big', detail=Config["MaxProtocolSize"]["Private"])
 		return
 	if recipient_username != "":
 		if text.isspace() or text=="":
@@ -277,7 +287,6 @@ def send_private_message(client, context, recipient_username, text):
 					client.send("PRI", {'text': text, 'name': u.name, 'id': u.protocol_id(), 'username': u.username_or_id(), 'receive': False})
 					u.receive_tell(client, text)
 				elif u.is_client() or "PRI" in u.forward_message_types:
-					respond_to = context[0]
 					if not u.is_client() or not in_blocked_username_list(client, u.connection_attr('ignore_list'), 'message %s' % u.name):
 						client.send("PRI", {'text': text, 'name': u.name, 'id': u.protocol_id(), 'username': u.username_or_id(), 'receive': False})
 						recipient_params = {'text': text, 'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'receive': True}

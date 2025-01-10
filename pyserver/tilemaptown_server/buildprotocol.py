@@ -364,7 +364,7 @@ def fn_MOV(connection, map, client, arg, echo):
 
 @protocol_command()
 def fn_CMD(connection, map, client, arg, echo):
-	if len(arg['text']) > Config["MaxProtocolSize"]["Chat"]:
+	if len(arg['text']) > Config["MaxProtocolSize"]["Command"]:
 		connection.protocol_error(echo, text='Tried to send command that was too big: (%d, max is %d)' % (len(arg['text']), Config["MaxProtocolSize"]["Command"]), code='command_too_big', detail=Config["MaxProtocolSize"]["Command"])
 		return
 	actor = client
