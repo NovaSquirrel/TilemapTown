@@ -364,6 +364,9 @@ def fn_MOV(connection, map, client, arg, echo):
 
 @protocol_command()
 def fn_CMD(connection, map, client, arg, echo):
+	if len(arg['text']) > Config["MaxProtocolSize"]["Chat"]:
+		connection.protocol_error(echo, text='Tried to send command that was too big: (%d, max is %d)' % (len(arg['text']), Config["MaxProtocolSize"]["Command"]), code='command_too_big', detail=Config["MaxProtocolSize"]["Command"])
+		return
 	actor = client
 	echo = arg['echo'] if ('echo' in arg) else None
 
@@ -647,6 +650,9 @@ def fn_EML(connection, map, client, arg, echo):
 
 @protocol_command()
 def fn_MSG(connection, map, client, arg, echo):
+	if len(arg['text']) > Config["MaxProtocolSize"]["Chat"]:
+		connection.protocol_error(echo, text='Tried to send chat message that was too big: (%d, max is %d)' % (len(arg['text']), Config["MaxProtocolSize"]["Chat"]), code='chat_too_big', detail=Config["MaxProtocolSize"]["Chat"])
+		return
 	actor = client
 
 	if 'rc' in arg:

@@ -222,6 +222,22 @@ FileUpload.AllowCrossOrigin
 Default: False
 Add CORS headers to the file upload API in order to allow accessing it when testing locally.
 
+MaxProtocolSize.MSG
+Set a maximum number of characters that an incoming message of a given type is allowed to be.
+You can use any 3-character protocol message type here.
+
+MaxProtocolSize.Default
+Used for any types not set; many of them do have default sizes though (see buildglobal.py)
+
+MaxProtocolSize.Chat
+Maximum number of characters for the "text" field of MSG.
+
+MaxProtocolSize.Private
+Maximum number of characters for the "text" field of PRI. (or a message sent with /tell)
+
+MaxProtocolSize.Command
+Maximum number of characters for the "text" field of CMD.
+
 .--------------------------------------------------------------------------------------------------
 | Resource files:
 '--------------------------------------------------------------------------------------------------

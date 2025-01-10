@@ -138,6 +138,9 @@ async def client_handler(websocket, path):
 			command = message[0:3]
 			arg = {}
 			if len(message) > 4:
+				if len(message) > Config["MaxProtocolSize"].get(command, Config["MaxProtocolSize"]["Default"]):
+					connection.protocol_error(echo, text='Received protocol message that was too big: %s' % command, code='protocol_too_big', detail=command)
+					continue
 				arg = json.loads(message[4:])
 
 			# Process the command
