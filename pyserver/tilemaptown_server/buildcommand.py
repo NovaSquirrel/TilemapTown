@@ -259,7 +259,7 @@ def fn_me(map, client, context, arg):
 
 def send_private_message(client, context, recipient_username, text):
 	if len(text) > Config["MaxProtocolSize"]["Private"]:
-		connection.protocol_error(echo, text='Tried to send private message that was too big: (%d, max is %d)' % (len(arg['text']), Config["MaxProtocolSize"]["Private"]), code='private_too_big', detail=Config["MaxProtocolSize"]["Private"])
+		connection.protocol_error(echo, text='Tried to send private message that was too big: (%d, max is %d)' % (len(text), Config["MaxProtocolSize"]["Private"]), code='private_too_big', detail=Config["MaxProtocolSize"]["Private"])
 		return
 	if recipient_username != "":
 		if text.isspace() or text=="":
