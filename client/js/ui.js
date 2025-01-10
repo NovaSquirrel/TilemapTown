@@ -1745,6 +1745,37 @@ function viewCompose() {
 	}
 }
 
+function mailSelectToggle() {
+	for (let i = 0; i < Mail.length; i++) {
+		const checkbox = document.getElementById("mailcheck" + i);
+		if (checkbox)
+			checkbox.checked = !checkbox.checked;
+	}
+}
+
+function mailSelectDelete() {
+	const deleteList = [];
+	for (let i = 0; i < Mail.length; i++) {
+		const checkbox = document.getElementById("mailcheck" + i);
+		if (checkbox && checkbox.checked)
+			deleteList.push(Mail[i].id);
+	}
+
+	if(deleteList.length && confirm("Really delete "+deleteList.length+" mail message"+(deleteList.length != 1 ? "" : "")+"?")) {
+		let newMail = [];
+		for (let i = 0; i < Mail.length; i++) {
+			if (!deleteList.includes(Mail[i].id))
+				newMail.push(Mail[i]);
+		}
+		Mail = newMail;
+
+		updateMailUL();
+
+		for (let id of deleteList)
+			SendCmd("EML", { "delete": id });
+	}
+}
+
 function updateMailUL() {
 	// Manage the users <ul>
 	let ul = document.getElementById('mailul');
@@ -1760,6 +1791,12 @@ function updateMailUL() {
 		let li = document.createElement("li");
 		let letter = Mail[i];
 
+		let checkbox = document.createElement("input");
+		checkbox.type = "checkbox";
+		checkbox.onclick = function(event) {event.stopPropagation();}
+		checkbox.id = "mailcheck" + i;
+		li.appendChild(checkbox);
+
 		if (letter.flags === undefined)
 			letter.flags = [];
 		if (letter.flags.includes('sent')) {
@@ -1773,6 +1810,13 @@ function updateMailUL() {
 		}
 
 		li.onclick = function () {
+			// Prevent accidentally wiping out the check list
+			for (let i = 0; i < Mail.length; i++) {
+				const checkbox = document.getElementById("mailcheck" + i);
+				if (checkbox && checkbox.checked)
+					return;
+			}
+
 			SendCmd("EML", { read: letter.id });
 			if(!Mail[i].flags.includes('read'))
 				Mail[i].flags.push('read'); // mark as read locally
