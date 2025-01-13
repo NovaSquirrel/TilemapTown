@@ -131,25 +131,29 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 	}
 
 	let sortedPlayers = [];
-	for (var index in PlayerWho) {
-		sortedPlayers.push(index);
+	for (let index in PlayerWho) {
+		sortedPlayers.push(PlayerWho[index]);
 	}
+	for (let particle of UserParticles) {
+		sortedPlayers.push({particle, passengers: [], id: null, x: particle.data.at[0], y: particle.data.at[1]});
+	}
+
 	sortedPlayers.sort(
 		(a, b) => {
-			if (!PlayerWho[b].is_following && PlayerWho[a].passengers.includes(parseInt(b))) {
+			if (a.y == b.y && ((a.particle && !b.particle) || (!a.particle || b.particle)))
+				return a.particle ? 1 : -1;
+			if (!b.is_following && a.passengers.includes(b.id)) {
 				return -1;
-			} else if (!PlayerWho[a].is_following && PlayerWho[b].passengers.includes(parseInt(a))) {
+			} else if (!a.is_following && b.passengers.includes(a.id)) {
 				return 1;
 			}
-			return (PlayerWho[a].y > PlayerWho[b].y) ? 1 : -1;
+			return (a.y > b.y) ? 1 : -1;
 		}
 	);
 
-	for (var sort_n in sortedPlayers) {
+	for (let Mob of sortedPlayers) {
 		try {
-			let index = sortedPlayers[sort_n];
-
-			let Mob = PlayerWho[index];
+			let index = Mob.id;
 			if(
 				(Mob.x < (tileX-3)) ||
 				(Mob.y < (tileY-3)) ||
@@ -157,6 +161,26 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 				(Mob.y > (tileY+viewHeight+3))
 			)
 				continue;
+
+			if(Mob.particle) {
+				let offset = Mob.particle.data.offset ?? [0,0];
+				let pic = Mob.particle.data.pic;
+				if (!pic)
+					continue;
+				let size = Mob.particle.data.size ?? [1,1];
+				if (pic[0] in IconSheets) {
+					let animationFrame = calculateAnimationFrame(Mob.particle.data, Mob.particle.timer);
+					ctx.drawImage(IconSheets[pic[0]],
+						(pic[1]+animationFrame*size[0]) * 16, pic[2] * 16,
+						size[0] * 16, size[1] * 16,
+						(Mob.x * 16 + 8 - size[0]*8) - pixelCameraX + offset[0],
+						(Mob.y * 16 + 16 - size[1]*16) - pixelCameraY + offset[1],
+						size[0] * 16, size[1] * 16);
+				} else {
+					RequestImageIfNeeded(pic[0]);
+				}
+				continue;
+			}
 
 			IsMousedOver = false;
 			for (let look = 0; look < MousedOverPlayers.length; look++) {
@@ -212,7 +236,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 				}
 
 			} else {
-				pic = Mob.pic;
+				let pic = Mob.pic;
 				if (pic == null)
 					pic = [0, 8, 24];
 				if (pic[0] in IconSheets) {
@@ -291,6 +315,37 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 	}
 }
 
+function calculateAnimationFrame(tile, timer) {
+	if (timer < 0)
+		timer = 0;
+	let animationFrameCount = Math.max(1, tile.anim_frames ?? 1);
+	if(animationFrameCount > 1) {
+		let animationTimer = timer + (tile.anim_offset ?? 0);
+		let animationSpeed = Math.max(1, tile.anim_speed ?? 1);
+		let animationMode = tile.anim_mode ?? 0;
+		switch(animationMode) {
+			case 0: // Forwards
+				return Math.floor(animationTimer / animationSpeed) % animationFrameCount;
+			case 1: // Backwards
+				return animationFrameCount - 1 - Math.floor(animationTimer / animationSpeed) % animationFrameCount;
+			case 2: // Ping-pong forwards
+			case 3: // Ping-pong backwards
+				animationFrameCount--;
+				let subAnimationFrame = Math.floor(animationTimer / animationSpeed) % animationFrameCount;
+				let isBackwards = Math.floor(Math.floor(animationTimer / animationSpeed) / animationFrameCount) & 1;
+				if(animationMode == 3)
+					isBackwards ^= 1;
+				if(isBackwards) {
+					return animationFrameCount - subAnimationFrame;
+				} else {
+					return subAnimationFrame;
+				}
+				break;
+		}
+	}
+	return 0;
+}
+
 function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCoordY, autotileIndexFunction, autotileMatchFunction) {
 	if (!tile) {
 		return;
@@ -307,33 +362,7 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 
 	let animationFrame = 0;
 	if(tileAnimationEnabled) {
-		let animationFrameCount = Math.max(1, tile.anim_frames ?? 1);
-		if(animationFrameCount > 1) {
-			let animationTimer = tenthOfSecondTimer + (tile.anim_offset ?? 0);
-			let animationSpeed = Math.max(1, tile.anim_speed ?? 1);
-			let animationMode = tile.anim_mode ?? 0;
-			switch(animationMode) {
-				case 0: // Forwards
-					animationFrame = Math.floor(animationTimer / animationSpeed) % animationFrameCount;
-					break;
-				case 1: // Backwards
-					animationFrame = animationFrameCount - 1 - Math.floor(animationTimer / animationSpeed) % animationFrameCount;
-					break;
-				case 2: // Ping-pong forwards
-				case 3: // Ping-pong backwards
-					animationFrameCount--;
-					let subAnimationFrame = Math.floor(animationTimer / animationSpeed) % animationFrameCount;
-					let isBackwards = Math.floor(Math.floor(animationTimer / animationSpeed) / animationFrameCount) & 1;
-					if(animationMode == 3)
-						isBackwards ^= 1;
-					if(isBackwards) {
-						animationFrame = animationFrameCount - subAnimationFrame;
-					} else {
-						animationFrame = subAnimationFrame;
-					}
-					break;
-			}
-		}
+		animationFrame = calculateAnimationFrame(tile, tenthOfSecondTimer);
 	}
 	switch(autotileLayout) {
 		case 0: // No autotiling, so leave picX and picY as-is

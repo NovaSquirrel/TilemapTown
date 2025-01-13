@@ -277,6 +277,12 @@ function bump_into_atom(atom) {
 	}
 }
 
+function getRandomInt(min, max) {
+	const minCeiled = Math.ceil(min);
+	const maxFloored = Math.floor(max);
+	return Math.floor(Math.random() * (maxFloored - minCeiled) + minCeiled); // The maximum is exclusive and the minimum is inclusive
+}
+
 function keyDownHandler(e) {
 	markNotIdle();
 	function ClampPlayerPos() {
@@ -461,6 +467,9 @@ function keyDownHandler(e) {
 			drawToolY = null;
 			NeedMapRedraw = true;
 		}
+	} else if (e.code == "KeyK") { // Kiss
+		const dir = PlayerWho[PlayerYou].dir;
+		SendCmd("EXT", {"user_particle":{"at": [PlayerWho[PlayerYou].x + DirX[dir], PlayerWho[PlayerYou].y + DirY[dir]], "pic": [0,14,21], "duration":10, "offset":[getRandomInt(-4, 4), -8+getRandomInt(-4, 4)]}});
 	}
 
 	let BeforeClampX = PlayerX, BeforeClampY = PlayerY;

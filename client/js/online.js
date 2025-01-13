@@ -287,6 +287,7 @@ function receiveServerMessage(cmd, arg) {
         }
         MyMap.Info = arg;
         updateWallpaperOnMap(MyMap);
+        UserParticles = [];
 
         // Clean up MapsByID
         var NotNeededMaps = [];
@@ -880,8 +881,7 @@ function receiveServerMessage(cmd, arg) {
           } else {
             takeControlsEnabled = false;
           }
-        }
-        if(arg.get_user_profile) {
+        } else if(arg.get_user_profile) {
           if(arg.get_user_profile.not_found) {
             if(arg.get_user_profile?.id == PlayerYou) {
               userProfileEdit(true);
@@ -896,6 +896,12 @@ function receiveServerMessage(cmd, arg) {
             }
           } else {
             openUserProfileWindow(arg.get_user_profile);
+          }
+        } else if(arg.user_particle) {
+          if(!arg.user_particle.action || arg.user_particle.action === "play") {
+            if (!arg.user_particle.duration)
+              arg.user_particle.duration = 10;
+            UserParticles.push({timer: -1, data: arg.user_particle});
           }
         }
       }

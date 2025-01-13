@@ -47,6 +47,7 @@ let PlayerAnimation = {
 }
 
 let PlayerBuildMarkers = {}; // EntityID: {pos: [x,y], name: string, timer: ticks, del: true/false}
+let UserParticles = [];
 
 // Camera settings
 // Note that CameraX and CameraY are the pixel coordinates of the *center* of the screen, rather than the top left
@@ -2385,7 +2386,7 @@ function apply_default_pic_for_type(item) {
 			if ((!(item.id in PlayerImages) && is_custom) ||
 				(item.id in PlayerImages && PlayerImages[item.id].src != item.pic[0] && is_custom)) {
 				let img = new Image();
-				img.src = pic[0];
+				img.src = item.pic[0];
 				PlayerImages[key] = img;
 			}
 			break;
@@ -2502,7 +2503,7 @@ function runAnimation(timestamp) {
 			}
 		}
 
-		// Tick the player build markers
+		// Tick the player build markers and particles
 		let removeMarkers = [];
 		for (let id in PlayerBuildMarkers) {
 			let marker = PlayerBuildMarkers[id];
@@ -2514,6 +2515,18 @@ function runAnimation(timestamp) {
 		for (let id in removeMarkers) {
 			delete PlayerBuildMarkers[removeMarkers[id]];
 		}
+		let newUserParticles = [];
+		for (let particle of UserParticles) {
+			particle.timer++;
+			if(particle.data.anim_repeats && ((particle.data.anim_mode ?? 0) < 2) && particle.timer >= (particle.data.anim_frames * particle.data.anim_speed * particle.data.anim_repeats)) {
+				continue;
+			}
+			if(particle.timer >= particle.data.duration) {
+				continue;
+			}
+			newUserParticles.push(particle);
+		}
+		UserParticles = newUserParticles;
 	}
 
 	let TargetCameraX = ((CameraOverrideX !== null ? CameraOverrideX : PlayerWho[PlayerYou].x) * 16 + 8);

@@ -608,6 +608,22 @@ Profile fields (can read):
 <-- EXT {"delete_user_profile": true}
 Deletes your user profile.
 
+--> EXT {"user_particle": {"pic": [sheet, x, y], "size": [1, 1], "at": [x, y], "offset": [0, 0], "anim_duration": ticks, "anim_frames": frames, "anim_speed": speed, "anim_mode": mode, "anim_offset": offset}}
+<-- EXT {"user_particle": {"id": user_id, "name": user_name, "username": user_username, and the other fields are repeated again}}
+Experimental feature: Allows you to play temporary animations on the map. Message is forwarded to everyone else on the map you're on with some additional fields for the user that did it.
+
+Fields:
+	"pic": [sprite sheet ID or URL, x, y]; particle appearance
+	"size": [width, height]; size of the particle in units of 16 pixels
+	"at": [x, y]; position on the map
+	"offset": [x, y]; pixel offset, just like for entities. If offset is [0, 0] then the bottom edge should be aligned to the bottom edge of the tile, like for entities.
+	"duration": integer; amount of time this particle should stick around in units of 0.1 seconds
+	"anim_repeats": integer, amount of times to repeat the animation. Animation will stop once the animation has repeated this number of times, or when the duration is up, whichever happens first.
+	"anim_frames": integer; see tiles.txt
+	"anim_speed": integer; see tiles.txt
+	"anim_mode": integer; see tiles.txt
+	"anim_offset": integer; see tiles.txt
+	"action": string; should be "play" or not specified. Client should ignore the whole user_particle message if it is present but isn't "play"
 
 === Extension: bulk_build ===
 This extension allows a client to request multiple map changes in one message, including operations like copies.

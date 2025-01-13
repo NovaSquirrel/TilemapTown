@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2024 NovaSquirrel
+# Copyright (C) 2017-2025 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -84,7 +84,7 @@ def who_mini_tilemap(data):
 			"clickable":        bool,
 			"map_size":         lambda x: is_list_with_two_ints(x) and x[0] >= 1   and x[0] <= 16 and x[1] >= 1 and x[1] <= 16,
 			"tile_size":        lambda x: is_list_with_two_ints(x) and x[0] >= 1   and x[0] <= 64 and x[1] >= 1 and x[1] <= 64,
-			"offset":           lambda x: is_list_with_two_ints(x) and x[0] >= -16 and x[0] <= 16 and x[1] >= -16 and x[1] <= 16,
+			"offset":           lambda x: is_list_with_two_ints(x) and x[0] >= -32 and x[0] <= 32 and x[1] >= -32 and x[1] <= 32,
 			"tileset_url":      image_url_is_okay,
 			"transparent_tile": int,
 		})
@@ -1435,6 +1435,30 @@ def ext_delete_user_profile(connection, map, client, context, arg, name):
 	c = Database.cursor()
 	c.execute('DELETE FROM User_Profile WHERE user_id=?', (connection.db_id,))
 	connection.send("EXT", {name: True})
+
+@ext_protocol_command("user_particle")
+def ext_user_particle(connection, map, client, context, arg, name):
+	if map == None:
+		return
+	arg = remove_invalid_dict_fields(arg, {
+		"pic":              pic_is_okay,
+		"size":             lambda x: is_list_with_two_ints(x) and x[0] >= 1 and x[0] <= 4 and x[1] >= 1 and x[1] <= 4,
+		"at":               is_list_with_two_ints,
+		"offset":           lambda x: is_list_with_two_ints(x) and x[0] >= -32 and x[0] <= 32 and x[1] >= -32 and x[1] <= 32,
+		"duration":         lambda x: isinstance(x, int) and x >= 1 and x <= 50,
+		"anim_repeats":     int,
+		"anim_frames":      int,
+		"anim_speed":       int,
+		"anim_mode":        int,
+		"anim_offset":      int,
+		"action":           lambda x: isinstance(x, str) and x == "play",
+	})
+	if 'duration' not in arg:
+		arg['duration'] = 50 if "anim_repeats" in arg else 10
+	arg['id'] = client.protocol_id()
+	arg['name'] = client.name
+	arg['username'] = client.username_or_id()
+	map.broadcast("EXT", {name: arg})
 
 @protocol_command()
 def fn_EXT(connection, map, client, arg, echo):
