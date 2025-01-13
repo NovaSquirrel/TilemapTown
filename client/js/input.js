@@ -469,7 +469,7 @@ function keyDownHandler(e) {
 		}
 	} else if (e.code == "KeyK") { // Kiss
 		const dir = PlayerWho[PlayerYou].dir;
-		SendCmd("EXT", {"user_particle":{"at": [PlayerWho[PlayerYou].x + DirX[dir], PlayerWho[PlayerYou].y + DirY[dir]], "pic": [0,14,21], "duration":10, "offset":[getRandomInt(-4, 4), -8+getRandomInt(-4, 4)]}});
+		SendCmd("EXT", {"user_particle":{"at": [PlayerWho[PlayerYou].x + DirX[dir], PlayerWho[PlayerYou].y + DirY[dir]], "pic": [0,14,21], "duration":10, "offset":[getRandomInt(-4, 4+1), -8+getRandomInt(-4, 4+1)]}});
 	}
 
 	let BeforeClampX = PlayerX, BeforeClampY = PlayerY;
