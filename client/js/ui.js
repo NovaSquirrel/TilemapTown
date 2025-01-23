@@ -1969,7 +1969,9 @@ function viewMail() {
 let chatLogForExport = [];
 
 function escape_tags(t) {
-	return t.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+	if (t.replaceAll)
+		return t.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+	return t;
 }
 
 function convertBBCodeMultiline(t) {

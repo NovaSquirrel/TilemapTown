@@ -202,7 +202,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 					playerIs16x16 = true;
 				} else {
 					let frameX = 0, frameY = 0;
-					let frameCountFromAnimationTick = entityAnimationEnabled ? (tenthOfSecondTimer/2) : 0;
+					let frameCountFromAnimationTick = entityAnimationEnabled ? Math.floor(tenthOfSecondTimer/2) : 0;
 					let isWalking = PlayerAnimation[index].walkTimer != 0;
 
 					switch (tilesetHeight / 32) { // Directions
