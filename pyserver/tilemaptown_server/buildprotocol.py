@@ -82,7 +82,7 @@ def who_mini_tilemap(data):
 		filtered = remove_invalid_dict_fields(data, {
 			"visible":          bool,
 			"clickable":        bool,
-			"map_size":         lambda x: is_list_with_two_ints(x) and x[0] >= 1   and x[0] <= 16 and x[1] >= 1 and x[1] <= 16,
+			"map_size":         lambda x: is_list_with_two_ints(x) and x[0] >= 1   and x[0] <= 24 and x[1] >= 1 and x[1] <= 24,
 			"tile_size":        lambda x: is_list_with_two_ints(x) and x[0] >= 1   and x[0] <= 64 and x[1] >= 1 and x[1] <= 64,
 			"offset":           lambda x: is_list_with_two_ints(x) and x[0] >= -32 and x[0] <= 32 and x[1] >= -32 and x[1] <= 32,
 			"tileset_url":      image_url_is_okay,

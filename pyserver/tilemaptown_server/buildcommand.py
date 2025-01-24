@@ -985,8 +985,8 @@ def fn_userflags(map, client, context, arg):
 		respond(context, 'Syntax: add/del list of flags', error=True)
 
 
-admin_changeable_flags = ('bot', 'hide_location', 'hide_api', 'no_watch', 'secret_pic', 'file_uploads', 'trusted_builder')
-@cmd_command(category="Settings", alias=['adminuserflag'])
+admin_changeable_flags = ('bot', 'hide_location', 'hide_api', 'no_watch', 'secret_pic', 'file_uploads', 'trusted_builder', 'scripter')
+@cmd_command(category="Settings", alias=['adminuserflag'], privilege_level="server_admin")
 def fn_adminuserflags(map, client, context, arg):
 	username, arg = separate_first_word(arg)
 	connection = find_connection_by_username(username)
