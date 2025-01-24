@@ -100,6 +100,9 @@ def in_blocked_username_list(client, banlist, action):
 		if '!objects' in banlist:
 			client.send("ERR", {'text': 'Only clients may %s' % action, 'code': 'clients_only'})
 			return True
+		username = find_username_by_db_id(client.owner_id)
+		if username != None and username in banlist:
+			return True
 		return False
 	username = client.username
 	if username == None and '!guests' in banlist:
@@ -112,7 +115,7 @@ def in_blocked_username_list(client, banlist, action):
 
 def respond(context, text, data=None, error=False, code=None, detail=None, subject_id=None, buttons=None, class_type=None):
 	args = {}
-	respond_to, echo = context
+	respond_to, echo, script_entity = context
 	if echo:
 		args['echo'] = echo
 	if text:
@@ -237,7 +240,7 @@ def fn_nick(map, client, context, arg):
 def fn_userdesc(map, client, context, arg):
 	client.desc = arg
 
-@cmd_command(category="Settings", syntax="text", no_entity_needed=True)
+@cmd_command(category="Settings", syntax="text", no_entity_needed=True, privilege_level="no_scripts")
 def fn_client_settings(map, client, context, arg):
 	connection = client.connection()
 	if connection:
@@ -252,7 +255,13 @@ def fn_say(map, client, context, arg):
 		return
 	if arg != '':
 		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': arg, 'rc_username': respond_to.username_or_id(), 'rc_id': respond_to.protocol_id()}
+		if context[2]: # Script entity
+			fields['rc_username'] = find_username_by_db_id(context[2].owner_id)
+			fields['rc_id'] = context[2].owner_id
 		map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
+		for e in map.contents:
+			if e.entity_type == entity_type['gadget'] and e.listening_to_chat:
+				e.receive_chat(client, arg)
 
 @cmd_command(category="Communication")
 def fn_me(map, client, context, arg):
@@ -263,7 +272,13 @@ def fn_me(map, client, context, arg):
 		return
 	if arg != '':
 		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': "/me "+arg, 'rc_username': respond_to.username_or_id(), 'rc_id': respond_to.protocol_id()}
+		if context[2]: # Script entity
+			fields['rc_username'] = find_username_by_db_id(context[2].owner_id)
+			fields['rc_id'] = context[2].owner_id
 		map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
+		for e in map.contents:
+			if e.entity_type == entity_type['gadget'] and e.listening_to_chat:
+				e.receive_chat(client, '/me '+arg)
 
 def send_private_message(client, context, recipient_username, text):
 	respond_to = context[0]
@@ -293,6 +308,9 @@ def send_private_message(client, context, recipient_username, text):
 						if respond_to is not client:
 							recipient_params['rc_username'] = respond_to.username_or_id()
 							recipient_params['rc_id'] = respond_to.protocol_id()
+						if context[2]: # Script entity
+							fields['rc_username'] = find_username_by_db_id(context[2].owner_id)
+							fields['rc_id'] = context[2].owner_id
 						u.send("PRI", recipient_params)
 				else:
 					respond(context, 'That entity isn\'t a user', error=True)
@@ -303,7 +321,7 @@ def send_private_message(client, context, recipient_username, text):
 						respond(context, 'You can\'t send offline messages as a guest', error=True)
 						return
 					respond_to = context[0]
-					if respond_to is not client:
+					if (respond_to is not client) or context[2]:
 						respond(context, 'You can\'t send offline messages via remote control', error=True)
 						return
 
@@ -884,7 +902,7 @@ def fn_newmap(map, client, context, arg):
 		raise
 
 # maybe combine the list add/remove/list commands together?
-@cmd_command(category="Settings", syntax="username", no_entity_needed=True)
+@cmd_command(category="Settings", syntax="username", no_entity_needed=True, privilege_level="no_scripts")
 def fn_ignore(map, client, context, arg):
 	arg = arg.lower().strip()
 	if not arg:
@@ -894,7 +912,7 @@ def fn_ignore(map, client, context, arg):
 		connection.ignore_list.add(arg)
 		respond(context, '\"%s\" added to ignore list' % arg)
 
-@cmd_command(category="Settings", syntax="username", no_entity_needed=True)
+@cmd_command(category="Settings", syntax="username", no_entity_needed=True, privilege_level="no_scripts")
 def fn_unignore(map, client, context, arg):
 	arg = arg.lower().strip()
 	if not arg:
@@ -904,11 +922,11 @@ def fn_unignore(map, client, context, arg):
 		connection.ignore_list.discard(arg)
 		respond(context, '\"%s\" removed from ignore list' % arg)
 
-@cmd_command(category="Settings", no_entity_needed=True)
+@cmd_command(category="Settings", no_entity_needed=True, privilege_level="no_scripts")
 def fn_ignorelist(map, client, context, arg):
 	respond(context, 'Ignore list: '+str(client.connection_attr('ignore_list')))
 
-@cmd_command(category="Settings", syntax="username", no_entity_needed=True)
+@cmd_command(category="Settings", syntax="username", no_entity_needed=True, privilege_level="no_scripts")
 def fn_watch(map, client, context, arg):
 	connection = client.connection()
 	if connection == None:
@@ -934,7 +952,7 @@ def fn_watch(map, client, context, arg):
 		if other.can_be_watched():
 			connection.send("WHO", {"add": other.watcher_who(), "type": "watch"})
 
-@cmd_command(category="Settings", syntax="username", no_entity_needed=True)
+@cmd_command(category="Settings", syntax="username", no_entity_needed=True, privilege_level="no_scripts")
 def fn_unwatch(map, client, context, arg):
 	arg = arg.lower().strip()
 	if not arg:
@@ -950,12 +968,12 @@ def fn_unwatch(map, client, context, arg):
 			if other.can_be_watched():
 				connection.send("WHO", {"remove": other.db_id, "type": "watch"})
 
-@cmd_command(category="Settings", no_entity_needed=True)
+@cmd_command(category="Settings", no_entity_needed=True, privilege_level="no_scripts")
 def fn_watchlist(map, client, context, arg):
 	respond(context, 'Watch list: '+str(client.connection_attr('watch_list')))
 
 user_changeable_flags = ('bot', 'hide_location', 'hide_api', 'no_watch', 'secret_pic')
-@cmd_command(category="Settings", alias=['userflag'])
+@cmd_command(category="Settings", alias=['userflag'], privilege_level="no_scripts")
 def fn_userflags(map, client, context, arg):
 	connection = client.connection()
 	if connection == None:
@@ -986,7 +1004,7 @@ def fn_userflags(map, client, context, arg):
 
 
 admin_changeable_flags = ('bot', 'hide_location', 'hide_api', 'no_watch', 'secret_pic', 'file_uploads', 'trusted_builder', 'scripter')
-@cmd_command(category="Settings", alias=['adminuserflag'], privilege_level="server_admin")
+@cmd_command(category="Settings", alias=['adminuserflag'])
 def fn_adminuserflags(map, client, context, arg):
 	username, arg = separate_first_word(arg)
 	connection = find_connection_by_username(username)
@@ -1259,7 +1277,7 @@ def fn_mapdesc(map, client, context, arg):
 	map.save_on_clean_up = True
 	respond(context, 'Map description set to \"%s\"' % map.desc)
 
-@cmd_command(category="Map", map_only=True, syntax="text")
+@cmd_command(category="Map", privilege_level="no_scripts", map_only=True, syntax="text")
 def fn_topic(map, client, context, arg):
 	if arg == None:
 		arg = ""
@@ -1280,7 +1298,7 @@ def fn_topic(map, client, context, arg):
 		else:
 			respond(context, 'There is no topic set for this map')
 
-@cmd_command(category="Map", privilege_level="registered", map_only=True)
+@cmd_command(category="Map", privilege_level="no_scripts", map_only=True)
 def fn_cleartopic(map, client, context, arg):
 	if client.is_client() and client.has_permission(map, permission['set_topic'], True):
 		map.topic = None
@@ -1636,7 +1654,7 @@ def fn_kicklisten(map, client, context, arg):
 
 	client.finish_batch()
 
-@cmd_command(syntax="category,category,category... id,id,id...", no_entity_needed=True)
+@cmd_command(syntax="category,category,category... id,id,id...", no_entity_needed=True, privilege_level="no_scripts")
 def fn_listen(map, client, context, arg):
 	if arg == "":
 		return
@@ -1663,7 +1681,7 @@ def fn_listen(map, client, context, arg):
 			send_ext_listen_status(connection)
 	client.finish_batch()
 
-@cmd_command(syntax="category,category,category... id,id,id...", no_entity_needed=True)
+@cmd_command(syntax="category,category,category... id,id,id...", no_entity_needed=True, privilege_level="no_scripts")
 def fn_unlisten(map, client, context, arg):
 	params = arg.split()
 	categories = set(params[0].split(','))
@@ -1852,7 +1870,7 @@ def fn_ipbanlist(map, client, context, arg):
 	results += "[/ul]"
 	respond(context, results)
 
-@cmd_command(category="Teleport")
+@cmd_command(category="Teleport", privilege_level="no_scripts")
 def fn_goback(map, client, context, arg):
 	if len(client.tp_history) > 0:
 		pos = client.tp_history.pop()
@@ -1860,13 +1878,13 @@ def fn_goback(map, client, context, arg):
 	else:
 		respond(context, 'Nothing in teleport history', error=True)
 
-@cmd_command(category="Teleport")
+@cmd_command(category="Teleport", privilege_level="no_scripts")
 def fn_sethome(map, client, context, arg):
 	client.home_id = client.map_id
 	client.home_position = [client.x, client.y]
 	respond(context, 'Home set')
 
-@cmd_command(category="Teleport")
+@cmd_command(category="Teleport", privilege_level="no_scripts")
 def fn_home(map, client, context, arg):
 	if client.home_id == None:
 		respond(context, 'You don\'t have a home set', error=True)
@@ -1874,11 +1892,11 @@ def fn_home(map, client, context, arg):
 		respond(context, 'Teleported to your home')
 		client.send_home()
 
-@cmd_command(category="Teleport", syntax="map")
+@cmd_command(category="Teleport", syntax="map", privilege_level="no_scripts")
 def fn_defaultmap(map, client, context, arg):
 	client.switch_map(get_database_meta('default_map'))
 
-@cmd_command(alias=['tpi'], category="Teleport", syntax="map")
+@cmd_command(alias=['tpi'], category="Teleport", syntax="map", privilege_level="no_scripts")
 def fn_map(map, client, context, arg):
 	try:
 		s = arg.split()
@@ -1963,7 +1981,7 @@ def fn_register(map, client, context, arg):
 			else:
 				respond(context, 'Register fail, account already exists', error=True)
 
-@cmd_command(category="Account", syntax="username password", no_entity_needed=True)
+@cmd_command(category="Account", syntax="username password", no_entity_needed=True, privilege_level="no_scripts")
 def fn_login(map, client, context, arg):
 	if not client.is_client():
 		respond(context, 'Not a client', error=True)
@@ -1979,7 +1997,7 @@ def fn_login(map, client, context, arg):
 		if connection:
 			connection.login(filter_username(params[0]), params[1], client)
 
-@cmd_command(no_entity_needed=True)
+@cmd_command(no_entity_needed=True, privilege_level="no_scripts")
 def fn_disconnect(map, client, context, arg):
 	respond(context, 'Goodbye!')
 	client.disconnect(reason="Quit")
@@ -2120,15 +2138,15 @@ def morph_shared(map, client, context, arg, quiet):
 	else:
 		respond(context, "You don't have a morph named \"%s\"" % arg, error=True)
 
-@cmd_command(category="Settings", syntax='morph name')
+@cmd_command(category="Settings", syntax='morph name', privilege_level="no_scripts")
 def fn_morph(map, client, context, arg):
 	morph_shared(map, client, context, arg, False)
 
-@cmd_command(category="Settings", syntax='morph name')
+@cmd_command(category="Settings", syntax='morph name', privilege_level="no_scripts")
 def fn_qmorph(map, client, context, arg):
 	morph_shared(map, client, context, arg, True)
 
-@cmd_command(category="Settings", alias=['morphs'])
+@cmd_command(category="Settings", alias=['morphs'], privilege_level="no_scripts")
 def fn_morphlist(map, client, context, arg):
 	if not client.is_client():
 		respond(context, 'Only clients can use /morphlist', error=True)
@@ -2695,7 +2713,7 @@ def fn_debugkick(map, client, context, arg):
 	if e.db_id:
 		AllEntitiesByDB.pop(e.db_id, None)
 
-@cmd_command(alias=['e'], no_entity_needed=True)
+@cmd_command(alias=['e'], no_entity_needed=True, privilege_level="no_scripts")
 def fn_entity(map, client, context, arg):
 	self_is_entity = is_entity(client)
 
@@ -3019,7 +3037,7 @@ def fn_keep_entities_loaded(map, client, context, arg):
 	client.keep_entities_loaded = new_keep_entities_loaded
 
 allowed_message_forward_types = set(['MOV', 'EXT', 'BAG', 'MSG', 'PRI', 'CMD', 'ERR', 'MAI', 'MAP', 'PUT', 'DEL', 'BLK', 'WHO', 'CHAT', 'KEYS', 'CLICK'])
-@cmd_command(no_entity_needed=True)
+@cmd_command(no_entity_needed=True, privilege_level="no_scripts")
 def fn_message_forwarding(map, client, context, arg):
 	#/message_forwarding set entity_id,entity_id,entity_id... MAP,MAI,PRI,...
 	args = arg.split(' ')
@@ -3081,12 +3099,12 @@ def fn_message_forwarding(map, client, context, arg):
 			respond(context, 'Please provide a subcommand: set', error=True)
 # -------------------------------------
 
-def handle_user_command(map, client, respond_to, echo, text):
+def handle_user_command(map, client, respond_to, echo, text, script_entity=None):
 	# Separate text into command and arguments
 	command, arg = separate_first_word(text)
 
 	# Attempt to run the command handler if it exists
-	context = (respond_to, echo)
+	context = (respond_to, echo, script_entity)
 
 	# Check aliases first
 	if command in aliases:
@@ -3106,13 +3124,15 @@ def handle_user_command(map, client, respond_to, echo, text):
 		# Check permissions
 		privilege_needed = command_privilege_level[command] # See user_privilege in buildglobal.py
 
-		if privilege_needed == 1 and client.db_id == None: # Registered
+		if privilege_needed == 1 and script_entity != None: # Guests can use it, but scripts can't
+			respond(context, 'Scripts may not can use "%s"' % command, error=True, code='real_users_only')
+		elif privilege_needed == 2 and (client.db_id == None or script_entity != None or not hasattr(client, 'connection')): # Registered
 			respond(context, 'Only registered accounts can use "%s"' % command, error=True, code='no_guests')
-		elif privilege_needed == 2 and client.db_id != map.owner_id and (not hasattr(client, 'connection') or not client.connection_attr('oper_override')) and not client.has_permission(map, permission['admin'], False): # Map admin
+		elif privilege_needed == 3 and client.db_id != map.owner_id and (not hasattr(client, 'connection') or not client.connection_attr('oper_override')) and not client.has_permission(map, permission['admin'], False): # Map admin
 			respond(context, 'Only the map owner or map admins can use "%s"' % command, error=True, code='missing_permission', detail='admin', subject_id=map.protocol_id())
-		elif privilege_needed == 3 and client.db_id != map.owner_id and (not hasattr(client, 'connection') or not client.connection_attr('oper_override')): # Map owner
+		elif privilege_needed == 4 and client.db_id != map.owner_id and (not hasattr(client, 'connection') or not client.connection_attr('oper_override')): # Map owner
 			respond(context, 'Only the map owner can use "%s"' % command, error=True, code='owner_only', subject_id=map.protocol_id())
-		elif privilege_needed == 4 and (not hasattr(client, 'connection') or client.username not in Config["Server"]["Admins"]):
+		elif privilege_needed == 5 and (not hasattr(client, 'connection') or client.username not in Config["Server"]["Admins"]):
 			respond(context, 'Only server admins can use "%s"' % command, error=True, code='server_admin_only')
 		else:
 			return handlers[command](map, client, context, arg)

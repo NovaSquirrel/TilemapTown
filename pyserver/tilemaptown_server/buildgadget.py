@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2024 NovaSquirrel
+# Copyright (C) 2017-2025 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -18,30 +18,7 @@ import random, weakref, asyncio
 from .buildglobal import *
 from .buildentity import Entity, save_generic_data, load_generic_data
 from .buildcommand import handle_user_command
-
-def get_tile_properties(name):
-	if isinstance(name, dict):
-		return name
-	if name == None:
-		return None
-	s = name.split(':')
-	if len(s) == 1:
-		tileset = ''
-		tilename = s[0]
-	else:
-		tileset = s[0]
-		tilename = s[1]
-
-	tileset = ServerResources['tilesets'].get(tileset)
-	if tileset == None:
-		return None
-	return tileset.get(tilename)
-
-def get_tile_density(name):
-	properties = get_tile_properties(name)
-	if properties == None:
-		return False
-	return properties.get('density', False)
+from .buildscripting import send_scripting_message, encode_scripting_message_values, VM_MessageType, ScriptingValueType, ScriptingCallbackType
 
 class Gadget(Entity):
 	def __init__(self, entity_type_gadget, creator_id=None):
@@ -49,8 +26,21 @@ class Gadget(Entity):
 
 		self.traits = []
 		self.data = {} # Configuration
+		self.script_data = {}
+		self.script_data_size = 0
+
+		self.script_callback_enabled = [False] * ScriptingCallbackType.COUNT
+		self.listening_to_chat = False
+		self.listening_to_chat_warning = False
+
+	def clean_up(self):
+		for trait in self.traits:
+			trait.on_shutdown()
+		super().clean_up()
 
 	def reload_traits(self):
+		for trait in self.traits:
+			trait.on_shutdown()
 		self.traits = []
 		for trait in self.data:
 			trait_type = trait[0]
@@ -67,6 +57,8 @@ class Gadget(Entity):
 				return True
 			load_generic_data(self, data)
 			self.data = data.get('data', {})
+			self.script_data = data.get('script_data', {})
+			self.script_data_size = data.get('script_data_size', 0)
 			self.reload_traits()
 			return True
 		except:
@@ -76,11 +68,20 @@ class Gadget(Entity):
 		data = {}
 		save_generic_data(self, data)
 		data['data'] = self.data
+		if len(self.script_data):
+			data['script_data'] = self.script_data
+		if script_data_size:
+			data['script_data_size'] = self.script_data_size
 		self.save_data_as_text(dumps_if_not_none(data))
 
 	# .----------------------
 	# | Event handlers
 	# '----------------------
+	def receive_switch_map(self):
+		for trait in self.traits:
+			if trait.on_switch_map():
+				return	
+
 	def receive_use(self, user):
 		for trait in self.traits:
 			if trait.on_use(user):
@@ -114,6 +115,21 @@ class Gadget(Entity):
 	def receive_entity_click(self, user, arg):
 		for trait in self.traits:
 			if trait.on_entity_click(user, arg):
+				return
+
+	def receive_join(self, user):
+		for trait in self.traits:
+			if trait.on_entity_join(user):
+				return
+
+	def receive_leave(self, user):
+		for trait in self.traits:
+			if trait.on_entity_leave(user):
+				return
+
+	def receive_chat(self, user, text):
+		for trait in self.traits:
+			if trait.on_entity_chat(user, text):
 				return
 
 	# .----------------------
@@ -158,6 +174,9 @@ class GadgetTrait(object):
 	def on_init(self):
 		pass
 
+	def on_shutdown(self):
+		pass
+
 	def on_use(self, user):
 		return None
 
@@ -177,6 +196,18 @@ class GadgetTrait(object):
 		return None
 
 	def on_entity_click(self, user, arg):
+		return None
+
+	def on_switch_map(self):
+		return None
+
+	def on_join(self, user):
+		return None
+
+	def on_leave(self, user):
+		return None
+
+	def on_chat(self, user, text):
 		return None
 
 class GadgetDice(GadgetTrait):
@@ -384,6 +415,147 @@ class GadgetRCCar(GadgetTrait):
 			user.send("EXT", {'take_controls': {'id': self.gadget.protocol_id(), 'keys': []}})
 		return True
 
+class GadgetScript(GadgetTrait):
+	def send_scripting_message(self, message_type, other_id=0, status=0, data=None):
+		send_scripting_message(message_type, user_id=self.gadget.owner_id, entity_id=self.gadget.db_id if self.gadget.db_id else -self.gadget.id, other_id=other_id, status=status, data=data)
+
+	def send_scripting_values(self, message_type, other_id=0, values=None):
+		self.send_scripting_message(message_type, other_id, status=len(values) if values != None else 0, data=encode_scripting_message_values(values) if values != None else None)
+
+	def trigger_script_callback(self, type, values):
+		self.send_scripting_values(VM_MessageType.CALLBACK, other_id=type, values=values)
+
+	# .----------------------
+	# | Event handlers
+	# '----------------------
+	def on_init(self):
+		print("Script init")
+		self.send_scripting_message(VM_MessageType.START_SCRIPT)
+
+	def on_shutdown(self):
+		self.send_scripting_message(VM_MessageType.STOP_SCRIPT)
+
+	def on_use(self, user):
+		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_USE]:
+			return None
+		self.trigger_script_callback(ScriptingCallbackType.SELF_USE, [{
+			"id":       user.protocol_id(),
+			"name":     user.name,
+			"username": user.username_or_id()
+		}])
+		return None
+
+	def on_tell(self, user, text):
+		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_PRIVATE_MESSAGE]:
+			return None
+		self.trigger_script_callback(ScriptingCallbackType.SELF_PRIVATE_MESSAGE, [{
+			"text":     text,
+			"id":       user.protocol_id(),
+			"name":     user.name,
+			"username": user.username_or_id()
+		}])
+		return None
+
+	def on_request(self, user, request_type, request_data, accept_command, decline_command):
+		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_REQUEST_RECEIVED]:
+			return None
+		self.trigger_script_callback(ScriptingCallbackType.SELF_REQUEST_RECEIVED, [{
+			"type":     request_type,
+			"accept_command": accept_command,
+			"decline_command": decline_command,
+			"id":       user.protocol_id(),
+			"name":     user.name,
+			"username": user.username_or_id()
+		}])
+		return None
+
+	def on_key_press(self, user, key, down):
+		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_KEY_PRESS]:
+			return None
+		self.trigger_script_callback(ScriptingCallbackType.SELF_KEY_PRESS, [{
+			"key":      key,
+			"down":     down,
+			"id":       user.protocol_id(),
+			"name":     user.name,
+			"username": user.username_or_id()
+		}])
+		return None
+
+	def on_bot_message_button(self, user, arg):
+		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_BOT_COMMAND_BUTTON]:
+			return None
+		self.trigger_script_callback(ScriptingCallbackType.SELF_BOT_COMMAND_BUTTON, [{
+			"text":     arg.get('text'),
+			"id":       user.protocol_id(),
+			"name":     user.name,
+			"username": user.username_or_id()
+		}])
+		return None
+
+	def on_took_controls(self, user, arg):
+		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_TOOK_CONTROLS]:
+			return None
+		self.trigger_script_callback(ScriptingCallbackType.SELF_TOOK_CONTROLS, [{
+			"keys":     arg.get('keys'),
+			"accept":   arg.get('accept'),
+			"id":       user.protocol_id(),
+			"name":     user.name,
+			"username": user.username_or_id()
+		}])
+		return None
+
+	def on_entity_click(self, user, arg):
+		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_CLICK]:
+			return None
+		self.trigger_script_callback(ScriptingCallbackType.SELF_CLICK, [{
+			"x":        arg.get('x'),
+			"y":        arg.get('y'),
+			"button":   arg.get('button'),
+			"target":   arg.get('target'),
+			"id":       user.protocol_id(),
+			"name":     user.name,
+			"username": user.username_or_id()
+		}])
+		return None
+
+	def on_map_switch(self):
+		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_SWITCH_MAP]:
+			return None
+		self.trigger_script_callback(ScriptingCallbackType.SELF_SWITCH_MAP, [{
+			"id":       self.gadget.map.protocol_id() if self.gadget.map else None
+		}])
+		return None
+
+	def on_join(self, user):
+		if not self.gadget.script_callback_enabled[ScriptingCallbackType.MAP_JOIN]:
+			return None
+		self.trigger_script_callback(ScriptingCallbackType.MAP_JOIN, [{
+			"id":       user.protocol_id(),
+			"name":     user.name,
+			"username": user.username_or_id()
+		}])
+		return None
+
+	def on_leave(self, user):
+		if not self.gadget.script_callback_enabled[ScriptingCallbackType.MAP_LEAVE]:
+			return None
+		self.trigger_script_callback(ScriptingCallbackType.MAP_LEAVE, [{
+			"id":       user.protocol_id(),
+			"name":     user.name,
+			"username": user.username_or_id()
+		}])
+		return None
+
+	def on_chat(self, user, text):
+		if not self.gadget.script_callback_enabled[ScriptingCallbackType.MAP_CHAT]:
+			return None
+		self.trigger_script_callback(ScriptingCallbackType.MAP_CHAT, [{
+			"id":       user.protocol_id(),
+			"name":     user.name,
+			"username": user.username_or_id()
+		}])
+		return None
+
 gadget_trait_class = {}
 gadget_trait_class['dice'] = GadgetDice
 gadget_trait_class['accept_requests'] = GadgetAcceptRequests
@@ -392,3 +564,4 @@ gadget_trait_class['bot_message_button'] = GadgetUseBotMessageButton
 gadget_trait_class['random_tell'] = GadgetUseRandomTell
 gadget_trait_class['random_say'] = GadgetUseRandomSay
 gadget_trait_class['rc_car'] = GadgetRCCar
+gadget_trait_class['script'] = GadgetScript

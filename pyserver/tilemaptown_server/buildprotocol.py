@@ -386,7 +386,7 @@ def fn_PRI(connection, map, client, arg, echo):
 		actor = find_remote_control_entity(connection, client, arg['rc'], echo)
 		if actor == None:
 			return
-	send_private_message(actor, (client, echo), arg['username'], arg['text'])
+	send_private_message(actor, (client, echo, None), arg['username'], arg['text'])
 
 @protocol_command()
 def fn_BAG(connection, map, client, arg, echo):
@@ -688,6 +688,9 @@ def fn_MSG(connection, map, client, arg, echo):
 			fields['rc_id'] = client.protocol_id()
 			fields['rc_username'] = client.username_or_id()
 		map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
+		for e in map.contents:
+			if e.entity_type == entity_type['gadget'] and e.listening_to_chat:
+				e.receive_chat(client, arg)
 
 @protocol_command()
 def fn_TSD(connection, map, client, arg, echo):

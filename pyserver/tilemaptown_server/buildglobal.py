@@ -104,6 +104,10 @@ def loadConfigJson():
 	setConfigDefault("API",      "Enabled",          True)
 	setConfigDefault("API",      "URL",              "")
 
+	setConfigDefault("Scripting","Enabled",          False)
+	setConfigDefault("Scripting","ProgramPath",      None)
+	setConfigDefault("Scripting","DataStorageLimit", 0x8000)
+
 	setConfigDefault("Database", "File",             "town.db")
 	setConfigDefault("Database", "Setup",            True)
 	setConfigDefault("Images",   "URLWhitelist",     ["https://i.imgur.com/", "https://i.postimg.cc/", "https://i.ibb.co/"])
@@ -302,10 +306,11 @@ for k,v in entity_type.items():
 # User privilege levels, for commands and protocol messages
 user_privilege = {}
 user_privilege['guest'] = 0
-user_privilege['registered'] = 1
-user_privilege['map_admin'] = 2
-user_privilege['map_owner'] = 3
-user_privilege['server_admin'] = 4
+user_privilege['no_scripts'] = 1
+user_privilege['registered'] = 2
+user_privilege['map_admin'] = 3
+user_privilege['map_owner'] = 4
+user_privilege['server_admin'] = 5
 
 # Used to mark IDs as being temporary, rather than being in the database
 temporary_id_marker = "~"
@@ -637,6 +642,30 @@ def send_ext_listen_status(connection):
 			all_maps[map_id] = []
 		all_maps[map_id].append(maplisten_type_name[category])
 	connection.send("EXT", {"listen_status": {"maps": all_maps}})
+
+def get_tile_properties(name):
+	if isinstance(name, dict):
+		return name
+	if name == None:
+		return None
+	s = name.split(':')
+	if len(s) == 1:
+		tileset = ''
+		tilename = s[0]
+	else:
+		tileset = s[0]
+		tilename = s[1]
+
+	tileset = ServerResources['tilesets'].get(tileset)
+	if tileset == None:
+		return None
+	return tileset.get(tilename)
+
+def get_tile_density(name):
+	properties = get_tile_properties(name)
+	if properties == None:
+		return False
+	return properties.get('density', False)
 
 from .buildentity import Entity, EntityWithPlainData, GenericEntity
 from .buildgadget import Gadget

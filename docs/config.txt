@@ -238,6 +238,15 @@ Maximum number of characters for the "text" field of PRI. (or a message sent wit
 MaxProtocolSize.Command
 Maximum number of characters for the "text" field of CMD.
 
+Scripting.Enabled
+Defaults to false, which will disable scripting
+
+Scripting.ProgramPath
+Path to a https://github.com/NovaSquirrel/TilemapTownScriptingService executable
+
+Scripting.DataStorageLimit
+Limit for how much persistent information each script is allowed to store
+
 .--------------------------------------------------------------------------------------------------
 | Resource files:
 '--------------------------------------------------------------------------------------------------
