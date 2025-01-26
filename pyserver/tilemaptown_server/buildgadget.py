@@ -70,7 +70,7 @@ class Gadget(Entity):
 		data['data'] = self.data
 		if len(self.script_data):
 			data['script_data'] = self.script_data
-		if script_data_size:
+		if self.script_data_size:
 			data['script_data_size'] = self.script_data_size
 		self.save_data_as_text(dumps_if_not_none(data))
 
@@ -201,10 +201,10 @@ class GadgetTrait(object):
 	def on_switch_map(self):
 		return None
 
-	def on_join(self, user):
+	def on_entity_join(self, user):
 		return None
 
-	def on_leave(self, user):
+	def on_entity_leave(self, user):
 		return None
 
 	def on_chat(self, user, text):
@@ -432,6 +432,16 @@ class GadgetScript(GadgetTrait):
 		print("Script init")
 		self.send_scripting_message(VM_MessageType.START_SCRIPT)
 
+		if not self.get_config('enabled', True):
+			return
+		item_id = self.get_config('code_item', None)
+		if item_id:
+			code = text_from_text_item(item_id)
+		else:
+			code = self.get_config('code', None)
+		if code:
+			self.send_scripting_message(VM_MessageType.RUN_CODE, data=code.encode())
+
 	def on_shutdown(self):
 		self.send_scripting_message(VM_MessageType.STOP_SCRIPT)
 
@@ -526,23 +536,25 @@ class GadgetScript(GadgetTrait):
 		}])
 		return None
 
-	def on_join(self, user):
+	def on_entity_join(self, user):
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.MAP_JOIN]:
 			return None
 		self.trigger_script_callback(ScriptingCallbackType.MAP_JOIN, [{
 			"id":       user.protocol_id(),
 			"name":     user.name,
-			"username": user.username_or_id()
+			"username": user.username_or_id(),
+			"in_user_list": user.is_client(),
 		}])
 		return None
 
-	def on_leave(self, user):
+	def on_entity_leave(self, user):
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.MAP_LEAVE]:
 			return None
 		self.trigger_script_callback(ScriptingCallbackType.MAP_LEAVE, [{
 			"id":       user.protocol_id(),
 			"name":     user.name,
-			"username": user.username_or_id()
+			"username": user.username_or_id(),
+			"in_user_list": user.is_client(),
 		}])
 		return None
 
@@ -552,7 +564,8 @@ class GadgetScript(GadgetTrait):
 		self.trigger_script_callback(ScriptingCallbackType.MAP_CHAT, [{
 			"id":       user.protocol_id(),
 			"name":     user.name,
-			"username": user.username_or_id()
+			"username": user.username_or_id(),
+			"in_user_list": user.is_client(),
 		}])
 		return None
 

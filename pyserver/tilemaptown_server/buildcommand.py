@@ -309,8 +309,8 @@ def send_private_message(client, context, recipient_username, text):
 							recipient_params['rc_username'] = respond_to.username_or_id()
 							recipient_params['rc_id'] = respond_to.protocol_id()
 						if context[2]: # Script entity
-							fields['rc_username'] = find_username_by_db_id(context[2].owner_id)
-							fields['rc_id'] = context[2].owner_id
+							recipient_params['rc_username'] = find_username_by_db_id(context[2].owner_id)
+							recipient_params['rc_id'] = context[2].owner_id
 						u.send("PRI", recipient_params)
 				else:
 					respond(context, 'That entity isn\'t a user', error=True)

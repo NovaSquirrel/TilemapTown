@@ -959,12 +959,7 @@ class Entity(PermissionsMixin, object):
 
 	def load_data_as_text(self):
 		""" Get the data and return it as a string """
-		c = Database.cursor()
-		c.execute('SELECT data, compressed_data FROM Entity WHERE id=?', (self.db_id,))
-		result = c.fetchone()
-		if result != None:
-			return decompress_entity_data(result[0], result[1])
-		return None
+		return load_text_data_from_db(self.db_id)
 
 	def load_data(self):
 		""" Load the entity's data to the database, using JSON unless overridden """

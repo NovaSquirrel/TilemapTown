@@ -34,6 +34,7 @@ class VM_MessageType(IntEnum):
 	API_CALL_GET = 8
 	CALLBACK = 9
 	SET_CALLBACK = 10
+	SCRIPT_ERROR = 11
 
 class ScriptingValueType(IntEnum):
 	NIL = 0
@@ -64,7 +65,6 @@ class ScriptingCallbackType(IntEnum):
 # -----------------------------------------------------------------------------
 
 def find_owner(entity):
-	print("Finding owner for %s" % entity.owner_id)
 	return AllEntitiesByDB.get(entity.owner_id)
 
 script_api_handlers = {}
@@ -79,7 +79,19 @@ def fn_ownersay(e, arg):
 	owner = find_owner(e)
 	if owner == None:
 		return
-	send_private_message(e, (e, None), owner.protocol_id(), arg[0])
+	send_private_message(e, (e, None, e), owner.protocol_id(), arg[0])
+
+@script_api()
+def fn_runitem(e, arg):
+	text = text_from_text_item(arg[0])
+	if text:
+		self.send_scripting_message(VM_MessageType.RUN_CODE, data=text.encode())
+		return True
+	return False
+
+@script_api()
+def fn_readitem(e, arg):
+	return text_from_item(arg[0])
 
 @script_api()
 def fn_e_new(e, arg):  #t
@@ -302,6 +314,12 @@ def fn_e_delete(e, arg): #E
 def fn_e_isloaded(e, arg): #E
 	return find_entity(arg[0]) != None
 
+@script_api()
+def fn_e_havepermission(e, arg): #Es
+	if arg[1] not in permission:
+		return None
+	return e.has_permission(arg[0], perm=0, default=False)
+
 # -----------------------------------------------------------------------------
 
 def encode_scripting_message_values(values):
@@ -369,6 +387,10 @@ def send_scripting_message(type, user_id=0, entity_id=0, other_id=0, status=0, d
 # -----------------------------------------------------------------------------
 
 def find_entity(e):
+	if isinstance(e, str):
+		if valid_id_format(e):
+			return get_entity_by_id(e, load_from_db=False)
+		return None
 	if e > 0:
 		return AllEntitiesByDB.get(e)
 	return AllEntitiesByID.get(-e)
@@ -417,8 +439,19 @@ async def run_scripting_service():
 					e.script_callback_enabled[other_id] = bool(status)
 			elif message_type == VM_MessageType.PING:
 				send_scripting_message(VM_MessageType.PONG, user_id=user_id, entity_id=entity_id, other_id=other_id, status=status, data=None)
-		except:
-			pass
+			elif message_type == VM_MessageType.SCRIPT_ERROR:
+				e = find_entity(entity_id)
+				if not e:
+					continue
+				owner = find_owner(e)
+				if owner != None:
+					if status == 1:
+						owner.send("ERR", {'text': 'Script failed to load: %s' % data.decode()})
+					else:
+						owner.send("ERR", {'text': 'Script error: %s' % data.decode()})
+		except Exception as e:
+			print("Exception thrown")
+			print(e)
 		#print(message_type, user_id, entity_id, other_id, status, data)
 		#print(type_and_size + rest_of_message)
 

@@ -635,6 +635,24 @@ def decompress_entity_data(data, compressed_data):
 		return zlib.decompress(compressed_data).decode()
 	return None
 
+def load_text_data_from_db(entity_id):
+	c = Database.cursor()
+	c.execute('SELECT data, compressed_data FROM Entity WHERE id=?', (entity_id,))
+	result = c.fetchone()
+	if result != None:
+		return decompress_entity_data(result[0], result[1])
+	return None
+
+def text_from_text_item(entity_id):
+	if isinstance(entity_id, str):
+		entity_id = find_db_id_by_str(entity_id)
+	if entity_id == None:
+		return None
+	entity_type = get_entity_type_by_db_id(entity_id)
+	if entity_type != entity_type['text']:
+		return None
+	return loads_if_not_none(load_text_data_from_db(entity_id))
+
 def send_ext_listen_status(connection):
 	all_maps = {}
 	for category, map_id in connection.listening_maps:
