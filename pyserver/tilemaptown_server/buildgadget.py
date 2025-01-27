@@ -28,6 +28,7 @@ class Gadget(Entity):
 		self.data = {} # Configuration
 		self.script_data = {}
 		self.script_data_size = 0
+		self.script_running = False
 
 		self.script_callback_enabled = [False] * ScriptingCallbackType.COUNT
 		self.listening_to_chat = False
@@ -74,13 +75,18 @@ class Gadget(Entity):
 			data['script_data_size'] = self.script_data_size
 		self.save_data_as_text(dumps_if_not_none(data))
 
+	def stop_scripts(self):
+		for trait in self.traits:
+			if isinstance(trait, GadgetScript):
+				trait.stop_script()
+
 	# .----------------------
 	# | Event handlers
 	# '----------------------
 	def receive_switch_map(self):
 		for trait in self.traits:
 			if trait.on_switch_map():
-				return	
+				return
 
 	def receive_use(self, user):
 		for trait in self.traits:
@@ -415,7 +421,18 @@ class GadgetRCCar(GadgetTrait):
 			user.send("EXT", {'take_controls': {'id': self.gadget.protocol_id(), 'keys': []}})
 		return True
 
+	def on_request(self, user, request_type, request_data, accept_command, decline_command):
+		if self.get_config("give_rides") and request_type == "carryme":
+			handle_user_command(self.gadget.map, self.gadget, self.gadget, None, '%s %s %s' % (accept_command, user.protocol_id(), request_type))
+			return True
+		return None
+
 class GadgetScript(GadgetTrait):
+	def __init__(self, gadget, config):
+		super().__init__(gadget, config)
+		if self.get_config("usable"):
+			self.usable = True
+
 	def send_scripting_message(self, message_type, other_id=0, status=0, data=None):
 		send_scripting_message(message_type, user_id=self.gadget.owner_id, entity_id=self.gadget.db_id if self.gadget.db_id else -self.gadget.id, other_id=other_id, status=status, data=data)
 
@@ -425,15 +442,30 @@ class GadgetScript(GadgetTrait):
 	def trigger_script_callback(self, type, values):
 		self.send_scripting_values(VM_MessageType.CALLBACK, other_id=type, values=values)
 
-	# .----------------------
-	# | Event handlers
-	# '----------------------
-	def on_init(self):
-		print("Script init")
-		self.send_scripting_message(VM_MessageType.START_SCRIPT)
-
+	def start_script(self):
+		if self.gadget.script_running:
+			return False
 		if not self.get_config('enabled', True):
-			return
+			return False
+		owner = AllEntitiesByDB.get(self.gadget.owner_id)
+		if owner and owner.is_client() and owner.connection_attr("disable_scripts"):
+			return False
+		if owner:
+			user_flags = owner.connection_attr("user_flags") or 0
+			if (user_flags & userflag['scripter']) == 0:
+				owner.send("ERR", {'text': 'You don\'t have permission to use server-side scripting'})
+				return False
+		else:
+			c = Database.cursor()
+			c.execute('SELECT flags FROM User WHERE entity_id=?', (self.gadget.owner_id,))
+			result = c.fetchone()
+			if result == None or (result[0] & userflag['scripter']) == 0:
+				return False
+
+		# OK there's nothing preventing the script from running
+		print("Calling start_script()")
+		self.gadget.script_running = True
+		self.send_scripting_message(VM_MessageType.START_SCRIPT)
 		item_id = self.get_config('code_item', None)
 		if item_id:
 			code = text_from_text_item(item_id)
@@ -441,9 +473,22 @@ class GadgetScript(GadgetTrait):
 			code = self.get_config('code', None)
 		if code:
 			self.send_scripting_message(VM_MessageType.RUN_CODE, data=code.encode())
+		return True
 
-	def on_shutdown(self):
+	def stop_script(self):
+		if not self.gadget.script_running:
+			return False
+		print("Calling stop_script()")
+		self.gadget.script_running = False
 		self.send_scripting_message(VM_MessageType.STOP_SCRIPT)
+		return True
+
+	# .----------------------
+	# | Event handlers
+	# '----------------------
+	def on_shutdown(self):
+		print("Script shutdown")
+		self.stop_script()
 
 	def on_use(self, user):
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_USE]:
@@ -453,7 +498,7 @@ class GadgetScript(GadgetTrait):
 			"name":     user.name,
 			"username": user.username_or_id()
 		}])
-		return None
+		return True
 
 	def on_tell(self, user, text):
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_PRIVATE_MESSAGE]:
@@ -464,7 +509,7 @@ class GadgetScript(GadgetTrait):
 			"name":     user.name,
 			"username": user.username_or_id()
 		}])
-		return None
+		return True
 
 	def on_request(self, user, request_type, request_data, accept_command, decline_command):
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_REQUEST_RECEIVED]:
@@ -477,7 +522,7 @@ class GadgetScript(GadgetTrait):
 			"name":     user.name,
 			"username": user.username_or_id()
 		}])
-		return None
+		return True
 
 	def on_key_press(self, user, key, down):
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_KEY_PRESS]:
@@ -489,7 +534,7 @@ class GadgetScript(GadgetTrait):
 			"name":     user.name,
 			"username": user.username_or_id()
 		}])
-		return None
+		return True
 
 	def on_bot_message_button(self, user, arg):
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_BOT_COMMAND_BUTTON]:
@@ -500,7 +545,7 @@ class GadgetScript(GadgetTrait):
 			"name":     user.name,
 			"username": user.username_or_id()
 		}])
-		return None
+		return True
 
 	def on_took_controls(self, user, arg):
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_TOOK_CONTROLS]:
@@ -512,7 +557,7 @@ class GadgetScript(GadgetTrait):
 			"name":     user.name,
 			"username": user.username_or_id()
 		}])
-		return None
+		return True
 
 	def on_entity_click(self, user, arg):
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_CLICK]:
@@ -526,15 +571,15 @@ class GadgetScript(GadgetTrait):
 			"name":     user.name,
 			"username": user.username_or_id()
 		}])
-		return None
+		return True
 
-	def on_map_switch(self):
+	def on_switch_map(self):
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_SWITCH_MAP]:
 			return None
 		self.trigger_script_callback(ScriptingCallbackType.SELF_SWITCH_MAP, [{
 			"id":       self.gadget.map.protocol_id() if self.gadget.map else None
 		}])
-		return None
+		return True
 
 	def on_entity_join(self, user):
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.MAP_JOIN]:
@@ -545,7 +590,7 @@ class GadgetScript(GadgetTrait):
 			"username": user.username_or_id(),
 			"in_user_list": user.is_client(),
 		}])
-		return None
+		return True
 
 	def on_entity_leave(self, user):
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.MAP_LEAVE]:
@@ -556,7 +601,7 @@ class GadgetScript(GadgetTrait):
 			"username": user.username_or_id(),
 			"in_user_list": user.is_client(),
 		}])
-		return None
+		return True
 
 	def on_chat(self, user, text):
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.MAP_CHAT]:
@@ -567,7 +612,31 @@ class GadgetScript(GadgetTrait):
 			"username": user.username_or_id(),
 			"in_user_list": user.is_client(),
 		}])
-		return None
+		return True
+
+class GadgetAutoScript(GadgetScript):
+	def on_init(self):
+		self.start_script()
+
+class GadgetManualScript(GadgetScript):
+	usable = True
+
+	def on_use(self, user):
+		self.start_script()
+		super().on_use(user)
+		return True
+
+class GadgetMapScript(GadgetScript):
+	def on_init(self):
+		if not self.gadget.script_running and self.gadget.map and self.gadget.map.is_map():
+			self.start_script()
+
+	def on_switch_map(self):
+		if self.gadget.script_running and (not self.gadget.map or not self.gadget.map.is_map()):
+			self.stop_script()
+		elif not self.gadget.script_running and self.gadget.map and self.gadget.map.is_map():
+			self.start_script()
+		super().on_switch_map()
 
 gadget_trait_class = {}
 gadget_trait_class['dice'] = GadgetDice
@@ -577,4 +646,6 @@ gadget_trait_class['bot_message_button'] = GadgetUseBotMessageButton
 gadget_trait_class['random_tell'] = GadgetUseRandomTell
 gadget_trait_class['random_say'] = GadgetUseRandomSay
 gadget_trait_class['rc_car'] = GadgetRCCar
-gadget_trait_class['script'] = GadgetScript
+gadget_trait_class['auto_script'] = GadgetAutoScript
+gadget_trait_class['use_script'] = GadgetManualScript
+gadget_trait_class['map_script'] = GadgetMapScript

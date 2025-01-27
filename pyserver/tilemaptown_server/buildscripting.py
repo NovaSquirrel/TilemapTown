@@ -94,6 +94,11 @@ def fn_readitem(e, arg):
 	return text_from_item(arg[0])
 
 @script_api()
+def fn_stopscript(e, arg):
+	if e.entity_type == entity_type['gadget']:
+		e.stop_scripts()
+
+@script_api()
 def fn_e_new(e, arg):  #t
 	return
 
@@ -159,7 +164,7 @@ def script_storage_value_cost(value):
 	return None # Unsupported
 
 def script_storage_item_cost(key, value):
-	value_cost = script_storage_value_cost(key, value)
+	value_cost = script_storage_value_cost(value)
 	if value_cost == None:
 		return None
 	key_cost = len(key.encode())
@@ -226,6 +231,11 @@ def fn_e_xy(e, arg): #E
 	e2 = find_entity(arg[0])
 	if e2:
 		return [e2.x, e2.y]
+
+@script_api()
+def fn_e_here(e, arg): #
+	if e.map:
+		return e.map.protocol_id()
 
 @script_api()
 def fn_e_move(e, arg): #Eiii

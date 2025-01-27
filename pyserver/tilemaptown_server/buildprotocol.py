@@ -1046,6 +1046,10 @@ def fn_IDN(connection, map, client, arg, echo):
 		new_client = connection.entity
 	connection.login_successful_callback = login_successful
 
+	# Allow disabling all of your scripts while logging in
+	# should happen before the entity gets loaded
+	connection.disable_scripts = "disable_scripts" in arg and arg["disable_scripts"]
+
 	# Check the features the client requested
 	ack_info = {}
 	if arg != {} and "features" in arg:

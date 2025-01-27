@@ -707,6 +707,9 @@ class Entity(PermissionsMixin, object):
 
 		self.finish_batch()
 
+		if self.entity_type == entity_type['gadget']:
+			self.receive_switch_map()
+
 		# Move any passengers too
 		if already_moved == None:
 			already_moved = {self}
