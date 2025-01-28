@@ -614,6 +614,10 @@ function receiveServerMessage(cmd, arg) {
             DBInventory[key].folder = arg['new_id']['new_id'];
         }
       }
+      if(arg['info'] && editItemWaitingForDataID === arg['info']['id']) {
+        editItemWaitingForDataID = undefined;
+        editItemShared(arg['info']);
+      }
       NeedInventoryUpdate = true;
       break;
 

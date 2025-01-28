@@ -1128,6 +1128,7 @@ function viewTileset(Item) {
 
 let editItemType = null;
 let editItemID = null;
+let editItemWaitingForDataID = undefined;
 let editItemOriginalSheet = null; // Original tileset image that the tile's pic was set to before the edit
 
 function editItemShared(item) {
@@ -1252,11 +1253,11 @@ function editItemShared(item) {
 			if (item.type == "map_tile" || item.type == "map_tile_hotbar" || item.type == "map_tile_mapobj_edit" || item.type == "map_tile_turf_edit") {
 				document.getElementById('edittileautotileoptions').style.display = "block";
 				itemobj = AtomFromName(item.data);
-				if (itemobj == null) {
+				if (itemobj == null && item.pic !== null) {
 					itemobj = { pic: [0, 8, 24] };
 				}
 			} else {
-				if ("pic" in item)
+				if ("pic" in item && item.pic !== null)
 					itemobj = { pic: item.pic };
 				else
 					itemobj = { pic: [0, 8, 24] };
@@ -1351,7 +1352,13 @@ function editItem(key) {
 	// open up the item editing screen for a given item
 	let item = DBInventory[key] || PlayerWho[key];
 	editItemID = item.id;
-	editItemShared(item);
+
+	if (key in PlayerWho && !(key in DBInventory) && (item.type === "gadget" || item.type === "text" || item.type === "image" || item.type === "map_tile")) {
+		editItemWaitingForDataID = editItemID;
+		SendCmd("BAG", {info: { id: editItemID }});
+	} else {
+		editItemShared(item);
+	}
 }
 
 function editTypeIsDirectEdit(type) {
