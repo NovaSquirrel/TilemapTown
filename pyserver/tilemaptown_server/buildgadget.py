@@ -20,8 +20,10 @@ from .buildentity import Entity, save_generic_data, load_generic_data
 from .buildcommand import handle_user_command
 from .buildscripting import send_scripting_message, encode_scripting_message_values, VM_MessageType, ScriptingValueType, ScriptingCallbackType
 
+SCRIPT_DEBUG_PRINTS = False
+
 class Gadget(Entity):
-	def __init__(self, entity_type_gadget, creator_id=None, dont_load_script=False):
+	def __init__(self, entity_type_gadget, creator_id=None, do_not_load_scripts=False):
 		super().__init__(entity_type['gadget'], creator_id=creator_id)
 
 		self.traits = []
@@ -29,7 +31,7 @@ class Gadget(Entity):
 		self.script_data = {}
 		self.script_data_size = 0
 		self.script_running = False
-		self.dont_load_script = dont_load_script
+		self.do_not_load_scripts = do_not_load_scripts
 
 		self.script_callback_enabled = [False] * ScriptingCallbackType.COUNT
 		self.listening_to_chat = False
@@ -451,7 +453,7 @@ class GadgetScript(GadgetTrait):
 		self.send_scripting_values(VM_MessageType.CALLBACK, other_id=type, values=values)
 
 	def start_script(self):
-		if self.gadget.script_running or self.gadget.dont_load_script:
+		if self.gadget.script_running or self.gadget.do_not_load_scripts:
 			return False
 		if not self.get_config('enabled', True):
 			return False
@@ -471,7 +473,8 @@ class GadgetScript(GadgetTrait):
 				return False
 
 		# OK there's nothing preventing the script from running
-		print("Calling start_script() %s" % self.gadget.protocol_id())
+		if SCRIPT_DEBUG_PRINTS:
+			print("Calling start_script() %s" % self.gadget.protocol_id())
 		self.gadget.script_running = True
 		self.send_scripting_message(VM_MessageType.START_SCRIPT)
 		item_id = self.get_config('code_item', None)
@@ -486,7 +489,8 @@ class GadgetScript(GadgetTrait):
 	def stop_script(self):
 		if not self.gadget.script_running:
 			return False
-		print("Calling stop_script() %s" % self.gadget.protocol_id())
+		if SCRIPT_DEBUG_PRINTS:
+			print("Calling stop_script() %s" % self.gadget.protocol_id())
 		self.gadget.script_running = False
 		self.send_scripting_message(VM_MessageType.STOP_SCRIPT)
 		return True
@@ -495,7 +499,8 @@ class GadgetScript(GadgetTrait):
 	# | Event handlers
 	# '----------------------
 	def on_shutdown(self):
-		print("Script shutdown %s" % self.gadget.protocol_id())
+		if SCRIPT_DEBUG_PRINTS:
+			print("Script shutdown %s" % self.gadget.protocol_id())
 		self.stop_script()
 
 	def on_use(self, user):

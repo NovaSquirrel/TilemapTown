@@ -21,6 +21,7 @@ from .buildcommand import handle_user_command, send_private_message
 
 # -----------------------------------------------------------------------------
 directions = ((1,0), (1,1), (0,1), (-1,1), (-1,0), (-1,-1), (0,-1), (1,-1))
+SCRIPT_DEBUG_PRINTS = False
 
 class VM_MessageType(IntEnum):
 	PING = 0
@@ -334,7 +335,6 @@ def fn_e_minitilemap(e, arg): #Et
 		mini_tilemap_data = GlobalData['who_mini_tilemap_data']({
 			"data": map_data
 		})
-		print(map_data)
 
 		out = {}
 		if not hasattr(e2, "mini_tilemap") or e2.mini_tilemap != mini_tilemap:
@@ -442,7 +442,10 @@ def create_scripting_message(type, user_id=0, entity_id=0, other_id=0, status=0,
 	+ (data or bytes(0))
 
 def send_scripting_message(type, user_id=0, entity_id=0, other_id=0, status=0, data=None):
-	print("SENDING", create_scripting_message(type, user_id, entity_id, other_id, status, data))
+	if scripting_service_proc == None:
+		return
+	if SCRIPT_DEBUG_PRINTS:
+		print("SENDING", create_scripting_message(type, user_id, entity_id, other_id, status, data))
 	scripting_service_proc.stdin.write(create_scripting_message(type, user_id, entity_id, other_id, status, data))
 
 # -----------------------------------------------------------------------------
@@ -490,7 +493,7 @@ async def run_scripting_service():
 				values = decode_scripting_message_values(data)
 				e = find_entity(entity_id)
 				if not e:
-					e = get_entity_by_id(entity_id, load_from_db=True, dont_load_script=True)
+					e = get_entity_by_id(entity_id, load_from_db=True, do_not_load_scripts=True)
 				if not e:
 					continue
 				if values[0] in script_api_handlers:
@@ -536,7 +539,7 @@ async def run_scripting_service():
 				e.send("MSG", {'text': 'Scripting status: %s' % data.decode()})
 				del e
 		except Exception as e:
-			print("Exception thrown")
+			print("Exception thrown from scripting")
 			print(e)
 		#print(message_type, user_id, entity_id, other_id, status, data)
 		#print(type_and_size + rest_of_message)
