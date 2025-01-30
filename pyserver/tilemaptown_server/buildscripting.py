@@ -35,6 +35,7 @@ class VM_MessageType(IntEnum):
 	CALLBACK = 9
 	SET_CALLBACK = 10
 	SCRIPT_ERROR = 11
+	STATUS_QUERY = 12
 
 class ScriptingValueType(IntEnum):
 	NIL = 0
@@ -44,6 +45,7 @@ class ScriptingValueType(IntEnum):
 	STRING = 4
 	JSON = 5
 	TABLE = 6
+	MINI_TILEMAP = 7
 
 class ScriptingCallbackType(IntEnum):
 	MISC_SHUTDOWN = 0
@@ -311,6 +313,44 @@ def fn_e_set(e, arg): #Et
 		p = arg[1]
 
 @script_api()
+def fn_e_minitilemap(e, arg): #Et
+	entity_id, tile_sheet_url, visible, clickable, transparent_tile, tile_width, tile_height, offset_x, offset_y, map = arg
+	map_width, map_height, map_data = map
+
+	e2 = find_entity(arg[0])
+	if e.has_permission(e2, perm=permission['modify_appearance']):
+		if not tile_sheet_url.startswith("https://") and not tile_sheet_url.startswith("http://"):
+			tile_sheet_url = Config["Server"]["ResourceIMGBase"] + "mini_tilemap/" + tile_sheet_url
+
+		mini_tilemap = GlobalData['who_mini_tilemap']({
+			"visible": visible,
+			"clickable": clickable,
+			"map_size": [map_width, map_height],
+			"tile_size": [tile_width, tile_height],
+			"offset": [offset_x, offset_y],
+			"transparent_tile": transparent_tile,
+			"tileset_url": tile_sheet_url,
+		})
+		mini_tilemap_data = GlobalData['who_mini_tilemap_data']({
+			"data": map_data
+		})
+		print(map_data)
+
+		out = {}
+		if not hasattr(e2, "mini_tilemap") or e2.mini_tilemap != mini_tilemap:
+			e2.mini_tilemap = mini_tilemap
+			out['mini_tilemap'] = mini_tilemap
+		if not hasattr(e2, "mini_tilemap_data") or e2.mini_tilemap_data != mini_tilemap_data:
+			e2.mini_tilemap_data = mini_tilemap_data
+			out['mini_tilemap_data'] = mini_tilemap_data
+		if e2.map == None:
+			return
+		if out == {}:
+			return
+		out["id"] = e2.protocol_id()
+		e2.map.broadcast("WHO", {"update": out})
+
+@script_api()
 def fn_e_clone(e, arg): #Et
 	e2 = find_entity(arg[0])
 	return
@@ -376,6 +416,17 @@ def decode_scripting_message_values(b):
 			i += 4
 			values.append(json.loads(b[i:i+size]).decode())
 			i += size
+		elif t == ScriptingValueType.MINI_TILEMAP:
+			width  = b[i+0]
+			height = b[i+1]
+			i += 2
+			length = int.from_bytes(b[i:i+2], byteorder='little', signed=False)
+			i += 2
+			map = []
+			for j in range(length):
+				map.append(int.from_bytes(b[i:i+4], byteorder='little', signed=False))
+				i += 4
+			values.append((width, height, map))
 		else:
 			print("Unknown scripting message value: %s" % t)
 			break
@@ -396,6 +447,14 @@ def send_scripting_message(type, user_id=0, entity_id=0, other_id=0, status=0, d
 
 # -----------------------------------------------------------------------------
 
+def find_owner_by_db_id(db_id):
+	c = Database.cursor()
+	c.execute('SELECT owner_id FROM Entity WHERE entity_id=?', (id,))
+	result = c.fetchone()
+	if result:
+		return result[0]
+	return None
+
 def find_entity(e):
 	if isinstance(e, str):
 		if valid_id_format(e):
@@ -406,7 +465,9 @@ def find_entity(e):
 	return AllEntitiesByID.get(-e)
 
 async def run_scripting_service():
-	global scripting_service_proc
+	global scripting_service_proc, GlobalData
+	GlobalData['request_script_status'] = request_script_status # Try to work around a circular dependency
+	GlobalData['shutdown_scripting_service'] = shutdown_scripting_service
 
 	print("Running scripting service")
 	scripting_service_proc = await asyncio.create_subprocess_exec(Config["Scripting"]["ProgramPath"], stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE)
@@ -429,6 +490,8 @@ async def run_scripting_service():
 				values = decode_scripting_message_values(data)
 				e = find_entity(entity_id)
 				if not e:
+					e = get_entity_by_id(entity_id, load_from_db=True, dont_load_script=True)
+				if not e:
 					continue
 				if values[0] in script_api_handlers:
 					out = script_api_handlers[values[0]](e, values[1:])
@@ -440,6 +503,7 @@ async def run_scripting_service():
 						send_scripting_message(VM_MessageType.API_CALL_GET, user_id=user_id, entity_id=entity_id, other_id=other_id, status=len(out), data=encode_scripting_message_values(out))
 				else:
 					print("Unimplemented API call: "+values[0])
+				del e
 			elif message_type == VM_MessageType.SET_CALLBACK:
 				e = find_entity(entity_id)
 				if e.entity_type == entity_type['gadget'] and other_id >= 0 and other_id < ScriptingCallbackType.COUNT:
@@ -447,18 +511,30 @@ async def run_scripting_service():
 						e.listening_to_chat = bool(status)
 						e.listening_to_chat_warning = e.listening_to_chat_warning or e.listening_to_chat
 					e.script_callback_enabled[other_id] = bool(status)
+				del e
 			elif message_type == VM_MessageType.PING:
 				send_scripting_message(VM_MessageType.PONG, user_id=user_id, entity_id=entity_id, other_id=other_id, status=status, data=None)
 			elif message_type == VM_MessageType.SCRIPT_ERROR:
 				e = find_entity(entity_id)
-				if not e:
+				if e:
+					owner_id = e.owner_id
+				else:
+					owner_id = find_owner_by_db_id(entity_id)
+				if owner_id == None:
 					continue
-				owner = find_owner(e)
+				owner = AllEntitiesByDB.get(owner_id)
 				if owner != None:
 					if status == 1:
 						owner.send("ERR", {'text': 'Script failed to load: %s' % data.decode()})
 					else:
 						owner.send("ERR", {'text': 'Script error: %s' % data.decode()})
+				del e
+			elif message_type == VM_MessageType.STATUS_QUERY:
+				e = find_entity(other_id)
+				if not e:
+					continue
+				e.send("MSG", {'text': 'Scripting status: %s' % data.decode()})
+				del e
 		except Exception as e:
 			print("Exception thrown")
 			print(e)
@@ -468,5 +544,14 @@ async def run_scripting_service():
 	# Wait for the subprocess exit.
 	await scripting_service_proc.wait()
 
-def shutdown_scripting_service():
-	send_scripting_message(VM_MessageType.SHUTDOWN)
+def shutdown_scripting_service(user_id=0):
+	send_scripting_message(VM_MessageType.SHUTDOWN, user_id=user_id)
+
+def request_script_status(client, arg):
+	if arg == "s":
+		send_scripting_message(VM_MessageType.STATUS_QUERY, status=1, other_id=client.db_id)
+		return
+	if len(arg) == 0:
+		send_scripting_message(VM_MessageType.STATUS_QUERY, other_id=client.db_id)
+		return
+	send_scripting_message(VM_MessageType.STATUS_QUERY, user_id=int(arg), other_id=client.db_id)

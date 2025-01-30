@@ -142,7 +142,8 @@ class Map(Entity):
 				# Unload
 				self.turfs = None
 				self.objs = None
-				
+				self.edge_ref_links = None
+
 				self.map_data_loaded = False
 			if self.user_count == 0:
 				self.topic = None

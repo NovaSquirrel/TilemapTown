@@ -420,7 +420,7 @@ def entity_id_exists(id):
 		return int(id[1:]) in AllEntitiesByID
 	return False
 
-def get_entity_by_id(id, load_from_db=True):
+def get_entity_by_id(id, load_from_db=True, dont_load_script=False):
 	# If it's temporary, get it if it still exists
 	if isinstance(id, str):
 		if id[0] == temporary_id_marker and id[1:].isdecimal():
@@ -464,7 +464,7 @@ def get_entity_by_id(id, load_from_db=True):
 			return e
 		return None
 	if t == entity_type['gadget']:
-		e = Gadget(t)
+		e = Gadget(t, dont_load_script=dont_load_script)
 		if e.load(id):
 			return e
 		return None

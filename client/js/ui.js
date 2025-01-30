@@ -1353,7 +1353,7 @@ function editItem(key) {
 	let item = DBInventory[key] || PlayerWho[key];
 	editItemID = item.id;
 
-	if (key in PlayerWho && !(key in DBInventory) && (item.type === "gadget" || item.type === "text" || item.type === "image" || item.type === "map_tile")) {
+	if (key in PlayerWho && !(key in DBInventory) && (item.type === "gadget" || item.type === "text" || item.type === "image" || item.type === "map_tile" || item.type === "tileset" || item.type === "landmark")) {
 		editItemWaitingForDataID = editItemID;
 		SendCmd("BAG", {info: { id: editItemID }});
 	} else {

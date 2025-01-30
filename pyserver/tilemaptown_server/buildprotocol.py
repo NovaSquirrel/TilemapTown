@@ -16,7 +16,7 @@
 
 import json, datetime, time, types, weakref, secrets
 from .buildglobal import *
-from .buildcommand import handle_user_command, tile_is_okay, data_disallowed_for_entity_type, send_private_message
+from .buildcommand import handle_user_command, tile_is_okay, data_disallowed_for_entity_type, send_private_message, entity_types_users_can_change_data_for
 from .buildentity import Entity
 from .buildclient import Client
 from .buildgadget import Gadget
@@ -103,10 +103,12 @@ def who_mini_tilemap(data):
 	return None
 def who_mini_tilemap_data(data):
 	if isinstance(data, dict):
-		if ("data" not in data) or (len(data["data"]) > 256):
+		if ("data" not in data) or (len(data["data"]) > 576): # 24*24
 			return None
 		return {"data": data["data"]}
 	return None
+GlobalData['who_mini_tilemap'] = who_mini_tilemap
+GlobalData['who_mini_tilemap_data'] = who_mini_tilemap_data
 
 CLIENT_WHO_WHITELIST = {
 	"typing": bool,
@@ -569,10 +571,12 @@ def fn_BAG(connection, map, client, arg, echo):
 
 		bag_info = info_me.bag_info()
 		if info_me.is_client(): # No spying
-			del bag_info['folder']
+			bag_info.pop('folder')
 			if (info_me.connection_attr('user_flags') or 0) & userflag['secret_pic']:
 				bag_info.pop('pic', None)
 				bag_info.pop('desc', None)
+		if bag_info['type'] not in entity_types_users_can_change_data_for:
+			bag_info.pop('data')
 		client.send("BAG", {'info': bag_info})
 
 	elif "list_contents" in arg:

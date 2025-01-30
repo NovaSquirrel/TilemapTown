@@ -137,8 +137,9 @@ def respond(context, text, data=None, error=False, code=None, detail=None, subje
 def parse_equal_list(text):
 	return (x.split('=') for x in text.split())
 
+entity_types_users_can_change_data_for = ('text', 'image', 'map_tile', 'tileset', 'landmark', 'gadget')
 def data_disallowed_for_entity_type(type, data):
-	if entity_type_name[type] not in ('text', 'image', 'map_tile', 'tileset', 'landmark', 'gadget'):
+	if entity_type_name[type] not in entity_types_users_can_change_data_for:
 		return 'Not a valid type to change data for'
 	if type == entity_type['gadget']:
 		if not isinstance(data, list):
@@ -2639,6 +2640,16 @@ def fn_pyexec(map, client, context, arg):
 	if len(arg) == 0:
 		return
 	respond(context, str(exec(compile(arg.replace("✨", "\n"), "test", "exec"))))
+
+@cmd_command(privilege_level="server_admin", no_entity_needed=True)
+def fn_scriptstatus(map, client, context, arg):
+	GlobalData['request_script_status'](client, arg)
+
+@cmd_command(privilege_level="server_admin", no_entity_needed=True)
+def fn_scriptstop(map, client, context, arg):
+	if len(arg) == 0:
+		return
+	GlobalData['shutdown_scripting_service'](int(arg))
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True)
 def fn_flushbuildlog(map, client, context, arg):

@@ -21,7 +21,7 @@ from .buildcommand import handle_user_command
 from .buildscripting import send_scripting_message, encode_scripting_message_values, VM_MessageType, ScriptingValueType, ScriptingCallbackType
 
 class Gadget(Entity):
-	def __init__(self, entity_type_gadget, creator_id=None):
+	def __init__(self, entity_type_gadget, creator_id=None, dont_load_script=False):
 		super().__init__(entity_type['gadget'], creator_id=creator_id)
 
 		self.traits = []
@@ -29,6 +29,7 @@ class Gadget(Entity):
 		self.script_data = {}
 		self.script_data_size = 0
 		self.script_running = False
+		self.dont_load_script = dont_load_script
 
 		self.script_callback_enabled = [False] * ScriptingCallbackType.COUNT
 		self.listening_to_chat = False
@@ -150,6 +151,13 @@ class Gadget(Entity):
 class GadgetTrait(object):
 	usable = False
 	verbs = []
+
+	@property
+	def gadget(self):
+		return self.gadget_ref() if self.gadget_ref != None else None
+	@gadget.setter
+	def gadget(self, value):
+		self.gadget_ref = weakref.ref(value) if value != None else None
 
 	def __init__(self, gadget, config):
 		self.gadget = gadget
@@ -443,7 +451,7 @@ class GadgetScript(GadgetTrait):
 		self.send_scripting_values(VM_MessageType.CALLBACK, other_id=type, values=values)
 
 	def start_script(self):
-		if self.gadget.script_running:
+		if self.gadget.script_running or self.gadget.dont_load_script:
 			return False
 		if not self.get_config('enabled', True):
 			return False
@@ -463,7 +471,7 @@ class GadgetScript(GadgetTrait):
 				return False
 
 		# OK there's nothing preventing the script from running
-		print("Calling start_script()")
+		print("Calling start_script() %s" % self.gadget.protocol_id())
 		self.gadget.script_running = True
 		self.send_scripting_message(VM_MessageType.START_SCRIPT)
 		item_id = self.get_config('code_item', None)
@@ -478,7 +486,7 @@ class GadgetScript(GadgetTrait):
 	def stop_script(self):
 		if not self.gadget.script_running:
 			return False
-		print("Calling stop_script()")
+		print("Calling stop_script() %s" % self.gadget.protocol_id())
 		self.gadget.script_running = False
 		self.send_scripting_message(VM_MessageType.STOP_SCRIPT)
 		return True
@@ -487,7 +495,7 @@ class GadgetScript(GadgetTrait):
 	# | Event handlers
 	# '----------------------
 	def on_shutdown(self):
-		print("Script shutdown")
+		print("Script shutdown %s" % self.gadget.protocol_id())
 		self.stop_script()
 
 	def on_use(self, user):
@@ -621,6 +629,12 @@ class GadgetAutoScript(GadgetScript):
 class GadgetManualScript(GadgetScript):
 	usable = True
 
+	def on_entity_leave(self, user):
+		if self.gadget.map and self.gadget.map.is_map():
+			if self.gadget.map.count_users_inside() == 0:
+				self.stop_script()
+		return super().on_entity_leave(user)
+
 	def on_use(self, user):
 		self.start_script()
 		super().on_use(user)
@@ -628,15 +642,30 @@ class GadgetManualScript(GadgetScript):
 
 class GadgetMapScript(GadgetScript):
 	def on_init(self):
-		if not self.gadget.script_running and self.gadget.map and self.gadget.map.is_map():
+		if not self.gadget.script_running and self.gadget.map and self.gadget.map.is_map() and self.gadget.map.count_users_inside():
 			self.start_script()
 
+	def on_entity_join(self, user):
+		if self.gadget.map and self.gadget.map.is_map():
+			if self.gadget.map.count_users_inside() != 0:
+				self.start_script()
+		return super().on_entity_join(user)
+
+	def on_entity_leave(self, user):
+		if self.gadget.map and self.gadget.map.is_map():
+			if self.gadget.map.count_users_inside() == 0:
+				self.stop_script()
+		return super().on_entity_leave(user)
+
 	def on_switch_map(self):
-		if self.gadget.script_running and (not self.gadget.map or not self.gadget.map.is_map()):
+		if self.gadget.map and self.gadget.map.is_map():
+			if self.gadget.map.count_users_inside():
+				self.start_script()
+			else:
+				self.stop_script()
+		else:
 			self.stop_script()
-		elif not self.gadget.script_running and self.gadget.map and self.gadget.map.is_map():
-			self.start_script()
-		super().on_switch_map()
+		return super().on_switch_map()
 
 gadget_trait_class = {}
 gadget_trait_class['dice'] = GadgetDice
