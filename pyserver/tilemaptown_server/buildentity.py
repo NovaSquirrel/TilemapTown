@@ -240,6 +240,7 @@ class Entity(PermissionsMixin, object):
 
 		# Temporary information
 		self.requests = {} # Indexed by tuple: (username, type). Each item is an array with [timer, id, data]; data may be None. Timer decreases each second, then the request is deleted.
+		self.rate_limiting = {} # Indexed by rate limiting type. Each item is a deque containing (minute, hits)
 		# valid types are "tpa", "tpahere", "carry", "followme"
 		self.tp_history = deque(maxlen=20)
 

@@ -76,6 +76,12 @@ def loadConfigJson():
 	setConfigDefault("Security", "DefaultBuildingPermission",  0)
 	setConfigDefault("Security", "TrustedOnlyBuilding",        0)
 	setConfigDefault("Security", "TrustedOnlyMapCreation",     1)
+	setConfigDefault("Security", "RateLimitMSG",     True)
+	setConfigDefault("Security", "RateLimitMSG1",    10)
+	setConfigDefault("Security", "RateLimitMSG5",    50)
+	setConfigDefault("Security", "RateLimitPRI",     True)
+	setConfigDefault("Security", "RateLimitPRI1",    10)
+	setConfigDefault("Security", "RateLimitPRI5",    50)
 
 	setConfigDefault("MaxProtocolSize", "Default", 32768)
 	setConfigDefault("MaxProtocolSize", "Chat",    8192)
@@ -199,6 +205,7 @@ AllMaps         = weakref.WeakSet()             # Maps only; used by /whereare
 AllEntitiesByDB = weakref.WeakValueDictionary() # All entities (indexed by database ID)
 AllEntitiesByID = weakref.WeakValueDictionary() # All entities (indexed by temporary ID)
 AllEntitiesWithRequests = weakref.WeakSet()     # All entities with active requests
+AllEntitiesWithRateLimiting = weakref.WeakSet() # All entities with rate limiting information
 ConnectionsByUsername = weakref.WeakValueDictionary() # Look up connections by lowercased username
 ConnectionsByApiKey = weakref.WeakValueDictionary() # Look up connections by API key (supplied to clients in IDN)
 OfflineMessages = {} # OfflineMessages[recipient_id][sender_id][index]

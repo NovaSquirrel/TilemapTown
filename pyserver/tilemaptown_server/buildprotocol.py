@@ -16,7 +16,7 @@
 
 import json, datetime, time, types, weakref, secrets
 from .buildglobal import *
-from .buildcommand import handle_user_command, tile_is_okay, data_disallowed_for_entity_type, send_private_message, entity_types_users_can_change_data_for
+from .buildcommand import handle_user_command, tile_is_okay, data_disallowed_for_entity_type, send_private_message, send_message_to_map, entity_types_users_can_change_data_for, apply_rate_limiting
 from .buildentity import Entity
 from .buildclient import Client
 from .buildgadget import Gadget
@@ -673,11 +673,7 @@ def fn_EML(connection, map, client, arg, echo):
 
 @protocol_command()
 def fn_MSG(connection, map, client, arg, echo):
-	if len(arg['text']) > Config["MaxProtocolSize"]["Chat"]:
-		connection.protocol_error(echo, text='Tried to send chat message that was too big: (%d, max is %d)' % (len(arg['text']), Config["MaxProtocolSize"]["Chat"]), code='chat_too_big', detail=Config["MaxProtocolSize"]["Chat"])
-		return
 	actor = client
-
 	if 'rc' in arg:
 		actor = find_remote_control_entity(connection, client, arg['rc'], echo)
 		if actor == None:
@@ -685,16 +681,7 @@ def fn_MSG(connection, map, client, arg, echo):
 		else:
 			map = actor.map
 
-	if map:
-		text = arg["text"]
-		fields = {'name': actor.name, 'id': actor.protocol_id(), 'username': actor.username_or_id(), 'text': text}
-		if 'rc' in arg:
-			fields['rc_id'] = client.protocol_id()
-			fields['rc_username'] = client.username_or_id()
-		map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
-		for e in map.contents:
-			if e.entity_type == entity_type['gadget'] and e.listening_to_chat:
-				e.receive_chat(client, arg)
+	send_message_to_map(map, actor, arg["text"], echo=echo, controlled_by=client)
 
 @protocol_command()
 def fn_TSD(connection, map, client, arg, echo):

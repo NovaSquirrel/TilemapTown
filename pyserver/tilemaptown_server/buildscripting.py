@@ -17,7 +17,7 @@
 import asyncio, json
 from .buildglobal import *
 from enum import IntEnum
-from .buildcommand import handle_user_command, send_private_message
+from .buildcommand import handle_user_command, send_private_message, send_message_to_map
 
 # -----------------------------------------------------------------------------
 directions = ((1,0), (1,1), (0,1), (-1,1), (-1,0), (-1,-1), (0,-1), (1,-1))
@@ -82,7 +82,7 @@ def fn_ownersay(e, arg):
 	owner = find_owner(e)
 	if owner == None:
 		return
-	send_private_message(e, (e, None, e), owner.protocol_id(), arg[0])
+	send_private_message(e, (e, None, e), owner.protocol_id(), arg[0], lenient_rate_limit=True)
 
 @script_api()
 def fn_runitem(e, arg):

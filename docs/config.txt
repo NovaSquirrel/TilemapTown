@@ -126,6 +126,30 @@ Allows the admin to lock down map creation.
 2: Trusted builders can make maps
 3: Server admins can make maps
 
+Security.RateLimitMSG
+Default: true
+If true, limit how often people can send messages to maps
+
+Security.RateLimitMSG1
+Default: 10
+Number of messages people can send to maps within a minute
+
+Security.RateLimitMSG5
+Default: 50
+Number of messages people can send to maps within 5 minutes
+
+Security.RateLimitPRI
+Default: true
+If true, limit how often people can send private messages
+
+Security.RateLimitPRI1
+Default: 10
+Number of messages people can send private messages within a minute
+
+Security.RateLimitPRI5
+Default: 50
+Number of messages people can send private messages within 5 minutes
+
 API.Enabled
 Default: true
 If true, makes information about the world available through a web API.

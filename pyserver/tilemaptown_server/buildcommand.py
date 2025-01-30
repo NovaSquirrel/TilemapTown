@@ -19,6 +19,7 @@ from .buildglobal import *
 from .buildentity import Entity
 from .buildmap import Map
 from .buildapi import admin_delete_uploaded_file, fix_uploaded_file_sizes
+from collections import deque
 
 handlers = {}	# dictionary of functions to call for each command
 aliases = {}	# dictionary of commands to change to other commands
@@ -249,40 +250,78 @@ def fn_client_settings(map, client, context, arg):
 
 @cmd_command(category="Communication")
 def fn_say(map, client, context, arg):
-	respond_to = context[0]
-	if len(arg) > Config["MaxProtocolSize"]["Chat"]:
-		if hasattr(respond_to, 'connection') and respond_to.connection():
-			respond_to.connection().protocol_error(context[1], text='Tried to send chat message that was too big: (%d, max is %d)' % (len(arg), Config["MaxProtocolSize"]["Chat"]), code='chat_too_big', detail=Config["MaxProtocolSize"]["Chat"])
-		return
-	if arg != '':
-		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': arg, 'rc_username': respond_to.username_or_id(), 'rc_id': respond_to.protocol_id()}
-		if context[2]: # Script entity
-			fields['rc_username'] = find_username_by_db_id(context[2].owner_id)
-			fields['rc_id'] = context[2].owner_id
-		map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
-		for e in map.contents:
-			if e.entity_type == entity_type['gadget'] and e.listening_to_chat:
-				e.receive_chat(client, arg)
+	send_message_to_map(map, client, arg, controlled_by=context[0], echo=context[1], script_entity=context[2])
 
 @cmd_command(category="Communication")
 def fn_me(map, client, context, arg):
-	respond_to = context[0]
-	if len(arg) > Config["MaxProtocolSize"]["Chat"]:
-		if hasattr(respond_to, 'connection') and respond_to.connection():
-			respond_to.connection().protocol_error(context[1], text='Tried to send chat message that was too big: (%d, max is %d)' % (len(arg), Config["MaxProtocolSize"]["Chat"]), code='chat_too_big', detail=Config["MaxProtocolSize"]["Chat"])
+	if arg == '':
 		return
-	if arg != '':
-		fields = {'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'text': "/me "+arg, 'rc_username': respond_to.username_or_id(), 'rc_id': respond_to.protocol_id()}
-		if context[2]: # Script entity
-			fields['rc_username'] = find_username_by_db_id(context[2].owner_id)
-			fields['rc_id'] = context[2].owner_id
+	send_message_to_map(map, client, "/me "+arg, controlled_by=context[0], echo=context[1], script_entity=context[2])
+
+def apply_rate_limiting(client, limit_type, count_limits):
+	current_minute = int(time.monotonic() // 60)
+
+	# Increase the counter for the current minute
+	if limit_type not in client.rate_limiting:
+		client.rate_limiting[limit_type] = deque()
+		AllEntitiesWithRateLimiting.add(client)
+	for minutes in client.rate_limiting[limit_type]:
+		if minutes[0] == current_minute:
+			minutes[1] += 1
+			break
+	else:
+		client.rate_limiting[limit_type].append([current_minute, 1])	
+
+	# Check against every limit supplied here
+	for limit in count_limits:
+		amount_of_minutes, max_count_allowed = limit
+
+		total = 0
+		for counts in client.rate_limiting[limit_type]:
+			if counts[0] > (current_minute - amount_of_minutes):
+				total += counts[1]
+		if total > max_count_allowed:
+			return True
+	return False
+
+def send_message_to_map(map, actor, text, controlled_by=None, echo=None, script_entity=None):
+	if text == '':
+		return
+	if Config["Security"]["RateLimitMSG"] and apply_rate_limiting(actor, 'msg', ( (1, Config["Security"]["RateLimitMSG1"]),(5, Config["Security"]["RateLimitMSG5"])) ):
+		respond_to = controlled_by or actor
+		if hasattr(respond_to, 'connection') and respond_to.connection():
+			respond_to.connection().protocol_error(echo, text='You\'re sending too many messages too quickly!')
+		return
+	if len(text) > Config["MaxProtocolSize"]["Chat"]:
+		respond_to = controlled_by or actor
+		if hasattr(respond_to, 'connection') and respond_to.connection():
+			respond_to.connection().protocol_error(echo, text='Tried to send chat message that was too big: (%d, max is %d)' % (len(text), Config["MaxProtocolSize"]["Chat"]), code='chat_too_big', detail=Config["MaxProtocolSize"]["Chat"])
+		return
+	if map == None:
+		map = actor.map
+	if map:
+		fields = {'name': actor.name, 'id': actor.protocol_id(), 'username': actor.username_or_id(), 'text': text}
+		if script_entity:
+			fields['rc_username'] = find_username_by_db_id(script_entity.owner_id)
+			fields['rc_id'] = script_entity.owner_id
+		elif controlled_by != None and actor is not controlled_by:
+			fields['rc_id'] = controlled_by.protocol_id()
+			fields['rc_username'] = controlled_by.username_or_id()
 		map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
 		for e in map.contents:
-			if e.entity_type == entity_type['gadget'] and e.listening_to_chat:
-				e.receive_chat(client, '/me '+arg)
+			if e.entity_type == entity_type['gadget'] and e.listening_to_chat and e is not actor and e is not controlled_by:
+				e.receive_chat(client, arg)
 
-def send_private_message(client, context, recipient_username, text):
+def send_private_message(client, context, recipient_username, text, lenient_rate_limit=False):
 	respond_to = context[0]
+	echo = context[1]
+
+	rate_limit_multiplier = lenient_rate_limit * 2
+	if Config["Security"]["RateLimitPRI"] and apply_rate_limiting(client, 'pri', ( (1, Config["Security"]["RateLimitPRI1"]*rate_limit_multiplier),(5, Config["Security"]["RateLimitPRI5"]*rate_limit_multiplier)) ):
+		respond_to = controlled_by or client
+		if hasattr(respond_to, 'connection') and respond_to.connection():
+			respond_to.connection().protocol_error(echo, text='You\'re sending too many messages too quickly!')
+		return
 	if len(text) > Config["MaxProtocolSize"]["Private"]:
 		if hasattr(respond_to, 'connection') and respond_to.connection():
 			respond_to.connection().protocol_error(context[1], text='Tried to send private message that was too big: (%d, max is %d)' % (len(text), Config["MaxProtocolSize"]["Private"]), code='private_too_big', detail=Config["MaxProtocolSize"]["Private"])
