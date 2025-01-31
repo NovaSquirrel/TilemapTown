@@ -465,7 +465,7 @@ Entities can display a little tilemap that overlays their graphic. You can use W
 "mini_tilemap": {              _Default___Purpose_
 	"visible": boolean,      | True    | If true, display the mini-tilemap; if false, hide it
 	"clickable", boolean,    | False   | If true, clients can click on the mini-tilemap to send the entity messages
-	"map_size": [w, h],      | N/A     | Size of the mini-tilemap, in tiles; max is [16, 16]
+	"map_size": [w, h],      | N/A     | Size of the mini-tilemap, in tiles; max is [24, 24]
 	"tile_size": [w, h],     | N/A     | Size of each tile in the mini-tilemap, in pixels; max is [64, 64]
 	"tileset_url": string,   | N/A     | Image URL to use for the tiles
 	"offset": [x, y],        | [0,0]   | X and Y offset from the entity, in pixels

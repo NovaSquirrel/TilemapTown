@@ -240,6 +240,7 @@ class Entity(PermissionsMixin, object):
 
 		# Temporary information
 		self.requests = {} # Indexed by tuple: (username, type). Each item is an array with [timer, id, data]; data may be None. Timer decreases each second, then the request is deleted.
+		self.rate_limiting = {} # Indexed by rate limiting type. Each item is a deque containing (minute, hits)
 		# valid types are "tpa", "tpahere", "carry", "followme"
 		self.tp_history = deque(maxlen=20)
 
@@ -429,6 +430,9 @@ class Entity(PermissionsMixin, object):
 
 		# Tell everyone in the container that the new item was added
 		self.broadcast("WHO", {'add': item.who()}, remote_category=maplisten_type['entry'])
+		for e in self.contents:
+			if e.entity_type == entity_type['gadget']:
+				e.receive_join(item)
 
 		# Warn about chat listeners, if present
 		if item.is_client():
@@ -447,6 +451,9 @@ class Entity(PermissionsMixin, object):
 
 		# Tell everyone in the container that the item was removed
 		self.broadcast("WHO", {'remove': item.protocol_id()}, remote_category=maplisten_type['entry'])
+		for e in self.contents:
+			if e.entity_type == entity_type['gadget']:
+				e.receive_leave(item)
 
 		# Notify parents
 		for parent in self.all_parents():
@@ -701,6 +708,9 @@ class Entity(PermissionsMixin, object):
 
 		self.finish_batch()
 
+		if self.entity_type == entity_type['gadget']:
+			self.receive_switch_map()
+
 		# Move any passengers too
 		if already_moved == None:
 			already_moved = {self}
@@ -781,6 +791,8 @@ class Entity(PermissionsMixin, object):
 			out['is_forwarding'] = True
 			if 'CHAT' in self.forward_message_types:
 				out['chat_listener'] = True
+		if hasattr(self, 'listening_to_chat_warning') and self.listening_to_chat_warning:
+			out['chat_listener'] = True
 		return out
 
 	def remote_who(self):
@@ -889,7 +901,7 @@ class Entity(PermissionsMixin, object):
 		self.db_id = id
 		AllEntitiesByDB[self.db_id] = self
 
-	def load(self, load_id, override_map=None):
+	def load(self, load_id, override_map=None, do_not_switch_map=False):
 		""" Load an entity from the database """
 		c = Database.cursor()
 		c.execute('SELECT type, name, desc, pic, location, position, home_location, home_position, tags, owner_id, allow, deny, guest_deny, creator_id FROM Entity WHERE id=?', (load_id,))
@@ -905,7 +917,7 @@ class Entity(PermissionsMixin, object):
 		self.pic = loads_if_not_none(result[3])
 		map_id = result[4]
 		if override_map:
-			if not self.switch_map(override_map[0], new_pos=None if (len(override_map) == 1) else (override_map[1:])):
+			if do_not_switch_map or not self.switch_map(override_map[0], new_pos=None if (len(override_map) == 1) else (override_map[1:])):
 				self.map_id = override_map[0]
 		elif map_id:
 			position = loads_if_not_none(result[5])
@@ -914,7 +926,7 @@ class Entity(PermissionsMixin, object):
 				self.y = position[1]
 				if len(position) == 3:
 					self.dir = position[2]
-			if not self.switch_map(result[4], goto_spawn=False):
+			if do_not_switch_map or not self.switch_map(result[4], goto_spawn=False):
 				self.map_id = result[4]
 		#print("Loading %d: %s" % (self.db_id or -1, self.name))
 
@@ -951,12 +963,7 @@ class Entity(PermissionsMixin, object):
 
 	def load_data_as_text(self):
 		""" Get the data and return it as a string """
-		c = Database.cursor()
-		c.execute('SELECT data, compressed_data FROM Entity WHERE id=?', (self.db_id,))
-		result = c.fetchone()
-		if result != None:
-			return decompress_entity_data(result[0], result[1])
-		return None
+		return load_text_data_from_db(self.db_id)
 
 	def load_data(self):
 		""" Load the entity's data to the database, using JSON unless overridden """

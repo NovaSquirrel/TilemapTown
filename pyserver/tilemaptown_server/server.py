@@ -13,13 +13,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import asyncio, datetime, random, websockets, json, sys, traceback, weakref
+import asyncio, datetime, random, websockets, json, sys, traceback, time
 from .buildglobal import *
 from .buildmap import *
 from .buildclient import *
 from .buildgadget import *
 from .buildprotocol import handle_protocol_command
 from .buildapi import start_api
+from .buildscripting import run_scripting_service, shutdown_scripting_service
 if Config["Database"]["Setup"]:
 	from .database_setup_v2 import *
 else:
@@ -29,50 +30,75 @@ else:
 total_connections = [0, 0, 0]
 
 # Timer that runs and performs background tasks
-def main_timer():
+async def main_timer():
 	global ServerShutdown
-	global loop
+	loop = asyncio.get_event_loop()
 
-	# Let requests expire
-	removeFromAllEntitiesWithRequests = set()
-	for c in AllEntitiesWithRequests:
-		if c.requests == {}:
-			removeFromAllEntitiesWithRequests.add(c)
-			continue
-		# Remove requests that time out
-		remove_requests = set()
-		for k,v in c.requests.items():
-			v[0] -= 1 # remove 1 from timer
-			if v[0] < 0:
-				remove_requests.add(k)
-		for r in remove_requests:
-			del c.requests[r]
-	for c in removeFromAllEntitiesWithRequests:
-		AllEntitiesWithRequests.discard(c)
+	while True:
+		# Let requests expire
+		removeFromAllEntitiesWithRequests = set()
+		for c in AllEntitiesWithRequests:
+			if c.requests == {}:
+				removeFromAllEntitiesWithRequests.add(c)
+				continue
+			# Remove requests that time out
+			remove_requests = set()
+			for k,v in c.requests.items():
+				v[0] -= 1 # remove 1 from timer
+				if v[0] < 0:
+					remove_requests.add(k)
+			for r in remove_requests:
+				del c.requests[r]
+		for c in removeFromAllEntitiesWithRequests:
+			AllEntitiesWithRequests.discard(c)
 
-	# Disconnect pinged-out users
-	for connection in AllConnections:
-		connection.idle_timer += 1
+		# Remove rate limiting information that's too old
+		current_minute = int(time.monotonic() // 60)
+		removeFromAllEntitiesWithRateLimiting = set()
+		for c in AllEntitiesWithRateLimiting:
+			# Stop tracking this entity because there's no longer any rate limiting info
+			if c.rate_limiting == {}:
+				removeFromAllEntitiesWithRateLimiting.add(c)
+				continue
 
-		# Remove users that time out
-		connection.ping_timer -= 1
-		if connection.ping_timer == 60 or connection.ping_timer == 30:
-			connection.send("PIN", None)
-		elif connection.ping_timer < 0:
-			connection.disconnect(reason="PingTimeout")
+			# Remove rate limiting info that's too old
+			removed_type = set()
+			for type_name,type_data in c.rate_limiting.items():
+				while len(type_data) and current_minute >= (type_data[0][0] + 10): # Remove information from >= 10 minutes ago
+					type_data.popleft()
+				if len(type_data) == 0:
+					removed_type.add(type_name)
+			for r in removed_type:
+				del c.rate_limiting[r]
+		for c in removeFromAllEntitiesWithRateLimiting:
+			AllEntitiesWithRateLimiting.discard(c)
+		c = None
 
-	# Run server shutdown timer, if it's running
-	if ServerShutdown[0] > 0:
-		ServerShutdown[0] -= 1
-		if ServerShutdown[0] == 1:
-			broadcast_to_all("Server is going down!")
-			for u in AllConnections:
-				u.disconnect(reason='Restart' if ServerShutdown[1] else 'Shutdown')
-			save_everything()
-		elif ServerShutdown[0] == 0:
-			loop.stop()
-	if ServerShutdown[0] != 0:
-		loop.call_later(1, main_timer)
+		# Disconnect pinged-out users
+		for connection in AllConnections:
+			connection.idle_timer += 1
+
+			# Remove users that time out
+			connection.ping_timer -= 1
+			if connection.ping_timer == 60 or connection.ping_timer == 30:
+				connection.send("PIN", None)
+			elif connection.ping_timer < 0:
+				connection.disconnect(reason="PingTimeout")
+
+		# Run server shutdown timer, if it's running
+		if ServerShutdown[0] > 0:
+			ServerShutdown[0] -= 1
+			if ServerShutdown[0] == 1:
+				broadcast_to_all("Server is going down!")
+				if Config["Scripting"]["Enabled"]:
+					shutdown_scripting_service()
+				for u in AllConnections:
+					u.disconnect(reason='Restart' if ServerShutdown[1] else 'Shutdown')
+				save_everything()
+			elif ServerShutdown[0] == 0:
+				loop.stop()
+
+		await asyncio.sleep(1)
 
 def save_everything():
 	for e in AllEntitiesByDB.values():
@@ -91,21 +117,21 @@ def save_everything():
 			c.execute("INSERT INTO Mail (owner_id, sender_id, recipients, subject, contents, created_at, flags) VALUES (?, ?, ?, ?, ?, ?, ?)", (recipient_db_id, sender_db_id, str(recipient_db_id), subject, contents, datetime.datetime.now(), 0))
 
 # Websocket connection handler
-async def client_handler(websocket, path):
+async def client_handler(websocket):
 	ip = websocket.remote_address[0]
 
 	# If the local and remote addresses are the same, it's trusted
 	# and the server should look for the forwarded IP address
 	if websocket.local_address[0] == websocket.remote_address[0]:
-		if 'X-Real-IP' in websocket.request_headers:
-			ip = websocket.request_headers['X-Real-IP']
+		if 'X-Real-IP' in websocket.request.headers:
+			ip = websocket.request.headers['X-Real-IP']
 		else:
 			ip = ''
 	elif Config["Security"]["ProxyOnly"]:
 		asyncio.ensure_future(websocket.close(reason="ProxyOnly"))
 		return
 
-	origin = websocket.request_headers.get('Origin')
+	origin = websocket.request.headers.get('Origin')
 
 	if Config["Security"]["AllowedOrigins"]:
 		if not any(_ == origin for _ in Config["Security"]["AllowedOrigins"]):
@@ -113,7 +139,7 @@ async def client_handler(websocket, path):
 			asyncio.ensure_future(websocket.close(reason="BadOrigin"))
 			total_connections[2] += 1 # Prevented connections
 			return
-	if Config["Security"]["BannedOrigins"] and websocket.request_headers['Origin'] and any(_ in origin for _ in Config["Security"]["BannedOrigins"]):
+	if Config["Security"]["BannedOrigins"] and websocket.request.headers['Origin'] and any(_ in origin for _ in Config["Security"]["BannedOrigins"]):
 		print("Banned origin \"%s\" from IP %s" % (origin, ip))
 		asyncio.ensure_future(websocket.close(reason="BadOrigin"))
 		total_connections[2] += 1
@@ -125,7 +151,7 @@ async def client_handler(websocket, path):
 		return
 	AllConnections.add(connection)
 
-	write_to_connect_log("connected: %s, %s, %s" % (path, ip, origin))
+	write_to_connect_log("connected: %s, %s" % (ip, origin))
 	total_connections[0] += 1
 
 	while connection.ws != None:
@@ -221,22 +247,20 @@ async def client_handler(websocket, path):
 
 global loop
 
-def main():
-	global loop
-	start_server = websockets.serve(client_handler, None, Config["Server"]["Port"], max_size=Config["Server"]["WSMaxSize"], max_queue=Config["Server"]["WSMaxQueue"], origins=Config["Security"]["AllowedOrigins2"])
-
-	# Start the event loop
-	loop = asyncio.get_event_loop()
-	loop.call_soon(main_timer)
-	loop.run_until_complete(start_server)
+async def async_main():
+	websocket_server = await websockets.serve(client_handler, None, Config["Server"]["Port"], max_size=Config["Server"]["WSMaxSize"], max_queue=Config["Server"]["WSMaxQueue"], origins=Config["Security"]["AllowedOrigins2"])
+	server_task = asyncio.create_task(websocket_server.serve_forever())
+	timer_task = asyncio.create_task(main_timer())
+	if Config["Scripting"]["Enabled"]:
+		scripting_service_task = asyncio.create_task(run_scripting_service())
 
 	if Config["API"]["Enabled"]:
-		start_api(loop, Config["API"]["Port"], total_connections=total_connections)
+		await start_api(asyncio.get_event_loop(), Config["API"]["Port"], total_connections=total_connections)
+	await server_task
 
-	print("Server started!")
-
+def main():
 	try:
-		loop.run_forever()
+		asyncio.run(async_main())
 	except KeyboardInterrupt:
 		print("Shutting the server down...")
 		save_everything()

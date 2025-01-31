@@ -483,7 +483,7 @@ function keyDownHandler(e) {
 	// Go back if the turf is solid, or if there's objects in the way
 	if (OldPlayerX != PlayerX || OldPlayerY != PlayerY) {
 		// Check if the player is attempting to cross a wall on the tile they're currently on
-		if(!Fly) {
+		if(!Fly && MyMap.Objs && MyMap.Tiles) {
 			// Check for a wall in the objs on that tile
 			for (let index in MyMap.Objs[OldPlayerX][OldPlayerY]) {
 				let Obj = AtomFromName(MyMap.Objs[OldPlayerX][OldPlayerY][index]);

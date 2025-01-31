@@ -16,7 +16,7 @@
 
 import json, datetime, time, types, weakref, secrets
 from .buildglobal import *
-from .buildcommand import handle_user_command, tile_is_okay, data_disallowed_for_entity_type, send_private_message
+from .buildcommand import handle_user_command, tile_is_okay, data_disallowed_for_entity_type, send_private_message, send_message_to_map, entity_types_users_can_change_data_for, apply_rate_limiting
 from .buildentity import Entity
 from .buildclient import Client
 from .buildgadget import Gadget
@@ -103,10 +103,12 @@ def who_mini_tilemap(data):
 	return None
 def who_mini_tilemap_data(data):
 	if isinstance(data, dict):
-		if ("data" not in data) or (len(data["data"]) > 256):
+		if ("data" not in data) or (len(data["data"]) > 576): # 24*24
 			return None
 		return {"data": data["data"]}
 	return None
+GlobalData['who_mini_tilemap'] = who_mini_tilemap
+GlobalData['who_mini_tilemap_data'] = who_mini_tilemap_data
 
 CLIENT_WHO_WHITELIST = {
 	"typing": bool,
@@ -307,7 +309,7 @@ def fn_MOV(connection, map, client, arg, echo):
 		return
 
 	# Handle bumping into the map edge (for clients that don't implement see_past_map_edge)
-	if "bump" in arg and map.is_map() and map.edge_ref_links != None:
+	if "bump" in arg and map.is_map() and map.edge_id_links != None:
 		bump_pos    = arg["bump"]
 
 		# Check if the bumped position is past one of the edges
@@ -316,7 +318,7 @@ def fn_MOV(connection, map, client, arg, echo):
 		if edge_sign_x != 0 or edge_sign_y != 0:
 			# Find what map link index to use
 			edge_index = directions.index((edge_sign_x, edge_sign_y))
-			new_map = map.edge_ref_links[edge_index]
+			new_map = get_entity_by_id(map.edge_id_links[edge_index])
 			if new_map != None:
 				new_x, new_y = bump_pos
 				if edge_sign_x == 1:
@@ -386,7 +388,7 @@ def fn_PRI(connection, map, client, arg, echo):
 		actor = find_remote_control_entity(connection, client, arg['rc'], echo)
 		if actor == None:
 			return
-	send_private_message(actor, (client, echo), arg['username'], arg['text'])
+	send_private_message(actor, (client, echo, None), arg['username'], arg['text'])
 
 @protocol_command()
 def fn_BAG(connection, map, client, arg, echo):
@@ -569,10 +571,12 @@ def fn_BAG(connection, map, client, arg, echo):
 
 		bag_info = info_me.bag_info()
 		if info_me.is_client(): # No spying
-			del bag_info['folder']
+			bag_info.pop('folder')
 			if (info_me.connection_attr('user_flags') or 0) & userflag['secret_pic']:
 				bag_info.pop('pic', None)
 				bag_info.pop('desc', None)
+		if bag_info['type'] not in entity_types_users_can_change_data_for:
+			bag_info.pop('data')
 		client.send("BAG", {'info': bag_info})
 
 	elif "list_contents" in arg:
@@ -669,11 +673,7 @@ def fn_EML(connection, map, client, arg, echo):
 
 @protocol_command()
 def fn_MSG(connection, map, client, arg, echo):
-	if len(arg['text']) > Config["MaxProtocolSize"]["Chat"]:
-		connection.protocol_error(echo, text='Tried to send chat message that was too big: (%d, max is %d)' % (len(arg['text']), Config["MaxProtocolSize"]["Chat"]), code='chat_too_big', detail=Config["MaxProtocolSize"]["Chat"])
-		return
 	actor = client
-
 	if 'rc' in arg:
 		actor = find_remote_control_entity(connection, client, arg['rc'], echo)
 		if actor == None:
@@ -681,13 +681,7 @@ def fn_MSG(connection, map, client, arg, echo):
 		else:
 			map = actor.map
 
-	if map:
-		text = arg["text"]
-		fields = {'name': actor.name, 'id': actor.protocol_id(), 'username': actor.username_or_id(), 'text': text}
-		if 'rc' in arg:
-			fields['rc_id'] = client.protocol_id()
-			fields['rc_username'] = client.username_or_id()
-		map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
+	send_message_to_map(map, actor, arg["text"], echo=echo, controlled_by=client)
 
 @protocol_command()
 def fn_TSD(connection, map, client, arg, echo):
@@ -1042,6 +1036,10 @@ def fn_IDN(connection, map, client, arg, echo):
 	else:
 		new_client = connection.entity
 	connection.login_successful_callback = login_successful
+
+	# Allow disabling all of your scripts while logging in
+	# should happen before the entity gets loaded
+	connection.disable_scripts = "disable_scripts" in arg and arg["disable_scripts"]
 
 	# Check the features the client requested
 	ack_info = {}
