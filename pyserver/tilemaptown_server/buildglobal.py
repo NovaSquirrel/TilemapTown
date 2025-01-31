@@ -76,6 +76,12 @@ def loadConfigJson():
 	setConfigDefault("Security", "DefaultBuildingPermission",  0)
 	setConfigDefault("Security", "TrustedOnlyBuilding",        0)
 	setConfigDefault("Security", "TrustedOnlyMapCreation",     1)
+	setConfigDefault("RateLimit", "MSG",             True)
+	setConfigDefault("RateLimit", "MSG1",            10)
+	setConfigDefault("RateLimit", "MSG5",            50)
+	setConfigDefault("RateLimit", "PRI",             True)
+	setConfigDefault("RateLimit", "PRI1",            10)
+	setConfigDefault("RateLimit", "PRI5",            50)
 
 	setConfigDefault("MaxProtocolSize", "Default", 32768)
 	setConfigDefault("MaxProtocolSize", "Chat",    8192)
@@ -103,6 +109,10 @@ def loadConfigJson():
 	setConfigDefault("API",      "Port",             12551)
 	setConfigDefault("API",      "Enabled",          True)
 	setConfigDefault("API",      "URL",              "")
+
+	setConfigDefault("Scripting","Enabled",          False)
+	setConfigDefault("Scripting","ProgramPath",      None)
+	setConfigDefault("Scripting","DataStorageLimit", 0x8000)
 
 	setConfigDefault("Database", "File",             "town.db")
 	setConfigDefault("Database", "Setup",            True)
@@ -195,6 +205,7 @@ AllMaps         = weakref.WeakSet()             # Maps only; used by /whereare
 AllEntitiesByDB = weakref.WeakValueDictionary() # All entities (indexed by database ID)
 AllEntitiesByID = weakref.WeakValueDictionary() # All entities (indexed by temporary ID)
 AllEntitiesWithRequests = weakref.WeakSet()     # All entities with active requests
+AllEntitiesWithRateLimiting = weakref.WeakSet() # All entities with rate limiting information
 ConnectionsByUsername = weakref.WeakValueDictionary() # Look up connections by lowercased username
 ConnectionsByApiKey = weakref.WeakValueDictionary() # Look up connections by API key (supplied to clients in IDN)
 OfflineMessages = {} # OfflineMessages[recipient_id][sender_id][index]
@@ -302,10 +313,11 @@ for k,v in entity_type.items():
 # User privilege levels, for commands and protocol messages
 user_privilege = {}
 user_privilege['guest'] = 0
-user_privilege['registered'] = 1
-user_privilege['map_admin'] = 2
-user_privilege['map_owner'] = 3
-user_privilege['server_admin'] = 4
+user_privilege['no_scripts'] = 1
+user_privilege['registered'] = 2
+user_privilege['map_admin'] = 3
+user_privilege['map_owner'] = 4
+user_privilege['server_admin'] = 5
 
 # Used to mark IDs as being temporary, rather than being in the database
 temporary_id_marker = "~"
@@ -415,7 +427,7 @@ def entity_id_exists(id):
 		return int(id[1:]) in AllEntitiesByID
 	return False
 
-def get_entity_by_id(id, load_from_db=True):
+def get_entity_by_id(id, load_from_db=True, do_not_load_scripts=False):
 	# If it's temporary, get it if it still exists
 	if isinstance(id, str):
 		if id[0] == temporary_id_marker and id[1:].isdecimal():
@@ -459,8 +471,8 @@ def get_entity_by_id(id, load_from_db=True):
 			return e
 		return None
 	if t == entity_type['gadget']:
-		e = Gadget(t)
-		if e.load(id):
+		e = Gadget(t, do_not_load_scripts=do_not_load_scripts)
+		if e.load(id, do_not_switch_map=do_not_load_scripts):
 			return e
 		return None
 
@@ -630,6 +642,24 @@ def decompress_entity_data(data, compressed_data):
 		return zlib.decompress(compressed_data).decode()
 	return None
 
+def load_text_data_from_db(entity_id):
+	c = Database.cursor()
+	c.execute('SELECT data, compressed_data FROM Entity WHERE id=?', (entity_id,))
+	result = c.fetchone()
+	if result != None:
+		return decompress_entity_data(result[0], result[1])
+	return None
+
+def text_from_text_item(entity_id):
+	if isinstance(entity_id, str):
+		entity_id = find_db_id_by_str(entity_id)
+	if entity_id == None:
+		return None
+	entity_type = get_entity_type_by_db_id(entity_id)
+	if entity_type != entity_type['text']:
+		return None
+	return loads_if_not_none(load_text_data_from_db(entity_id))
+
 def send_ext_listen_status(connection):
 	all_maps = {}
 	for category, map_id in connection.listening_maps:
@@ -637,6 +667,30 @@ def send_ext_listen_status(connection):
 			all_maps[map_id] = []
 		all_maps[map_id].append(maplisten_type_name[category])
 	connection.send("EXT", {"listen_status": {"maps": all_maps}})
+
+def get_tile_properties(name):
+	if isinstance(name, dict):
+		return name
+	if name == None:
+		return None
+	s = name.split(':')
+	if len(s) == 1:
+		tileset = ''
+		tilename = s[0]
+	else:
+		tileset = s[0]
+		tilename = s[1]
+
+	tileset = ServerResources['tilesets'].get(tileset)
+	if tileset == None:
+		return None
+	return tileset.get(tilename)
+
+def get_tile_density(name):
+	properties = get_tile_properties(name)
+	if properties == None:
+		return False
+	return properties.get('density', False)
 
 from .buildentity import Entity, EntityWithPlainData, GenericEntity
 from .buildgadget import Gadget

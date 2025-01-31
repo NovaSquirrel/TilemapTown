@@ -1128,6 +1128,7 @@ function viewTileset(Item) {
 
 let editItemType = null;
 let editItemID = null;
+let editItemWaitingForDataID = undefined;
 let editItemOriginalSheet = null; // Original tileset image that the tile's pic was set to before the edit
 
 function editItemShared(item) {
@@ -1137,6 +1138,7 @@ function editItemShared(item) {
 	document.getElementById('edittileobject').style.display = "none";
 	document.getElementById('edittiletext').style.display = "none";
 	document.getElementById('edittileimage').style.display = "none";
+	document.getElementById('edittilegadget').style.display = "none";
 	document.getElementById('edittilename').value = item.name;
 	if(editTypeIsDirectEdit(item.type)) {
 		document.getElementById('description_or_message').textContent = "Message";
@@ -1164,19 +1166,105 @@ function editItemShared(item) {
 		case "map_tile_mapobj_edit":
 		case "map_tile_turf_edit":
 		case "map_tile":
+			if (item.type === "gadget") {
+				let traits = item.data;
+				document.getElementById('gadgetTypeScript').checked = false;
+				document.getElementById('gadgetTypePreset').checked = false;
+				document.getElementById('gadgetTypeRaw').checked = true;
+
+				document.getElementById('edittilegadget_raw_textarea').value = "";
+				document.getElementById('edittilegadget_script_run').value = "auto_script";
+				document.getElementById('edittilegadget_script_disable').checked = false;
+				document.getElementById('edittilegadget_script_text').value = "";
+				document.getElementById('edittilegadget_script_usable').checked = false;
+				document.getElementById('edittilegadget_script_item').value = "";
+				document.getElementById('edittilegadget_preset_dice_dice').value = 2;
+				document.getElementById('edittilegadget_preset_dice_sides').value = 6;
+				document.getElementById('edittilegadget_preset_accept_requests_owner_only').checked = false;
+				document.getElementById('edittilegadget_preset_accept_requests_types').value = "";
+				document.getElementById('edittilegadget_preset_random_message_text').value = "";
+				document.getElementById('edittilegadget_preset_rc_car_owner_only').checked = false;
+				document.getElementById('edittilegadget_preset_rc_car_fly').checked = false;
+				document.getElementById('edittilegadget_preset_rc_car_give_rides').checked = false;
+
+				if (Array.isArray(traits)) {
+					document.getElementById('edittilegadget_raw_textarea').value = JSON.stringify(item.data);
+					try {
+						if (traits.length == 1) {
+							let trait = traits[0];
+							document.getElementById('gadgetTypeScript').checked = false;
+							document.getElementById('gadgetTypePreset').checked = false;
+							document.getElementById('gadgetTypeRaw').checked = true;
+							if (trait[0] === "auto_script" || trait[0] === "use_script" || trait[0] === "map_script") {
+								document.getElementById('edittilegadget_script_run').value = trait[0];
+								document.getElementById('edittilegadget_script_disable').checked = !(trait[1].enabled ?? true);
+								document.getElementById('edittilegadget_script_text').value = trait[1].code ?? "";
+								document.getElementById('edittilegadget_script_usable').checked = trait[1].usable ?? false;
+								document.getElementById('edittilegadget_script_item').value = trait[1].code_item ?? "";
+
+								document.getElementById('gadgetTypeRaw').checked = false;
+								document.getElementById('gadgetTypeScript').checked = true;
+							} else if(trait[0] === "dice") {
+								document.getElementById('edittilegadget_preset_dice_dice').value = trait[1].dices ?? 2;
+								document.getElementById('edittilegadget_preset_dice_sides').value = trait[1].sides ?? 6;
+
+								document.getElementById('edittilegadget_preset_choice').value = trait[0];
+								document.getElementById('gadgetTypeRaw').checked = false;
+								document.getElementById('gadgetTypePreset').checked = true;
+							} else if(trait[0] === "accept_requests") {
+								document.getElementById('edittilegadget_preset_accept_requests_owner_only').checked = trait[1].owner_only ?? false;
+								document.getElementById('edittilegadget_preset_accept_requests_types').value = (trait[1].request_types ?? []).join(',');
+
+								document.getElementById('edittilegadget_preset_choice').value = trait[0];
+								document.getElementById('gadgetTypeRaw').checked = false;
+								document.getElementById('gadgetTypePreset').checked = true;
+							} else if(trait[0] === "random_tell" || trait[0] === "random_say") {
+								if (Array.isArray(trait[0].text)) {
+									document.getElementById('edittilegadget_preset_random_message_text').value = trait[1].text.join('\n');
+								} else {
+									document.getElementById('edittilegadget_preset_random_message_text').value = trait[1].text ?? "";
+								}
+
+								document.getElementById('edittilegadget_preset_choice').value = trait[0];
+								document.getElementById('gadgetTypeRaw').checked = false;
+								document.getElementById('gadgetTypePreset').checked = true;
+							} else if(trait[0] === "rc_car") {
+								document.getElementById('edittilegadget_preset_rc_car_owner_only').checked = trait[1].owner_only ?? false;
+								document.getElementById('edittilegadget_preset_rc_car_fly').checked = trait[1].fly ?? false;
+								document.getElementById('edittilegadget_preset_rc_car_give_rides').checked = trait[1].give_rides ?? false;
+
+								document.getElementById('edittilegadget_preset_choice').value = trait[0];
+								document.getElementById('gadgetTypeRaw').checked = false;
+								document.getElementById('gadgetTypePreset').checked = true;
+							}
+						}
+					} catch (error) {
+					}
+				} else {
+					console.log("Not array?");
+					console.log(traits);
+				}
+
+				document.getElementById('edittilegadget').style.display = "block";
+				changeGadgetType();
+				changeGadgetPreset();
+			}
+
 			if (item.type == "map_tile" || item.type == "map_tile_hotbar" || item.type == "map_tile_mapobj_edit" || item.type == "map_tile_turf_edit") {
 				document.getElementById('edittileautotileoptions').style.display = "block";
 				itemobj = AtomFromName(item.data);
-				if (itemobj == null) {
+				if (itemobj == null && item.pic !== null) {
 					itemobj = { pic: [0, 8, 24] };
 				}
 			} else {
-				if ("pic" in item)
+				if ("pic" in item && item.pic !== null)
 					itemobj = { pic: item.pic };
 				else
 					itemobj = { pic: [0, 8, 24] };
 			}
 			editItemOriginalSheet = itemobj.pic[0];
+			document.getElementById('edittileimageurl_span').style.display = (item.type === "generic" || item.type === "gadget") ? "block" : "none";
+			document.getElementById('edittileimageurl').value = (typeof pic[0] === "number") ? "" : pic[0];
 
 			// Display all the available images assets in the user's inventory
 			let sheetselect = document.getElementById("edittilesheet");
@@ -1264,7 +1352,13 @@ function editItem(key) {
 	// open up the item editing screen for a given item
 	let item = DBInventory[key] || PlayerWho[key];
 	editItemID = item.id;
-	editItemShared(item);
+
+	if (key in PlayerWho && !(key in DBInventory) && (item.type === "gadget" || item.type === "text" || item.type === "image" || item.type === "map_tile" || item.type === "tileset" || item.type === "landmark")) {
+		editItemWaitingForDataID = editItemID;
+		SendCmd("BAG", {info: { id: editItemID }});
+	} else {
+		editItemShared(item);
+	}
 }
 
 function editTypeIsDirectEdit(type) {
@@ -1311,6 +1405,7 @@ function editItemApply() {
 			let edittilesheet = parseInt(sheet);
 			let edittilex = parseInt(document.getElementById('edittilex').value);
 			let edittiley = parseInt(document.getElementById('edittiley').value);
+			let edittileurl = document.getElementById('edittileimageurl').value
 			let edittiletype = document.getElementById('edittiletype').value;
 			let edittiledensity = document.getElementById('edittiledensity').checked;
 			let edittileobject = !document.getElementById('edittileisobject').checked;
@@ -1325,6 +1420,9 @@ function editItemApply() {
 			let edittileanimationoffset = parseInt(document.getElementById('edittileanimationoffset').value);
 
 			updates.pic = [edittilesheet, edittilex, edittiley];
+			if ((editItemType === "generic" || editItemType === "gadget") && edittileurl.trim().length) {
+				updates.pic = [edittileurl.trim(), 0, 0];
+			}
 
 			if (editItemType == "map_tile" || editTypeIsDirectEdit(editItemType)) {
 				let data = {
@@ -1376,6 +1474,55 @@ function editItemApply() {
 				}
 			}
 
+			if (editItemType == "gadget") {
+				if (document.getElementById('gadgetTypeScript').checked) {
+					let t = {};
+					if (document.getElementById('edittilegadget_script_disable').checked)
+						t['enabled'] = false;
+					if (document.getElementById('edittilegadget_script_text').value.trim().length)
+						t['code'] = document.getElementById('edittilegadget_script_text').value;
+					if (document.getElementById('edittilegadget_script_item').value.trim().length)
+						t['code_item'] = document.getElementById('edittilegadget_script_item').value;
+					if (document.getElementById('edittilegadget_script_usable').checked)
+						t['usable'] = true;
+					updates.data = [[document.getElementById('edittilegadget_script_run').value, t]];
+				} else if (document.getElementById('gadgetTypePreset').checked) {
+					let t = {};
+					switch (document.getElementById('edittilegadget_preset_choice').value) {
+						case "dice":
+							t['dice'] = parseInt(document.getElementById('edittilegadget_preset_dice_dice').value);
+							t['sides'] = parseInt(document.getElementById('edittilegadget_preset_dice_sides').value);
+							break;
+						case "accept_requests":
+							if (document.getElementById('edittilegadget_preset_accept_requests_owner_only').checked)
+								t['owner_only'] = true;
+							t['request_types'] = document.getElementById('edittilegadget_preset_accept_requests_types').value.trim().split(',');
+							break;
+						case "random_tell":
+						case "random_say":
+							t['text'] = document.getElementById('edittilegadget_preset_random_message_text').value.trim().split('\n');
+							break;
+						case "rc_car":
+							if (document.getElementById('edittilegadget_preset_rc_car_owner_only').checked)
+								t['owner_only'] = true;
+							if (document.getElementById('edittilegadget_preset_rc_car_fly').checked)
+								t['fly'] = true;
+							if (document.getElementById('edittilegadget_preset_rc_car_give_rides').checked)
+								t['give_rides'] = true;
+							break;
+					}
+					let data = [];
+					updates.data = [[document.getElementById('edittilegadget_preset_choice').value, t]];
+				} else if (document.getElementById('gadgetTypeRaw').checked) {
+					try {
+						updates.data = JSON.parse(document.getElementById('edittilegadget_raw_textarea').value);
+					} catch (error) {
+						alert(error);
+						return;
+					}
+				}
+			}
+
 			if(editItemType === "map_tile" || editItemType === "generic" || editItemType === "gadget") {
 				SendCmd("BAG", { update: updates });
 			}
@@ -1416,6 +1563,23 @@ function newItemCreate(type) {
 
 function newItemCancel() {
 	document.getElementById('newItemWindow').style.display = "none";
+}
+
+function changeGadgetType() {
+	let isScript = document.getElementById("gadgetTypeScript").checked;
+	let isPreset = document.getElementById("gadgetTypePreset").checked;
+	let isRaw    = document.getElementById("gadgetTypeRaw").checked;
+	document.getElementById("edittilegadget_script").style.display = isScript ? "block" : "none";
+	document.getElementById("edittilegadget_preset").style.display = isPreset ? "block" : "none";
+	document.getElementById("edittilegadget_raw").style.display    = isRaw    ? "block" : "none";
+}
+
+function changeGadgetPreset() {
+	let preset = document.getElementById("edittilegadget_preset_choice").value;
+	document.getElementById("edittilegadget_preset_rc_car").style.display = (preset === "rc_car") ? "block" : "none";
+	document.getElementById("edittilegadget_preset_accept_requests").style.display = (preset === "accept_requests") ? "block" : "none";
+	document.getElementById("edittilegadget_preset_random_message").style.display = (preset === "random_say" || preset === "random_tell") ? "block" : "none";
+	document.getElementById("edittilegadget_preset_dice").style.display = (preset === "dice") ? "block" : "none";
 }
 
 ///////////////////////////////////////////////////////////

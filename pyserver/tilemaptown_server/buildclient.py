@@ -658,6 +658,9 @@ class FakeClient(PermissionsMixin, ClientMixin, object):
 
 		self.name = "?"
 
+		self.requests = {}
+		self.rate_limiting = {}
+
 	def is_client(self): # is_client_and_entity() will distinguish between this and a real Client
 		return True
 

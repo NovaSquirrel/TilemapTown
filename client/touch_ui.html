@@ -586,6 +586,59 @@
     This should an image uploaded to this server, or on<br><a href="https://imgur.com/" target="_blank">Imgur</a>, <a href="https://imgbb.com/" target="_blank">ImgBB</a> or <a href="https://postimages.org/" target="_blank">Postimages</a>.<br>More image hosts can be added on request.
     </div>
 
+	<div id="edittilegadget">
+		<strong>Gadget</strong><br>
+		Type:
+		<label class="unselectable"><input type="radio" id="gadgetTypeScript" name="gadgetType" onchange="changeGadgetType()" checked>Scripted</label>
+		<label class="unselectable"><input type="radio" id="gadgetTypePreset" name="gadgetType" onchange="changeGadgetType()">Built-in</label>
+		<label class="unselectable"><input type="radio" id="gadgetTypeRaw"    name="gadgetType" onchange="changeGadgetType()">Raw</label>
+		<br>
+		<div id="edittilegadget_script">
+			Run script: <select id="edittilegadget_script_run">
+			  <option value="auto_script">when gadget is loaded</option>
+			  <option value="map_script">when gadget is on a map</option>
+			  <option value="use_script">when gadget is "used"</option>
+			</select> <label class="unselectable"><input type="checkbox" id="edittilegadget_script_disable">Disable script</label><br>
+			<textarea id="edittilegadget_script_text" cols="60" rows="15" placeholder="tt.owner_say(&quot;Hello World!&quot;)"></textarea><br>
+			<label class="unselectable" for="edittilegadget_script_usable"><input type="checkbox" id="edittilegadget_script_usable">Gadget can be "used"</label><br>
+			Text item to get source from: <input type="text" id="edittilegadget_script_item" placeholder="Item entity ID">
+		</div>
+		<div id="edittilegadget_preset">
+			Preset: <select id="edittilegadget_preset_choice" onchange="changeGadgetPreset()">
+			  <option value="rc_car">Remote control car</option>
+			  <option value="accept_requests">Accept requests</option>
+			  <option value="random_say">Say random message</option>
+			  <option value="random_tell">Random private message</option>
+			  <option value="dice">Dice</option>
+			</select>
+			<div id="edittilegadget_preset_rc_car">
+				<label class="unselectable" for="edittilegadget_preset_rc_car_owner_only"><input type="checkbox" id="edittilegadget_preset_rc_car_owner_only">Only the owner can use this</label><br>
+				<label class="unselectable" for="edittilegadget_preset_rc_car_fly"><input type="checkbox" id="edittilegadget_preset_rc_car_fly">Car can move through walls</label><br>
+				<label class="unselectable" for="edittilegadget_preset_rc_car_give_rides"><input type="checkbox" id="edittilegadget_preset_rc_car_give_rides">Car accepts carryme requests</label>
+			</div>
+			<div id="edittilegadget_preset_accept_requests">
+				<label class="unselectable" for="edittilegadget_preset_accept_requests_owner_only"><input type="checkbox" id="edittilegadget_preset_accept_requests_owner_only">Only accept requests from the owner</label><br>
+				Types to accept: <input id="edittilegadget_preset_accept_requests_types" placeholder="carry,carryme,followme,...">
+			</div>
+			<div id="edittilegadget_preset_random_message">
+				<textarea id="edittilegadget_preset_random_message_text" cols="60" rows="8" placeholder="One message per line"></textarea>
+			</div>
+			<div id="edittilegadget_preset_dice">
+				<table border="0">
+				<tr><td>Dice</td><td><input type="number" value="2" id="edittilegadget_preset_dice_dice" placeholder="2" size="3" /></td></tr>
+				<tr><td>Sides</td><td><input type="number" value="6" id="edittilegadget_preset_dice_sides" placeholder="6" size="3" /></td></tr>
+				</table>
+			</div>
+		</div>
+		<div id="edittilegadget_raw">
+			<textarea id="edittilegadget_raw_textarea" cols="60" rows="8" placeholder="Raw JSON for the gadget"></textarea>
+		</div>
+		<br>
+		<input type="button" value="Apply changes" onclick="editItemApply();">
+		<input type="button" value="Cancel" onclick="editItemCancel();">
+		<hr>
+	</div>
+
     <div id="edittiletext">
     <textarea id="edittiletextarea" cols="60" rows="15"></textarea>
     </div>
