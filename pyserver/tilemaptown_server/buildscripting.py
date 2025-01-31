@@ -467,6 +467,7 @@ def find_entity(e):
 		return AllEntitiesByDB.get(e)
 	return AllEntitiesByID.get(-e)
 
+scripting_service_proc = None
 async def run_scripting_service():
 	global scripting_service_proc, GlobalData
 	GlobalData['request_script_status'] = request_script_status # Try to work around a circular dependency
