@@ -472,7 +472,7 @@ def get_entity_by_id(id, load_from_db=True, do_not_load_scripts=False):
 		return None
 	if t == entity_type['gadget']:
 		e = Gadget(t, do_not_load_scripts=do_not_load_scripts)
-		if e.load(id):
+		if e.load(id, do_not_switch_map=do_not_load_scripts):
 			return e
 		return None
 

@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio, json
+import asyncio, json, traceback
 from .buildglobal import *
 from enum import IntEnum
 from .buildcommand import handle_user_command, send_private_message, send_message_to_map
@@ -539,8 +539,9 @@ async def run_scripting_service():
 				e.send("MSG", {'text': 'Scripting status: %s' % data.decode()})
 				del e
 		except Exception as e:
-			print("Exception thrown from scripting")
-			print(e)
+			print("Exception thrown from scripting:", sys.exc_info()[0])
+			print(sys.exc_info()[1])
+			traceback.print_tb(sys.exc_info()[2])
 		#print(message_type, user_id, entity_id, other_id, status, data)
 		#print(type_and_size + rest_of_message)
 

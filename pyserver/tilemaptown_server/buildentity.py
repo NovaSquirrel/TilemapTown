@@ -901,7 +901,7 @@ class Entity(PermissionsMixin, object):
 		self.db_id = id
 		AllEntitiesByDB[self.db_id] = self
 
-	def load(self, load_id, override_map=None):
+	def load(self, load_id, override_map=None, do_not_switch_map=False):
 		""" Load an entity from the database """
 		c = Database.cursor()
 		c.execute('SELECT type, name, desc, pic, location, position, home_location, home_position, tags, owner_id, allow, deny, guest_deny, creator_id FROM Entity WHERE id=?', (load_id,))
@@ -917,7 +917,7 @@ class Entity(PermissionsMixin, object):
 		self.pic = loads_if_not_none(result[3])
 		map_id = result[4]
 		if override_map:
-			if not self.switch_map(override_map[0], new_pos=None if (len(override_map) == 1) else (override_map[1:])):
+			if do_not_switch_map or not self.switch_map(override_map[0], new_pos=None if (len(override_map) == 1) else (override_map[1:])):
 				self.map_id = override_map[0]
 		elif map_id:
 			position = loads_if_not_none(result[5])
@@ -926,7 +926,7 @@ class Entity(PermissionsMixin, object):
 				self.y = position[1]
 				if len(position) == 3:
 					self.dir = position[2]
-			if not self.switch_map(result[4], goto_spawn=False):
+			if do_not_switch_map or not self.switch_map(result[4], goto_spawn=False):
 				self.map_id = result[4]
 		#print("Loading %d: %s" % (self.db_id or -1, self.name))
 

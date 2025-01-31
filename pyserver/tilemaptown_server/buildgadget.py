@@ -24,10 +24,7 @@ SCRIPT_DEBUG_PRINTS = False
 
 class Gadget(Entity):
 	def __init__(self, entity_type_gadget, creator_id=None, do_not_load_scripts=False):
-		super().__init__(entity_type['gadget'], creator_id=creator_id)
-
 		self.traits = []
-		self.data = {} # Configuration
 		self.script_data = {}
 		self.script_data_size = 0
 		self.script_running = False
@@ -36,6 +33,10 @@ class Gadget(Entity):
 		self.script_callback_enabled = [False] * ScriptingCallbackType.COUNT
 		self.listening_to_chat = False
 		self.listening_to_chat_warning = False
+
+		super().__init__(entity_type['gadget'], creator_id=creator_id)
+
+		self.data = {} # Configuration
 
 	def clean_up(self):
 		for trait in self.traits:
