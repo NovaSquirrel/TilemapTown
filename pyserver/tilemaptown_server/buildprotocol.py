@@ -309,7 +309,7 @@ def fn_MOV(connection, map, client, arg, echo):
 		return
 
 	# Handle bumping into the map edge (for clients that don't implement see_past_map_edge)
-	if "bump" in arg and map.is_map() and map.edge_ref_links != None:
+	if "bump" in arg and map.is_map() and map.edge_id_links != None:
 		bump_pos    = arg["bump"]
 
 		# Check if the bumped position is past one of the edges
@@ -318,7 +318,7 @@ def fn_MOV(connection, map, client, arg, echo):
 		if edge_sign_x != 0 or edge_sign_y != 0:
 			# Find what map link index to use
 			edge_index = directions.index((edge_sign_x, edge_sign_y))
-			new_map = map.edge_ref_links[edge_index]
+			new_map = get_entity_by_id(map.edge_id_links[edge_index])
 			if new_map != None:
 				new_x, new_y = bump_pos
 				if edge_sign_x == 1:

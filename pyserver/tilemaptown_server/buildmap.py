@@ -22,6 +22,63 @@ from .buildentity import Entity
 DirX = [ 1,  1,  0, -1, -1, -1,  0,  1]
 DirY = [ 0,  1,  1,  1,  0, -1, -1, -1]
 
+def temporarily_load_map_from_db(db_id, user=None):
+	c = Database.cursor()
+
+	c.execute('SELECT type, name, desc, tags, owner_id, allow, deny, guest_deny FROM Entity WHERE id=?', (db_id,))
+	entity_table_data = c.fetchone()
+	if entity_table_data == None:
+		return None
+	entity_type, entity_name, entity_desc, entity_tags_column, entity_owner_id, entity_allow, entity_deny, entity_guest_deny = entity_table_data
+	entity_tags_column = loads_if_not_none(entity_tags_column)
+	if entity_tags_column:
+		entity_tags = entity_tags_column.get('tags', {})
+	else:
+		entity_tags = {}
+
+	c.execute('SELECT flags, width, height, default_turf FROM Map WHERE entity_id=?', (db_id,))
+	map_table_data = c.fetchone()
+	if map_table_data == None:
+		return None
+	map_flags, map_width, map_height, map_default_turf = map_table_data
+	if map_default_turf == '{':
+		try:
+			map_default_turf = json.loads(map_default_turf)
+		except:
+			map_default_turf = "grass"
+
+	map_entity_data = loads_if_not_none(load_text_data_from_db(db_id))
+	if map_entity_data == None:
+		print("Bad map data for %s" % db_id)
+		return None
+
+	###############
+
+	mai = {
+		'name': entity_name,
+		'desc': entity_desc,
+		'id': db_id,
+		'owner_id': entity_owner_id,
+		'owner_username': find_username_by_db_id(entity_owner_id) or '?',
+		'default': map_default_turf,
+		'size': [map_width, map_height],
+		'public': map_flags & mapflag['public'] != 0,
+		'private': (entity_deny & permission['entry']) != 0,
+		'build_enabled': (entity_deny & permission['build']) == 0,
+		'full_sandbox': entity_allow & permission['sandbox'] != 0,
+		'edge_links': map_entity_data.get('edge_links'),
+		'tags': entity_tags
+	}
+	if user:
+		mai['you_allow'] = permission_list_from_bitfield(entity_allow)
+		mai['you_deny'] = permission_list_from_bitfield(entity_deny)
+	if "wallpaper" in map_entity_data:
+		mai['wallpaper'] = map_entity_data["wallpaper"]
+
+	map = {'pos': map_entity_data['pos'], 'default': map_entity_data['default'], 'turf': map_entity_data['turf'], 'obj': map_entity_data['obj']}
+
+	return (mai, map)
+
 class Map(Entity):
 	def __init__(self,width=100,height=100,id=None,creator_id=None):
 		super().__init__(entity_type['map'], creator_id = creator_id)
@@ -47,7 +104,6 @@ class Map(Entity):
 		# self.objs[x][y]
 
 		self.edge_id_links  = None
-		self.edge_ref_links = None
 
 		self.map_wallpaper = None
 		self.map_music = None
@@ -84,41 +140,34 @@ class Map(Entity):
 		if self.db_id not in connection.loaded_maps:
 			connection.send("MAP", self.map_section(0, 0, self.width-1, self.height-1))
 
-		if connection.see_past_map_edge and self.edge_ref_links:
-			for linked_map in self.edge_ref_links:
-				if linked_map == None:
+		if connection.see_past_map_edge and self.edge_id_links:
+			for linked_map_id in self.edge_id_links:
+				if linked_map_id == None:
 					continue
 				# Only send the client maps they wouldn't have yet
-				if linked_map.db_id in connection.loaded_maps:
+				if linked_map_id in connection.loaded_maps:
 					continue
-
-				# If map data is not loaded, it has to be read before MAI because MAI's edge_links comes from the map's data field
-				if not linked_map.map_data_loaded:
-					# If it's not loaded, load the json and parse it right here
-					from_db = linked_map.load_data_as_text()
-					if from_db == None:
-						continue
-					from_db = json.loads(from_db)
-
-					# Patch in the edge ID links and wallpaper so linked_map.map_info() can include them
-					if "edge_links" in from_db:
-						linked_map.edge_id_links = from_db["edge_links"]
-					if "wallpaper" in from_db:
-						linked_map.wallpaper = from_db["wallpaper"]
-
-				info = linked_map.map_info(user=item)
-				info['remote_map'] = linked_map.db_id
-				connection.send("MAI", info)
-
-				if linked_map.map_data_loaded:
-					section = linked_map.map_section(0, 0, linked_map.width-1, linked_map.height-1)
+				# Get the information to send
+				linked_map = get_entity_by_id(linked_map_id, load_from_db=False)
+				if linked_map and linked_map.map_data_loaded:
+					mai = linked_map.map_info(user=item)
+					map = linked_map.map_section(0, 0, linked_map.width-1, linked_map.height-1)
+					mai['remote_map'] = linked_map_id
+					map['remote_map'] = linked_map_id
+					connection.send("MAI", mai)
+					connection.send("MAP", map)
 				else:
-					section = {'pos': from_db['pos'], 'default': from_db['default'], 'turf': from_db['turf'], 'obj': from_db['obj']}
-				section['remote_map'] = linked_map.db_id
-				connection.send("MAP", section)
+					mai_map = temporarily_load_map_from_db(linked_map_id, user=item)
+					if mai_map == None:
+						continue
+					mai, map = mai_map
+					mai['remote_map'] = linked_map_id
+					map['remote_map'] = linked_map_id
+					connection.send("MAI", mai)
+					connection.send("MAP", map)
 
-			connection.loaded_maps = set([x.db_id for x in self.edge_ref_links if x != None] + [self.db_id])
-		if connection.see_past_map_edge and not self.edge_ref_links:
+			connection.loaded_maps = set([x for x in self.edge_id_links if x != None] + [self.db_id])
+		if connection.see_past_map_edge and not self.edge_id_links:
 			connection.loaded_maps = set([self.db_id])
 
 	def resend_map_info_to_users(self):
@@ -142,7 +191,6 @@ class Map(Entity):
 				# Unload
 				self.turfs = None
 				self.objs = None
-				self.edge_ref_links = None
 
 				self.map_data_loaded = False
 			if self.user_count == 0:
@@ -197,7 +245,6 @@ class Map(Entity):
 					self.objs[o[0]][o[1]] = o[2]
 				if "edge_links" in d:
 					self.edge_id_links = d["edge_links"]
-					self.edge_ref_links = [(get_entity_by_id(x) if x != None else None) for x in self.edge_id_links]
 				if "wallpaper" in d:
 					self.map_wallpaper = d["wallpaper"]
 				if "music" in d:

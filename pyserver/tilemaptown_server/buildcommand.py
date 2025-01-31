@@ -287,7 +287,7 @@ def apply_rate_limiting(client, limit_type, count_limits):
 def send_message_to_map(map, actor, text, controlled_by=None, echo=None, script_entity=None):
 	if text == '':
 		return
-	if Config["Security"]["RateLimitMSG"] and apply_rate_limiting(actor, 'msg', ( (1, Config["Security"]["RateLimitMSG1"]),(5, Config["Security"]["RateLimitMSG5"])) ):
+	if Config["RateLimit"]["MSG"] and apply_rate_limiting(actor, 'msg', ( (1, Config["RateLimit"]["MSG1"]),(5, Config["RateLimit"]["MSG5"])) ):
 		respond_to = controlled_by or actor
 		if hasattr(respond_to, 'connection') and respond_to.connection():
 			respond_to.connection().protocol_error(echo, text='You\'re sending too many messages too quickly!')
@@ -317,7 +317,7 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 	echo = context[1]
 
 	rate_limit_multiplier = lenient_rate_limit * 2
-	if Config["Security"]["RateLimitPRI"] and apply_rate_limiting(client, 'pri', ( (1, Config["Security"]["RateLimitPRI1"]*rate_limit_multiplier),(5, Config["Security"]["RateLimitPRI5"]*rate_limit_multiplier)) ):
+	if Config["RateLimit"]["PRI"] and apply_rate_limiting(client, 'pri', ( (1, Config["RateLimit"]["PRI1"]*rate_limit_multiplier),(5, Config["RateLimit"]["PRI5"]*rate_limit_multiplier)) ):
 		respond_to = controlled_by or client
 		if hasattr(respond_to, 'connection') and respond_to.connection():
 			respond_to.connection().protocol_error(echo, text='You\'re sending too many messages too quickly!')
@@ -1363,15 +1363,11 @@ def fn_mapedgelink(map, client, context, arg):
 		# Make sure it's a list, so I can write to one of the items
 		if map.edge_id_links == None:
 			map.edge_id_links = [None] * 8
-		if map.edge_ref_links == None:
-			map.edge_ref_links = [(get_entity_by_id(x) if x != None else None) for x in map.edge_id_links]
 		map.edge_id_links[edge] = map_id
-		map.edge_ref_links[edge] = get_entity_by_id(map_id) if map_id != None else None
 
 		# If it's all None, change it to None instead of being a list at all
 		if all(x == None for x in map.edge_id_links):
 			map.edge_id_links = None
-			map.edge_ref_links = None
 
 		map.map_data_modified = True
 		respond(context, 'Map edge %d set to %s; links: %s' % (edge, map_id, map.edge_id_links))
