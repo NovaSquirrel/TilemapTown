@@ -9,3 +9,7 @@ html, body {
     bottom: 32px;
     width: 50%;
 }
+
+#chat-container.pinned {
+	z-index: 1;
+}
