@@ -379,7 +379,7 @@ class Entity(PermissionsMixin, object):
 					client.send_string(send_me, is_chat=is_chat)
 
 		# Add remote map on the params if needed, so that linked maps and listeners can see where the message came from
-		do_linked = send_to_links and self.is_map() and self.edge_ref_links
+		do_linked = send_to_links and self.is_map() and self.edge_id_links
 		do_listeners = remote_category != None and self.protocol_id() in MapListens[remote_category]
 		if do_linked or do_listeners:
 			if command_params == None:
@@ -390,7 +390,10 @@ class Entity(PermissionsMixin, object):
 
 		""" Send it to any maps linked from this one, if send_to_links """
 		if do_linked: # Assume it's a map if do_linked is true
-			for linked_map in self.edge_ref_links:
+			for linked_map in self.edge_id_links:
+				if linked_map == None:
+					continue
+				linked_map = get_entity_by_id(linked_map, load_from_db=False)
 				if linked_map == None:
 					continue
 				for client in linked_map.contents:
