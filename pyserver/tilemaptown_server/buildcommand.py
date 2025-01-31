@@ -310,7 +310,7 @@ def send_message_to_map(map, actor, text, controlled_by=None, echo=None, script_
 		map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
 		for e in map.contents:
 			if e.entity_type == entity_type['gadget'] and e.listening_to_chat and e is not actor and e is not controlled_by:
-				e.receive_chat(client, arg)
+				e.receive_chat(actor, text)
 
 def send_private_message(client, context, recipient_username, text, lenient_rate_limit=False):
 	respond_to = context[0]
@@ -3132,11 +3132,11 @@ def fn_message_forwarding(map, client, context, arg):
 				if entity.forward_message_types:
 					entity.forward_messages_to = client.protocol_id()
 					if entity.map:
-						entity.map.broadcast("WHO", {"update": {"id": entity.protocol_id(), "is_forwarding": True, "clickable": "CLICK" in entity.forward_message_types, "chat_listener": "CHAT" in entity.forward_message_types}})
+						entity.map.broadcast("WHO", {"update": {"id": entity.protocol_id(), "is_forwarding": True, "clickable": "CLICK" in entity.forward_message_types, "chat_listener": "CHAT" in entity.forward_message_types or (hasattr(entity, 'listening_to_chat_warning') and entity.listening_to_chat_warning)}})
 				else:
 					entity.forward_messages_to = None
 					if entity.map:
-						entity.map.broadcast("WHO", {"update": {"id": entity.protocol_id(), "is_forwarding": False, "clickable": False, "chat_listener": False}})
+						entity.map.broadcast("WHO", {"update": {"id": entity.protocol_id(), "is_forwarding": False, "clickable": False, "chat_listener": (hasattr(entity, 'listening_to_chat_warning') and entity.listening_to_chat_warning)}})
 				if not entity.temporary:
 					entity.save()
 			data = {'set': entities_set, 'not_found': entities_not_found, 'denied': entities_not_allowed}

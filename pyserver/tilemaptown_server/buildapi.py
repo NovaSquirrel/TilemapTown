@@ -738,7 +738,7 @@ if Config["FileUpload"]["AllowCrossOrigin"]:
 
 # ---------------------------------------------------------
 
-def start_api(loop, port, total_connections):
+async def start_api(loop, port, total_connections):
 	global shared_total_connections
 	shared_total_connections = total_connections
 
@@ -746,9 +746,9 @@ def start_api(loop, port, total_connections):
 	app.add_routes(routes)
 
 	runner = web.AppRunner(app)
-	loop.run_until_complete(runner.setup())
+	await runner.setup()
 	site = web.TCPSite(runner, port=port)
-	loop.run_until_complete(site.start())
+	await site.start()
 
 	global global_file_upload_size
 	if global_file_upload_size != None:

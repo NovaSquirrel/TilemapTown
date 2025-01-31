@@ -479,6 +479,8 @@ async def run_scripting_service():
 	quit = False
 	while not quit:
 		type_and_size = await scripting_service_proc.stdout.read(4)
+		if len(type_and_size) == 0:
+			break
 		message_type = type_and_size[0]
 		data_size = int.from_bytes(type_and_size[1:], byteorder='little')
 		rest_of_message = await scripting_service_proc.stdout.read((4*3+1) + data_size)
@@ -512,6 +514,8 @@ async def run_scripting_service():
 				if e.entity_type == entity_type['gadget'] and other_id >= 0 and other_id < ScriptingCallbackType.COUNT:
 					if other_id == ScriptingCallbackType.MAP_CHAT:
 						e.listening_to_chat = bool(status)
+						if not e.listening_to_chat_warning and e.map:
+							e.map.broadcast("WHO", {"update": {"id": e.protocol_id(), "chat_listener": True}})
 						e.listening_to_chat_warning = e.listening_to_chat_warning or e.listening_to_chat
 					e.script_callback_enabled[other_id] = bool(status)
 				del e

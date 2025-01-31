@@ -139,7 +139,7 @@ class Gadget(Entity):
 
 	def receive_chat(self, user, text):
 		for trait in self.traits:
-			if trait.on_entity_chat(user, text):
+			if trait.on_chat(user, text):
 				return
 
 	# .----------------------
@@ -621,6 +621,7 @@ class GadgetScript(GadgetTrait):
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.MAP_CHAT]:
 			return None
 		self.trigger_script_callback(ScriptingCallbackType.MAP_CHAT, [{
+			"text":     text,
 			"id":       user.protocol_id(),
 			"name":     user.name,
 			"username": user.username_or_id(),
