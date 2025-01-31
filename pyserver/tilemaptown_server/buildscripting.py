@@ -435,9 +435,9 @@ def decode_scripting_message_values(b):
 def create_scripting_message(type, user_id=0, entity_id=0, other_id=0, status=0, data=None):
 	return type.to_bytes(1, byteorder='little', signed=False) \
 	+ (len(data) if data else 0).to_bytes(3, byteorder='little', signed=False) \
-	+ user_id.to_bytes(4, byteorder='little', signed=False) \
-	+ entity_id.to_bytes(4, byteorder='little', signed=False) \
-	+ other_id.to_bytes(4, byteorder='little', signed=False) \
+	+ user_id.to_bytes(4, byteorder='little', signed=True) \
+	+ entity_id.to_bytes(4, byteorder='little', signed=True) \
+	+ other_id.to_bytes(4, byteorder='little', signed=True) \
 	+ status.to_bytes(1, byteorder='little', signed=False) \
 	+ (data or bytes(0))
 
