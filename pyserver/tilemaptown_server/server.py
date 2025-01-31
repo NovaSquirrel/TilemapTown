@@ -88,10 +88,11 @@ async def main_timer():
 		# Run server shutdown timer, if it's running
 		if ServerShutdown[0] > 0:
 			ServerShutdown[0] -= 1
-			if ServerShutdown[0] == 1:
-				broadcast_to_all("Server is going down!")
+			if ServerShutdown[0] == 2:
 				if Config["Scripting"]["Enabled"]:
 					shutdown_scripting_service()
+			elif ServerShutdown[0] == 1:
+				broadcast_to_all("Server is going down!")
 				for u in AllConnections:
 					u.disconnect(reason='Restart' if ServerShutdown[1] else 'Shutdown')
 				save_everything()
