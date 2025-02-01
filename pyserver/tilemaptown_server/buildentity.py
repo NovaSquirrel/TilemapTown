@@ -434,7 +434,7 @@ class Entity(PermissionsMixin, object):
 		# Tell everyone in the container that the new item was added
 		self.broadcast("WHO", {'add': item.who()}, remote_category=maplisten_type['entry'])
 		for e in self.contents:
-			if e.entity_type == entity_type['gadget']:
+			if hasattr(e, 'receive_join'):
 				e.receive_join(item)
 
 		# Warn about chat listeners, if present
@@ -455,7 +455,7 @@ class Entity(PermissionsMixin, object):
 		# Tell everyone in the container that the item was removed
 		self.broadcast("WHO", {'remove': item.protocol_id()}, remote_category=maplisten_type['entry'])
 		for e in self.contents:
-			if e.entity_type == entity_type['gadget']:
+			if hasattr(e, 'receive_leave'):
 				e.receive_leave(item)
 
 		# Notify parents
