@@ -309,7 +309,7 @@ def send_message_to_map(map, actor, text, controlled_by=None, echo=None, script_
 			fields['rc_username'] = controlled_by.username_or_id()
 		map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
 		for e in map.contents:
-			if e.entity_type == entity_type['gadget'] and e.listening_to_chat and e is not actor and e is not controlled_by:
+			if e.entity_type == entity_type['gadget'] and hasattr(e, 'listening_to_chat') and e.listening_to_chat and e is not actor and e is not controlled_by:
 				e.receive_chat(actor, text)
 
 def send_private_message(client, context, recipient_username, text, lenient_rate_limit=False):

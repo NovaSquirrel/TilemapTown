@@ -1264,7 +1264,7 @@ function editItemShared(item) {
 			}
 			editItemOriginalSheet = itemobj.pic[0];
 			document.getElementById('edittileimageurl_span').style.display = (item.type === "generic" || item.type === "gadget") ? "block" : "none";
-			document.getElementById('edittileimageurl').value = (typeof pic[0] === "number") ? "" : pic[0];
+			document.getElementById('edittileimageurl').value = (typeof itemobj.pic[0] === "number") ? "" : itemobj.pic[0];
 
 			// Display all the available images assets in the user's inventory
 			let sheetselect = document.getElementById("edittilesheet");
@@ -1514,11 +1514,15 @@ function editItemApply() {
 					let data = [];
 					updates.data = [[document.getElementById('edittilegadget_preset_choice').value, t]];
 				} else if (document.getElementById('gadgetTypeRaw').checked) {
-					try {
-						updates.data = JSON.parse(document.getElementById('edittilegadget_raw_textarea').value);
-					} catch (error) {
-						alert(error);
-						return;
+					if (document.getElementById('edittilegadget_raw_textarea').value == "") {
+						updates.data = [];
+					} else {
+						try {
+							updates.data = JSON.parse(document.getElementById('edittilegadget_raw_textarea').value);
+						} catch (error) {
+							alert(error);
+							return;
+						}
 					}
 				}
 			}
