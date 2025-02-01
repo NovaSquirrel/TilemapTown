@@ -318,7 +318,6 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 
 	rate_limit_multiplier = lenient_rate_limit * 2
 	if Config["RateLimit"]["PRI"] and apply_rate_limiting(client, 'pri', ( (1, Config["RateLimit"]["PRI1"]*rate_limit_multiplier),(5, Config["RateLimit"]["PRI5"]*rate_limit_multiplier)) ):
-		respond_to = controlled_by or client
 		if hasattr(respond_to, 'connection') and respond_to.connection():
 			respond_to.connection().protocol_error(echo, text='You\'re sending too many messages too quickly!')
 		return

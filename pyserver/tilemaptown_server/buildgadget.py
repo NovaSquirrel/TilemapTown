@@ -362,6 +362,8 @@ class GadgetRCCar(GadgetTrait):
 		return True
 
 	def apply_key(self, key):
+		if self.gadget == None:
+			return False
 		offset = key_to_offset.get(key)
 		if offset != None:
 			if self.gadget.map and not self.get_config('fly', False) and self.gadget.map.is_map() and self.gadget.map.map_data_loaded:
@@ -382,6 +384,8 @@ class GadgetRCCar(GadgetTrait):
 			return True
 
 	def keep_moving(self):
+		if self.gadget == None:
+			return
 		if self.in_use_by == None or not self.keys_held:
 			self.timer_going = False
 			return
