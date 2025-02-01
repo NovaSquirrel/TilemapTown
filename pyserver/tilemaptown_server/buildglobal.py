@@ -51,8 +51,12 @@ def setConfigDefault(group, item, value):
 def loadConfigJson():
 	if os.path.isfile(ConfigFile):
 		with open(ConfigFile) as f:
-			Config.clear()
-			Config.update(json.load(f))
+			try:
+				j = json.load(f)
+				Config.clear()
+				Config.update(j)
+			except:
+				print("Bad config file!")
 	else:
 		print("Config file '%s' doesn't exist, using defaults" % ConfigFile)
 
