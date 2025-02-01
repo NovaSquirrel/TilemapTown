@@ -17,7 +17,7 @@
 import random, weakref, asyncio
 from .buildglobal import *
 from .buildentity import Entity, save_generic_data, load_generic_data
-from .buildcommand import handle_user_command
+from .buildcommand import handle_user_command, send_private_message
 from .buildscripting import send_scripting_message, encode_scripting_message_values, VM_MessageType, ScriptingValueType, ScriptingCallbackType
 
 SCRIPT_DEBUG_PRINTS = False
@@ -183,7 +183,7 @@ class GadgetTrait(object):
 	# | Utility
 	# '----------------------
 	def tell(self, user, text):
-		handle_user_command(self.gadget.map, self.gadget, user, None, "tell %s %s" % (user.protocol_id(), text))
+		send_private_message(self.gadget, [user, None, self.gadget], user.protocol_id(), text, lenient_rate_limit=user.db_id == self.gadget.owner_id)
 
 	# .----------------------
 	# | Event handlers
