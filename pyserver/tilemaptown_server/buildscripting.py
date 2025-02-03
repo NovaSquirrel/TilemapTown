@@ -239,6 +239,9 @@ def fn_e_xy(e, arg): #E
 def fn_e_mapid(e, arg): #E
 	e2 = find_entity(arg[0])
 	if e2:
+		if e2.is_client() and \
+			((e2.connection_attr('user_flags') & userflag['hide_location'] != 0) or (e2.map and e2.map.is_map() and (e2.map.map_flags & mapflag['public'] == 0))):
+			return (None,)
 		return e2.map_id
 
 @script_api()
@@ -373,7 +376,7 @@ def fn_e_isloaded(e, arg): #E
 @script_api()
 def fn_e_havepermission(e, arg): #Es
 	if arg[1] not in permission:
-		return None
+		return (None,)
 	return e.has_permission(arg[0], perm=0, default=False)
 
 @script_api()
