@@ -499,7 +499,7 @@ class GadgetScript(GadgetTrait):
 		self.send_scripting_values(VM_MessageType.CALLBACK, other_id=type, values=values)
 
 	def start_script(self):
-		if self.gadget.script_running or self.gadget.do_not_load_scripts:
+		if self.gadget == None or self.gadget.script_running or self.gadget.do_not_load_scripts:
 			return False
 		if not self.get_config('enabled', True):
 			return False
@@ -533,7 +533,7 @@ class GadgetScript(GadgetTrait):
 		return True
 
 	def stop_script(self):
-		if not self.gadget.script_running:
+		if self.gadget == None or not self.gadget.script_running:
 			return False
 		if SCRIPT_DEBUG_PRINTS:
 			print("Calling stop_script() %s" % self.gadget.protocol_id())
