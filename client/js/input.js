@@ -253,7 +253,7 @@ function keyUpHandler(e) {
 	var e = e || window.event;
 	ShiftPressed = e.shiftKey;
 	CtrlPressed = e.ctrlKey;
-	if(takeControlsEnabled && takeControlsKeyUp) {
+	if(takeControlsEnabled && takeControlsKeyUp && document.activeElement.tagName != "INPUT" && document.activeElement.tagName != "TEXTAREA") {
 		let ttKey = keyEventToTilemapTownKey(e);
 		if(takeControlsKeys.has(ttKey)) {
 			SendCmd("EXT", {
@@ -336,7 +336,7 @@ function keyDownHandler(e) {
 		return;
 	}
 
-	if(takeControlsEnabled) {
+	if(takeControlsEnabled && document.activeElement.tagName != "INPUT" && document.activeElement.tagName != "TEXTAREA") {
 		let ttKey = keyEventToTilemapTownKey(e);
 		if(takeControlsKeys.has(ttKey)) {
 			if(e.repeat !== true) {
