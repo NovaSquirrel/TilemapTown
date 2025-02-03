@@ -316,7 +316,7 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 	respond_to = context[0]
 	echo = context[1]
 
-	rate_limit_multiplier = 1 + int(lenient_rate_limit)
+	rate_limit_multiplier = 1 + int(lenient_rate_limit)*2
 	if Config["RateLimit"]["PRI"] and apply_rate_limiting(client, 'pri', ( (1, Config["RateLimit"]["PRI1"]*rate_limit_multiplier),(5, Config["RateLimit"]["PRI5"]*rate_limit_multiplier)) ):
 		if hasattr(respond_to, 'connection') and respond_to.connection():
 			respond_to.connection().protocol_error(echo, text='You\'re sending too many messages too quickly!')
@@ -2974,6 +2974,8 @@ def fn_entity(map, client, context, arg):
 			actor, permission_value = params
 			actor.temp_permissions[e] = actor.temp_permissions.get(e, 0) | permission_value
 			e.temp_permissions_given_to.add(actor)
+			if permission_value == permission['minigame'] and actor.entity_type == entity_type['gadget'] and e in actor.want_controls_for:
+				actor.take_controls(e, actor.want_controls_key_set, pass_on=actor.want_controls_pass_on, key_up=actor.want_controls_key_up)
 	elif subcommand == 'temprevoke':
 		if permission_check(permission['admin']):
 			params = temp_permission_args()

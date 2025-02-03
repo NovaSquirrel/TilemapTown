@@ -1151,6 +1151,8 @@ def entity_click(connection, map, client, context, arg, name):
 		"button":           int, # Usually 0?
 		"target":           lambda x: x in (None, "entity", "mini_tilemap"),
 	})
+	if "button" not in arg:
+		arg["button"] = 0
 	arg['id'] = client.protocol_id()
 
 	if e.entity_type == entity_type['gadget']:

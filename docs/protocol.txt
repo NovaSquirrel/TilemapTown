@@ -528,7 +528,7 @@ Fields:
 	"key_up": If true, request to receive key release events in addition to key press events.
 
 --> EXT {"took_controls": {"id": id, "keys": [key_name, key_name, key_name...], "accept": true/false}}
-Message gets forwarded to the entity specified in "id", in order to tell it that the "take_controls" was accepted (or declined) and to let it know which subset of the keys are actually supported by the client.
+Message gets forwarded to the entity specified in "id", in order to tell it that the "take_controls" was accepted (or declined) and to let it know which subset of the keys are actually supported by the client. If the message contains "keys" and it's not empty, but "accept" is not present in the message, you can assume it was accepted.
 
 Key names:
 	Arrow keys and home/end/pgup/pgdn in the web client

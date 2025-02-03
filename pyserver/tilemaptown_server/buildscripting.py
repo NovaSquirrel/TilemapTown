@@ -370,6 +370,38 @@ def fn_e_havepermission(e, arg): #Es
 		return None
 	return e.has_permission(arg[0], perm=0, default=False)
 
+@script_api()
+def fn_e_takecontrols(e, arg): #EIsbb
+	e2 = find_entity(arg[0])
+	if e is not e2: # For now, limit it to the script taking controls for itself, not on behalf of something else
+		return
+	client = find_client_by_username(arg[1])
+	if client == None:
+		return
+	if e2.has_permission(client, permission['minigame']):
+		e.take_controls(client, arg[2], pass_on=arg[3], key_up=arg[4])
+	else:
+		# Save the details about the request for later
+		e.want_controls_for.add(client)
+		e.want_controls_key_set = arg[2]
+		e.want_controls_pass_on = arg[3]
+		e.want_controls_key_up  = arg[4]
+		handle_user_command(e2.map, e2, e, None, "requestpermission %s minigame" % client.protocol_id(), script_entity=e)
+
+@script_api()
+def fn_e_releasecontrols(e, arg): #EI
+	e2 = find_entity(arg[0])
+	if e is not e2: # For now, limit it to the script taking controls for itself, not on behalf of something else
+		return
+	client = find_client_by_username(arg[1])
+	if client == None:
+		return
+	e.release_controls(client)
+
+@script_api()
+def fn_releasecontrols(e, arg): #EI
+	e.release_all_controls()
+
 # -----------------------------------------------------------------------------
 
 def encode_scripting_message_values(values):
@@ -518,6 +550,9 @@ async def run_scripting_service():
 						if not e.listening_to_chat_warning and e.map:
 							e.map.broadcast("WHO", {"update": {"id": e.protocol_id(), "chat_listener": True}})
 						e.listening_to_chat_warning = e.listening_to_chat_warning or e.listening_to_chat
+					elif other_id == ScriptingCallbackType.SELF_CLICK:
+						e.clickable = bool(status)
+						e.map.broadcast("WHO", {"update": {"id": e.protocol_id(), "clickable": bool(status)}})
 					e.script_callback_enabled[other_id] = bool(status)
 				del e
 			elif message_type == VM_MessageType.PING:

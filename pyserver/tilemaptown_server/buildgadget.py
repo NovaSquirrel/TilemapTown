@@ -22,6 +22,11 @@ from .buildscripting import send_scripting_message, encode_scripting_message_val
 
 SCRIPT_DEBUG_PRINTS = False
 
+move_keys = set(("move-n", "move-ne", "move-e", "move-se", "move-s", "move-sw", "move-w", "move-nw", "turn-n", "turn-ne", "turn-e", "turn-se", "turn-s", "turn-sw", "turn-w", "turn-nw", "use-item"))
+take_controls_options = {
+	"move": move_keys
+}
+
 class Gadget(Entity):
 	def __init__(self, entity_type_gadget, creator_id=None, do_not_load_scripts=False):
 		self.traits = []
@@ -34,16 +39,26 @@ class Gadget(Entity):
 		self.listening_to_chat = False
 		self.listening_to_chat_warning = False
 
+		self.have_controls_for = weakref.WeakSet()
+		self.want_controls_for = weakref.WeakSet()
+
+		# Pending request that's waiting on someone to give permission
+		self.want_controls_key_set = None
+		self.want_controls_pass_on = None
+		self.want_controls_key_up = None
+
 		super().__init__(entity_type['gadget'], creator_id=creator_id)
 
 		self.data = {} # Configuration
 
 	def clean_up(self):
+		self.release_all_controls()
 		for trait in self.traits:
 			trait.on_shutdown()
 		super().clean_up()
 
 	def reload_traits(self):
+		self.release_all_controls()
 		for trait in self.traits:
 			trait.on_shutdown()
 		self.traits = []
@@ -150,6 +165,38 @@ class Gadget(Entity):
 		w['usable'] = any(_.usable for _ in self.traits)
 		w['verbs'] = list(dict.fromkeys(sum((_.verbs for _ in self.traits), [])))
 		return w
+
+	def take_controls(self, client, key_set, pass_on=False, key_up=False):
+		if key_set not in take_controls_options:
+			return
+		arg = {
+			"id":      self.protocol_id(),
+			"keys":    list(take_controls_options[key_set]),
+			"pass_on": pass_on,
+			"key_up":  key_up,
+		}
+		client.send("EXT", {"take_controls": arg})
+		self.have_controls_for.add(client)
+		self.want_controls_for.discard(client)
+
+	def release_controls(self, client):
+		if client in self.have_controls_for:
+			arg = {
+				"id":   self.protocol_id(),
+				"keys": []
+			}
+			client.send("EXT", {"take_controls": arg})
+			self.have_controls_for.discard(client)
+
+	def release_all_controls(self):
+		for client in self.have_controls_for:
+			arg = {
+				"id":   self.protocol_id(),
+				"keys": []
+			}
+			client.send("EXT", {"take_controls": arg})
+		self.have_controls_for.clear()
+		self.want_controls_for.clear()
 
 class GadgetTrait(object):
 	usable = False
@@ -317,7 +364,7 @@ key_to_offset = {
 	"turn-w":  (0,  0, 4),
 	"turn-nw": (0,  0, 5),
 }
-move_keys = set(("move-n", "move-ne", "move-e", "move-se", "move-s", "move-sw", "move-w", "move-nw", "turn-n", "turn-ne", "turn-e", "turn-se", "turn-s", "turn-sw", "turn-w", "turn-nw", "use-item"))
+
 class GadgetRCCar(GadgetTrait):
 	usable = True
 
@@ -336,7 +383,7 @@ class GadgetRCCar(GadgetTrait):
 	def stop_being_used(self):
 		if self.in_use_by:
 			self.tell(self.in_use_by, 'Stopped controlling')
-			self.in_use_by.send("EXT", {'take_controls': {'id': self.gadget.protocol_id(), 'keys': []}})
+			self.gadget.release_controls(self.in_use_by)
 			self.in_use_by = None
 			self.keys_held.clear()
 			self.timer_going = False
@@ -346,13 +393,7 @@ class GadgetRCCar(GadgetTrait):
 			if self.get_config('owner_only') and not user.has_permission(self.gadget):
 				self.tell(user, 'Only the item\'s owner can use this')
 				return True
-			arg = {
-				'id': self.gadget.protocol_id(),
-				'keys':             list(move_keys),
-				'pass_on':          False, # Don't allow keys to do their normal actions
-				'key_up':           True, # Include key release events
-			}
-			user.send("EXT", {'take_controls': arg})
+			self.gadget.take_controls(user, "move", pass_on=False, key_up=True)
 			self.in_use_by = user
 		else:
 			if self.in_use_by is user:
@@ -508,8 +549,8 @@ class GadgetScript(GadgetTrait):
 			print("Script shutdown %s" % self.gadget.protocol_id())
 		self.stop_script()
 
-	def on_use(self, user):
-		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_USE]:
+	def on_use(self, user, ignore_enable=False):
+		if not ignore_enable and not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_USE]:
 			return None
 		self.trigger_script_callback(ScriptingCallbackType.SELF_USE, [{
 			"id":       user.protocol_id(),
@@ -577,8 +618,8 @@ class GadgetScript(GadgetTrait):
 		}])
 		return True
 
-	def on_entity_click(self, user, arg):
-		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_CLICK]:
+	def on_entity_click(self, user, arg, ignore_enable=False):
+		if not ignore_enable and not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_CLICK]:
 			return None
 		self.trigger_script_callback(ScriptingCallbackType.SELF_CLICK, [{
 			"x":        arg.get('x'),
@@ -646,9 +687,14 @@ class GadgetManualScript(GadgetScript):
 				self.stop_script()
 		return super().on_entity_leave(user)
 
+	def on_entity_click(self, user, arg):
+		self.start_script()
+		super().on_entity_click(user, arg, ignore_enable=True)
+		return True
+
 	def on_use(self, user):
 		self.start_script()
-		super().on_use(user)
+		super().on_use(user, ignore_enable=True)
 		return True
 
 class GadgetMapScript(GadgetScript):
