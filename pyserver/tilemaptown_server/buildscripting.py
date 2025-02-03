@@ -124,7 +124,7 @@ def fn_m_objs(e, arg): #ii
 		x = arg[0]
 		y = arg[1]
 		if x >= 0 and y >= 0 and x < e.map.width and y < e.map.height:
-			return e.map.objs[x][y]
+			return [e.map.objs[x][y]]
 
 @script_api()
 def fn_m_dense(e, arg): #iii
@@ -156,7 +156,7 @@ def fn_m_within(e, arg): #ii
 @script_api()
 def fn_m_size(e, arg): #
 	if e.map == None or not e.map.is_map():
-		return None
+		return [None, None]
 	return [e.map.width, e.map.height]
 
 def script_storage_value_cost(value):
@@ -234,6 +234,12 @@ def fn_e_xy(e, arg): #E
 	e2 = find_entity(arg[0])
 	if e2:
 		return [e2.x, e2.y]
+
+@script_api()
+def fn_e_mapid(e, arg): #E
+	e2 = find_entity(arg[0])
+	if e2:
+		return e2.map_id
 
 @script_api()
 def fn_e_here(e, arg): #

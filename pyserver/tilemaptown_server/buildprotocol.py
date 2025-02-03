@@ -1171,6 +1171,8 @@ def key_press(connection, map, client, context, arg, name):
 		"key":				str,
 		"down":             bool,
 	})
+	if "down" not in arg:
+		arg["down"] = True
 	arg['id'] = client.protocol_id()
 
 	if e.entity_type == entity_type['gadget']:
