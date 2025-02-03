@@ -241,7 +241,7 @@ def fn_e_mapid(e, arg): #E
 	if e2:
 		if e2.is_client() and \
 			((e2.connection_attr('user_flags') & userflag['hide_location'] != 0) or (e2.map and e2.map.is_map() and (e2.map.map_flags & mapflag['public'] == 0))):
-			return (None,)
+			return [None]
 		return e2.map_id
 
 @script_api()
