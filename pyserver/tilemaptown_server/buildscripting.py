@@ -142,8 +142,10 @@ def fn_m_tilelookup(e, arg): #s
 
 @script_api()
 def fn_m_info(e, arg): #
-	if e.map != None:
+	if e.map != None and hasattr(e.map, "map_info"):
 		return e.map.map_info()
+	else:
+		return [None]
 
 @script_api()
 def fn_m_within(e, arg): #ii
