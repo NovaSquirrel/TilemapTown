@@ -88,13 +88,13 @@ def fn_ownersay(e, arg):
 def fn_runitem(e, arg):
 	text = text_from_text_item(arg[0])
 	if text:
-		self.send_scripting_message(VM_MessageType.RUN_CODE, data=text.encode())
+		send_scripting_message(VM_MessageType.RUN_CODE, user_id=e.owner_id, entity_id=e.db_id if e.db_id else -e.id, data=text.encode())
 		return True
 	return False
 
 @script_api()
 def fn_readitem(e, arg):
-	return text_from_item(arg[0])
+	return text_from_text_item(arg[0])
 
 @script_api()
 def fn_stopscript(e, arg):

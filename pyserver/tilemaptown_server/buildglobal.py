@@ -659,8 +659,7 @@ def text_from_text_item(entity_id):
 		entity_id = find_db_id_by_str(entity_id)
 	if entity_id == None:
 		return None
-	entity_type = get_entity_type_by_db_id(entity_id)
-	if entity_type != entity_type['text']:
+	if get_entity_type_by_db_id(entity_id) != entity_type['text']:
 		return None
 	return loads_if_not_none(load_text_data_from_db(entity_id))
 
