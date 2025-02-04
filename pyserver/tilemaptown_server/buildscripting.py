@@ -193,7 +193,7 @@ def fn_s_reset(e, arg): #s
 
 @script_api()
 def fn_s_load(e, arg): #s
-	return e.script_data.get(arg[0])
+	return [e.script_data.get(arg[0])]
 
 @script_api()
 def fn_s_save(e, arg): #s.
@@ -221,9 +221,9 @@ def fn_s_save(e, arg): #s.
 @script_api()
 def fn_s_list(e, arg): #s
 	if len(arg) == 0:
-		return list(e.script_data.keys())
+		return [list(e.script_data.keys())]
 	else:
-		return [_ for _ in e.script_data.keys() if _.startswith(arg[0])]
+		return [[_ for _ in e.script_data.keys() if _.startswith(arg[0])]]
 
 @script_api()
 def fn_e_who(e, arg): #E
