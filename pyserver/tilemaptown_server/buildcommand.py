@@ -678,6 +678,7 @@ def fn_tpaccept(map, client, context, arg):
 	elif request_type == 'tempgrant':
 		handlers['entity'](map, client, context, "me tempgrant %s %s" % (request_data, subject_id))
 	elif request_type == 'giveitem':
+		is_script = context[2] != None
 		item, givetype = request_data
 		item = item()
 		if item == None:
@@ -689,9 +690,9 @@ def fn_tpaccept(map, client, context, arg):
 			item.creator_temp_id = client.id
 		elif givetype == 'move':
 			item.switch_map(client, on_behalf_of=client)
-		elif givetype == 'copy':
+		elif givetype == 'copy' and not is_script:
 			clone_item(item, False)
-		elif givetype == 'tempcopy':
+		elif givetype == 'tempcopy' and not is_script:
 			clone_item(item, True)
 	elif request_type == "syncmove":
 		if client is subject:
