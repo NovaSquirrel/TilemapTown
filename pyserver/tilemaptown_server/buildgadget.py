@@ -607,6 +607,8 @@ class GadgetScript(GadgetTrait):
 		return True
 
 	def on_took_controls(self, user, arg):
+		if self.gadget and arg.get('keys') == []:
+			self.gadget.have_controls_for.discard(user)
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_TOOK_CONTROLS]:
 			return None
 		self.trigger_script_callback(ScriptingCallbackType.SELF_TOOK_CONTROLS, [{

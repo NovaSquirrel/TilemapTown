@@ -382,6 +382,21 @@ def fn_e_havepermission(e, arg): #Es
 	return e.has_permission(arg[0], perm=0, default=False)
 
 @script_api()
+def fn_e_havecontrolsfor(e, arg): #EI
+	e2 = find_entity(arg[0])
+	if e2 is not e:
+		return [False]
+	return [find_entity(arg[1]) in e.have_controls_for]
+
+@script_api()
+def fn_e_havecontrolslist(e, arg): #E
+	e2 = find_entity(arg[0])
+	if e2 is not e:
+		return
+	u = [x.protocol_id() for x in e.have_controls_for]
+	return [u]
+
+@script_api()
 def fn_e_takecontrols(e, arg): #EIsbb
 	e2 = find_entity(arg[0])
 	if e is not e2: # For now, limit it to the script taking controls for itself, not on behalf of something else
