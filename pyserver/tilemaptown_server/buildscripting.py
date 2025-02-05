@@ -70,6 +70,9 @@ class ScriptingCallbackType(IntEnum):
 def find_owner(entity):
 	return AllEntitiesByDB.get(entity.owner_id)
 
+def same_owner_gadget(actor, target):
+	return actor is target or (target.entity_type == entity_type['gadget'] and (actor.owner_id == target.owner_id or (actor.db_id == target.owner_id and actor.db_id != None)))
+
 script_api_handlers = {}
 def script_api():
 	def decorator(f):
@@ -201,14 +204,14 @@ def fn_s_reset(e, arg): #s
 
 @script_api()
 def fn_s_load(e, arg): #s
-	return e.script_data.get(arg[0])
+	return e.script_data.get(arg[0]) or ""
 
 @script_api()
 def fn_s_save(e, arg): #s.
 	key       = arg[0]
 	new_value = arg[1]
 
-	if new_value == None:
+	if new_value == None or new_value == "":
 		if key in e.script_data:
 			e.script_data_size -= script_storage_item_cost(key, e.script_data[key])
 			del e.script_data[key]
@@ -224,7 +227,24 @@ def fn_s_save(e, arg): #s.
 		e.script_data_size = e.script_data_size - previous_cost + new_cost
 		if e.script_data_size < 0:
 			e.script_data_size = 0
+		e.save_on_clean_up = True
 		return True
+
+@script_api()
+def fn_es_load(e, arg): #Es
+	e2 = find_entity(arg[0])
+	if e2 and same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['remote_command']):
+		return script_api_handlers["s_load"](e2, arg[1:])
+	else:
+		return None
+
+@script_api()
+def fn_es_save(e, arg): #Es$
+	e2 = find_entity(arg[0])
+	if e2 and same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['remote_command']):
+		return script_api_handlers["s_save"](e2, arg[1:])
+	else:
+		return None
 
 @script_api()
 def fn_s_list(e, arg): #s
@@ -232,6 +252,17 @@ def fn_s_list(e, arg): #s
 		return [list(e.script_data.keys())]
 	else:
 		return [[_ for _ in e.script_data.keys() if _.startswith(arg[0])]]
+
+@script_api()
+def fn_s_count(e, arg): #s
+	if len(arg) == 0:
+		return [len(e.script_data.keys())]
+	else:
+		count = 0
+		for _ in e.script_data.keys():
+			if _.startswith(arg[0]):
+				count += 1
+		return count
 
 @script_api()
 def fn_e_who(e, arg): #E
@@ -270,7 +301,9 @@ def fn_e_here(e, arg): #
 @script_api()
 def fn_e_move(e, arg): #Eiii
 	e2 = find_entity(arg[0])
-	if e.has_permission(e2, perm=permission['move']):
+	if e2 == None:
+		return
+	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['move']):
 		from_x = e2.x
 		from_y = e2.y
 		new_x = arg[0]
@@ -281,14 +314,18 @@ def fn_e_move(e, arg): #Eiii
 @script_api()
 def fn_e_turn(e, arg): #Ei
 	e2 = find_entity(arg[0])
-	if e.has_permission(e2, perm=permission['move']):
+	if e2 == None:
+		return
+	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['move']):
 		e2.move_to(e2.x, e2.y, new_dir=arg[0])
 		e2.map.broadcast("MOV", {'id': e2.protocol_id(), 'dir': e2.dir}, remote_category=maplisten_type['move'])
 
 @script_api()
 def fn_e_step(e, arg): #Ei
 	e2 = find_entity(arg[0])
-	if e.has_permission(e2, perm=permission['move']):
+	if e2 == None:
+		return
+	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['move']):
 		from_x = e2.x
 		from_y = e2.y
 		new_x = from_x + directions[arg[1]][0]
@@ -300,7 +337,9 @@ def fn_e_step(e, arg): #Ei
 @script_api()
 def fn_e_fly(e, arg): #Ei
 	e2 = find_entity(arg[0])
-	if e.has_permission(e2, perm=permission['move']):
+	if e2 == None:
+		return
+	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['move']):
 		from_x = e2.x
 		from_y = e2.y
 		new_x = from_x + directions[arg[1]][0]
@@ -311,25 +350,53 @@ def fn_e_fly(e, arg): #Ei
 @script_api()
 def fn_e_say(e, arg): #Es
 	e2 = find_entity(arg[0])
-	if e.has_permission(e2, perm=permission['remote_command']):
+	if e2 == None:
+		return
+	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['remote_command']):
 		handle_user_command(e2.map, e2, e, None, "say "+arg[1], script_entity=e)
 
 @script_api()
 def fn_e_cmd(e, arg): #Es
 	e2 = find_entity(arg[0])
-	if e.has_permission(e2, perm=permission['remote_command']):
+	if e2 == None:
+		return
+	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['remote_command']):
 		handle_user_command(e2.map, e2, e, None, arg[1], script_entity=e)
 
 @script_api()
 def fn_e_tell(e, arg): #EIs
 	e2 = find_entity(arg[0])
-	if e.has_permission(e2, perm=permission['remote_command']):
+	if e2 == None:
+		return
+	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['remote_command']):
 		send_private_message(e2, (e, None, e), arg[1], arg[2])
+
+@script_api()
+def fn_e_botmessagebutton(e, arg): #EIs
+	e2 = find_entity(arg[0])
+	if e2 == None:
+		return
+	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['remote_command']):
+		e3 = find_entity(arg[1])
+		if e3 == None:
+			return
+		bmb_arg = {
+			'text': arg[2],
+			'id': e2.protocol_id(),
+			'name': e2.name,
+			'username': e2.username_or_id()
+		}
+		if e3.entity_type == entity_type['gadget']:
+			e3.receive_bot_message_button(client, bmb_arg)
+		else:
+			e3.send("EXT", {'bot_message_button': bmb_arg})
 
 @script_api()
 def fn_e_typing(e, arg): #Eb
 	e2 = find_entity(arg[0])
-	if e.has_permission(e2, perm=permission['modify_appearance']):
+	if e2 == None:
+		return
+	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['modify_appearance']):
 		if e2.map == None:
 			return
 		e2.map.broadcast("WHO", {"update": {"id": e2.protocol_id(), "typing": arg[1]}})
@@ -337,7 +404,9 @@ def fn_e_typing(e, arg): #Eb
 @script_api()
 def fn_e_set(e, arg): #Et
 	e2 = find_entity(arg[0])
-	if e.has_permission(e2, perm=permission['modify_properties']):
+	if e2 == None:
+		return
+	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['modify_properties']):
 		p = arg[1]
 
 @script_api()
@@ -346,7 +415,9 @@ def fn_e_minitilemap(e, arg): #Et
 	map_width, map_height, map_data = map
 
 	e2 = find_entity(arg[0])
-	if e.has_permission(e2, perm=permission['modify_appearance']):
+	if e2 == None:
+		return
+	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['modify_appearance']):
 		if not tile_sheet_url.startswith("https://") and not tile_sheet_url.startswith("http://"):
 			tile_sheet_url = Config["Server"]["ResourceIMGBase"] + "mini_tilemap/" + tile_sheet_url
 
@@ -380,11 +451,15 @@ def fn_e_minitilemap(e, arg): #Et
 @script_api()
 def fn_e_clone(e, arg): #Et
 	e2 = find_entity(arg[0])
+	if e2 == None:
+		return
 	return
 
 @script_api()
 def fn_e_delete(e, arg): #E
 	e2 = find_entity(arg[0])
+	if e2 == None:
+		return
 	return
 
 @script_api()
@@ -450,9 +525,9 @@ def encode_scripting_message_values(values):
 	for x in values:
 		if x == None:
 			b += bytes([ScriptingValueType.NIL])
-		elif x == True:
+		elif isinstance(x, bool) and x == True:
 			b += bytes([ScriptingValueType.TRUE])
-		elif x == False:
+		elif isinstance(x, bool) and x == False:
 			b += bytes([ScriptingValueType.FALSE])
 		elif isinstance(x, int):
 			b += bytes([ScriptingValueType.INTEGER]) + x.to_bytes(4, byteorder='little')
