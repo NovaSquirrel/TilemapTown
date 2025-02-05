@@ -94,7 +94,7 @@ def fn_runitem(e, arg):
 
 @script_api()
 def fn_readitem(e, arg):
-	return text_from_text_item(arg[0])
+	return [text_from_text_item(arg[0])]
 
 @script_api()
 def fn_stopscript(e, arg):
@@ -109,6 +109,8 @@ def fn_e_new(e, arg):  #t
 def fn_m_who(e, arg):  #
 	if e.map != None:
 		return e.map.who_contents()
+	else:
+		return [None]
 
 @script_api()
 def fn_m_turf(e, arg): #ii
@@ -116,7 +118,9 @@ def fn_m_turf(e, arg): #ii
 		x = arg[0]
 		y = arg[1]
 		if x >= 0 and y >= 0 and x < e.map.width and y < e.map.height:
-			return e.map.turfs[x][y] or e.map.default_turf
+			return [e.map.turfs[x][y] or e.map.default_turf]
+	else:
+		return [None]
 
 @script_api()
 def fn_m_objs(e, arg): #ii
@@ -125,6 +129,8 @@ def fn_m_objs(e, arg): #ii
 		y = arg[1]
 		if x >= 0 and y >= 0 and x < e.map.width and y < e.map.height:
 			return [e.map.objs[x][y]]
+	else:
+		return [None]
 
 @script_api()
 def fn_m_dense(e, arg): #iii
@@ -132,18 +138,20 @@ def fn_m_dense(e, arg): #iii
 		x = arg[0]
 		y = arg[1]
 		if x >= 0 and y >= 0 and x < e.map.width and y < e.map.height:
-			return get_tile_density(self.gadget.map.turfs[x][y]) or any((get_tile_density(o) for o in (self.gadget.map.objs[x][y] or [])))
+			return [get_tile_density(self.gadget.map.turfs[x][y]) or any((get_tile_density(o) for o in (self.gadget.map.objs[x][y] or [])))]
 		else:
 			return True
+	else:
+		return [None]
 
 @script_api()
 def fn_m_tilelookup(e, arg): #s
-	return get_tile_properties(arg[0])
+	return [get_tile_properties(arg[0])]
 
 @script_api()
 def fn_m_info(e, arg): #
 	if e.map != None and hasattr(e.map, "map_info"):
-		return e.map.map_info()
+		return [e.map.map_info()]
 	else:
 		return [None]
 
@@ -229,13 +237,17 @@ def fn_s_list(e, arg): #s
 def fn_e_who(e, arg): #E
 	e2 = find_entity(arg[0])
 	if e2:
-		return e2.who()
+		return [e2.who()]
+	else:
+		return [None]
 
 @script_api()
 def fn_e_xy(e, arg): #E
 	e2 = find_entity(arg[0])
 	if e2:
 		return [e2.x, e2.y]
+	else:
+		return [None, None]
 
 @script_api()
 def fn_e_mapid(e, arg): #E
@@ -244,12 +256,16 @@ def fn_e_mapid(e, arg): #E
 		if e2.is_client() and \
 			((e2.connection_attr('user_flags') & userflag['hide_location'] != 0) or (e2.map and e2.map.is_map() and (e2.map.map_flags & mapflag['public'] == 0))):
 			return [None]
-		return e2.map_id
+		return [e2.map_id]
+	else:
+		return [None]
 
 @script_api()
 def fn_e_here(e, arg): #
 	if e.map:
 		return e.map.protocol_id()
+	else:
+		return [None]
 
 @script_api()
 def fn_e_move(e, arg): #Eiii
