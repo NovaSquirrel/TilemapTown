@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio, datetime, json, copy, zlib, random, weakref
+import asyncio, datetime, json, copy, zlib, random, weakref, copy
 from .buildglobal import *
 from collections import deque
 
@@ -1036,9 +1036,14 @@ class Entity(PermissionsMixin, object):
 		other.allow = self.allow
 		other.deny = self.deny
 		other.guest_deny = self.guest_deny
-		other.data = self.data
+		other.data = copy.deepcopy(self.data)
 		other.creator_id = self.creator_id
 		other.temporary = self.temporary
+		if other.entity_type == entity_type['gadget']:
+			for trait in other.data:
+				if trait[0] in ("auto_script", "use_script", "map_script"):
+					trait[1]['enabled'] = False
+			other.reload_traits()
 
 class EntityWithPlainData(Entity):
 	def load_data(self):

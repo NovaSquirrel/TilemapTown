@@ -99,6 +99,11 @@ class Gadget(Entity):
 			if isinstance(trait, GadgetScript):
 				trait.stop_script()
 
+	def disable_scripts(self):
+		for trait in self.traits:
+			if isinstance(trait, GadgetScript):
+				trait.set_config('enabled', False)
+
 	# .----------------------
 	# | Event handlers
 	# '----------------------
@@ -355,7 +360,7 @@ key_to_offset = {
 	"move-sw": (-1, 1, 3),
 	"move-w":  (-1, 0, 4),
 	"move-nw": (-1,-1, 5),
-	"turn-n":  (0, -1, 6),
+	"turn-n":  (0,  0, 6),
 	"turn-ne": (0,  0, 7),
 	"turn-e":  (0,  0, 0),
 	"turn-se": (0,  0, 1),
@@ -737,3 +742,5 @@ gadget_trait_class['rc_car'] = GadgetRCCar
 gadget_trait_class['auto_script'] = GadgetAutoScript
 gadget_trait_class['use_script'] = GadgetManualScript
 gadget_trait_class['map_script'] = GadgetMapScript
+
+GlobalData["gadget_class"] = Gadget

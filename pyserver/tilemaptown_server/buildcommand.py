@@ -16,7 +16,7 @@
 
 import json, random, datetime, time, ipaddress, hashlib, weakref
 from .buildglobal import *
-from .buildentity import Entity
+from .buildentity import Entity, GenericEntity
 from .buildmap import Map
 from .buildapi import admin_delete_uploaded_file, fix_uploaded_file_sizes
 from collections import deque
@@ -630,7 +630,13 @@ def fn_tpaccept(map, client, context, arg):
 	)
 
 	def clone_item(item, temp):
-		new_item = Entity(item.entity_type)			
+		c = Entity
+		if item.entity_type == entity_type['gadget']:
+			c = GlobalData["gadget_class"]
+		elif item.entity_type == entity_type['generic']:
+			c = GenericEntity
+		new_item = c(item.entity_type)
+
 		item.copy_onto(new_item)
 		new_item.owner_id = client.db_id
 		new_item.creator_temp_id = client.id

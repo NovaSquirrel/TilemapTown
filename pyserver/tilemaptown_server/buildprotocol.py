@@ -17,7 +17,7 @@
 import json, datetime, time, types, weakref, secrets
 from .buildglobal import *
 from .buildcommand import handle_user_command, tile_is_okay, data_disallowed_for_entity_type, send_private_message, send_message_to_map, entity_types_users_can_change_data_for, apply_rate_limiting
-from .buildentity import Entity
+from .buildentity import Entity, GenericEntity
 from .buildclient import Client
 from .buildgadget import Gadget
 
@@ -394,9 +394,9 @@ def fn_PRI(connection, map, client, arg, echo):
 def fn_BAG(connection, map, client, arg, echo):
 	def allow_special_ids(text):
 		if text == 'here':
-			return map.db_id
+			return map.protocol_id()
 		if text == 'me':
-			return client.db_id
+			return client.protocol_id()
 		return text
 
 	c = Database.cursor()
@@ -409,6 +409,8 @@ def fn_BAG(connection, map, client, arg, echo):
 		c = Entity
 		if create['type'] == 'gadget':
 			c = Gadget
+		elif create['type'] == 'generic':
+			c = GenericEntity
 		e = c(entity_type[create['type']], creator_id=client.db_id)
 		e.name = "New item" # Default that will probably be overridden
 		e.map_id = client.db_id
