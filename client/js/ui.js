@@ -1186,6 +1186,8 @@ function editItemShared(item) {
 				document.getElementById('edittilegadget_preset_rc_car_owner_only').checked = false;
 				document.getElementById('edittilegadget_preset_rc_car_fly').checked = false;
 				document.getElementById('edittilegadget_preset_rc_car_give_rides').checked = false;
+				document.getElementById('edittilegadget_preset_bot_message_button_id').value = "";
+				document.getElementById('edittilegadget_preset_bot_message_button_text').value = "";
 
 				if (Array.isArray(traits)) {
 					document.getElementById('edittilegadget_raw_textarea').value = JSON.stringify(item.data);
@@ -1232,6 +1234,13 @@ function editItemShared(item) {
 								document.getElementById('edittilegadget_preset_rc_car_owner_only').checked = trait[1].owner_only ?? false;
 								document.getElementById('edittilegadget_preset_rc_car_fly').checked = trait[1].fly ?? false;
 								document.getElementById('edittilegadget_preset_rc_car_give_rides').checked = trait[1].give_rides ?? false;
+
+								document.getElementById('edittilegadget_preset_choice').value = trait[0];
+								document.getElementById('gadgetTypeRaw').checked = false;
+								document.getElementById('gadgetTypePreset').checked = true;
+							} else if(trait[0] === "bot_message_button") {
+								document.getElementById('edittilegadget_preset_bot_message_button_id').value = trait[1].id;
+								document.getElementById('edittilegadget_preset_bot_message_button_text').value = trait[1].text;
 
 								document.getElementById('edittilegadget_preset_choice').value = trait[0];
 								document.getElementById('gadgetTypeRaw').checked = false;
@@ -1510,6 +1519,13 @@ function editItemApply() {
 							if (document.getElementById('edittilegadget_preset_rc_car_give_rides').checked)
 								t['give_rides'] = true;
 							break;
+						case "bot_message_button":
+							t['id'] = document.getElementById('edittilegadget_preset_bot_message_button_id').value;
+							let as_int = parseInt(t['id']);
+							if (!Number.isNaN(as_int))
+								t['id'] = as_int;
+							t['text'] = document.getElementById('edittilegadget_preset_bot_message_button_text').value;
+							break;
 					}
 					let data = [];
 					updates.data = [[document.getElementById('edittilegadget_preset_choice').value, t]];
@@ -1584,6 +1600,7 @@ function changeGadgetPreset() {
 	document.getElementById("edittilegadget_preset_accept_requests").style.display = (preset === "accept_requests") ? "block" : "none";
 	document.getElementById("edittilegadget_preset_random_message").style.display = (preset === "random_say" || preset === "random_tell") ? "block" : "none";
 	document.getElementById("edittilegadget_preset_dice").style.display = (preset === "dice") ? "block" : "none";
+	document.getElementById("edittilegadget_preset_bot_message_button").style.display = (preset === "bot_message_button") ? "block" : "none";
 }
 
 ///////////////////////////////////////////////////////////
