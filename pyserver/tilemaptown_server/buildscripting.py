@@ -94,7 +94,7 @@ def fn_runitem(e, arg):
 
 @script_api()
 def fn_readitem(e, arg):
-	return [text_from_text_item(arg[0])]
+	return text_from_text_item(arg[0])
 
 @script_api()
 def fn_stopscript(e, arg):
@@ -110,7 +110,7 @@ def fn_m_who(e, arg):  #
 	if e.map != None:
 		return e.map.who_contents()
 	else:
-		return [None]
+		return None
 
 @script_api()
 def fn_m_turf(e, arg): #ii
@@ -120,7 +120,7 @@ def fn_m_turf(e, arg): #ii
 		if x >= 0 and y >= 0 and x < e.map.width and y < e.map.height:
 			return [e.map.turfs[x][y] or e.map.default_turf]
 	else:
-		return [None]
+		return None
 
 @script_api()
 def fn_m_objs(e, arg): #ii
@@ -130,7 +130,7 @@ def fn_m_objs(e, arg): #ii
 		if x >= 0 and y >= 0 and x < e.map.width and y < e.map.height:
 			return [e.map.objs[x][y]]
 	else:
-		return [None]
+		return None
 
 @script_api()
 def fn_m_dense(e, arg): #iii
@@ -142,18 +142,18 @@ def fn_m_dense(e, arg): #iii
 		else:
 			return True
 	else:
-		return [None]
+		return None
 
 @script_api()
 def fn_m_tilelookup(e, arg): #s
-	return [get_tile_properties(arg[0])]
+	return get_tile_properties(arg[0])
 
 @script_api()
 def fn_m_info(e, arg): #
 	if e.map != None and hasattr(e.map, "map_info"):
-		return [e.map.map_info()]
+		return e.map.map_info()
 	else:
-		return [None]
+		return None
 
 @script_api()
 def fn_m_within(e, arg): #ii
@@ -201,7 +201,7 @@ def fn_s_reset(e, arg): #s
 
 @script_api()
 def fn_s_load(e, arg): #s
-	return [e.script_data.get(arg[0])]
+	return e.script_data.get(arg[0])
 
 @script_api()
 def fn_s_save(e, arg): #s.
@@ -237,9 +237,9 @@ def fn_s_list(e, arg): #s
 def fn_e_who(e, arg): #E
 	e2 = find_entity(arg[0])
 	if e2:
-		return [e2.who()]
+		return e2.who()
 	else:
-		return [None]
+		return None
 
 @script_api()
 def fn_e_xy(e, arg): #E
@@ -255,17 +255,17 @@ def fn_e_mapid(e, arg): #E
 	if e2:
 		if e2.is_client() and \
 			((e2.connection_attr('user_flags') & userflag['hide_location'] != 0) or (e2.map and e2.map.is_map() and (e2.map.map_flags & mapflag['public'] == 0))):
-			return [None]
-		return [e2.map_id]
+			return None
+		return e2.map_id
 	else:
-		return [None]
+		return None
 
 @script_api()
 def fn_e_here(e, arg): #
 	if e.map:
 		return e.map.protocol_id()
 	else:
-		return [None]
+		return None
 
 @script_api()
 def fn_e_move(e, arg): #Eiii
@@ -394,23 +394,22 @@ def fn_e_isloaded(e, arg): #E
 @script_api()
 def fn_e_havepermission(e, arg): #Es
 	if arg[1] not in permission:
-		return (None,)
+		return None
 	return e.has_permission(arg[0], perm=0, default=False)
 
 @script_api()
 def fn_e_havecontrolsfor(e, arg): #EI
 	e2 = find_entity(arg[0])
 	if e2 is not e:
-		return [False]
-	return [find_entity(arg[1]) in e.have_controls_for]
+		return False
+	return find_entity(arg[1]) in e.have_controls_for
 
 @script_api()
 def fn_e_havecontrolslist(e, arg): #E
 	e2 = find_entity(arg[0])
 	if e2 is not e:
-		return
-	u = [x.protocol_id() for x in e.have_controls_for]
-	return [u]
+		return None
+	return [[x.protocol_id() for x in e.have_controls_for]]
 
 @script_api()
 def fn_e_takecontrols(e, arg): #EIsbb
@@ -576,8 +575,6 @@ async def run_scripting_service():
 				if values[0] in script_api_handlers:
 					out = script_api_handlers[values[0]](e, values[1:])
 					if message_type == VM_MessageType.API_CALL_GET:
-						if out == None:
-							out = []
 						if not isinstance(out, list):
 							out = [out]
 						send_scripting_message(VM_MessageType.API_CALL_GET, user_id=user_id, entity_id=entity_id, other_id=other_id, status=len(out), data=encode_scripting_message_values(out))
