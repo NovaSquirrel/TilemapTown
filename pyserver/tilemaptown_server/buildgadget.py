@@ -343,7 +343,8 @@ class GadgetUseBotMessageButton(GadgetTrait):
 			'text': self.get_config('text'),
 			'id': user.protocol_id(),
 			'name': user.name,
-			'username': user.username_or_id()
+			'username': user.username_or_id(),
+			"gadget_id": self.gadget.protocol_id(),
 		}
 		if e.entity_type == entity_type['gadget']:
 			e.receive_bot_message_button(client, arg)
@@ -607,7 +608,9 @@ class GadgetScript(GadgetTrait):
 			"text":     arg.get('text'),
 			"id":       user.protocol_id(),
 			"name":     user.name,
-			"username": user.username_or_id()
+			"username": user.username_or_id(),
+			"rc_id":     arg.get('rc_id'),
+			"gadget_id": arg.get('gadget_id'),
 		}])
 		return True
 

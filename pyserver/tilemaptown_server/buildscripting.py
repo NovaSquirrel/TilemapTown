@@ -384,7 +384,9 @@ def fn_e_botmessagebutton(e, arg): #EIs
 			'text': arg[2],
 			'id': e2.protocol_id(),
 			'name': e2.name,
-			'username': e2.username_or_id()
+			'username': e2.username_or_id(),
+			'rc_id': e.owner_id,
+			'gadget_id': e.protocol_id(),
 		}
 		if e3.entity_type == entity_type['gadget']:
 			e3.receive_bot_message_button(client, bmb_arg)
