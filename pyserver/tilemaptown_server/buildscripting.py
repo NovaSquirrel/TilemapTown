@@ -330,7 +330,7 @@ def fn_e_step(e, arg): #Ei
 		from_y = e2.y
 		new_x = from_x + directions[arg[1]][0]
 		new_y = from_y + directions[arg[1]][1]
-		if e2.map and (not e2.map.is_map() or (and new_x >= 0 and new_y >= 0 and new_x < e2.map.width and new_y < e2.map.height and (not get_tile_density(e2.map.turfs[new_x][new_y]) and not any((get_tile_density(o) for o in (e2.map.objs[new_x][new_y] or [])))))):
+		if e2.map and (not e2.map.is_map() or (new_x >= 0 and new_y >= 0 and new_x < e2.map.width and new_y < e2.map.height and (not get_tile_density(e2.map.turfs[new_x][new_y]) and not any((get_tile_density(o) for o in (e2.map.objs[new_x][new_y] or [])))))):
 			e2.move_to(new_x, new_y, new_dir=arg[1])
 			e2.map.broadcast("MOV", {'id': e2.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e2.dir}, remote_category=maplisten_type['move'])
 
