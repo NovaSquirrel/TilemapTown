@@ -1227,41 +1227,49 @@
 			"spikes": {
 				"name": "spikes",
 				"pic": [-3, 23, 38],
+				"density": true,
 				"obj": true
 			},
 			"spikes2": {
 				"name": "spikes",
 				"pic": [-3, 24, 38],
+				"density": true,
 				"obj": true
 			},
 			"spikes3": {
 				"name": "spikes",
 				"pic": [-3, 25, 38],
+				"density": true,
 				"obj": true
 			},
 			"spikes4": {
 				"name": "spikes",
 				"pic": [-3, 30, 38],
+				"density": true,
 				"obj": true
 			},
 			"spikes5": {
 				"name": "spikes",
 				"pic": [-3, 26, 37],
+				"over": true,
 				"obj": true
 			},
 			"spikes6": {
 				"name": "spikes",
 				"pic": [-3, 26, 38],
+				"density": true,
 				"obj": true
 			},
 			"spikes7": {
 				"name": "spikes",
 				"pic": [-3, 27, 37],
+				"over": true,
 				"obj": true
 			},
 			"spikes8": {
 				"name": "spikes",
 				"pic": [-3, 27, 38],
+				"density": true,
 				"obj": true
 			},
 			"rocks": {
