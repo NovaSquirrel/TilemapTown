@@ -124,7 +124,7 @@ body {
 .modal {
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
-    z-index: 3; /* Sit on top */
+    z-index: 20; /* Sit on top */
     padding-top: 100px; /* Location of the box */
     left: 0;
     top: 0;
@@ -201,6 +201,10 @@ body {
    0% {opacity: 1;}
    80% {opacity: 1;}
    100% {opacity: 0;}
+}
+
+widget-window {
+	z-index: 9;
 }
 
 widget-contextmenu {
