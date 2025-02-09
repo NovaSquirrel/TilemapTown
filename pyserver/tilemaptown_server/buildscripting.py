@@ -65,6 +65,8 @@ class ScriptingCallbackType(IntEnum):
 	SELF_SWITCH_MAP = 13
 	COUNT = 14
 
+do_not_return_response = []
+
 # -----------------------------------------------------------------------------
 
 def find_owner(entity):
@@ -94,6 +96,16 @@ def fn_runitem(e, arg):
 		send_scripting_message(VM_MessageType.RUN_CODE, user_id=e.owner_id, entity_id=e.db_id if e.db_id else -e.id, data=text.encode())
 		return True
 	return False
+
+@script_api()
+def fn_callitem(e, arg):
+	text = text_from_text_item(arg[0])
+	if text:
+		send_scripting_message(VM_MessageType.RUN_CODE, user_id=e.owner_id, entity_id=e.db_id if e.db_id else -e.id, other_id=arg[1], status=1, data=text.encode())
+		# Hack to prevent returning a response
+		return do_not_return_response
+	else:
+		return None
 
 @script_api()
 def fn_readitem(e, arg):
@@ -651,7 +663,7 @@ async def run_scripting_service():
 					continue
 				if values[0] in script_api_handlers:
 					out = script_api_handlers[values[0]](e, values[1:])
-					if message_type == VM_MessageType.API_CALL_GET:
+					if message_type == VM_MessageType.API_CALL_GET and (out is not do_not_return_response):
 						if not isinstance(out, list):
 							out = [out]
 						send_scripting_message(VM_MessageType.API_CALL_GET, user_id=user_id, entity_id=entity_id, other_id=other_id, status=len(out), data=encode_scripting_message_values(out))
