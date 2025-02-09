@@ -209,6 +209,7 @@ widget-window {
 
 widget-contextmenu {
     position: absolute;
+    z-index: 10;
 }
 
 
