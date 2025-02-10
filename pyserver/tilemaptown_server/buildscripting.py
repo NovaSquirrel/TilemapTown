@@ -17,7 +17,7 @@
 import asyncio, json, traceback
 from .buildglobal import *
 from enum import IntEnum
-from .buildcommand import handle_user_command, send_private_message, send_message_to_map
+from .buildcommand import handle_user_command, send_private_message, send_message_to_map, apply_rate_limiting
 
 # -----------------------------------------------------------------------------
 directions = ((1,0), (1,1), (0,1), (-1,1), (-1,0), (-1,-1), (0,-1), (1,-1))
@@ -91,6 +91,8 @@ def fn_ownersay(e, arg):
 
 @script_api()
 def fn_runitem(e, arg):
+	if Config["RateLimit"]["ScriptCompile"] and apply_rate_limiting(e, 'compile', ( (1, 15), (2, 30) )):
+		return
 	text = text_from_text_item(arg[0])
 	if text:
 		send_scripting_message(VM_MessageType.RUN_CODE, user_id=e.owner_id, entity_id=e.db_id if e.db_id else -e.id, data=text.encode())
@@ -99,6 +101,8 @@ def fn_runitem(e, arg):
 
 @script_api()
 def fn_callitem(e, arg):
+	if Config["RateLimit"]["ScriptCompile"] and apply_rate_limiting(e, 'compile', ( (1, 15), (2, 30) )):
+		return
 	text = text_from_text_item(arg[0])
 	if text:
 		send_scripting_message(VM_MessageType.RUN_CODE, user_id=e.owner_id, entity_id=e.db_id if e.db_id else -e.id, other_id=arg[1], status=1, data=text.encode())
@@ -321,6 +325,8 @@ def fn_e_move(e, arg): #Eiii
 		new_x = arg[0]
 		new_y = arg[1]
 		e2.move_to(new_x, new_y, new_dir=arg[2] if len(arg) == 3 else None)
+		if Config["RateLimit"]["ScriptMove"] and apply_rate_limiting(e2, 'sm', ( (1, 900), (2, 1800) )):
+			return
 		e2.map.broadcast("MOV", {'id': e2.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e2.dir}, remote_category=maplisten_type['move'])
 
 @script_api()
@@ -330,6 +336,8 @@ def fn_e_turn(e, arg): #Ei
 		return
 	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['move']):
 		e2.move_to(e2.x, e2.y, new_dir=arg[0])
+		if Config["RateLimit"]["ScriptMove"] and apply_rate_limiting(e2, 'sm', ( (1, 900), (2, 1800) )):
+			return
 		e2.map.broadcast("MOV", {'id': e2.protocol_id(), 'dir': e2.dir}, remote_category=maplisten_type['move'])
 
 @script_api()
@@ -342,6 +350,8 @@ def fn_e_step(e, arg): #Ei
 		from_y = e2.y
 		new_x = from_x + directions[arg[1]][0]
 		new_y = from_y + directions[arg[1]][1]
+		if Config["RateLimit"]["ScriptMove"] and apply_rate_limiting(e2, 'sm', ( (1, 900), (2, 1800) )):
+			return
 		if e2.map and (not e2.map.is_map() or (new_x >= 0 and new_y >= 0 and new_x < e2.map.width and new_y < e2.map.height and (not get_tile_density(e2.map.turfs[new_x][new_y]) and not any((get_tile_density(o) for o in (e2.map.objs[new_x][new_y] or [])))))):
 			e2.move_to(new_x, new_y, new_dir=arg[1])
 			e2.map.broadcast("MOV", {'id': e2.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e2.dir}, remote_category=maplisten_type['move'])
@@ -357,6 +367,8 @@ def fn_e_fly(e, arg): #Ei
 		new_x = from_x + directions[arg[1]][0]
 		new_y = from_y + directions[arg[1]][1]
 		e2.move_to(new_x, new_y, new_dir=arg[1])
+		if Config["RateLimit"]["ScriptMove"] and apply_rate_limiting(e2, 'sm', ( (1, 900), (2, 1800) )):
+			return
 		e2.map.broadcast("MOV", {'id': e2.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e2.dir}, remote_category=maplisten_type['move'])
 
 @script_api()
@@ -373,6 +385,8 @@ def fn_e_cmd(e, arg): #Es
 	if e2 == None:
 		return
 	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['remote_command']):
+		if Config["RateLimit"]["ScriptCommand"] and apply_rate_limiting(e2, 'sc', ( (1, 70), (2, 140) )):
+			return
 		handle_user_command(e2.map, e2, e, None, arg[1], script_entity=e)
 
 @script_api()
@@ -389,6 +403,8 @@ def fn_e_botmessagebutton(e, arg): #EIs
 	if e2 == None:
 		return
 	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['remote_command']):
+		if Config["RateLimit"]["ScriptBotMessageButton"] and apply_rate_limiting(e2, 'bmb', ( (1, 1500), (2, 3000) )):
+			return
 		e3 = find_entity(arg[1])
 		if e3 == None:
 			return
@@ -411,6 +427,8 @@ def fn_e_typing(e, arg): #Eb
 	if e2 == None:
 		return
 	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['modify_appearance']):
+		if Config["RateLimit"]["WhoUpdate"] and apply_rate_limiting(e2, 'wu', ( (1, 10), (2, 20) )):
+			return
 		if e2.map == None:
 			return
 		e2.map.broadcast("WHO", {"update": {"id": e2.protocol_id(), "typing": arg[1]}})
@@ -432,6 +450,8 @@ def fn_e_minitilemap(e, arg): #Et
 	if e2 == None:
 		return
 	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['modify_appearance']):
+		if Config["RateLimit"]["MiniTilemap"] and apply_rate_limiting(e2, 'mt', ( (1, 700), (2, 1400) )):
+			return
 		if not tile_sheet_url.startswith("https://") and not tile_sheet_url.startswith("http://"):
 			tile_sheet_url = Config["Server"]["ResourceIMGBase"] + "mini_tilemap/" + tile_sheet_url
 
@@ -507,6 +527,8 @@ def fn_e_takecontrols(e, arg): #EIsbb
 		return
 	client = find_client_by_username(arg[1])
 	if client == None:
+		return
+	if Config["RateLimit"]["ScriptTakeControls"] and apply_rate_limiting(e2, 'tc', ( (1, 50), (2, 100) )):
 		return
 	if e2.has_permission(client, permission['minigame']):
 		e.take_controls(client, arg[2], pass_on=arg[3], key_up=arg[4])

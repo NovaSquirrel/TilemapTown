@@ -86,6 +86,13 @@ def loadConfigJson():
 	setConfigDefault("RateLimit", "PRI",             True)
 	setConfigDefault("RateLimit", "PRI1",            10)
 	setConfigDefault("RateLimit", "PRI5",            50)
+	setConfigDefault("RateLimit", "MiniTilemap",     True)
+	setConfigDefault("RateLimit", "WhoUpdate",       True)
+	setConfigDefault("RateLimit", "ScriptCommand",   True)
+	setConfigDefault("RateLimit", "ScriptBotMessageButton", True)
+	setConfigDefault("RateLimit", "ScriptTakeControls", True)
+	setConfigDefault("RateLimit", "ScriptMove",      True)
+	setConfigDefault("RateLimit", "ScriptCompile",   True)
 
 	setConfigDefault("MaxProtocolSize", "Default", 32768)
 	setConfigDefault("MaxProtocolSize", "Chat",    8192)
