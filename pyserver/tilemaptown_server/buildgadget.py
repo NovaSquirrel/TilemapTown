@@ -707,6 +707,10 @@ class GadgetManualScript(GadgetScript):
 		super().on_use(user, ignore_enable=True)
 		return True
 
+	def on_switch_map(self):
+		self.stop_script()
+		return super().on_switch_map()
+
 class GadgetMapScript(GadgetScript):
 	def on_init(self):
 		if not self.gadget.script_running and self.gadget.map and self.gadget.map.is_map() and self.gadget.map.count_users_inside():
