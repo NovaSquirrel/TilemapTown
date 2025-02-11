@@ -483,7 +483,7 @@ def fn_BAG(connection, map, client, arg, echo):
 
 	elif "update" in arg:
 		update = arg['update']
-		update_me = get_entity_by_id(allow_special_ids(update['id']))
+		update_me = get_entity_by_id(allow_special_ids(update['id']), do_not_load_scripts=True)
 		if update_me == None:
 			connection.protocol_error(echo, text='Can\'t update %s' % update['id'], code='not_found', subject_id=update['id'])
 			return
@@ -566,7 +566,7 @@ def fn_BAG(connection, map, client, arg, echo):
 
 	elif "info" in arg:
 		info = arg['info']
-		info_me = get_entity_by_id(info['id'])
+		info_me = get_entity_by_id(info['id'], do_not_load_scripts=True)
 		if info_me == None:
 			connection.protocol_error(echo, text='Can\'t get info for %s' % info['id'], code='not_found', subject_id=info['id'])
 			return
