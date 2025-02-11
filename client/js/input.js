@@ -125,6 +125,13 @@ function runLocalCommand(t) {
 		hotbarDragging = false;
 		drawHotbar();
 		return true;
+	} else if(t.toLowerCase().startsWith("/edititem ")) {
+		editItemID = parseInt(t.slice(10));
+		if (Number.isNaN(editItemID))
+			return true;
+		editItemWaitingForDataID = editItemID;
+		SendCmd("BAG", {info: { id: editItemID }});
+		return true;
 	}
 	return false;
 }
