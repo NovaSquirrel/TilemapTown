@@ -746,7 +746,7 @@ async def run_scripting_service():
 					continue
 				owner = AllEntitiesByDB.get(owner_id)
 				if owner != None:
-					owner.send("ERR", {'text': 'Script %s print: %s' % (entity_id_int_to_string(entity_id), data.decode())})
+					owner.send("MSG", {'text': 'Script %s print: %s' % (entity_id_int_to_string(entity_id), data.decode())})
 				del owner
 				del e
 		except Exception as e:
