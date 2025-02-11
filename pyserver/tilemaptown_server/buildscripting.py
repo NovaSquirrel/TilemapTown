@@ -670,6 +670,8 @@ async def run_scripting_service():
 
 	quit = False
 	while not quit:
+		e = None
+		owner = None
 		type_and_size = await scripting_service_proc.stdout.read(4)
 		if len(type_and_size) == 0:
 			break
@@ -746,8 +748,6 @@ async def run_scripting_service():
 			print("Exception thrown from scripting:", sys.exc_info()[0])
 			print(sys.exc_info()[1])
 			traceback.print_tb(sys.exc_info()[2])
-		e = None
-		owner = None
 		#print(message_type, user_id, entity_id, other_id, status, data)
 		#print(type_and_size + rest_of_message)
 
