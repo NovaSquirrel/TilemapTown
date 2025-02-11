@@ -698,7 +698,6 @@ async def run_scripting_service():
 						send_scripting_message(VM_MessageType.API_CALL_GET, user_id=user_id, entity_id=entity_id, other_id=other_id, status=len(out), data=encode_scripting_message_values(out))
 				else:
 					print("Unimplemented API call: "+values[0])
-				del e
 			elif message_type == VM_MessageType.SET_CALLBACK:
 				e = find_entity(entity_id)
 				if e.entity_type == entity_type['gadget'] and other_id >= 0 and other_id < ScriptingCallbackType.COUNT:
@@ -711,7 +710,6 @@ async def run_scripting_service():
 						e.clickable = bool(status)
 						e.map.broadcast("WHO", {"update": {"id": e.protocol_id(), "clickable": bool(status)}})
 					e.script_callback_enabled[other_id] = bool(status)
-				del e
 			elif message_type == VM_MessageType.PING:
 				send_scripting_message(VM_MessageType.PONG, user_id=user_id, entity_id=entity_id, other_id=other_id, status=status, data=None)
 			elif message_type == VM_MessageType.SCRIPT_ERROR:
@@ -728,14 +726,11 @@ async def run_scripting_service():
 						owner.send("ERR", {'text': 'Script %s failed to load: %s' % (entity_id_int_to_string(entity_id), data.decode())})
 					else:
 						owner.send("ERR", {'text': 'Script %s error: %s' % (entity_id_int_to_string(entity_id), data.decode())})
-				del owner
-				del e
 			elif message_type == VM_MessageType.STATUS_QUERY:
 				e = find_entity(other_id)
 				if not e:
 					continue
 				e.send("MSG", {'text': 'Scripting status: %s' % data.decode()})
-				del e
 			elif message_type == VM_MessageType.SCRIPT_PRINT:
 				e = find_entity(entity_id)
 				if e:
@@ -747,12 +742,12 @@ async def run_scripting_service():
 				owner = AllEntitiesByDB.get(owner_id)
 				if owner != None:
 					owner.send("MSG", {'text': 'Script %s print: %s' % (entity_id_int_to_string(entity_id), data.decode())})
-				del owner
-				del e
 		except Exception as e:
 			print("Exception thrown from scripting:", sys.exc_info()[0])
 			print(sys.exc_info()[1])
 			traceback.print_tb(sys.exc_info()[2])
+		e = None
+		owner = None
 		#print(message_type, user_id, entity_id, other_id, status, data)
 		#print(type_and_size + rest_of_message)
 
