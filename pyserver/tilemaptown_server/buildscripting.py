@@ -723,9 +723,9 @@ async def run_scripting_service():
 				owner = AllEntitiesByDB.get(owner_id)
 				if owner != None:
 					if status == 1:
-						owner.send("ERR", {'text': 'Script %s failed to load: %s' % (entity_id_int_to_string(entity_id), data.decode())})
+						owner.send("ERR", {'text': 'Script failed to load: %s' % (data.decode())})
 					else:
-						owner.send("ERR", {'text': 'Script %s error: %s' % (entity_id_int_to_string(entity_id), data.decode())})
+						owner.send("ERR", {'text': 'Script error: %s' % (data.decode())})
 			elif message_type == VM_MessageType.STATUS_QUERY:
 				e = find_entity(other_id)
 				if not e:
