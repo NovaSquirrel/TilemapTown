@@ -37,6 +37,7 @@ class VM_MessageType(IntEnum):
 	SET_CALLBACK = 10
 	SCRIPT_ERROR = 11
 	STATUS_QUERY = 12
+	SCRIPT_PRINT = 13
 
 class ScriptingValueType(IntEnum):
 	NIL = 0
@@ -651,6 +652,12 @@ def find_entity(e):
 		return AllEntitiesByDB.get(e)
 	return AllEntitiesByID.get(-e)
 
+def entity_id_int_to_string(e):
+	if e >= 0:
+		return str(e)
+	else:
+		return "~" + str(-e)
+
 scripting_service_proc = None
 async def run_scripting_service():
 	global scripting_service_proc, GlobalData
@@ -718,15 +725,29 @@ async def run_scripting_service():
 				owner = AllEntitiesByDB.get(owner_id)
 				if owner != None:
 					if status == 1:
-						owner.send("ERR", {'text': 'Script failed to load: %s' % data.decode()})
+						owner.send("ERR", {'text': 'Script %s failed to load: %s' % (entity_id_int_to_string(entity_id), data.decode())})
 					else:
-						owner.send("ERR", {'text': 'Script error: %s' % data.decode()})
+						owner.send("ERR", {'text': 'Script %s error: %s' % (entity_id_int_to_string(entity_id), data.decode())})
+				del owner
 				del e
 			elif message_type == VM_MessageType.STATUS_QUERY:
 				e = find_entity(other_id)
 				if not e:
 					continue
 				e.send("MSG", {'text': 'Scripting status: %s' % data.decode()})
+				del e
+			elif message_type == VM_MessageType.SCRIPT_PRINT:
+				e = find_entity(entity_id)
+				if e:
+					owner_id = e.owner_id
+				else:
+					owner_id = find_owner_by_db_id(entity_id)
+				if owner_id == None:
+					continue
+				owner = AllEntitiesByDB.get(owner_id)
+				if owner != None:
+					owner.send("ERR", {'text': 'Script %s print: %s' % (entity_id_int_to_string(entity_id), data.decode())})
+				del owner
 				del e
 		except Exception as e:
 			print("Exception thrown from scripting:", sys.exc_info()[0])
