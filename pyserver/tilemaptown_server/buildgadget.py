@@ -38,6 +38,7 @@ class Gadget(Entity):
 		self.script_callback_enabled = [False] * ScriptingCallbackType.COUNT
 		self.listening_to_chat = False
 		self.listening_to_chat_warning = False
+		self.map_watch_zones = []
 
 		self.have_controls_for = weakref.WeakSet()
 		self.want_controls_for = weakref.WeakSet()
@@ -162,6 +163,11 @@ class Gadget(Entity):
 			if trait.on_chat(user, text):
 				return
 
+	def receive_zone(self, user, fx, fy, tx, ty, dir, zone_index, callback):
+		for trait in self.traits:
+			if trait.on_zone(user, fx, fy, tx, ty, dir, zone_index, callback):
+				return
+
 	# .----------------------
 	# | Miscellaneous
 	# '----------------------
@@ -277,6 +283,9 @@ class GadgetTrait(object):
 		return None
 
 	def on_chat(self, user, text):
+		return None
+
+	def on_zone(user, fx, fy, tx, ty, dir, zone_index, callback):
 		return None
 
 class GadgetDice(GadgetTrait):
@@ -509,6 +518,7 @@ class GadgetScript(GadgetTrait):
 			return False
 		if not self.get_config('enabled', True):
 			return False
+		# Check if user is even allowed to run scripts
 		owner = AllEntitiesByDB.get(self.gadget.owner_id)
 		if owner and owner.is_client() and owner.connection_attr("disable_scripts"):
 			return False
@@ -523,6 +533,11 @@ class GadgetScript(GadgetTrait):
 			result = c.fetchone()
 			if result == None or (result[0] & userflag['scripter']) == 0:
 				return False
+
+		# Reset script status
+		self.gadget.script_callback_enabled = [False] * ScriptingCallbackType.COUNT
+		self.gadget.listening_to_chat = False
+		self.gadget.map_watch_zones = []
 
 		# OK there's nothing preventing the script from running
 		if SCRIPT_DEBUG_PRINTS:
@@ -681,6 +696,23 @@ class GadgetScript(GadgetTrait):
 			"name":     user.name,
 			"username": user.username_or_id(),
 			"in_user_list": user.is_client(),
+		}])
+		return True
+
+	def on_zone(self, user, fx, fy, tx, ty, dir, zone_index, callback):
+		if not self.gadget.script_callback_enabled[callback]:
+			return None
+		self.trigger_script_callback(callback, [{
+			"id":       user.protocol_id(),
+			"name":     user.name,
+			"username": user.username_or_id(),
+			"in_user_list": user.is_client(),
+			"from_x":   fx,
+			"from_y":   fy,
+			"x":        tx,
+			"y":        ty,
+			"dir":      dir,
+			"zone":     zone_index,
 		}])
 		return True
 

@@ -55,16 +55,20 @@ class ScriptingCallbackType(IntEnum):
 	MAP_LEAVE = 2
 	MAP_CHAT = 3
 	MAP_BUMP = 4
-	SELF_PRIVATE_MESSAGE = 5
-	SELF_GOT_PERMISSION = 6
-	SELF_TOOK_CONTROLS = 7
-	SELF_KEY_PRESS = 8
-	SELF_CLICK = 9
-	SELF_BOT_COMMAND_BUTTON = 10
-	SELF_REQUEST_RECEIVED = 11
-	SELF_USE = 12
-	SELF_SWITCH_MAP = 13
-	COUNT = 14
+	MAP_ZONE_ENTER = 5
+	MAP_ZONE_LEAVE = 6
+	MAP_ZONE_MOVE = 7
+	SELF_PRIVATE_MESSAGE = 8
+	SELF_GOT_PERMISSION = 9
+	SELF_TOOK_CONTROLS = 10
+	SELF_KEY_PRESS = 11
+	SELF_CLICK = 12
+	SELF_BOT_COMMAND_BUTTON = 13
+	SELF_REQUEST_RECEIVED = 14
+	SELF_USE = 15
+	SELF_SWITCH_MAP = 16
+	COUNT = 17
+GlobalData['ScriptingCallbackType'] = ScriptingCallbackType
 
 do_not_return_response = []
 
@@ -182,6 +186,17 @@ def fn_m_within(e, arg): #ii
 	x = arg[0]
 	y = arg[1]
 	return x >= 0 and y >= 0 and x < e.map.width and y < e.map.height
+
+@script_api()
+def fn_m_watchzones(e, arg): #iiii iiii iiii iiii iiii iiii iiii iiii iiii iiii
+	if e.map == None or not e.map.is_map():
+		return
+	# Up to 10 rectangles
+	if (len(arg) % 4) != 0:
+		return
+	e.map_watch_zones = []
+	for i in range(len(arg)//4):
+		e.map_watch_zones.append(arg[i*4:i*4+4])
 
 @script_api()
 def fn_m_size(e, arg): #

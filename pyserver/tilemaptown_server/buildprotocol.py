@@ -347,7 +347,7 @@ def fn_MOV(connection, map, client, arg, echo):
 			data[valid_field] = arg[valid_field]
 	if not any_valid_fields:
 		return
-	map.broadcast("MOV", data, remote_category=maplisten_type['move'])
+	map.broadcast("MOV", data, remote_category=maplisten_type['move'], mov_user=client)
 
 	if 'offset' in data:
 		offset = data['offset']

@@ -2934,7 +2934,7 @@ def fn_entity(map, client, context, arg):
 					if e.is_client():
 						e.map.broadcast("MOV", {'id': e.protocol_id(), 'to': [new_x, new_y], 'dir': e.dir}, remote_category=maplisten_type['move'])
 					else:
-						e.map.broadcast("MOV", {'id': e.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e.dir}, remote_category=maplisten_type['move'])
+						e.map.broadcast("MOV", {'id': e.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e.dir}, remote_category=maplisten_type['move'], mov_user=e)
 	elif subcommand == 'move':
 		if permission_check(permission['move']):
 			coords = subarg.split()
@@ -2950,7 +2950,7 @@ def fn_entity(map, client, context, arg):
 					if e.is_client():
 						e.map.broadcast("MOV", {'id': e.protocol_id(), 'to': [new_x, new_y], 'dir': e.dir}, remote_category=maplisten_type['move'])
 					else:
-						e.map.broadcast("MOV", {'id': e.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e.dir}, remote_category=maplisten_type['move'])
+						e.map.broadcast("MOV", {'id': e.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e.dir}, remote_category=maplisten_type['move'], mov_user=e)
 	elif subcommand == 'perms':
 		handlers['permlist'](e, client, context, subarg)
 	elif subcommand == 'permsfor':

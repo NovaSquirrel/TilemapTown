@@ -20,6 +20,9 @@ from collections import deque
 
 entityCounter = 1
 
+def in_zone(x, y, zone):
+	return x >= zone[0] and y >= zone[1] and x < (zone[0]+zone[2]) and y < (zone[1]+zone[3])
+
 # Allow things that are not entities to do permission checking like entities (like FakeClient)
 class PermissionsMixin(object):
 	def get_allow_deny_for_other_entity(self, other_id):
@@ -365,7 +368,7 @@ class Entity(PermissionsMixin, object):
 		pass
 
 	# Send a message to all contents
-	def broadcast(self, command_type, command_params, remote_category=None, remote_only=False, send_to_links=False, require_extension=None, only_send_if=None):
+	def broadcast(self, command_type, command_params, remote_category=None, remote_only=False, send_to_links=False, require_extension=None, only_send_if=None, mov_user=None):
 		""" Send a message to everyone on the map """
 		if not remote_only and self.contents:
 			is_chat = command_type == 'MSG' and command_params and 'name' in command_params
@@ -377,6 +380,27 @@ class Entity(PermissionsMixin, object):
 					client.send_string(send_me, is_chat=is_chat)
 				elif client.is_client() and client.connection_attr(require_extension):
 					client.send_string(send_me, is_chat=is_chat)
+
+		""" Notify scripts """
+		if mov_user and command_type == "MOV" and self.contents and "from" in command_params and "to" in command_params:
+			fx, fy = command_params['from']
+			tx, ty = command_params['to']
+			dir = command_params.get('dir')
+			callback_type = GlobalData['ScriptingCallbackType']
+
+			for gadget in self.contents:
+				if gadget.entity_type != entity_type['gadget'] or not hasattr(gadget, 'map_watch_zones') or not gadget.map_watch_zones:
+					continue
+				for index, zone in enumerate(gadget.map_watch_zones):
+					is_from = in_zone(fx, fy, zone)
+					is_to = in_zone(tx, ty, zone)
+
+					if is_to and is_from:
+						gadget.receive_zone(mov_user, fx, fy, tx, ty, dir, index, callback_type.MAP_ZONE_MOVE)
+					elif is_to and not is_from:
+						gadget.receive_zone(mov_user, fx, fy, tx, ty, dir, index, callback_type.MAP_ZONE_ENTER)
+					elif not is_to and is_from:
+						gadget.receive_zone(mov_user, fx, fy, tx, ty, dir, index, callback_type.MAP_ZONE_LEAVE)
 
 		# Add remote map on the params if needed, so that linked maps and listeners can see where the message came from
 		do_linked = send_to_links and self.is_map() and self.edge_id_links
