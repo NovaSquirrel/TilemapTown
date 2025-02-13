@@ -712,7 +712,7 @@ class GadgetScript(GadgetTrait):
 			"x":        tx,
 			"y":        ty,
 			"dir":      dir,
-			"zone":     zone_index,
+			"zone":     zone_index+1,
 		}])
 		return True
 
