@@ -126,27 +126,31 @@ Allows the admin to lock down map creation.
 2: Trusted builders can make maps
 3: Server admins can make maps
 
-Security.RateLimitMSG
+Security.NoGuests
+Default: false
+If true, users can't log in without an account
+
+RateLimit.MSG
 Default: true
 If true, limit how often people can send messages to maps
 
-Security.RateLimitMSG1
+RateLimit.MSG1
 Default: 10
 Number of messages people can send to maps within a minute
 
-Security.RateLimitMSG5
+RateLimit.MSG5
 Default: 50
 Number of messages people can send to maps within 5 minutes
 
-Security.RateLimitPRI
+RateLimit.PRI
 Default: true
 If true, limit how often people can send private messages
 
-Security.RateLimitPRI1
+RateLimit.PRI1
 Default: 10
 Number of messages people can send private messages within a minute
 
-Security.RateLimitPRI5
+RateLimit.PRI5
 Default: 50
 Number of messages people can send private messages within 5 minutes
 

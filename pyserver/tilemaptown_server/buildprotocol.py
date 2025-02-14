@@ -1078,6 +1078,10 @@ def fn_IDN(connection, map, client, arg, echo):
 			connection.disconnect(reason="BadLogin")
 			connection.login_successful_callback = None
 			return
+	elif Config["Security"]["NoGuests"]:
+		connection.finish_batch()
+		connection.disconnect("Server currently doesn't allow guests to connect; check in later?", reason="BadLogin")
+		return
 	elif messaging_only_mode:
 		connection.finish_batch()
 		connection.disconnect("Messaging mode currently requires you to log into an account", reason="BadLogin")
