@@ -3149,6 +3149,10 @@ function userProfileGoToHome() {
 // Initial setup
 ///////////////////////////////////////////////////////////
 
+function buildMenuZoom() {
+	redrawBuildCanvas();
+}
+
 function updateBuildToolCategoriesAvailable() {
 	let categorySelect = document.getElementById('buildToolCategory');
 
@@ -3195,11 +3199,15 @@ function redrawBuildCanvas() {
 	let canvas = document.getElementById('inventoryCanvas');
 	// add click action
 	canvas = document.getElementById('inventoryCanvas');
-	let BuildWidth = 16;
+	let Zoomed = document.getElementById("zoom-build-menu").checked;
+	let BuildWidth = (Zoomed && touch_mode) ? 8 : 16;
 
 	let len = Object.keys(currentBuildCategoryArrayNames).length;
 	canvas.width = (BuildWidth * 16) + "";
 	canvas.height = (Math.ceil(len / BuildWidth) * 16) + "";
+	canvas.style.width = (canvas.width * (1 + Zoomed)) + "px";
+	canvas.style.height = (canvas.height * (1 + Zoomed)) + "px";
+
 	let ctx = canvas.getContext("2d");
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -3239,8 +3247,13 @@ function initBuild() {
 
 	canvas.addEventListener('mousedown', function (evt) {
 		let pos = getMousePosRaw(inventoryCanvas, evt);
-		pos.x = pos.x >> 4;
-		pos.y = pos.y >> 4;
+
+		let Zoomed = document.getElementById("zoom-build-menu").checked;
+		let BuildWidth = (Zoomed && touch_mode) ? 8 : 16;
+		let Shift = Zoomed ? 5 : 4;
+
+		pos.x = pos.x >> Shift;
+		pos.y = pos.y >> Shift;
 		let index = pos.y * BuildWidth + pos.x;
 
 		if(evt.button == 0) {
