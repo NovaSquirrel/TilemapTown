@@ -3247,11 +3247,9 @@ function initBuild() {
 
 	canvas.addEventListener('mousedown', function (evt) {
 		let pos = getMousePosRaw(inventoryCanvas, evt);
-
 		let Zoomed = document.getElementById("zoom-build-menu").checked;
 		let BuildWidth = (Zoomed && touch_mode) ? 8 : 16;
 		let Shift = Zoomed ? 5 : 4;
-
 		pos.x = pos.x >> Shift;
 		pos.y = pos.y >> Shift;
 		let index = pos.y * BuildWidth + pos.x;
@@ -3268,8 +3266,11 @@ function initBuild() {
 
 	canvas.addEventListener('contextmenu', function (evt) {
 		let pos = getMousePosRaw(inventoryCanvas, evt);
-		pos.x = pos.x >> 4;
-		pos.y = pos.y >> 4;
+		let Zoomed = document.getElementById("zoom-build-menu").checked;
+		let BuildWidth = (Zoomed && touch_mode) ? 8 : 16;
+		let Shift = Zoomed ? 5 : 4;
+		pos.x = pos.x >> Shift;
+		pos.y = pos.y >> Shift;
 		let index = pos.y * BuildWidth + pos.x;
 		rightClickedBuildTile = window['currentBuildCategoryArrayNames'][index];
 
