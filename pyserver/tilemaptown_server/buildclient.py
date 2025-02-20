@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2024 NovaSquirrel
+# Copyright (C) 2017-2025 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -17,8 +17,102 @@
 import asyncio, datetime, time, random, websockets, json, hashlib, ipaddress, weakref
 from .buildglobal import *
 from .buildentity import *
+from collections import deque
 
 userEntityCounter = 1
+
+class BuildSession(object):
+	def __init__(self, temp_id, ip):
+		self.temp_id = temp_id
+		self.ip = ip
+		self.name = "?"
+		self.username = None
+		self.maps = {}
+		self.in_global_list_yet = False
+		self.time = datetime.datetime.now()
+
+		# Stats
+		self.total_put = 0
+		self.total_delete = 0
+
+	def init_map(self, map_id):
+		if map_id not in self.maps:
+			self.maps[map_id] = deque(maxlen=Config["TempLogs"]["RollbackItemsSize"])
+		if not self.in_global_list_yet:
+			TempLogs[3].append(self)
+			self.in_global_list_yet = True
+
+	def write_put_turf(self, map_id, x, y, new, old):
+		self.init_map(map_id)
+		self.maps[map_id].appendleft("t\n%d\n%d\n%s\n%s" % (x, y, json.dumps(new), json.dumps(old)))
+		self.total_put += 1
+
+	def write_put_objs(self, map_id, x, y, new, old):
+		self.init_map(map_id)
+		self.maps[map_id].appendleft("o\n%d\n%d\n%s\n%s" % (x, y, json.dumps(new), json.dumps(old)))
+		self.total_put += 1
+
+	def write_del(self, map_id, x1, y1, x2, y2, old):
+		self.init_map(map_id)
+		self.maps[map_id].appendleft("d\n%d\n%d\n%d\n%d\n%s" % (x1, y1, x2, y2, json.dumps(old)))
+		self.total_delete += 1
+
+	def rollback_all(self):
+		different = {}
+		for m in set(self.maps.keys()):
+			different[m] = self.rollback_map(m)
+		self.total_put = 0
+		self.total_delete = 0
+		return different
+
+	def rollback_map(self, map_id):
+		different = []
+		if map_id not in self.maps:
+			return
+		map = get_entity_by_id(map_id)
+		if map == None:
+			return
+		was_data_loaded = map.map_data_loaded
+		if not was_data_loaded:
+			map.load_data(load_anyway=True)
+
+		for c in map.contents:
+			if c.is_client():
+				c.start_batch()
+
+		for e in self.maps.pop(map_id, []):
+			a = e.splitlines()
+			if a[0] == 't':
+				_, x, y, new, old = a
+				x = int(x)
+				y = int(y)
+				if map.turfs[x][y] != json.loads(new):
+					different.append((x,y))
+				else:
+					map.turfs[x][y] = json.loads(old)
+					map.broadcast("MAP", map.map_section(x, y, x, y), send_to_links=True)
+			elif a[0] == 'o':
+				_, x, y, new, old = a
+				x = int(x)
+				y = int(y)
+				if map.objs[x][y] != json.loads(new):
+					different.append((x,y))
+				else:
+					map.objs[x][y] = json.loads(old)
+					map.broadcast("MAP", map.map_section(x, y, x, y), send_to_links=True)
+			elif a[0] == 'd':
+				_, x1, y1, x2, y2, old = a
+				map.apply_map_section(json.loads(old))
+
+		# Save changes and unload if needed
+		map.map_data_modified = True
+		if not was_data_loaded:
+			map.save_data()
+			map.unload_data()
+		for c in map.contents:
+			if c.is_client():
+				c.finish_batch()
+		return different
 
 class ClientMixin(object):
 	def send(self, command_type, command_params):
@@ -240,9 +334,10 @@ class Connection(object):
 		self.build_count = 0     # Amount this person has built
 		self.delete_count = 0    # Amount this person has deleted
 
-		# Information for /undodel
+		# Information for /undodel and rollbacks
 		self.undo_delete_data = None
 		self.undo_delete_when = None
+		self.build_session = BuildSession(userEntityCounter, ip)
 
 		# "batch" extension variables
 		self.can_batch_messages = False
@@ -271,6 +366,8 @@ class Connection(object):
 
 		# If the password is good, copy the other stuff over
 		self.username = username
+		self.build_session.username = username
+		self.build_session.name = self.entity.name
 		self.db_id = result[0]
 		self.watch_list = set(json.loads(result[1] or "[]"))
 		self.ignore_list = set(json.loads(result[2] or "[]"))
@@ -646,6 +743,9 @@ class Connection(object):
 
 		self.listening_maps.discard((category_id, map_id))
 		return removed
+
+	def write_to_build_session(self):
+		pass
 
 class FakeClient(PermissionsMixin, ClientMixin, object):
 	def __init__(self, connection):

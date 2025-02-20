@@ -221,6 +221,9 @@ def fn_nick(map, client, context, arg):
 	if is_entity(client):
 		map.broadcast("MSG", {'text': "\""+noparse(client.name)+"\" is now known as \""+noparse(arg)+"\""})
 		client.name = arg
+		session = client.connection_attr('build_session')
+		if session:
+			session.name = client.name
 		map.broadcast("WHO", {'add': client.who()}, remote_category=maplisten_type['entry']) # update client view
 
 		# If this client is listening to any map's chat, tell any clients listening to changes in the listener list the name has changed
@@ -2722,6 +2725,74 @@ def fn_uploadlog(map, client, context, arg):
 		respond(context, "Upload log (%d):[ul]%s[/ul]" % (len(TempLogs[2]), ''.join("[li]%s[/li]" % _ for _ in TempLogs[2])), class_type="secret_message")
 	if arg != 'k':
 		TempLogs[2].clear()
+
+@cmd_command(privilege_level="server_admin", no_entity_needed=True)
+def fn_rrb(map, client, context, arg):
+	def find_info(i):
+		for r in TempLogs[3]:
+			if r.temp_id == i:
+				return r
+		return None
+	if arg == "":
+		out = ""
+		skipped = 0
+		for r in TempLogs[3]:
+			if not r.maps:
+				skipped += 1
+				continue
+			out += "[li][b]%s: %s (%s) @ %s[/b]: Built %d, Deleted %d - %s | 💣[command]rrb R %d[/command][/li]" % (r.time.strftime("(%Y-%m-%d)"), noparse(r.name or "?"), noparse(r.username or "?"), r.ip, r.total_put, r.total_delete, ' '.join('[command]rrb i %d %s[/command](%d)' % (r.temp_id, _, len(r.maps[_])) for _ in r.maps.keys()), r.temp_id)
+		respond(context, "Rollback data (%d):[ul]%s[/ul]" % (len(TempLogs[3])-skipped, out), class_type="secret_message")
+		return
+	elif arg == "c":
+		TempLogs[3].clear()
+		return
+	elif arg == "?":
+		respond(context, "i = map info, I = more info, r = rollback map, R = rollback all", class_type="secret_message")
+		return
+
+	args = arg.split()
+	if len(args) == 0:
+		return
+	if args[0] == "i" or args[0] == "I" or args[0] == "II":
+		info = find_info(int(args[1]))
+		if info:
+			amount = 500 if args[0] == "II" else (100 if args[0] == "I" else 25)
+			m = info.maps.get(int(args[2]))
+			if m:
+				out = ""
+				for e in m:
+					a = e.splitlines()
+					if a[0] == 't':
+						out += "[li]T %s,%s: %s | %s[/li]" % (a[1], a[2], a[3], a[4])
+					elif a[0] == 'o':
+						out += "[li]O %s,%s: %s | %s[/li]" % (a[1], a[2], a[3], a[4])
+					elif a[0] == 'd':
+						out += "[li]D %s,%s,%s,%s | %s[/li]" % (a[1], a[2], a[3], a[4], a[5])
+
+					amount -= 1
+					if amount == 0:
+						break
+				respond(context, "Rollback data [command]rrb r %s %s[/command][command]map %s[/command]:[ul]%s[/ul]" % (args[1], args[2], args[2], out), class_type="secret_message")
+			else:
+				respond(context, "Session %s map %s not found" % (args[1], args[2]), class_type="secret_message")
+		else:
+			respond(context, "Session %s not found" % args[1], class_type="secret_message")
+	elif args[0] == "r":
+		info = find_info(int(args[1]))
+		if info:
+			non_matching_tiles = info.rollback_map(int(args[2]))
+			if non_matching_tiles == None:
+				respond(context, "Rollback data not present for %s map %s" % (args[1], args[2]), class_type="secret_message")
+			else:
+				respond(context, "Rolled back session %s map %s (conflicts: %s)" % (args[1], args[2], non_matching_tiles), class_type="secret_message")
+		else:
+			respond(context, "Session %s not found" % args[1], class_type="secret_message")
+	elif args[0] == "R":
+		info = find_info(int(args[1]))
+		if info:
+			respond(context, "Rolled back session %s (conflicts: %s)" % (args[1], info.rollback_all()), class_type="secret_message")
+		else:
+			respond(context, "Session %s not found" % args[1], class_type="secret_message")
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True)
 def fn_deleteuserfile(map, client, context, arg):

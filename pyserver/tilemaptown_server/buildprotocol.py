@@ -756,6 +756,7 @@ def fn_DEL(connection, map, client, arg, echo):
 			connection.delete_count += 1
 			old_data = connection.undo_delete_data
 		write_to_build_log(map, client, "DEL", arg, old_data)
+		connection.build_session.write_del(map.protocol_id(), x1, y1, x2, y2, old_data)
 
 		# Do the delete and tell clients about it
 		for x in range(x1, x2+1):
@@ -803,8 +804,9 @@ def fn_PUT(connection, map, client, arg, echo):
 		# verify the the tiles you're attempting to put down are actually good
 		if arg.get("obj", False): #object
 			tile_test = [tile_is_okay(x) for x in arg["atom"]]
-			if all(x[0] for x in tile_test): # all tiles pass the test
+			if all(_[0] for _ in tile_test): # all tiles pass the test
 				write_to_build_log(map, client, "PUT", arg, map.objs[x][y])
+				connection.build_session.write_put_objs(map.protocol_id(), x, y, arg["atom"], map.objs[x][y])
 				map.objs[x][y] = arg["atom"]
 				notify_listeners()
 				map.broadcast("MAP", map.map_section(x, y, x, y), send_to_links=True)
@@ -816,6 +818,7 @@ def fn_PUT(connection, map, client, arg, echo):
 			tile_test = tile_is_okay(arg["atom"])
 			if tile_test[0]:
 				write_to_build_log(map, client, "PUT", arg, map.turfs[x][y])
+				connection.build_session.write_put_turf(map.protocol_id(), x, y, arg["atom"], map.turfs[x][y])
 				map.turfs[x][y] = arg["atom"] if arg["atom"] != map.default_turf else None
 				notify_listeners()
 				map.broadcast("MAP", map.map_section(x, y, x, y), send_to_links=True)
@@ -1030,6 +1033,7 @@ def fn_IDN(connection, map, client, arg, echo):
 		if connection.username in Config["Server"]["Admins"]:
 			connection.send("MSG", {'text': '[command]connectlog[/command] size: %d, [command]buildlog[/command] size: %d, [command]filelog[/command] size: %d' % (len(TempLogs[0]), len(TempLogs[1]), len(TempLogs[2])), 'class': 'secret_message'})
 		connection.login_successful_callback = None
+		connection.build_session.name = connection.entity.name
 
 	#######################################################
 	if not messaging_only_mode:

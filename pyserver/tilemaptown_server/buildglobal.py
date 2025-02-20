@@ -22,7 +22,7 @@ Config = {}
 ConfigFile = 'config.json'
 ServerResources = {}
 LoadedAnyServerResources = [False]
-TempLogs = [None, None, None]
+TempLogs = [None, None, None, None] # Connect, Build, Upload, Rollback info
 
 # Information about the code itself
 available_server_features = {
@@ -133,9 +133,11 @@ def loadConfigJson():
 	setConfigDefault("Logs",     "BuildFile",        "")
 	setConfigDefault("Logs",     "UploadFile",       "")
 	setConfigDefault("Logs",     "BuildDefault",     True)
-	setConfigDefault("TempLogs", "ConnectSize",      100)
+	setConfigDefault("TempLogs", "ConnectSize",      200)
 	setConfigDefault("TempLogs", "BuildSize",        100)
 	setConfigDefault("TempLogs", "UploadSize",       100)
+	setConfigDefault("TempLogs", "RollbackSize",     30)
+	setConfigDefault("TempLogs", "RollbackItemsSize", 15000)
 
 	setConfigDefault("FileUpload", "Enabled",        False)
 	setConfigDefault("FileUpload", "URLPrefix",      "")
@@ -188,6 +190,7 @@ def loadConfigJson():
 	TempLogs[0] = deque(maxlen=Config["TempLogs"]["ConnectSize"])
 	TempLogs[1] = deque(maxlen=Config["TempLogs"]["BuildSize"])
 	TempLogs[2] = deque(maxlen=Config["TempLogs"]["UploadSize"])
+	TempLogs[3] = deque(maxlen=Config["TempLogs"]["RollbackSize"])
 loadConfigJson()
 GlobalData = {}
 
@@ -204,7 +207,6 @@ if len(Config["Logs"]["UploadFile"]):
 	UploadLog = open(Config["Logs"]["UploadFile"], 'a', encoding="utf-8")
 
 # Temporary log for moderation
-ConnectLog = deque(maxlen=40)
 def write_to_connect_log(text):
 	print(text)
 	now = datetime.datetime.today().strftime("(%Y-%m-%d) %I:%M %p")

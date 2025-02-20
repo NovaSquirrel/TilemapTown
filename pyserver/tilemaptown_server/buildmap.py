@@ -188,11 +188,7 @@ class Map(Entity):
 			if self.user_count == 0 and self.map_data_loaded:
 				# Save if the map was modified
 				self.save_data()
-				# Unload
-				self.turfs = None
-				self.objs = None
-
-				self.map_data_loaded = False
+				self.unload_data()
 			if self.user_count == 0:
 				self.topic = None
 				self.topic_username = None
@@ -230,10 +226,16 @@ class Map(Entity):
 
 		return super().load(map_id)
 
-	def load_data(self):
+	def unload_data(self):
+		if self.map_data_loaded:
+			self.turfs = None
+			self.objs = None
+			self.map_data_loaded = False
+
+	def load_data(self, load_anyway=False):
 		if self.map_data_loaded:
 			return True
-		if self.user_count:
+		if self.user_count or load_anyway:
 			d = loads_if_not_none(self.load_data_as_text())
 
 			# Parse map data

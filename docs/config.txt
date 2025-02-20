@@ -191,7 +191,7 @@ Default: ""
 If provided, this is the filename used for the upload log.
 
 TempLogs.ConnectSize
-Default: 100
+Default: 200
 Maximum number of connection/login messages to keep at once.
 
 TempLogs.BuildSize
@@ -201,6 +201,14 @@ Maximum number of build messages to keep at once.
 TempLogs.UploadSize
 Default: 100
 Maximum number of file upload messages to keep at once.
+
+TempLogs.RollbackSize
+Default: 30
+Maximum number of per-user build history sessions to keep at once, for the sake of map rollbacks.
+
+TempLogs.RollbackItemsSize
+Default: 15000
+Maximum number of entries each of the above can have.
 
 FileUpload.Enabled
 Default: false
