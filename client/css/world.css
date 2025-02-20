@@ -91,11 +91,10 @@ body {
     height: 100%;
 }
 #inventoryCanvas {
-    image-rendering: pixelated;
+	image-rendering: pixelated;
 	background: url('../img/scrolling_grid.gif');
 }
 #edittilesheetselect {
-    image-rendering: pixelated;
 	background: url('../img/scrolling_grid.gif');
 }
 
