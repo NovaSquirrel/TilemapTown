@@ -974,12 +974,16 @@ function CancelReconnect() {
 	}
 }
 
+let addedUnloadHandler = false;
 function ConnectToServer() {
-	const beforeUnloadHandler = (event) => {
-		event.preventDefault();
-		event.returnValue = true;
-	};
-	window.addEventListener("beforeunload", beforeUnloadHandler);
+	if (!addedUnloadHandler) {
+		const beforeUnloadHandler = (event) => {
+			event.preventDefault();
+			event.returnValue = true;
+		};
+		window.addEventListener("beforeunload", beforeUnloadHandler);
+		addedUnloadHandler = true;
+	}
 
 	OnlineMode = true;
 	OnlineIsConnected = false;
