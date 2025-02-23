@@ -814,6 +814,8 @@ class Entity(PermissionsMixin, object):
 
 		if self.offset and self.offset != [0,0]:
 			out['offset'] = self.offset
+		if hasattr(self, "z_index") and self.z_index:
+			out['z_index'] = self.z_index
 		if self.forward_messages_to:
 			out['is_forwarding'] = True
 			if 'CHAT' in self.forward_message_types:

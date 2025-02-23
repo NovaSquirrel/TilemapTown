@@ -254,9 +254,11 @@ function receiveServerMessage(cmd, arg) {
 
           PlayerWho[arg.id].x = arg.to[0];
           PlayerWho[arg.id].y = arg.to[1];
-          //if(PlayerWho[arg.id].vehicle == null || PlayerWho[arg.id].is_following) {
-          startPlayerWalkAnim(arg.id);
-          //}
+          if(PlayerWho[arg.id].vehicle == null || PlayerWho[arg.id].is_following ||
+            (PlayerWho[arg.id].vehicle && PlayerWho[PlayerWho[arg.id].vehicle] && arg.id == PlayerWho[PlayerWho[arg.id].vehicle].vehicle)
+          ) {
+            startPlayerWalkAnim(arg.id);
+          }
         }
         if("dir" in arg) {
           PlayerWho[arg.id].dir = arg.dir;
@@ -264,6 +266,9 @@ function receiveServerMessage(cmd, arg) {
         }
         if("offset" in arg) {
           PlayerWho[arg.id].offset = arg["offset"];
+        }
+        if("z_index" in arg) {
+          PlayerWho[arg.id].z_index = arg["z_index"];
         }
         NeedMapRedraw = true;
       }

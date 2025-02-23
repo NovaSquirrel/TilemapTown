@@ -2256,6 +2256,14 @@ def fn_roffset(map, client, context, arg):
 		client.offset = None
 		map.broadcast("MOV", {"id": client.protocol_id(), "offset": None}, remote_category=maplisten_type['move'])
 
+@cmd_command(category="Settings", syntax='index')
+def fn_z(map, client, context, arg):
+	if arg == "":
+		client.z_index = 0
+	elif string_is_int(arg):
+		client.z_index = min(10, max(-10, int(arg)))
+	map.broadcast("MOV", {"id": client.protocol_id(), "z_index": client.z_index}, remote_category=maplisten_type['move'])
+
 @cmd_command(category="Who", no_entity_needed=True)
 def fn_gwho(map, client, context, arg):
 	names = ''

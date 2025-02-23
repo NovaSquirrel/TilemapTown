@@ -140,6 +140,10 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 
 	sortedPlayers.sort(
 		(a, b) => {
+			let z_a = a.z_index ?? 0;
+			let z_b = b.z_index ?? 0;
+			if (z_a != z_b)
+				return z_a - z_b;
 			if (a.y == b.y && ((a.particle && !b.particle) || (!a.particle || b.particle)))
 				return a.particle ? 1 : -1;
 			if (!b.is_following && a.passengers.includes(b.id)) {
