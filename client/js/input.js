@@ -60,39 +60,43 @@ const OK_DRAW_DISTANCE = 5;
 ///////////////////////////////////////////////////////////
 
 function runLocalCommand(t) {
-	if (t.toLowerCase() == "/clear") {
+	tl = t.toLowerCase();
+	if (tl == "/clear") {
 		chatArea.innerHTML = "";
 		chatLogForExport = [];
 		return true;
-	} else if (t.toLowerCase() == "/exportmap" || t.toLowerCase() == "/mapexport") {
+	} else if (tl == "/exportmap" || tl == "/mapexport" || tl.startsWith("/exportmap ") || tl.startsWith("/mapexport ")) {
 		//logMessage('<a href="data:,'+encodeURIComponent(exportMap())+'" download="map.txt">Map download (click here)</a>', 'server_message');
 
+		let filename = "map";
+		if (t.length >= 12)
+			filename = t.slice(11);
 		//from https://ourcodeworld.com/articles/read/189/how-to-create-a-file-and-generate-a-download-with-javascript-in-the-browser-without-a-server
 		let element = document.createElement('a');
 		element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(exportMap()));
-		element.setAttribute('download', "map.txt");
+		element.setAttribute('download', filename+".txt");
 		element.style.display = 'none';
 		document.body.appendChild(element);
 		element.click();
 		document.body.removeChild(element);
 		return true;
-	} else if (t.toLowerCase().startsWith("/playmusic ")) {
+	} else if (tl.startsWith("/playmusic ")) {
 		playMusic(t.slice(11), true);
 		return true;
-	} else if (t.toLowerCase().startsWith("/openprofile ") || t.toLowerCase().startsWith("/userprofile ")) {
+	} else if (tl.startsWith("/openprofile ") || tl.startsWith("/userprofile ")) {
 		SendCmd("EXT", { "get_user_profile": {"username": t.slice(13)} });
 		return true;
-	} else if (t.toLowerCase() == "/stopmusic") {
+	} else if (tl == "/stopmusic") {
 		stopMusic();
 		return true;
-	} else if (t.toLowerCase() == "/releasekeys") {
+	} else if (tl == "/releasekeys") {
 		forceReleaseKeys();
 		return true;
-	} else if (t.toLowerCase() == "/cameraxy") {
+	} else if (tl == "/cameraxy") {
 		CameraOverrideX = null;
 		CameraOverrideY = null;
 		return true;
-	} else if (t.toLowerCase().startsWith("/cameraxy ")) {
+	} else if (tl.startsWith("/cameraxy ")) {
 		let arg = t.slice(10).split(' ');
 		if(arg.length == 2) {
 			CameraOverrideX = parseInt(arg[0]);
@@ -103,7 +107,7 @@ function runLocalCommand(t) {
 				CameraOverrideY = null;
 		}
 		return true;
-	} else if (t.toLowerCase() == "/exportlogs" || t.toLowerCase() == "/exportlog") {
+	} else if (tl == "/exportlogs" || tl == "/exportlog") {
 		// https://stackoverflow.com/a/4929629
 		let today = new Date();
 		let dd = String(today.getDate()).padStart(2, '0');
@@ -119,13 +123,13 @@ function runLocalCommand(t) {
 		element.click();
 		document.body.removeChild(element);
 		return true;
-	} else if(t.toLowerCase() == "/clearhotbar") {
+	} else if(tl == "/clearhotbar") {
 		hotbarData = [null, null, null, null, null, null, null, null, null, null];
 		hotbarSelectIndex = null;
 		hotbarDragging = false;
 		drawHotbar();
 		return true;
-	} else if(t.toLowerCase().startsWith("/edititem ")) {
+	} else if(tl.startsWith("/edititem ")) {
 		editItemID = parseInt(t.slice(10));
 		if (Number.isNaN(editItemID))
 			return true;

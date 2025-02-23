@@ -220,7 +220,7 @@
 	<p>
 	<strong>Import/Export:</strong><br>
 	<input type="file" id="importmapfile" /><br><button onclick="importLocalMap()">Import map</button><br><br>
-	<button onclick="runLocalCommand('/exportmap')">Export map</button>
+	<button onclick="runLocalCommand('/exportmap ' + document.getElementById('localMapName').value)">Export map</button>
 	</p>
 
 	</div>
