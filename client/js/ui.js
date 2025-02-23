@@ -715,6 +715,7 @@ function loadLocalMap() {
 		if (map === null)
 			return;
 		if (importMap(map)) {
+			document.getElementById("localMapName").value = name;
 			mapWasChanged = false;
 			cancelMapWindowChanges();
 		}
