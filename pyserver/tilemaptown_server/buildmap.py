@@ -67,11 +67,13 @@ def temporarily_load_map_from_db(db_id, user=None):
 		'build_enabled': (entity_deny & permission['build']) == 0,
 		'full_sandbox': entity_allow & permission['sandbox'] != 0,
 		'edge_links': map_entity_data.get('edge_links'),
-		'tags': entity_tags
+		'tags': entity_tags,
+		'default_allow': permission_list_from_bitfield(entity_allow),
+		'default_deny': permission_list_from_bitfield(entity_deny)
 	}
-	if user:
-		mai['you_allow'] = permission_list_from_bitfield(entity_allow)
-		mai['you_deny'] = permission_list_from_bitfield(entity_deny)
+	#if user:
+	#	mai['you_allow'] = permission_list_from_bitfield(entity_allow)
+	#	mai['you_deny'] = permission_list_from_bitfield(entity_deny)
 	if "wallpaper" in map_entity_data:
 		mai['wallpaper'] = map_entity_data["wallpaper"]
 
@@ -125,17 +127,19 @@ class Map(Entity):
 			# Don't load data here; wait until send_map_info()
 		super().add_to_contents(item)
 
-	def send_map_info(self, item):
+	def send_map_info(self, item, mai_only=False):
 		if not hasattr(item, 'connection'): # Map info should only get sent to clients, but it doesn't hurt to be sure
 			return
 		connection = item.connection()
 		if connection == None:
 			return
-		if not self.map_data_loaded:
+		if not self.map_data_loaded and not mai_only:
 			self.load_data()
 
 		# Always send MAI for the map you move to, because it's the formal signal that you entered a new map
 		connection.send("MAI", self.map_info(user=item))
+		if mai_only:
+			return
 		# Skip the map data if the client should already have it
 		if self.db_id not in connection.loaded_maps:
 			connection.send("MAP", self.map_section(0, 0, self.width-1, self.height-1))
@@ -170,15 +174,16 @@ class Map(Entity):
 		if connection.see_past_map_edge and not self.edge_id_links:
 			connection.loaded_maps = set([self.db_id])
 
-	def resend_map_info_to_users(self):
+	def resend_map_info_to_users(self, mai_only=False):
 		for user in self.contents:
 			if user.is_client():
 				connection = user.connection()
 				if not connection:
 					continue
-				connection.loaded_maps.discard(self.db_id)
+				if not mai_only:
+					connection.loaded_maps.discard(self.db_id)
 				connection.start_batch()
-				self.send_map_info(user)
+				self.send_map_info(user, mai_only=mai_only)
 				connection.finish_batch()
 
 	def remove_from_contents(self, item):
@@ -331,12 +336,12 @@ class Map(Entity):
 
 	def map_info(self, user=None, all_info=False):
 		""" MAI message data """
-		out = {'name': self.name, 'desc': self.desc, 'id': self.db_id, 'owner_id': self.owner_id, 'owner_username': find_username_by_db_id(self.owner_id) or '?', 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.map_flags & mapflag['public'] != 0, 'private': (self.deny & permission['entry']) != 0, 'build_enabled': (self.deny & permission['build']) == 0, 'full_sandbox': self.allow & permission['sandbox'] != 0, 'edge_links': self.edge_id_links, 'tags': self.tags}
+		out = {'name': self.name, 'desc': self.desc, 'id': self.db_id, 'owner_id': self.owner_id, 'owner_username': find_username_by_db_id(self.owner_id) or '?', 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.map_flags & mapflag['public'] != 0, 'private': (self.deny & permission['entry']) != 0, 'build_enabled': (self.deny & permission['build']) == 0, 'full_sandbox': self.allow & permission['sandbox'] != 0, 'edge_links': self.edge_id_links, 'tags': self.tags, 'default_allow': permission_list_from_bitfield(self.allow), 'default_deny': permission_list_from_bitfield(self.deny)}
 		if all_info:
 			out['start_pos'] = self.start_pos
-		if user:
-			out['you_allow'] = permission_list_from_bitfield(self.map_allow)
-			out['you_deny'] = permission_list_from_bitfield(self.map_deny)
+		#if user:
+		#	out['you_allow'] = permission_list_from_bitfield(self.map_allow)
+		#	out['you_deny'] = permission_list_from_bitfield(self.map_deny)
 		if self.topic:
 			out['topic'] = self.topic
 			out['topic_username'] = self.topic_username

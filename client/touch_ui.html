@@ -153,33 +153,78 @@
     <span class="modalclose">&times;</span>
     <p>
     <h1>Map</h1>
-    In the future this will let you set map attributes and permissions.
-<!--
-    <input type="text" id="mapname"  placeholder="Map name">Map name<br>
-    <input type="text" id="mapowner" placeholder="Map owner" disabled>Map owner<br>
-    <input type="text" id="mapid"    placeholder="Map id" disabled>Map id<br>
+
+    <div id="map_window_online" style="display: none;">
+    <table border="0">
+    <tr>
+    <td><label for="mapname" class="unselectable">Map name</label></td>
+    <td><input type="text" id="mapname"/></td>
+    </tr>
+    <tr>
+    <td><label for="mapdesc" class="unselectable">Description</label></td>
+    <td><textarea id="mapdesc"></textarea></td>
+    </tr>
+    <tr>
+    <td><label for="mapowner" class="unselectable">Map owner</label></td>
+    <td><input type="text" id="mapowner" disabled/></td>
+    </tr>
+    <tr>
+    <td><label for="mapid" class="unselectable">Map ID</label></td>
+    <td><input type="text" id="mapid" disabled/></td>
+    </tr>
+    </table>
+
+    <p>
+	<button onclick="sendChatCommand('mapspawn')">Set start position here</button>
+	<button onclick="runLocalCommand('/exportmap')">Export map</button>
     </p>
 
     <p>
-    <input type="number" value="100" min="10" max="100" id="mapwidth" size="4" />&times;<input type="number" value="100" min="10" max="100" id="mapheight" size="4" />Map height<br>
-    <input type="number" value="3" id="mapstartx" size="4" />&times;<input type="number" value="3" id="mapstarty" size="4" />Start position<br>
-    <input type="text" id="mapdefaultturf" placeholder="grass">Default floor<br>
-    </p>
-
-    <p>
-    <h2>Permissions</h2><br>
-    <select>
+    <h2>Permissions</h2>
+    <table border="0">
+    <tr><td>Privacy</td><td><select id="mapprivacy">
       <option value="public">Public</option>
       <option value="unlisted">Unlisted</option>
-      <option value="whitelist">Private</option>
-    </select><br>
-    </p>
+      <option value="private">Private</option>
+      <option value="?">?</option>
+    </select></td></tr>
+	</table>
+
+	<p>
+	Anyone can:
+	<label class="unselectable">Build: <input type="checkbox" id="permission_build"></label>
+	| <label class="unselectable">Bring objects: <input type="checkbox" id="permission_object_entry"></label>
+	| <label class="unselectable">Leave objects here: <input type="checkbox" id="permission_persistent_object"></label>
+	| <label class="unselectable">Set topics: <input type="checkbox" id="permission_topic"></label>
+	</p>
 
     <p>
-    <input type="button" value="Export" onclick=";">
-    <input type="button" value="Import" onclick=";"><br>
--->
+    <button onclick="applyMapWindowChanges()">Apply changes</button>
+    <button onclick="cancelMapWindowChanges()">Cancel</button>
     </p>
+    </div>
+
+	<div id="map_window_offline">
+	You're offline! You can still make maps by yourself and save them to your device.
+
+	<p>
+	<input type="number" value="100" min="10" max="200" id="localMapWidth" size="4" />&times;<input type="number" value="100" min="10" max="200" id="localMapHeight" size="4" /> <button onclick="resizeLocalMap()">Resize map</button> | <button onclick="clearLocalMap()">Clear map</button>
+	</p>
+
+	<p>
+	<strong>Locally stored maps:</strong><br>
+	<input placeholder="Map name" id="localMapName"> <button onclick="saveLocalMap()">Save</button><br>
+	<select id="localMapList"></select> <button onclick="loadLocalMap()">Load</button> | <button onclick="deleteLocalMap()">Delete</button>
+	</p>
+
+	<p>
+	<strong>Import/Export:</strong><br>
+	<input type="file" id="importmapfile" /><br><button onclick="importLocalMap()">Import map</button><br><br>
+	<button onclick="runLocalCommand('/exportmap')">Export map</button>
+	</p>
+
+	</div>
+
   </div>
 </div>
 

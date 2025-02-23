@@ -70,7 +70,7 @@ function runLocalCommand(t) {
 		//from https://ourcodeworld.com/articles/read/189/how-to-create-a-file-and-generate-a-download-with-javascript-in-the-browser-without-a-server
 		let element = document.createElement('a');
 		element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(exportMap()));
-		element.setAttribute('download', "map.json");
+		element.setAttribute('download', "map.txt");
 		element.style.display = 'none';
 		document.body.appendChild(element);
 		element.click();
@@ -825,6 +825,7 @@ function useItemAtXY(Placed, x, y) {
 				MyMap.Tiles[x][y] = Placed.data;
 				SendCmd("PUT", { pos: [x, y], obj: false, atom: MyMap.Tiles[x][y] });
 			}
+			mapWasChanged = true;
 			drawMap();
 			break;
 		case "gadget":

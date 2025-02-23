@@ -1,0 +1,10 @@
+localStorage fields used by the web client:
+
+"username"
+	Username that was most recently used
+"options"
+	JSON object containing web client options (see loadOptions in ui.js)
+"saved_map_names"
+	JSON list containing a list of saved maps
+"saved_map:MAP_NAME_HERE"
+	A saved map, in the same format used when exporting and importing maps

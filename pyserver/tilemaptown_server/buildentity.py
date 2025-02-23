@@ -706,7 +706,7 @@ class Entity(PermissionsMixin, object):
 			if have_permission and on_behalf_of and self.is_banned_from(map_id, which_permission):
 				have_permission = False
 			if not have_permission:
-				self.send("ERR", {'text': 'You don\'t have permission to go to map %d' % map_id})
+				self.send("ERR", {'text': 'You don\'t have permission to go to map %d' % (map_id if (isinstance(map_id, int) or isinstance(map_id, str)) else map_id.protocol_id()) })
 				if added_new_history:
 					self.tp_history.pop()
 				self.finish_batch()
@@ -729,7 +729,7 @@ class Entity(PermissionsMixin, object):
 				params['edge_warp'] = True
 				params['dir'] = self.dir
 			self.map.broadcast("MOV", params, remote_category=maplisten_type['move'])
-		elif new_pos == None and goto_spawn and self.map.is_map():
+		elif new_pos == None and goto_spawn and self.map and self.map.is_map():
 			self.move_to(self.map.start_pos[0], self.map.start_pos[1], is_teleport=True)
 			self.map.broadcast("MOV", {'id': self.protocol_id(), 'to': [self.x, self.y]}, remote_category=maplisten_type['move'])
 
@@ -1103,8 +1103,8 @@ def load_generic_data(self, data):
 
 # If the entity is truly generic, then use the data field (when it would've otherwise gone unused) in a useful way
 class GenericEntity(Entity):
-	def __init__(self,websocket):
-		super().__init__(entity_type['generic'])
+	def __init__(self, ignored_entity_type, creator_id=None):
+		super().__init__(entity_type['generic'], creator_id=creator_id)
 
 	def load_data(self):
 		try:

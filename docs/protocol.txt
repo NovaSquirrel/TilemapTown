@@ -141,6 +141,8 @@ Fields that may appear in MAI on the official server:
 	"tags": dictionary; Generic entity tags set on this map
 	"you_allow": List of permission names that the user is granted for this map
 	"you_deny": List of permission names that the user is denied for this map
+	"default_allow": List of permission names that this map grants by default
+	"default_deny": List of permission names that this map denies by default
 	"topic": string; Current topic, if there is one
 	"topic_username": string; Username of the person who set the topic
 	"remote_map": integer; If set, this MAI is actually for a different map, and not the one you're on; the parameter is the database ID of that other map

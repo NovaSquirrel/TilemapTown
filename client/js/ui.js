@@ -605,7 +605,205 @@ function previewIcon() {
 }
 */
 
+function applyMapWindowChanges() {
+	let mapname = document.getElementById('mapname').value;
+	let mapdesc = document.getElementById('mapdesc').value;
+	let permission_build             = document.getElementById('permission_build').checked
+	let permission_object_entry      = document.getElementById('permission_object_entry').checked
+	let permission_persistent_object = document.getElementById('permission_persistent_object').checked
+	let permission_topic             = document.getElementById('permission_topic').checked
+	let mapprivacy = document.getElementById('mapprivacy').value;
 
+	if (mapname != MyMap.Info.name)
+		sendChatCommand('mapname ' + mapname)
+	if (mapdesc != (MyMap.Info.desc ?? ""))
+		sendChatCommand('mapdesc ' + mapdesc)
+
+	let mapprivacy_current = "?";
+	if (!MyMap.Info['private'] && MyMap.Info['public'])
+		mapprivacy_current = "public";
+	else if (!MyMap.Info['private'] && !MyMap.Info['public'])
+		mapprivacy_current = "unlisted";
+	else if (MyMap.Info['private'] && !MyMap.Info['public'])
+		mapprivacy_current = "private";
+	if (mapprivacy != mapprivacy_current && mapprivacy != "?")
+		sendChatCommand('mapprivacy ' + mapprivacy)
+
+	let map_deny = MyMap.Info.default_deny ?? [];
+	let map_allow_build = !map_deny.includes('build');
+	let map_allow_object_entry = !map_deny.includes('object_entry');
+	let map_allow_persistent_object = !map_deny.includes('persistent_object_entry');
+	let map_allow_topic = !map_deny.includes('set_topic');
+
+	// Change permissions
+	if (permission_build != map_allow_build)
+		sendChatCommand((permission_build ? 'revoke' : 'deny') + ' build !default')
+	if (permission_object_entry != map_allow_object_entry)
+		sendChatCommand((permission_object_entry ? 'revoke' : 'deny') + ' object_entry !default')
+	if (permission_persistent_object != map_allow_persistent_object)
+		sendChatCommand((permission_persistent_object ? 'revoke' : 'deny') + ' persistent_object_entry !default')
+	if (permission_topic != map_allow_topic)
+		sendChatCommand((permission_topic ? 'revoke' : 'deny') + ' set_topic !default')
+
+	cancelMapWindowChanges();
+}
+
+function cancelMapWindowChanges() {
+	document.getElementById('mapOptionsWindow').style.display = "none";
+}
+
+///////////////////////////////////////////////////////////
+// Local maps
+///////////////////////////////////////////////////////////
+
+const savedMapStoragePrefix = "saved_map:";
+let mapWasChanged = false;
+
+function resizeLocalMap() {
+	if (!mapWasChanged || confirm("Resize the map?")) {
+		let width = parseInt(document.getElementById("localMapWidth").value);
+		let height = parseInt(document.getElementById("localMapHeight").value);
+		if (isNaN(width) || isNaN(height) || width < 1 || height < 1)
+			return;
+		let originalTiles = MyMap.Tiles;
+		let originalObjs = MyMap.Objs;
+		let originalWidth = MyMap.Width;
+		let originalHeight = MyMap.Height;
+		MyMap.Width = width;
+		MyMap.Height = height;
+		MyMap.Info.size = [width, height];
+
+		MyMap.Tiles = [];
+		MyMap.Objs = [];
+		for(let i=0; i<width; i++) {
+			MyMap.Tiles[i] = [];
+			MyMap.Objs[i] = [];
+			for(let j=0; j<height; j++) {
+				if (i < originalWidth && j < originalHeight) {
+					MyMap.Tiles[i][j] = originalTiles[i][j];
+					MyMap.Objs[i][j] = originalObjs[i][j];
+				} else {
+					MyMap.Tiles[i][j] = MyMap.Info["default"];
+					MyMap.Objs[i][j] = [];
+				}
+			}
+		}
+
+		NeedMapRedraw = true;
+	}
+}
+
+function clearLocalMap() {
+	if (!mapWasChanged || confirm("Clear the map?")) {
+		let width = parseInt(document.getElementById("localMapWidth").value);
+		let height = parseInt(document.getElementById("localMapHeight").value);
+		if (isNaN(width) || isNaN(height) || width < 1 || height < 1)
+			return;
+		MyMap = new TownMap(width, height);
+		mapWasChanged = false;
+		cancelMapWindowChanges();
+	}
+}
+
+function loadLocalMap() {
+	let name = document.getElementById("localMapList").value.trim();
+	if (name == "")
+		return;
+	if (!mapWasChanged || confirm('Load map "'+name+'"?')) {
+		let map = localStorage.getItem(savedMapStoragePrefix + name)
+		if (map === null)
+			return;
+		if (importMap(map)) {
+			mapWasChanged = false;
+			cancelMapWindowChanges();
+		}
+		document.getElementById('localMapWidth').value = MyMap.Width;
+		document.getElementById('localMapHeight').value = MyMap.Height;
+	}
+}
+
+function saveLocalMap() {
+	let name = document.getElementById("localMapName").value.trim();
+	if (name == "")
+		return;
+	if(localStorage.getItem(savedMapStoragePrefix + name) !== null) {
+		if(!confirm('Overwrite map "'+name+'"?'))
+			return;
+	}
+
+	let exported = exportMap();
+	localStorage.setItem(savedMapStoragePrefix + name, exported);
+	let maps = getLocalMapList();
+	if (!maps.includes(name)) {
+		maps.push(name);
+		setLocalMapList(maps);
+	}
+	document.getElementById("localMapList").value = name;
+	mapWasChanged = false;
+}
+
+function deleteLocalMap() {
+	let name = document.getElementById("localMapList").value.trim();
+	if (name == "")
+		return;
+	if (confirm('Delete map "'+name+'"?')) {
+		localStorage.removeItem(savedMapStoragePrefix + name);
+
+		let maps = getLocalMapList();
+		let index = maps.indexOf(name);
+		if (index != -1) {
+			maps.splice(index, 1);
+			setLocalMapList(maps);
+		}
+	}
+}
+
+function importLocalMap() {
+	let file = document.getElementById("importmapfile").files[0];
+	if (file) {
+		let reader = new FileReader();
+		reader.onload = function (evt) {
+			if(importMap(evt.target.result)) {
+				mapWasChanged = false;
+				cancelMapWindowChanges();
+			}
+		}
+		reader.onerror = function (evt) {
+			alert("Error reading this file");
+		}
+		reader.readAsText(file, "UTF-8");
+	}
+}
+
+function getLocalMapList() {
+	try {
+		return JSON.parse(localStorage.getItem("saved_map_names") ?? "[]");
+	} catch(error) {
+		return [];
+	}
+}
+
+function setLocalMapList(list) {
+	list.sort();
+	localStorage.setItem("saved_map_names", JSON.stringify(list));
+	refreshLocalMapList();
+}
+
+function refreshLocalMapList() {
+	let maps = getLocalMapList();
+
+	let dropdown = document.getElementById("localMapList");
+	while (dropdown.firstChild) {
+		dropdown.removeChild(dropdown.firstChild);
+	}
+
+	for (let name of maps) {
+		let el = document.createElement("option");
+		el.textContent = name;
+		el.value = name;
+		dropdown.appendChild(el);
+	}
+}
 
 ///////////////////////////////////////////////////////////
 // Inventory
@@ -1280,7 +1478,7 @@ function editItemShared(item) {
 			while (sheetselect.firstChild) {
 				sheetselect.removeChild(sheetselect.firstChild);
 			}
-			el = document.createElement("option");
+			let el = document.createElement("option");
 			el.textContent = "Don't change";
 			el.value = "keep";
 			sheetselect.appendChild(el);
@@ -3348,6 +3546,39 @@ function initWorld() {
 		}
 
 		mapbtn.onclick = function () {
+			if (OnlineMode) {
+				document.getElementById('map_window_online').style.display = "block";
+				document.getElementById('map_window_offline').style.display = "none";
+
+				document.getElementById('mapname').value = MyMap.Info.name ?? "";
+				document.getElementById('mapdesc').value = MyMap.Info.desc ?? "";
+				document.getElementById('mapowner').value = MyMap.Info.owner_username ?? "";
+				document.getElementById('mapid').value = MyMap.Info.id;
+				document.getElementById('permission_build').checked = true;
+				document.getElementById('permission_object_entry').checked = true;
+				document.getElementById('permission_persistent_object').checked = true;
+				document.getElementById('permission_topic').checked = true;
+
+				document.getElementById('mapprivacy').value = "?";
+				if (!MyMap.Info['private'] && MyMap.Info['public'])
+					document.getElementById('mapprivacy').value = "public";
+				else if (!MyMap.Info['private'] && !MyMap.Info['public'])
+					document.getElementById('mapprivacy').value = "unlisted";
+				else if (MyMap.Info['private'] && !MyMap.Info['public'])
+					document.getElementById('mapprivacy').value = "private";
+
+				let map_deny = MyMap.Info.default_deny ?? [];
+				document.getElementById('permission_build').checked = !map_deny.includes('build');
+				document.getElementById('permission_object_entry').checked = !map_deny.includes('object_entry');
+				document.getElementById('permission_persistent_object').checked = !map_deny.includes('persistent_object_entry');
+				document.getElementById('permission_topic').checked = !map_deny.includes('set_topic');
+			} else {
+				document.getElementById('localMapWidth').value = MyMap.Width;
+				document.getElementById('localMapHeight').value = MyMap.Height;
+				refreshLocalMapList();
+				document.getElementById('map_window_online').style.display = "none";
+				document.getElementById('map_window_offline').style.display = "block";
+			}
 			mapmodal.style.display = "block";
 		}
 

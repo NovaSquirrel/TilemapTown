@@ -157,6 +157,9 @@ Offsets your character some amount of pixels horizontally and vertically
 /roffset will change the offset relative to the current offset
 If no offset is given, the offset is reset
 
+/z index
+Change your z-index; if your Y coordinate matches someone else's, and your z-index is higher, you'll appear on top. Can be -10 to 10, and defaults to 0.
+
 /map mapnumber
 /map mapnumber x y
 /defaultmap

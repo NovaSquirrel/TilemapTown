@@ -48,7 +48,7 @@ class TownMap {
 		this.Height = MapHeight;
 
 		// Gets filled in from MAI
-		this.Info = {name: "?", 'id': -1, 'owner': -1, 'default': 'grass', 'size': [60, 60], 'public': true, 'private': false, 'build_enabled': true, 'full_sandbox': true, 'wallpaper': null};
+		this.Info = {name: "", 'id': -1, 'owner': -1, 'default': 'grass', 'size': [MapWidth, MapHeight], 'public': true, 'private': false, 'build_enabled': true, 'full_sandbox': true, 'wallpaper': null};
 		this.WallpaperImage = null;
 
 		// Initialize the map
@@ -221,7 +221,7 @@ function initMap() {
 	}
 }
 
-// Convert the map to a JSON object
+// Convert the map to a string that can be put in a file
 function exportMap() {
 	let turfs = [];
 	let objs = [];
@@ -241,5 +241,46 @@ function exportMap() {
 	}
 
 	let map = {'default': MyMap.Info['default'], 'obj': objs, 'turf': turfs, 'pos': [0, 0, MyMap.Width-1, MyMap.Height-1]};
-	return "MAI\n"+JSON.stringify(MyMap.Info)+"\nMAP\n"+JSON.stringify(map)+"\n";
+	return "TilemapTownMapExport\nversion=1\nMAI="+JSON.stringify(MyMap.Info)+"\nMAP="+JSON.stringify(map)+"\n";
+}
+
+// Convert a string from the above function into a map
+function importMap(map) {
+	let lines = map.split("\n");
+	if (lines.length == 0 || lines[0] != "TilemapTownMapExport") {
+		alert("File isn't a Tilemap Town map?");
+		return false;
+	}
+	let mapInfo = undefined;
+
+	for (let line of lines) {
+		if (line.startsWith("version=")) {
+			let version = line.slice(8);
+			if (version != "1") {
+				alert("Map file is for a later version of Tilemap Town");
+				return false;
+			}
+		} else if (line.startsWith("MAP=")) {
+			let mapData = JSON.parse(line.slice(4));
+			let width = mapData.pos[2]+1;
+			let height = mapData.pos[3]+1;
+
+			MyMap = new TownMap(width, height);
+			if (mapInfo)
+				MyMap.Info = mapInfo;
+
+			// Write in tiles and objects
+			for (let turf of mapData.turf) {
+				MyMap.Tiles[turf[0]][turf[1]] = turf[2];
+			}
+			for (let obj of mapData.obj) {
+				MyMap.Objs[obj[0]][obj[1]] = obj[2];
+			}
+
+			NeedMapRedraw = true;
+		} else if (line.startsWith("MAI=")) {
+			mapInfo = JSON.parse(line.slice(4));
+		}
+	}
+	return true;
 }

@@ -1127,6 +1127,8 @@ def permission_change(map, client, context, arg, command2):
 			map.deny &= ~permission_value
 		map.broadcast("MSG", {'text': "%s sets the default \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[0], command2)})
 		map.save_on_clean_up = True
+		if map.is_map():
+			map.resend_map_info_to_users(mai_only=True)
 		return
 
 	# Group permissions and entity permissions are the same thing
@@ -1319,12 +1321,16 @@ def fn_mapname(map, client, context, arg):
 	map.name = arg.replace('\n', '')
 	map.save_on_clean_up = True
 	respond(context, 'Map name set to \"%s\"' % map.name)
+	map.resend_map_info_to_users(mai_only=True)
 
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="text")
 def fn_mapdesc(map, client, context, arg):
+	if arg == "":
+		arg = None
 	map.desc = arg
 	map.save_on_clean_up = True
-	respond(context, 'Map description set to \"%s\"' % map.desc)
+	respond(context, 'Map description set to \"%s\"' % (map.desc or ""))
+	map.resend_map_info_to_users(mai_only=True)
 
 @cmd_command(category="Map", privilege_level="no_scripts", map_only=True, syntax="text")
 def fn_topic(map, client, context, arg):
@@ -1392,6 +1398,8 @@ def fn_mapowner(map, client, context, arg):
 		respond(context, 'Map owner set to \"%s\"' % map.owner)
 	else:
 		respond(context, 'Nonexistent account', error=True)
+		return
+	map.resend_map_info_to_users(mai_only=True)
 	map.save_on_clean_up = True
 
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="public/private/unlisted")
@@ -1407,6 +1415,8 @@ def fn_mapprivacy(map, client, context, arg):
 		map.map_flags &= ~mapflag['public']
 	else:
 		respond(context, 'Map privacy must be public, private, or unlisted', error=True)
+		return
+	map.resend_map_info_to_users(mai_only=True)
 	map.save_on_clean_up = True
 
 @cmd_command(category="Map", privilege_level="map_admin", map_only=True, syntax="on/off")
@@ -1417,6 +1427,8 @@ def fn_mapprotect(map, client, context, arg):
 		map.allow &= ~permission['sandbox']
 	else:
 		respond(context, 'Map sandbox must be on or off', error=True)
+		return
+	map.resend_map_info_to_users(mai_only=True)
 
 @cmd_command(category="Map", privilege_level="map_admin", map_only=True, syntax="on/off")
 def fn_mapbuild(map, client, context, arg):
@@ -1426,6 +1438,8 @@ def fn_mapbuild(map, client, context, arg):
 		map.deny |= permission['build']
 	else:
 		respond(context, 'Map building must be on or off', error=True)
+		return
+	map.resend_map_info_to_users(mai_only=True)
 
 @cmd_command(category="Map", privilege_level="map_admin", map_only=True, syntax="on/off")
 def fn_mapdisablesave(map, client, context, arg):
@@ -1450,6 +1464,7 @@ def fn_mapdefaultfloor(map, client, context, arg):
 		map.default_turf = arg
 		map.save_on_clean_up = True
 		respond(context, 'Map floor changed to %s' % arg)
+	map.resend_map_info_to_users(mai_only=True)
 
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="url")
 def fn_mapwallpaper(map, client, context, arg):
@@ -1461,12 +1476,10 @@ def fn_mapwallpaper(map, client, context, arg):
 			map.map_wallpaper = None
 			map.map_data_modified = True # Because wallpapers get saved in with the rest of the data
 			map.save_on_clean_up = True
-			for user in map.contents:
-				if user.is_client():
-					user.send("MAI", map.map_info(user=user))
 			respond(context, 'Wallpaper removed')
 		else:
 			respond(context, 'No wallpaper to remove', error=True)
+			return
 	elif arg[0].startswith("http"):
 		if image_url_is_okay(arg[0]):
 			wallpaper = {"url": arg[0], "center": True, "offset": [0,0]}
@@ -1487,14 +1500,14 @@ def fn_mapwallpaper(map, client, context, arg):
 			map.map_data_modified = True # Because wallpapers get saved in with the rest of the data
 			map.save_on_clean_up = True
 
-			for user in map.contents:
-				if user.is_client():
-					user.send("MAI", map.map_info(user=user))
 			respond(context, 'Wallpaper changed to "%s"' % arg[0])
 		else:
 			respond(context, 'URL doesn\'t match any allowlisted sites, or is not a PNG', error=True)
+			return
 	else:
 		respond(context, 'Please provide a URL', error=True)
+		return
+	map.resend_map_info_to_users(mai_only=True)
 
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="url")
 def fn_mapmusic(map, client, context, arg):
@@ -1506,12 +1519,10 @@ def fn_mapmusic(map, client, context, arg):
 			map.map_music = None
 			map.map_data_modified = True # Because music gets saved in with the rest of the data
 			map.save_on_clean_up = True
-			for user in map.contents:
-				if user.is_client():
-					user.send("MAI", map.map_info(user=user))
 			respond(context, 'Music removed')
 		else:
 			respond(context, 'No music to remove', error=True)
+			return
 	elif arg[0].startswith("http"):
 		if user_file_url_is_ok(arg[0]):
 			lower = arg[0].lower()
@@ -1520,17 +1531,17 @@ def fn_mapmusic(map, client, context, arg):
 				map.map_music = music
 				map.map_data_modified = True # Because music gets saved in with the rest of the data
 				map.save_on_clean_up = True
-
-				for user in map.contents:
-					if user.is_client():
-						user.send("MAI", map.map_info(user=user))
 				respond(context, 'Music changed to "%s"' % arg[0])
 			else:
 				respond(context, 'Allowed music formats are MOD, S3M, XM, IT, MPTM', error=True)
+				return
 		else:
 			respond(context, 'URL doesn\t match any allowlisted sites', error=True)
+			return
 	else:
 		respond(context, 'Please provide a URL', error=True)
+		return
+	map.resend_map_info_to_users(mai_only=True)
 
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="text")
 def fn_mapspawn(map, client, context, arg):
