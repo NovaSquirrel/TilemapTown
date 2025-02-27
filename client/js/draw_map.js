@@ -754,6 +754,8 @@ function drawMap() {
 		let [zoneDrawX, zoneDrawY, zoneIndex] = over;
 		
 		for (let o of backdropOverMap[zoneIndex]) {
+			if (!backdropDrawnAlready[zoneIndex])
+				continue;
 			let [x, y, object, map, mapx, mapy] = o;
 			drawObj(ctx, (zoneDrawX * BACKDROP_ZONE_PIXEL_SIZE - zoneScrollOffsetX) + x * 16, (zoneDrawY * BACKDROP_ZONE_PIXEL_SIZE - zoneScrollOffsetY) + y * 16, object, map, mapx, mapy);
 		}
