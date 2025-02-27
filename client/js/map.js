@@ -1,7 +1,7 @@
 /*
  * Tilemap Town
  *
- * Copyright (C) 2017-2023 NovaSquirrel
+ * Copyright (C) 2017-2025 NovaSquirrel
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -109,6 +109,7 @@ function FetchTilesetImage(id, url) {
 	let img = new Image();
 	img.onload = function(){
 		NeedMapRedraw = true;
+		backdropRerenderAll = true;
 		if(id <= 0) {
 			redrawBuildCanvas();
 		}
@@ -278,6 +279,7 @@ function importMap(map) {
 			}
 
 			NeedMapRedraw = true;
+			backdropRerenderAll = true;
 		} else if (line.startsWith("MAI=")) {
 			mapInfo = JSON.parse(line.slice(4));
 		}
