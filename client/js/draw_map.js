@@ -597,6 +597,7 @@ function drawMap() {
 	// Other backdrop information
 	let backdropCtx = backdropCanvas.getContext("2d");
 	let backdropDrawnAlready = new Uint8Array(backdropWidthTiles * backdropHeightTiles);
+	let backdropWithOver = [];
 
 	let edgeLinks = MyMap?.Info?.edge_links ?? null;
 
@@ -614,12 +615,11 @@ function drawMap() {
 		backdropDirtyMap[zoneIndex] = BACKDROP_DIRTY_SKIP;
 		if (backdropDrawnAlready[zoneIndex])
 			return;
-		backdropOverMap[zoneIndex] = [];
-
 		if (backdropRerenderAll || dirty == BACKDROP_DIRTY_RENDER || dirty == BACKDROP_DIRTY_ANIMATED) {
 			backdropCtx.globalAlpha = 1;
 			backdropCtx.fillStyle = "black";
 			backdropCtx.fillRect(renderBaseX, renderBaseY, BACKDROP_ZONE_PIXEL_SIZE, BACKDROP_ZONE_PIXEL_SIZE);
+			backdropOverMap[zoneIndex] = [];
 
 			for (let withinZoneX = 0; withinZoneX < BACKDROP_ZONE_SIZE; withinZoneX++) {
 				for (let withinZoneY = 0; withinZoneY < BACKDROP_ZONE_SIZE; withinZoneY++) {
@@ -714,10 +714,19 @@ function drawMap() {
 			ctx.drawImage(backdropCanvas, renderBaseX, renderBaseY, BACKDROP_ZONE_PIXEL_SIZE, BACKDROP_ZONE_PIXEL_SIZE, zoneDrawGridX*BACKDROP_ZONE_PIXEL_SIZE-zoneScrollOffsetX, zoneDrawGridY*BACKDROP_ZONE_PIXEL_SIZE-zoneScrollOffsetY, BACKDROP_ZONE_PIXEL_SIZE, BACKDROP_ZONE_PIXEL_SIZE);
 			backdropDrawnAlready[zoneIndex] = 1;
 		}
+		if (backdropOverMap[zoneIndex] && backdropOverMap[zoneIndex].length) {
+			backdropWithOver.push([zoneDrawGridX, zoneDrawGridY, zoneIndex]);
+		}
 	}
 
 	for (let zoneDrawGridY = 0; zoneDrawGridY < backdropHeightZones; zoneDrawGridY++) {
 		for (let zoneDrawGridX = 0; zoneDrawGridX < backdropWidthZones; zoneDrawGridX++) {
+			const zoneRealGridX = wrapWithin(zoneScrollGridX+zoneDrawGridX, backdropWidthZones);
+			const zoneRealGridY = wrapWithin(zoneScrollGridY+zoneDrawGridY, backdropHeightZones);
+			const renderBaseX = zoneRealGridX * BACKDROP_ZONE_PIXEL_SIZE;
+			const renderBaseY = zoneRealGridY * BACKDROP_ZONE_PIXEL_SIZE;
+			const zoneIndex = zoneRealGridY * backdropWidthZones + zoneRealGridX;
+
 			processBackdropGrid(zoneDrawGridX, zoneDrawGridY);
 		}
 	}
@@ -741,13 +750,14 @@ function drawMap() {
 	drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCameraX, pixelCameraY, tileX, tileY);
 
 	// Draw objects that should appear above players
-	// TODO
-/*
-	for (let i=0; i<objectsWithOverFlag.length; i++) {
-		let [x, y, object, map, mapx, mapy] = objectsWithOverFlag[i];
-		drawObj(ctx, x, y, object, map, mapx, mapy);
+	for (let over of backdropWithOver) {
+		let [zoneDrawX, zoneDrawY, zoneIndex] = over;
+		
+		for (let o of backdropOverMap[zoneIndex]) {
+			let [x, y, object, map, mapx, mapy] = o;
+			drawObj(ctx, (zoneDrawX * BACKDROP_ZONE_PIXEL_SIZE - zoneScrollOffsetX) + x * 16, (zoneDrawY * BACKDROP_ZONE_PIXEL_SIZE - zoneScrollOffsetY) + y * 16, object, map, mapx, mapy);
+		}
 	}
-*/
 
 	// Draw markers that show that people are building
 	let potluck = document.getElementById('potluck');
