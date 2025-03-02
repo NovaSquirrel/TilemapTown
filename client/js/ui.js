@@ -3032,7 +3032,7 @@ function runAnimation(timestamp) {
 		}
 
 		drawMap();
-	} else if (tileAnimationTicked) { // every 0.1 seconds
+	} else if (tileAnimationTicked && (entityAnimationEnabled || tileAnimationEnabled)) { // every 0.1 seconds
 		drawMap();
 	} else if (NeedMapRedraw) {
 		drawMap();
