@@ -3012,6 +3012,7 @@ function runAnimation(timestamp) {
 			const screenGridX = pixelCameraX >> (4+BACKDROP_ZONE_SHIFT);
 			const screenGridY = pixelCameraY >> (4+BACKDROP_ZONE_SHIFT);
 
+			// When scrolling, render the part of the map that's scrolling in
 			if (AdjustX > 0) {
 				if (AdjustX < BACKDROP_ZONE_PIXEL_SIZE*3) {
 					for (let column = 0; (backdropWidthZones-column-1) >= 0 && column < Math.ceil(AdjustX / BACKDROP_ZONE_PIXEL_SIZE); column++)
@@ -3024,7 +3025,7 @@ function runAnimation(timestamp) {
 				if (AdjustY < BACKDROP_ZONE_PIXEL_SIZE*3) {
 					for (let row = 0; (backdropHeightZones-row-1) >= 0 && row < Math.ceil(AdjustY / BACKDROP_ZONE_PIXEL_SIZE); row++)
 						for (let i=0; i<backdropWidthZones; i++)
-							markGrid(i, backdropHeightZones-row-1, i);
+							markGrid(i, backdropHeightZones-row-1);
 				} else
 					backdropRerenderAll = true;
 			}
@@ -3038,7 +3039,6 @@ function runAnimation(timestamp) {
 			}
 			if (AdjustY < 0) {
 				if (AdjustY > -BACKDROP_ZONE_PIXEL_SIZE*3) {
-					console.log(Math.ceil(-AdjustY / BACKDROP_ZONE_PIXEL_SIZE), "up");
 					for (let row = 0; row < backdropHeightZones && row < Math.ceil(-AdjustY / BACKDROP_ZONE_PIXEL_SIZE); row++)
 						for (let i=0; i<backdropWidthZones; i++)
 							markGrid(i, row);
