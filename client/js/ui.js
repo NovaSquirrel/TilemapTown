@@ -77,17 +77,18 @@ let selCanvas = null; // selector
 let chatInput = null;
 let panel = null;
 
-let backdropCanvas = null; // map without any entities or "over" tiles on it
-let backdropDirtyMap = undefined; // 1D array, row major
-let backdropOverMap = undefined; // 1D array, row major. [X, Y, [pic_sheet, pic_x, pic_y]]
-let backdropRerenderAll = undefined, backdropDrawAll = undefined;
-let backdropWidthZones = undefined;
-let backdropHeightZones = undefined;
-let backdropWidthTiles = undefined;
-let backdropHeightTiles = undefined;
-const BACKDROP_ZONE_SIZE = 8;
+// Backdrop related variables (backdrop is a second canvas that only contains map tiles, that can be redrawn behind entities as they move across it)
+let backdropCanvas = null; // Map without any entities or "over" tiles on it
+let backdropDirtyMap = undefined; // 2D array stored as a 1D array, row major
+let backdropOverMap = undefined; // 2D array stored as a 1D array, row major. [withinZoneX, withinZoneY, object, map, mapCoordX, mapCoordY]
+let backdropRerenderAll = undefined, backdropDrawAll = undefined; // Overrides the dirty map
+let backdropWidthZones = undefined;  // Width of the backdrop in zone units
+let backdropHeightZones = undefined; // Height of the backdrop in zone units
+let backdropWidthTiles = undefined;  // Width of the backdrop in 16x16 tile units
+let backdropHeightTiles = undefined; // Height of the backdrop in 16x16 tile units 
+const BACKDROP_ZONE_SIZE = 8;        // Size in tiles
 const BACKDROP_ZONE_PIXEL_SIZE = BACKDROP_ZONE_SIZE * 16;
-const BACKDROP_ZONE_SHIFT = 3;
+const BACKDROP_ZONE_SHIFT = 3;       // ">> BACKDROP_ZONE_SHIFT" is the same as "/ BACKDROP_ZONE_SIZE"
 
 let NeedMapRedraw = false;
 let NeedInventoryUpdate = false;

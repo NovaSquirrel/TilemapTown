@@ -596,12 +596,12 @@ function drawMap() {
 
 	// Other backdrop information
 	let backdropCtx = backdropCanvas.getContext("2d");
-	let backdropDrawnAlready = new Uint8Array(backdropWidthTiles * backdropHeightTiles);
-	let backdropWithOver = [];
+	let backdropDrawnAlready = new Uint8Array(backdropWidthZones * backdropHeightZones);
+	let backdropWithOver = []; // Keep track of which zones were processed that contain "over" tiles, so we don't need a second scan to find them after entities are drawn
 
 	let edgeLinks = MyMap?.Info?.edge_links ?? null;
 
-	// Render and re-display the map
+	// Attempt to draw one "zone" on the backdrop
 	function processBackdropGrid(zoneDrawGridX, zoneDrawGridY, redraw) {
 		// Which zone is used on the backdrop canvas
 		const zoneRealGridX = wrapWithin(zoneScrollGridX+zoneDrawGridX, backdropWidthZones);
@@ -610,6 +610,7 @@ function drawMap() {
 		const renderBaseX = zoneRealGridX * BACKDROP_ZONE_PIXEL_SIZE;
 		const renderBaseY = zoneRealGridY * BACKDROP_ZONE_PIXEL_SIZE;
 
+		// Index for the 1D array
 		const zoneIndex = zoneRealGridY * backdropWidthZones + zoneRealGridX;
 		const dirty = backdropDirtyMap[zoneIndex];
 		backdropDirtyMap[zoneIndex] = BACKDROP_DIRTY_SKIP;
@@ -625,6 +626,7 @@ function drawMap() {
 				for (let withinZoneY = 0; withinZoneY < BACKDROP_ZONE_SIZE; withinZoneY++) {
 					try {
 						backdropCtx.globalAlpha = 1;
+						// Coordinates for the backdrop canvas
 						let drawOnBackdropPixelX = (zoneRealGridX * BACKDROP_ZONE_SIZE + withinZoneX) * 16;
 						let drawOnBackdropPixelY = (zoneRealGridY * BACKDROP_ZONE_SIZE + withinZoneY) * 16;
 
@@ -709,11 +711,10 @@ function drawMap() {
 			}
 		}
 		if (backdropRerenderAll || backdropDrawAll || redraw || dirty != BACKDROP_DIRTY_SKIP) {
-			ctx.fillStyle = "black";
-			ctx.fillRect(zoneDrawGridX*BACKDROP_ZONE_PIXEL_SIZE-zoneScrollOffsetX, zoneDrawGridY*BACKDROP_ZONE_PIXEL_SIZE-zoneScrollOffsetY, BACKDROP_ZONE_PIXEL_SIZE, BACKDROP_ZONE_PIXEL_SIZE);
 			ctx.drawImage(backdropCanvas, renderBaseX, renderBaseY, BACKDROP_ZONE_PIXEL_SIZE, BACKDROP_ZONE_PIXEL_SIZE, zoneDrawGridX*BACKDROP_ZONE_PIXEL_SIZE-zoneScrollOffsetX, zoneDrawGridY*BACKDROP_ZONE_PIXEL_SIZE-zoneScrollOffsetY, BACKDROP_ZONE_PIXEL_SIZE, BACKDROP_ZONE_PIXEL_SIZE);
 			backdropDrawnAlready[zoneIndex] = 1;
 		}
+		// Note that there are "over" tiles here, to draw later
 		if (backdropOverMap[zoneIndex] && backdropOverMap[zoneIndex].length) {
 			backdropWithOver.push([zoneDrawGridX, zoneDrawGridY, zoneIndex]);
 		}
@@ -721,12 +722,6 @@ function drawMap() {
 
 	for (let zoneDrawGridY = 0; zoneDrawGridY < backdropHeightZones; zoneDrawGridY++) {
 		for (let zoneDrawGridX = 0; zoneDrawGridX < backdropWidthZones; zoneDrawGridX++) {
-			const zoneRealGridX = wrapWithin(zoneScrollGridX+zoneDrawGridX, backdropWidthZones);
-			const zoneRealGridY = wrapWithin(zoneScrollGridY+zoneDrawGridY, backdropHeightZones);
-			const renderBaseX = zoneRealGridX * BACKDROP_ZONE_PIXEL_SIZE;
-			const renderBaseY = zoneRealGridY * BACKDROP_ZONE_PIXEL_SIZE;
-			const zoneIndex = zoneRealGridY * backdropWidthZones + zoneRealGridX;
-
 			processBackdropGrid(zoneDrawGridX, zoneDrawGridY);
 		}
 	}
