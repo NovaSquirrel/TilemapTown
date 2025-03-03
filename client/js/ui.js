@@ -2902,8 +2902,9 @@ function runAnimation(timestamp) {
 
 	if (tileAnimationTickTimer > 500) // Limit how many times the loop below can go
 		tileAnimationTickTimer = 500;
-	while (tileAnimationTickTimer >= 100) {
-		tileAnimationTickTimer -= 100;
+	const animationTimerTarget = SlowAnimationTick ? 400 : 100;
+	while (tileAnimationTickTimer >= animationTimerTarget) {
+		tileAnimationTickTimer -= animationTimerTarget;
 
 		tenthOfSecondTimer = (tenthOfSecondTimer + 1) % 0x1000000;
 

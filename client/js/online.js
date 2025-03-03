@@ -99,6 +99,9 @@ function readURLParams() {
         break;
 
       // Include non-server related flags too
+      case "instant_scroll":
+        InstantCamera = true;
+        break;
       case "low_animation":
         InstantCamera = true;
         SlowAnimationTick = true;
