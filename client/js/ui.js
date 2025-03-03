@@ -220,6 +220,7 @@ function applyOptions() {
 		"minutes_until_disconnect": minutesUntilDisconnect,
 	};
 	localStorage.setItem("options", JSON.stringify(saved_options));
+	backdropRerenderAll = true;
 }
 
 function zoomIn() {
@@ -2952,6 +2953,8 @@ function runAnimation(timestamp) {
 		let AdjustX = 0, AdustY = 0;
 
 		if(InstantCamera) {
+			AdjustX = (TargetCameraX - CameraX); // To detect the direction the camera is moving
+			AdjustY = (TargetCameraY - CameraY);
 			CameraX = TargetCameraX;
 			CameraY = TargetCameraY;
 		} else {
