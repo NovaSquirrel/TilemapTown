@@ -1,7 +1,7 @@
 /*
  * Tilemap Town
  *
- * Copyright (C) 2017-2024 NovaSquirrel
+ * Copyright (C) 2017-2025 NovaSquirrel
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -32,6 +32,11 @@ let edgeMapLookupTable = [
 ];
 let tileAnimationEnabled = true;
 let entityAnimationEnabled = true;
+
+const BACKDROP_DIRTY_RENDER   = 0; // Needs to be rendered and displayed
+const BACKDROP_DIRTY_ANIMATED = 1; // Zone is ready, but contains animated tiles
+const BACKDROP_DIRTY_REDRAW   = 2; // Needs to be displayed again
+const BACKDROP_DIRTY_SKIP     = 3; // Skip this zone because it's all ready
 
 ///////////////////////////////////////////////////////////
 // Autotile related functions
@@ -128,6 +133,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 		let Mob = PlayerWho[who];
 		let offset = Mob.offset ?? [0,0];
 		ctx.drawImage(PlayerImages[who], frameX * 32, frameY * 32, 32, 32, (Mob.x * 16 - 8) - pixelCameraX + offset[0], (Mob.y * 16 - 16) - pixelCameraY + offset[1], 32, 32);
+		markAreaAroundPointAsDirty(MyMap, Mob.x + (offset[0]/16), Mob.y + (offset[1]/16), 5);
 	}
 
 	let sortedPlayers = [];
@@ -180,6 +186,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 						(Mob.x * 16 + 8 - size[0]*8) - pixelCameraX + offset[0],
 						(Mob.y * 16 + 16 - size[1]*16) - pixelCameraY + offset[1],
 						size[0] * 16, size[1] * 16);
+					markAreaAroundPointAsDirty(MyMap, Mob.x + (offset[0]/16), Mob.y + (offset[1]/16), 5);
 				} else {
 					RequestImageIfNeeded(pic[0]);
 				}
@@ -204,6 +211,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 				} else if (tilesetWidth == 16 && tilesetHeight == 16) {
 					ctx.drawImage(PlayerImages[index], 0, 0, 16, 16, (Mob.x * 16) - pixelCameraX + MobOffset[0], (Mob.y * 16) - pixelCameraY + MobOffset[1], 16, 16);
 					playerIs16x16 = true;
+					markAreaAroundPointAsDirty(MyMap, Mob.x + (MobOffset[0]/16), Mob.y + (MobOffset[1]/16), 5);
 				} else {
 					let frameX = 0, frameY = 0;
 					let frameCountFromAnimationTick = entityAnimationEnabled ? Math.floor(tenthOfSecondTimer/2) : 0;
@@ -245,6 +253,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 					pic = [0, 8, 24];
 				if (pic[0] in IconSheets) {
 					ctx.drawImage(IconSheets[pic[0]], pic[1] * 16, pic[2] * 16, 16, 16, (Mob.x * 16) - pixelCameraX + MobOffset[0], (Mob.y * 16) - pixelCameraY + MobOffset[1], 16, 16);
+					markAreaAroundPointAsDirty(MyMap, Mob.x + (MobOffset[0]/16), Mob.y + (MobOffset[1]/16), 5);
 				} else {
 					RequestImageIfNeeded(pic[0]);
 				}
@@ -290,6 +299,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 							data_count--;
 						}
 					}
+					markAreaAroundPointAsDirty(MyMap, Mob.x + (MobOffset[0]/16 + mini_tilemap_offset[0]/16), Mob.y + (MobOffset[1]/16 + mini_tilemap_offset[1]/16), 5);
 				}
 			} catch (error) {
 			}
@@ -297,6 +307,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 			// typing indicators
 			if (Mob.typing) {
 				ctx.drawImage(IconSheets[0], 0, 24 * 16, 16, 16, (Mob.x * 16) - pixelCameraX + MobOffset[0], (Mob.y * 16) - pixelCameraY - heightForPlayerStatus + MobOffset[1] + 6 + 5, 16, 16);
+				// Should this mark tiles as dirty? Probably unneeded due to WHO updates doing this too
 			}
 
 			// carry text and nametags
@@ -367,6 +378,10 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 	let animationFrame = 0;
 	if(tileAnimationEnabled) {
 		animationFrame = calculateAnimationFrame(tile, tenthOfSecondTimer);
+
+		let animationFrameCount = Math.max(1, tile.anim_frames ?? 1);
+		if (animationFrameCount > 1)
+			markTilesAsDirty(map, mapCoordX, mapCoordY, 1, 1, BACKDROP_DIRTY_ANIMATED);
 	}
 	switch(autotileLayout) {
 		case 0: // No autotiling, so leave picX and picY as-is
@@ -494,116 +509,224 @@ function drawObj(ctx, drawAtX, drawAtY, obj, map, mapCoordX, mapCoordY) {
 }
 
 function wrapWithin(value, max) {
-	if(value >= 0)
-		return value % max;
-	return max + (value % max) - 1;
+	return ((value % max) + max) % max;
+}
+
+function markAreaAroundEntityAsDirty(id) {
+	let x = PlayerWho[id]?.x;
+	let y = PlayerWho[id]?.y;
+	if (x !== undefined && y !== undefined)
+		markAreaAroundPointAsDirty(MyMap, x, y, 7);
+}
+function markAreaAroundPointAsDirty(map, x, y, size) {
+	if (x === undefined || x === null || y === undefined || y === null)
+		return;
+	markTilesAsDirty(map, Math.round(x)-(size>>1), Math.round(y)-(size>>1), size, size, BACKDROP_DIRTY_REDRAW);
+}
+const edgeIndexIncludesLeft  = [false, false, false, true, true, true, false, false];
+const edgeIndexIncludesRight = [true, true, false, false, false, false, false, true];
+const edgeIndexIncludesUp    = [false, false, false, false, false, true, true, true];
+const edgeIndexIncludesDown  = [false, true, true, true, false, false, false, false];
+
+function markTilesAsDirty(map, baseX, baseY, width, height, level) {
+	const pixelCameraX = Math.round(CameraX - mapCanvas.width / 2);
+	const pixelCameraY = Math.round(CameraY - mapCanvas.height / 2);
+
+	if (map !== MyMap) {
+		let edgeLinks = MyMap?.Info?.edge_links ?? null;
+		if (!edgeLinks)
+			return;
+		let edgeIndex = edgeLinks.indexOf(map.Info.id);
+		if (edgeIndex < 0)
+			return;
+		if (edgeIndexIncludesLeft[edgeIndex]) // Left
+			baseX -= map.Width;
+		else if (edgeIndexIncludesRight[edgeIndex]) // Right
+			baseX += MyMap.Width;
+		if (edgeIndexIncludesUp[edgeIndex]) // Above
+			baseY -= map.Height;
+		else if (edgeIndexIncludesDown[edgeIndex]) // Below
+			baseY += MyMap.Height;
+	}
+
+	for (let h=0; h<height; h++) {
+		const mapY = baseY+h;
+		const tileGridY   = mapY >> BACKDROP_ZONE_SHIFT;
+		const screenGridY = pixelCameraY >> (4+BACKDROP_ZONE_SHIFT);
+		if (tileGridY < screenGridY || tileGridY >= (screenGridY + backdropHeightZones))
+			continue;
+		for (let w=0; w<width; w++) {
+			const mapX = baseX+w;
+			const tileGridX   = mapX >> BACKDROP_ZONE_SHIFT;
+			const screenGridX = pixelCameraX >> (4+BACKDROP_ZONE_SHIFT);
+			if (tileGridX < screenGridX || tileGridX >= (screenGridX + backdropWidthZones))
+				continue;
+
+			const zoneRealGridX = wrapWithin(tileGridX, backdropWidthZones);
+			const zoneRealGridY = wrapWithin(tileGridY, backdropHeightZones);
+			const zoneIndex = zoneRealGridY * backdropWidthZones + zoneRealGridX;
+
+			if (level < backdropDirtyMap[zoneIndex])
+				backdropDirtyMap[zoneIndex] = level;
+		}
+	}
 }
 
 function drawMap() {
 	let canvas = mapCanvas;
-	let ctx = canvas.getContext("2d");
-
-	// Clear to black
-	ctx.fillStyle = "black";
-	ctx.fillRect(0, 0, canvas.width, canvas.height);
+	let ctx = mapCanvas.getContext("2d");
 
 	// Calculate camera pixel coordinates
 	let viewWidth = Math.floor(canvas.width / 16);
 	let viewHeight = Math.floor(canvas.height / 16);
 	let pixelCameraX = Math.round(CameraX - canvas.width / 2);
 	let pixelCameraY = Math.round(CameraY - canvas.height / 2);
+
+	// Scrolling information for individual tiles
 	let offsetX = pixelCameraX & 15;
 	let offsetY = pixelCameraY & 15;
 	let tileX = pixelCameraX >> 4;
 	let tileY = pixelCameraY >> 4;
 
+	// Scrolling information for backdrop zones
+	let zoneScrollOffsetX = pixelCameraX & (BACKDROP_ZONE_PIXEL_SIZE-1);
+	let zoneScrollOffsetY = pixelCameraY & (BACKDROP_ZONE_PIXEL_SIZE-1);
+	let zoneScrollGridX = pixelCameraX >> (4+BACKDROP_ZONE_SHIFT);
+	let zoneScrollGridY = pixelCameraY >> (4+BACKDROP_ZONE_SHIFT);
+
+	// Other backdrop information
+	let backdropCtx = backdropCanvas.getContext("2d");
+	let backdropDrawnAlready = new Uint8Array(backdropWidthZones * backdropHeightZones);
+	let backdropWithOver = []; // Keep track of which zones were processed that contain "over" tiles, so we don't need a second scan to find them after entities are drawn
+
 	let edgeLinks = MyMap?.Info?.edge_links ?? null;
 
-	let objectsWithOverFlag = []; // X, Y, [pic_sheet, pic_x, pic_y]
+	// Attempt to draw one "zone" on the backdrop
+	function processBackdropGrid(zoneDrawGridX, zoneDrawGridY, redraw) {
+		// Which zone is used on the backdrop canvas
+		const zoneRealGridX = wrapWithin(zoneScrollGridX+zoneDrawGridX, backdropWidthZones);
+		const zoneRealGridY = wrapWithin(zoneScrollGridY+zoneDrawGridY, backdropHeightZones);
+		// Pixel coordinates for the above
+		const renderBaseX = zoneRealGridX * BACKDROP_ZONE_PIXEL_SIZE;
+		const renderBaseY = zoneRealGridY * BACKDROP_ZONE_PIXEL_SIZE;
 
-	// Render the map
-	for (x = 0; x < (viewWidth + 2); x++) {
-		for (y = 0; y < (viewHeight + 2); y++) {
-			try {
-				ctx.globalAlpha = 1;
-				let mapCoordX = x + tileX;
-				let mapCoordY = y + tileY;
-				let map = MyMap;
+		// Index for the 1D array
+		const zoneIndex = zoneRealGridY * backdropWidthZones + zoneRealGridX;
+		const dirty = backdropDirtyMap[zoneIndex];
+		backdropDirtyMap[zoneIndex] = BACKDROP_DIRTY_SKIP;
+		if (backdropDrawnAlready[zoneIndex])
+			return;
+		if (backdropRerenderAll || dirty == BACKDROP_DIRTY_RENDER || dirty == BACKDROP_DIRTY_ANIMATED) {
+			backdropCtx.globalAlpha = 1;
+			backdropCtx.fillStyle = "black";
+			backdropCtx.fillRect(renderBaseX, renderBaseY, BACKDROP_ZONE_PIXEL_SIZE, BACKDROP_ZONE_PIXEL_SIZE);
+			backdropOverMap[zoneIndex] = [];
 
-				// Out-of-bounds tiles may be on another map
-				let edgeLookupIndex = (mapCoordX < 0) * 1 + (mapCoordX >= MyMap.Width) * 2 +
-					(mapCoordY < 0) * 4 + (mapCoordY >= MyMap.Height) * 8;
-				if (edgeLookupIndex != 0) {
-					if (edgeLinks == null)
-						continue;
-					map = MapsByID[edgeLinks[edgeMapLookupTable[edgeLookupIndex]]];
-					if (map == null)
-						continue;
-					let gradientHorizontal = 1;
-					let gradientVertical = 1;
-					if (edgeLookupIndex & 1) { // Left
-						gradientHorizontal = 0.5 - (-Math.floor(mapCoordX / 2) + 1) * 0.025;
-						mapCoordX = map.Width + mapCoordX;
-					}
-					if (edgeLookupIndex & 2) { // Right
-						mapCoordX -= MyMap.Width;
-						gradientHorizontal = 0.5 - Math.floor(mapCoordX / 2) * 0.025;
-					}
-					if (edgeLookupIndex & 4) { // Above
-						gradientVertical = 0.5 - (-Math.floor(mapCoordY / 2) + 1) * 0.025;
-						mapCoordY = map.Height + mapCoordY;
-					}
-					if (edgeLookupIndex & 8) { // Below
-						mapCoordY -= MyMap.Height;
-						gradientVertical = 0.5 - Math.floor(mapCoordY / 2) * 0.025;
-					}
-					if (mapCoordX < 0 || mapCoordX >= map.Width || mapCoordY < 0 || mapCoordY >= map.Height)
-						continue;
-					ctx.globalAlpha = Math.max(0, Math.min(gradientHorizontal, gradientVertical));
-					if (ctx.globalAlpha == 0)
-						continue;
-				}
+			for (let withinZoneX = 0; withinZoneX < BACKDROP_ZONE_SIZE; withinZoneX++) {
+				for (let withinZoneY = 0; withinZoneY < BACKDROP_ZONE_SIZE; withinZoneY++) {
+					try {
+						backdropCtx.globalAlpha = 1;
+						// Coordinates for the backdrop canvas
+						let drawOnBackdropPixelX = (zoneRealGridX * BACKDROP_ZONE_SIZE + withinZoneX) * 16;
+						let drawOnBackdropPixelY = (zoneRealGridY * BACKDROP_ZONE_SIZE + withinZoneY) * 16;
 
-				// Draw the turf
-				let turfAtom = AtomFromName(map.Tiles[mapCoordX][mapCoordY]);
-				drawTurf(ctx, x * 16 - offsetX, y * 16 - offsetY, turfAtom, map, mapCoordX, mapCoordY);
+						// Find map data coordinates
+						let mapCoordX = withinZoneX + (zoneScrollGridX + zoneDrawGridX) * BACKDROP_ZONE_SIZE;
+						let mapCoordY = withinZoneY + (zoneScrollGridY + zoneDrawGridY) * BACKDROP_ZONE_SIZE;
+						let map = MyMap;
 
-				// Draw wallpaper if available
-				if(map.WallpaperData) {
-					let wallpaper = map.WallpaperData;
-					if(wallpaper.hasWallpaper &&
-					(map.Info["wallpaper"]["over_turf"] || (turfAtom.name == wallpaper.defaultTurf.name && turfAtom.pic[0] == wallpaper.defaultTurf.pic[0] && turfAtom.pic[1] == wallpaper.defaultTurf.pic[1] && turfAtom.pic[2] == wallpaper.defaultTurf.pic[2]))
-					&& (mapCoordX >= wallpaper.wallpaperStartX && mapCoordX <= wallpaper.wallpaperEndX && mapCoordY >= wallpaper.wallpaperStartY && mapCoordY <= wallpaper.wallpaperEndY)) {
-						if(wallpaper.wallpaperHasRepeat) {
-							ctx.drawImage(map.WallpaperImage,
-								wrapWithin(mapCoordX - wallpaper.wallpaperTileX, map.WallpaperImage.naturalWidth>>4)*16,
-								wrapWithin(mapCoordY - wallpaper.wallpaperTileY, map.WallpaperImage.naturalHeight>>4)*16,
-								16, 16, x * 16 - offsetX, y * 16 - offsetY, 16, 16);
-						} else {
-							ctx.drawImage(map.WallpaperImage,
-								(mapCoordX - wallpaper.wallpaperTileX)*16 - (wallpaper.wallpaperDrawX&15),
-								(mapCoordY - wallpaper.wallpaperTileY)*16 - (wallpaper.wallpaperDrawY&15),
-								16, 16, x * 16 - offsetX, y * 16 - offsetY, 16, 16);
+						// Out-of-bounds tiles may be on another map
+						let edgeLookupIndex = (mapCoordX < 0) * 1 + (mapCoordX >= MyMap.Width) * 2 +
+							(mapCoordY < 0) * 4 + (mapCoordY >= MyMap.Height) * 8;
+						if (edgeLookupIndex != 0) {
+							if (edgeLinks == null)
+								continue;
+							map = MapsByID[edgeLinks[edgeMapLookupTable[edgeLookupIndex]]];
+							if (map == null)
+								continue;
+							let gradientHorizontal = 1;
+							let gradientVertical = 1;
+							if (edgeLookupIndex & 1) { // Left
+								gradientHorizontal = 0.5 - (-Math.floor(mapCoordX / 2) + 1) * 0.025;
+								mapCoordX = map.Width + mapCoordX;
+							}
+							if (edgeLookupIndex & 2) { // Right
+								mapCoordX -= MyMap.Width;
+								gradientHorizontal = 0.5 - Math.floor(mapCoordX / 2) * 0.025;
+							}
+							if (edgeLookupIndex & 4) { // Above
+								gradientVertical = 0.5 - (-Math.floor(mapCoordY / 2) + 1) * 0.025;
+								mapCoordY = map.Height + mapCoordY;
+							}
+							if (edgeLookupIndex & 8) { // Below
+								mapCoordY -= MyMap.Height;
+								gradientVertical = 0.5 - Math.floor(mapCoordY / 2) * 0.025;
+							}
+							if (mapCoordX < 0 || mapCoordX >= map.Width || mapCoordY < 0 || mapCoordY >= map.Height)
+								continue;
+							backdropCtx.globalAlpha = Math.max(0, Math.min(gradientHorizontal, gradientVertical));
+							if (backdropCtx.globalAlpha == 0)
+								continue;
 						}
-					}
-				}
 
-				// Draw anything above the turf (the tile objects)
-				let Objs = map.Objs[mapCoordX][mapCoordY];
-				if (Objs.length) {
-					for (let o of Objs) {
-						o = AtomFromName(o);
-						if(o.over === true) {
-							objectsWithOverFlag.push([x * 16 - offsetX, y * 16 - offsetY, o, map, mapCoordX, mapCoordY]);
-						} else {
-							drawObj(ctx, x * 16 - offsetX, y * 16 - offsetY, o, map, mapCoordX, mapCoordY);
+						// Draw the turf
+						let turfAtom = AtomFromName(map.Tiles[mapCoordX][mapCoordY]);
+						drawTurf(backdropCtx, drawOnBackdropPixelX, drawOnBackdropPixelY, turfAtom, map, mapCoordX, mapCoordY);
+
+						// Draw wallpaper if available
+						if(map.WallpaperData) {
+							let wallpaper = map.WallpaperData;
+							if(wallpaper.hasWallpaper &&
+							(map.Info["wallpaper"]["over_turf"] || (turfAtom.name == wallpaper.defaultTurf.name && turfAtom.pic[0] == wallpaper.defaultTurf.pic[0] && turfAtom.pic[1] == wallpaper.defaultTurf.pic[1] && turfAtom.pic[2] == wallpaper.defaultTurf.pic[2]))
+							&& (mapCoordX >= wallpaper.wallpaperStartX && mapCoordX <= wallpaper.wallpaperEndX && mapCoordY >= wallpaper.wallpaperStartY && mapCoordY <= wallpaper.wallpaperEndY)) {
+								if(wallpaper.wallpaperHasRepeat) {
+									backdropCtx.drawImage(map.WallpaperImage,
+										wrapWithin(mapCoordX - wallpaper.wallpaperTileX, map.WallpaperImage.naturalWidth>>4)*16,
+										wrapWithin(mapCoordY - wallpaper.wallpaperTileY, map.WallpaperImage.naturalHeight>>4)*16,
+										16, 16, drawOnBackdropPixelX, drawOnBackdropPixelY, 16, 16);
+								} else {
+									backdropCtx.drawImage(map.WallpaperImage,
+										(mapCoordX - wallpaper.wallpaperTileX)*16 - (wallpaper.wallpaperDrawX&15),
+										(mapCoordY - wallpaper.wallpaperTileY)*16 - (wallpaper.wallpaperDrawY&15),
+										16, 16, drawOnBackdropPixelX, drawOnBackdropPixelY, 16, 16);
+								}
+							}
 						}
+
+						// Draw anything above the turf (the tile objects)
+						let Objs = map.Objs[mapCoordX][mapCoordY];
+						if (Objs.length) {
+							for (let o of Objs) {
+								o = AtomFromName(o);
+								if(o.over === true) {
+									backdropOverMap[zoneIndex].push([withinZoneX, withinZoneY, o, map, mapCoordX, mapCoordY]);
+								} else {
+									drawObj(backdropCtx, drawOnBackdropPixelX, drawOnBackdropPixelY, o, map, mapCoordX, mapCoordY);
+								}
+							}
+						}
+					} catch (error) {
 					}
 				}
-			} catch (error) {
 			}
 		}
+		if (backdropRerenderAll || backdropDrawAll || redraw || dirty != BACKDROP_DIRTY_SKIP) {
+			ctx.drawImage(backdropCanvas, renderBaseX, renderBaseY, BACKDROP_ZONE_PIXEL_SIZE, BACKDROP_ZONE_PIXEL_SIZE, zoneDrawGridX*BACKDROP_ZONE_PIXEL_SIZE-zoneScrollOffsetX, zoneDrawGridY*BACKDROP_ZONE_PIXEL_SIZE-zoneScrollOffsetY, BACKDROP_ZONE_PIXEL_SIZE, BACKDROP_ZONE_PIXEL_SIZE);
+			backdropDrawnAlready[zoneIndex] = 1;
+		}
+		// Note that there are "over" tiles here, to draw later
+		if (backdropOverMap[zoneIndex] && backdropOverMap[zoneIndex].length) {
+			backdropWithOver.push([zoneDrawGridX, zoneDrawGridY, zoneIndex]);
+		}
 	}
+
+	for (let zoneDrawGridY = 0; zoneDrawGridY < backdropHeightZones; zoneDrawGridY++) {
+		for (let zoneDrawGridX = 0; zoneDrawGridX < backdropWidthZones; zoneDrawGridX++) {
+			processBackdropGrid(zoneDrawGridX, zoneDrawGridY);
+		}
+	}
+	backdropRerenderAll = false;
+	backdropDrawAll = false;
 
 	// Draw entities and map link edge normally
 	ctx.globalAlpha = 1;
@@ -622,9 +745,15 @@ function drawMap() {
 	drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCameraX, pixelCameraY, tileX, tileY);
 
 	// Draw objects that should appear above players
-	for (let i=0; i<objectsWithOverFlag.length; i++) {
-		let [x, y, object, map, mapx, mapy] = objectsWithOverFlag[i];
-		drawObj(ctx, x, y, object, map, mapx, mapy);
+	for (let over of backdropWithOver) {
+		let [zoneDrawX, zoneDrawY, zoneIndex] = over;
+		
+		for (let o of backdropOverMap[zoneIndex]) {
+			if (!backdropDrawnAlready[zoneIndex])
+				continue;
+			let [x, y, object, map, mapx, mapy] = o;
+			drawObj(ctx, (zoneDrawX * BACKDROP_ZONE_PIXEL_SIZE - zoneScrollOffsetX) + x * 16, (zoneDrawY * BACKDROP_ZONE_PIXEL_SIZE - zoneScrollOffsetY) + y * 16, object, map, mapx, mapy);
+		}
 	}
 
 	// Draw markers that show that people are building
@@ -635,6 +764,7 @@ function drawMap() {
 		let del = marker.del;
 		drawTextSmall(ctx, (marker.pos[0] * 16 + 8) - pixelCameraX - (nameText.length * 4 / 2),   (marker.pos[1] * 16) - pixelCameraY - 8, nameText);
 		ctx.drawImage(potluck, del?(17 * 16):(9 * 16), del?(19 * 16):(22 * 16), 16, 16, marker.pos[0] * 16 - pixelCameraX, marker.pos[1] * 16 - pixelCameraY, 16, 16);
+		markAreaAroundPointAsDirty(marker.pos[0], marker.pos[1], 7);
 	}
 
 	// Draw a mouse selection if there is one

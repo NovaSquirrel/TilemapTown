@@ -1,7 +1,7 @@
 /*
  * Tilemap Town
  *
- * Copyright (C) 2017-2024 NovaSquirrel
+ * Copyright (C) 2017-2025 NovaSquirrel
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -366,8 +366,6 @@ function keyDownHandler(e) {
 		}    
 	}
 
-	let needRedraw = false;
-
 	let PlayerX = PlayerWho[PlayerYou].x;
 	let PlayerY = PlayerWho[PlayerYou].y;
 	let PlayerDir = PlayerWho[PlayerYou].dir;
@@ -387,6 +385,7 @@ function keyDownHandler(e) {
 		MouseDown = false;
 		panel.innerHTML = "";
 		NeedMapRedraw = true;
+		backdropDrawAll = true;
 		selectionInfoVisibility(false);
 	} else if (e.keyCode >= 48 && e.keyCode <= 57) { // 0 through 9
 		// calculate which inventory item
@@ -470,6 +469,7 @@ function keyDownHandler(e) {
 			isDraw = document.getElementById("buildToolDraw").checked = true;
 			MouseActive = false;
 			NeedMapRedraw = true;
+			backdropDrawAll = true;
 		} else if(buildTool == BUILD_TOOL_DRAW) {
 			buildTool = BUILD_TOOL_SELECT;
 			isSelect = document.getElementById("buildToolSelect").checked = true;
@@ -477,6 +477,7 @@ function keyDownHandler(e) {
 			drawToolX = null;
 			drawToolY = null;
 			NeedMapRedraw = true;
+			backdropDrawAll = true;
 		}
 	} else if (e.code == "KeyK") { // Kiss
 		const dir = PlayerWho[PlayerYou].dir;
@@ -575,9 +576,6 @@ function keyDownHandler(e) {
 			movePlayer(PlayerYou, PlayerX, PlayerY, PlayerDir, new Set([PlayerYou]));
 		}
 	}
-
-	if (needRedraw)
-		drawMap();
 }
 document.onkeydown = keyDownHandler;
 document.onkeyup = keyUpHandler;
@@ -830,6 +828,7 @@ function useItemAtXY(Placed, x, y) {
 				SendCmd("PUT", { pos: [x, y], obj: false, atom: MyMap.Tiles[x][y] });
 			}
 			mapWasChanged = true;
+			markTilesAsDirty(MyMap, x-1, y-1, 3, 3, BACKDROP_DIRTY_RENDER);
 			drawMap();
 			break;
 		case "gadget":
@@ -866,6 +865,7 @@ function selectionDelete() {
 
 	MouseActive = false;
 	NeedMapRedraw = true;
+	backdropRerenderAll = true;
 	selectionInfoVisibility(false);
 }
 
@@ -879,19 +879,24 @@ function handleDragging(pos) {
 	if (buildTool == BUILD_TOOL_SELECT) {
 		if (!MouseDown)
 			return;
-		if (pos.x != MouseEndX || pos.y != MouseEndY)
+		if (pos.x != MouseEndX || pos.y != MouseEndY) {
 			NeedMapRedraw = true;
+			backdropDrawAll = true;
+		}
 		MouseEndX = pos.x;
 		MouseEndY = pos.y;
 	} else if(buildTool == BUILD_TOOL_DRAW) {
 		if(drawingTooFar(pos.x, pos.y, OK_DRAW_DISTANCE)) {
+			markAreaAroundPointAsDirty(MyMap, drawToolX, drawToolY, 3);
 			drawToolX = null;
 			drawToolY = null;
 			return;
 		}
 		if(drawToolX !== MouseNowX || drawToolY !== MouseNowY) {
+			markAreaAroundPointAsDirty(MyMap, drawToolX, drawToolY, 3);
 			drawToolX = MouseNowX;
 			drawToolY = MouseNowY;
+			markAreaAroundPointAsDirty(MyMap, drawToolX, drawToolY, 3);
 			NeedMapRedraw = true;
 
 			if (!MouseDown)
@@ -948,6 +953,7 @@ function initMouse() {
 		MouseEndY = pos.y;
 		MouseActive = true;
 		NeedMapRedraw = true;
+		backdropDrawAll = true;
 		selectionInfoVisibility(false);
 	} else if(buildTool == BUILD_TOOL_DRAW) {
 		let data = getDataForDraw();
@@ -979,6 +985,7 @@ function initMouse() {
 		MouseRawPos = getMousePos(mapCanvas, evt);
 		MouseDown = false;
 		NeedMapRedraw = true;
+		backdropDrawAll = true;
 
 		if (buildTool == BUILD_TOOL_SELECT) {
 			// adjust the selection box
@@ -1053,6 +1060,7 @@ function initMouse() {
 		let Around = PlayersAroundTile(MouseNowX, MouseNowY, 2);
 		if (MousedOverPlayers.length != Around.length) {
 			NeedMapRedraw = true;
+			backdropDrawAll = true;
 		}
 		MousedOverEntityClickAvailable = false;
 

@@ -77,6 +77,19 @@ let selCanvas = null; // selector
 let chatInput = null;
 let panel = null;
 
+// Backdrop related variables (backdrop is a second canvas that only contains map tiles, that can be redrawn behind entities as they move across it)
+let backdropCanvas = null; // Map without any entities or "over" tiles on it
+let backdropDirtyMap = undefined; // 2D array stored as a 1D array, row major
+let backdropOverMap = undefined; // 2D array stored as a 1D array, row major. [withinZoneX, withinZoneY, object, map, mapCoordX, mapCoordY]
+let backdropRerenderAll = undefined, backdropDrawAll = undefined; // Overrides the dirty map
+let backdropWidthZones = undefined;  // Width of the backdrop in zone units
+let backdropHeightZones = undefined; // Height of the backdrop in zone units
+let backdropWidthTiles = undefined;  // Width of the backdrop in 16x16 tile units
+let backdropHeightTiles = undefined; // Height of the backdrop in 16x16 tile units 
+const BACKDROP_ZONE_SIZE = 8;        // Size in tiles
+const BACKDROP_ZONE_PIXEL_SIZE = BACKDROP_ZONE_SIZE * 16;
+const BACKDROP_ZONE_SHIFT = 3;       // ">> BACKDROP_ZONE_SHIFT" is the same as "/ BACKDROP_ZONE_SIZE"
+
 let NeedMapRedraw = false;
 let NeedInventoryUpdate = false;
 let TickCounter = 0;   // Goes up every 20ms, wraps at 0x1000000 (hex)
@@ -124,8 +137,21 @@ function getRandomInt(min, max) {
 function resizeCanvas() {
 	let parent = mapCanvas.parentNode;
 	let r = parent.getBoundingClientRect();
-	mapCanvas.width = r.width / CameraScale;
-	mapCanvas.height = r.height / CameraScale;
+	let width  = Math.round(r.width / CameraScale);
+	let height = Math.round(r.height / CameraScale);
+	mapCanvas.width = width;
+	mapCanvas.height = height;
+
+	backdropWidthZones = Math.ceil((width+16.0) / (BACKDROP_ZONE_SIZE*16.0)) + 1;
+	backdropHeightZones = Math.ceil((height+16.0) / (BACKDROP_ZONE_SIZE*16.0)) + 1;
+	backdropWidthTiles = backdropWidthZones * BACKDROP_ZONE_SIZE;
+	backdropHeightTiles = backdropHeightZones * BACKDROP_ZONE_SIZE;
+	backdropCanvas.width = backdropWidthTiles * 16;
+	backdropCanvas.height = backdropHeightTiles * 16;
+	backdropRerenderAll = true;
+	backdropDrawAll = true;
+	backdropDirtyMap = new Uint8Array(backdropWidthZones * backdropHeightZones);
+	backdropOverMap = new Array(backdropWidthZones * backdropHeightZones);
 
 	drawMap();
 	drawHotbar();
@@ -195,6 +221,7 @@ function applyOptions() {
 		"minutes_until_disconnect": minutesUntilDisconnect,
 	};
 	localStorage.setItem("options", JSON.stringify(saved_options));
+	backdropRerenderAll = true;
 }
 
 function zoomIn() {
@@ -2875,8 +2902,9 @@ function runAnimation(timestamp) {
 
 	if (tileAnimationTickTimer > 500) // Limit how many times the loop below can go
 		tileAnimationTickTimer = 500;
-	while (tileAnimationTickTimer >= 100) {
-		tileAnimationTickTimer -= 100;
+	const animationTimerTarget = SlowAnimationTick ? 400 : 100;
+	while (tileAnimationTickTimer >= animationTimerTarget) {
+		tileAnimationTickTimer -= animationTimerTarget;
 
 		tenthOfSecondTimer = (tenthOfSecondTimer + 1) % 0x1000000;
 
@@ -2923,20 +2951,29 @@ function runAnimation(timestamp) {
 	let CameraDistance = Math.sqrt(CameraDifferenceX * CameraDifferenceX + CameraDifferenceY * CameraDifferenceY);
 
 	if (CameraDistance > 0.5) {
+		let OldCameraX = CameraX, OldCameraY = CameraY;
+		let AdjustX = 0, AdustY = 0;
+
 		if(InstantCamera) {
+			AdjustX = (TargetCameraX - CameraX); // To detect the direction the camera is moving
+			AdjustY = (TargetCameraY - CameraY);
 			CameraX = TargetCameraX;
 			CameraY = TargetCameraY;
 		} else {
 			let multiplyBy = deltaTime/300;
 			if (multiplyBy > 1)
 				multiplyBy = 1;
-			let AdjustX = (TargetCameraX - CameraX) * multiplyBy;
-			let AdjustY = (TargetCameraY - CameraY) * multiplyBy;
+			AdjustX = (TargetCameraX - CameraX) * multiplyBy;
+			AdjustY = (TargetCameraY - CameraY) * multiplyBy;
 
 			if (Math.abs(AdjustX) > 0.1)
 				CameraX += AdjustX;
+			else
+				AdjustX = 0;
 			if (Math.abs(AdjustY) > 0.1)
 				CameraY += AdjustY;
+			else
+				AdjustY = 0;
 		}
 
 		if (!CameraAlwaysCenter) {
@@ -2962,6 +2999,56 @@ function runAnimation(timestamp) {
 			}
 			if (MyMap.Height * 16 <= mapCanvas.height) {
 				CameraY = MyMap.Height * 16 / 2;
+			}
+		}
+
+		if (AdjustX != 0 || AdjustY != 0) {
+			backdropDrawAll = true;
+
+			function markGrid(x, y) {
+				const zoneRealGridX = wrapWithin(screenGridX+x, backdropWidthZones);
+				const zoneRealGridY = wrapWithin(screenGridY+y, backdropHeightZones);
+				const zoneIndex = zoneRealGridY * backdropWidthZones + zoneRealGridX;
+				backdropDirtyMap[zoneIndex] = BACKDROP_DIRTY_RENDER;
+			}
+
+			const pixelCameraX = Math.round(CameraX - mapCanvas.width / 2);
+			const pixelCameraY = Math.round(CameraY - mapCanvas.height / 2);
+			const screenGridX = pixelCameraX >> (4+BACKDROP_ZONE_SHIFT);
+			const screenGridY = pixelCameraY >> (4+BACKDROP_ZONE_SHIFT);
+
+			// When scrolling, render the part of the map that's scrolling in
+			if (AdjustX > 0) {
+				if (AdjustX < BACKDROP_ZONE_PIXEL_SIZE*3) {
+					for (let column = 0; (backdropWidthZones-column-1) >= 0 && column < Math.ceil(AdjustX / BACKDROP_ZONE_PIXEL_SIZE); column++)
+						for (let i=0; i<backdropHeightZones; i++)
+							markGrid(backdropWidthZones-column-1, i);
+				} else
+					backdropRerenderAll = true;
+			}
+			if (AdjustY > 0) {
+				if (AdjustY < BACKDROP_ZONE_PIXEL_SIZE*3) {
+					for (let row = 0; (backdropHeightZones-row-1) >= 0 && row < Math.ceil(AdjustY / BACKDROP_ZONE_PIXEL_SIZE); row++)
+						for (let i=0; i<backdropWidthZones; i++)
+							markGrid(i, backdropHeightZones-row-1);
+				} else
+					backdropRerenderAll = true;
+			}
+			if (AdjustX < 0) {
+				if (AdjustX > -BACKDROP_ZONE_PIXEL_SIZE*3) {
+					for (let column = 0; column < backdropWidthZones && column < Math.ceil(-AdjustX / BACKDROP_ZONE_PIXEL_SIZE); column++)
+						for (let i=0; i<backdropHeightZones; i++)
+							markGrid(column, i);
+				} else
+					backdropRerenderAll = true;
+			}
+			if (AdjustY < 0) {
+				if (AdjustY > -BACKDROP_ZONE_PIXEL_SIZE*3) {
+					for (let row = 0; row < backdropHeightZones && row < Math.ceil(-AdjustY / BACKDROP_ZONE_PIXEL_SIZE); row++)
+						for (let i=0; i<backdropWidthZones; i++)
+							markGrid(i, row);
+				} else
+					backdropRerenderAll = true;
 			}
 		}
 
@@ -3488,6 +3575,7 @@ function initWorld() {
 
 	chatInput = document.getElementById("chatInput");
 	mapCanvas = document.getElementById("map");
+	backdropCanvas = document.createElement("canvas");
 
 	chatInput.addEventListener('input', function (evt) {
 		sendTyping();

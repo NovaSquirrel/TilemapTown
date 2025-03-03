@@ -1,7 +1,7 @@
 /*
  * Tilemap Town
  *
- * Copyright (C) 2017-2024 NovaSquirrel
+ * Copyright (C) 2017-2025 NovaSquirrel
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -99,6 +99,9 @@ function readURLParams() {
         break;
 
       // Include non-server related flags too
+      case "instant_scroll":
+        InstantCamera = true;
+        break;
       case "low_animation":
         InstantCamera = true;
         SlowAnimationTick = true;
@@ -209,6 +212,7 @@ function updateWallpaperOnMap(map) {
 			let img = new Image();
 			img.onload = function(){
 				NeedMapRedraw = true;
+				backdropRerenderAll = true;
 				updateWallpaperData(map);
 			};
 			img.src = map.Info["wallpaper"].url;
@@ -231,6 +235,7 @@ function receiveServerMessage(cmd, arg) {
           if(arg.id == PlayerYou) {
             var EdgeWarp = arg["edge_warp"] == true;
             if(PlayerWho[arg.id].x != arg.to[0]) {
+              backdropRerenderAll = true;
               if(EdgeWarp) {
                 var TargetCameraX = (PlayerWho[PlayerYou].x*16+8);
                 var CameraDifferenceX = TargetCameraX - CameraX;
@@ -241,6 +246,7 @@ function receiveServerMessage(cmd, arg) {
               }
             }
             if(PlayerWho[arg.id].y != arg.to[1]) {
+              backdropRerenderAll = true;
               if(EdgeWarp) {
                 var TargetCameraY = (PlayerWho[PlayerYou].y*16+8);
                 var CameraDifferenceY = TargetCameraY - CameraY;
@@ -252,8 +258,10 @@ function receiveServerMessage(cmd, arg) {
             }
           }
 
+          markAreaAroundEntityAsDirty(arg.id);
           PlayerWho[arg.id].x = arg.to[0];
           PlayerWho[arg.id].y = arg.to[1];
+          markAreaAroundEntityAsDirty(arg.id);
           if(PlayerWho[arg.id].vehicle == null || PlayerWho[arg.id].is_following ||
             (PlayerWho[arg.id].vehicle && PlayerWho[PlayerWho[arg.id].vehicle] && arg.id == PlayerWho[PlayerWho[arg.id].vehicle].vehicle)
           ) {
@@ -332,6 +340,7 @@ function receiveServerMessage(cmd, arg) {
 
         alreadyBumped = false;
         NeedMapRedraw = true;
+		backdropRerenderAll = true;
       }
       break;
     case "MAP":
@@ -362,6 +371,7 @@ function receiveServerMessage(cmd, arg) {
         Map.Objs[obj[0]][obj[1]] = obj[2];
       }
 
+      markTilesAsDirty(Map, x1-1, y1-1, x2-x1+2, y2-y1+2, BACKDROP_DIRTY_RENDER);
       NeedMapRedraw = true;
       break;
     case "BLK":
@@ -408,6 +418,7 @@ function receiveServerMessage(cmd, arg) {
                 Map.Objs[x2+w][y2+h] = copiedObjs[w][h];
             }
           }
+          markTilesAsDirty(Map, x2-1, y2-1, w+2, h+2, BACKDROP_DIRTY_RENDER);
         }
       }
       for (var key in arg.turf) {
@@ -424,6 +435,7 @@ function receiveServerMessage(cmd, arg) {
             Map.Tiles[turf[0]+w][turf[1]+h] = turf[2];
           }
         }
+        markTilesAsDirty(Map, turf[0]-1, turf[1]-1, w+2, h+2, BACKDROP_DIRTY_RENDER);
       }
       for (var key in arg.obj) {
         // get info
@@ -439,7 +451,7 @@ function receiveServerMessage(cmd, arg) {
             Map.Objs[obj[0]+w][obj[1]+h] = obj[2];
           }
         }
-
+        markTilesAsDirty(Map, obj[0]-1, obj[1]-1, w+2, h+2, BACKDROP_DIRTY_RENDER);
       }
       NeedMapRedraw = true;
       break;
@@ -463,6 +475,9 @@ function receiveServerMessage(cmd, arg) {
           updateDirectionForAnim(id);
           apply_default_pic_for_type(PlayerWho[id]);
         }
+
+        NeedMapRedraw = true;
+        backdropDrawAll = true;
       } else if(arg.add) {
         if(!PlayerWho[arg.add.id] && (arg.add.in_user_list || arg.add.chat_listener)) { // if player isn't already in the list
           let isForwarding = arg.add.chat_listener ? " &#x1F916;" : "";
@@ -472,7 +487,9 @@ function receiveServerMessage(cmd, arg) {
         initPlayerIfNeeded(arg.add.id);
         updateDirectionForAnim(arg.add.id);
         apply_default_pic_for_type(PlayerWho[arg.add.id]);
+
         NeedMapRedraw = true;
+        backdropDrawAll = true;
       } else if(arg.remove) {
         if(PlayerWho[arg.remove].in_user_list) {
           let isForwarding = PlayerWho[arg.remove].chat_listener ? " &#x1F916;" : "";
@@ -489,6 +506,7 @@ function receiveServerMessage(cmd, arg) {
         delete PlayerWho[arg.remove];
 
         NeedMapRedraw = true;
+        backdropDrawAll = true;
       } else if(arg.update) {
         if("status" in arg.update && ((arg.update["status"] !== PlayerWho[arg.update.id]["status"]) || (("status_message" in arg.update) && arg.update["status_message"] !== PlayerWho[arg.update.id]["status_message"]))) {
           if(arg.update["status"] && arg.update.id != PlayerYou) {
@@ -525,11 +543,12 @@ function receiveServerMessage(cmd, arg) {
             logMessage(escape_tags(PlayerWho[arg.update.id].name) + " cleared their status", 'status_change', {'isSilent': true, 'plainText': PlayerWho[arg.update.id].name + " cleared their status"});
           }
         }
+        markAreaAroundEntityAsDirty(arg.update.id);
         PlayerWho[arg.update.id] = Object.assign(
           PlayerWho[arg.update.id],
           arg.update
         );
-
+        markAreaAroundEntityAsDirty(arg.update.id);
         NeedMapRedraw = true;
       } else if(arg.new_id) {
         PlayerWho[arg.new_id.new_id] = PlayerWho[arg.new_id.id];
@@ -554,6 +573,7 @@ function receiveServerMessage(cmd, arg) {
           var img = new Image();
           img.onload = function(){
             NeedMapRedraw = true;
+            backdropDrawAll = true;
             updateUsersUL()
           };
           img.src = pic[0];
