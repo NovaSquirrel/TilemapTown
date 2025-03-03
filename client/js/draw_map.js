@@ -532,6 +532,8 @@ function markTilesAsDirty(map, baseX, baseY, width, height, level) {
 	const pixelCameraX = Math.round(CameraX - mapCanvas.width / 2);
 	const pixelCameraY = Math.round(CameraY - mapCanvas.height / 2);
 
+	if (map === undefined)
+		return;
 	if (map !== MyMap) {
 		let edgeLinks = MyMap?.Info?.edge_links ?? null;
 		if (!edgeLinks)
@@ -764,7 +766,7 @@ function drawMap() {
 		let del = marker.del;
 		drawTextSmall(ctx, (marker.pos[0] * 16 + 8) - pixelCameraX - (nameText.length * 4 / 2),   (marker.pos[1] * 16) - pixelCameraY - 8, nameText);
 		ctx.drawImage(potluck, del?(17 * 16):(9 * 16), del?(19 * 16):(22 * 16), 16, 16, marker.pos[0] * 16 - pixelCameraX, marker.pos[1] * 16 - pixelCameraY, 16, 16);
-		markAreaAroundPointAsDirty(marker.pos[0], marker.pos[1], 7);
+		markAreaAroundPointAsDirty(MyMap, marker.pos[0], marker.pos[1], 7);
 	}
 
 	// Draw a mouse selection if there is one
