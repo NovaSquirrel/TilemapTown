@@ -232,6 +232,7 @@ function receiveServerMessage(cmd, arg) {
           if(arg.id == PlayerYou) {
             var EdgeWarp = arg["edge_warp"] == true;
             if(PlayerWho[arg.id].x != arg.to[0]) {
+              backdropRerenderAll = true;
               if(EdgeWarp) {
                 var TargetCameraX = (PlayerWho[PlayerYou].x*16+8);
                 var CameraDifferenceX = TargetCameraX - CameraX;
@@ -242,6 +243,7 @@ function receiveServerMessage(cmd, arg) {
               }
             }
             if(PlayerWho[arg.id].y != arg.to[1]) {
+              backdropRerenderAll = true;
               if(EdgeWarp) {
                 var TargetCameraY = (PlayerWho[PlayerYou].y*16+8);
                 var CameraDifferenceY = TargetCameraY - CameraY;

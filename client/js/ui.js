@@ -2949,6 +2949,7 @@ function runAnimation(timestamp) {
 
 	if (CameraDistance > 0.5) {
 		let OldCameraX = CameraX, OldCameraY = CameraY;
+		let AdjustX = 0, AdustY = 0;
 
 		if(InstantCamera) {
 			CameraX = TargetCameraX;
@@ -2957,13 +2958,17 @@ function runAnimation(timestamp) {
 			let multiplyBy = deltaTime/300;
 			if (multiplyBy > 1)
 				multiplyBy = 1;
-			let AdjustX = (TargetCameraX - CameraX) * multiplyBy;
-			let AdjustY = (TargetCameraY - CameraY) * multiplyBy;
+			AdjustX = (TargetCameraX - CameraX) * multiplyBy;
+			AdjustY = (TargetCameraY - CameraY) * multiplyBy;
 
 			if (Math.abs(AdjustX) > 0.1)
 				CameraX += AdjustX;
+			else
+				AdjustX = 0;
 			if (Math.abs(AdjustY) > 0.1)
 				CameraY += AdjustY;
+			else
+				AdjustY = 0;
 		}
 
 		if (!CameraAlwaysCenter) {
@@ -2992,32 +2997,53 @@ function runAnimation(timestamp) {
 			}
 		}
 
-		if (OldCameraX != CameraX || OldCameraY != CameraY) {
+		if (AdjustX != 0 || AdjustY != 0) {
 			backdropDrawAll = true;
 
-			if (CameraDistance < BACKDROP_ZONE_PIXEL_SIZE) {
-				const pixelCameraX = Math.round(CameraX - mapCanvas.width / 2);
-				const pixelCameraY = Math.round(CameraY - mapCanvas.height / 2);
-				const screenGridX = pixelCameraX >> (4+BACKDROP_ZONE_SHIFT);
-				const screenGridY = pixelCameraY >> (4+BACKDROP_ZONE_SHIFT);
+			function markGrid(x, y) {
+				const zoneRealGridX = wrapWithin(screenGridX+x, backdropWidthZones);
+				const zoneRealGridY = wrapWithin(screenGridY+y, backdropHeightZones);
+				const zoneIndex = zoneRealGridY * backdropWidthZones + zoneRealGridX;
+				backdropDirtyMap[zoneIndex] = BACKDROP_DIRTY_RENDER;
+			}
 
-				function markGrid(x, y) {
-					const zoneRealGridX = wrapWithin(screenGridX+x, backdropWidthZones);
-					const zoneRealGridY = wrapWithin(screenGridY+y, backdropHeightZones);
-					const zoneIndex = zoneRealGridY * backdropWidthZones + zoneRealGridX;
-					backdropDirtyMap[zoneIndex] = BACKDROP_DIRTY_RENDER;
-				}
+			const pixelCameraX = Math.round(CameraX - mapCanvas.width / 2);
+			const pixelCameraY = Math.round(CameraY - mapCanvas.height / 2);
+			const screenGridX = pixelCameraX >> (4+BACKDROP_ZONE_SHIFT);
+			const screenGridY = pixelCameraY >> (4+BACKDROP_ZONE_SHIFT);
 
-				for (let i=0; i<backdropWidthZones; i++) {
-					markGrid(i, 0);
-					markGrid(i, backdropHeightZones-1);
-				}
-				for (let i=0; i<backdropHeightZones; i++) {
-					markGrid(0, i);
-					markGrid(backdropWidthZones-1, i);
-				}
-			} else {
-				backdropRerenderAll = true;
+			if (AdjustX > 0) {
+				if (AdjustX < BACKDROP_ZONE_PIXEL_SIZE*3) {
+					for (let column = 0; (backdropWidthZones-column-1) >= 0 && column < Math.ceil(AdjustX / BACKDROP_ZONE_PIXEL_SIZE); column++)
+						for (let i=0; i<backdropHeightZones; i++)
+							markGrid(backdropWidthZones-column-1, i);
+				} else
+					backdropRerenderAll = true;
+			}
+			if (AdjustY > 0) {
+				if (AdjustY < BACKDROP_ZONE_PIXEL_SIZE*3) {
+					for (let row = 0; (backdropHeightZones-row-1) >= 0 && row < Math.ceil(AdjustY / BACKDROP_ZONE_PIXEL_SIZE); row++)
+						for (let i=0; i<backdropWidthZones; i++)
+							markGrid(i, backdropHeightZones-row-1, i);
+				} else
+					backdropRerenderAll = true;
+			}
+			if (AdjustX < 0) {
+				if (AdjustX > -BACKDROP_ZONE_PIXEL_SIZE*3) {
+					for (let column = 0; column < backdropWidthZones && column < Math.ceil(-AdjustX / BACKDROP_ZONE_PIXEL_SIZE); column++)
+						for (let i=0; i<backdropHeightZones; i++)
+							markGrid(column, i);
+				} else
+					backdropRerenderAll = true;
+			}
+			if (AdjustY < 0) {
+				if (AdjustY > -BACKDROP_ZONE_PIXEL_SIZE*3) {
+					console.log(Math.ceil(-AdjustY / BACKDROP_ZONE_PIXEL_SIZE), "up");
+					for (let row = 0; row < backdropHeightZones && row < Math.ceil(-AdjustY / BACKDROP_ZONE_PIXEL_SIZE); row++)
+						for (let i=0; i<backdropWidthZones; i++)
+							markGrid(i, row);
+				} else
+					backdropRerenderAll = true;
 			}
 		}
 
