@@ -734,7 +734,7 @@ function drawMap() {
 	// Draw the map link edges
 	if (edgeLinks != null) {
 		ctx.beginPath();
-		ctx.globalAlpha = 0.5;
+		ctx.globalAlpha = 1;
 		ctx.lineWidth = "2";
 		ctx.strokeStyle = "green";
 		ctx.rect(0 - pixelCameraX, 0 - pixelCameraY, MyMap.Width * 16, MyMap.Height * 16);
