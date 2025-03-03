@@ -2034,6 +2034,7 @@ def fn_register(map, client, context, arg):
 			elif connection.register(filtered, params[1]):
 				map.broadcast("MSG", {'text': client.name+" has now registered"})
 				map.broadcast("WHO", {'add': client.who()}) # update client view, probably just for the username
+				write_to_connect_log("New account: %s (%s)" % (client.name, client.username))
 			else:
 				respond(context, 'Register fail, account already exists', error=True)
 
