@@ -339,14 +339,15 @@ def fn_MOV(connection, map, client, arg, echo):
 					return
 
 	# Broadcast that this entity moved
-	data = {'id': client.protocol_id()}
-	any_valid_fields = False
-	for valid_field in ('from', 'to', 'dir', 'offset'):
-		if valid_field in arg:
-			any_valid_fields = True
-			data[valid_field] = arg[valid_field]
-	if not any_valid_fields:
+	data = remove_invalid_dict_fields(arg, {
+			"from":				is_list_with_two_ints,
+			"to":				is_list_with_two_ints,
+			"dir":				int,
+			"offset": 			lambda x: is_list_with_two_ints(x) and x[0] >= -32 and x[0] <= 32 and x[1] >= -32 and x[1] <= 32,
+		})
+	if not data:
 		return
+	data['id'] = client.protocol_id()
 	map.broadcast("MOV", data, remote_category=maplisten_type['move'], mov_user=client)
 
 	if 'offset' in data:
