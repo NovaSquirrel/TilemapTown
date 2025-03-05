@@ -200,6 +200,9 @@ Teleports to your "home"
 /tpherecommand
 Get a command you can paste to other people that will allow them to teleport to your current location
 
+/tailshift offset
+/tailshift
+Tentative feature to help with sprites that are not centered at the middle of the image. If you enter 4, for instance, when facing right your sprite will be offset 4 pixels to the left, and when facing left your sprite will be offset 4 pixels to the right. Meant for sprites that have big tails in the back, while still allowing the character's feet to stand on the tile's center.
 
 ---Carrying users---
 /carry user

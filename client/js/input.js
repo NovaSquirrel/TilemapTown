@@ -55,6 +55,8 @@ let alreadyBumped = false;
 
 const OK_DRAW_DISTANCE = 5;
 
+let autoOffsetSide = 0; // Subtract this from X offset if facing right, and add it to X offset if facing right.
+
 ///////////////////////////////////////////////////////////
 // Chat
 ///////////////////////////////////////////////////////////
@@ -135,6 +137,29 @@ function runLocalCommand(t) {
 			return true;
 		editItemWaitingForDataID = editItemID;
 		SendCmd("BAG", {info: { id: editItemID }});
+		return true;
+	} else if(tl === "/tailshift") {
+		autoOffsetSide = 0;
+		SendCmd("MOV", {offset: [0, 0]});
+		return true;
+	} else if(tl.startsWith("/tailshift ")) {
+		autoOffsetSide = parseInt(tl.slice(11));
+		if (Number.isNaN(autoOffsetSide))
+			autoOffsetSide = 0;
+		if (PlayerImages[PlayerYou]) {
+			const direction = (PlayerImages[PlayerYou].naturalHeight >= 128) ? PlayerAnimation[PlayerYou].lastDirection4 : PlayerAnimation[PlayerYou].lastDirectionLR;
+			switch (direction) {
+				case Directions.EAST:
+					SendCmd("MOV", {offset: [-autoOffsetSide, 0]});
+					break;
+				case Directions.WEST:
+					SendCmd("MOV", {offset: [autoOffsetSide, 0]});
+					break;
+				case Directions.NORTH: case Directions.SOUTH:
+					SendCmd("MOV", {offset: [0, 0]});
+					break;
+			}
+		}
 		return true;
 	}
 	return false;
@@ -557,6 +582,44 @@ function keyDownHandler(e) {
 
 	if (Bumped || OldPlayerX != PlayerX || OldPlayerY != PlayerY || OldPlayerDir != PlayerDir) {
 		let Params = { 'dir': PlayerDir };
+
+		// Automatically shift the offset left and right to account for a sprite that isn't centered at the middle of the sprite
+		if (autoOffsetSide !== 0 && OldPlayerDir !== PlayerDir) {
+			if (PlayerImages[PlayerYou]) {
+				const directionCount = PlayerImages[PlayerYou].naturalHeight / 32;
+				const lastDirection = (directionCount == 4) ? PlayerAnimation[PlayerYou].lastDirection4 : PlayerAnimation[PlayerYou].lastDirectionLR;
+				const offset = PlayerWho[PlayerYou].offset ?? [0,0];
+				if (PlayerDir !== lastDirection) {
+					if (directionCount === 2) {
+						if (PlayerDir === Directions.WEST && lastDirection === Directions.EAST) {
+							Params['offset'] = [offset[0] + autoOffsetSide*2, offset[1]]
+						} else if (PlayerDir === Directions.EAST && lastDirection === Directions.WEST) {
+							Params['offset'] = [offset[0] - autoOffsetSide*2, offset[1]]
+						}
+					} else if (directionCount == 4) {
+						if (PlayerDir === Directions.WEST) {
+							if (lastDirection === Directions.NORTH || lastDirection === Directions.SOUTH)
+								Params['offset'] = [offset[0] + autoOffsetSide, offset[1]]
+							else
+								Params['offset'] = [offset[0] + autoOffsetSide*2, offset[1]]
+						} else if (PlayerDir === Directions.EAST) {
+							if (lastDirection === Directions.NORTH || lastDirection === Directions.SOUTH)
+								Params['offset'] = [offset[0] - autoOffsetSide, offset[1]]
+							else
+								Params['offset'] = [offset[0] - autoOffsetSide*2, offset[1]]
+						} else if (PlayerDir === Directions.NORTH || PlayerDir === Directions.SOUTH) {
+							if (lastDirection === Directions.WEST)
+								Params['offset'] = [offset[0] - autoOffsetSide, offset[1]]
+							else if (lastDirection === Directions.EAST)
+								Params['offset'] = [offset[0] + autoOffsetSide, offset[1]]
+						}
+					}
+				}
+				if (Params['offset'])
+					PlayerWho[PlayerYou].offset = Params['offset']
+			}
+		}
+
 		if (e.shiftKey) {
 			SendCmd("MOV", Params);
 			movePlayer(PlayerYou, null, null, PlayerDir, new Set([PlayerYou]));
