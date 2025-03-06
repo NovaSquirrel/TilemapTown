@@ -1,0 +1,37 @@
+{
+  "name": "Tilemap Town (Messaging)",
+  "short_name": "Tilemap Town ✉️",
+  "categories": ["games", "social"],
+  "description": "Collaboratively build a 2D pixel art world to chat and roleplay in",
+  "icons": [
+    {
+      "src": "https://tilemap.town/img/pwa/icon-128-messaging.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://tilemap.town/img/pwa/icon-128-messaging.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "https://tilemap.town/img/pwa/icon-512-messaging.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://tilemap.town/img/pwa/icon-512-messaging.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "https://tilemap.town/messaging",
+  "display": "standalone",
+  "theme_color": "#80FF80",
+  "background_color": "#6abe30",
+  "orientation": "any"
+}
