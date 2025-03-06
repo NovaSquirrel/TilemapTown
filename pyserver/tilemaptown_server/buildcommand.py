@@ -1998,7 +1998,7 @@ def fn_resetpassfor(map, client, context, arg):
 		combined = randpass+salt
 		hash = "%s:%s" % (salt, hashlib.sha512(combined.encode()).hexdigest())
 
-		c.execute('UPDATE User SET passhash=?, passalgo=? WHERE username=?', (hash, "sha512", arg,))
+		c.execute('UPDATE User SET passhash=?, passalgo=? WHERE username=?', (hash, "sha512", filter_username(arg),))
 		respond(context, 'Password for %s reset to [tt]%s[/tt]' % (arg, randpass))
 
 @cmd_command(category="Account", privilege_level="registered", syntax="oldpassword password password", no_entity_needed=True)
