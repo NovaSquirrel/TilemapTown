@@ -1106,6 +1106,8 @@ function initMouse() {
 		CameraScale += event.deltaY * -0.01;
 
 		// Restrict CameraScale
+		if (Number.isNaN(CameraScale))
+			CameraScale = 3;
 		CameraScale = Math.min(Math.max(CameraScaleMin, CameraScale), CameraScaleMax);
 
 		updateZoomLevelDisplay();

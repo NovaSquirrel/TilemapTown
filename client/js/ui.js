@@ -226,12 +226,16 @@ function applyOptions() {
 
 function zoomIn() {
 	CameraScale = Math.min(Math.max(CameraScaleMin, CameraScale + 0.25), CameraScaleMax);
+	if (Number.isNaN(CameraScale))
+		CameraScale = 3;
 	resizeCanvas();
 	updateZoomLevelDisplay();
 }
 
 function zoomOut() {
 	CameraScale = Math.min(Math.max(CameraScaleMin, CameraScale - 0.25), CameraScaleMax);
+	if (Number.isNaN(CameraScale))
+		CameraScale = 3;
 	resizeCanvas();
 	updateZoomLevelDisplay();
 }
