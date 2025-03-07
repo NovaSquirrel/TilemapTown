@@ -228,58 +228,60 @@ function updateWallpaperOnMap(map) {
 function receiveServerMessage(cmd, arg) {
   switch(cmd) {
     case "MOV":
-      if(arg.id != PlayerYou || !arg.from) {
-        if("to" in arg) {
-
-          // If you're being teleported, adjust the camera
-          if(arg.id == PlayerYou) {
-            var EdgeWarp = arg["edge_warp"] == true;
-            if(PlayerWho[arg.id].x != arg.to[0]) {
-              backdropRerenderAll = true;
-              if(EdgeWarp) {
-                var TargetCameraX = (PlayerWho[PlayerYou].x*16+8);
-                var CameraDifferenceX = TargetCameraX - CameraX;
-                CameraX = arg.to[0]*16+8 - CameraDifferenceX + (PlayerWho[arg.id].x < arg.to[0] ? 16 : -16);
-                BumpCooldown = 0;
-              } else {
-                CameraX = arg.to[0]*16+8;
-              }
-            }
-            if(PlayerWho[arg.id].y != arg.to[1]) {
-              backdropRerenderAll = true;
-              if(EdgeWarp) {
-                var TargetCameraY = (PlayerWho[PlayerYou].y*16+8);
-                var CameraDifferenceY = TargetCameraY - CameraY;
-                CameraY = arg.to[1]*16+8 - CameraDifferenceY + (PlayerWho[arg.id].y < arg.to[1] ? 16 : -16);
-                BumpCooldown = 0;
-              } else {
-                CameraY = arg.to[1]*16+8;
-              }
+      if("to" in arg && (arg.id != PlayerYou || !arg.from)) {
+        // If you're being teleported, adjust the camera
+        if(arg.id == PlayerYou) {
+          var EdgeWarp = arg["edge_warp"] == true;
+          if(PlayerWho[arg.id].x != arg.to[0]) {
+            backdropRerenderAll = true;
+            if(EdgeWarp) {
+              var TargetCameraX = (PlayerWho[PlayerYou].x*16+8);
+              var CameraDifferenceX = TargetCameraX - CameraX;
+              CameraX = arg.to[0]*16+8 - CameraDifferenceX + (PlayerWho[arg.id].x < arg.to[0] ? 16 : -16);
+              BumpCooldown = 0;
+            } else {
+              CameraX = arg.to[0]*16+8;
             }
           }
-
-          markAreaAroundEntityAsDirty(arg.id);
-          PlayerWho[arg.id].x = arg.to[0];
-          PlayerWho[arg.id].y = arg.to[1];
-          markAreaAroundEntityAsDirty(arg.id);
-          if(PlayerWho[arg.id].vehicle == null || PlayerWho[arg.id].is_following ||
-            (PlayerWho[arg.id].vehicle && PlayerWho[PlayerWho[arg.id].vehicle] && arg.id == PlayerWho[PlayerWho[arg.id].vehicle].vehicle)
-          ) {
-            startPlayerWalkAnim(arg.id);
+          if(PlayerWho[arg.id].y != arg.to[1]) {
+            backdropRerenderAll = true;
+            if(EdgeWarp) {
+              var TargetCameraY = (PlayerWho[PlayerYou].y*16+8);
+              var CameraDifferenceY = TargetCameraY - CameraY;
+              CameraY = arg.to[1]*16+8 - CameraDifferenceY + (PlayerWho[arg.id].y < arg.to[1] ? 16 : -16);
+              BumpCooldown = 0;
+            } else {
+              CameraY = arg.to[1]*16+8;
+            }
           }
         }
-        if("dir" in arg) {
-          PlayerWho[arg.id].dir = arg.dir;
-          updateDirectionForAnim(arg.id);
+
+        markAreaAroundEntityAsDirty(arg.id);
+        PlayerWho[arg.id].x = arg.to[0];
+        PlayerWho[arg.id].y = arg.to[1];
+        markAreaAroundEntityAsDirty(arg.id);
+        if(PlayerWho[arg.id].vehicle == null || PlayerWho[arg.id].is_following ||
+          (PlayerWho[arg.id].vehicle && PlayerWho[PlayerWho[arg.id].vehicle] && arg.id == PlayerWho[PlayerWho[arg.id].vehicle].vehicle)
+        ) {
+          startPlayerWalkAnim(arg.id);
         }
-        if("offset" in arg) {
-          PlayerWho[arg.id].offset = arg["offset"];
-        }
-        if("z_index" in arg) {
-          PlayerWho[arg.id].z_index = arg["z_index"];
-        }
-        NeedMapRedraw = true;
       }
+      if("dir" in arg) {
+        if (arg.id === PlayerYou) {
+          let offset = applyTailShift(PlayerWho[arg.id], arg.dir);
+          if (offset !== null)
+            SendCmd("MOV", { offset });
+        }
+        PlayerWho[arg.id].dir = arg.dir;
+        updateDirectionForAnim(arg.id);
+      }
+      if("offset" in arg) {
+        PlayerWho[arg.id].offset = arg["offset"];
+      }
+      if("z_index" in arg) {
+        PlayerWho[arg.id].z_index = arg["z_index"];
+      }
+      NeedMapRedraw = true;
       break;
     case "MAI":
       if("remote_map" in arg) {
