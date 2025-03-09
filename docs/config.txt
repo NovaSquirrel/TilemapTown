@@ -130,6 +130,10 @@ Security.NoGuests
 Default: false
 If true, users can't log in without an account
 
+Security.RegistrationsPerIP
+Default: 3
+Maximum number of registrations that each IP can do between server restarts
+
 RateLimit.MSG
 Default: true
 If true, limit how often people can send messages to maps

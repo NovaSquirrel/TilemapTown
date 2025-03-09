@@ -2014,12 +2014,16 @@ def fn_changepass(map, client, context, arg):
 	else:
 		respond(context, 'No password given', error=True)
 
+registration_count_by_ip = {}
 @cmd_command(category="Account", syntax="username password")
 def fn_register(map, client, context, arg):
 	if not client.is_client():
 		return
 	connection = client.connection()
 	if not connection:
+		return
+	if registration_count_by_ip.get(connection.ip, 0) >= Config["Security"]["RegistrationsPerIP"]:
+		respond(context, 'Register fail, your IP has registered too many accounts recently', error=True)
 		return
 	if connection.db_id != None:
 		respond(context, 'Register fail, you already registered', error=True)
@@ -2034,7 +2038,11 @@ def fn_register(map, client, context, arg):
 			elif connection.register(filtered, params[1]):
 				map.broadcast("MSG", {'text': client.name+" has now registered"})
 				map.broadcast("WHO", {'add': client.who()}) # update client view, probably just for the username
-				write_to_connect_log("New account: %s (%s)" % (client.name, client.username))
+				write_to_connect_log("New account: %s (%s) @ %s" % (client.name, client.username, connection.ip))
+
+				if connection.ip not in registration_count_by_ip:
+					registration_count_by_ip[connection.ip] = 0
+				registration_count_by_ip[connection.ip] += 1
 			else:
 				respond(context, 'Register fail, account already exists', error=True)
 
