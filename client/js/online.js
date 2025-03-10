@@ -30,6 +30,7 @@ let ShowProtocol = true;
 let DidConnectOnce = false; // A connection got an IDN from the server at least once, indicating the connection went all the way through
 let StatusOnDisconnect = null;
 let StatusMessageOnDisconnect = null;
+let mostRecentError = "";
 let GlobalImageNames = {"0": "Potluck", "-1": "Extra", "-2": "Pulp", "-3": "EasyRPG"};
 let API_Key = null;
 let API_Version = null;
@@ -744,6 +745,7 @@ function receiveServerMessage(cmd, arg) {
       SendCmd("PIN", null);
       break;
     case "ERR":
+      mostRecentError = arg.text;
       logMessage("Error: "+convertBBCodeChat(arg.text), 'error_message', {'plainText': `Error: ${arg.text}`});
       break;
     case "PRI":
@@ -849,6 +851,7 @@ function receiveServerMessage(cmd, arg) {
         }
       break;
     case "IDN":
+      document.getElementById('passwordResetHint').style.display = "none";
       ReconnectAttempts = 0;
       DidConnectOnce = true;
       if(messaging_mode) {
@@ -1086,6 +1089,8 @@ function ConnectToServer() {
 		} else if(reason == "BadLogin") {
 			display = "Connection closed due to bad login credentials";
 			document.getElementById('loginWindow').style.display = "block";
+			document.getElementById('loginErrorText').textContent = mostRecentError;
+			document.getElementById('passwordResetHint').style.display = "block";
 		} else if(reason == "Shutdown") {
 			display = "Connection closed because the server shut down";
 		} else if(reason == "Restart") {
