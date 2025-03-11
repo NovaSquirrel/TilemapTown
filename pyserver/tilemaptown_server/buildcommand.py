@@ -116,7 +116,11 @@ def in_blocked_username_list(client, banlist, action):
 
 def respond(context, text, data=None, error=False, code=None, detail=None, subject_id=None, buttons=None, class_type=None):
 	args = {}
-	respond_to, echo, script_entity = context
+	client = context['client']
+	if client == None:
+		return
+	echo = context['echo']
+
 	if echo:
 		args['echo'] = echo
 	if text:
@@ -133,7 +137,11 @@ def respond(context, text, data=None, error=False, code=None, detail=None, subje
 		args['buttons'] = buttons
 	if class_type:
 		args['class'] = class_type
-	respond_to.send('ERR' if error else 'CMD', args)
+	client.send('ERR' if error else 'CMD', args)
+	if error:
+		attach_result_to_context(context, 'err')
+	else:
+		attach_result_to_context(context, 'ok')
 
 def parse_equal_list(text):
 	return (x.split('=') for x in text.split())
@@ -210,6 +218,9 @@ def find_local_entity_by_name(map, name):
 			return e
 	return None
 
+def attach_result_to_context(context, result):
+	pass
+
 # -------------------------------------
 
 @cmd_command(category="Settings", syntax="newname", no_entity_needed=True)
@@ -253,13 +264,13 @@ def fn_client_settings(map, client, context, arg):
 
 @cmd_command(category="Communication")
 def fn_say(map, client, context, arg):
-	send_message_to_map(map, client, arg, controlled_by=context[0], echo=context[1], script_entity=context[2])
+	send_message_to_map(map, client, arg, context)
 
 @cmd_command(category="Communication")
 def fn_me(map, client, context, arg):
 	if arg == '':
 		return
-	send_message_to_map(map, client, "/me "+arg, controlled_by=context[0], echo=context[1], script_entity=context[2])
+	send_message_to_map(map, client, "/me "+arg, context)
 
 def apply_rate_limiting(client, limit_type, count_limits):
 	current_minute = int(time.monotonic() // 60)
@@ -287,46 +298,44 @@ def apply_rate_limiting(client, limit_type, count_limits):
 			return True
 	return False
 
-def send_message_to_map(map, actor, text, controlled_by=None, echo=None, script_entity=None):
+def send_message_to_map(map, actor, text, context):
 	if text == '':
 		return
 	if Config["RateLimit"]["MSG"] and apply_rate_limiting(actor, 'msg', ( (1, Config["RateLimit"]["MSG1"]),(5, Config["RateLimit"]["MSG5"])) ):
-		respond_to = controlled_by or actor
+		respond_to = context['client']
 		if hasattr(respond_to, 'connection') and respond_to.connection():
-			respond_to.connection().protocol_error(echo, text='You\'re sending too many messages too quickly!')
+			respond_to.connection().protocol_error(context, text='You\'re sending too many messages too quickly!')
 		return
 	if len(text) > Config["MaxProtocolSize"]["Chat"]:
-		respond_to = controlled_by or actor
+		respond_to = context['client']
 		if hasattr(respond_to, 'connection') and respond_to.connection():
-			respond_to.connection().protocol_error(echo, text='Tried to send chat message that was too big: (%d, max is %d)' % (len(text), Config["MaxProtocolSize"]["Chat"]), code='chat_too_big', detail=Config["MaxProtocolSize"]["Chat"])
+			respond_to.connection().protocol_error(context, text='Tried to send chat message that was too big: (%d, max is %d)' % (len(text), Config["MaxProtocolSize"]["Chat"]), code='chat_too_big', detail=Config["MaxProtocolSize"]["Chat"])
 		return
 	if map == None:
 		map = actor.map
 	if map:
 		fields = {'name': actor.name, 'id': actor.protocol_id(), 'username': actor.username_or_id(), 'text': text}
-		if script_entity:
+		if context.get('script_entity'):
 			fields['rc_username'] = find_username_by_db_id(script_entity.owner_id)
 			fields['rc_id'] = script_entity.owner_id
-		elif controlled_by != None and actor is not controlled_by:
-			fields['rc_id'] = controlled_by.protocol_id()
-			fields['rc_username'] = controlled_by.username_or_id()
+		elif context['client'] != None and actor is not context['client']:
+			fields['rc_id'] = context['client'].protocol_id()
+			fields['rc_username'] = context['client'].username_or_id()
 		map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
 		for e in map.contents:
-			if e.entity_type == entity_type['gadget'] and hasattr(e, 'listening_to_chat') and e.listening_to_chat and e is not actor and e is not controlled_by:
+			if e.entity_type == entity_type['gadget'] and hasattr(e, 'listening_to_chat') and e.listening_to_chat and e is not actor and e is not context['client']:
 				e.receive_chat(actor, text)
 
 def send_private_message(client, context, recipient_username, text, lenient_rate_limit=False):
-	respond_to = context[0]
-	echo = context[1]
-
+	respond_to = context['client']
 	rate_limit_multiplier = 1 + int(lenient_rate_limit)*2
 	if Config["RateLimit"]["PRI"] and apply_rate_limiting(client, 'pri', ( (1, Config["RateLimit"]["PRI1"]*rate_limit_multiplier),(5, Config["RateLimit"]["PRI5"]*rate_limit_multiplier)) ):
 		if hasattr(respond_to, 'connection') and respond_to.connection():
-			respond_to.connection().protocol_error(echo, text='You\'re sending too many messages too quickly!')
+			respond_to.connection().protocol_error(context, text='You\'re sending too many messages too quickly!')
 		return
 	if len(text) > Config["MaxProtocolSize"]["Private"]:
 		if hasattr(respond_to, 'connection') and respond_to.connection():
-			respond_to.connection().protocol_error(context[1], text='Tried to send private message that was too big: (%d, max is %d)' % (len(text), Config["MaxProtocolSize"]["Private"]), code='private_too_big', detail=Config["MaxProtocolSize"]["Private"])
+			respond_to.connection().protocol_error(context, text='Tried to send private message that was too big: (%d, max is %d)' % (len(text), Config["MaxProtocolSize"]["Private"]), code='private_too_big', detail=Config["MaxProtocolSize"]["Private"])
 		return
 	if recipient_username != "":
 		if text.isspace() or text=="":
@@ -350,21 +359,24 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 						if respond_to is not client:
 							recipient_params['rc_username'] = respond_to.username_or_id()
 							recipient_params['rc_id'] = respond_to.protocol_id()
-						if context[2]: # Script entity
+						if context.get('script_entity'): # Script entity
 							recipient_params['rc_username'] = find_username_by_db_id(context[2].owner_id)
 							recipient_params['rc_id'] = context[2].owner_id
 						u.send("PRI", recipient_params)
 				else:
 					respond(context, 'That entity isn\'t a user', error=True)
+					attach_result_to_context(context, 'fail')
 			else:
 				recipient_db_id = find_db_id_by_username(recipient_username)
 				if recipient_db_id:
 					if not client.db_id:
 						respond(context, 'You can\'t send offline messages as a guest', error=True)
+						attach_result_to_context(context, 'fail')
 						return
-					respond_to = context[0]
+					respond_to = context['client']
 					if (respond_to is not client) or context[2]:
 						respond(context, 'You can\'t send offline messages via remote control', error=True)
+						attach_result_to_context(context, 'fail')
 						return
 
 					c = Database.cursor()
@@ -372,6 +384,7 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 					result = c.fetchone()
 					if result != None and (client.username in json.loads(result[0] or "[]")):
 						respond(context, 'You can\'t message that person', error=True)
+						attach_result_to_context(context, 'blocked')
 						return False
 
 					if recipient_db_id not in OfflineMessages:
@@ -387,6 +400,7 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 					# Notify the sender
 					recipient_name = get_entity_name_by_db_id(recipient_db_id) or find_username_by_db_id(recipient_db_id) or "?"
 					client.send("PRI", {'text': text, 'name': recipient_name, 'id': recipient_db_id, 'username': find_username_by_db_id(recipient_db_id), 'receive': False, 'offline': True})
+					attach_result_to_context(context, 'offline')
 					return
 
 				failed_to_find(context, recipient_username)
@@ -2003,7 +2017,7 @@ def fn_resetpassfor(map, client, context, arg):
 
 @cmd_command(category="Account", privilege_level="registered", syntax="oldpassword password password", no_entity_needed=True)
 def fn_changepass(map, client, context, arg):
-	if not client.is_client() or context[0] != client:
+	if not client.is_client() or context['client'] is not client:
 		return
 	connection = client.connection()
 	if not connection:
@@ -3007,13 +3021,13 @@ def fn_entity(map, client, context, arg):
 
 	elif subcommand == 'do':
 		if permission_check(permission['remote_command']):
-			handle_user_command(e.map, e, client, context[1], subarg)
+			handle_user_command(e.map, e, context, subarg)
 	elif subcommand == 'say':
 		if permission_check(permission['remote_command']):
-			handle_user_command(e.map, e, client, context[1], "say "+subarg)
+			handle_user_command(e.map, e, context, "say "+subarg)
 	elif subcommand == 'me':
 		if permission_check(permission['remote_command']):
-			handle_user_command(e.map, e, client, context[1], "me "+subarg)
+			handle_user_command(e.map, e, context, "me "+subarg)
 	elif subcommand == 'use':
 		if e != None and e.entity_type == entity_type['gadget']:
 			e.receive_use(client)
@@ -3252,12 +3266,15 @@ def fn_message_forwarding(map, client, context, arg):
 			respond(context, 'Please provide a subcommand: set', error=True)
 # -------------------------------------
 
-def handle_user_command(map, client, respond_to, echo, text, script_entity=None):
+def handle_user_command(map, actor, context, text, script_entity=None, respond_to=None):
 	# Separate text into command and arguments
 	command, arg = separate_first_word(text)
+	if context == None:
+		context = {'echo': None, 'ack_req': None, 'client': respond_to or script_entity or actor}
+	context['actor'] = actor
+	context["script_entity"] = script_entity
 
 	# Attempt to run the command handler if it exists
-	context = (respond_to, echo, script_entity)
 
 	# Check aliases first
 	if command in aliases:
@@ -3265,12 +3282,12 @@ def handle_user_command(map, client, respond_to, echo, text, script_entity=None)
 
 	if command in handlers:
 		# Most commands can only be done by entities, and not FakeClient
-		if not isinstance(client, Entity) and (command not in no_entity_needed_commands):
+		if not isinstance(actor, Entity) and (command not in no_entity_needed_commands):
 			respond(context, 'You need to be in the world to use that command!', error=True)
 			return
 
 		# Restrict some commands to maps
-		if command in map_only_commands and (client.map == None or not client.map.is_map()):
+		if command in map_only_commands and (actor.map == None or not actor.map.is_map()):
 			respond(context, 'Command can only be run while on a map', error=True)
 			return
 
@@ -3279,15 +3296,15 @@ def handle_user_command(map, client, respond_to, echo, text, script_entity=None)
 
 		if privilege_needed == 1 and script_entity != None: # Guests can use it, but scripts can't
 			respond(context, 'Scripts may not can use "%s"' % command, error=True, code='real_users_only')
-		elif privilege_needed == 2 and (client.db_id == None or script_entity != None or not hasattr(client, 'connection')): # Registered
+		elif privilege_needed == 2 and (actor.db_id == None or script_entity != None or not hasattr(actor, 'connection')): # Registered
 			respond(context, 'Only registered accounts can use "%s"' % command, error=True, code='no_guests')
-		elif privilege_needed == 3 and client.db_id != map.owner_id and (not hasattr(client, 'connection') or not client.connection_attr('oper_override')) and not client.has_permission(map, permission['admin'], False): # Map admin
+		elif privilege_needed == 3 and actor.db_id != map.owner_id and (not hasattr(actor, 'connection') or not actor.connection_attr('oper_override')) and not actor.has_permission(map, permission['admin'], False): # Map admin
 			respond(context, 'Only the map owner or map admins can use "%s"' % command, error=True, code='missing_permission', detail='admin', subject_id=map.protocol_id())
-		elif privilege_needed == 4 and client.db_id != map.owner_id and (not hasattr(client, 'connection') or not client.connection_attr('oper_override')): # Map owner
+		elif privilege_needed == 4 and actor.db_id != map.owner_id and (not hasattr(actor, 'connection') or not actor.connection_attr('oper_override')): # Map owner
 			respond(context, 'Only the map owner can use "%s"' % command, error=True, code='owner_only', subject_id=map.protocol_id())
-		elif privilege_needed == 5 and (not hasattr(client, 'connection') or client.username not in Config["Server"]["Admins"]):
+		elif privilege_needed == 5 and (not hasattr(actor, 'connection') or actor.username not in Config["Server"]["Admins"]):
 			respond(context, 'Only server admins can use "%s"' % command, error=True, code='server_admin_only')
 		else:
-			return handlers[command](map, client, context, arg)
+			return handlers[command](map, actor, context, arg)
 	else:
 		respond(context, 'Invalid command? "%s"' % command, code="invalid_command", detail=command, error=True)

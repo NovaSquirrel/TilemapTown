@@ -156,6 +156,7 @@ async def client_handler(websocket):
 	total_connections[0] += 1
 
 	while connection.ws != None:
+		connection.start_batch()
 		try:
 			# Read a message, make sure it's not too short
 			message = await websocket.recv()
@@ -172,7 +173,8 @@ async def client_handler(websocket):
 
 			# Process the command
 			connection.idle_timer = 0
-			echo = arg.get("echo", None)
+			echo = arg.get("echo")
+			ack_req = arg.get("ack_req")
 			if "remote_map" in arg:
 				map = get_entity_by_id(arg["remote_map"], load_from_db=False)
 				if map != None:
@@ -190,7 +192,7 @@ async def client_handler(websocket):
 				else:
 					connection.entity.send("ERR", {'text': 'Map %s is not loaded' % arg["remote_map"], 'code': 'not_loaded', 'subject_id': arg["remote_map"], 'echo': echo})
 			else:
-				handle_protocol_command(connection, connection.entity.map, connection.entity, command, arg, echo) # client.map may be None
+				handle_protocol_command(connection, connection.entity.map, connection.entity, command, arg, echo, ack_req) # client.map may be None
 
 		except websockets.ConnectionClosed:
 			if isinstance(connection.entity, Client) and connection.identified: # Only announce if they're actually in the world as an entity
@@ -219,7 +221,10 @@ async def client_handler(websocket):
 			print("Unexpected error:", sys.exc_info()[0])
 			print(sys.exc_info()[1])
 			traceback.print_tb(sys.exc_info()[2])
-		#	raise
+			raise
+		if ack_req:
+			connection.send("ACK", {"key": ack_req, "type": command})
+		connection.finish_batch()
 
 	# Clean up connection, including any listens the connection had
 	listens = set(connection.listening_maps)

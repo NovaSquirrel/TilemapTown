@@ -393,7 +393,7 @@ def fn_e_say(e, arg): #Es
 	if e2 == None:
 		return
 	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['remote_command']):
-		handle_user_command(e2.map, e2, e, None, "say "+arg[1], script_entity=e)
+		handle_user_command(e2.map, e2, None, "say "+arg[1], script_entity=e)
 
 @script_api()
 def fn_e_cmd(e, arg): #Es
@@ -403,7 +403,7 @@ def fn_e_cmd(e, arg): #Es
 	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['remote_command']):
 		if Config["RateLimit"]["ScriptCommand"] and apply_rate_limiting(e2, 'sc', ( (1, 70), (2, 140) )):
 			return
-		handle_user_command(e2.map, e2, e, None, arg[1], script_entity=e)
+		handle_user_command(e2.map, e2, None, arg[1], script_entity=e)
 
 @script_api()
 def fn_e_tell(e, arg): #EIs
@@ -554,7 +554,7 @@ def fn_e_takecontrols(e, arg): #EIsbb
 		e.want_controls_key_set = arg[2]
 		e.want_controls_pass_on = arg[3]
 		e.want_controls_key_up  = arg[4]
-		handle_user_command(e2.map, e2, e, None, "requestpermission %s minigame" % client.protocol_id(), script_entity=e)
+		handle_user_command(e2.map, e2, None, "requestpermission %s minigame" % client.protocol_id(), script_entity=e)
 
 @script_api()
 def fn_e_releasecontrols(e, arg): #EI

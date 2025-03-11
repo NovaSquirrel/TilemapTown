@@ -352,6 +352,7 @@ class Connection(object):
 		self.receive_build_messages = False
 		self.can_forward_messages_to = False
 		self.user_watch_with_who = False
+		self.can_acknowledge = False
 		self.features = set() # list of feature names
 
 	def load_settings(self, username):
@@ -671,7 +672,7 @@ class Connection(object):
 	def refresh_client_inventory(self, entity):
 		self.send("BAG", {'list': [child.bag_info() for child in entity.all_children()], 'clear': True})
 
-	def protocol_error(self, echo, text=None, code=None, detail=None, subject_id=None):
+	def protocol_error(self, context, text=None, code=None, detail=None, subject_id=None):
 		out = {}
 		if text != None:
 			out['text'] = text
@@ -684,8 +685,8 @@ class Connection(object):
 				out['subject_id'] = subject_id.protocol_id()
 			else:
 				out['subject_id'] = subject_id
-		if echo != None:
-			out['echo'] = echo
+		if context['echo'] != None:
+			out['echo'] = context['echo']
 		self.send("ERR", out)
 
 	def disconnect(self, text=None, reason=''):

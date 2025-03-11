@@ -281,11 +281,11 @@ Display message in log.
 "buttons" provides a list of choices to present that will execute commands.
 May contain "rc_username" and "rc_id" to indicate who is remote controlling the entity to send a chat message.
 
---> PRI {"text": "[text"], "username": username}
+--> PRI {"text": "[text]", "username": username}
 Send a private message. You can also do this with CMD and the "tell" command.
 Can take "echo" and "rc" like CMD can.
 
-<-- PRI {"text": "[text"], "name": display name, "id": id, "username": username, "receive": true/false}
+<-- PRI {"text": "[text]", "name": display name, "id": id, "username": username, "receive": true/false}
 Private message, displays in the log
 Receive is false for sender, true for recipient. You will get a PRI acknowledging a private message you sent, just like with MSG.
 
@@ -698,6 +698,21 @@ If an entity is forwarding messages, it will have a WHO field named "is_forwardi
 === Extension: user_watch_with_who ===
 When enabled, you may receive WHO messages when users on your watch list log in, log out, or change status. All of the WHO messages will be labeled with "type": "watch" and the user information provided is a limited subset of what's usually there, consisting of "id", "username", "status", "status_message" and a new boolean named "in_world" which is true if the user is fully logged in rather than being in instant messaging mode.
 
+
+=== Extension: message_acknowledgement ===
+This extension allows you to specify that you want the server to acknowledge that it received the message; this is done by adding a field named "ack_req" with a key of your choice.
+This key will be echoed back with an ACK message.
+
+--> PRI {"text": "[text]", "username": username, "ack_req": key}
+<-- ACK {"key": key, "type": "PRI"}
+
+The server can also request the client to acknowledge a message.
+
+<-- PRI {"text": "[text"], "name": display name, "id": id, "username": username, "receive": true/false, "ack_req": key}
+--> ACK {"key": key, "type": "PRI"}
+
+If the client sends multiple messages with the same "ack_req" value, only the first one the server receives will have an effect.
+The server will still send an ACK in response to the messages it's otherwise ignoring, and in the case of PRI, MSG and /tell via CMD, it will send the client the acknowledgement message it would have received.
 
 === WebSocket disconnect reasons ===
 The server may send the following WebSocket disconnect reasons:

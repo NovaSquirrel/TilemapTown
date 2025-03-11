@@ -31,6 +31,7 @@ available_server_features = {
 	"receive_build_messages": {"version": "0.0.1", "minimum_version": "0.0.1"},
 	"entity_message_forwarding": {"version": "0.0.1", "minimum_version": "0.0.1"},
 	"user_watch_with_who": {"version": "0.0.1", "minimum_version": "0.0.1"},
+	"message_acknowledgement": {"version": "0.0.1", "minimum_version": "0.0.1"},
 }
 server_software_name = "Tilemap Town server"
 server_software_version = "0.2.0"
