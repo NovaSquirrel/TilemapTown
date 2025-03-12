@@ -138,10 +138,11 @@ def respond(context, text, data=None, error=False, code=None, detail=None, subje
 	if class_type:
 		args['class'] = class_type
 	client.send('ERR' if error else 'CMD', args)
-	if error:
-		attach_result_to_context(context, 'err')
-	else:
-		attach_result_to_context(context, 'ok')
+	if not context.get('already_received'):
+		if error:
+			attach_result_to_context(context, 'err')
+		else:
+			attach_result_to_context(context, 'ok')
 
 def parse_equal_list(text):
 	return (x.split('=') for x in text.split())

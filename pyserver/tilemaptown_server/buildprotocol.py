@@ -1544,6 +1544,7 @@ def protocol_command_already_received(connection, map, client, command, arg, ech
 		'ack_req': ack_req,
 		'actor': client,
 		'client': client,
+		'already_received': True,
 	}
 
 	# These three types accept "rc" so put this common code here
@@ -1567,7 +1568,7 @@ def protocol_command_already_received(connection, map, client, command, arg, ech
 			send_private_message(client, context, username, privtext, acknowledge_only=True)
 		else:
 			if ack_result == 'err':
-				respond(context, 'Already received /%s (it failed)' % command)
+				respond(context, 'Already received /%s (it failed)' % command, error=False)
 			elif ack_result == 'ok':
 				respond(context, 'Already received /%s (it succceded)' % command)
 			else:
