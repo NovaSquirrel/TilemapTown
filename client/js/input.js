@@ -625,8 +625,10 @@ function keyDownHandler(e) {
 
 		// Automatically shift the offset left and right to account for a sprite that isn't centered at the middle of the sprite
 		let offset = applyTailShift(OldPlayerDir, PlayerDir);
-		if (offset !== null)
+		if (offset !== null) {
 			Params['offset'] = offset;
+			PlayerWho[PlayerYou].offset = offset;
+		}
 
 		if (e.shiftKey) {
 			SendCmd("MOV", Params);
