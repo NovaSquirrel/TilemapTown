@@ -226,6 +226,7 @@ AllEntitiesWithRateLimiting = weakref.WeakSet() # All entities with rate limitin
 ConnectionsByUsername = weakref.WeakValueDictionary() # Look up connections by lowercased username
 ConnectionsByApiKey = weakref.WeakValueDictionary() # Look up connections by API key (supplied to clients in IDN)
 OfflineMessages = {} # OfflineMessages[recipient_id][sender_id][index]
+AcknowlegeRequestResult = {} # For implementing idempotency
 
 # Remote map-watching for bots (and remote chat)
 maplisten_type = {}

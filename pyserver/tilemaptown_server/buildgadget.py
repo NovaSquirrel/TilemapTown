@@ -571,6 +571,8 @@ class GadgetScript(GadgetTrait):
 		self.stop_script()
 
 	def on_use(self, user, ignore_enable=False):
+		if not self.gadget:
+			return None
 		if not ignore_enable and not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_USE]:
 			return None
 		self.trigger_script_callback(ScriptingCallbackType.SELF_USE, [{
@@ -581,6 +583,8 @@ class GadgetScript(GadgetTrait):
 		return True
 
 	def on_tell(self, user, text):
+		if not self.gadget:
+			return None
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_PRIVATE_MESSAGE]:
 			return None
 		self.trigger_script_callback(ScriptingCallbackType.SELF_PRIVATE_MESSAGE, [{
@@ -592,6 +596,8 @@ class GadgetScript(GadgetTrait):
 		return True
 
 	def on_request(self, user, request_type, request_data, accept_command, decline_command):
+		if not self.gadget:
+			return None
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_REQUEST_RECEIVED]:
 			return None
 		self.trigger_script_callback(ScriptingCallbackType.SELF_REQUEST_RECEIVED, [{
@@ -605,6 +611,8 @@ class GadgetScript(GadgetTrait):
 		return True
 
 	def on_key_press(self, user, key, down):
+		if not self.gadget:
+			return None
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_KEY_PRESS]:
 			return None
 		self.trigger_script_callback(ScriptingCallbackType.SELF_KEY_PRESS, [{
@@ -617,6 +625,8 @@ class GadgetScript(GadgetTrait):
 		return True
 
 	def on_bot_message_button(self, user, arg):
+		if not self.gadget:
+			return None
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_BOT_COMMAND_BUTTON]:
 			return None
 		self.trigger_script_callback(ScriptingCallbackType.SELF_BOT_COMMAND_BUTTON, [{
@@ -630,7 +640,9 @@ class GadgetScript(GadgetTrait):
 		return True
 
 	def on_took_controls(self, user, arg):
-		if self.gadget and arg.get('keys') == []:
+		if not self.gadget:
+			return None
+		if arg.get('keys') == []:
 			self.gadget.have_controls_for.discard(user)
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_TOOK_CONTROLS]:
 			return None
@@ -644,6 +656,8 @@ class GadgetScript(GadgetTrait):
 		return True
 
 	def on_entity_click(self, user, arg, ignore_enable=False):
+		if not self.gadget:
+			return None
 		if not ignore_enable and not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_CLICK]:
 			return None
 		self.trigger_script_callback(ScriptingCallbackType.SELF_CLICK, [{
@@ -658,6 +672,8 @@ class GadgetScript(GadgetTrait):
 		return True
 
 	def on_switch_map(self):
+		if not self.gadget:
+			return None
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_SWITCH_MAP]:
 			return None
 		self.trigger_script_callback(ScriptingCallbackType.SELF_SWITCH_MAP, [{
@@ -666,6 +682,8 @@ class GadgetScript(GadgetTrait):
 		return True
 
 	def on_entity_join(self, user):
+		if not self.gadget:
+			return None
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.MAP_JOIN]:
 			return None
 		self.trigger_script_callback(ScriptingCallbackType.MAP_JOIN, [{
@@ -677,6 +695,8 @@ class GadgetScript(GadgetTrait):
 		return True
 
 	def on_entity_leave(self, user):
+		if not self.gadget:
+			return None
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.MAP_LEAVE]:
 			return None
 		self.trigger_script_callback(ScriptingCallbackType.MAP_LEAVE, [{
@@ -688,6 +708,8 @@ class GadgetScript(GadgetTrait):
 		return True
 
 	def on_chat(self, user, text):
+		if not self.gadget:
+			return None
 		if not self.gadget.script_callback_enabled[ScriptingCallbackType.MAP_CHAT]:
 			return None
 		self.trigger_script_callback(ScriptingCallbackType.MAP_CHAT, [{
@@ -700,6 +722,8 @@ class GadgetScript(GadgetTrait):
 		return True
 
 	def on_zone(self, user, fx, fy, tx, ty, dir, zone_index, callback):
+		if not self.gadget:
+			return None
 		if not self.gadget.script_callback_enabled[callback]:
 			return None
 		self.trigger_script_callback(callback, [{
@@ -724,6 +748,8 @@ class GadgetManualScript(GadgetScript):
 	usable = True
 
 	def on_entity_leave(self, user):
+		if not self.gadget:
+			return None
 		if self.gadget.map and self.gadget.map.is_map():
 			if self.gadget.map.count_users_inside() == 0:
 				self.stop_script()
@@ -745,22 +771,30 @@ class GadgetManualScript(GadgetScript):
 
 class GadgetMapScript(GadgetScript):
 	def on_init(self):
+		if not self.gadget:
+			return None
 		if not self.gadget.script_running and self.gadget.map and self.gadget.map.is_map() and self.gadget.map.count_users_inside():
 			self.start_script()
 
 	def on_entity_join(self, user):
+		if not self.gadget:
+			return None
 		if self.gadget.map and self.gadget.map.is_map():
 			if self.gadget.map.count_users_inside() != 0:
 				self.start_script()
 		return super().on_entity_join(user)
 
 	def on_entity_leave(self, user):
+		if not self.gadget:
+			return None
 		if self.gadget.map and self.gadget.map.is_map():
 			if self.gadget.map.count_users_inside() == 0:
 				self.stop_script()
 		return super().on_entity_leave(user)
 
 	def on_switch_map(self):
+		if not self.gadget:
+			return None
 		if self.gadget.map and self.gadget.map.is_map():
 			if self.gadget.map.count_users_inside():
 				self.start_script()

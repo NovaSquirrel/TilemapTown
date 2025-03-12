@@ -227,6 +227,8 @@ function updateWallpaperOnMap(map) {
 }
 
 function receiveServerMessage(cmd, arg) {
+  if (arg && arg.ack_req)
+    SendCmd("ACK", { key: arg.ack_req, type: cmd });
   switch(cmd) {
     case "MOV":
       if("to" in arg && (arg.id != PlayerYou || !arg.from)) {

@@ -219,7 +219,20 @@ def find_local_entity_by_name(map, name):
 	return None
 
 def attach_result_to_context(context, result):
-	pass
+	ack_req = context['ack_req']
+	if not ack_req:
+		return
+	client = context['client']
+	if not client.username:
+		return
+	if client.username not in AcknowlegeRequestResult:
+		AcknowlegeRequestResult[client.username] = deque(maxlen=5)
+	for i, value in enumerate(AcknowlegeRequestResult[client.username]):
+		if value[0] == ack_req:
+			AcknowlegeRequestResult[i] = (ack_req, result)
+			return
+	else:
+		AcknowlegeRequestResult[client.username].append((ack_req, result))
 
 # -------------------------------------
 
@@ -298,10 +311,10 @@ def apply_rate_limiting(client, limit_type, count_limits):
 			return True
 	return False
 
-def send_message_to_map(map, actor, text, context):
+def send_message_to_map(map, actor, text, context, acknowledge_only=False):
 	if text == '':
 		return
-	if Config["RateLimit"]["MSG"] and apply_rate_limiting(actor, 'msg', ( (1, Config["RateLimit"]["MSG1"]),(5, Config["RateLimit"]["MSG5"])) ):
+	if not acknowledge_only and Config["RateLimit"]["MSG"] and apply_rate_limiting(actor, 'msg', ( (1, Config["RateLimit"]["MSG1"]),(5, Config["RateLimit"]["MSG5"])) ):
 		respond_to = context['client']
 		if hasattr(respond_to, 'connection') and respond_to.connection():
 			respond_to.connection().protocol_error(context, text='You\'re sending too many messages too quickly!')
@@ -321,15 +334,18 @@ def send_message_to_map(map, actor, text, context):
 		elif context['client'] != None and actor is not context['client']:
 			fields['rc_id'] = context['client'].protocol_id()
 			fields['rc_username'] = context['client'].username_or_id()
-		map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
-		for e in map.contents:
-			if e.entity_type == entity_type['gadget'] and hasattr(e, 'listening_to_chat') and e.listening_to_chat and e is not actor and e is not context['client']:
-				e.receive_chat(actor, text)
+		if acknowledge_only:
+			actor.send("MSG", fields)
+		else:
+			map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
+			for e in map.contents:
+				if e.entity_type == entity_type['gadget'] and hasattr(e, 'listening_to_chat') and e.listening_to_chat and e is not actor and e is not context['client']:
+					e.receive_chat(actor, text)
 
-def send_private_message(client, context, recipient_username, text, lenient_rate_limit=False):
+def send_private_message(client, context, recipient_username, text, lenient_rate_limit=False, acknowledge_only=False):
 	respond_to = context['client']
 	rate_limit_multiplier = 1 + int(lenient_rate_limit)*2
-	if Config["RateLimit"]["PRI"] and apply_rate_limiting(client, 'pri', ( (1, Config["RateLimit"]["PRI1"]*rate_limit_multiplier),(5, Config["RateLimit"]["PRI5"]*rate_limit_multiplier)) ):
+	if not acknowledge_only and Config["RateLimit"]["PRI"] and apply_rate_limiting(client, 'pri', ( (1, Config["RateLimit"]["PRI1"]*rate_limit_multiplier),(5, Config["RateLimit"]["PRI5"]*rate_limit_multiplier)) ):
 		if hasattr(respond_to, 'connection') and respond_to.connection():
 			respond_to.connection().protocol_error(context, text='You\'re sending too many messages too quickly!')
 		return
@@ -351,7 +367,8 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 			if u:
 				if u.entity_type == entity_type['gadget']:
 					client.send("PRI", {'text': text, 'name': u.name, 'id': u.protocol_id(), 'username': u.username_or_id(), 'receive': False})
-					u.receive_tell(client, text)
+					if not acknowledge_only:
+						u.receive_tell(client, text)
 				elif u.is_client() or "PRI" in u.forward_message_types:
 					if not u.is_client() or not in_blocked_username_list(client, u.connection_attr('ignore_list'), 'message %s' % u.name):
 						client.send("PRI", {'text': text, 'name': u.name, 'id': u.protocol_id(), 'username': u.username_or_id(), 'receive': False})
@@ -362,21 +379,19 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 						if context.get('script_entity'): # Script entity
 							recipient_params['rc_username'] = find_username_by_db_id(context[2].owner_id)
 							recipient_params['rc_id'] = context[2].owner_id
-						u.send("PRI", recipient_params)
+						if not acknowledge_only:
+							u.send("PRI", recipient_params)
 				else:
 					respond(context, 'That entity isn\'t a user', error=True)
-					attach_result_to_context(context, 'fail')
 			else:
 				recipient_db_id = find_db_id_by_username(recipient_username)
 				if recipient_db_id:
 					if not client.db_id:
 						respond(context, 'You can\'t send offline messages as a guest', error=True)
-						attach_result_to_context(context, 'fail')
 						return
 					respond_to = context['client']
 					if (respond_to is not client) or context[2]:
 						respond(context, 'You can\'t send offline messages via remote control', error=True)
-						attach_result_to_context(context, 'fail')
 						return
 
 					c = Database.cursor()
@@ -384,7 +399,6 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 					result = c.fetchone()
 					if result != None and (client.username in json.loads(result[0] or "[]")):
 						respond(context, 'You can\'t message that person', error=True)
-						attach_result_to_context(context, 'blocked')
 						return False
 
 					if recipient_db_id not in OfflineMessages:
@@ -395,12 +409,12 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 					if len(queue) >= 10:
 						respond(context, 'You have too many messages queued up for \"%s\" already' % recipient_username, error=True)
 						return
-					queue.append((text, datetime.datetime.now(), client.name, client.username))
+					if not acknowledge_only:
+						queue.append((text, datetime.datetime.now(), client.name, client.username))
 
 					# Notify the sender
 					recipient_name = get_entity_name_by_db_id(recipient_db_id) or find_username_by_db_id(recipient_db_id) or "?"
 					client.send("PRI", {'text': text, 'name': recipient_name, 'id': recipient_db_id, 'username': find_username_by_db_id(recipient_db_id), 'receive': False, 'offline': True})
-					attach_result_to_context(context, 'offline')
 					return
 
 				failed_to_find(context, recipient_username)

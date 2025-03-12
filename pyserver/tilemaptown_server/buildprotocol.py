@@ -16,7 +16,7 @@
 
 import json, datetime, time, types, weakref, secrets
 from .buildglobal import *
-from .buildcommand import handle_user_command, tile_is_okay, data_disallowed_for_entity_type, send_private_message, send_message_to_map, entity_types_users_can_change_data_for, apply_rate_limiting
+from .buildcommand import handle_user_command, tile_is_okay, data_disallowed_for_entity_type, send_private_message, send_message_to_map, entity_types_users_can_change_data_for, apply_rate_limiting, attach_result_to_context, respond, separate_first_word
 from .buildentity import Entity, GenericEntity
 from .buildclient import Client
 from .buildgadget import Gadget
@@ -1500,18 +1500,21 @@ def fn_EXT(connection, map, client, arg, context):
 # -------------------------------------
 
 def handle_protocol_command(connection, map, client, command, arg, echo, ack_req):
+	if ack_req:
+		connection.send("ACK", {"key": ack_req, "type": command})
+	context = {
+		'echo': echo or ack_req,
+		'ack_req': ack_req,
+		'actor': client,
+		'client': client,
+	}
 	if not isinstance(client, Client) and not connection.username and command not in pre_identify_commands:
 		connection.protocol_error(context, text='Protocol command requires identifying first: %s' % command, code='identify')
 		return
 
 	# Attempt to run the command handler if it exists
 	if command in handlers:
-		context = {
-			'echo': echo or ack_req,
-			'ack_req': ack_req,
-			'actor': client,
-			'client': client,
-		}
+		attach_result_to_context(context, None)
 
 		if command in map_only_commands and (client.map == None or not client.map.is_map()):
 			connection.protocol_error(context, text='Protocol command must be done on a map: %s' % command, code='map_only')
@@ -1519,3 +1522,38 @@ def handle_protocol_command(connection, map, client, command, arg, echo, ack_req
 			return handlers[command](connection, map, client, arg, context)
 	else:
 		connection.protocol_error(context, text='Bad protocol command: %s' % command, code='invalid_command', detail=command)
+
+def protocol_command_already_received(connection, map, client, command, arg, echo, ack_req, ack_result):
+	context = {
+		'echo': echo or ack_req,
+		'ack_req': ack_req,
+		'actor': client,
+		'client': client,
+	}
+
+	# These three types accept "rc" so put this common code here
+	actor = client
+	if 'rc' in arg:
+		actor = find_remote_control_entity(connection, client, arg['rc'], context)
+		if actor == None:
+			return
+		else:
+			map = actor.map
+
+	# Send the client some acknowledgement the user can see, that's appropriate for the message type being sent
+	if command == "PRI":
+		send_private_message(actor, context, arg['username'], arg['text'], acknowledge_only=True)
+	elif command == "MSG":
+		send_message_to_map(map, actor, arg["text"], context, acknowledge_only=True)
+	elif command == "CMD":
+		command, arg = separate_first_word(arg["text"])
+		if command in ("tell", "p", "msg"):
+			username, privtext = separate_first_word(arg)
+			send_private_message(client, context, username, privtext, acknowledge_only=True)
+		else:
+			if ack_result == 'err':
+				respond(context, 'Already received /%s (it failed)' % command)
+			elif ack_result == 'ok':
+				respond(context, 'Already received /%s (it succceded)' % command)
+			else:
+				respond(context, 'Already received /%s' % command)

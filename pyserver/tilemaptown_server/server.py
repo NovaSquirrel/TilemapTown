@@ -18,7 +18,7 @@ from .buildglobal import *
 from .buildmap import *
 from .buildclient import *
 from .buildgadget import *
-from .buildprotocol import handle_protocol_command
+from .buildprotocol import handle_protocol_command, protocol_command_already_received
 from .buildapi import start_api
 from .buildscripting import run_scripting_service, shutdown_scripting_service
 if Config["Database"]["Setup"]:
@@ -156,7 +156,6 @@ async def client_handler(websocket):
 	total_connections[0] += 1
 
 	while connection.ws != None:
-		connection.start_batch()
 		try:
 			# Read a message, make sure it's not too short
 			message = await websocket.recv()
@@ -175,6 +174,12 @@ async def client_handler(websocket):
 			connection.idle_timer = 0
 			echo = arg.get("echo")
 			ack_req = arg.get("ack_req")
+			if isinstance(ack_req, str):
+				ack_req = ack_req[:40] # Allow room for a UUID
+			elif isinstance(ack_req, int):
+				pass
+			else:
+				ack_req = None
 			if "remote_map" in arg:
 				map = get_entity_by_id(arg["remote_map"], load_from_db=False)
 				if map != None:
@@ -192,7 +197,16 @@ async def client_handler(websocket):
 				else:
 					connection.entity.send("ERR", {'text': 'Map %s is not loaded' % arg["remote_map"], 'code': 'not_loaded', 'subject_id': arg["remote_map"], 'echo': echo})
 			else:
-				handle_protocol_command(connection, connection.entity.map, connection.entity, command, arg, echo, ack_req) # client.map may be None
+				connection.start_batch()
+				skip = False
+				if ack_req and connection.username and connection.username in AcknowlegeRequestResult:
+					for item in AcknowlegeRequestResult[connection.username]:
+						if item[0] == ack_req:
+							protocol_command_already_received(connection, connection.entity.map, connection.entity, command, arg, echo, ack_req, item[1])
+							skip = True
+				if not skip:
+					handle_protocol_command(connection, connection.entity.map, connection.entity, command, arg, echo, ack_req) # client.map may be None
+				connection.finish_batch()
 
 		except websockets.ConnectionClosed:
 			if isinstance(connection.entity, Client) and connection.identified: # Only announce if they're actually in the world as an entity
@@ -222,9 +236,6 @@ async def client_handler(websocket):
 			print(sys.exc_info()[1])
 			traceback.print_tb(sys.exc_info()[2])
 			raise
-		if ack_req:
-			connection.send("ACK", {"key": ack_req, "type": command})
-		connection.finish_batch()
 
 	# Clean up connection, including any listens the connection had
 	listens = set(connection.listening_maps)
