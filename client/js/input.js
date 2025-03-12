@@ -163,6 +163,7 @@ function runLocalCommand(t) {
 		return true;
 	} else if(tl === "/cancelcommands") {
 		MessagesToRetry = [];
+		return true;
 	}
 	return false;
 }
