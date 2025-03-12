@@ -199,8 +199,8 @@ async def client_handler(websocket):
 			else:
 				connection.start_batch()
 				skip = False
-				if ack_req and connection.username and connection.username in AcknowlegeRequestResult:
-					for item in AcknowlegeRequestResult[connection.username]:
+				if ack_req and connection.db_id and connection.db_id in AcknowlegeRequestResult:
+					for item in AcknowlegeRequestResult[connection.db_id]:
 						if item[0] == ack_req:
 							protocol_command_already_received(connection, connection.entity.map, connection.entity, command, arg, echo, ack_req, item[1])
 							skip = True

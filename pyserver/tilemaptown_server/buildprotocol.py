@@ -952,10 +952,25 @@ def fn_PIN(connection, map, client, arg, context):
 
 @protocol_command(pre_identify=True)
 def fn_ACK(connection, map, client, arg, context):
-	t = arg.get("type")
-	if t == "PRI":
-		# TODO: mark the private message as having been acknowledged
-		pass
+	cmd = arg.get("type")
+	if cmd == "PRI":
+		try:
+			if connection.db_id not in OfflineMessages:
+				return
+			timestamp = datetime.datetime.fromisoformat(arg["key"])
+
+			new_offline_messages = {}
+			for sender_db_id, queue in OfflineMessages[client.db_id].items():
+				new_offline_messages[sender_db_id] = [_ for _ in queue if timestamp < _[1]]
+				if new_offline_messages[sender_db_id] == []:
+					del new_offline_messages[sender_db_id]
+
+			if new_offline_messages == []:
+				del OfflineMessages[client.db_id]
+			else:
+				OfflineMessages[client.db_id] = new_offline_messages
+		except:
+			pass
 
 @protocol_command(pre_identify=True)
 def fn_VER(connection, map, client, arg, context):

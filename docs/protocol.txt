@@ -714,6 +714,7 @@ The server can also request the client to acknowledge a message.
 If the client sends multiple messages with the same "ack_req" value, only the first one the server receives will have an effect.
 The server will still send an ACK in response to the messages it's otherwise ignoring, and in the case of PRI, MSG and /tell via CMD, it will send the client the acknowledgement message it would have received.
 
+
 === WebSocket disconnect reasons ===
 The server may send the following WebSocket disconnect reasons:
 	"Quit": User requested a disconnect

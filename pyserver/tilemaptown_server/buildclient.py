@@ -584,10 +584,17 @@ class Connection(object):
 			# Send the user any offline messages meant for them
 			if self.db_id in OfflineMessages:
 				for sender_db_id, queue in OfflineMessages[self.db_id].items():
+					if not queue:
+						continue
+					last_item = queue[-1]
 					for item in queue:
 						text, time, sender_name, sender_username = item
-						self.send("PRI", {'text': text, 'name': sender_name, 'id': sender_db_id, 'username': sender_username, 'receive': True, 'offline': True, 'timestamp': time.isoformat()})
-				del OfflineMessages[self.db_id]
+						params = {'text': text, 'name': sender_name, 'id': sender_db_id, 'username': sender_username, 'receive': True, 'offline': True, 'timestamp': time.isoformat()}
+						if item is last_item and self.can_acknowledge:
+							params['ack_req'] = params['timestamp']
+						self.send("PRI", params)
+				if not self.can_acknowledge:
+					del OfflineMessages[self.db_id]
 
 			self.finish_batch()
 			return True

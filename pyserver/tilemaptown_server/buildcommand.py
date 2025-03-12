@@ -223,16 +223,16 @@ def attach_result_to_context(context, result):
 	if not ack_req:
 		return
 	client = context['client']
-	if not client.username:
+	if not client.db_id:
 		return
-	if client.username not in AcknowlegeRequestResult:
-		AcknowlegeRequestResult[client.username] = deque(maxlen=5)
+	if client.db_id not in AcknowlegeRequestResult:
+		AcknowlegeRequestResult[client.db_id] = deque(maxlen=5)
 	for i, value in enumerate(AcknowlegeRequestResult[client.username]):
 		if value[0] == ack_req:
 			AcknowlegeRequestResult[i] = (ack_req, result)
 			return
 	else:
-		AcknowlegeRequestResult[client.username].append((ack_req, result))
+		AcknowlegeRequestResult[client.db_id].append((ack_req, result))
 
 # -------------------------------------
 
@@ -342,6 +342,19 @@ def send_message_to_map(map, actor, text, context, acknowledge_only=False):
 				if e.entity_type == entity_type['gadget'] and hasattr(e, 'listening_to_chat') and e.listening_to_chat and e is not actor and e is not context['client']:
 					e.receive_chat(actor, text)
 
+def queue_offline_private_message(client, recipient_db_id, text):
+	if recipient_db_id not in OfflineMessages:
+		OfflineMessages[recipient_db_id] = {}
+	if client.db_id not in OfflineMessages[recipient_db_id]:
+		OfflineMessages[recipient_db_id][client.db_id] = []
+	queue = OfflineMessages[recipient_db_id][client.db_id]
+	if len(queue) >= 10:
+		return False
+	queue.append((text, datetime.datetime.now(), client.name, client.username))
+	return True
+
+#respond(context, 'You have too many messages queued up for \"%s\" already' % recipient_username, error=True)
+
 def send_private_message(client, context, recipient_username, text, lenient_rate_limit=False, acknowledge_only=False):
 	respond_to = context['client']
 	rate_limit_multiplier = 1 + int(lenient_rate_limit)*2
@@ -377,9 +390,12 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 							recipient_params['rc_username'] = respond_to.username_or_id()
 							recipient_params['rc_id'] = respond_to.protocol_id()
 						if context.get('script_entity'): # Script entity
-							recipient_params['rc_username'] = find_username_by_db_id(context[2].owner_id)
-							recipient_params['rc_id'] = context[2].owner_id
+							recipient_params['rc_username'] = find_username_by_db_id(context['script_entity'].owner_id)
+							recipient_params['rc_id'] = context['script_entity'].owner_id
 						if not acknowledge_only:
+							if u.is_client() and u.db_id and u.connection_attr('can_acknowledge'):
+								queue_offline_private_message(client, u.db_id, text)
+								recipient_params['ack_req'] = datetime.datetime.now().isoformat()
 							u.send("PRI", recipient_params)
 				else:
 					respond(context, 'That entity isn\'t a user', error=True)
@@ -390,7 +406,7 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 						respond(context, 'You can\'t send offline messages as a guest', error=True)
 						return
 					respond_to = context['client']
-					if (respond_to is not client) or context[2]:
+					if (respond_to is not client) or context.get('script_entity'):
 						respond(context, 'You can\'t send offline messages via remote control', error=True)
 						return
 
@@ -401,16 +417,10 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 						respond(context, 'You can\'t message that person', error=True)
 						return False
 
-					if recipient_db_id not in OfflineMessages:
-						OfflineMessages[recipient_db_id] = {}
-					if client.db_id not in OfflineMessages[recipient_db_id]:
-						OfflineMessages[recipient_db_id][client.db_id] = []
-					queue = OfflineMessages[recipient_db_id][client.db_id]
-					if len(queue) >= 10:
-						respond(context, 'You have too many messages queued up for \"%s\" already' % recipient_username, error=True)
-						return
 					if not acknowledge_only:
-						queue.append((text, datetime.datetime.now(), client.name, client.username))
+						if not queue_offline_private_message(client, recipient_db_id, text):
+							respond(context, 'You have too many messages queued up for \"%s\" already' % recipient_username, error=True)
+							return
 
 					# Notify the sender
 					recipient_name = get_entity_name_by_db_id(recipient_db_id) or find_username_by_db_id(recipient_db_id) or "?"
