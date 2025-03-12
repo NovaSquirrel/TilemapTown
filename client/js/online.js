@@ -35,6 +35,10 @@ let GlobalImageNames = {"0": "Potluck", "-1": "Extra", "-2": "Pulp", "-3": "Easy
 let API_Key = null;
 let API_Version = null;
 let API_URL = null;
+let MessagesToRetry = []; // Each entry is {commandType, commandArgs, key, map_id}
+let MessageAckReqPrefix = Math.random() + "_";
+let MessageAckReqNumber = 0; // Incremented every time a key is required, and added to the prefix to get the key that's sent out
+let JoinedMapYet = false;
 const SupportedTakeControlsKeys = ["turn-ne", "move-ne", "turn-se", "move-se", "turn-nw", "move-nw", "turn-sw", "move-sw", "turn-w", "move-w", "turn-s", "move-s", "turn-n", "move-n", "turn-e", "move-e", "use-item", "cancel", "hotbar-1", "hotbar-2", "hotbar-3", "hotbar-4", "hotbar-5", "hotbar-6", "hotbar-7", "hotbar-8", "hotbar-9", "hotbar-10"];
 
 // For messaging mode
@@ -152,10 +156,17 @@ function SendCmd(commandType, commandArgs) {
     }
     return;
   }
-  if(commandArgs)
-    OnlineSocket.send(commandType+" "+JSON.stringify(commandArgs));
-  else
-    OnlineSocket.send(commandType);
+  if(commandArgs) {
+    if (!commandArgs.ack_req && (commandType === "PRI" || commandType === "MSG" || commandType === "CMD" || commandType === "EML") ) {
+      let key = MessageAckReqPrefix + (MessageAckReqNumber++);
+      commandArgs.ack_req = key;
+      MessagesToRetry.push({commandType, commandArgs, key, map_id: messaging_mode ? undefined : MyMap.Info.id});
+    }
+    if (OnlineIsConnected)
+      OnlineSocket.send(commandType+" "+JSON.stringify(commandArgs));
+  } else
+    if (OnlineIsConnected)
+      OnlineSocket.send(commandType);
 }
 
 function initPlayerIfNeeded(id) {
@@ -286,6 +297,9 @@ function receiveServerMessage(cmd, arg) {
       }
       NeedMapRedraw = true;
       break;
+    case "ACK":
+      MessagesToRetry = MessagesToRetry.filter((item) => item.key !== arg.key);
+      break;
     case "MAI":
       if("remote_map" in arg) {
         var remote = arg["remote_map"];
@@ -306,6 +320,17 @@ function receiveServerMessage(cmd, arg) {
         MyMap.Info = arg;
         updateWallpaperOnMap(MyMap);
         UserParticles = [];
+        if (!JoinedMapYet) {
+          JoinedMapYet = true;
+          let newList = [];
+          for (let item of MessagesToRetry) {
+            if (item.commandType !== "MSG" || item.commandArgs.remote_map || item.map_id === arg.id) {
+               SendCmd(item.commandType, item.commandArgs);
+               newList.push(item);
+            }
+          }
+          MessagesToRetry = newList;
+        }
 
         // Clean up MapsByID
         var NotNeededMaps = [];
@@ -859,6 +884,10 @@ function receiveServerMessage(cmd, arg) {
       if(messaging_mode) {
         document.getElementById('onlineStatus').style.backgroundColor = "green";
         document.getElementById('onlineStatus').textContent = "Connected and logged in!";
+
+        for (let item of MessagesToRetry) {
+           SendCmd(item.commandType, item.commandArgs);
+        }
       }
 
       API_Key = arg.api_key;
@@ -1058,8 +1087,9 @@ function ConnectToServer() {
 			idn_args["client_name"] = "Tilemap Town Web Client (touch)";
 		}
 
-		SendCmd("IDN", idn_args);
+		JoinedMapYet = false;
 		OnlineIsConnected = true;
+		SendCmd("IDN", idn_args);
 
 		// Cancel any reconnect going on
 		ReconnectAttempts = 0;

@@ -235,7 +235,7 @@ async def client_handler(websocket):
 			print("Unexpected error:", sys.exc_info()[0])
 			print(sys.exc_info()[1])
 			traceback.print_tb(sys.exc_info()[2])
-			raise
+			#raise
 
 	# Clean up connection, including any listens the connection had
 	listens = set(connection.listening_maps)

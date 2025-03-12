@@ -227,7 +227,7 @@ def attach_result_to_context(context, result):
 		return
 	if client.db_id not in AcknowlegeRequestResult:
 		AcknowlegeRequestResult[client.db_id] = deque(maxlen=5)
-	for i, value in enumerate(AcknowlegeRequestResult[client.username]):
+	for i, value in enumerate(AcknowlegeRequestResult[client.db_id]):
 		if value[0] == ack_req:
 			AcknowlegeRequestResult[i] = (ack_req, result)
 			return

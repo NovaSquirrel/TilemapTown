@@ -599,6 +599,7 @@ function loginButton() {
 	alreadySeenMOTD = undefined;
 	alreadySeenEvent = undefined;
 	alreadySeenMail = undefined;
+	MessagesToRetry = [];
 
 	OnlineUsername = document.getElementById("loginuser").value;
 	OnlinePassword = document.getElementById("loginpass").value;
