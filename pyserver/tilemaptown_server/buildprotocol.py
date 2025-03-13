@@ -1570,6 +1570,6 @@ def protocol_command_already_received(connection, map, client, command, arg, ech
 			if ack_result == 'err':
 				respond(context, 'Already received /%s (it failed)' % command, error=False)
 			elif ack_result == 'ok':
-				respond(context, 'Already received /%s (it succceded)' % command)
+				respond(context, 'Already received /%s (it succeeded)' % command)
 			else:
 				respond(context, 'Already received /%s' % command)

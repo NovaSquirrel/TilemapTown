@@ -237,6 +237,22 @@ function updateWallpaperOnMap(map) {
 	}
 }
 
+function SendStatusMessageFromBeforeDisconnect() {
+	if(StatusOnDisconnect) {
+		const length = MessagesToRetry.length;
+		if(StatusMessageOnDisconnect && StatusMessageOnDisconnect != '') {
+			SendCmd("CMD", {text: "status " + StatusOnDisconnect + " " + StatusMessageOnDisconnect});
+		} else {
+			SendCmd("CMD", {text: "status " + StatusOnDisconnect});
+		}
+		if (MessagesToRetry.length === length + 1) {
+			MessagesToRetry.pop();
+		}
+		StatusOnDisconnect = null;
+		StatusMessageOnDisconnect = null;
+	}
+}
+
 function receiveServerMessage(cmd, arg) {
   if (arg && arg.ack_req)
     SendCmd("ACK", { key: arg.ack_req, type: cmd });
@@ -321,6 +337,7 @@ function receiveServerMessage(cmd, arg) {
         updateWallpaperOnMap(MyMap);
         UserParticles = [];
         if (!JoinedMapYet) {
+          SendStatusMessageFromBeforeDisconnect();
           JoinedMapYet = true;
           let newList = [];
           for (let item of MessagesToRetry) {
@@ -888,21 +905,13 @@ function receiveServerMessage(cmd, arg) {
         for (let item of MessagesToRetry) {
            SendCmd(item.commandType, item.commandArgs);
         }
+        SendStatusMessageFromBeforeDisconnect();
       }
 
       API_Key = arg.api_key;
       API_Version = arg.api_version;
       API_URL = arg.api_url;
 
-      if(StatusOnDisconnect) {
-        if(StatusMessageOnDisconnect && StatusMessageOnDisconnect != '') {
-          SendCmd("CMD", {text: "status " + StatusOnDisconnect + " " + StatusMessageOnDisconnect});
-        } else {
-          SendCmd("CMD", {text: "status " + StatusOnDisconnect});
-        }
-        StatusOnDisconnect = null;
-        StatusMessageOnDisconnect = null;
-      }
       break;
 
     case "PUT":
