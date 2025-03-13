@@ -416,7 +416,7 @@ def fn_BAG(connection, map, client, arg, context):
 		e.map_id = client.db_id
 		e.creator_temp_id = client.id
 
-		set_entity_params_from_dict(e, create, connection, client, echo)
+		set_entity_params_from_dict(e, create, connection, client, context)
 
 		if client.db_id == None:
 			e.temporary = True
@@ -458,7 +458,7 @@ def fn_BAG(connection, map, client, arg, context):
 		new_item.owner_id = client.db_id
 		new_item.creator_temp_id = client.id
 
-		set_entity_params_from_dict(new_item, arg['clone'], connection, client, echo)
+		set_entity_params_from_dict(new_item, arg['clone'], connection, client, context)
 		if client.db_id == None:
 			new_item.temporary = True
 			new_item.allow = permission['all']
@@ -488,7 +488,7 @@ def fn_BAG(connection, map, client, arg, context):
 			connection.protocol_error(context, text='Can\'t update %s' % update['id'], code='not_found', subject_id=update['id'])
 			return
 
-		set_entity_params_from_dict(update_me, update, connection, client, echo)
+		set_entity_params_from_dict(update_me, update, connection, client, context)
 
 		if not update_me.is_client() and not update_me.temporary:
 			update_me.save()
