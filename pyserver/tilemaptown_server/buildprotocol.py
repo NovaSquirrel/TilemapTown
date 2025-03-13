@@ -965,7 +965,7 @@ def fn_ACK(connection, map, client, arg, context):
 				if new_offline_messages[sender_db_id] == []:
 					del new_offline_messages[sender_db_id]
 
-			if new_offline_messages == []:
+			if new_offline_messages == {}:
 				del OfflineMessages[client.db_id]
 			else:
 				OfflineMessages[client.db_id] = new_offline_messages

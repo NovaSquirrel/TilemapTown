@@ -112,6 +112,8 @@ def save_everything():
 	for recipient_db_id, senders in OfflineMessages.items():
 		print("Converting offline messages for %d into mail" % recipient_db_id)
 		for sender_db_id, queue in senders.items():
+			if len(queue) == 0:
+				continue
 			messages_in_queue = ''.join(["[li]%s: %s[/li]" % (_[1].strftime("%Y-%m-%d"), _[0]) for _ in queue])
 			subject = "(Automatic mail) %d offline message%s" % (len(queue), "s" if len(queue) != 1 else "")
 			contents = "The server restarted while you had messages waiting for you, so the following offline messages were converted to mail: [ul]"+messages_in_queue+"[/ul]"

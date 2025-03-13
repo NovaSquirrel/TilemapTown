@@ -119,7 +119,7 @@ def respond(context, text, data=None, error=False, code=None, detail=None, subje
 	client = context['client']
 	if client == None:
 		return
-	echo = context['echo']
+	echo = context.get('echo')
 
 	if echo:
 		args['echo'] = echo

@@ -92,7 +92,11 @@ def fn_ownersay(e, arg):
 	owner = find_owner(e)
 	if owner == None:
 		return
-	send_private_message(e, (e, None, e), owner.protocol_id(), arg[0], lenient_rate_limit=True)
+	context = {
+		"client": e,
+		"script_entity": e
+	}
+	send_private_message(e, context, owner.protocol_id(), arg[0], lenient_rate_limit=True)
 
 @script_api()
 def fn_runitem(e, arg):
