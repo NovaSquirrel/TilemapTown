@@ -351,7 +351,7 @@ def queue_offline_private_message(client, recipient_db_id, text):
 	queue = OfflineMessages[recipient_db_id][client.db_id]
 	if len(queue) >= 10:
 		return False
-	queue.append((text, datetime.datetime.now(), client.name, client.username))
+	queue.append((text, datetime.datetime.now(), client.name, client.username_or_id()))
 	return True
 
 #respond(context, 'You have too many messages queued up for \"%s\" already' % recipient_username, error=True)
