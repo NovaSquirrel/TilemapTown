@@ -2969,7 +2969,7 @@ def fn_entity(map, client, context, arg):
 		if e.creator_id:
 			creator_username = find_username_by_db_id(e.creator_id)
 			info += '\n[b]Creator:[/b] %s' % creator_username
-		if len(e.contents):
+		if len(e.contents) and ((e.is_map() and (e.map_flags & mapflag['public'])) or client.has_permission(e, permission['list_contents'], False)):
 			info += '\n[b]Contents:[/b] %s' % ', '.join(c.name_and_username() for c in e.contents)
 		respond(context, info)
 	elif subcommand == 'locate':
