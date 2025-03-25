@@ -338,10 +338,18 @@ def send_message_to_map(map, actor, text, context, acknowledge_only=False):
 		if acknowledge_only:
 			actor.send("MSG", fields)
 		else:
-			map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
-			for e in map.contents:
-				if e.entity_type == entity_type['gadget'] and hasattr(e, 'listening_to_chat') and e.listening_to_chat and e is not actor and e is not context['client']:
-					e.receive_chat(actor, text)
+			if isinstance(map, int):
+				if map not in MapListens[maplisten_type['chat']]:
+					return
+				fields['remote_map'] = map
+				for connection in MapListens[maplisten_type['chat']][map]:
+					connection.send('MSG', fields)
+				return
+			else:
+				map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
+				for e in map.contents:
+					if e.entity_type == entity_type['gadget'] and hasattr(e, 'listening_to_chat') and e.listening_to_chat and e is not actor and e is not context['client']:
+						e.receive_chat(actor, text)
 
 def queue_offline_private_message(client, recipient_db_id, text):
 	if recipient_db_id not in OfflineMessages:

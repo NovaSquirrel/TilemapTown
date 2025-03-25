@@ -183,11 +183,12 @@ async def client_handler(websocket):
 			else:
 				ack_req = None
 			if "remote_map" in arg:
-				map = get_entity_by_id(arg["remote_map"], load_from_db=False)
+				map_id = arg["remote_map"]
+				map = get_entity_by_id(map_id, load_from_db=False)
 				if map != None:
 					if connection.entity.has_permission(map, permission['map_bot'], False) \
 					or (command == 'MSG' and connection.entity.has_permission(map, permission['remote_chat'], False)):
-						handle_protocol_command(connection, map, connection.entity, command, arg, echo)
+						handle_protocol_command(connection, map, connection.entity, command, arg, echo, ack_req)
 					else:
 						connection.entity.send("ERR", {
 							'text': 'You do not have [tt]%s[/tt] permission on map %d' % ('remote_chat' if command == 'MSG' else 'map_bot', arg["remote_map"]),
@@ -196,8 +197,10 @@ async def client_handler(websocket):
 							'subject_id': arg["remote_map"],
 							'echo': echo
 						})
+				elif command == 'MSG' and isinstance(map_id, int) and connection.entity.has_permission(map_id, (permission['remote_chat'], permission['map_bot']), False):
+					handle_protocol_command(connection, map_id, connection.entity, command, arg, echo, ack_req)
 				else:
-					connection.entity.send("ERR", {'text': 'Map %s is not loaded' % arg["remote_map"], 'code': 'not_loaded', 'subject_id': arg["remote_map"], 'echo': echo})
+					connection.entity.send("ERR", {'text': 'Map %s is not loaded' % map_id, 'code': 'not_loaded', 'subject_id': map_id, 'echo': echo})
 			else:
 				connection.start_batch()
 				skip = False
