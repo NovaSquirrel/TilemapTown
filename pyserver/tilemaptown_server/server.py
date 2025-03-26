@@ -195,6 +195,7 @@ async def client_handler(websocket):
 								if item[0] == ack_req:
 									protocol_command_already_received(connection, map, connection.entity, command, arg, echo, ack_req, item[1])
 									skip = True
+									break
 						if not skip:
 							handle_protocol_command(connection, map, connection.entity, command, arg, echo, ack_req)
 						connection.finish_batch()
@@ -214,6 +215,7 @@ async def client_handler(websocket):
 							if item[0] == ack_req:
 								protocol_command_already_received(connection, map_id, connection.entity, command, arg, echo, ack_req, item[1])
 								skip = True
+								break
 					if not skip:
 						handle_protocol_command(connection, map_id, connection.entity, command, arg, echo, ack_req)
 					connection.finish_batch()
@@ -227,6 +229,7 @@ async def client_handler(websocket):
 						if item[0] == ack_req:
 							protocol_command_already_received(connection, connection.entity.map, connection.entity, command, arg, echo, ack_req, item[1])
 							skip = True
+							break
 				if not skip:
 					handle_protocol_command(connection, connection.entity.map, connection.entity, command, arg, echo, ack_req) # client.map may be None
 				connection.finish_batch()
