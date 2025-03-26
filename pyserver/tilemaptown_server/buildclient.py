@@ -155,7 +155,7 @@ class ClientMixin(object):
 			map_id = find_db_id_by_str(map_id) or map_id
 		# Permission check
 		if not self.has_permission(map_id, permission['map_bot'], False) \
-		and not (category_id in (maplisten_type['chat'], maplisten_type['chat_listen']) and self.has_permission(map_id, permission['remote_chat'], False)):
+		and not (category_id in (maplisten_type['chat'], maplisten_type['chat_listen'], maplisten_type['entry']) and self.has_permission(map_id, permission['remote_chat'], False)):
 			return False
 		connection.listen(map_id, category_id)
 		return True
