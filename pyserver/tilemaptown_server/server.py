@@ -207,7 +207,16 @@ async def client_handler(websocket):
 							'echo': echo
 						})
 				elif command == 'MSG' and isinstance(map_id, int) and connection.entity.has_permission(map_id, (permission['remote_chat'], permission['map_bot']), False):
-					handle_protocol_command(connection, map_id, connection.entity, command, arg, echo, ack_req)
+					connection.start_batch()
+					skip = False
+					if ack_req and connection.db_id and connection.db_id in AcknowlegeRequestResult:
+						for item in AcknowlegeRequestResult[connection.db_id]:
+							if item[0] == ack_req:
+								protocol_command_already_received(connection, map_id, connection.entity, command, arg, echo, ack_req, item[1])
+								skip = True
+					if not skip:
+						handle_protocol_command(connection, map_id, connection.entity, command, arg, echo, ack_req)
+					connection.finish_batch()
 				else:
 					connection.entity.send("ERR", {'text': 'Map %s is not loaded' % map_id, 'code': 'not_loaded', 'subject_id': map_id, 'echo': echo})
 			else:
