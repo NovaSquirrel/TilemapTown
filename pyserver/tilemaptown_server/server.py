@@ -188,7 +188,16 @@ async def client_handler(websocket):
 				if map != None:
 					if connection.entity.has_permission(map, permission['map_bot'], False) \
 					or (command == 'MSG' and connection.entity.has_permission(map, permission['remote_chat'], False)):
-						handle_protocol_command(connection, map, connection.entity, command, arg, echo, ack_req)
+						connection.start_batch()
+						skip = False
+						if ack_req and connection.db_id and connection.db_id in AcknowlegeRequestResult:
+							for item in AcknowlegeRequestResult[connection.db_id]:
+								if item[0] == ack_req:
+									protocol_command_already_received(connection, map, connection.entity, command, arg, echo, ack_req, item[1])
+									skip = True
+						if not skip:
+							handle_protocol_command(connection, map, connection.entity, command, arg, echo, ack_req)
+						connection.finish_batch()
 					else:
 						connection.entity.send("ERR", {
 							'text': 'You do not have [tt]%s[/tt] permission on map %d' % ('remote_chat' if command == 'MSG' else 'map_bot', arg["remote_map"]),
