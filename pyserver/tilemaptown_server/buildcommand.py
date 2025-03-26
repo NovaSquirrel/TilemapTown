@@ -336,6 +336,8 @@ def send_message_to_map(map, actor, text, context, acknowledge_only=False):
 			fields['rc_id'] = context['client'].protocol_id()
 			fields['rc_username'] = context['client'].username_or_id()
 		if acknowledge_only:
+			if map is not actor.map:
+				fields['remote_map'] = map.protocol_id()
 			actor.send("MSG", fields)
 		else:
 			if isinstance(map, int):
