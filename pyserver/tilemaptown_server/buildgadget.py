@@ -241,7 +241,12 @@ class GadgetTrait(object):
 	# | Utility
 	# '----------------------
 	def tell(self, user, text):
-		send_private_message(self.gadget, [user, None, self.gadget], user.protocol_id(), text, lenient_rate_limit=user.db_id == self.gadget.owner_id)
+		context = {
+			'client': user,
+			'actor': self.gadget,
+			'script_entity': self.gadget
+		}
+		send_private_message(self.gadget, context, user.protocol_id(), text, lenient_rate_limit=user.db_id == self.gadget.owner_id)
 
 	# .----------------------
 	# | Event handlers
