@@ -2188,6 +2188,8 @@ def fn_savedpiclist(map, client, context, arg):
 	subcommand, subarg = separate_first_word(arg)
 	if subcommand in ('set', 'add') and subarg:
 		picname, picvalue = separate_first_word(subarg)
+		if picvalue == '':
+			picvalue = str(client.pic[0])
 		if picvalue.startswith("http"):
 			if image_url_is_okay(picvalue):
 				client.saved_pics[picname] = picvalue
