@@ -2424,16 +2424,18 @@ def fn_last(map, client, context, arg):
 
 @cmd_command(category="Who", alias=['wa'], no_entity_needed=True)
 def fn_whereare(map, client, context, arg):
+	override = hasattr(client, 'connection') and client.connection_attr('oper_override')
+
 	names = 'Whereare: [ul]'
 	for m in AllMaps:
-		if m.map_flags & mapflag['public'] == 0:
+		if not override and (m.map_flags & mapflag['public'] == 0):
 			continue
 		user_count = m.count_users_inside()
 		if user_count == 0:
 			continue
 		names += '[li][b]%s[/b] (%d): ' % (noparse(m.name), user_count)
 		for u in m.contents:
-			if u.is_client() and (u.connection_attr('user_flags') & userflag['hide_location'] == 0):
+			if u.is_client() and (override or (u.connection_attr('user_flags') & userflag['hide_location'] == 0)):
 				if arg == 'c' or arg == 'C':
 					names += '%s<%d,%d>, ' % (u.name_and_username(), u.x, u.y)
 				else:
