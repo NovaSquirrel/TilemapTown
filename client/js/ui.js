@@ -400,7 +400,8 @@ function fileCardList(ul, folders_only, click_handler, contextmenu_handler) {
 			DisplayFiles[folder_info.folder] = [-key];
 		}
 	}
-	// sort by name or date later
+
+	// sort by name
 	for (let key in DisplayFiles) {
 		DisplayFiles[key].sort(function (a, b) {
 			if (a < 0 && b > 0) // A is folder, B is file
@@ -2895,9 +2896,17 @@ function runAnimation(timestamp) {
 			}
 		}
 
-		// sort by name or date later
+		// sort by name, and put folders at the top
 		for (let key in DisplayInventory) {
-			DisplayInventory[key].sort(function (a, b) { return a - b });
+			DisplayInventory[key].sort(function (a, b) {
+				if (DBInventory[a].type === "folder" && DBInventory[b].type !== "folder")
+					return -1;
+				if (DBInventory[a].type !== "folder" && DBInventory[b].type === "folder")
+					return 1;
+				const name1 = DBInventory[a].name;
+				const name2 = DBInventory[b].name;
+				return name1.localeCompare(name2);
+			});
 		}
 
 		updateInventoryUL();
