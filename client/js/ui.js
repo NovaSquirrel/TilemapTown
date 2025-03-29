@@ -402,7 +402,15 @@ function fileCardList(ul, folders_only, click_handler, contextmenu_handler) {
 	}
 	// sort by name or date later
 	for (let key in DisplayFiles) {
-		DisplayFiles[key].sort(function (a, b) { return a - b });
+		DisplayFiles[key].sort(function (a, b) {
+			if (a < 0 && b > 0) // A is folder, B is file
+				return -1;
+			if (b < 0 && a > 0) // B is folder, A is file
+				return 1;
+			const name1 = (a > 0) ? FileStorageInfo.files[a].name : FileStorageInfo.folders[-a].name;
+			const name2 = (b > 0) ? FileStorageInfo.files[b].name : FileStorageInfo.folders[-b].name;
+			return name1.localeCompare(name2);
+		});
 	}
 
 	let lis = [];

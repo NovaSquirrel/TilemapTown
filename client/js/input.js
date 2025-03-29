@@ -1206,8 +1206,8 @@ function initMouse() {
 					entityPixelY = (Mob.y * 16) - PixelCameraY + MobOffset[1];
 					entitySize = 16;
 				} else {
-					entityPixelX = (Mob.x * 16 - 8) - PixelCameraX + offset[0];
-					entityPixelY = (Mob.y * 16 - 16) - PixelCameraY + offset[1];
+					entityPixelX = (Mob.x * 16 - 8) - PixelCameraX + MobOffset[0];
+					entityPixelY = (Mob.y * 16 - 16) - PixelCameraY + MobOffset[1];
 					entitySize = 32;
 				}
 				if(pixelPos.x < entityPixelX || pixelPos.y < entityPixelY || pixelPos.x >= (entityPixelX + entitySize) || pixelPos.y >= (entityPixelY + entitySize) ) {
