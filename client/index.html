@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head><title>Tilemap Town</title>
 <meta charset="UTF-8">
@@ -132,15 +133,15 @@ body {
 
 	<div class="tab-content">
 		<h1 class="tab-fallback-heading">About</h1>
-		<p><b>Tilemap Town</b> is a multiplayer game/platform where you can build maps with your friends and roleplay and chat in the worlds you have created. It takes inspiration from BYOND "building games" that used to be popular long ago, as well as from MUCKs and other text-based platforms.</p>
+		<p><b>Tilemap Town</b> is a platform where you can build maps with your friends and roleplay and chat in the worlds you have created. It takes inspiration from BYOND "building games" that used to be popular long ago, as well as from MUCKs, Second Life, Pony Town, and other platforms.</p>
 
-		<p>Currently you can walk around maps and chat, and place/remove tiles to build things. You can even make your own map if you register. You can use your own 16x16 (or 32x32) player avatar or use a premade one, and in the future there will be custom tilesets. Want to help? <a href="https://novasquirrel.com/contact.html">Get in touch!</a> 
+		<p>Currently you can walk around maps and chat, and place/remove tiles to build things. If you register an account (not required) you make your own personal map or upload your own custom graphics for characters and map tiles. Want to help? <a href="https://novasquirrel.com/contact.html">Get in touch!</a> 
 
 		<p><a href="world.html" class="join">Come visit the world!</a><noscript><br>Though maybe not with this browser, because the web client requires JavaScript.</noscript></p>
 
-		<p><strong>If you don't have an account, don't enter in a password.</strong> Once you're in you can register an account, though it's not needed to explore or build. There's a bunch of stuff to explore, and you can add your own mark to the world if you like.</p>
+		<p><strong>If you don't have an account, don't enter in a password.</strong> Account registration is done via a command while connected to the server. There's a bunch of stuff to explore, and you can add your own mark to the world if you like.</p>
 
-		<p>The HTML5 client will also work offline, if you just want to mess around on your own on a temporary map.</p>
+		<p>The HTML5 client will also work offline; you can work on maps privately and save them to your device.</p>
 
 		<div class="center">
 		<a href="novahouse.png"><img style="width:320px;" src="novahouse.png" alt="Tilemap Town screenshot of a house"/></a>
@@ -165,40 +166,41 @@ body {
 		<li>Autotiling and animation support</li>
 		<li>Make objects and place them in the world to act as props</li>
 		<li>An inventory system, allowing you to hold onto objects and keep notes for yourself</li>
-		<li>A simple mail feature</li>
+		<li>A simple mail feature (and private messages sent to offline users will be held until they're online)</li>
 		<li>A profile feature where you can write about yourself</li>
 		<li>BBCode for chat messages, with support for multiple lines of text</li>
 		<li>Commands for things like dice rolls and teleport requests</li>
 		<li>Multiple commands to help with roleplaying: /me /ooc /spoof</li>
 		<li>Save multiple characters and swap between them easily with commands</li>
 		<li>Can directly click and edit the properties of tiles directly on the map</li>
+		<li>Tries to gracefully handle momentarily losing connection to the server; sent messages and commands should reach their destination once and only once</li>
 		</ul>
 
 		Some advanced features:
 		<ul>
-		<li>Scripting with the <a href="https://luau.org/">Luau</a> language (which requires a permission given by the admin)</li>
+		<li>Scripting with the <a href="https://luau.org/">Luau</a> language (which requires a permission given by the admin) - see <a href="https://github.com/NovaSquirrel/TilemapTownScriptingService/tree/main/docs">the scripting documentation</a></li>
 		<li>Documented protocol, with an open source client and server</li>
 		<li>Maps can be linked to each other, so that you can pass over the edge of one and end up on another, to make a big connected world</li>
 		<li>An elaborate permission system, including the ability to grant permissions to someone temporarily</li>
 		<li>Features intended to make bots easier, where you can remotely interact with other maps (if granted permission to)</li>
-		<li>There's support to let bots run their own little minigames directly on the map, with their own screens you can click on</li>
+		<li>There's support to let bots and scripts run their own little minigames directly on the map, with their own screens you can click on</li>
 		</ul>
 	</div>
 	
 	<div class="tab-content">
 		<h1 class="tab-fallback-heading">Community</h1>
-		<p>There is an official server that's been running since 2017, and it's not especially lively but there is quite a lot to explore. You're welcome to come visit and check it out, and even leave your own mark on the world by building something nice if you like. The official server is the default one on <a href="world.html">the web client</a>!</p>
+		<p>There is an official server that's been running since 2017, and it's not especially lively (yet!) but there is quite a lot to explore. You're welcome to come visit and check it out, and even leave your own mark on the world by building something nice if you like. The official server is the default one on <a href="world.html">the web client</a>!</p>
 
 		<p>The community is pro-LGBT+ and is meant to be a safe space to hang out. Be kind to the other people you meet here.</p>
 
 		<p>There's also a small <a href="https://discord.gg/N2Eqj2H">Discord server</a> for Tilemap Town and other projects I work on, though keep in mind that it is meant to be a SFW environment for adults. You can chat with other people interested in Tilemap Town, and plan out meetups. You can also get updates about what's been going on through <a href="https://blog.novasquirrel.com/tilemap-town">the Tilemap Town blog</a>, which has RSS and Atom feeds available.</p>
 
-		<p>If you prefer forums, there is space for Tilemap Town discussion <a href="https://forum.cyansorcery.com/viewforum.php?f=17">here</a>!</p>
+		<p>If you prefer forums, there is space for Tilemap Town discussion <a href="https://forum.cyansorcery.com/viewforum.php?f=17">here</a>! If there is actual demand for a Tilemap Town specific forum in the future I could potentially set one up.</p>
 
 		<h4>Roleplay setting</h4>
 
 		<p>The official server is intended to be a SFW furry roleplay space, like MUCKs usually are, but you're welcome to just hang out and chat if that's more your thing! I think it would be interesting to really embrace the nature of the platform, and treat it in-character as a digital world where it's especially easy to shape the land to your wishes and build things.</p>
-		<p>The world is sort of a crossroads where characters from lots of other worlds meet up, sometimes because they had to leave home for whatever reason and needed a place to go, like Traverse Town. Fantasy elements and magic are encouraged too, and the tone is supposed to be lighthearted.</p>
+		<p>The world is sort of a crossroads where characters from lots of other worlds meet up, sometimes because they had to leave home for whatever reason and needed a place to go, like Traverse Town. Fantasy elements and magic are encouraged too, and the tone is supposed to be lighthearted. Explore the world, introduce people to your character, and add your own (literal) worldbuilding.</p>
 	</div>
 
 	<div class="tab-content">
@@ -267,6 +269,6 @@ body {
 	</div>
 </div>
 
-</div></div>
+</div></div></div>
 
 </body></html>
