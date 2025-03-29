@@ -1182,7 +1182,7 @@ function deleteItem(id) {
 	if(item == undefined)
 		item = {name: "?"};
 	if (
-		confirm(`Really delete ${item.name} with ID ${item.id}?`)
+		confirm(`Really delete ${item.name} with ID ${item.id}?${item.type === 'image' ? '\nIf you do, any tiles linked to this image will lose their appearance.': ''}`)
 	) {
 		SendCmd("BAG", { delete: { id: id } });
 	}
