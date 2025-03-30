@@ -3731,3 +3731,10 @@ function initWorld() {
 		}
 	}
 }
+
+document.addEventListener("visibilitychange", (event) => {
+	if (document.visibilityState == "visible") {
+		backdropRerenderAll = true;
+		NeedMapRedraw = true;
+	}
+});
