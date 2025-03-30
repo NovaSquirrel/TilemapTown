@@ -22,6 +22,19 @@ body {
 .join {
   font-size:24px;
 }
+.join_touch {
+  font-size:24px;
+  display: none;
+}
+@media (hover: none) or (pointer: coarse) {
+  .join {
+    display: none;
+  }
+  .join_touch {
+    display: inline;
+  }
+}
+
 .center {
   text-align: center;
 }
@@ -137,7 +150,7 @@ body {
 
 		<p>Currently you can walk around maps and chat, and place/remove tiles to build things. If you register an account (not required) you can make your own personal map or upload your own custom graphics for characters and map tiles. Want to help? <a href="https://novasquirrel.com/contact.html">Get in touch!</a> 
 
-		<p><a href="world.html" class="join">Come visit the world!</a><noscript><br>Though maybe not with this browser, because the web client requires JavaScript.</noscript></p>
+		<p><a href="world.html" class="join">Come visit the world!</a><a href="touch_ui.html" class="join_touch">Come visit the world!</a><noscript><br>Though maybe not with this browser, because the web client requires JavaScript.</noscript></p>
 
 		<p><strong>If you don't have an account, don't enter in a password.</strong> Account registration is done via a command while connected to the server. There's a bunch of stuff to explore, and you can add your own mark to the world if you like.</p>
 
