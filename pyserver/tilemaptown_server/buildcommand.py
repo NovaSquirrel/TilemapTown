@@ -2281,7 +2281,7 @@ def fn_morphlist(map, client, context, arg):
 			'desc': client.desc,
 			'saved_pics': client.saved_pics,
 			'tags': client.tags,
-			'secret_pic': bool(client.connection_attr('user_flags')),
+			'secret_pic': bool((client.connection_attr('user_flags') or 0) & userflag['secret_pic']),
 		}
 		respond(context, "Saved morph \"%s\"" % (subarg))
 	elif subcommand == 'list2': # Provide it as text just in case
@@ -2289,11 +2289,17 @@ def fn_morphlist(map, client, context, arg):
 			respond(context, "You don't have any morphs")
 		else:
 			respond(context, "Morphs: %s" % ', '.join(sorted(client.morphs.keys())))
-	elif subcommand == 'del' and subarg:
+	elif subcommand == ('del', 'delete', 'remove') and subarg:
 		subarg = subarg.lower()
 		was = client.morphs.pop(subarg, None)
 		if was:
 			respond(context, 'Deleted morph \"%s" (it was %s)' % (subarg, was))
+		else:
+			respond(context, "You don't have a morph named \"%s\"" % subarg, error=True)
+	elif subcommand == 'peek' and subarg:
+		p = client.morphs.get(subarg)
+		if p:
+			respond(context, 'Morph \"%s" is %s' % (subarg, p))
 		else:
 			respond(context, "You don't have a morph named \"%s\"" % subarg, error=True)
 	elif subcommand == 'clear':
