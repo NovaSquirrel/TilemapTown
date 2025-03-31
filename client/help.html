@@ -33,87 +33,68 @@ table, td, tr, th{
 	border-collapse: collapse;
 }
 
-/* From https://codepen.io/MPDoctor/pen/mpJdYe */
-.tabbed {
-	overflow-x: hidden; /* so we could easily hide the radio inputs */
-	margin: 0 0;
-	padding-bottom: 16px;
-	border-bottom: 1px solid #ccc;
+/* ------------------------------------------------------
+ * From https://www.w3schools.com/howto/howto_js_tabs.asp
+ * but modified
+ */
+.tab {
+  display: none;
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
 }
-.tabbed [type="radio"] {
-	/* hiding the inputs */
-	display: none;
+/* Style the buttons inside the tab */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.1s;
+  font-size: 17px;
 }
-.tabs {
-	display: none; /* Will override this to flex if supported */
-	align-items: stretch;
-	list-style: none;
-	padding: 0;
-	border-bottom: 1px solid #ccc;
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
 }
-.tab > label {
-	display: block;
-	margin-bottom: -1px;
-	padding: 12px 15px;
-	border: 1px solid #ccc;
-	background: #eee;
-	color: #666;
-	font-size: 12px; 
-	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 1px;
-	cursor: pointer;	
-	transition: all 0.3s;
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #999;
+  color: white;
 }
-.tab:hover label {
-	border-top-color: #333;
-	color: #333;
-}
-
-/* Some browsers like Netsurf don't seem to support fancy CSS */
-.tab-content {
-	display: block;
-	color: black;
-}
-.tab-fallback-heading {
-	display: block;
-	text-align: center;
-}
-@supports selector(:nth-of-type(1)) {
-	.tab-content {
-		display: none;
-		color: black;
-	}
-	.tab-fallback-heading {
-		display: none;
-	}
-	.tabs {
-		display: flex;
-	}
+/* Style the tab content */
+.tabcontent {
+  padding: 6px 12px;
+  border-top: none;
 }
 
-/* As we cannot replace the numbers with variables or calls to element properties, the number of this selector parts is our tab count limit */
-.tabbed [type="radio"]:nth-of-type(1):checked ~ .tabs .tab:nth-of-type(1) label,
-.tabbed [type="radio"]:nth-of-type(2):checked ~ .tabs .tab:nth-of-type(2) label,
-.tabbed [type="radio"]:nth-of-type(3):checked ~ .tabs .tab:nth-of-type(3) label,
-.tabbed [type="radio"]:nth-of-type(4):checked ~ .tabs .tab:nth-of-type(4) label,
-.tabbed [type="radio"]:nth-of-type(5):checked ~ .tabs .tab:nth-of-type(5) label,
-.tabbed [type="radio"]:nth-of-type(6):checked ~ .tabs .tab:nth-of-type(6) label {
-	border-bottom-color: #fff;
-	border-top-color: #80C080;
-	background: #fff;
-	color: #222;
-}
-.tabbed [type="radio"]:nth-of-type(1):checked ~ .tab-content:nth-of-type(1),
-.tabbed [type="radio"]:nth-of-type(2):checked ~ .tab-content:nth-of-type(2),
-.tabbed [type="radio"]:nth-of-type(3):checked ~ .tab-content:nth-of-type(3),
-.tabbed [type="radio"]:nth-of-type(4):checked ~ .tab-content:nth-of-type(4),
-.tabbed [type="radio"]:nth-of-type(5):checked ~ .tab-content:nth-of-type(5),
-.tabbed [type="radio"]:nth-of-type(6):checked ~ .tab-content:nth-of-type(6) {
-	display: block;
+@media (scripting: enabled) {
+  .tabcontent {
+    display: none;
+    color: black;
+  }
+  .tab-fallback-heading {
+    display: none;
+  }
+  .tab {
+    display: block;
+  }
 }
 </style>
-
+<script>
+function openTab(evt, tabName) {
+	let tabcontent = document.getElementsByClassName("tabcontent");
+	let tablinks = document.getElementsByClassName("tablinks");
+	for (let i = 0; i < tabcontent.length; i++)
+		tabcontent[i].style.display = "none";
+	for (let i = 0; i < tablinks.length; i++)
+		tablinks[i].className = tablinks[i].className.replace(" active", "");
+	document.getElementById(tabName).style.display = "block";
+	evt.currentTarget.className += " active";
+}
+</script>
+</head>
 <body>
 <a href="https://github.com/NovaSquirrel/TilemapTown"><img decoding="async" loading="lazy" width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149" alt="Fork me on GitHub" data-recalc-dims="1" style="position: absolute; top: 0; right: 0; border: 0;"></a>
 
@@ -125,24 +106,17 @@ table, td, tr, th{
 <br>
 
 <div style="border:dashed #80ff80 3px;"><div style="margin-left:100px; margin-right:100px;">
-<div class="tabbed">
-	<input type="radio" id="tab1" name="css-tabs" checked>
-	<input type="radio" id="tab2" name="css-tabs">
-	<input type="radio" id="tab3" name="css-tabs">
-	<input type="radio" id="tab4" name="css-tabs">
-	<input type="radio" id="tab5" name="css-tabs">
-	<input type="radio" id="tab6" name="css-tabs">
+<div>
+	<div class="tab">
+		<button class="tablinks active" onclick="openTab(event, 'About')">Basics</button>
+		<button class="tablinks" onclick="openTab(event, 'Chat')">Chat</button>
+		<button class="tablinks" onclick="openTab(event, 'AvatarAccount')">Avatar / Account</button>
+		<button class="tablinks" onclick="openTab(event, 'MapsTeleports')">Maps / Teleports</button>
+		<button class="tablinks" onclick="openTab(event, 'Moderation')">Moderation</button>
+		<button class="tablinks" onclick="openTab(event, 'Other')">Other</button>
+	</div>
 	
-	<ul class="tabs">
-		<li class="tab"><label for="tab1">Basics</label></li>
-		<li class="tab"><label for="tab2">Chat</label></li>
-		<li class="tab"><label for="tab3">Avatar / Account</label></li>
-		<li class="tab"><label for="tab4">Maps / Teleports</label></li>
-		<li class="tab"><label for="tab5">Moderation</label></li>
-		<li class="tab"><label for="tab6">Other</label></li>
-	</ul>
-	
-	<div class="tab-content">
+	<div class="tabcontent" id="About" style="display: block;">
 		<h1 class="tab-fallback-heading">Basics</h1>
 		<p><div class="cmd_group">Controls</div>
 			<ul>
@@ -184,7 +158,7 @@ table, td, tr, th{
 		<br><span class="cmd_name">/changepass password</span><br><span class="cmd_desc">Changes password to new password if logged in.</span><br>
 	</div>
 
-	<div class="tab-content">
+	<div class="tabcontent" id="Chat">
 		<h1 class="tab-fallback-heading">Chat</h1>
 		<div class="cmd_group">BBCode reference</div>
 		Tilemap Town uses BBCode for text formatting, just like many forums.
@@ -301,11 +275,11 @@ table, td, tr, th{
 		<br><span class="cmd_name">/offlinequeue username</span><br><span class="cmd_desc">View what messages you have queued up for when that user logs in. <kbd>/offlinequeue username clear</kbd> will clear the queue.</span><br>
 	</div>	
 
-	<div class="tab-content">
+	<div class="tabcontent" id="AvatarAccount">
 		<h1 class="tab-fallback-heading">Avatar / Account</h1>
 		<span class="cmd_group">Setting up a custom player graphic</span>
 		<p>
-		You can use custom player graphics on Tilemap Town! If you register an account you can upload PNGs directly to the server (click the Files button) but an alternative is to use an image hosting site. Currently the server is set up to accept images from <a href="https://imgur.com/">Imgur</a>, <a href="https://imgbb.com/">ImgBB</a> and <a href="https://postimages.org/">Postimages</a>. Additional image hosts can be added on request, as long as they are set up properly.
+		You can use custom player graphics on Tilemap Town! If you register an account you can upload PNGs directly to the server (click the Files button) but an alternative is to use an image hosting site. Currently the server is set up to accept images from <a href="https://imgur.com/">Imgur</a>, <a href="https://imgbb.com/">ImgBB</a>, <a href="https://postimages.org/">Postimages</a> and <a href="https://filegarden.com/">File Garden</a>. Additional image hosts can be added on request, as long as they are set up properly.
 		</p>
 
 		<p>
@@ -356,7 +330,7 @@ table, td, tr, th{
 		<br><span class="cmd_name">/changepass password</span><br><span class="cmd_desc">Changes password to new password if logged in.</span><br>
 	</div>
 
-	<div class="tab-content">
+	<div class="tabcontent" id="MapsTeleports">
 		<h1 class="tab-fallback-heading">Map / Teleports</h1>
 		<div class="cmd_group">Teleport</div>
 		<br><span class="cmd_name">/coords</span><br><span class="cmd_desc">Display your coordinates.</span><br>
@@ -429,7 +403,7 @@ table, td, tr, th{
 		<br><span class="cmd_name">/mapexport</span><br><span class="cmd_desc">Download the current map.</span><br>
 	</div>
 
-	<div class="tab-content">
+	<div class="tabcontent" id="Moderation">
 		<h1 class="tab-fallback-heading">Moderation</h1>
 		<div class="cmd_group">Map Moderation</div>
 		<br><span class="cmd_name">/kick user</span><br><span class="cmd_desc">Kicks the user off the map.</span><br>
@@ -447,7 +421,7 @@ table, td, tr, th{
 		<br><span class="cmd_name">/rehash</span><br><span class="cmd_desc">Reloads the config file, including any resource files the config includes.</span><br>
 	</div>
 
-	<div class="tab-content">
+	<div class="tabcontent" id="Other">
         <h1 class="tab-fallback-heading">Other</h1>
         <div class="cmd_group">Rides</div>
         <br><span class="cmd_name">/carry user</span><br><span class="cmd_desc">Offer to carry a user. Carried users overlap and move on top of the user that's carrying them whenever the ride moves.</span><br>

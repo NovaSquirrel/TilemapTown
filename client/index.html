@@ -34,90 +34,72 @@ body {
     display: inline;
   }
 }
-
 .center {
   text-align: center;
 }
-/* From https://codepen.io/MPDoctor/pen/mpJdYe */
-.tabbed {
-	overflow-x: hidden; /* so we could easily hide the radio inputs */
-	margin: 0 0;
-	padding-bottom: 16px;
-	border-bottom: 1px solid #ccc;
+
+/* ------------------------------------------------------
+ * From https://www.w3schools.com/howto/howto_js_tabs.asp
+ * but modified
+ */
+.tab {
+  display: none;
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
 }
-.tabbed [type="radio"] {
-	/* hiding the inputs */
-	display: none;
+/* Style the buttons inside the tab */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.1s;
+  font-size: 17px;
 }
-.tabs {
-	display: none; /* Will override this to flex if supported */
-	align-items: stretch;
-	list-style: none;
-	padding: 0;
-	border-bottom: 1px solid #ccc;
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
 }
-.tab > label {
-	display: block;
-	margin-bottom: -1px;
-	padding: 12px 15px;
-	border: 1px solid #ccc;
-	background: #eee;
-	color: #666;
-	font-size: 12px; 
-	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 1px;
-	cursor: pointer;	
-	transition: all 0.3s;
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #999;
+  color: white;
 }
-.tab:hover label {
-	border-top-color: #333;
-	color: #333;
+/* Style the tab content */
+.tabcontent {
+  padding: 6px 12px;
+  border-top: none;
 }
 
-/* Some browsers like Netsurf don't seem to support fancy CSS */
-.tab-content {
-	display: block;
-	color: black;
+@media (scripting: enabled) {
+  .tabcontent {
+    display: none;
+    color: black;
+  }
+  .tab-fallback-heading {
+    display: none;
+  }
+  .tab {
+    display: block;
+  }
 }
-.tab-fallback-heading {
-	display: block;
-	text-align: center;
-}
-@supports selector(:nth-of-type(1)) {
-	.tab-content {
-		display: none;
-		color: black;
-	}
-	.tab-fallback-heading {
-		display: none;
-	}
-	.tabs {
-		display: flex;
-	}
-}
-
-/* As we cannot replace the numbers with variables or calls to element properties, the number of this selector parts is our tab count limit */
-.tabbed [type="radio"]:nth-of-type(1):checked ~ .tabs .tab:nth-of-type(1) label,
-.tabbed [type="radio"]:nth-of-type(2):checked ~ .tabs .tab:nth-of-type(2) label,
-.tabbed [type="radio"]:nth-of-type(3):checked ~ .tabs .tab:nth-of-type(3) label,
-.tabbed [type="radio"]:nth-of-type(4):checked ~ .tabs .tab:nth-of-type(4) label,
-.tabbed [type="radio"]:nth-of-type(5):checked ~ .tabs .tab:nth-of-type(5) label {
-	border-bottom-color: #fff;
-	border-top-color: #80C080;
-	background: #fff;
-	color: #222;
-}
-.tabbed [type="radio"]:nth-of-type(1):checked ~ .tab-content:nth-of-type(1),
-.tabbed [type="radio"]:nth-of-type(2):checked ~ .tab-content:nth-of-type(2),
-.tabbed [type="radio"]:nth-of-type(3):checked ~ .tab-content:nth-of-type(3),
-.tabbed [type="radio"]:nth-of-type(4):checked ~ .tab-content:nth-of-type(4),
-.tabbed [type="radio"]:nth-of-type(5):checked ~ .tab-content:nth-of-type(5) {
-	display: block;
-}
-
 </style>
-
+<script>
+function openTab(evt, tabName) {
+	let tabcontent = document.getElementsByClassName("tabcontent");
+	let tablinks = document.getElementsByClassName("tablinks");
+	for (let i = 0; i < tabcontent.length; i++)
+		tabcontent[i].style.display = "none";
+	for (let i = 0; i < tablinks.length; i++)
+		tablinks[i].className = tablinks[i].className.replace(" active", "");
+	document.getElementById(tabName).style.display = "block";
+	evt.currentTarget.className += " active";
+}
+</script>
+</head>
 <body>
 <a href="https://github.com/NovaSquirrel/TilemapTown"><img decoding="async" loading="lazy" width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149" alt="Fork me on GitHub" data-recalc-dims="1" style="position: absolute; top: 0; right: 0; border: 0;"></a>
 
@@ -129,22 +111,16 @@ body {
 <br>
 
 <div style="border:dashed #80ff80 3px;"><div style="margin-left:100px; margin-right:100px;">
-<div class="tabbed">
-	<input type="radio" id="tab1" name="css-tabs" checked>
-	<input type="radio" id="tab2" name="css-tabs">
-	<input type="radio" id="tab3" name="css-tabs">
-	<input type="radio" id="tab4" name="css-tabs">
-	<input type="radio" id="tab5" name="css-tabs">
-	
-	<ul class="tabs">
-		<li class="tab"><label for="tab1">About</label></li>
-		<li class="tab"><label for="tab2">Features</label></li>
-		<li class="tab"><label for="tab3">Community</label></li>
-		<li class="tab"><label for="tab4">Open platform</label></li>
-		<li class="tab"><label for="tab5">Credits</label></li>
-	</ul>
+<div>
+	<div class="tab">
+		<button class="tablinks active" onclick="openTab(event, 'About')">About</button>
+		<button class="tablinks" onclick="openTab(event, 'Features')">Features</button>
+		<button class="tablinks" onclick="openTab(event, 'Community')">Community</button>
+		<button class="tablinks" onclick="openTab(event, 'OpenPlatform')">Open platform</button>
+		<button class="tablinks" onclick="openTab(event, 'Credits')">Credits</button>
+	</div>
 
-	<div class="tab-content">
+	<div class="tabcontent" id="About" style="display: block;">
 		<h1 class="tab-fallback-heading">About</h1>
 		<p><b>Tilemap Town</b> is a platform where you can build maps with your friends and roleplay and chat in the worlds you have created. It takes inspiration from BYOND "building games" that used to be popular long ago, as well as from MUCKs, Second Life, Pony Town, and other platforms.</p>
 
@@ -165,7 +141,7 @@ body {
 		</div>
 	</div>
 	
-	<div class="tab-content">
+	<div class="tabcontent" id="Features">
 		<h1 class="tab-fallback-heading">Features</h1>
 		<p>In <b>Tilemap Town</b>, you can wander around a top-down 2D pixel art world, and you can play as any character you like, as long as you can draw or find a 32x32 sprite of them! There is support for multiple directions and simple animation, and <a href="https://github.com/NovaSquirrel/TilemapTown/tree/main/docs/player%20templates">there are some templates</a> intended to help with this. The game picks up on how many frames and directions there are from the size of the image you use, so if you fill in your character's frames in the right places you're all set.</p>
 
@@ -200,7 +176,7 @@ body {
 		</ul>
 	</div>
 	
-	<div class="tab-content">
+	<div class="tabcontent" id="Community">
 		<h1 class="tab-fallback-heading">Community</h1>
 		<p>There is an official server that's been running since 2017, and it's not especially lively (yet!) but there is quite a lot to explore. You're welcome to come visit and check it out, and even leave your own mark on the world by building something nice if you like. The official server is the default one on <a href="world.html">the web client</a>!</p>
 
@@ -216,7 +192,7 @@ body {
 		<p>The world is sort of a crossroads where characters from lots of other worlds meet up, sometimes because they had to leave home for whatever reason and needed a place to go, like Traverse Town. Fantasy elements and magic are encouraged too, and the tone is supposed to be lighthearted. Explore the world, introduce people to your character, and add your own (literal) worldbuilding.</p>
 	</div>
 
-	<div class="tab-content">
+	<div class="tabcontent" id="OpenPlatform">
 		<h1 class="tab-fallback-heading">Open platform</h1>
 		<p>Tilemap Town is an open source project, and you can find the web client, server, and documentation <a href="https://github.com/NovaSquirrel/TilemapTown">on GitHub</a>. Anyone can host their own server or make their own client, or customize the official server or client to their liking. It could even be a good head start if you're trying to make your own online game.</p>
 
@@ -236,7 +212,7 @@ body {
 		</ul>
 	</div>
 
-	<div class="tab-content">
+	<div class="tabcontent" id="Credits">
       <h1 class="tab-fallback-heading">Credits</h1>
       <ul>
 		<li><b>Development</b></li>
