@@ -1134,9 +1134,17 @@ function initMouse() {
 		MouseNowY = pos.y;
 		// record the nearby players
 		let Around = PlayersAroundTile(MouseNowX, MouseNowY, 2);
-		if (MousedOverPlayers.length != Around.length) {
+		if (MousedOverPlayers.length !== Around.length) {
 			NeedMapRedraw = true;
 			backdropDrawAll = true;
+		} else {
+			for (let i=0; i<MousedOverPlayers.length; i++) {
+				if (MousedOverPlayers[i] !== Around[i]) {
+					NeedMapRedraw = true;
+					backdropDrawAll = true;
+					break;
+				}
+			}
 		}
 		MousedOverEntityClickAvailable = false;
 
