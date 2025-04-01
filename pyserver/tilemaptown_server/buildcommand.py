@@ -2176,7 +2176,7 @@ def fn_savedpic(map, client, context, arg):
 	else:
 		respond(context, "You don't have a saved pic named \"%s\"" % arg, error=True)
 
-@cmd_command(category="Settings", alias=['savepiclist', 'spl'])
+@cmd_command(category="Settings", alias=['savepiclist', 'spl', 'savedpics'])
 def fn_savedpiclist(map, client, context, arg):
 	if not client.is_client():
 		respond(context, 'Only clients can use /savedpiclist', error=True)
@@ -2188,7 +2188,7 @@ def fn_savedpiclist(map, client, context, arg):
 	subcommand, subarg = separate_first_word(arg)
 	if subcommand in ('set', 'add') and subarg:
 		picname, picvalue = separate_first_word(subarg)
-		if picvalue == '':
+		if subarg == '':
 			picvalue = str(client.pic[0])
 		if picvalue.startswith("http"):
 			if image_url_is_okay(picvalue):
@@ -2203,11 +2203,17 @@ def fn_savedpiclist(map, client, context, arg):
 			respond(context, "You don't have any saved pics")
 		else:
 			respond(context, "Saved pics: %s" % ', '.join(sorted(client.saved_pics.keys())))
-	elif subcommand == 'del' and subarg:
+	elif subcommand in ('del', 'delete', 'remove') and subarg:
 		subarg = subarg.lower()
 		was = client.saved_pics.pop(subarg, None)
 		if was:
 			respond(context, 'Deleted saved pic \"%s" (it was %s)' % (subarg, was))
+		else:
+			respond(context, "You don't have a saved pic named \"%s\"" % subarg, error=True)
+	elif subcommand == 'peek' and subarg:
+		p = client.saved_pics.get(subarg)
+		if p:
+			respond(context, 'Saved pic \"%s" is %s' % (subarg, p))
 		else:
 			respond(context, "You don't have a saved pic named \"%s\"" % subarg, error=True)
 	elif subcommand == 'clear':
@@ -2289,7 +2295,7 @@ def fn_morphlist(map, client, context, arg):
 			respond(context, "You don't have any morphs")
 		else:
 			respond(context, "Morphs: %s" % ', '.join(sorted(client.morphs.keys())))
-	elif subcommand == ('del', 'delete', 'remove') and subarg:
+	elif subcommand in ('del', 'delete', 'remove') and subarg:
 		subarg = subarg.lower()
 		was = client.morphs.pop(subarg, None)
 		if was:
