@@ -147,29 +147,37 @@ function openTab(evt, tabName) {
 
 		<p>In the world, you can place tiles onto a map with other players to collaboratively make a map together, or if you register then you can even create your own map. You can restrict building to yourself only, limit entry to specific users, and have a private space if you would like one.</p>
 
-		Features in more detail:
+		Map features:
 		<ul>
 		<li>You can use your own graphics for the tiles you draw onto maps!</li>
 		<li>Small amount of space to upload your own graphics and music to</li>
 		<li>Tons of premade tiles available to build with</li>
 		<li>Autotiling and animation support</li>
+		<li>Can directly click and edit the properties of tiles directly on the map</li>
 		<li>Make objects and place them in the world to act as props</li>
-		<li>An inventory system, allowing you to hold onto objects and keep notes for yourself</li>
-		<li>A simple mail feature (and private messages sent to offline users will be held until they're online)</li>
-		<li>A profile feature where you can write about yourself</li>
+		<li>Maps can be linked to each other, so that you can pass over the edge of one and end up on another, to make a big connected world</li>
+		</ul>
+
+		Chat features:
+		<ul>
 		<li>BBCode for chat messages, with support for multiple lines of text</li>
 		<li>Commands for things like dice rolls and teleport requests</li>
 		<li>Multiple commands to help with roleplaying: /me /ooc /spoof</li>
-		<li>Save multiple characters and swap between them easily with commands</li>
-		<li>Can directly click and edit the properties of tiles directly on the map</li>
 		<li>Tries to gracefully handle momentarily losing connection to the server; sent messages and commands should reach their destination once and only once</li>
+		</ul>
+
+		Other features:
+		<ul>
+		<li>An inventory system, allowing you to hold onto objects and keep notes for yourself</li>
+		<li>A simple mail feature (and private messages sent to offline users will be held until they're online)</li>
+		<li>A profile feature where you can write about yourself</li>
+		<li>Save multiple characters and swap between them easily with commands</li>
 		</ul>
 
 		Some advanced features:
 		<ul>
 		<li>Scripting with the <a href="https://luau.org/">Luau</a> language (which requires a permission given by the admin) - see <a href="https://github.com/NovaSquirrel/TilemapTownScriptingService/tree/main/docs">the scripting documentation</a></li>
 		<li>Documented protocol, with an open source client and server</li>
-		<li>Maps can be linked to each other, so that you can pass over the edge of one and end up on another, to make a big connected world</li>
 		<li>An elaborate permission system, including the ability to grant permissions to someone temporarily</li>
 		<li>Features intended to make bots easier, where you can remotely interact with other maps (if granted permission to)</li>
 		<li>There's support to let bots and scripts run their own little minigames directly on the map, with their own screens you can click on</li>
