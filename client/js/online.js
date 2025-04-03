@@ -1131,7 +1131,7 @@ function ConnectToServer() {
 		} else if(reason == "BadLogin") {
 			display = "Connection closed due to bad login credentials";
 			document.getElementById('loginWindow').style.display = "block";
-			document.getElementById('loginErrorText').textContent = mostRecentError;
+			document.getElementById('loginErrorText').textContent = (message != '') ? message : mostRecentError;
 			document.getElementById('passwordResetHint').style.display = "block";
 		} else if(reason == "Shutdown") {
 			display = "Connection closed because the server shut down";

@@ -1102,16 +1102,19 @@ def fn_IDN(connection, map, client, arg, context):
 		if not connection.login(filter_username(arg["username"]), arg["password"], new_client, override_map=override_map, announce_login=False):
 			write_to_connect_log("Failed login for "+filter_username(arg["username"]))
 			connection.finish_batch()
-			connection.disconnect(reason="BadLogin")
+			if hasattr(connection, 'login_fail_reason'):
+				connection.disconnect(reason="BadLogin|" + connection.login_fail_reason)
+			else:
+				connection.disconnect(reason="BadLogin")
 			connection.login_successful_callback = None
 			return
 	elif Config["Security"]["NoGuests"]:
 		connection.finish_batch()
-		connection.disconnect("Server currently doesn't allow guests to connect; check in later?", reason="BadLogin")
+		connection.disconnect("Server currently doesn't allow guests to connect; check in later?", reason="BadLogin|Server currently doesn't allow guests")
 		return
 	elif messaging_only_mode:
 		connection.finish_batch()
-		connection.disconnect("Messaging mode currently requires you to log into an account", reason="BadLogin")
+		connection.disconnect("Messaging mode currently requires you to log into an account", reason="BadLogin|An account is required for messaging mode")
 		return
 	else:
 		# Become a guest
