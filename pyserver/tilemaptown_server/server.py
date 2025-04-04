@@ -135,7 +135,7 @@ async def client_handler(websocket):
 		return
 
 	if sum(int(connection.ip == ip) for connection in AllConnections) > (Config["Security"]["MaxConnectionsPerIP"] + 5):
-		connection.disconnect(reason="TooManyConnections")
+		asyncio.ensure_future(websocket.close(reason="TooManyConnections"))
 		return
 
 	origin = websocket.request.headers.get('Origin')
