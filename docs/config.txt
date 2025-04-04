@@ -48,7 +48,6 @@ List of usernames allowed to perform admin actions.
 Server.MaxUsers
 Default: 200
 Maximum number of connections allowed to the server at once, or -1 to disable the limit.
-(Not yet implemented)
 
 Server.MaxDBMaps
 Default: 5000
@@ -133,6 +132,10 @@ If true, users can't log in without an account
 Security.RegistrationsPerIP
 Default: 3
 Maximum number of registrations that each IP can do between server restarts
+
+Security.MaxConnectionsPerIP
+Default: 10
+Maximum number of connections that each IP can simultaneously have
 
 RateLimit.MSG
 Default: true

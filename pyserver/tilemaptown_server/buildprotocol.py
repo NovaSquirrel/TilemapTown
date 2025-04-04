@@ -991,6 +991,14 @@ def fn_IDN(connection, map, client, arg, context):
 	if connection.identified: # Already identified
 		return
 
+	# Ideally MaxConnectionsPerIP would get checked earlier, but doing it here means the disconnect reason actually gets sent
+	if sum(int(connection2.ip == connection.ip) for connection2 in AllConnections) > Config["Security"]["MaxConnectionsPerIP"]:
+		connection.disconnect(reason="TooManyConnections")
+		return
+	if (("username" not in arg) or (arg["username"] not in Config["Server"]["Admins"])) and len(AllConnections) > Config["Server"]["MaxUsers"]:
+		connection.disconnect(reason="ServerTooFull")
+		return
+
 	override_map = None
 	if "map" in arg:
 		override_map = arg["map"]

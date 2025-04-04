@@ -729,6 +729,8 @@ The server may send the following WebSocket disconnect reasons:
 	"PingTimeout": Failed to respond to a server's PIN in time
 	"ProxyOnly": Server only allows connecting through a reverse proxy
 	"BadOrigin": Disallowed "Origin" header.
+	"TooManyConnections": You have too many connections to the server already
+	"ServerTooFull": Server has too many users connected to it already
 
 The server will always set the disconnect close code to 1000; if it's not 1000 then refer to the WebSocket spec: https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4.1
 

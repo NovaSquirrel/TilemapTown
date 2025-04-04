@@ -134,6 +134,10 @@ async def client_handler(websocket):
 		asyncio.ensure_future(websocket.close(reason="ProxyOnly"))
 		return
 
+	if sum(int(connection.ip == ip) for connection in AllConnections) > (Config["Security"]["MaxConnectionsPerIP"] + 5):
+		connection.disconnect(reason="TooManyConnections")
+		return
+
 	origin = websocket.request.headers.get('Origin')
 
 	if Config["Security"]["AllowedOrigins"]:

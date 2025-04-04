@@ -1158,6 +1158,10 @@ function ConnectToServer() {
 				display = "Connection closed because you were kicked!";
 			} else if(reason == "LoggedInElsewhere") {
 				display = "Connection closed because you logged into this account somewhere else";
+			} else if(reason == "TooManyConnections") {
+				display = "Too many simultaneous connections from your IP address";
+			} else if(reason == "ServerTooFull") {
+				display = "Too many people are already connected to this server; try again later?";
 			} else {
 				display = "Connection closed because: " + convertBBCode(reason);
 			}
