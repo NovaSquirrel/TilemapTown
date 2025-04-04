@@ -1117,7 +1117,7 @@ function ConnectToServer() {
 		// Separate the message into a reason and a message
 		let reason = event.reason;
 		let should_reconnect = false;
-		let display;
+		let display = OnlineIsConnected ? (event.wasClean ? 'Connection closed' : 'Connection closed due to an error') : 'Connection failed';
 		let offer_register = false;
 
 		if (event.code == 1000) {
@@ -1132,7 +1132,6 @@ function ConnectToServer() {
 				reason = reasonSplit[0];
 
 			// Handle the disconnect reasons
-			display = OnlineIsConnected ? (event.wasClean ? 'Connection closed' : 'Connection closed due to an error') : 'Connection failed';
 			if(!reason || reason == "Quit") {
 				// Leave it as the default
 			} else if(reason == "BadLogin") {
@@ -1165,6 +1164,8 @@ function ConnectToServer() {
 			if(message != '')
 				display += "<br>More information: "+convertBBCode(message);
 		} else {
+			if (reason)
+				display = "<br>Reason: " + convertBBCode(reason);
 			should_reconnect = event.code == 1006;
 		}
 
@@ -1197,7 +1198,7 @@ function ConnectToServer() {
 		if (messaging_mode) {
 			document.getElementById('onlineStatus').innerHTML = display.replaceAll("<br>", " | ");
 			document.getElementById('onlineStatus').style.backgroundColor = "red";
-		} else {
+		} else if(display) {
 			logMessage(display, 'error_message');
 		}
 
