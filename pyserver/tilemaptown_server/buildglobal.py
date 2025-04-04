@@ -133,6 +133,7 @@ def loadConfigJson():
 	setConfigDefault("Database", "File",             "town.db")
 	setConfigDefault("Database", "Setup",            True)
 	setConfigDefault("Images",   "URLWhitelist",     ["https://i.imgur.com/", "https://i.postimg.cc/", "https://i.ibb.co/"])
+	setConfigDefault("Logs",     "ConnectFile",      "")
 	setConfigDefault("Logs",     "BuildFile",        "")
 	setConfigDefault("Logs",     "UploadFile",       "")
 	setConfigDefault("Logs",     "BuildDefault",     True)
@@ -202,6 +203,9 @@ Database = sqlite3.connect(Config["Database"]["File"], detect_types=sqlite3.PARS
 DatabaseMeta = {}
 
 # Open logs
+ConnectLog = None
+if len(Config["Logs"]["ConnectFile"]):
+	ConnectLog = open(Config["Logs"]["ConnectFile"], 'a', encoding="utf-8")
 BuildLog = None
 if len(Config["Logs"]["BuildFile"]):
 	BuildLog = open(Config["Logs"]["BuildFile"], 'a', encoding="utf-8")
@@ -213,7 +217,10 @@ if len(Config["Logs"]["UploadFile"]):
 def write_to_connect_log(text):
 	print(text)
 	now = datetime.datetime.today().strftime("(%Y-%m-%d) %I:%M %p")
-	TempLogs[0].append(now + ": " + text)
+	text = now + ": " + text
+	TempLogs[0].append(text)
+	if ConnectLog:
+		ConnectLog.write(text + "\n")
 
 # Important information shared by each module
 ServerShutdown = [-1, False] # First value is seconds left, second value is true for restarts but false for shutdowns

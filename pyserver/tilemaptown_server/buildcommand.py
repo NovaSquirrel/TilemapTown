@@ -2791,12 +2791,11 @@ def fn_scriptstop(map, client, context, arg):
 	GlobalData['shutdown_scripting_service'](int(arg))
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True)
-def fn_flushbuildlog(map, client, context, arg):
+def fn_flushlogs(map, client, context, arg):
+	if ConnectLog:
+		ConnectLog.flush()
 	if BuildLog:
 		BuildLog.flush()
-
-@cmd_command(privilege_level="server_admin", no_entity_needed=True)
-def fn_flushuploadlog(map, client, context, arg):
 	if UploadLog:
 		UploadLog.flush()
 

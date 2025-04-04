@@ -185,6 +185,10 @@ Images.URLWhitelist
 Default: ["https://i.imgur.com/", "https://i.postimg.cc/", "https://i.ibb.co/"]
 Set a list of URL parts that are considered safe to start user-provided image URLs with.
 
+Logs.ConnectFile
+Default: ""
+If provided, this is the filename used for the connect log.
+
 Logs.BuildFile
 Default: ""
 If provided, this is the filename used for the build log.

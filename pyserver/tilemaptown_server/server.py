@@ -316,6 +316,8 @@ def main():
 		print("Closing the database")
 		Database.close()
 
+		if ConnectLog:
+			ConnectLog.close()
 		if BuildLog:
 			BuildLog.close()
 		if UploadLog:
