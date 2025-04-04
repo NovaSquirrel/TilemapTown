@@ -82,7 +82,7 @@ def loadConfigJson():
 	setConfigDefault("Security", "TrustedOnlyBuilding",        0)
 	setConfigDefault("Security", "TrustedOnlyMapCreation",     1)
 	setConfigDefault("Security", "NoGuests",         False)
-	setConfigDefault("Security", "RegistrationsPerIP", 3)
+	setConfigDefault("Security", "MaxRegistrationsPerIP", 3)
 	setConfigDefault("Security", "MaxConnectionsPerIP", 10)
 
 	setConfigDefault("RateLimit", "MSG",             True)

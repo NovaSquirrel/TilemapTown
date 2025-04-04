@@ -2073,7 +2073,7 @@ def fn_register(map, client, context, arg):
 	connection = client.connection()
 	if not connection:
 		return
-	if registration_count_by_ip.get(connection.ip, 0) >= Config["Security"]["RegistrationsPerIP"]:
+	if registration_count_by_ip.get(connection.ip, 0) >= Config["Security"]["MaxRegistrationsPerIP"]:
 		respond(context, 'Register fail, your IP has registered too many accounts recently', error=True)
 		return
 	if connection.db_id != None:
@@ -2806,6 +2806,7 @@ def fn_connectlog(map, client, context, arg):
 		respond(context, "Connection log (%d):[ul]%s[/ul]" % (len(TempLogs[0]), ''.join("[li]%s[/li]" % noparse(_) for _ in TempLogs[0])), class_type="secret_message")
 	if arg != 'k':
 		TempLogs[0].clear()
+		registration_count_by_ip.clear()
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True)
 def fn_buildlog(map, client, context, arg):
