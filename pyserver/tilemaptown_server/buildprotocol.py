@@ -1103,7 +1103,7 @@ def fn_IDN(connection, map, client, arg, context):
 			write_to_connect_log("Failed login for "+filter_username(arg["username"]))
 			connection.finish_batch()
 			if hasattr(connection, 'login_fail_reason'):
-				connection.disconnect(reason="BadLogin|" + connection.login_fail_reason)
+				connection.disconnect(reason="BadLogin " + connection.login_fail_reason)
 			else:
 				connection.disconnect(reason="BadLogin")
 			connection.login_successful_callback = None

@@ -599,10 +599,10 @@ class Connection(object):
 			self.finish_batch()
 			return True
 		elif login_successful == False:
-			self.login_fail_reason = "Bad password for account"
-			self.send("ERR", {'text': 'Login fail, bad password for account'})
+			self.login_fail_reason = "WrongPassword"
+			self.send("ERR", {'text': 'Login fail, wrong password for account'})
 		else:
-			self.login_fail_reason = "Account does not exist"
+			self.login_fail_reason = "NonexistentAccount"
 			self.send("ERR", {'text': 'Login fail, nonexistent account'})
 		return False
 

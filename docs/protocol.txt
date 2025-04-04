@@ -723,12 +723,16 @@ The server may send the following WebSocket disconnect reasons:
 	"Ban": User is banned from the server
 	"Kick": User's connection was terminated by another user
 	"BadLogin": User's login credentials are wrong
+	"BadLogin WrongPassword": User's login credentials are wrong, but the provided account exists
+	"BadLogin NonexistentAccount": Users's login credentials are wrong, and the provided account doesn't even exist
 	"LoggedInElsewhere": Disconnected because another client logged into the same account
 	"PingTimeout": Failed to respond to a server's PIN in time
 	"ProxyOnly": Server only allows connecting through a reverse proxy
 	"BadOrigin": Disallowed "Origin" header.
 
-A client may choose to automatically reconnect in response to a "Restart" reason but should *not* automatically reconnect in response to the other reasons.
+The server will always set the disconnect close code to 1000; if it's not 1000 then refer to the WebSocket spec: https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4.1
+
+A client may choose to automatically reconnect in response to a "Restart" reason or code other than 1000 that warrants it (such as 1006), but should *not* automatically reconnect in response to the other reasons.
 There will probably be other reasons in the future for things like a private server, or the client's version being too old, or not supporting a required extension.
 
 A disconnect reason can have additional text in it that's meant to give additional context to the user about why the disconnect happened. If it's present, there will be a | separating the two parts of the disconnect message, for example:

@@ -1116,39 +1116,57 @@ function ConnectToServer() {
 	OnlineSocket.onclose = function (event) {
 		// Separate the message into a reason and a message
 		let reason = event.reason;
-		let message = '';
-		let separatorIndex = reason.indexOf('|');
-		if(separatorIndex != -1) {
-			message = reason.substring(separatorIndex+1);
-			reason = reason.substring(0, separatorIndex);
-		}
-
-		// Handle the disconnect reasons
 		let should_reconnect = false;
-		let display = OnlineIsConnected ? (event.wasClean ? 'Connection closed' : 'Connection closed due to an error') : 'Connection failed';
-		if(!reason || reason == "Quit") {
-			// Leave it as the default
-		} else if(reason == "BadLogin") {
-			display = "Connection closed due to bad login credentials";
-			document.getElementById('loginWindow').style.display = "block";
-			document.getElementById('loginErrorText').textContent = (message != '') ? message : mostRecentError;
-			document.getElementById('passwordResetHint').style.display = "block";
-		} else if(reason == "Shutdown") {
-			display = "Connection closed because the server shut down";
-		} else if(reason == "Restart") {
-			display = "Connection closed because the server is restarting";
-			should_reconnect = true;
-		} else if(reason == "Ban") {
-			display = "Connection closed because you're banned!! :(";
-		} else if(reason == "Kick") {
-			display = "Connection closed because you were kicked!";
-		} else if(reason == "LoggedInElsewhere") {
-			display = "Connection closed because you logged into this account somewhere else";
+		let display;
+		let offer_register = false;
+
+		if (event.code == 1000) {
+			let message = '';
+			let separatorIndex = reason.indexOf('\n');
+			if(separatorIndex != -1) {
+				message = reason.substring(separatorIndex+1);
+				reason = reason.substring(0, separatorIndex);
+			}
+			let reasonSplit = reason.split(' ');
+			if (reasonSplit.length > 1)
+				reason = reasonSplit[0];
+
+			// Handle the disconnect reasons
+			display = OnlineIsConnected ? (event.wasClean ? 'Connection closed' : 'Connection closed due to an error') : 'Connection failed';
+			if(!reason || reason == "Quit") {
+				// Leave it as the default
+			} else if(reason == "BadLogin") {
+				display = "Connection closed due to bad login credentials";
+				if (message === '' && reasonSplit.length > 1) {
+					if (reasonSplit[1] === 'WrongPassword') {
+						message = "Incorrect password for account";
+					} else if (reasonSplit[1] === 'NonexistentAccount') {
+						message = "That account doesn't exist!";
+						offer_register = true;
+					}
+				}
+				document.getElementById('loginWindow').style.display = "block";
+				document.getElementById('loginErrorText').textContent = (message != '') ? message : mostRecentError;
+				document.getElementById('passwordResetHint').style.display = "block";
+			} else if(reason == "Shutdown") {
+				display = "Connection closed because the server shut down";
+			} else if(reason == "Restart") {
+				display = "Connection closed because the server is restarting";
+				should_reconnect = true;
+			} else if(reason == "Ban") {
+				display = "Connection closed because you're banned!! :(";
+			} else if(reason == "Kick") {
+				display = "Connection closed because you were kicked!";
+			} else if(reason == "LoggedInElsewhere") {
+				display = "Connection closed because you logged into this account somewhere else";
+			} else {
+				display = "Connection closed because: " + convertBBCode(reason);
+			}
+			if(message != '')
+				display += "<br>More information: "+convertBBCode(message);
 		} else {
-			display = "Connection closed because: " + convertBBCode(reason);
+			should_reconnect = event.code == 1006;
 		}
-		if(message != '')
-			display += "<br>More information: "+convertBBCode(message);
 
 		if(DidConnectOnce && (should_reconnect || !event.wasClean)) {
 			// If this is the first disconnect and not a disconnect attempt, save the player status info
@@ -1184,6 +1202,15 @@ function ConnectToServer() {
 		}
 
 		OnlineIsConnected = false;
+		if (offer_register && confirm(`That account doesn't exist.\nDo you want to create a new account with the username "${OnlineUsername}" and the password you entered?`)) {
+			document.getElementById('loginWindow').style.display = "none";
+			let key = MessageAckReqPrefix + (MessageAckReqNumber++);
+			let commandArgs = {text: `register ${OnlineUsername} ${OnlinePassword}`};
+			commandArgs.ack_req = key;
+			MessagesToRetry = [{commandType: "CMD", commandArgs, key, map_id: undefined}];
+			OnlinePassword = "";
+			ConnectToServer();			
+		}
 	}
 
 	OnlineSocket.onmessage = receiveServerMessageEvent;
