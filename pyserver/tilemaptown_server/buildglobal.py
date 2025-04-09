@@ -82,6 +82,7 @@ def loadConfigJson():
 	setConfigDefault("Security", "TrustedOnlyBuilding",        0)
 	setConfigDefault("Security", "TrustedOnlyMapCreation",     1)
 	setConfigDefault("Security", "NoGuests",         False)
+	setConfigDefault("Security", "NoRegistration",   False)
 	setConfigDefault("Security", "MaxRegistrationsPerIP", 3)
 	setConfigDefault("Security", "MaxConnectionsPerIP", 10)
 
@@ -305,15 +306,16 @@ mapflag['no_build_logs'] = 4
 
 # User flags
 userflag = {}
-userflag['bot']             = 0x0001 # Is a bot
-userflag['file_uploads']    = 0x0002 # Larger file upload limits
-userflag['no_build_logs']   = 0x0004 # Don't log when this user builds
-userflag['hide_location']   = 0x0008 # Don't show in /whereare and such
-userflag['hide_api']        = 0x0010 # Don't show in API
-userflag['no_watch']        = 0x0020 # Don't allow other users to have you on their watch list
-userflag['secret_pic']      = 0x0040 # Hide your pic from remote view
-userflag['trusted_builder'] = 0x0080 # User can still build when building is locked down
-userflag['scripter']        = 0x0100 # User can use server-side scripting
+userflag['bot']             = 0x00000001 # Is a bot
+userflag['file_uploads']    = 0x00000002 # Larger file upload limits
+userflag['no_build_logs']   = 0x00000004 # Don't log when this user builds
+userflag['hide_location']   = 0x00000008 # Don't show in /whereare and such
+userflag['hide_api']        = 0x00000010 # Don't show in API
+userflag['no_watch']        = 0x00000020 # Don't allow other users to have you on their watch list
+userflag['secret_pic']      = 0x00000040 # Hide your pic from remote view
+userflag['trusted_builder'] = 0x00000080 # User can still build when building is locked down
+userflag['scripter']        = 0x00000100 # User can use server-side scripting
+userflag['no_login']        = 0x80000000 # Account can't be logged into
 
 # Entity types
 entity_type = {}

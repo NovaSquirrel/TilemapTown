@@ -129,6 +129,10 @@ Security.NoGuests
 Default: false
 If true, users can't log in without an account
 
+Security.NoRegistration
+Default: false
+If true, users cannot register an account
+
 Security.MaxRegistrationsPerIP
 Default: 3
 Maximum number of registrations that each IP is allowed to do; reset every time /connectlog is used, or when the server restarts

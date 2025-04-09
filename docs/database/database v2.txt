@@ -129,14 +129,16 @@ ignore          - text    - JSON array of users to ignore messages from
 client_settings - text    - whatever the client wants to store (like settings)
 
 flags           - integer - user-specific flags
-	0x0001 is a bot
-	0x0002 larger file upload limits
-	0x0004 don't produce build logs when this user builds
-	0x0008 don't show this user's location in the API or /whereare
-	0x0010 don't show this user at all in the API
-	0x0020 don't allow adding this user to your watch list
-	0x0040 don't include this user's pic and desc when their information is viewed remotely (as in a BAG info message)
-	0x0080 user is a trusted builder, and will still be able to build if building is locked down
+	0x00000001 is a bot
+	0x00000002 larger file upload limits
+	0x00000004 don't produce build logs when this user builds
+	0x00000008 don't show this user's location in the API or /whereare
+	0x00000010 don't show this user at all in the API
+	0x00000020 don't allow adding this user to your watch list
+	0x00000040 don't include this user's pic and desc when their information is viewed remotely (as in a BAG info message)
+	0x00000080 user is a trusted builder, and will still be able to build if building is locked down
+	0x00000100 user can run scripts
+	0x80000000 user's account can't be logged into currently
 
 ---MAIL---
 id              * integer - mail id

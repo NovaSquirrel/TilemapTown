@@ -495,6 +495,15 @@ class Connection(object):
 		""" Attempt to log the client into an account """
 		username = filter_username(username)
 
+		c = Database.cursor()
+		c.execute('SELECT flags FROM User WHERE username=?', (username,))
+		result = c.fetchone()
+		if result != None:
+			if result[0] & userflag['no_login']:
+				self.login_fail_reason = "BadLogin|Account is currently disabled"
+				self.send("ERR", {'text': 'Login fail, account is currently disabled'})
+				return False
+
 		login_successful = self.test_login(username, password)
 		if login_successful == True:
 			self.start_batch()
@@ -570,7 +579,6 @@ class Connection(object):
 			if settings != {}:
 				self.send("EXT", {"settings": settings})
 
-			c = Database.cursor()
 			# send the user their mail
 			mail = []
 			for row in c.execute('SELECT id, sender_id, recipients, subject, contents, flags, created_at FROM Mail WHERE owner_id=?', (self.db_id,)):

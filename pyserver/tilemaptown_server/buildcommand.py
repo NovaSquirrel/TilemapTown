@@ -1103,7 +1103,7 @@ def fn_userflags(map, client, context, arg):
 		respond(context, 'Syntax: add/del list of flags', error=True)
 
 
-admin_changeable_flags = ('bot', 'hide_location', 'hide_api', 'no_watch', 'secret_pic', 'file_uploads', 'trusted_builder', 'scripter')
+admin_changeable_flags = ('bot', 'hide_location', 'hide_api', 'no_watch', 'secret_pic', 'file_uploads', 'trusted_builder', 'scripter', 'no_login')
 @cmd_command(category="Settings", alias=['adminuserflag'])
 def fn_adminuserflags(map, client, context, arg):
 	username, arg = separate_first_word(arg)
@@ -2068,6 +2068,9 @@ def fn_changepass(map, client, context, arg):
 registration_count_by_ip = {}
 @cmd_command(category="Account", syntax="username password")
 def fn_register(map, client, context, arg):
+	if Config["Security"]["NoRegistration"]:
+		respond(context, 'Registration is currently disabled', error=True)
+		return
 	if not client.is_client():
 		return
 	connection = client.connection()
