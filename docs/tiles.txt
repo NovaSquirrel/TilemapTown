@@ -204,18 +204,18 @@ Tiles are defined with a JSON object, which can have the following fields:
 
 	A client may decide to disable animation if autotiling is used (or if an unknown autotile_layout is used), but a client could combine autotiling with animation by multiplying the offset added, so that each animation frame uses a separate autotiling tileset.
 	Table of values to multiply by for each autotile_layout:
-	0: 1
-	1: 3
-	2: 4
-	3: 4
-	4: 3
-	5: 3
-	6: 3
-	7: 4
-	8: 4
-	9: 1
-	10: 1
-	11: 1
+	0: 1   (No autotiling)
+	1: 3   ("9 slice")
+	2: 4   ("4 directions - middle")
+	3: 4   ("4 directions - single")
+	4: 3   ("RPG - middle")
+	5: 3   ("RPG - single")
+	6: 3   ("Horizontal - middle 3")
+	7: 4   ("Horizontal - middle 4")
+	8: 4   ("Horizontal - single 4")
+	9: 1   ("Vertical - middle 3")
+	10: 1  ("Vertical - middle 4")
+	11: 1  ("Vertical - single 4")
 
 "anim_offset"
 	Defaults to 0. Adds an offset to the timer used for animation (in 0.1 second units).
