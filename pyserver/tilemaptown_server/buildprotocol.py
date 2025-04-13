@@ -817,11 +817,15 @@ def fn_PUT(connection, map, client, arg, context):
 		else: #turf
 			tile_test = tile_is_okay(arg["atom"])
 			if tile_test[0]:
-				write_to_build_log(map, client, "PUT", arg, map.turfs[x][y])
-				connection.build_session.write_put_turf(map.protocol_id(), x, y, arg["atom"], map.turfs[x][y])
-				map.turfs[x][y] = arg["atom"] if arg["atom"] != map.default_turf else None
-				notify_listeners()
-				map.broadcast("MAP", map.map_section(x, y, x, y), send_to_links=True)
+				written_turf = arg["atom"] if arg["atom"] != map.default_turf else None
+				if map.turfs[x][y] != written_turf:
+					write_to_build_log(map, client, "PUT", arg, map.turfs[x][y])
+					connection.build_session.write_put_turf(map.protocol_id(), x, y, arg["atom"], map.turfs[x][y])
+					map.turfs[x][y] = written_turf
+					notify_listeners()
+					map.broadcast("MAP", map.map_section(x, y, x, y), send_to_links=True)
+				else:
+					client.send("MAP", map.map_section(x, y, x, y))
 			else:
 				client.send("MAP", map.map_section(x, y, x, y))
 				connection.protocol_error(context, text='Tile [tt]%s[/tt] rejected (%s)' % (arg["atom"], tile_test[1]))
