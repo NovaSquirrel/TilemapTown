@@ -1207,6 +1207,11 @@ function finishMapObjMenuChange() {
 	// Tell the server about the change
 	if(mapObjContextMenuX >= 0 && mapObjContextMenuY >= 0 && mapObjContextMenuX < MyMap.Width && mapObjContextMenuY < MyMap.Height) {
 		SendCmd("PUT", { pos: [mapObjContextMenuX, mapObjContextMenuY], obj: true, atom: MyMap.Objs[mapObjContextMenuX][mapObjContextMenuY] });
+
+		if (!OnlineMode) {
+			NeedMapRedraw = true;
+			backdropRerenderAll = true;
+		}
 	}
 
 	// Update the selection window
