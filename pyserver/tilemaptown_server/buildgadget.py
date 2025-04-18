@@ -297,7 +297,7 @@ class GadgetDice(GadgetTrait):
 	usable = True
 
 	def on_use(self, user):
-		handle_user_command(user.map, user, user, None, "roll %d %d" % (self.get_config('dice', 2), self.get_config('sides', 6)))
+		handle_user_command(user.map, user, None, "roll %d %d" % (self.get_config('dice', 2), self.get_config('sides', 6)))
 		return True
 
 class GadgetAcceptRequests(GadgetTrait):
