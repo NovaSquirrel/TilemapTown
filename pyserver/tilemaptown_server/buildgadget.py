@@ -305,12 +305,12 @@ class GadgetAcceptRequests(GadgetTrait):
 		request_types = self.get_config("types")
 		if (request_types and request_type not in request_types) or (self.get_config("owner_only") and not user.has_permission(self.gadget)):
 			return None
-		handle_user_command(self.gadget.map, self.gadget, self.gadget, None, '%s %s %s' % (accept_command, user.protocol_id(), request_type))
+		handle_user_command(self.gadget.map, self.gadget, None, '%s %s %s' % (accept_command, user.protocol_id(), request_type))
 		return True
 
 class GadgetDeclineRequests(GadgetTrait):
 	def on_request(self, user, request_type, request_data, accept_command, decline_command):
-		handle_user_command(self.gadget.map, self.gadget, self.gadget, None, decline_command)
+		handle_user_command(self.gadget.map, self.gadget, None, decline_command)
 		return True
 
 class GadgetEchoTell(GadgetTrait):
@@ -335,9 +335,9 @@ class GadgetUseRandomSay(GadgetTrait):
 	def on_use(self, user):
 		text = self.get_config("text")
 		if isinstance(text, str):
-			handle_user_command(self.gadget.map, self.gadget, user, None, "say %s" % (text))
+			handle_user_command(self.gadget.map, self.gadget, None, "say %s" % (text), respond_to=user)
 		elif isinstance(text, list):
-			handle_user_command(self.gadget.map, self.gadget, user, None, "say %s" % (random.choice(text)))
+			handle_user_command(self.gadget.map, self.gadget, None, "say %s" % (random.choice(text)), respond_to=user)
 		return True
 
 class GadgetUseBotMessageButton(GadgetTrait):
@@ -499,7 +499,7 @@ class GadgetRCCar(GadgetTrait):
 
 	def on_request(self, user, request_type, request_data, accept_command, decline_command):
 		if self.get_config("give_rides") and request_type == "carryme":
-			handle_user_command(self.gadget.map, self.gadget, self.gadget, None, '%s %s %s' % (accept_command, user.protocol_id(), request_type))
+			handle_user_command(self.gadget.map, self.gadget, None, '%s %s %s' % (accept_command, user.protocol_id(), request_type))
 			return True
 		return None
 
