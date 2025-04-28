@@ -122,6 +122,7 @@ var GlobalTilesArrayNames = [];
 
 let chatTimestamps = true;
 let lockZoomLevel = false;
+let focusChatBarOnTabBack = false;
 
 let FileStorageInfo = null;
 let sampleAvatarList = {};
@@ -3612,6 +3613,14 @@ function initWorld() {
 		sendTyping();
 	});
 
+	chatInput.addEventListener('focusout', function (evt) {
+		if (evt.relatedTarget) {
+			if (evt.relatedTarget.tagName === "A") {
+				focusChatBarOnTabBack = true;
+			}
+		}
+	});
+
 	viewInit();
 
 	panel = document.getElementById("panel");
@@ -3741,5 +3750,9 @@ document.addEventListener("visibilitychange", (event) => {
 	if (document.visibilityState == "visible") {
 		backdropRerenderAll = true;
 		NeedMapRedraw = true;
+		if (focusChatBarOnTabBack) {
+			chatInput.focus();
+			focusChatBarOnTabBack = false;
+		}
 	}
 });
