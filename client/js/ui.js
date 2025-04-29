@@ -357,6 +357,11 @@ function viewCustomize() {
 	let options = document.getElementById("character");
 	let Hidden = (options.style.display == 'none');
 	document.getElementById("navcustomize").setAttribute("class", Hidden ? "navactive" : "");
+
+	document.getElementById("quickstatus").value = PlayerWho[PlayerYou].status ?? "";
+	document.getElementById("quickstatus").value = PlayerWho[PlayerYou].status_message ?? "";
+	document.getElementById("newnick").value = PlayerWho[PlayerYou].name ?? "";
+
 	options.style.display = Hidden ? 'block' : 'none';
 }
 
@@ -694,6 +699,25 @@ function cancelMapWindowChanges() {
 	document.getElementById('mapOptionsWindow').style.display = "none";
 }
 
+function setUserStatusButton() {
+	let newStatus = document.getElementById('quickstatus').value;
+	let newStatusContext = document.getElementById('quickstatustext').value.trim();
+
+	if (newStatus == '') {
+		if (newStatusContext == '') {
+			sendChatCommand('status');
+		} else {
+			sendChatCommand('status . ' + newStatusContext);
+		}
+	} else {
+		if (newStatusContext == '') {
+			sendChatCommand('status ' + newStatus);
+		} else {
+			sendChatCommand('status ' + newStatus + ' ' + newStatusContext);
+		}
+	}
+}
+
 ///////////////////////////////////////////////////////////
 // Local maps
 ///////////////////////////////////////////////////////////
@@ -1020,9 +1044,9 @@ function itemCard(id) {
 		if (item.status_message && item.status == '.')
 			status_span.innerText = `${item.status_message}`;
 		else if (item.status_message)
-			status_span.innerText = `${item.status} (${item.status_message})`;
+			status_span.innerText = `${item.status.substring(0, 20)} (${item.status_message.substring(0, 50)})`;
 		else
-			status_span.innerText = `${item.status}`;
+			status_span.innerText = `${item.status.substring(0, 20)}`;
 		info_name.appendChild(status_span);
 	}
 

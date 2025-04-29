@@ -568,6 +568,8 @@ function receiveServerMessage(cmd, arg) {
                 case "idle": status_name = "idle"; break;
                 case "away": status_name = "away"; break;
                 case "busy": status_name = "busy"; break;
+                case "dnd": status_name = "do-not-disturb"; break;
+                case "chat": status_name = "looking to chat"; break;
                 case "ic": status_name = "in character"; break;
                 case "ooc": status_name = "out of character"; break;
                 case "iic": status_name = "looking to be in-character"; break;
