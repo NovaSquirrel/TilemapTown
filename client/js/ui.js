@@ -361,6 +361,11 @@ function viewCustomize() {
 	document.getElementById("quickstatus").value = PlayerWho[PlayerYou].status ?? "";
 	document.getElementById("quickstatus").value = PlayerWho[PlayerYou].status_message ?? "";
 	document.getElementById("newnick").value = PlayerWho[PlayerYou].name ?? "";
+	if (typeof PlayerWho[PlayerYou].pic[0] === "string") {
+		document.getElementById("newcustompic").value = PlayerWho[PlayerYou].pic[0];
+	} else {
+		document.getElementById("newcustompic").value = "";
+	}
 
 	options.style.display = Hidden ? 'block' : 'none';
 }
