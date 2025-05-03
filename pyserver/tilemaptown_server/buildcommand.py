@@ -1939,10 +1939,6 @@ def fn_ipban(map, client, context, arg):
 	ipv4 = ip.split('.')
 	ipv6 = ip.split(':')
 	if len(ipv4) == 4:
-		ipsplit = parsed_ip.exploded.split('.')
-		if len(ipsplit) != 4:
-			ipsplit = (None, None, None, None)
-
 		# Insert the ban
 		c = Database.cursor()
 		c.execute("INSERT INTO Server_Ban (ip, ip4_1, ip4_2, ip4_3, ip4_4, admin_id, created_at, expires_at, reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",\
@@ -1951,7 +1947,7 @@ def fn_ipban(map, client, context, arg):
 	elif len(ipv6) == 8:
 		# Insert the ban
 		c = Database.cursor()
-		c.execute("INSERT INTO Server_Ban (ip, ip6_1, ip6_2, ip6_3, ip6_4, ip6_5, ip6_6, ip6_7, ip6_7, admin_id, created_at, expires_at, reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",\
+		c.execute("INSERT INTO Server_Ban (ip, ip6_1, ip6_2, ip6_3, ip6_4, ip6_5, ip6_6, ip6_7, ip6_8, admin_id, created_at, expires_at, reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",\
 			(ip, ipv6[0], ipv6[1], ipv6[2], ipv6[3], ipv6[4], ipv6[5], ipv6[6], ipv6[7], client.db_id, now, expiry, reason))
 	else:
 		respond(context, 'Invalid IP format "%s"' % ip, error=True)
