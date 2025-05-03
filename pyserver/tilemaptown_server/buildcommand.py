@@ -1972,7 +1972,7 @@ def fn_ipunban(map, client, context, arg):
 def fn_ipbanlist(map, client, context, arg):
 	c = Database.cursor()
 	results = "IP bans: [ul]"
-	for row in c.execute('SELECT b.ip, b.reason, b.time, b.expiry, a.username FROM Server_Ban b, USER a WHERE a.uid = b.admin'):
+	for row in c.execute('SELECT b.ip, b.reason, b.created_at, b.expires_at, a.username FROM Server_Ban b, USER a WHERE a.entity_id = b.admin_id'):
 		results += "[li][b]%s[/b] banned by [tt]%s[/tt] for \"%s\" at [tt]%s[/tt] until [tt]%s[/tt] [command]ipunban %s[/command][/li]" % (noparse(row[0]), noparse(row[4]), row[1], row[2], row[3] or 'never', row[0])
 	results += "[/ul]"
 	respond(context, results)
