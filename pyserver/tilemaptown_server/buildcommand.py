@@ -1948,7 +1948,7 @@ def fn_ipban(map, client, context, arg):
 		c.execute("INSERT INTO Server_Ban (ip, ip4_1, ip4_2, ip4_3, ip4_4, admin_id, created_at, expires_at, reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",\
 			(ip, ipv4[0], ipv4[1], ipv4[2], ipv4[3], client.db_id, now, expiry, reason))
 
-	elif len(ipv6) == 6:
+	elif len(ipv6) == 8:
 		# Insert the ban
 		c = Database.cursor()
 		c.execute("INSERT INTO Server_Ban (ip, ip6_1, ip6_2, ip6_3, ip6_4, ip6_5, ip6_6, ip6_7, ip6_7, admin_id, created_at, expires_at, reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",\
