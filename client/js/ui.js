@@ -1766,6 +1766,10 @@ function editItemApply() {
 					if(withinCurrentMap(turfContextMenuX, turfContextMenuY)) {
 						MyMap.Tiles[turfContextMenuX][turfContextMenuY] = data;
 						SendCmd("PUT", { pos: [turfContextMenuX, turfContextMenuY], atom: data });
+						if (!OnlineMode) {
+							NeedMapRedraw = true;
+							backdropRerenderAll = true;
+						}
 					}
 					// Update the selection window
 					if(MouseActive && MouseStartX == turfContextMenuX && MouseStartY == turfContextMenuY && MouseStartX == MouseEndX && MouseStartY == MouseEndY) {
