@@ -97,6 +97,12 @@ body {
 #edittilesheetselect {
 	background: url('../img/scrolling_grid.gif');
 }
+#itemEditTilePickerWindowDiv {
+	background: url('../img/scrolling_grid.gif');
+}
+#itemEditTilePickerWindowImg {
+    image-rendering: pixelated;
+}
 
 #chat-container {
     position: absolute;
@@ -360,4 +366,8 @@ widget-contextmenu li:hover {
 
 #touch-button-container td:hover {
     background-color: lightpink;
+}
+
+summary {
+	font-weight: bold;
 }

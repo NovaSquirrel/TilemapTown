@@ -190,7 +190,7 @@
       <option value="public">Public</option>
       <option value="unlisted">Unlisted</option>
       <option value="private">Private</option>
-      <option value="?">Don't change</option>
+      <option value="?">Keep the same</option>
     </select></td></tr>
 	</table>
 
@@ -247,7 +247,7 @@
     <input type="button" value="Map tile" onclick="newItemCreate('map_tile');" />
     <input type="button" value="Text" onclick="newItemCreate('text');" />
     <input type="button" value="Image link" onclick="newItemCreate('image');" />
-    <input type="button" value="Tileset" onclick="newItemCreate('tileset');" />
+    <!--<input type="button" value="Tileset" onclick="newItemCreate('tileset');" />-->
     <input type="button" value="Folder" onclick="newItemCreate('folder');" />
     <input type="button" value="Gadget" onclick="newItemCreate('gadget');" />
     </p>
@@ -287,9 +287,14 @@
     <textarea id="newfiledesc"></textarea>
     </p>
 
-    <input type="button" value="Upload file" onclick="createNewFile(false, false);" /><br>
-    <input type="button" value="Upload and set appearance" onclick="createNewFile(true, false);" /><br>
-    <input type="button" value="Upload and create item" onclick="createNewFile(false, true);" />
+	How would you like to use this file?<br>
+	<table>
+	<tr><td>Map tile graphics:</td><td><input type="button" value="Upload and create Image Link item" onclick="createNewFile(false, true);" /></td></tr>
+	<tr><td>Avatar graphics:</td><td><input type="button" value="Upload and set appearance" onclick="createNewFile(true, false);" /></td></tr>
+	</table>
+    Otherwise you can just <input type="button" value="Upload file" onclick="createNewFile(false, false);" /><br>
+    <br>
+    
     </p>
     <p>
     <input type="button" value="Cancel" onclick="newFileCancel();" />
@@ -375,6 +380,18 @@
     </p>
     <p>
     <input type="button" value="Cancel" onclick="editFolderCancel();" />
+    </p>
+  </div>
+</div>
+
+<div id="itemEditTilePickerWindow" class="modal">
+  <div class="modal-content">
+    <span class="modalclose">&times;</span>
+    <p>
+    <h1>Pick a tile:</h1>
+    <div id="itemEditTilePickerWindowDiv">
+    <img id="itemEditTilePickerWindowImg">
+    </div>
     </p>
   </div>
 </div>
@@ -632,21 +649,10 @@
 <widget-window id="editItemWindow" style="display: none;">
   <span slot="title">Edit Item</span>
   <div slot="contents">
-    <table border="0">
-    <tr>
-    <td><label for="edittilename" class="unselectable">Item name</label></td>
-    <td><input type="text" id="edittilename"/></td>
-    </tr>
-    <tr>
-    <td><label for="edittiledesc" class="unselectable" id="description_or_message">Description</label></td>
-    <td><textarea id="edittiledesc"></textarea></td>
-    </tr>
-
-    </table>
-
     <div id="edittileimage">
     Image URL: <input type="text" id="edittileurl" /><br>
-    This should an image uploaded to this server, or on<br><a href="https://imgur.com/" target="_blank">Imgur</a>, <a href="https://imgbb.com/" target="_blank">ImgBB</a> or <a href="https://postimages.org/" target="_blank">Postimages</a>.<br>More image hosts can be added on request.
+    <p>This should be an image uploaded to this server, or on<br><a href="https://imgur.com/" target="_blank">Imgur</a>, <a href="https://imgbb.com/" target="_blank">ImgBB</a> or <a href="https://postimages.org/" target="_blank">Postimages</a>.<br>More image hosts can be added on request.</p>
+	<p>You can select this item in the tile editing window<br>to use it for tile graphics.</p>
     </div>
 
 	<div id="edittilegadget">
@@ -716,19 +722,37 @@
     <div id="edittileobject">
     <p>
     <strong>Item picture</strong><br>
-    <img src="img/transparent.png" width="16" height="16" id="edittilepic" style="background: url(img/potluck.png) 0px 0px;">
-    <select id="edittilesheet" onchange="editItemUpdatePic();">
+	<span id="itemImageTypePicker">Type:
+	<label class="unselectable"><input type="radio" id="itemImageIsSheet" name="itemImageType" onchange="changeItemImageType()" checked>Normal</label>
+	<label class="unselectable"><input type="radio" id="itemImageIsURL" name="itemImageType" onchange="changeItemImageType()">URL</label>
+	</span>
+
+	<div id="tileImageSheetOptions">
+    Tile sheet: <select id="edittilesheet" onchange="editItemUpdatePic();">
       <option value="0">Potluck</option>
       <option value="-1">Extras</option>
       <option value="-2">Pulp</option>
       <option value="-3">EasyRPG</option>
       <option value="custom">Custom</option>
-    </select>
+    </select><br>
+
+	<img src="img/transparent.png" width="16" height="16" id="edittilepic" style="background: url(img/potluck.png) 0px 0px;">
     <input type="number" value="0" id="edittilex" oninput="editItemUpdatePic();" size="4" />
-    <input type="number" value="0" id="edittiley" oninput="editItemUpdatePic();" size="4" /><br >
-	<span id="edittileimageurl_span">Or you can use a URL: <input id="edittileimageurl" type="text" placeholder="Image URL"></span>
-    <span id="edittileautotileoptions">
-	Autotiling: <select id="edittileautotile">
+    <input type="number" value="0" id="edittiley" oninput="editItemUpdatePic();" size="4" />
+	<button onclick="itemEditZoom();">Zoom</button><br>
+    <p>
+    <div style="overflow:scroll; width:528px; height:256px;" id="edittilesheetcontainer">
+    <img src="" id="edittilesheetselect">
+    </div>
+    </p>
+	</div>
+	<div id="tileImageURLOptions">URL: <input id="edittileimageurl" type="text" placeholder="Image URL"></div>
+    </p>
+
+	<p><details id="edittileautotileoptions">
+	<summary class="unselectable">Autotiling</summary>
+	<table border="0">
+	<tr><td>Type</td><td><select id="edittileautotile">
 		<option value="0">None</option>
 		<option value="1">9 slice</option>
 		<option value="2">4 directions - Middle</option>
@@ -741,27 +765,40 @@
 		<option value="9">Vertical - Middle 3</option>
 		<option value="10">Vertical - Middle 4</option>
 		<option value="11">Vertical - Single 4</option>
-	</select>
-    <input type="text" id="edittileautotileclass" placeholder="Autotile class" />
-    <input type="text" id="edittileautotileclassedge" placeholder="Autotile class (edge)" />
-    </span>
-    </p>
+	</select></td></tr>
+	<tr><td>Class</td><td><input type="text" id="edittileautotileclass" placeholder="Autotile class" /></td></tr>
+	<tr><td>Class (edge)</td><td><input type="text" id="edittileautotileclassedge" placeholder="Autotile class (edge)" /></td></tr>
+	</table>
+	This tile will connect to others if the classes match,<br>or (if a class isn't provided) the names match.<br>A tile will connect to another tile's "edge" class in one direction.
+	</details></p>
 
-    <p>
-    Animation: <select id="edittileanimationmode">
+	<p><details id="edittileanimationoptions">
+	<summary class="unselectable">Animation</summary>
+	<table border="0">
+	<tr><td>Frames</td><td><input type="number" value="0" size="4" id="edittileanimationframes" /></td></tr>
+	<tr><td>Frame duration</td><td><input type="number" value="0"  size="4" id="edittileanimationspeed" /> (units of 0.1 seconds)</td></tr>
+	<tr><td>Start offset</td><td><input type="number" value="0" size="4" id="edittileanimationoffset" /> (units of 0.1 seconds)</td></tr>
+	<tr><td>Direction</td><td>
+    <select id="edittileanimationmode">
         <option value="0">Forwards</option>
         <option value="1">Backwards</option>
         <option value="2">Ping-pong</option>
         <option value="3">Ping-pong reverse</option>
-    </select>
-    <br>
-    Frames: <input type="number" value="0" size="4" id="edittileanimationframes" />
-    Speed: <input type="number" value="0"  size="4" id="edittileanimationspeed" />
-    Offset: <input type="number" value="0" size="4" id="edittileanimationoffset" />
-    <div style="overflow:scroll; width:528px; height:256px;" id="edittilesheetcontainer">
-    <img src="" id="edittilesheetselect">
-    </div>
-    </p>
+    </select></td></tr>
+	</table>
+	</details></p>
+
+	<strong>Item properties</strong>
+    <table border="0">
+    <tr>
+    <td><label for="edittilename" class="unselectable">Name</label></td>
+    <td><input type="text" id="edittilename"/></td>
+    </tr>
+    <tr>
+    <td><label for="edittiledesc" class="unselectable" id="description_or_message">Description</label></td>
+    <td><textarea id="edittiledesc"></textarea></td>
+    </tr>
+    </table>
 
     <div id="edittilemaptile">
     <p>
@@ -777,17 +814,30 @@
     </p>
 
     <p>
-    <label class="unselectable"><input type="checkbox" id="edittiledensity">Item is an obstacle (dense)</label><br>
-    <label class="unselectable"><input type="checkbox" id="edittileisobject">Item is a map tile (uncheck if it should go on top of the ground, instead of replacing it)</label><br>
-    <label class="unselectable"><input type="checkbox" id="edittileover">Display above players, instead of underneath</label>
+    <label class="unselectable"><input type="checkbox" id="edittiledensity">Item is a wall</label><br>
+    <label class="unselectable"><input type="checkbox" id="edittileisobject">Item is a floor tile</label><br>
+    <label class="unselectable"><input type="checkbox" id="edittileover">Display item above players</label>
     </p>
     </div>
     </div>
 
+	<div id="itemproperties_notmaptile">
+	<strong>Item properties</strong>
+    <table border="0">
+    <tr>
+    <td><label for="edittilename_notmaptile" class="unselectable">Name</label></td>
+    <td><input type="text" id="edittilename_notmaptile"/></td>
+    </tr>
+    <tr>
+    <td><label for="edittiledesc_notmaptile" class="unselectable">Description</label></td>
+    <td><textarea id="edittiledesc_notmaptile"></textarea></td>
+    </tr>
+    </table>
+	</div>
+
     <br>
     <input type="button" value="Apply changes" onclick="editItemApply();">
     <input type="button" value="Cancel" onclick="editItemCancel();">
-    </p>
   </div>
 </widget-window>
 

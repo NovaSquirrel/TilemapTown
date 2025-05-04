@@ -993,12 +993,20 @@ function handleDragging(pos) {
 
 function initMouse() {
 	let edittilesheetselect = document.getElementById("edittilesheetselect");
-
 	edittilesheetselect.addEventListener('mousedown', function (evt) {
 		// update to choose the selected tile
 		document.getElementById('edittilex').value = (evt.clientX - evt.target.getBoundingClientRect().x) >> 4;
 		document.getElementById('edittiley').value = (evt.clientY - evt.target.getBoundingClientRect().y) >> 4;
 		editItemUpdatePic();
+	}, false);
+
+	let edittilesheetselectzoom = document.getElementById("itemEditTilePickerWindowImg");
+	itemEditTilePickerWindowImg.addEventListener('mousedown', function (evt) {
+		// update to choose the selected tile
+		document.getElementById('edittilex').value = (evt.clientX - evt.target.getBoundingClientRect().x) >> 5;
+		document.getElementById('edittiley').value = (evt.clientY - evt.target.getBoundingClientRect().y) >> 5;
+		editItemUpdatePic();
+		document.getElementById('itemEditTilePickerWindow').style.display = "none";
 	}, false);
 
 	mapCanvas.addEventListener('mousedown', function (evt) {

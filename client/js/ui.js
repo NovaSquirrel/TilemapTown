@@ -1411,6 +1411,9 @@ function editItemShared(item) {
 	let itemobj = null;
 	editItemType = item.type;
 	document.getElementById('edittileautotileoptions').style.display = "none";
+	document.getElementById('edittileanimationoptions').style.display = "none";
+	document.getElementById('itemproperties_notmaptile').style.display = "block";
+	document.getElementById('edittileobject').style.display = "none";
 	document.getElementById('edittileobject').style.display = "none";
 	document.getElementById('edittiletext').style.display = "none";
 	document.getElementById('edittileimage').style.display = "none";
@@ -1423,6 +1426,9 @@ function editItemShared(item) {
 		document.getElementById('description_or_message').textContent = "Description";
 		document.getElementById('edittiledesc').value = item.desc ?? "";
 	}
+	document.getElementById('edittilename_notmaptile').value = document.getElementById('edittilename').value;
+	document.getElementById('edittiledesc_notmaptile').value = document.getElementById('edittiledesc').value;
+
 	switch (item.type) {
 		case "text":
 			document.getElementById('edittiletext').style.display = "block";
@@ -1537,6 +1543,7 @@ function editItemShared(item) {
 
 			if (item.type == "map_tile" || item.type == "map_tile_hotbar" || item.type == "map_tile_mapobj_edit" || item.type == "map_tile_turf_edit") {
 				document.getElementById('edittileautotileoptions').style.display = "block";
+				document.getElementById('edittileanimationoptions').style.display = "block";
 				itemobj = AtomFromName(item.data);
 				if (itemobj == null && item.pic !== null) {
 					itemobj = { pic: [0, 8, 24] };
@@ -1548,8 +1555,14 @@ function editItemShared(item) {
 					itemobj = { pic: [0, 8, 24] };
 			}
 			editItemOriginalSheet = itemobj.pic[0];
-			document.getElementById('edittileimageurl_span').style.display = (item.type === "generic" || item.type === "gadget") ? "block" : "none";
-			document.getElementById('edittileimageurl').value = (typeof itemobj.pic[0] === "number") ? "" : itemobj.pic[0];
+			document.getElementById("tileImageSheetOptions").style.display = document.getElementById("itemImageIsSheet").checked ? "inline" : "none";
+			document.getElementById("tileImageURLOptions").style.display = document.getElementById("itemImageIsURL").checked ? "inline" : "none";
+			document.getElementById('itemImageTypePicker').style.display = (item.type === "generic" || item.type === "gadget") ? "block" : "none";
+			const isURLPic = (typeof itemobj.pic[0] === "string");
+			document.getElementById('edittileimageurl').value = isURLPic ? itemobj.pic[0] : "";
+			document.getElementById("itemImageIsSheet").checked = !isURLPic;
+			document.getElementById("itemImageIsURL").checked = isURLPic;
+			changeItemImageType();
 
 			// Display all the available images assets in the user's inventory
 			let sheetselect = document.getElementById("edittilesheet");
@@ -1557,7 +1570,7 @@ function editItemShared(item) {
 				sheetselect.removeChild(sheetselect.firstChild);
 			}
 			let el = document.createElement("option");
-			el.textContent = "Don't change";
+			el.textContent = "Keep the same";
 			el.value = "keep";
 			sheetselect.appendChild(el);
 
@@ -1582,6 +1595,7 @@ function editItemShared(item) {
 
 			document.getElementById('edittilemaptile').style.display = (item.type == "map_tile" || item.type == "map_tile_hotbar" || item.type == "map_tile_mapobj_edit" || item.type == "map_tile_turf_edit") ? "block" : "none";
 			document.getElementById('edittileobject').style.display = "block";
+			document.getElementById('itemproperties_notmaptile').style.display = "none";
 			document.getElementById('edittilesheet').value = "keep";
 			document.getElementById('edittilex').value = itemobj.pic[1];
 			document.getElementById('edittiley').value = itemobj.pic[2];
@@ -1651,8 +1665,9 @@ function editTypeIsDirectEdit(type) {
 }
 
 function editItemApply() {
-	let edittilename = document.getElementById('edittilename').value;
-	let edittiledesc = document.getElementById('edittiledesc').value;
+	let alternateItemProperties = document.getElementById('itemproperties_notmaptile').style.display === "block";
+	let edittilename = document.getElementById('edittilename' + (alternateItemProperties ? "_notmaptile" : "")).value;
+	let edittiledesc = document.getElementById('edittiledesc' + (alternateItemProperties ? "_notmaptile" : "")).value;
 	if (edittiledesc == "")
 		edittiledesc = null;
 
@@ -1690,7 +1705,7 @@ function editItemApply() {
 			let edittilesheet = parseInt(sheet);
 			let edittilex = parseInt(document.getElementById('edittilex').value);
 			let edittiley = parseInt(document.getElementById('edittiley').value);
-			let edittileurl = document.getElementById('edittileimageurl').value
+			let edittileurl = document.getElementById("itemImageIsURL").checked ? document.getElementById('edittileimageurl').value : "";
 			let edittiletype = document.getElementById('edittiletype').value;
 			let edittiledensity = document.getElementById('edittiledensity').checked;
 			let edittileobject = !document.getElementById('edittileisobject').checked;
@@ -1877,6 +1892,11 @@ function changeGadgetPreset() {
 	document.getElementById("edittilegadget_preset_random_message").style.display = (preset === "random_say" || preset === "random_tell") ? "block" : "none";
 	document.getElementById("edittilegadget_preset_dice").style.display = (preset === "dice") ? "block" : "none";
 	document.getElementById("edittilegadget_preset_bot_message_button").style.display = (preset === "bot_message_button") ? "block" : "none";
+}
+
+function changeItemImageType() {
+	document.getElementById("tileImageSheetOptions").style.display = document.getElementById("itemImageIsSheet").checked ? "inline" : "none";
+	document.getElementById("tileImageURLOptions").style.display = document.getElementById("itemImageIsURL").checked ? "inline" : "none";
 }
 
 ///////////////////////////////////////////////////////////
@@ -3497,6 +3517,13 @@ function buildMenuZoom() {
 	redrawBuildCanvas();
 }
 
+function itemEditZoom() {
+	document.getElementById('itemEditTilePickerWindow').style.display = 'block';
+	document.getElementById('itemEditTilePickerWindowImg').src = document.getElementById('edittilesheetselect').src;
+	document.getElementById('itemEditTilePickerWindowImg').style.width = (2 * document.getElementById('edittilesheetselect').naturalWidth) + "px";
+	document.getElementById('itemEditTilePickerWindowImg').style.height = (2 * document.getElementById('edittilesheetselect').naturalHeight) + "px";
+}
+
 function updateBuildToolCategoriesAvailable() {
 	let categorySelect = document.getElementById('buildToolCategory');
 
@@ -3685,6 +3712,7 @@ function initWorld() {
 		let newfoldermodal = document.getElementById('newFolderWindow');
 		let editfilemodal = document.getElementById('editFileWindow');
 		let editfoldermodal = document.getElementById('editFolderWindow');
+		let itemedittilepickermodal = document.getElementById('itemEditTilePickerWindow');
 
 		let btn = document.getElementById("navlogin");
 		let mapbtn = document.getElementById("navmap");
@@ -3747,6 +3775,7 @@ function initWorld() {
 				newfoldermodal.style.display = "none";
 				editfilemodal.style.display = "none";
 				editfoldermodal.style.display = "none";
+				itemedittilepickermodal.style.display = "none";
 			}
 		}
 
@@ -3765,6 +3794,8 @@ function initWorld() {
 				editfilemodal.style.display = "none";
 			} else if (event.target == editfoldermodal) {
 				editfoldermodal.style.display = "none";
+			} else if (event.target == itemedittilepickermodal) {
+				itemedittilepickermodal.style.display = "none";
 			}
 		}
 
