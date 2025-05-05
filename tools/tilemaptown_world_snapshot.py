@@ -8,7 +8,7 @@
 # provided the copyright notice and this notice are preserved.
 # This file is offered as-is, without any warranty.
 #
-import requests, json, io
+import requests, json, io, datetime
 from PIL import Image
 
 # .--------------------------------------------------------
@@ -338,4 +338,4 @@ for y in range(min_grid_y, max_grid_y+1):
 		world_image.paste(map.image, box=(image_x*100*16, image_y*100*16))
 
 world_image.show()
-world_image.save('world_map.png')
+world_image.save('world_map_%s.png' % (datetime.datetime.today().strftime("%Y-%m-%d")))
