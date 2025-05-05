@@ -1574,8 +1574,7 @@ function editItemShared(item) {
 			el.value = "keep";
 			sheetselect.appendChild(el);
 
-			// Display the global images; TODO: don't hardcode the amount of them
-			for(let i=0; i>=-3; i--) {
+			for(let i=0; GlobalImageNames[i] !== undefined; i--) {
 				el = document.createElement("option");
 				el.textContent = GlobalImageNames[i];
 				el.value = i;
