@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2024 NovaSquirrel
+# Copyright (C) 2017-2025 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -126,6 +126,7 @@ def loadConfigJson():
 	setConfigDefault("API",      "Port",             12551)
 	setConfigDefault("API",      "Enabled",          True)
 	setConfigDefault("API",      "URL",              "")
+	setConfigDefault("API",      "AdminPassword",    "")
 
 	setConfigDefault("Scripting","Enabled",          False)
 	setConfigDefault("Scripting","ProgramPath",      None)

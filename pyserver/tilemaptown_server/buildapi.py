@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2024 NovaSquirrel
+# Copyright (C) 2017-2025 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -735,6 +735,52 @@ if Config["FileUpload"]["AllowCrossOrigin"]:
 	@routes.options('/v1/my_files/folder/{id}')
 	async def folder_id_options(_: web.Request) -> web.Response:
 		return web.json_response({"message": "Accept all hosts"}, headers=CORS_HEADERS)
+
+# ---------------------------------------------------------
+
+@routes.get('/v1/moderation/rrb')
+async def get_rrb(request):
+	if (request.query.get('pass') != Config["API"]["AdminPassword"]) or (not Config["API"]["AdminPassword"]):
+		return web.Response(status=401, text="🔨🐇")
+	css = """summary {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+	}"""
+	response = "<!DOCTYPE html><html><style>%s</style><body>" % css
+
+	item_count = 0
+	for r in TempLogs[3]:
+		if not r.maps:
+			continue
+		item_count += 1
+		inside = "<kbd>/rrb R %s</kbd> <input></input>" % r.temp_id
+
+		for map_key, map_val in r.maps.items():
+			map_inside = "<kbd>/rrb r %s %s</kbd> <input></input><ul>" % (r.temp_id, map_key)
+			for row in map_val:
+				a = row.splitlines()
+				if a[0] == 't':
+					map_inside += "<li>T %s,%s: %s | %s</li>" % (escape_tags(a[1]), escape_tags(a[2]), escape_tags(a[3]), escape_tags(a[4]))
+				elif a[0] == 'o':
+					map_inside += "<li>O %s,%s: %s | %s</li>" % (escape_tags(a[1]), escape_tags(a[2]), escape_tags(a[3]), escape_tags(a[4]))
+				elif a[0] == 'd':
+					map_inside += "<li>D %s,%s,%s,%s | %s</li>" % (escape_tags(a[1]), escape_tags(a[2]), escape_tags(a[3]), escape_tags(a[4]), escape_tags(a[5]))
+
+			map_inside += "</ul>"
+			map_header = "%s \"%s\" - #%d" % (map_key, get_entity_name_by_db_id(map_key), len(map_val))
+			inside += "<details><summary>%s</summary>%s</details>" % (map_header, map_inside)
+
+		header = escape_tags("%s: %s (%s) @ %s: Built %d, Deleted %d - #%d" % (r.time.strftime("(%Y-%m-%d)"), r.name or "?", r.username or "?", r.ip, r.total_put, r.total_delete, len(r.maps)))
+		response += "<details><summary><strong>%s</strong></summary>%s</details><hr>" % (header, inside)
+	if item_count == 0:
+		response += "Nothing so far!"
+
+	response += "</body></html>"
+	return web.Response(text=response, content_type="text/html", charset="utf-8")
 
 # ---------------------------------------------------------
 

@@ -177,6 +177,11 @@ API.URL
 Default: ""
 URL to give clients for accessing the API.
 
+API.AdminPassword
+Default: ""
+Password required to access sensitive API endpoints, like the build log.
+If a password is not provided here, these endpoints are just not accessible.
+
 Database.File
 Default: "town.db"
 Filename used for Tilemap Town's database.
