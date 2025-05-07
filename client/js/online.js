@@ -1171,7 +1171,7 @@ function ConnectToServer() {
 				display += "<br>More information: "+convertBBCode(message);
 		} else {
 			if (reason)
-				display = "<br>Reason: " + convertBBCode(reason);
+				display += "<br>Reason: " + convertBBCode(reason);
 			should_reconnect = event.code == 1006;
 		}
 
