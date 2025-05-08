@@ -1581,14 +1581,21 @@ function editItemShared(item) {
 				sheetselect.appendChild(el);
 			}
 
-			// Now display everything in the inventory
+			// Show all the tile sheets in the inventory, sorted by name
+			let allUserOwnedTileSheets = [];
 			for (let i in DBInventory) {
 				if (DBInventory[i].type == "image") {
 					el = document.createElement("option");
 					el.textContent = DBInventory[i].name;
 					el.value = DBInventory[i].id;
-					sheetselect.appendChild(el);
+					allUserOwnedTileSheets.push(el);
 				}
+			}
+			allUserOwnedTileSheets.sort(function (a, b) {
+				return a.textContent.localeCompare(b.textContent);
+			});
+			for (let i of allUserOwnedTileSheets) {
+				sheetselect.appendChild(i);
 			}
 			// Probably also allow just typing in something?
 
