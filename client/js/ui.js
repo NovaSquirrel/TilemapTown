@@ -2022,6 +2022,21 @@ function fileUploadContextMenuAppearance() {
 	let file = FileStorageInfo.files[contextMenuFile];
 	sendChatCommand('userpic '+file.url);
 }
+function fileUploadContextMenuTileSheet() {
+	let file = FileStorageInfo.files[contextMenuFile];
+	for (let item of DBInventory) {
+		console.log(item);
+		if (item === undefined)
+			continue;
+		if (item.data == file.url) {
+			if (!confirm(`You already have a tile sheet pointing at this image (named "${item.name}"); create another?`))
+				return;
+			break;
+		}
+	}
+	SendCmd("BAG", { create: { "type": "image", "name": file.name, "data": file.url } });
+}
+
 async function fileUploadContextMenuDelete () {
 	let file = FileStorageInfo.files[contextMenuFile];
 	if (

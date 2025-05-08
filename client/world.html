@@ -246,7 +246,7 @@
     <input type="button" value="Generic" onclick="newItemCreate('generic');" />
     <input type="button" value="Map tile" onclick="newItemCreate('map_tile');" />
     <input type="button" value="Text" onclick="newItemCreate('text');" />
-    <input type="button" value="Image link" onclick="newItemCreate('image');" />
+    <input type="button" value="Tile sheet" onclick="newItemCreate('image');" />
     <!--<input type="button" value="Tileset" onclick="newItemCreate('tileset');" />-->
     <input type="button" value="Folder" onclick="newItemCreate('folder');" />
     <input type="button" value="Gadget" onclick="newItemCreate('gadget');" />
@@ -258,7 +258,7 @@
 	<ul>
 	<li>Map tiles are templates for tiles to place down on the map, like how the build menu works.</li>
 	<li>Generic items are more like standard video game items, and you can drop them onto maps to have them act as props!</li>
-	<li>Image link items add additional tileset images you can pick when editing tiles. If you delete an image link, tiles referencing it will lose their appearance.</li>
+	<li>Tile sheet items add additional images you can pick when editing tiles. If you delete the item, tiles referencing it will lose their appearance.</li>
 	</ul>
     </p>
     <p>
@@ -289,7 +289,7 @@
 
 	How would you like to use this file?<br>
 	<table>
-	<tr><td>Map tile graphics:</td><td><input type="button" value="Upload and create Image Link item" onclick="createNewFile(false, true);" /></td></tr>
+	<tr><td>Map tile graphics:</td><td><input type="button" value="Upload and create tile sheet item" onclick="createNewFile(false, true);" /></td></tr>
 	<tr><td>Avatar graphics:</td><td><input type="button" value="Upload and set appearance" onclick="createNewFile(true, false);" /></td></tr>
 	</table>
     Otherwise you can just <input type="button" value="Upload file" onclick="createNewFile(false, false);" /><br>
@@ -1040,6 +1040,7 @@
 	<li onclick="fileUploadContextMenuEdit();">Edit image</li>
 	<li onclick="moveFileOrFolder(contextMenuFile, false);">Move image</li>
 	<li><a id="openFileInNewTabLink" href="https://example.com" target="_blank">Open image in new tab</a></li>
+	<li onclick="fileUploadContextMenuTileSheet();">Create a tile sheet item</li>
 	<li onclick="fileUploadContextMenuAppearance();">Set appearance to this</li>
 	<li onclick="fileUploadContextMenuDelete();">Delete image</li>
   </ul>
