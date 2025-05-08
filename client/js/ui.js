@@ -548,63 +548,91 @@ function fileCardList(ul, folders_only, click_handler, contextmenu_handler) {
 }
 
 function updateFileList() {
-	document.getElementById("filelist-status").innerHTML = (FileStorageInfo.info.used_space / 1024).toFixed(2) + " KiB used, " + (FileStorageInfo.info.free_space / 1024).toFixed(2) + " KiB free";
+	/*if (document.getElementById("tileImageSheetUploadWizard").style.display !== "none") {
+		document.getElementById("filelist-status_tileedit").textContent = (FileStorageInfo.info.used_space / 1024).toFixed(2) + " KiB used, " + (FileStorageInfo.info.free_space / 1024).toFixed(2) + " KiB free";
+		
+		let ul = document.getElementById('filesul_tileedit');
+		if (!ul) return;
+
+		fileCardList(ul, false, null, function(e, id) {
+			if (id > 0)
+				openFileContextMenu(id, e.clientX, e.clientY);
+			else if (id < 0)
+				openFolderContextMenu(-id, e.clientX, e.clientY);
+			e.preventDefault();
+		});
+	}*/
+	if (document.getElementById("filelist").style.display !== "none") {
+		document.getElementById("filelist-status").innerHTML = (FileStorageInfo.info.used_space / 1024).toFixed(2) + " KiB used, " + (FileStorageInfo.info.free_space / 1024).toFixed(2) + " KiB free";
+
+		let ul = document.getElementById('filesul');
+		if (!ul) return;
+
+		fileCardList(ul, false, null, function(e, id) {
+			if (id > 0)
+				openFileContextMenu(id, e.clientX, e.clientY);
+			else if (id < 0)
+				openFolderContextMenu(-id, e.clientX, e.clientY);
+			e.preventDefault();
+		});
+
+		// Add the "new file" item
+		let newitem = document.createElement("li");
+		newitem.appendChild(document.createTextNode("+File"));
+		newitem.classList.add('inventoryli');
+		newitem.id = "fileadd"
+		newitem.onclick = function () { document.getElementById('newFileWindow').style.display = "block"; };
+		ul.appendChild(newitem);
+
+		// Add the "new folder" item
+		newitem = document.createElement("li");
+		newitem.appendChild(document.createTextNode("+Folder"));
+		newitem.classList.add('inventoryli');
+		newitem.id = "fileadd"
+		newitem.onclick = function () { document.getElementById('newFolderWindow').style.display = "block"; };
+		ul.appendChild(newitem);
+	}
+}
+
+async function getFileListFromAPI(statusElement, successCallback) {
+	if(!API_URL) {
+		document.getElementById(statusElement).textContent = "Server has its API disabled";
+		return;
+	}
+
+	// Clean up
+	document.getElementById(statusElement).textContent = "Checking status...";
+	if (statusElement === "filelist-status_tileedit") {
+		document.getElementById("tileedit_upload_file_tr").style.display = "none";
+		document.getElementById("tileedit_upload_name_tr").style.display = "none";
+		document.getElementById("tileedit_upload_desc_tr").style.display = "none";
+		document.getElementById("tileedit_upload_button").style.display = "none";
+	}
 
 	let ul = document.getElementById('filesul');
 	if (!ul) return;
+	while (ul.firstChild) {
+		ul.removeChild(ul.firstChild);
+	}
 
-	fileCardList(ul, false, null, function(e, id) {
-		if (id > 0)
-			openFileContextMenu(id, e.clientX, e.clientY);
-		else if (id < 0)
-			openFolderContextMenu(-id, e.clientX, e.clientY);
-		e.preventDefault();
-	});
-
-	// Add the "new file" item
-	let newitem = document.createElement("li");
-	newitem.appendChild(document.createTextNode("+File"));
-	newitem.classList.add('inventoryli');
-	newitem.id = "fileadd"
-	newitem.onclick = function () { document.getElementById('newFileWindow').style.display = "block"; };
-	ul.appendChild(newitem);
-
-	// Add the "new folder" item
-	newitem = document.createElement("li");
-	newitem.appendChild(document.createTextNode("+Folder"));
-	newitem.classList.add('inventoryli');
-	newitem.id = "fileadd"
-	newitem.onclick = function () { document.getElementById('newFolderWindow').style.display = "block"; };
-	ul.appendChild(newitem);
+	let response = await fetch(API_URL + "/v1/my_files" , {
+		headers: {'Authorization': 'Bearer ' + API_Key},
+		method: "GET"});
+	if(response.status == 200) {
+		FileStorageInfo = await response.json();
+		if (successCallback)
+			successCallback();
+	} else if (response.status == 403) {
+		document.getElementById(statusElement).textContent = "You need an account for this.";
+	} else {
+		document.getElementById(statusElement).textContent = "Error accessing file upload API.";
+	}
 }
 
-async function viewFiles() {
+function viewFiles() {
 	let files = document.getElementById('filelist');
 	if(toggleDisplay(files)) {
-		if(!API_URL) {
-			document.getElementById("filelist-status").textContent = "Server has its API disabled";
-			return;
-		}
-
-		// Clean up
-		document.getElementById("filelist-status").textContent = "Checking status...";
-		let ul = document.getElementById('filesul');
-		if (!ul) return;
-		while (ul.firstChild) {
-			ul.removeChild(ul.firstChild);
-		}
-
-		let response = await fetch(API_URL + "/v1/my_files" , {
-			headers: {'Authorization': 'Bearer ' + API_Key},
-			method: "GET"});
-		if(response.status == 200) {
-			FileStorageInfo = await response.json();
-			updateFileList();
-		} else if (response.status == 403) {
-			document.getElementById("filelist-status").textContent = "You need an account for this.";
-		} else {
-			document.getElementById("filelist-status").textContent = "Error accessing file upload API.";
-		}
+		getFileListFromAPI("filelist-status", updateFileList);
 	}
 }
 
@@ -1212,7 +1240,7 @@ function deleteItem(id) {
 	if(item == undefined)
 		item = {name: "?"};
 	if (
-		confirm(`Really delete ${item.name} with ID ${item.id}?${item.type === 'image' ? '\nIf you do, any tiles linked to this image will lose their appearance.': ''}`)
+		confirm(`Really delete ${item.name} with ID ${item.id}?${item.type === 'image' ? '\nIf you do, any tiles linked to this item will lose their appearance.': ''}`)
 	) {
 		SendCmd("BAG", { delete: { id: id } });
 	}
@@ -1406,6 +1434,50 @@ let editItemType = null;
 let editItemID = null;
 let editItemWaitingForDataID = undefined;
 let editItemOriginalSheet = null; // Original tileset image that the tile's pic was set to before the edit
+let waitingForItemAfterFileUpload = false; // Uploading a file with the intention of creating a tile sheet
+
+function refreshEditItemTilesheetList() {
+	// Display all the available images assets in the user's inventory
+	let sheetselect = document.getElementById("edittilesheet");
+	while (sheetselect.firstChild) {
+		sheetselect.removeChild(sheetselect.firstChild);
+	}
+	let el = document.createElement("option");
+	el.textContent = "Keep the same";
+	el.value = "keep";
+	sheetselect.appendChild(el);
+
+	for(let i=0; GlobalImageNames[i] !== undefined; i--) {
+		el = document.createElement("option");
+		el.textContent = GlobalImageNames[i];
+		el.value = i;
+		sheetselect.appendChild(el);
+	}
+
+	// Show all the tile sheets in the inventory, sorted by name
+	let allUserOwnedTileSheets = [];
+	for (let i in DBInventory) {
+		if (DBInventory[i].type == "image") {
+			el = document.createElement("option");
+			el.textContent = DBInventory[i].name;
+			el.value = DBInventory[i].id;
+			allUserOwnedTileSheets.push(el);
+		}
+	}
+	allUserOwnedTileSheets.sort(function (a, b) {
+		return a.textContent.localeCompare(b.textContent);
+	});
+	for (let i of allUserOwnedTileSheets) {
+		sheetselect.appendChild(i);
+	}
+
+	// Probably also allow just typing in something?
+
+	el = document.createElement("option");
+	el.textContent = "+ New tile sheet!";
+	el.value = "newtilesheet";
+	sheetselect.appendChild(el);
+}
 
 function editItemShared(item) {
 	let itemobj = null;
@@ -1564,33 +1636,7 @@ function editItemShared(item) {
 			document.getElementById("itemImageIsURL").checked = isURLPic;
 			changeItemImageType();
 
-			// Display all the available images assets in the user's inventory
-			let sheetselect = document.getElementById("edittilesheet");
-			while (sheetselect.firstChild) {
-				sheetselect.removeChild(sheetselect.firstChild);
-			}
-			let el = document.createElement("option");
-			el.textContent = "Keep the same";
-			el.value = "keep";
-			sheetselect.appendChild(el);
-
-			for(let i=0; GlobalImageNames[i] !== undefined; i--) {
-				el = document.createElement("option");
-				el.textContent = GlobalImageNames[i];
-				el.value = i;
-				sheetselect.appendChild(el);
-			}
-
-			// Now display everything in the inventory
-			for (let i in DBInventory) {
-				if (DBInventory[i].type == "image") {
-					el = document.createElement("option");
-					el.textContent = DBInventory[i].name;
-					el.value = DBInventory[i].id;
-					sheetselect.appendChild(el);
-				}
-			}
-			// Probably also allow just typing in something?
+            refreshEditItemTilesheetList();
 
 			document.getElementById('edittilemaptile').style.display = (item.type == "map_tile" || item.type == "map_tile_hotbar" || item.type == "map_tile_mapobj_edit" || item.type == "map_tile_turf_edit") ? "block" : "none";
 			document.getElementById('edittileobject').style.display = "block";
@@ -1628,8 +1674,26 @@ function editItemShared(item) {
 	document.getElementById('editItemWindow').style.display = "block";
 }
 
+function gotFileStorageInfoForTileEdit() {
+	document.getElementById("tileedit_upload_file_tr").style.display = "";
+	document.getElementById("tileedit_upload_name_tr").style.display = "";
+	document.getElementById("tileedit_upload_desc_tr").style.display = "";
+	document.getElementById("tileedit_upload_button").style.display = "";
+	document.getElementById("filelist-status_tileedit").textContent = (FileStorageInfo.info.used_space / 1024).toFixed(2) + " KiB used, " + (FileStorageInfo.info.free_space / 1024).toFixed(2) + " KiB free";
+}
+
 function editItemUpdatePic() {
 	let edittilesheet = document.getElementById('edittilesheet').value;
+	if (edittilesheet == "newtilesheet") {
+		document.getElementById('tileImageSheetUploadWizard').style.display = "inline";
+		document.getElementById('tileImageSheetPosition').style.display = "none";
+		getFileListFromAPI("filelist-status_tileedit", gotFileStorageInfoForTileEdit);
+		return;
+	} else {
+		document.getElementById('tileImageSheetUploadWizard').style.display = "none";
+		document.getElementById('tileImageSheetPosition').style.display = "inline";
+	}
+
 	let edittilex = parseInt(document.getElementById('edittilex').value);
 	let edittiley = parseInt(document.getElementById('edittiley').value);
 
@@ -2226,6 +2290,39 @@ async function doEditFolder() {
 	}
 
 	editFolderCancel();
+}
+
+async function uploadFileForTileEdit() {
+	const formData = new FormData();
+	formData.append("name", document.getElementById("newfilename_tileedit").value);
+	formData.append("desc", document.getElementById("newfiledesc_tileedit").value);
+	formData.append("set_my_pic", false);
+	formData.append("create_entity", true);
+	formData.append('file', document.getElementById("newfilefile_tileedit").files[0]);
+
+	waitingForItemAfterFileUpload = true;
+	let response = await fetch(API_URL + "/v1/my_files/file" , {
+		headers: {'Authorization': 'Bearer ' + API_Key},
+		body: formData,
+		method: "POST"});
+	if(response.status == 200) {
+		let j = await response.json();
+		let file_info = j.file;
+		FileStorageInfo.files[file_info.id] = file_info;
+		FileStorageInfo.info.used_space = j.info.used_space;
+		FileStorageInfo.info.free_space = j.info.free_space;
+	} else {
+		waitingForItemAfterFileUpload = false;
+		if (response.status == 413) {
+			alert("That file is too big to upload");
+		} else if(response.status == 415) {
+			alert("File is not a valid image; please make sure it's a PNG");
+		} else if(response.status == 507) {
+			alert("Not enough storage space to upload that");
+		} else {
+			alert("Encountered an error; code "+response.status);
+		}
+	}
 }
 
 ///////////////////////////////////////////////////////////

@@ -659,8 +659,16 @@ function receiveServerMessage(cmd, arg) {
         for(let item of arg.list) {
           DBInventory[item.id] = item;
           // Preload all image assets in the initial inventory
-          if(item.type == 'image') // image
+          if(item.type == 'image') {
             RequestImageIfNeeded(item.id);
+            if (waitingForItemAfterFileUpload) {
+              waitingForItemAfterFileUpload = false;
+              refreshEditItemTilesheetList();
+              document.getElementById('edittilesheet').value = item.id;
+              editItemUpdatePic();
+              document.getElementById('edittilesheetselect').src = item.data;
+            }
+          }
         }
         FlushIconSheetRequestList();
       }

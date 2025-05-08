@@ -736,6 +736,7 @@
       <option value="custom">Custom</option>
     </select><br>
 
+	<span id="tileImageSheetPosition">
 	<img src="img/transparent.png" width="16" height="16" id="edittilepic" style="background: url(img/potluck.png) 0px 0px;">
     <input type="number" value="0" id="edittilex" oninput="editItemUpdatePic();" size="4" />
     <input type="number" value="0" id="edittiley" oninput="editItemUpdatePic();" size="4" />
@@ -745,6 +746,25 @@
     <img src="" id="edittilesheetselect">
     </div>
     </p>
+	</span>
+	<span id="tileImageSheetUploadWizard">
+		
+		<p>
+		<strong>Upload a new file</strong><br>It should be a PNG image containing<br>any number of 16x16 tiles in a grid.<br>
+		<table border="0">
+		<tr><td>Storage:</td><td><span id="filelist-status_tileedit"></span></td></tr>
+		<tr id="tileedit_upload_file_tr"><td>File:</td><td><input type="file" id="newfilefile_tileedit" accept="image/png" /></td></tr>
+		<tr id="tileedit_upload_name_tr"><td><label for="newfilename_tileedit" class="unselectable">Name:</label></td><td><input type="text" id="newfilename_tileedit" value="Image"/></td></tr>
+		<tr id="tileedit_upload_desc_tr"><td><label for="newfiledesc_tileedit" class="unselectable">Description:</label></td><td><input type="text" id="newfiledesc_tileedit" value="Image"/></td></tr>
+		</table>
+		</p>
+
+		<button id="tileedit_upload_button" onclick="uploadFileForTileEdit()">Upload file</button>
+		<!--<hr>
+		If you've already uploaded the file,<br>you can pick it from here:
+		<ul id="filesul_tileedit" class="itemsul unselectable">
+		</ul>-->
+	</span>
 	</div>
 	<div id="tileImageURLOptions">URL: <input id="edittileimageurl" type="text" placeholder="Image URL"></div>
     </p>
