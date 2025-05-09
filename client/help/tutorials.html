@@ -1,0 +1,280 @@
+<html>
+<head><title>Tilemap Town</title>
+<meta charset="UTF-8">
+<link rel="canonical" href="https://tilemap.town/help">
+<style>
+.green1 {
+  background:#80ff80;border:8px outset #a0ffa0;color:black;
+}
+body {
+	font-size: 16px;
+}
+.cmd_name {
+	font-size: 20px;
+}
+.cmd_group {
+	font-size: 24px;
+}
+kbd {
+	font-size: 14px;
+	font-family: monospace;
+	color: #408040;
+}
+samp {
+	font-size: 14px;
+	font-family: monospace;
+	color: #404080;
+}
+.center {
+	text-align: center;
+}
+table, td, tr, th{
+	border: 2px solid #80ff80;
+	border-collapse: collapse;
+}
+
+/* ------------------------------------------------------
+ * From https://www.w3schools.com/howto/howto_js_tabs.asp
+ * but modified
+ */
+.tab {
+  display: none;
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+/* Style the buttons inside the tab */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.1s;
+  font-size: 17px;
+}
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #999;
+  color: white;
+}
+/* Style the tab content */
+.tabcontent {
+  padding: 6px 12px;
+  border-top: none;
+}
+
+@media (scripting: enabled) {
+  .tabcontent {
+    display: none;
+    color: black;
+  }
+  .tab-fallback-heading {
+    display: none;
+  }
+  .tab {
+    display: block;
+  }
+}
+</style>
+<script>
+function openTab(evt, tabName) {
+	let tabcontent = document.getElementsByClassName("tabcontent");
+	let tablinks = document.getElementsByClassName("tablinks");
+	for (let i = 0; i < tabcontent.length; i++)
+		tabcontent[i].style.display = "none";
+	for (let i = 0; i < tablinks.length; i++)
+		tablinks[i].className = tablinks[i].className.replace(" active", "");
+	document.getElementById(tabName).style.display = "block";
+	evt.currentTarget.className += " active";
+}
+</script>
+</head>
+<body>
+<a href="https://github.com/NovaSquirrel/TilemapTown"><img decoding="async" loading="lazy" width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149" alt="Fork me on GitHub" data-recalc-dims="1" style="position: absolute; top: 0; right: 0; border: 0;"></a>
+
+<div style="width:900px; margin-left:auto; margin-right:auto;">
+<div class="green1">
+<span class="center"><h1>Tilemap Town</h1></span>
+</div>
+<div style="background:black;color:white;"><div class="center">Collaborative map building and hangout/roleplay</div></div>
+<br>
+
+<div style="border:dashed #80ff80 3px;"><div style="margin-left:100px; margin-right:100px;">
+<div>
+	<div class="tab">
+		<button class="tablinks active" onclick="openTab(event, 'Building')">Building</button>
+		<button class="tablinks" onclick="openTab(event, 'CustomAvatar')">Custom avatars</button>
+		<button class="tablinks" onclick="openTab(event, 'CustomMapTile')">Custom map tile graphics</button>
+	</div>
+	
+	<div class="tabcontent" id="Building" style="display: block;">
+		<h1 class="tab-fallback-heading">Building</h1>
+		<h2>Build window</h2>
+		<p>
+		A big focus in Tilemap Town is building, and you're welcome to make cool stuff! If you want to learn how to build, first move to an area in the world with some free space; you don't want to mess up something someone else built, after all.
+		</p>
+
+		<img src="buildwindow.png" alt="Screenshot of the build window">
+
+		<p>
+		You can click on the "Build" button at the top to bring up the build window. There are two modes here, and you can change modes by pressing the <kbd>R</kbd> key, or by clicking on the buttons at the top of the build window.
+		<ul>
+		<li><strong>Select</strong>: Clicking on a tile in the build window will place it onto the map where you're standing. Clicking and dragging on the map will select an area.</li>
+		<li><strong>Draw</strong>: Clicking on a tile in the build window will select it. Clicking and dragging on the map will draw onto the map using the selected tile.</li>
+		</ul>
+		</p>
+
+		<p>
+		There are multiple tile categories to pick from. "My inventory" will show every "Map tile" item in your inventory, but otherwise there's no way to add new tile types to the build menu yet. Right clicking on a tile in the build window will allow you to copy it to your inventory or hotbar (more on that later).
+		</p>
+
+		<h2>Selecting tiles</h2>
+		<p>
+		In "Select" mode, you can select tiles on the map. This will bring up a window that looks like this:
+		</p>
+		<img src="selectionwindow.png" alt="Screenshot of the selection window">
+		<p>
+		From here you can choose to delete a rectangle of tiles; you can choose to delete only floor tiles or only objects, or both. You can also right click on the tiles in the selection window to change or reorder them, or copy them to your hotbar.
+		</p>
+
+		<h2>The hotbar</h2>
+
+		<img src="hotbar.png" alt="Screenshot of the hotbar">
+
+		<p>The hotbar is the area at the bottom with ten numbered spaces. You can press the number keys on your keyboard to quickly switch between slots, or you can click on them. You can also drag to reorder them, and right click to edit or delete the tile in that slot.</p>
+
+		<p>The hotbar's purpose is to give you quick access to up to 10 different tile types, but you can also use it as a little work area where you can <em>compose</em> a tile with whatever properties you want, and then draw with it.</p>
+
+		<h2>Tile editing window</h2>
+
+		<p>
+		You can right click and edit a tile on your hotbar, in your inventory, or in the selection window. This will bring up a window where you can change the tile's properties.
+		</p>
+
+		<img src="tileeditwindow.png" alt="Screenshot of the tile editing window">
+
+		<p>
+		You can choose between multiple <em>tile sheets</em>, which are images that each contain a bunch of different tiles graphics. You can click on a spot within a tile sheet to choose the tile graphic in that spot, and you'll be shown a preview of which graphic you have selected. There are many tile graphics in here that aren't in the build menu, so have a look around!
+		</p>
+
+		<p>
+		There are animation and autotiling features you can make use of, but they probably won't be very useful unless you're making your own custom tile sheets. There are also controls for whether the tile should be treated as a wall or not, and whether the tile should appear in front of players or behind them.
+		</p>
+	</div>
+
+	<div class="tabcontent" id="CustomAvatar">
+		<h1 class="tab-fallback-heading">Custom avatars</h1>
+		<h2>Creating the file</h2>
+		<p>
+		In order to use your own custom sprites for your character, you will need to create a sprite sheet in an art program on your computer, and then upload the file somewhere.
+		</p>
+		<p>
+		This file should be a grid of 32x32 frames. Tilemap Town will use the width and height of the file to determine how many directions and animation frames it has. Here are some examples:<br>
+		<img src="cricecorn.png" style="border: 1px solid black;" alt="Example of a sprite sheet">
+		<img src="../img/userpic/fire.png" style="border: 1px solid black;" alt="Example of a sprite sheet">
+		<img src="../img/userpic/cat.png" style="border: 1px solid black;" alt="Example of a sprite sheet"><br>
+		The first has one column and four rows, so it has four directions and no animation.<br>The second has four columns and four rows, so it has two frames of animation when idle, and two frames of animation when moving.<br>The third has eight columns and two rows, so it has four idle frames and four movement frames.
+		</p>
+
+		<table border="1">
+		<tr><th>1 column</th><td>No animation</td></tr>
+		<tr><th>2 columns</th><td>1 frame when idle, 1 frame when moving</td></tr>
+		<tr><th>4 columns</th><td>2 frames when idle, 2 frames when moving</td></tr>
+		<tr><th>6 columns</th><td>3 frame when idle, 3 frames when moving</td></tr>
+		<tr><th>8 columns</th><td>4 frame when idle, 4 frames when moving</td></tr>
+		</table>
+		<br>
+		<table border="1">
+		<tr><th>1 row</th><td>Same appearance used for all directions</td></tr>
+		<tr><th>2 rows</th><td>First row is used when facing right, second row is used when facing left</td></tr>
+		<tr><th>4 rows</th><td>Rows go in order of right, down, left, up</td></tr>
+		<tr><th>8 rows</th><td>Rows start facing right and go in clockwise order</td></tr>
+		</table>
+
+		<p>You may find it helpful to use a <a href="https://github.com/NovaSquirrel/TilemapTown/tree/main/docs/player%20templates">template</a>. If you don't want to mess with directions or animation, you can draw a 32x32 image and upload that.</p>
+		<h2>Uploading the avatar</h2>
+		<p>
+		The simplest option for uploading a custom avatar is to upload it directly to the Tilemap Town server, which requires user registration.<p>
+		<h3>Uploading a file to the server</h3>
+		<ul>
+		<li>Click the "Files" button at the top, which will open a "File uploads" window.</li>
+		<li>Click "+File" button at the bottom of that window, then that will bring up a new window where you can choose a file and give it a name.</li>
+		<li>From here there's a button to upload the file and set it as your appearance.</li>
+		</ul>
+		</p>
+
+		<p>
+		After you've uploaded a file, you can browse all of the files you have uploaded in the "File uploads" window. You can right click on a file to change it (uploading a new file, changing the name) or quickly switch over to another avatar you have uploaded.
+		</p>
+
+		<h3>Uploading the file to an image host</h3>
+		<p>
+		Alternatively, you can upload your avatar to another site. This does not require user registration, so guests can do it. Currently the server will accept uploads from <a href="https://imgur.com/">Imgur</a>, <a href="https://imgbb.com/">ImgBB</a>, <a href="https://postimages.org/">Postimages</a> and <a href="https://filegarden.com/">File Garden</a>, and more sites can be added on request, as long as they are set up properly. Limiting it to approved sites protects user privacy, because otherwise someone could use a file on their own website and then record what IP addresses access that file.
+		</p>
+
+		<p>
+		Once you have uploaded a file to another service, you will need to get a link directly to that file. That may involve right clicking on the image after it has been uploaded and choosing "Copy Image Link". From here you can click the &#x1F407; button in the top left on Tilemap Town, and paste the copied link in the section that asks for a URL.
+		</p>
+	</div>
+
+	<div class="tabcontent" id="CustomMapTile">
+		<h1 class="tab-fallback-heading">Custom map tile graphics</h1>
+
+		<h2>Creating the file</h2>
+		<p>
+		In order to use custom map tile graphics, you need to create an image file containing the graphics you would like to use and then upload it somewhere, similar to creating a custom player avatar. This file should be a grid of tiles that are each 16x16 pixels in size.
+		</p>
+
+		<img src="tilesheetexample.png" style="border: 1px solid black;" alt="Example of a tile sheet">
+
+		<p>
+		You can arrange tie graphics in whatever arrangement you like, and have as many as you like. You can have objects that are bigger than 16x16 by using multiple tiles and then placing them next to each other on a map, like the bed in the above example.
+		</p>
+
+		<h3>Tile animation</h3>
+
+		<img src="animationexample.png" style="border: 1px solid black;" alt="Example of a tile sheet that uses animation">
+
+		<p>If you create a horizontal strip of tile graphics, you can set up an animation in the tile editing window. You'll be able to control the frame count, frame speed, and animation direction.</p>
+
+		<h3>Autotiling</h3>
+
+		<img src="autotilingexample.png" style="border: 1px solid black;" alt="Example of a tile sheet that uses autotiling">
+
+		<p>There's a feature where you can supply multiple tile graphics and have a tile automatically choose which graphic to use based on what tiles are nearby. This requires you to put the tile graphics in a specific pattern on the image. There's a description of the different autotiling modes <a href="https://raw.githubusercontent.com/NovaSquirrel/TilemapTown/refs/heads/main/docs/tiles.txt">here</a>; I'd like to make a helpful diagram later on.</p>
+
+		<h2>Uploading the tile sheet image</h2>
+
+		<p>As with custom avatars, you will need to upload your image file somewhere, and you can choose between uploading directly to the server, or to an image hosting site. This guide will cover uploading to the server.</p>
+
+		<p>
+		<ul>
+		<li>Click the "Files" button at the top, which will open a "File uploads" window.</li>
+		<li>Click "+File" button at the bottom of that window, then that will bring up a new window where you can choose a file and give it a name.</li>
+		<li>From here there's a button to upload the file and create a tile sheet item.</li>
+		<li>You will now have a new item in your inventory referencing the file you uploaded.</li>
+		</ul>
+		Your new image will appear as one of the tile sheets you can choose from when editing a tile.
+		</p>
+
+		<p>As with custom avatars, you can reupload this file after uploading it using the "File uploads" window, and any tiles drawn using the graphics on it will automatically update to the new appearance.</p>
+
+		<h2>Tile sheet items</h2>
+
+		<p>Tiles with custom tile graphics work in a somewhat indirect way. A tile on the map actually points to a <em>tile sheet item</em> rather than directly pointing at a file. This item holds a link to an image file, whether uploaded to the server or an image host. That means that this item needs to continue to exist <em>somewhere</em> in order for the map tiles that use it to keep their appearance. You can keep it in your inventory, or drop it somewhere on one of your maps if you want to keep your inventory clean.</p>
+
+		<p>It's designed this way because custom tile graphics were implemented about six years before file uploads were. Your only option originally was to upload a file to a site like Imgur, and these sites generally do not let you modify images after uploading them. That meant that if you wanted to change the image, you had to delete it and upload a new one, which would give you a new image URL. Tile sheet items allowed you to paste the new URL into a single place in Tilemap Town, and instantly update all of your tiles that were using the old URL.</p>
+
+		<p>You can create a tile sheet item when uploading a file, or you can right click on a file you have uploaded to create an item for it later on.</p>
+	</div>
+</div>
+
+</div></div>
+
+</body></html>
