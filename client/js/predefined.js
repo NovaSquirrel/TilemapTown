@@ -19,6 +19,11 @@ let GlobalTiles = {
 		"pic": [-1, 0, 3],
 		"density": false
 	},
+	"grass5": {
+		"name": "grass",
+		"pic": [-1, 9, 13],
+		"density": false
+	},
 	"dirt": {
 		"name": "dirt",
 		"pic": [0, 6, 4],
@@ -37,6 +42,14 @@ let GlobalTiles = {
 	"water": {
 		"name": "water",
 		"pic": [-1, 1, 1],
+		"density": true,
+		"type": "water",
+		"anim_frames": 2,
+		"anim_speed": 8
+	},
+	"water3": {
+		"name": "water",
+		"pic": [-1, 9, 14],
 		"density": true,
 		"type": "water"
 	},
@@ -62,6 +75,14 @@ let GlobalTiles = {
 		"name": "purple sand",
 		"pic": [0, 10, 4],
 		"density": false
+	},
+	"brownsand2": {
+		"name": "brown sand",
+		"pic": [-1, 0, 13]
+	},
+	"snow": {
+		"name": "snow",
+		"pic": [-1, 1, 13]
 	},
 	"redbrickfloor": {
 		"name": "red brick floor",
@@ -134,6 +155,83 @@ let GlobalTiles = {
 		"name": "floor",
 		"pic": [0, 6, 17],
 		"density": false
+	},
+	"floor6": {
+		"name": "floor",
+		"pic": [-1, 12, 13]
+	},
+	"floor7": {
+		"name": "floor",
+		"pic": [-1, 13, 13]
+	},
+	"floor8": {
+		"name": "floor",
+		"pic": [-1, 14, 13]
+	},
+	"floor9": {
+		"name": "floor",
+		"pic": [-1, 11, 3]
+	},
+	"floor10": {
+		"name": "floor",
+		"pic": [-1, 12, 3]
+	},
+	"cobblestone": {
+		"name": "cobblestone",
+		"pic": [-1, 0, 14]
+	},
+	"cobblestone2": {
+		"name": "mossy cobblestone",
+		"pic": [-1, 1, 14]
+	},
+	"hellrock": {
+		"name": "hell rock",
+		"pic": [-1, 2, 14]
+	},
+	"hellrock2": {
+		"name": "hell rock",
+		"pic": [-1, 3, 14]
+	},
+	"lightsand": {
+		"name": "sand",
+		"pic": [-1, 4, 14]
+	},
+	"granite": {
+		"name": "granite",
+		"pic": [-1, 5, 14]
+	},
+	"gravel": {
+		"name": "gravel",
+		"pic": [-1, 6, 14]
+	},
+	"brickwall": {
+		"name": "brick wall",
+		"density": true,
+		"pic": [-1, 2, 13]
+	},
+	"brickwall2": {
+		"name": "brick wall",
+		"density": true,
+		"pic": [-1, 3, 13]
+	},
+	"brickwall3": {
+		"name": "brick wall",
+		"density": true,
+		"pic": [-1, 4, 13]
+	},
+	"brickwall4": {
+		"name": "brick wall",
+		"density": true,
+		"pic": [-1, 5, 13]
+	},
+	"brickwall5": {
+		"name": "brick wall",
+		"density": true,
+		"pic": [-1, 6, 13]
+	},
+	"darkfloor": {
+		"name": "dark floor",
+		"pic": [-1, 7, 13]
 	},
 	"forcedown": {
 		"name": "force",
@@ -558,6 +656,12 @@ let GlobalTiles = {
 		"density": true,
 		"obj": true
 	},
+	"tree3": {
+		"name": "tree",
+		"pic": [-1, 8, 13],
+		"density": true,
+		"obj": true
+	},
 	"treefall": {
 		"name": "tree",
 		"pic": [-1, 9, 5],
@@ -598,6 +702,12 @@ let GlobalTiles = {
 	"well": {
 		"name": "well",
 		"pic": [-1, 15, 1],
+		"density": true,
+		"obj": true
+	},
+	"well2": {
+		"name": "well",
+		"pic": [-1, 12, 15],
 		"density": true,
 		"obj": true
 	},
@@ -654,6 +764,11 @@ let GlobalTiles = {
 		"pic": [-1, 6, 4],
 		"density": true
 	},
+	"rockwall2": {
+		"name": "rock wall",
+		"pic": [-1, 11, 13],
+		"density": true
+	},
 	"statue": {
 		"name": "statue",
 		"pic": [-1, 7, 4],
@@ -678,9 +793,10 @@ let GlobalTiles = {
 	},
 	"pillar2": {
 		"name": "pillar2",
-		"pic": [-1, 26, 6],
+		"pic": [0, 21, 16],
 		"autotile_layout": 9, 
-		"obj": true
+		"obj": true,
+		"over": true
 	},
 	"drawers": {
 		"name": "drawers",
@@ -722,7 +838,14 @@ let GlobalTiles = {
 		"name": "lava",
 		"pic": [-1, 11, 2],
 		"density": true,
-		"obj": false
+		"obj": false,
+		"anim_frames": 2,
+		"anim_speed": 8
+	},
+	"lava2": {
+		"name": "lava",
+		"pic": [-1, 10, 13],
+		"density": true
 	},
 	"door": {
 		"name": "door",
