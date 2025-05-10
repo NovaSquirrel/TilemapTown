@@ -746,8 +746,9 @@
 				"pic": [-2, 0, 32]
 			},
 			"colorfloor1b": {
-				"name": "floor",
-				"pic": [-2, 0, 33]
+				"name": "wall",
+				"pic": [-2, 0, 33],
+				"density": true
 			},
 			"colorfloor1c": {
 				"name": "floor",
@@ -780,8 +781,9 @@
 				"pic": [-2, 1, 32]
 			},
 			"colorfloor2b": {
-				"name": "floor",
-				"pic": [-2, 1, 33]
+				"name": "wall",
+				"pic": [-2, 1, 33],
+				"density": true
 			},
 			"colorfloor2c": {
 				"name": "floor",
@@ -814,8 +816,9 @@
 				"pic": [-2, 2, 32]
 			},
 			"colorfloor3b": {
-				"name": "floor",
-				"pic": [-2, 2, 33]
+				"name": "wall",
+				"pic": [-2, 2, 33],
+				"density": true
 			},
 			"colorfloor3c": {
 				"name": "floor",
@@ -848,8 +851,9 @@
 				"pic": [-2, 3, 32]
 			},
 			"colorfloor4b": {
-				"name": "floor",
-				"pic": [-2, 3, 33]
+				"name": "wall",
+				"pic": [-2, 3, 33],
+				"density": true
 			},
 			"colorfloor4c": {
 				"name": "floor",
@@ -882,8 +886,9 @@
 				"pic": [-2, 4, 32]
 			},
 			"colorfloor5b": {
-				"name": "floor",
-				"pic": [-2, 4, 33]
+				"name": "wall",
+				"pic": [-2, 4, 33],
+				"density": true
 			},
 			"colorfloor5c": {
 				"name": "floor",
@@ -916,8 +921,9 @@
 				"pic": [-2, 5, 32]
 			},
 			"colorfloor6b": {
-				"name": "floor",
-				"pic": [-2, 5, 33]
+				"name": "wall",
+				"pic": [-2, 5, 33],
+				"density": true
 			},
 			"colorfloor6c": {
 				"name": "floor",
@@ -950,8 +956,9 @@
 				"pic": [-2, 6, 32]
 			},
 			"colorfloor7b": {
-				"name": "floor",
-				"pic": [-2, 6, 33]
+				"name": "wall",
+				"pic": [-2, 6, 33],
+				"density": true
 			},
 			"colorfloor7c": {
 				"name": "floor",
@@ -984,8 +991,9 @@
 				"pic": [-2, 7, 32]
 			},
 			"colorfloor8b": {
-				"name": "floor",
-				"pic": [-2, 7, 33]
+				"name": "wall",
+				"pic": [-2, 7, 33],
+				"density": true
 			},
 			"colorfloor8c": {
 				"name": "floor",
@@ -1018,8 +1026,9 @@
 				"pic": [-2, 8, 32]
 			},
 			"colorfloor9b": {
-				"name": "floor",
-				"pic": [-2, 8, 33]
+				"name": "wall",
+				"pic": [-2, 8, 33],
+				"density": true
 			},
 			"colorfloor9c": {
 				"name": "floor",
@@ -1052,8 +1061,9 @@
 				"pic": [-2, 9, 32]
 			},
 			"colorfloor10b": {
-				"name": "floor",
-				"pic": [-2, 9, 33]
+				"name": "wall",
+				"pic": [-2, 9, 33],
+				"density": true
 			},
 			"colorfloor10c": {
 				"name": "floor",
