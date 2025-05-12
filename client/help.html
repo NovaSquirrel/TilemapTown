@@ -111,7 +111,8 @@ function openTab(evt, tabName) {
 		<button class="tablinks active" onclick="openTab(event, 'About')">Basics</button>
 		<button class="tablinks" onclick="openTab(event, 'Chat')">Chat</button>
 		<button class="tablinks" onclick="openTab(event, 'AvatarAccount')">Avatar / Account</button>
-		<button class="tablinks" onclick="openTab(event, 'MapsTeleports')">Maps / Teleports</button>
+		<button class="tablinks" onclick="openTab(event, 'Teleports')">Teleports</button>
+		<button class="tablinks" onclick="openTab(event, 'Maps')">Map creation</button>
 		<button class="tablinks" onclick="openTab(event, 'Moderation')">Moderation</button>
 		<button class="tablinks" onclick="openTab(event, 'Other')">Other</button>
 	</div>
@@ -330,9 +331,9 @@ function openTab(evt, tabName) {
 		<br><span class="cmd_name">/changepass password</span><br><span class="cmd_desc">Changes password to new password if logged in.</span><br>
 	</div>
 
-	<div class="tabcontent" id="MapsTeleports">
-		<h1 class="tab-fallback-heading">Map / Teleports</h1>
-		<div class="cmd_group">Teleport</div>
+	<div class="tabcontent" id="Teleports">
+		<h1 class="tab-fallback-heading">Teleports</h1>
+		<div class="cmd_group">Teleports</div>
 		<br><span class="cmd_name">/coords</span><br><span class="cmd_desc">Display your coordinates.</span><br>
 		<br><span class="cmd_name">/tpa user , /mjoin user</span><br><span class="cmd_desc">Request to teleport to user.</span><br>
 		<br><span class="cmd_name">/tpahere user , /msummon user</span><br><span class="cmd_desc">Request a user teleport to you.</span><br>
@@ -346,9 +347,12 @@ function openTab(evt, tabName) {
 		<br><span class="cmd_name">/defaultmap</span><br><span class="cmd_desc">Teleports you to the default map.</span><br>
 		<br><span class="cmd_name">/map mapID (x y)</span><br><span class="cmd_desc">Teleport to a specific map. X and Y are optional and will teleport you to a specific tile coordinate on said map.</span><br>
 		<br><span class="cmd_name">/goback</span><br><span class="cmd_desc">Go back to the ma pyou were previously on.</span><br>
-		<br><span class="cmd_name">/sethome , /home</span><br><span class="cmd_desc">Allows you to set your current location as your "home", which you can teleport to with <kbd>/home</kbd>.</span><br>
+		<br><span class="cmd_name">/sethome , /home</span><br><span class="cmd_desc">Allows you to set your current location as your "home", which you can teleport to with <kbd>/home</kbd>.</span>
+	</div>
 
-		<br><hr><div class="cmd_group">Map management</div>
+	<div class="tabcontent" id="Maps">
+		<h1 class="tab-fallback-heading">Map Creation</h1>
+		<div class="cmd_group">Map management</div>
 		<br><span class="cmd_name">/mymaps</span><br><span class="cmd_desc">Lists all maps you are the owner of.</span><br>
 		<br><span class="cmd_name">/newmap</span><br><span class="cmd_desc">Generates a new map and map ID number (if registered).</span><br>
 		<br><span class="cmd_name">/mapid</span><br><span class="cmd_desc">Lists the map ID of the current map you are on.</span><br>
