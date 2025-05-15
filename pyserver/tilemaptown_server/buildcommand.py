@@ -2915,7 +2915,7 @@ def fn_fixuserfilesizes(map, client, context, arg):
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True)
 def fn_rehash(map, client, context, arg):
-	loadConfigJson()
+	loadConfigJson(clearLogs=(arg == "c"))
 	respond(context, 'Reloaded the config file')
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True)

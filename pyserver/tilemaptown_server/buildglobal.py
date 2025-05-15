@@ -49,7 +49,7 @@ def setConfigDefault(group, item, value):
 	if item not in Config[group]:
 		Config[group][item] = value
 
-def loadConfigJson():
+def loadConfigJson(clearLogs=True):
 	if os.path.isfile(ConfigFile):
 		with open(ConfigFile) as f:
 			try:
@@ -193,10 +193,11 @@ def loadConfigJson():
 				url = ServerResources["sample_avatars"][i]
 				if not url.startswith("http://") and not url.startswith("https://"):
 					ServerResources["sample_avatars"][i] = base + url
-	TempLogs[0] = deque(maxlen=Config["TempLogs"]["ConnectSize"])
-	TempLogs[1] = deque(maxlen=Config["TempLogs"]["BuildSize"])
-	TempLogs[2] = deque(maxlen=Config["TempLogs"]["UploadSize"])
-	TempLogs[3] = deque(maxlen=Config["TempLogs"]["RollbackSize"])
+	if clearLogs:
+		TempLogs[0] = deque(maxlen=Config["TempLogs"]["ConnectSize"])
+		TempLogs[1] = deque(maxlen=Config["TempLogs"]["BuildSize"])
+		TempLogs[2] = deque(maxlen=Config["TempLogs"]["UploadSize"])
+		TempLogs[3] = deque(maxlen=Config["TempLogs"]["RollbackSize"])
 loadConfigJson()
 GlobalData = {}
 
