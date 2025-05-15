@@ -1090,11 +1090,11 @@ function picIcon(pic) {
 	img.src = "img/transparent.png";
 	img.style.width = "16px";
 	img.style.height = "16px";
-	let src = "";
+	let src = "img/transparent.png";
 
 	if (IconSheets[pic[0]])
 		src = IconSheets[pic[0]].src;
-	else
+	else if (typeof(pic[0]) === 'string')
 		src = pic[0];
 
 	let background = "url(" + src + ") -" + (pic[1] * 16) + "px -" + (pic[2] * 16) + "px";
@@ -1114,7 +1114,7 @@ function itemIcon(key) {
 	img.src = "img/transparent.png";
 	img.style.width = "16px";
 	img.style.height = "16px";
-	let src = "";
+	let src = "img/transparent.png";
 
 	let item = (typeof key === 'object') ? key : (DBInventory[key] || PlayerWho[key]);
 	if (item === undefined) {
@@ -1145,7 +1145,7 @@ function itemIcon(key) {
 
 	if (IconSheets[pic[0]])
 		src = IconSheets[pic[0]].src;
-	else
+	else if(typeof(pic[0]) === 'string')
 		src = pic[0];
 
 	let background = "url(" + src + ") -" + (pic[1] * 16) + "px -" + (pic[2] * 16) + "px";
@@ -2732,7 +2732,8 @@ function drawHotbar() {
 			let item = AtomFromName(hotbarData[i]);
 			if(item) {
 				let pic = item.menu_pic ?? item.pic;
-				ctx.drawImage(IconSheets[pic[0]], pic[1]*16, pic[2]*16, 16, 16, i*oneWidth+12, 0, 16, 16);
+				if (IconSheets[pic[0]])
+					ctx.drawImage(IconSheets[pic[0]], pic[1]*16, pic[2]*16, 16, 16, i*oneWidth+12, 0, 16, 16);
 			}
 		}
 		if(i == hotbarSelectIndex) {

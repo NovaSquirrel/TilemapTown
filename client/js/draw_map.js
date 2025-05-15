@@ -367,6 +367,8 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 	}
 	if (!IconSheets[tile.pic[0]]) {
 		RequestImageIfNeeded(tile.pic[0]);
+		// Draw a "?" fallback so users can notice tiles with invalid pic[0] and delete/fix them
+		ctx.drawImage(IconSheets[0], 8 * 16, 24 * 16, 16, 16, drawAtX, drawAtY, 16, 16);
 		return;
 	}
 
