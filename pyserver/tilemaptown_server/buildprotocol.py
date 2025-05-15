@@ -1122,11 +1122,11 @@ def fn_IDN(connection, map, client, arg, context):
 			return
 	elif Config["Security"]["NoGuests"]:
 		connection.finish_batch()
-		connection.disconnect("Server currently doesn't allow guests to connect; check in later?", reason="BadLogin|Server currently doesn't allow guests")
+		connection.disconnect("Server currently doesn't allow guests to connect; check in later?", reason="BadLogin\nServer currently doesn't allow guests")
 		return
 	elif messaging_only_mode:
 		connection.finish_batch()
-		connection.disconnect("Messaging mode currently requires you to log into an account", reason="BadLogin|An account is required for messaging mode")
+		connection.disconnect("Messaging mode currently requires you to log into an account", reason="BadLogin\nAn account is required for messaging mode")
 		return
 	else:
 		# Become a guest

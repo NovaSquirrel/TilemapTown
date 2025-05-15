@@ -2510,7 +2510,7 @@ def fn_shutdown(map, client, context, arg):
 	elif arg.isdecimal():
 		ServerShutdown[0] = int(arg)
 		ServerShutdown[1] = False
-		broadcast_to_all("Server shutdown in %d seconds! (started by %s)" % (ServerShutdown[0], client.name))
+		broadcast_to_all("Server shutdown in %d seconds! (started by %s)" % (ServerShutdown[0], client.username))
 
 @cmd_command(category="Server Admin", privilege_level="server_admin", syntax="cancel/seconds", alias=['serverrestart'], no_entity_needed=True)
 def fn_restartserver(map, client, context, arg):
@@ -2521,7 +2521,7 @@ def fn_restartserver(map, client, context, arg):
 	elif arg.isdecimal():
 		ServerShutdown[0] = int(arg)
 		ServerShutdown[1] = True
-		broadcast_to_all("Server restarting in %d seconds! (started by %s)" % (ServerShutdown[0], client.name))
+		broadcast_to_all("Server restarting in %d seconds! (started by %s)" % (ServerShutdown[0], client.username))
 
 # Experimental
 @cmd_command(category="Server Admin", privilege_level="server_admin", syntax="text", no_entity_needed=True)

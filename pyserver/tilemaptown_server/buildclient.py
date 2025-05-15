@@ -501,7 +501,7 @@ class Connection(object):
 		if result != None:
 			if result[0] & userflag['no_login']:
 				write_to_connect_log("Denied access to disabled account \"%s\" from %s" % (username, self.ip))
-				self.login_fail_reason = "BadLogin|Account is currently disabled"
+				self.login_fail_reason = "BadLogin\nAccount is currently disabled"
 				self.send("ERR", {'text': 'Login fail, account is currently disabled'})
 				return False
 

@@ -737,5 +737,5 @@ The server will always set the disconnect close code to 1000; if it's not 1000 t
 A client may choose to automatically reconnect in response to a "Restart" reason or code other than 1000 that warrants it (such as 1006), but should *not* automatically reconnect in response to the other reasons.
 There will probably be other reasons in the future for things like a private server, or the client's version being too old, or not supporting a required extension.
 
-A disconnect reason can have additional text in it that's meant to give additional context to the user about why the disconnect happened. If it's present, there will be a | separating the two parts of the disconnect message, for example:
-"Restart|Restarting to update nginx"
+A disconnect reason can have additional text in it that's meant to give additional context to the user about why the disconnect happened. If it's present, there will be a newline separating the two parts of the disconnect message, for example:
+"Restart\nRestarting to update nginx"
