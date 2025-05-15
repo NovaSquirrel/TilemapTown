@@ -286,3 +286,34 @@ function importMap(map) {
 	}
 	return true;
 }
+
+// Helper command for JavaScript console use
+function tileSheetUses(sheet) {
+	for (let mapId in MapsByID) {
+		let map = MapsByID[mapId];
+		let width = map.Width;
+		let height = map.Height;
+		let uses = [];
+		for (let y=0; y<height; y++) {
+			for (let x=0; x<width; x++) {
+				let found = false;
+				let turf = AtomFromName(map.Tiles[x][y]);
+				if (turf.pic?.[0] === sheet) {
+					found = true;
+				} else if (Array.isArray(map.Objs[x][y])) {
+					for (let objName of map.Objs[x][y]) {
+						let obj = AtomFromName(objName);
+						if (obj.pic?.[0] === sheet) {
+							found = true;
+							break;
+						}
+					}
+				}
+				if (found)
+					uses.push(`${x},${y}`);
+			}
+		}
+		if (uses.length > 0)
+			console.log(`Uses for sheet ${sheet} on map ${mapId}:`, uses)
+	}
+}
