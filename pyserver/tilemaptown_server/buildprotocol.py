@@ -406,12 +406,12 @@ def fn_BAG(connection, map, client, arg, context):
 		if create['type'] not in creatable_entity_types:
 			connection.protocol_error(context, text='Invalid type of item to create (%s)' % create['type'])
 			return
-		c = Entity
+		create_class = Entity
 		if create['type'] == 'gadget':
-			c = Gadget
+			create_class = Gadget
 		elif create['type'] == 'generic':
-			c = GenericEntity
-		e = c(entity_type[create['type']], creator_id=client.db_id)
+			create_class = GenericEntity
+		e = create_class(entity_type[create['type']], creator_id=client.db_id)
 		e.name = "New item" # Default that will probably be overridden
 		e.map_id = client.db_id
 		e.creator_temp_id = client.id
@@ -439,8 +439,12 @@ def fn_BAG(connection, map, client, arg, context):
 			return
 
 		clone_type = clone_me.entity_type
+		create_class = Entity
 		if clone_type == entity_type['user']:
 			clone_type = entity_type['generic']
+			create_class = GenericEntity
+		elif clone_type == entity_type['gadget']:
+			create_class = Gadget
 		else:
 			clone_type_name = entity_type_name[clone_type]
 			if clone_type_name not in creatable_entity_types:
@@ -453,7 +457,7 @@ def fn_BAG(connection, map, client, arg, context):
 			return
 
 		# Create a new entity and copy over the properties
-		new_item = Entity(clone_me.entity_type)
+		new_item = create_class(clone_me.entity_type)
 		clone_me.copy_onto(new_item)
 		new_item.owner_id = client.db_id
 		new_item.creator_temp_id = client.id
