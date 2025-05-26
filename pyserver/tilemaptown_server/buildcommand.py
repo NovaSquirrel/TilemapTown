@@ -330,6 +330,7 @@ def send_message_to_map(map, actor, text, context, acknowledge_only=False):
 	if map:
 		fields = {'name': actor.name, 'id': actor.protocol_id(), 'username': actor.username_or_id(), 'text': text}
 		if context.get('script_entity'):
+			script_entity = context.get('script_entity')
 			fields['rc_username'] = find_username_by_db_id(script_entity.owner_id)
 			fields['rc_id'] = script_entity.owner_id
 		elif context['client'] != None and actor is not context['client']:
