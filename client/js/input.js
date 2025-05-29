@@ -164,6 +164,10 @@ function runLocalCommand(t) {
 	} else if(tl === "/cancelcommands") {
 		MessagesToRetry = [];
 		return true;
+	} else if(tl === "/whatturf") {
+		let tile = MyMap.Tiles[PlayerWho[PlayerYou].x][PlayerWho[PlayerYou].y];
+		logMessage(convertBBCodeChat(`You're standing on [tt]${JSON.stringify(tile)}[/tt]`), 'server_message',   {'isChat': false});
+		return true;
 	}
 	return false;
 }

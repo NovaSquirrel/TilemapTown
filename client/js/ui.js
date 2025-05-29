@@ -2726,30 +2726,33 @@ function drawHotbar() {
 	// Draw ten inventory items
 	let oneWidth = canvas.width / 10;
 	for (let i = 0; i < 10; i++) {
-		drawText(ctx, i * oneWidth, 0, ((i + 1) % 10) + "");
-    
-		if(i < hotbarData.length) {
-			let item = AtomFromName(hotbarData[i]);
-			if(item) {
-				let pic = item.menu_pic ?? item.pic;
-				if (IconSheets[pic[0]])
-					ctx.drawImage(IconSheets[pic[0]], pic[1]*16, pic[2]*16, 16, 16, i*oneWidth+12, 0, 16, 16);
+		try {
+			drawText(ctx, i * oneWidth, 0, ((i + 1) % 10) + "");
+		
+			if(i < hotbarData.length) {
+				let item = AtomFromName(hotbarData[i]);
+				if(item) {
+					let pic = item.menu_pic ?? item.pic;
+					if (IconSheets[pic[0]])
+						ctx.drawImage(IconSheets[pic[0]], pic[1]*16, pic[2]*16, 16, 16, i*oneWidth+12, 0, 16, 16);
+				}
 			}
-		}
-		if(i == hotbarSelectIndex) {
-			ctx.beginPath();
-			ctx.globalAlpha = 0.75;
-			ctx.lineWidth = "2";
-			ctx.strokeStyle = "black";
-			ctx.rect(i*oneWidth+12-1, 0, 18, 16);
-			ctx.stroke();
+			if(i == hotbarSelectIndex) {
+				ctx.beginPath();
+				ctx.globalAlpha = 0.75;
+				ctx.lineWidth = "2";
+				ctx.strokeStyle = "black";
+				ctx.rect(i*oneWidth+12-1, 0, 18, 16);
+				ctx.stroke();
 
-			ctx.beginPath();
-			ctx.moveTo(i*oneWidth+12-2, 16);
-			ctx.lineTo(i*oneWidth+0,    16);
-			ctx.stroke();
+				ctx.beginPath();
+				ctx.moveTo(i*oneWidth+12-2, 16);
+				ctx.lineTo(i*oneWidth+0,    16);
+				ctx.stroke();
 
-			ctx.globalAlpha = 1;
+				ctx.globalAlpha = 1;
+			}
+		} catch (error) {
 		}
 	}
 }
