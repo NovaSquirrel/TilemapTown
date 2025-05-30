@@ -1042,7 +1042,7 @@ def fn_IDN(connection, map, client, arg, context):
 				text = '%s has connected!' % new_client.name_and_username()
 			for u in AllClients:
 				if u is not new_client:
-					u.send("MSG", {'text': text})
+					u.send("MSG", {'text': text, 'class': 'server_userconnect'})
 
 		# Bot and user counts
 		if "bot" in arg:

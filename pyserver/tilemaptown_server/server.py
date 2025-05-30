@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2024 NovaSquirrel
+# Copyright (C) 2017-2025 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -244,7 +244,7 @@ async def client_handler(websocket):
 					text = '%s has disconnected!' % connection.entity.name_and_username()
 					for u in AllClients:
 						if u is not connection.entity:
-							u.send("MSG", {'text': text})
+							u.send("MSG", {'text': text, 'class': 'server_userconnect'})
 
 				# Leave a note about what the user did while connected
 				disconnect_extra = ""

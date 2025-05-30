@@ -532,7 +532,7 @@ class Connection(object):
 						client.map.broadcast("MSG", {'text': client.name+" has logged in ("+username+")"})
 					client.map.broadcast("WHO", {'add': client.who()}, remote_category=maplisten_type['entry']) # update client view
 				else:
-					client.send("MSG", {'text': "Your last map wasn't saved correctly. Sending you to the default one..."})
+					client.send("MSG", {'text': "Couldn't send you to the map you were on last time; sending you to the default map instead"})
 					client.switch_map(get_database_meta('default_map'))
 
 				# send the client their inventory
