@@ -156,17 +156,17 @@ def fn_m_objs(e, arg): #ii
 		x = arg[0]
 		y = arg[1]
 		if x >= 0 and y >= 0 and x < e.map.width and y < e.map.height:
-			return [e.map.objs[x][y]]
+			return [e.map.objs[x][y] or []]
 	else:
 		return None
 
 @script_api()
 def fn_m_dense(e, arg): #iii
-	if e.map != None or e.map.is_map():
+	if e.map != None and e.map.is_map():
 		x = arg[0]
 		y = arg[1]
 		if x >= 0 and y >= 0 and x < e.map.width and y < e.map.height:
-			return [get_tile_density(self.gadget.map.turfs[x][y]) or any((get_tile_density(o) for o in (self.gadget.map.objs[x][y] or [])))]
+			return get_tile_density(e.map.turfs[x][y]) or any((get_tile_density(o) for o in (e.map.objs[x][y] or [])))
 		else:
 			return True
 	else:
