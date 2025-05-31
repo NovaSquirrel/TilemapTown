@@ -3040,8 +3040,9 @@ def fn_entity(map, client, context, arg):
 			e.switch_map(client, on_behalf_of=client)
 			save_entity = True
 	elif subcommand in ('drop', 'summon') and self_is_entity:
-		if permission_check( (permission['move'], permission['move_new_map']) ):
-			if e.map_id is client.map_id or permission_check(permission['move_new_map']):
+		kick_from_inventory = (e.map_id == client.db_id and client.db_id != None) or (e.map is client) or (e.map and e.map.owner_id == client.db_id and client.db_id != None)
+		if kick_from_inventory or permission_check( (permission['move'], permission['move_new_map']) ):
+			if kick_from_inventory or (e.map_id is client.map_id or permission_check(permission['move_new_map'])):
 				if not e.switch_map(client.map_id, new_pos=[client.x, client.y], on_behalf_of=client):
 					respond(context, "Entity \"%s\" doesn't have permission to go to this map" % provided_id, error=True)
 				save_entity = True
