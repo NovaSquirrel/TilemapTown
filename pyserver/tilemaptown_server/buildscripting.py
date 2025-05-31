@@ -355,7 +355,7 @@ def fn_e_turn(e, arg): #Ei
 	if e2 == None:
 		return
 	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['move']):
-		e2.move_to(e2.x, e2.y, new_dir=arg[0])
+		e2.move_to(e2.x, e2.y, new_dir=arg[1])
 		if Config["RateLimit"]["ScriptMove"] and apply_rate_limiting(e2, 'sm', ( (1, 900), (2, 1800) )):
 			return
 		e2.map.broadcast("MOV", {'id': e2.protocol_id(), 'dir': e2.dir}, remote_category=maplisten_type['move'])
