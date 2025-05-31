@@ -342,8 +342,8 @@ def fn_e_move(e, arg): #Eiii
 	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['move']):
 		from_x = e2.x
 		from_y = e2.y
-		new_x = arg[0]
-		new_y = arg[1]
+		new_x = arg[1]
+		new_y = arg[2]
 		e2.move_to(new_x, new_y, new_dir=arg[2] if len(arg) == 3 else None)
 		if Config["RateLimit"]["ScriptMove"] and apply_rate_limiting(e2, 'sm', ( (1, 900), (2, 1800) )):
 			return
