@@ -128,10 +128,10 @@ def validate_client_who(id, data):
 def must_be_map_owner(connection, actor, context, admin_okay, give_error=True):
 	if actor.map == None:
 		return False
-	if (actor.db_id != None and actor.map.owner_id == actor.db_id) or connection.oper_override or (admin_okay and client.has_permission(client.map, permission['admin'], False)):
+	if (actor.db_id != None and actor.map.owner_id == actor.db_id) or connection.oper_override or (admin_okay and actor.has_permission(actor.map, permission['admin'], False)):
 		return True
 	elif give_error:
-		connection.protocol_error(context, text='You don\'t have permission to do that', code='missing_permission', detail='admin' if admin_okay else None, subject_id=client.map)
+		connection.protocol_error(context, text='You don\'t have permission to do that', code='missing_permission', detail='admin' if admin_okay else None, subject_id=actor.map)
 	return False
 
 def default_build_permission_for_connection(connection):
