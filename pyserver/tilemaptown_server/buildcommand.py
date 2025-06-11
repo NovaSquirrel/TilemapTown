@@ -908,25 +908,21 @@ def fn_status(map, client, context, arg):
 
 @cmd_command(alias=['findrp'])
 def fn_findiic(map, client, context, arg):
-	names = ''
+	formatted = []
 	for u in AllClients:
-		if client.status_type == None or client.status_type.lower() not in ('iic', 'irp', 'lfrp'):
+		if u.status_type == None or u.status_type.lower() not in ('iic', 'irp', 'lfrp'):
 			continue
-		if len(names) > 0:
-			names += ', '
-		names += u.name_and_username()
-	respond(context, 'These users are looking for RP: '+names)
+		formatted.append(u.name_and_username())
+	respond(context, 'These users are looking for RP: '+(", ".join(sorted(formatted, key=str.casefold))))
 
 @cmd_command()
 def fn_findic(map, client, context, arg):
-	names = ''
+	formatted = []
 	for u in AllClients:
-		if client.status_type == None or client.status_type.lower() not in ('ic', 'rp'):
+		if u.status_type == None or u.status_type.lower() not in ('ic', 'rp'):
 			continue
-		if len(names) > 0:
-			names += ', '
-		names += u.name_and_username()
-	respond(context, 'These users are currently in character (or roleplaying): '+names)
+		formatted.append(u.name_and_username())
+	respond(context, 'These users are currently in character (or roleplaying): '+(", ".join(sorted(formatted, key=str.casefold))))
 
 @cmd_command(syntax="dice sides", no_entity_needed=True, alias=['proll'])
 def fn_privateroll(map, client, context, arg):
@@ -1040,7 +1036,7 @@ def fn_watch(map, client, context, arg):
 			if other_connection == None or not other_connection.can_be_watched():
 				continue
 			users.append(other_connection.username if isinstance(other_connection.entity, Entity) else (other_connection.username +"✉️"))
-		respond(context, 'Players currently online: %s' % ', '.join(users))
+		respond(context, 'Players currently online: %s' % ', '.join(sorted(users, key=str.casefold)))
 		return
 
 	# Add to watch list
@@ -1261,36 +1257,39 @@ def fn_permlist(map, client, context, arg):
 			perms += "-"+k+"(guest) "
 
 	# User permissions
-	perms += "[ul]"
+	formatted = []
 	for row in c.execute('SELECT username, allow, deny FROM Permission mp, User u WHERE mp.subject_id=? AND mp.actor_id=u.entity_id', (map.db_id,)):
-		perms += "[li][b]"+noparse(row[0]) + "[/b]: "
+		perms = "[li][b]"+noparse(row[0]) + "[/b]: "
 		for k,v in permission.items():
 			if (row[1] & v) == v: # allow
 				perms += "+"+k+" "
 			if (row[2] & v) == v: #deny
 				perms += "-"+k+" "
 		perms += "[/li]"
+		formatted.append(perms)
 
 	# Group (or anything that isn't a user) permissions
 	for row in c.execute('SELECT u.name, u.type, mp.allow, mp.deny, u.id FROM Permission mp, Entity u WHERE mp.subject_id=? AND mp.actor_id=u.id AND u.type != ?', (map.db_id, entity_type['user'])):
-		perms += "[li][b]%s: %s(%s) [/b]: " % (entity_type_name[row[1]].title(), row[4], noparse(row[0]))
+		perms = "[li][b]%s: %s(%s) [/b]: " % (entity_type_name[row[1]].title(), row[4], noparse(row[0]))
 		for k,v in permission.items():
 			if (row[2] & v) == v: # allow
 				perms += "+"+k+" "
 			if (row[3] & v) == v: # deny
 				perms += "-"+k+" "
 		perms += "[/li]"
+		formatted.append(perms)
 
 	# Temporary
 	for v in map.temp_permissions_given_to:
-		perms += "[li][b]Temp: %s(%s)[/b]" % (noparse(v.name), v.protocol_id())
+		perms = "[li][b]Temp: %s(%s)[/b]" % (noparse(v.name), v.protocol_id())
 		perm_bits = v.temp_permissions.get(map)
 		for k,v in permission.items():
 			if (perm_bits & v) == v: # allow
 				perms += "+"+k+" "
 		perms += "[/li]"
+		formatted.append(perms)
 
-	perms += "[/ul]"
+	perms = "[ul]"+("".join(sorted(formatted, key=str.casefold)))+"[/ul]"
 	respond(context, perms)
 
 @cmd_command(privilege_level="registered", no_entity_needed=True)
@@ -1299,11 +1298,10 @@ def fn_findmyitems(map, client, context, arg):
 	if connection == None:
 		return
 	c = Database.cursor()
-	maps = "My items: [ul]"
+	formatted = []
 	for row in c.execute('SELECT m.id, m.name, m.type FROM Entity m WHERE m.owner_id=? AND m.type != ? AND m.type != ? AND m.location == NULL', (connection.db_id, entity_type['map'], entity_type['group'])):
-		maps += "[li][b]%s[/b] (%s) [command]e %d take[/command][/li]" % (row[1], noparse(entity_type_name[row[2]]), row[0])
-	maps += "[/ul]"
-	respond(context, maps)
+		formatted.append("[li][b]%s[/b] (%s) [command]e %d take[/command][/li]" % (row[1], noparse(entity_type_name[row[2]]), row[0]))
+	respond(context, "My items: [ul]" + (", ".join(sorted(formatted, key=str.casefold))) + "[/ul]")
 
 @cmd_command()
 def fn_deletemytempitems(map, client, context, arg):
@@ -1344,28 +1342,28 @@ def fn_mymaps(map, client, context, arg):
 	if connection == None:
 		return
 	c = Database.cursor()
-	maps = "My maps: [ul]"
+	formatted = []
 	for row in c.execute('SELECT m.id, m.name FROM Entity m WHERE m.owner_id=? AND m.type == ?', (connection.db_id, entity_type['map'])):
-		maps += "[li][b]%s[/b] [command]map %d[/command][/li]" % (row[1], row[0])
-	maps += "[/ul]"
+		formatted.append("[li][b]%s[/b] [command]map %d[/command][/li]" % (row[1], row[0]))
+	maps = "My maps: [ul]"+("".join(sorted(formatted, key=str.casefold )))+"[/ul]"
 	respond(context, maps)
 
 @cmd_command(category="Map", hidden=True, privilege_level="server_admin", no_entity_needed=True)
 def fn_allmaps(map, client, context, arg):
 	c = Database.cursor()
-	maps = "All maps: [ul]"
-	for row in c.execute('SELECT e.id, e.name, u.username FROM Entity e, Map m, User u WHERE e.owner_id=u.entity_id AND e.id=m.entity_id'):
-		maps += "[li][b]%s[/b] (%s) [command]map %d[/command][/li]" % (row[1], row[2], row[0])
-	maps += "[/ul]"
+	formatted = []
+	for row in c.execute('SELECT e.id, e.name, u.username FROM Entity e, Map m, User u WHERE e.owner_id=u.entity_id AND e.id=m.entity_id AND (m.flags&1)!=0'):
+		formatted.append("[li][b]%s[/b] (%s) [command]map %d[/command][/li]" % (row[1], row[2], row[0]))
+	maps = "All maps: [ul]"+("".join(sorted(formatted, key=str.casefold )))+"[/ul]"
 	respond(context, maps)
 
 @cmd_command(category="Map", no_entity_needed=True)
 def fn_publicmaps(map, client, context, arg):
 	c = Database.cursor()
-	maps = "Public maps: [ul]"
+	formatted = []
 	for row in c.execute('SELECT e.id, e.name, u.username FROM Entity e, Map m, User u WHERE e.owner_id=u.entity_id AND e.id=m.entity_id AND (m.flags&1)!=0'):
-		maps += "[li][b]%s[/b] (%s) [command]map %d[/command][/li]" % (row[1], row[2], row[0])
-	maps += "[/ul]"
+		formatted.append("[li][b]%s[/b] (%s) [command]map %d[/command][/li]" % (row[1], row[2], row[0]))
+	maps = "Public maps: [ul]"+("".join(sorted(formatted, key=str.casefold )))+"[/ul]"
 	respond(context, maps)
 
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="newname")
@@ -1702,22 +1700,22 @@ def fn_listeners(map, client, context, arg):
 	if map == None:
 		return
 
-	out = ''
+	out = []
 	for i in maplisten_type.keys():
 		c = maplisten_type[i]
 		if map.db_id in BotWatch[c]:
 			for u in BotWatch[c][map.db_id]:
-				out += '%s (%s), ' % (u.username, i)
-	out_forward = ''
+				out.append('%s (%s)' % (u.username, i))
+	out_forward = []
 	for e in map.contents:
 		if e.forward_messages_to:
-			out_forward += '%s (%s) → [%s], ' % (e.name_and_username(), ', '.join(list(e.forward_message_types)), ', '.join([p.name_and_username() for p in e.forward_messages_to]))
+			out_forward.append('%s (%s) → [%s]' % (e.name_and_username(), ', '.join(list(e.forward_message_types)), ', '.join([p.name_and_username() for p in e.forward_messages_to])))
 
 	parts = []
 	if out:
-		parts.append('Remote listeners here: ' + out)
+		parts.append('Remote listeners here: ' + (", ".join(sorted(out, key=str.casefold))))
 	if out_forward:
-		parts.append('Forwarders here: ' + out_forward)
+		parts.append('Forwarders here: ' + (", ".join(sorted(out_forward, key=str.casefold))))
 	if not parts:
 		parts = ['Nothing is listening to this map']
 	respond(context, ' | '.join(parts))
@@ -2158,7 +2156,7 @@ def show_saved_pic_list(context, client):
 		respond(context, "You don't have any saved pics")
 	else:
 		buttons = []
-		for pic in sorted(client.saved_pics.keys()):
+		for pic in sorted(client.saved_pics.keys(), key=str.casefold):
 			buttons.append(pic)
 			buttons.append('sp ' + pic)
 		respond(context, "Saved pics:", buttons=buttons)
@@ -2202,7 +2200,7 @@ def fn_savedpiclist(map, client, context, arg):
 		if client.saved_pics == {}:
 			respond(context, "You don't have any saved pics")
 		else:
-			respond(context, "Saved pics: %s" % ', '.join(sorted(client.saved_pics.keys())))
+			respond(context, "Saved pics: %s" % ', '.join(sorted(client.saved_pics.keys(), key=str.casefold)))
 	elif subcommand in ('del', 'delete', 'remove') and subarg:
 		subarg = subarg.lower()
 		was = client.saved_pics.pop(subarg, None)
@@ -2228,7 +2226,7 @@ def show_morph_list(context, client, quiet=False):
 		respond(context, "You don't have any morphs")
 	else:
 		buttons = []
-		for morph in sorted(client.morphs.keys()):
+		for morph in sorted(client.morphs.keys(), key=str.casefold):
 			buttons.append(morph)
 			buttons.append(('q' if quiet else '') + 'morph ' + morph)
 		respond(context, "Morphs:", buttons=buttons)
@@ -2294,7 +2292,7 @@ def fn_morphlist(map, client, context, arg):
 		if client.morphs == {}:
 			respond(context, "You don't have any morphs")
 		else:
-			respond(context, "Morphs: %s" % ', '.join(sorted(client.morphs.keys())))
+			respond(context, "Morphs: %s" % ', '.join(sorted(client.morphs.keys(), key=str.casefold)))
 	elif subcommand in ('del', 'delete', 'remove') and subarg:
 		subarg = subarg.lower()
 		was = client.morphs.pop(subarg, None)
@@ -2351,23 +2349,19 @@ def fn_z(map, client, context, arg):
 
 @cmd_command(category="Who", no_entity_needed=True)
 def fn_gwho(map, client, context, arg):
-	names = ''
+	formatted = []
 	for u in AllClients:
-		if len(names) > 0:
-			names += ', '
-		names += u.name_and_username()
-	respond(context, 'List of users connected: '+names)
+		formatted.append(u.name_and_username())
+	respond(context, 'List of users connected: '+(", ".join(sorted(formatted, key=str.casefold))))
 
 @cmd_command(category="Who", no_entity_needed=True)
 def fn_imwho(map, client, context, arg):
-	names = ''
+	formatted = []
 	for c in AllConnections:
 		if isinstance(c.entity, Entity) and c.identified:
 			continue
-		if len(names) > 0:
-			names += ', '
-		names += c.username
-	respond(context, 'List of messaging users: '+names)
+		formatted.append(c.username)
+	respond(context, 'List of messaging users: '+(", ".join(sorted(formatted, key=str.casefold))))
 
 @cmd_command(category="Who", no_entity_needed=True)
 def fn_clientwho(map, client, context, arg):
@@ -2382,24 +2376,21 @@ def fn_clientwho(map, client, context, arg):
 	for k,v in all_client_names.items():
 		out += "[li][b]%s[/b]: " % noparse(k or "?")
 
-		users = ''
+		users = []
 		for u in v:
-			if len(users) > 0:
-				users += ', '
-			users += u.name_and_username()
-		out += users+"[/li]"
+			users.append(u.name_and_username())
+		out += (", ".join(sorted(users, key=str.casefold)))+"[/li]"
 	respond(context, 'List of clients in use: [ul]'+out+'[/ul]')
 
 @cmd_command(category="Who")
 def fn_who(map, client, context, arg):
 	names = ''
+	formatted = []
 	for u in map.contents:
 		if not u.is_client():
 			continue
-		if len(names) > 0:
-			names += ', '
-		names += u.name_and_username()
-	respond(context, 'List of users here: '+names)
+		formatted.append(u.name_and_username())
+	respond(context, 'List of users here: '+(", ".join(sorted(formatted, key=str.casefold))))
 
 @cmd_command(category="Who", syntax="name")
 def fn_look(map, client, context, arg):
@@ -2438,36 +2429,38 @@ def fn_last(map, client, context, arg):
 def fn_whereare(map, client, context, arg):
 	override = hasattr(client, 'connection') and client.connection_attr('oper_override')
 
-	names = 'Whereare: [ul]'
+	formatted = []
 	for m in AllMaps:
+		names = ''
 		if not override and (m.map_flags & mapflag['public'] == 0):
 			continue
 		user_count = m.count_users_inside()
 		if user_count == 0:
 			continue
+
 		names += '[li][b]%s[/b] (%d): ' % (noparse(m.name), user_count)
+		users = []
 		for u in m.contents:
 			if u.is_client() and (override or (u.connection_attr('user_flags') & userflag['hide_location'] == 0)):
 				if arg == 'c' or arg == 'C':
-					names += '%s<%d,%d>, ' % (u.name_and_username(), u.x, u.y)
+					users.append('%s<%d,%d>, ' % (u.name_and_username(), u.x, u.y))
 				else:
-					names += u.name_and_username()+', '
-		names = names.rstrip(', ') + ' | [command]map %d[/command]' % m.db_id
+					users.append(u.name_and_username())
+		names += ", ".join(sorted(users, key=str.casefold)) + ' | [command]map %d[/command]' % m.db_id
 		if m.topic:
 			names += ' (📅[i]"%s" by %s[/i])' % (m.topic, m.topic_username)
 		names += '[/li]'
-	names += '[/ul]'
+		formatted.append(names)
 
+	names = 'Whereare: [ul]'+("".join(sorted(formatted, key=str.casefold)))+'[/ul]'
 	respond(context, names)
 
 @cmd_command(alias=['ewho'], category="Who")
 def fn_entitywho(map, client, context, arg):
-	names = ''
+	formatted = []
 	for u in map.contents:
-		if len(names) > 0:
-			names += ', '
-		names += u.name_and_username()
-	respond(context, 'List of entities here: '+names)
+		formatted.append(u.name_and_username())
+	respond(context, 'List of entities here: '+(", ".join(sorted(formatted, key=str.casefold))))
 
 @cmd_command(category="Map")
 def fn_savemap(map, client, context, arg):
@@ -2653,22 +2646,22 @@ def fn_kickgroup(map, client, context, arg):
 @cmd_command(category="Group", privilege_level="registered", no_entity_needed=True)
 def fn_ownedgroups(map, client, context, arg):
 	c = Database.cursor()
-	groups = "Groups you are own: [ul]"
+	formatted = []
 	for row in c.execute('SELECT g.id, g.name FROM Entity g WHERE g.owner_id=? AND type=?', (client.db_id, entity_type['group'])):
 		groups += "[li][b]%s[/b] (%d)[/li]" % (noparse(row[1]), row[0])
-	groups += "[/ul]"
+	groups = "Groups you are own: [ul]" + ("".join(sorted(formatted, key=str.casefold))) + "[/ul]"
 	respond(context, groups)
 
 @cmd_command(category="Group", privilege_level="registered", no_entity_needed=True)
 def fn_mygroups(map, client, context, arg):
 	c = Database.cursor()
-	groups = "Groups you are in: [ul]"
+	formatted = []
 	for row in c.execute('SELECT g.id, g.name, m.accepted_at FROM Entity g, Group_Member m WHERE g.id=m.group_id AND m.member_id=?', (client.db_id,)):
 		if row[2]:
-			groups += "[li][b]%s[/b] (%d)[/li]" % (noparse(row[1]), row[0])
+			formatted.append("[li][b]%s[/b] (%d)[/li]" % (noparse(row[1]), row[0]))
 		else:
-			groups += "[li][b]%s[/b] (%d)[/li] - Invited" % (noparse(row[1]), row[0])
-	groups += "[/ul]"
+			formatted.append("[li][b]%s[/b] (%d)[/li] - Invited" % (noparse(row[1]), row[0]))
+	groups = "Groups you are in: [ul]"+("".join(sorted(formatted, key=str.casefold)))+"[/ul]"
 	respond(context, groups)
 
 @cmd_command(category="Group")
@@ -2682,13 +2675,13 @@ def fn_groupmembers(map, client, context, arg, no_entity_needed=True):
 		respond(context, "Group ID %s not found" % arg, error=True)
 		return
 	c = Database.cursor()
-	groups = "Group %d (%s) members: [ul]" % (group_id, group_name)
+	formatted = []
 	for row in c.execute('SELECT g.id, g.name, m.accepted_at FROM Entity g, Group_Member m WHERE m.group_id=? AND m.member_id=g.id', (group_id,)):
 		if row[2] == None:
-			groups += "[li][b]%s[/b] (%d) - Invited[/li]" % (row[1], row[0])
+			formatted.append("[li][b]%s[/b] (%d) - Invited[/li]" % (row[1], row[0]))
 		else:
-			groups += "[li][b]%s[/b] (%d)[/li]" % (row[1], row[0])
-	groups += "[/ul]"
+			formatted.append("[li][b]%s[/b] (%d)[/li]" % (row[1], row[0]))
+	groups = "Group %d (%s) members: [ul]%s[/ul]" % (group_id, group_name, "".join(sorted(formatted, key=str.casefold)))
 	respond(context, groups)
 
 @cmd_command(privilege_level="registered", hidden=True)
@@ -3001,7 +2994,7 @@ def fn_entity(map, client, context, arg):
 			creator_username = find_username_by_db_id(e.creator_id)
 			info += '\n[b]Creator:[/b] %s' % creator_username
 		if len(e.contents) and ((e.is_map() and (e.map_flags & mapflag['public'])) or client.has_permission(e, permission['list_contents'], False)):
-			info += '\n[b]Contents:[/b] %s' % ', '.join(c.name_and_username() for c in e.contents)
+			info += '\n[b]Contents:[/b] %s' % ', '.join(sorted((c.name_and_username() for c in e.contents), key=str.casefold))
 		respond(context, info)
 	elif subcommand == 'locate':
 		if e.is_client() and not client.connection_attr('oper_override') and \
