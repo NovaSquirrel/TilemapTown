@@ -1352,7 +1352,7 @@ def fn_mymaps(map, client, context, arg):
 def fn_allmaps(map, client, context, arg):
 	c = Database.cursor()
 	formatted = []
-	for row in c.execute('SELECT e.id, e.name, u.username FROM Entity e, Map m, User u WHERE e.owner_id=u.entity_id AND e.id=m.entity_id AND (m.flags&1)!=0'):
+	for row in c.execute('SELECT e.id, e.name, u.username FROM Entity e, Map m, User u WHERE e.owner_id=u.entity_id AND e.id=m.entity_id'):
 		formatted.append("[li][b]%s[/b] (%s) [command]map %d[/command][/li]" % (row[1], row[2], row[0]))
 	maps = "All maps: [ul]"+("".join(sorted(formatted, key=str.casefold )))+"[/ul]"
 	respond(context, maps)
