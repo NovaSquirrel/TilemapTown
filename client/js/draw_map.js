@@ -386,6 +386,8 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 			markTilesAsDirty(map, mapCoordX, mapCoordY, 1, 1, BACKDROP_DIRTY_ANIMATED);
 	}
 	switch(autotileLayout) {
+		default:// Unrecognized autotiling setup, so do not apply animation
+			break;
 		case 0: // No autotiling, so leave picX and picY as-is
 			picX += animationFrame;
 			break;
