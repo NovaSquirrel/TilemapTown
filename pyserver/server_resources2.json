@@ -144,7 +144,7 @@
 			},
 			"colorwindow1": {
 				"name": "colored window",
-				"pic": [-2, 13, 14],
+				"pic": [-2, 19, 4],
 				"autotile_layout": 3,
 				"density": true,
 				"obj": true
