@@ -230,29 +230,25 @@
 				"name": "barn wall",
 				"pic": [-2, 31, 16],
 				"autotile_layout": 3,
-				"density": true,
-				"obj": true
+				"density": true
 			},
 			"barnwall2": {
 				"name": "barn wall",
 				"pic": [-2, 31, 20],
 				"autotile_layout": 3,
-				"density": true,
-				"obj": true
+				"density": true
 			},
 			"barnwall3": {
 				"name": "barn wall",
 				"pic": [-2, 31, 24],
 				"autotile_layout": 3,
-				"density": true,
-				"obj": true
+				"density": true
 			},
 			"barnwall4": {
 				"name": "barn wall",
 				"pic": [-2, 31, 28],
 				"autotile_layout": 3,
-				"density": true,
-				"obj": true
+				"density": true
 			},
 			"glass1": {
 				"name": "glass",
