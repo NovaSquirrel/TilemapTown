@@ -179,6 +179,46 @@ Tiles are defined with a JSON object, which can have the following fields:
 		D = Tile to use if there is a connection on the top, but not the top
 		P = Pic; tile to use if there is not a connection on the top or the bottom
 
+	12 = 8-way connections and 8x8 tiles, defaulting to middle
+
+		Builds the tile out of four 8x8 units, like 4 and 5
+
+		P
+		S
+		C
+		E
+
+		M = Pic; tile to use if there are connections in all 8 directions
+		S = Tile to use if there are no connections in cardinal directions
+		C = Tile to use when there are connections on all four cardinal directions, but not northeast, northwest, southeast, or southwest
+		E = Edges, broken up in the following way:
+			RD | R=Connection on everything except right | D=Connection on everything except down
+			UL | U=Connection on everything except up    | L=Connection on everything except left
+
+	13 = 8-way connections and 8x8 tiles, defaulting to single
+
+		Like 12 but the Pic value points to S instead of M
+
+	14 = 8-way connections and 8x8 tiles, defaulting to middle, with vertical and horizontal
+
+		Builds the tile out of four 8x8 units, like 4 and 5, but there's a separate tile for a vertical connection and a horizontal connection
+
+		P
+		S
+		C
+		V
+		H
+
+		M = Pic; tile to use if there are connections in all 8 directions
+		S = Tile to use if there are no connections in cardinal directions
+		C = Tile to use when there are connections on all four cardinal directions, but not northeast, northwest, southeast, or southwest
+		V = Tile to use when there are connections on the top and bottom, but not left and right
+		H = Tile to use when there are connections on the left and right, but not top and bottom
+
+	15 = 8-way connections and 8x8 tiles, defaulting to single, with vertical and horizontal
+
+		Like 14, but the Pic value points to S instead of M
+
 "autotile_class"
 	When provided, the client will use this field for determining whether tiles should look connected to each other.
 

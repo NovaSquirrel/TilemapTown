@@ -452,10 +452,10 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 			}
 			// Draw the four tiles
 			let sheet = IconSheets[tile.pic[0]];
-				ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[0][0] * 8, picY * 16 + quarters[0][1] * 8, 8, 8, drawAtX,     drawAtY,   8, 8);
-				ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[1][0] * 8, picY * 16 + quarters[1][1] * 8, 8, 8, drawAtX + 8, drawAtY,   8, 8);
-				ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[2][0] * 8, picY * 16 + quarters[2][1] * 8, 8, 8, drawAtX,     drawAtY+8, 8, 8);
-				ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[3][0] * 8, picY * 16 + quarters[3][1] * 8, 8, 8, drawAtX + 8, drawAtY+8, 8, 8);
+			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[0][0] * 8, picY * 16 + quarters[0][1] * 8, 8, 8, drawAtX,     drawAtY,   8, 8);
+			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[1][0] * 8, picY * 16 + quarters[1][1] * 8, 8, 8, drawAtX + 8, drawAtY,   8, 8);
+			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[2][0] * 8, picY * 16 + quarters[2][1] * 8, 8, 8, drawAtX,     drawAtY+8, 8, 8);
+			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[3][0] * 8, picY * 16 + quarters[3][1] * 8, 8, 8, drawAtX + 8, drawAtY+8, 8, 8);
 			return; // Don't do the regular draw at the end
 		}
 		case 6: // Horizontal-only autotiling
@@ -499,6 +499,87 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 			if(autotileLayout == 11) picY+=2;
 			picX += animationFrame;
 			break;
+		}
+		case 12: // Quarter 8-way - Middle (8)
+		case 13: // Quarter 8-way - Single (8)
+		{
+			let autotileIndex = autotileIndexFunction(tile, map, mapCoordX, mapCoordY);
+			// Start out with 4-direction autotiling
+			let quarters = [[[0, 2],[1, 2],[0, 3],[1, 3]], [[0, 7],[1, 2],[1, 6],[1, 3]],
+			                [[0, 2],[0, 7],[0, 3],[1, 6]], [[0, 7],[0, 7],[1, 6],[1, 6]],
+			                [[1, 7],[0, 6],[0, 3],[1, 3]], [[0, 0],[0, 6],[1, 6],[1, 3]],
+			                [[1, 7],[1, 0],[0, 3],[1, 6]], [[0, 0],[1, 0],[1, 6],[1, 6]],
+			                [[0, 2],[1, 2],[1, 7],[0, 6]], [[0, 7],[1, 2],[0, 1],[0, 6]],
+			                [[0, 2],[0, 7],[1, 7],[1, 1]], [[0, 7],[0, 7],[0, 1],[1, 1]],
+			                [[1, 7],[0, 6],[1, 7],[0, 6]], [[0, 0],[0, 6],[0, 1],[0, 6]],
+			                [[1, 7],[1, 0],[1, 7],[1, 1]], [[0, 0],[1, 0],[0, 1],[1, 1]],
+			][autotileIndex];
+			// Add the inner parts of turns
+			if (((autotileIndex & 5) == 5) && !autotileMatchFunction(tile, map, mapCoordX-1, mapCoordY-1)) {
+				quarters[0][0] = 0;
+				quarters[0][1] = 4;
+			}
+			if (((autotileIndex & 6) == 6) && !autotileMatchFunction(tile, map, mapCoordX+1, mapCoordY-1)) {
+				quarters[1][0] = 1;
+				quarters[1][1] = 4;
+			}
+			if (((autotileIndex & 9) == 9) && !autotileMatchFunction(tile, map, mapCoordX-1, mapCoordY+1)) {
+				quarters[2][0] = 0;
+				quarters[2][1] = 5;
+			}
+			if (((autotileIndex & 10) == 10) && !autotileMatchFunction(tile, map, mapCoordX+1, mapCoordY+1)) {
+				quarters[3][0] = 1;
+				quarters[3][1] = 5;
+			}
+			if(autotileLayout == 13) picY--;
+			picX += animationFrame;
+			let sheet = IconSheets[tile.pic[0]];
+			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[0][0] * 8, picY * 16 + quarters[0][1] * 8, 8, 8, drawAtX,     drawAtY,   8, 8);
+			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[1][0] * 8, picY * 16 + quarters[1][1] * 8, 8, 8, drawAtX + 8, drawAtY,   8, 8);
+			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[2][0] * 8, picY * 16 + quarters[2][1] * 8, 8, 8, drawAtX,     drawAtY+8, 8, 8);
+			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[3][0] * 8, picY * 16 + quarters[3][1] * 8, 8, 8, drawAtX + 8, drawAtY+8, 8, 8);
+			return; // Don't do the regular draw at the end
+
+		}
+		case 14: // Quarter 8-way - Middle (16)
+		case 15: // Quarter 8-way - Single (16)
+		{
+			let autotileIndex = autotileIndexFunction(tile, map, mapCoordX, mapCoordY);
+			// Start out with 4-direction autotiling
+			let quarters = [[[0, 2],[1, 2],[0, 3],[1, 3]], [[0, 8],[1, 2],[0, 9],[1, 3]],
+			                [[0, 2],[1, 8],[0, 3],[1, 9]], [[0, 8],[1, 8],[0, 9],[1, 9]],
+			                [[0, 6],[1, 6],[0, 3],[1, 3]], [[0, 0],[1, 6],[0, 9],[1, 3]],
+			                [[0, 6],[1, 0],[0, 3],[1, 9]], [[0, 0],[1, 0],[0, 9],[1, 9]],
+			                [[0, 2],[1, 2],[0, 7],[1, 7]], [[0, 8],[1, 2],[0, 1],[1, 7]],
+			                [[0, 2],[1, 8],[0, 7],[1, 1]], [[0, 8],[1, 8],[0, 1],[1, 1]],
+			                [[0, 6],[1, 6],[0, 7],[1, 7]], [[0, 0],[1, 6],[0, 1],[1, 7]],
+			                [[0, 6],[1, 0],[0, 7],[1, 1]], [[0, 0],[1, 0],[0, 1],[1, 1]],
+			][autotileIndex];
+			// Add the inner parts of turns
+			if (((autotileIndex & 5) == 5) && !autotileMatchFunction(tile, map, mapCoordX-1, mapCoordY-1)) {
+				quarters[0][0] = 0;
+				quarters[0][1] = 4;
+			}
+			if (((autotileIndex & 6) == 6) && !autotileMatchFunction(tile, map, mapCoordX+1, mapCoordY-1)) {
+				quarters[1][0] = 1;
+				quarters[1][1] = 4;
+			}
+			if (((autotileIndex & 9) == 9) && !autotileMatchFunction(tile, map, mapCoordX-1, mapCoordY+1)) {
+				quarters[2][0] = 0;
+				quarters[2][1] = 5;
+			}
+			if (((autotileIndex & 10) == 10) && !autotileMatchFunction(tile, map, mapCoordX+1, mapCoordY+1)) {
+				quarters[3][0] = 1;
+				quarters[3][1] = 5;
+			}
+			if(autotileLayout == 15) picY--;
+			picX += animationFrame;
+			let sheet = IconSheets[tile.pic[0]];
+			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[0][0] * 8, picY * 16 + quarters[0][1] * 8, 8, 8, drawAtX,     drawAtY,   8, 8);
+			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[1][0] * 8, picY * 16 + quarters[1][1] * 8, 8, 8, drawAtX + 8, drawAtY,   8, 8);
+			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[2][0] * 8, picY * 16 + quarters[2][1] * 8, 8, 8, drawAtX,     drawAtY+8, 8, 8);
+			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[3][0] * 8, picY * 16 + quarters[3][1] * 8, 8, 8, drawAtX + 8, drawAtY+8, 8, 8);
+			return; // Don't do the regular draw at the end
 		}
 	}
 	ctx.drawImage(IconSheets[tile.pic[0]], picX * 16, picY * 16, 16, 16, drawAtX, drawAtY, 16, 16);
