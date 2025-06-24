@@ -186,14 +186,14 @@
 			},
 			"colorwindow7": {
 				"name": "colored window",
-				"pic": [-2, 27, 4],
+				"pic": [-2, 27, 8],
 				"autotile_layout": 3,
 				"density": true,
 				"obj": true
 			},
 			"colorwindow8": {
 				"name": "colored window",
-				"pic": [-2, 31, 4],
+				"pic": [-2, 31, 8],
 				"autotile_layout": 3,
 				"density": true,
 				"obj": true
@@ -3121,6 +3121,20 @@
 			"railing2": {
 				"name": "railing",
 				"pic": [-2, 5, 111],
+				"autotile_layout": 2,
+				"obj": true,
+				"density": true
+			},
+			"ropefence": {
+				"name": "rope fence",
+				"pic": [-2, 9, 111],
+				"autotile_layout": 2,
+				"obj": true,
+				"density": true
+			},
+			"ropefence2": {
+				"name": "rope fence",
+				"pic": [-2, 13, 111],
 				"autotile_layout": 2,
 				"obj": true,
 				"density": true
