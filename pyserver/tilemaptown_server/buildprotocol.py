@@ -357,13 +357,16 @@ def fn_MOV(connection, map, client, arg, context):
 		else:
 			offset_x, offset_y = min(32, max(-32, offset[0])), min(32, max(-32, offset[1]))
 			client.offset = [offset_x, offset_y]
+		if client.vehicle != None and client in client.vehicle.passengers:
+			client.vehicle.offset = client.offset
+			map.broadcast("MOV", {"id": client.vehicle.protocl_id(), "offset": client.offset}, remote_category=maplisten_type['move'])
 
 	# Update this entity's position
 	new_dir = data['dir'] if 'dir' in data else None
 	if 'to' in data:
 		client.move_to(data['to'][0], data['to'][1], new_dir=new_dir)
 	else:
-		client.move_to(None, None, new_dir=new_dir)		
+		client.move_to(None, None, new_dir=new_dir)
 
 @protocol_command()
 def fn_CMD(connection, map, client, arg, context):

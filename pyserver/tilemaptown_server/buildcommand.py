@@ -2313,6 +2313,10 @@ def fn_morphlist(map, client, context, arg):
 		respond(context, 'Unrecognized subcommand "%s"' % subcommand, code='invalid_subcommand', detail=subcommand, error=True)
 
 
+def synchronize_offset(map, client):
+	if client.vehicle != None and client in client.vehicle.passengers:
+		client.vehicle.offset = client.offset
+		map.broadcast("MOV", {"id": client.vehicle.protocol_id(), "offset": client.offset}, remote_category=maplisten_type['move'])
 
 @cmd_command(category="Settings", syntax='"x y"')
 def fn_offset(map, client, context, arg):
@@ -2324,6 +2328,7 @@ def fn_offset(map, client, context, arg):
 	else:
 		client.offset = None
 		map.broadcast("MOV", {"id": client.protocol_id(), "offset": None}, remote_category=maplisten_type['move'])
+	synchronize_offset(map, client)
 
 @cmd_command(category="Settings", syntax='"x y"')
 def fn_roffset(map, client, context, arg):
@@ -2338,6 +2343,7 @@ def fn_roffset(map, client, context, arg):
 	else:
 		client.offset = None
 		map.broadcast("MOV", {"id": client.protocol_id(), "offset": None}, remote_category=maplisten_type['move'])
+	synchronize_offset(map, client)
 
 @cmd_command(category="Settings", syntax='index')
 def fn_z(map, client, context, arg):
