@@ -503,6 +503,46 @@ class GadgetRCCar(GadgetTrait):
 			return True
 		return None
 
+
+class GadgetPushable(GadgetTrait):
+	def on_shutdown(self):
+		if not self.gadget:
+			return
+		self.gadget.map_watch_zones = []
+
+	def on_init(self):
+		self.set_zone()
+	def on_switch_map(self):
+		self.set_zone()
+
+	def set_zone(self):
+		if not self.gadget:
+			return
+		if self.gadget.map == None or not hasattr(self.gadget.map, "width"):
+			self.gadget.map_watch_zones = []
+		else:
+			self.gadget.map_watch_zones = [(0, 0, self.gadget.map.width, self.gadget.map.height)]
+
+	def on_zone(self, user, fx, fy, tx, ty, dir, zone_index, callback):
+		if not self.gadget:
+			return None
+		if callback != GlobalData['ScriptingCallbackType'].MAP_ZONE_MOVE:
+			return None
+		if tx == self.gadget.x and ty == self.gadget.y:
+			new_x = tx + (tx - fx)
+			new_y = ty + (ty - fy)
+
+			if self.gadget.map and (new_x < 0 or new_y < 0 or new_x >= self.gadget.map.width or new_y >= self.gadget.map.height):
+				new_x = fx
+				new_y = fy
+			elif self.gadget.map and not self.get_config('fly', False) and self.gadget.map.is_map() and self.gadget.map.map_data_loaded:
+				if get_tile_density(self.gadget.map.turfs[new_x][new_y]) or any((get_tile_density(o) for o in (self.gadget.map.objs[new_x][new_y] or []))):
+					new_x = fx
+					new_y = fy
+			self.gadget.move_to(new_x, new_y)
+			self.gadget.map.broadcast("MOV", {'id': self.gadget.protocol_id(), 'from': [tx, ty], 'to': [new_x, new_y]}, remote_category=maplisten_type['move'])
+		return True
+
 class GadgetScript(GadgetTrait):
 	def __init__(self, gadget, config):
 		super().__init__(gadget, config)
@@ -817,6 +857,7 @@ gadget_trait_class['bot_message_button'] = GadgetUseBotMessageButton
 gadget_trait_class['random_tell'] = GadgetUseRandomTell
 gadget_trait_class['random_say'] = GadgetUseRandomSay
 gadget_trait_class['rc_car'] = GadgetRCCar
+gadget_trait_class['pushable'] = GadgetPushable
 gadget_trait_class['auto_script'] = GadgetAutoScript
 gadget_trait_class['use_script'] = GadgetManualScript
 gadget_trait_class['map_script'] = GadgetMapScript
