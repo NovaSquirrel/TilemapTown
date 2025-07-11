@@ -123,6 +123,7 @@ var GlobalTilesArrayNames = [];
 let chatTimestamps = true;
 let lockZoomLevel = false;
 let focusChatBarOnTabBack = false;
+let warnInvalidBBCode = true;
 
 let FileStorageInfo = null;
 let sampleAvatarList = {};
@@ -181,6 +182,7 @@ function loadOptions() {
 		document.getElementById("chat-timestamp").checked = saved_options.chat_timestamps ?? true;
 		document.getElementById("minutes-until-idle").value = saved_options.minutes_until_idle ?? 60;
 		document.getElementById("minutes-until-disconnect").value = saved_options.minutes_until_disconnect ?? 720;
+		document.getElementById("warn-invalid-bbcode").value = saved_options.warn_invalid_bbcode ?? true;
 	}
 }
 
@@ -198,6 +200,7 @@ function applyOptions() {
 	tileAnimationEnabled = document.getElementById("option-tile-animation").checked;
 	chatTimestamps = document.getElementById("chat-timestamp").checked;
 	lockZoomLevel = document.getElementById("lock-zoom-level").checked;
+	warnInvalidBBCode = document.getElementById("warn-invalid-bbcode").checked;
 
 	let mapMusicPreviouslyEnabled = mapMusicEnabled;
 	mapMusicEnabled = document.getElementById("audiomapmusic").checked;
@@ -220,6 +223,7 @@ function applyOptions() {
 		"lock-zoom-level": lockZoomLevel,
 		"minutes_until_idle": minutesUntilIdle,
 		"minutes_until_disconnect": minutesUntilDisconnect,
+		"warn_invalid_bbcode": warnInvalidBBCode,
 	};
 	localStorage.setItem("options", JSON.stringify(saved_options));
 	backdropRerenderAll = true;

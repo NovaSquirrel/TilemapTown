@@ -393,6 +393,20 @@ function keyDownHandler(e) {
 			// First, check for commands that are local to the client
 			const startsWithNewline = chatInput.value.startsWith("\n");
 			let trimmedChatText = chatInput.value.trimStart();
+			if (warnInvalidBBCode) {
+				let tryBBCode = XBBCODE.process({
+					text: trimmedChatText,
+					removeMisalignedTags: false,
+					addInLineBreaks: true
+				});
+				if (tryBBCode.error) {
+					if (!confirm("BBCode is invalid; post anyway?\n* "+tryBBCode.errorQueue.join("\n *"))) {
+						e.preventDefault();
+						return;
+					}
+				}
+			}
+
 			if (runLocalCommand(trimmedChatText));
 				// commands are CMD while regular room messages are MSG. /me is a room message.
 			else if (trimmedChatText.slice(0, 1) == "/" &&
