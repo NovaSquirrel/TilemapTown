@@ -17,7 +17,7 @@ For a basic graphical client, a good minimal set of message types to support are
 	IMG (request URL for an image ID that was seen on a map)
 	WHO (list of entities, and entity property management)
 	MOV (entity movement)
-Building, mail, inventory management, and all extensions are optional.
+Building, mail, inventory management, and all extensions are optional (but "batch" support is highly recommended!)
 PNG is the only officially supported image format, so clients only need to be able to handle PNG.
 If you are making a web client, you are responsible for escaping text when inserting it into something like innerHTML.
 
@@ -488,15 +488,6 @@ This means the maximum tileset size is 64x64 tiles, for 4096 tile types.
 Tiles are specified top to bottom, going through each line from left to right. If tiles match "transparent_tile" it's not drawn.
 
 
-=== Extension: see_past_map_edge ====
-If a client signals that it supports see_past_map_edge, then it will receive a MAI and MAP message for all of the maps linked from the one they have just joined.
-After this point, they'll receive MAP messages broadcast to those maps.
-Messages for linked maps are marked with a remote_map field, just like the /listen command adds.
-
-A client is expected to keep copies of the linked maps in memory, and the server takes this into account to reduce bandwidth usage.
-When a client moves to a new map, the server will send a MAI for the new map, but will not send MAIs or MAPs for the new map or any linked maps if they match the client's old map or any maps adjacent to it.
-
-
 === EXT messages ===
 There's a protocol message type "EXT" which is used for sending protocol messages with a type that's longer than three characters. (EXTended type names?)
 This is especially helpful for Tilemap Town forks or other extensions (EXTensions?) that want to define their own protocol message types and want to avoid any potential conflicts with later versions of the official protocol. For this kind of usage, it could be a good idea to prefix the message type name with something specific to the thing you're making. Something like "tilemap_town:key_press".
@@ -657,6 +648,15 @@ MOV {params}
 
 Where BAT signals that it's a batch message, and newline characters (\n) separate the characters that make up each sub-message. Carriage returns (\r) are not used.
 Batch messages cannot be nested, so none of the sub-messages can be BAT.
+
+
+=== Extension: see_past_map_edge ====
+If a client signals that it supports see_past_map_edge, then it will receive a MAI and MAP message for all of the maps linked from the one they have just joined.
+After this point, they'll receive MAP messages broadcast to those maps.
+Messages for linked maps are marked with a remote_map field, just like the /listen command adds.
+
+A client is expected to keep copies of the linked maps in memory, and the server takes this into account to reduce bandwidth usage.
+When a client moves to a new map, the server will send a MAI for the new map, but will not send MAIs or MAPs for the new map or any linked maps if they match the client's old map or any maps adjacent to it.
 
 
 === Extension: receive_build_messages ===
