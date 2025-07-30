@@ -2294,6 +2294,7 @@ function mailSelectDelete() {
 
 		for (let id of deleteList)
 			SendCmd("EML", { "delete": id });
+		alreadySeenMail = "";
 	}
 }
 
@@ -2339,6 +2340,7 @@ function updateMailUL() {
 			}
 
 			SendCmd("EML", { read: letter.id });
+			alreadySeenMail = "";
 			if(!Mail[i].flags.includes('read'))
 				Mail[i].flags.push('read'); // mark as read locally
 			updateMailUL(); // show it as read locally
