@@ -770,14 +770,17 @@ function receiveServerMessage(cmd, arg) {
           Mail.push(arg['sent']);
       } else if(arg['list']) {
           Mail = arg['list'];
-          let unread = 0;
+          let unread = 0, self_mail = 0;
           for(let i=0; i<Mail.length; i++) {
             if(Mail[i].flags.length == 0) {
               unread++;
+            } else if(Mail[i].flags.includes("sent")) {
+              self_mail++;
             }
           }
-
-          let mailText = "You've got mail! ("+Mail.length+" messages, "+unread+" unread)";
+          if(unread == 0)
+            break;
+          let mailText = "You've got mail! ("+unread+" unread message"+((unread == 1)?"":"s")+")";
           if (alreadySeenMail === mailText)
             break;
           else
