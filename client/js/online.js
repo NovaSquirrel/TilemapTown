@@ -751,6 +751,7 @@ function receiveServerMessage(cmd, arg) {
           if(!('timestamp' in arg['receive']))
             arg['receive'].timestamp = new Date(Date.now()).toISOString();
           Mail.push(arg['receive']);
+          alreadySeenMail = "";
       } else if(arg['sent']) {
           if (messaging_mode) {
             if (document.getElementById('mailDivCompose').style.display === "block") {
