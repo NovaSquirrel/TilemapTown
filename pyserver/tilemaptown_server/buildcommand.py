@@ -2314,7 +2314,7 @@ def fn_morphlist(map, client, context, arg):
 
 
 def synchronize_offset(map, client):
-	if client.vehicle != None and client in client.vehicle.passengers:
+	if client.vehicle != None and client in client.vehicle.passengers and client.vehicle.vehicle is client:
 		client.vehicle.offset = client.offset
 		map.broadcast("MOV", {"id": client.vehicle.protocol_id(), "offset": client.offset}, remote_category=maplisten_type['move'])
 

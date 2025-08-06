@@ -357,7 +357,7 @@ def fn_MOV(connection, map, client, arg, context):
 		else:
 			offset_x, offset_y = min(32, max(-32, offset[0])), min(32, max(-32, offset[1]))
 			client.offset = [offset_x, offset_y]
-		if client.vehicle != None and client in client.vehicle.passengers:
+		if client.vehicle != None and client in client.vehicle.passengers and client.vehicle.vehicle is client:
 			client.vehicle.offset = client.offset
 			map.broadcast("MOV", {"id": client.vehicle.protocl_id(), "offset": client.offset}, remote_category=maplisten_type['move'])
 
