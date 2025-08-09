@@ -758,7 +758,11 @@ function drawMap() {
 
 						// Draw the turf
 						let turfAtom = AtomFromName(map.Tiles[mapCoordX][mapCoordY]);
-						drawTurf(backdropCtx, drawOnBackdropPixelX, drawOnBackdropPixelY, turfAtom, map, mapCoordX, mapCoordY);
+						if (turfAtom.over) {
+							backdropOverMap[zoneIndex].push([withinZoneX, withinZoneY, turfAtom, map, mapCoordX, mapCoordY]);
+						} else {
+							drawTurf(backdropCtx, drawOnBackdropPixelX, drawOnBackdropPixelY, turfAtom, map, mapCoordX, mapCoordY);
+						}
 
 						// Draw wallpaper if available
 						if(map.WallpaperData) {
