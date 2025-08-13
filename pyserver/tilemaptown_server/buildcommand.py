@@ -14,11 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import json, random, datetime, time, ipaddress, hashlib, weakref
+import json, random, datetime, time, ipaddress, hashlib, weakref, asyncio
 from .buildglobal import *
 from .buildentity import Entity, GenericEntity
 from .buildmap import Map
-from .buildapi import admin_delete_uploaded_file, fix_uploaded_file_sizes
+from .buildapi import admin_delete_uploaded_file, fix_uploaded_file_sizes, reupload_entity_images
 from collections import deque
 
 handlers = {}	# dictionary of functions to call for each command
@@ -2903,6 +2903,12 @@ def fn_deleteuserfile(map, client, context, arg):
 		respond(context, "Can't delete user file %d" % arg)
 	elif result == None:
 		respond(context, "Didn't find user file %d" % arg)
+
+@cmd_command(privilege_level="server_admin", no_entity_needed=True)
+def fn_reuploaduserfile(map, client, context, arg):
+	if arg == "":
+		return
+	asyncio.ensure_future(reupload_entity_images(client, arg))
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True, alias=['fixuserfilesize'])
 def fn_fixuserfilesizes(map, client, context, arg):

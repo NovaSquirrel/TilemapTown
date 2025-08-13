@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import time, os, random, json
-from aiohttp import web
+from aiohttp import web, ClientSession
 from .buildglobal import *
 from .buildentity import Entity
 
@@ -276,7 +276,8 @@ def update_image_url_everywhere(connection, old_url, new_url):
 			img_entity.data = new_url
 			if not img_entity.temporary:
 				img_entity.save()
-			connection.send("BAG", {'update': {'id': img_id, 'data': new_url}})
+			if connection != None:
+				connection.send("BAG", {'update': {'id': img_id, 'data': new_url}})
 
 		for c in AllConnections:
 			if img_id in c.images_and_tilesets_received_so_far:
@@ -574,6 +575,118 @@ def admin_delete_uploaded_file(file_id):
 	# Should probably remove from user upload usage if they're online
 	global_file_upload_size -= result[4]
 	return True
+
+async def download_and_reupload(download_url, new_file_name, user_id):
+	async with ClientSession() as session:
+		async with session.get(download_url, headers={'User-Agent': 'curl/7.84.0', 'Accept': '*/*'}) as resp:
+			if resp.status != 200:
+				print("Bad status %s" % resp.status)
+				return None
+			file_data = await resp.read()
+			file_size = len(file_data)
+
+			if file_size > 1024*1024: # Be careful about files that are too big
+				return None
+
+			random_filename = generate_filename(user_id, extension=".png")
+			if random_filename == None:
+				return None
+
+			# Save to the storage
+			try:
+				os.makedirs(path_for_user_file(user_id, ''), exist_ok=True)
+				with open(path_for_user_file(user_id, random_filename), 'wb') as f:
+					f.write(file_data)
+				global global_file_upload_size
+				global_file_upload_size += file_size
+			except:
+				return None
+
+			# Add a database entry
+			c = Database.cursor()
+			c.execute("INSERT INTO User_File_Upload (user_id, created_at, updated_at, name, desc, location, size, filename) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (user_id, datetime.datetime.now(), datetime.datetime.now(), new_file_name, "Copied from "+download_url, None, file_size, random_filename))
+
+			file_id = c.lastrowid
+			url = url_for_user_file(user_id, random_filename)
+			write_to_file_log(None, "Admin file reupload %d, (size=%d KiB, [url=%s]file[/url], name=%s)" % (file_id, file_size, url, new_file_name))
+			update_image_url_everywhere(None, download_url, url)
+			return (url, file_id)
+
+def is_hosted_locally(url):
+	return url.startswith(Config["FileUpload"]["URLPrefix"])
+
+async def reupload_entity_images(client, args):
+	args = args.split()
+	if len(args) >= 3 and args[0] == "!": # Upload that's not associated with an entity
+		user_id = find_db_id_by_str(args[1])
+		if user_id == None:
+			client.send("ERR", {'text': "Couldn't find user %s" % args[1]})
+			return
+		download_url = args[2]
+		new_url = await download_and_reupload(download_url, "Image" if len(args) < 4 else args[3], user_id)
+		if new_url == None:
+			client.send("ERR", {'text': "Couldn't copy file [url]%s[/url]" % download_url})
+		else:
+			client.send("MSG", {'text': "[url]%s[/url] reuploaded as [url]%s[/url] (%d)" % (download_url, new_url[0], new_url[1])})
+	elif len(args) == 1 and string_is_int(args[0]):
+		entity_id = int(args[0])
+		loaded_entity = get_entity_by_id(entity_id, load_from_db=False)
+		c = Database.cursor()
+
+		entity_owner_id = None
+
+		if loaded_entity != None:
+			this_entity_type  = loaded_entity.entity_type
+			entity_pic        = loaded_entity.pic
+			entity_owner_id   = loaded_entity.owner_id or loaded_entity.creator_id
+			entity_data       = loaded_entity.data
+			entity_compressed = None
+			entity_name       = loaded_entity.name
+		else:
+			c.execute('SELECT type, pic, owner_id, creator_id, data, compressed_data, name FROM Entity WHERE id=?', (entity_id,))
+			result = c.fetchone()
+			if result == None:
+				return "Couldn't find entity"
+			this_entity_type, entity_pic, entity_owner_id, entity_creator_id, entity_data, entity_compressed, entity_name = result
+			entity_data = loads_if_not_none(entity_data)
+			entity_pic = loads_if_not_none(entity_pic)
+			entity_owner_id = entity_owner_id or entity_creator_id
+
+		if entity_owner_id == None:
+			client.send("ERR", {'text': "Couldn't find entity, or entity has no owner"})
+			return
+
+		report = ""
+		if this_entity_type == entity_type['image'] and entity_compressed == None and isinstance(entity_data, str) and not is_hosted_locally(entity_data):
+			new_image_url = await download_and_reupload(entity_data, entity_name, entity_owner_id)
+			if new_image_url == None:
+				report = "Couldn't copy image ([url]%s[/url])" % entity_data
+			else:
+				report = "Reuploaded image; was [url]%s[/url], now [url]%s[/url] (%d)" % (entity_data, new_image_url[0], new_image_url[1])
+		if entity_pic != None and isinstance(entity_pic[0], str) and not is_hosted_locally(entity_pic[0]):
+			original_pic = entity_pic[0]
+			if report != "":
+				report += "\n"
+			new_image_url = await download_and_reupload(original_pic, entity_name + " pic", entity_owner_id)
+			if new_image_url == None:
+				report += "Couldn't copy entity pic ([url]%s[/url])" % entity_data
+			else:
+				report += "Reuploaded entity pic; was [url]%s[/url], now [url]%s[/url] (%d)" % (original_pic, new_image_url[0], new_image_url[1])
+
+			if loaded_entity != None:
+				loaded_entity.pic[0] = new_image_url[0]
+				loaded_entity.save_on_clean_up = True
+				loaded_entity.broadcast_who()
+			else:
+				entity_pic[0] = new_image_url[0]
+				c.execute('UPDATE Entity SET pic=? WHERE id=?', (json.dumps(entity_pic), entity_id))
+
+		if report == "":
+			client.send("ERR", {'text': 'Nothing to reupload for %d' % entity_id})
+		else:
+			client.send("MSG", {'text': 'Reupload for %d: %s' % (entity_id, report)})
+	else:
+		client.send("ERR", {'text': 'Bad arguments for /rehostuserfile'})
 
 @routes.delete('/v1/my_files/file/{id}')
 async def delete_file(request):
