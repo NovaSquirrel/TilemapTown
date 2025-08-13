@@ -215,7 +215,7 @@ function openTab(evt, tabName) {
 
 		<h3>Uploading the file to an image host</h3>
 		<p>
-		Alternatively, you can upload your avatar to another site. This does not require user registration, so guests can do it. Currently the server will accept uploads from <a href="https://imgur.com/">Imgur</a>, <a href="https://imgbb.com/">ImgBB</a>, <a href="https://postimages.org/">Postimages</a> and <a href="https://filegarden.com/">File Garden</a>, and more sites can be added on request, as long as they are set up properly. Limiting it to approved sites protects user privacy, because otherwise someone could use a file on their own website and then record what IP addresses access that file.
+		Alternatively, you can upload your avatar to another site. This does not require user registration, so guests can do it. Currently the server will accept uploads from <a href="https://filegarden.com/" target="_blank">File Garden</a>, <a href="https://imgbb.com/">ImgBB</a>, and <a href="https://postimages.org/">Postimages</a>, and more sites can be added on request, as long as they are set up properly. Limiting it to approved sites protects user privacy, because otherwise someone could use a file on their own website and then record what IP addresses access that file.
 		</p>
 
 		<p>
@@ -269,7 +269,7 @@ function openTab(evt, tabName) {
 
 		<p>Tiles with custom tile graphics work in a somewhat indirect way. A tile on the map actually points to a <em>tile sheet item</em> rather than directly pointing at a file. This item holds a link to an image file, whether uploaded to the server or an image host. That means that this item needs to continue to exist <em>somewhere</em> in order for the map tiles that use it to keep their appearance. You can keep it in your inventory, or drop it somewhere on one of your maps if you want to keep your inventory clean.</p>
 
-		<p>It's designed this way because custom tile graphics were implemented about six years before file uploads were. Your only option originally was to upload a file to a site like Imgur, and these sites generally do not let you modify images after uploading them. That meant that if you wanted to change the image, you had to delete it and upload a new one, which would give you a new image URL. Tile sheet items allowed you to paste the new URL into a single place in Tilemap Town, and instantly update all of your tiles that were using the old URL.</p>
+		<p>It's designed this way because custom tile graphics were implemented about six years before file uploads were. Your only option originally was to upload a file to an image hosting site, and these sites generally do not let you modify images after uploading them. That meant that if you wanted to change the image, you had to delete it and upload a new one, which would give you a new image URL. Tile sheet items allowed you to paste the new URL into a single place in Tilemap Town, and instantly update all of your tiles that were using the old URL.</p>
 
 		<p>You can create a tile sheet item when uploading a file, or you can right click on a file you have uploaded to create an item for it later on.</p>
 	</div>

@@ -134,7 +134,7 @@ def loadConfigJson(clearLogs=True):
 
 	setConfigDefault("Database", "File",             "town.db")
 	setConfigDefault("Database", "Setup",            True)
-	setConfigDefault("Images",   "URLWhitelist",     ["https://i.imgur.com/", "https://i.postimg.cc/", "https://i.ibb.co/"])
+	setConfigDefault("Images",   "URLWhitelist",     ["https://file.garden/", "https://i.postimg.cc/", "https://i.ibb.co/"])
 	setConfigDefault("Logs",     "ConnectFile",      "")
 	setConfigDefault("Logs",     "BuildFile",        "")
 	setConfigDefault("Logs",     "UploadFile",       "")
