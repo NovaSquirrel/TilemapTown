@@ -299,6 +299,12 @@ def update_image_url_everywhere(connection, old_url, new_url):
 				if morph_pic and morph_pic[0] == old_url:
 					morph_pic[0] = new_url
 
+	# Try to get entities that aren't loaded too
+	old_url_json = json.dumps([old_url, 0, 0])
+	new_url_json = json.dumps([new_url, 0, 0])
+	c = Database.cursor()
+	c.execute('UPDATE Entity SET pic=? WHERE pic=?', (new_url_json, old_url_json))
+
 def fix_uploaded_file_sizes(user_id):
 	c = Database.cursor()
 
@@ -673,13 +679,7 @@ async def reupload_entity_images(client, args):
 			else:
 				report += "Reuploaded entity pic; was [url]%s[/url], now [url]%s[/url] (%d)" % (original_pic, new_image_url[0], new_image_url[1])
 
-			if loaded_entity != None:
-				loaded_entity.pic[0] = new_image_url[0]
-				loaded_entity.save_on_clean_up = True
-				loaded_entity.broadcast_who()
-			else:
-				entity_pic[0] = new_image_url[0]
-				c.execute('UPDATE Entity SET pic=? WHERE id=?', (json.dumps(entity_pic), entity_id))
+			# Don't need to update entities since download_and_reupload will call update_image_url_everywhere
 
 		if report == "":
 			client.send("ERR", {'text': 'Nothing to reupload for %d' % entity_id})
