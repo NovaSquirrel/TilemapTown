@@ -240,7 +240,7 @@ def set_entity_params_from_dict(e, d, connection, client, context):
 			e.home_id = d['home']
 			e.home_position = None
 		else:
-			connection.protocol_error(context, text='Don\'t have permission to set entity\'s home there', code='missing_permission', detail='persistent_object_entry', subject_id=e_id)
+			connection.protocol_error(context, text='Don\'t have permission to set entity\'s home there', code='missing_permission', detail='persistent_object_entry', subject_id=e)
 			del d['home']
 
 	if 'home_position' in d and len(d['home_position']) == 2:
@@ -253,7 +253,7 @@ def set_entity_params_from_dict(e, d, connection, client, context):
 		if pic_is_okay(d['pic']):
 			e.pic = d['pic']
 		else:
-			connection.protocol_error(context, text='Invalid picture: %s' % d['pic'], code='bad_value', detail='pic', subject_id=e_id)
+			connection.protocol_error(context, text='Invalid picture: %s' % d['pic'], code='bad_value', detail='pic', subject_id=e)
 			del d['pic']
 	if 'tags' in d:
 		e.tags = d['tags']

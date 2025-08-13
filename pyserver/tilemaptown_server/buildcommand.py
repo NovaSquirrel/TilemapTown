@@ -18,7 +18,7 @@ import json, random, datetime, time, ipaddress, hashlib, weakref, asyncio
 from .buildglobal import *
 from .buildentity import Entity, GenericEntity
 from .buildmap import Map
-from .buildapi import admin_delete_uploaded_file, fix_uploaded_file_sizes, reupload_entity_images
+from .buildapi import admin_delete_uploaded_file, fix_uploaded_file_sizes, reupload_entity_images, update_image_url_everywhere
 from collections import deque
 
 handlers = {}	# dictionary of functions to call for each command
@@ -2909,6 +2909,18 @@ def fn_reuploaduserfile(map, client, context, arg):
 	if arg == "":
 		return
 	asyncio.ensure_future(reupload_entity_images(client, arg))
+
+@cmd_command(privilege_level="server_admin", no_entity_needed=True)
+def fn_updateimageeverywhere(map, client, context, arg):
+	if arg == "":
+		return
+	arg = arg.split()
+	if len(arg) != 2:
+		respond(context, "Need to provide old and new URLs" % arg, error=True)
+		return
+	update_image_url_everywhere(None, arg[0], arg[1])
+	print(arg)
+	respond(context, "Switched entities using [url]%s[/url] to use [url]%s[/url]" % tuple(arg))
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True, alias=['fixuserfilesize'])
 def fn_fixuserfilesizes(map, client, context, arg):
