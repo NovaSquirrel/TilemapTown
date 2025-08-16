@@ -256,6 +256,10 @@ Tiles are defined with a JSON object, which can have the following fields:
 	9: 1   ("Vertical - middle 3")
 	10: 1  ("Vertical - middle 4")
 	11: 1  ("Vertical - single 4")
+	12: 1  ("Quarter 8-way - Middle (8)")
+	13: 1  ("Quarter 8-way - Single (8)")
+	14: 1  ("Quarter 8-way - Middle (16)")
+	15: 1  ("Quarter 8-way - Single (16)")
 
 "anim_offset"
 	Defaults to 0. Adds an offset to the timer used for animation (in 0.1 second units).

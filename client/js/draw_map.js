@@ -534,10 +534,10 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 			if(autotileLayout == 13) picY--;
 			picX += animationFrame;
 			let sheet = IconSheets[tile.pic[0]];
-			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[0][0] * 8, picY * 16 + quarters[0][1] * 8, 8, 8, drawAtX,     drawAtY,   8, 8);
-			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[1][0] * 8, picY * 16 + quarters[1][1] * 8, 8, 8, drawAtX + 8, drawAtY,   8, 8);
-			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[2][0] * 8, picY * 16 + quarters[2][1] * 8, 8, 8, drawAtX,     drawAtY+8, 8, 8);
-			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[3][0] * 8, picY * 16 + quarters[3][1] * 8, 8, 8, drawAtX + 8, drawAtY+8, 8, 8);
+			ctx.drawImage(sheet, (picX + animationFrame) * 16 + quarters[0][0] * 8, picY * 16 + quarters[0][1] * 8, 8, 8, drawAtX,     drawAtY,   8, 8);
+			ctx.drawImage(sheet, (picX + animationFrame) * 16 + quarters[1][0] * 8, picY * 16 + quarters[1][1] * 8, 8, 8, drawAtX + 8, drawAtY,   8, 8);
+			ctx.drawImage(sheet, (picX + animationFrame) * 16 + quarters[2][0] * 8, picY * 16 + quarters[2][1] * 8, 8, 8, drawAtX,     drawAtY+8, 8, 8);
+			ctx.drawImage(sheet, (picX + animationFrame) * 16 + quarters[3][0] * 8, picY * 16 + quarters[3][1] * 8, 8, 8, drawAtX + 8, drawAtY+8, 8, 8);
 			return; // Don't do the regular draw at the end
 
 		}
@@ -575,10 +575,10 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 			if(autotileLayout == 15) picY--;
 			picX += animationFrame;
 			let sheet = IconSheets[tile.pic[0]];
-			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[0][0] * 8, picY * 16 + quarters[0][1] * 8, 8, 8, drawAtX,     drawAtY,   8, 8);
-			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[1][0] * 8, picY * 16 + quarters[1][1] * 8, 8, 8, drawAtX + 8, drawAtY,   8, 8);
-			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[2][0] * 8, picY * 16 + quarters[2][1] * 8, 8, 8, drawAtX,     drawAtY+8, 8, 8);
-			ctx.drawImage(sheet, (picX + animationFrame*3) * 16 + quarters[3][0] * 8, picY * 16 + quarters[3][1] * 8, 8, 8, drawAtX + 8, drawAtY+8, 8, 8);
+			ctx.drawImage(sheet, (picX + animationFrame) * 16 + quarters[0][0] * 8, picY * 16 + quarters[0][1] * 8, 8, 8, drawAtX,     drawAtY,   8, 8);
+			ctx.drawImage(sheet, (picX + animationFrame) * 16 + quarters[1][0] * 8, picY * 16 + quarters[1][1] * 8, 8, 8, drawAtX + 8, drawAtY,   8, 8);
+			ctx.drawImage(sheet, (picX + animationFrame) * 16 + quarters[2][0] * 8, picY * 16 + quarters[2][1] * 8, 8, 8, drawAtX,     drawAtY+8, 8, 8);
+			ctx.drawImage(sheet, (picX + animationFrame) * 16 + quarters[3][0] * 8, picY * 16 + quarters[3][1] * 8, 8, 8, drawAtX + 8, drawAtY+8, 8, 8);
 			return; // Don't do the regular draw at the end
 		}
 	}
