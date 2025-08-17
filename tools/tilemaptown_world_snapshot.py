@@ -62,8 +62,12 @@ def get_image(image_id):
 		print('Download failed %d: %s' % (response.status_code, response.text))
 		url_for_img_id[image_id] = "bad"
 		return None
-	image = Image.open(io.BytesIO(response.content)).convert('RGBA')
-	image_for_img_id[image_id] = image
+	try:
+		image = Image.open(io.BytesIO(response.content)).convert('RGBA')
+		image_for_img_id[image_id] = image
+	except:
+		print("Couldn't load image %d (%s)" % (image_id, url))
+		url_for_img_id[image_id] = "bad"
 	return image
 
 # .--------------------------------------------------------
