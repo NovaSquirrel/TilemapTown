@@ -259,6 +259,55 @@ class Map(object):
 				pic_y -= 2
 			if autotile_layout == 11:
 				pic_y += 2
+		elif autotile_layout >= 12 and autotile_layout <= 15: # Quarter 8-way
+			index = index_function(properties, x, y)
+			if autotile_layout == 12 or autotile_layout == 13:
+				quarters = [[[0, 2],[1, 2],[0, 3],[1, 3]], [[0, 7],[1, 2],[1, 6],[1, 3]],
+							[[0, 2],[0, 7],[0, 3],[1, 6]], [[0, 7],[0, 7],[1, 6],[1, 6]],
+							[[1, 7],[0, 6],[0, 3],[1, 3]], [[0, 0],[0, 6],[1, 6],[1, 3]],
+							[[1, 7],[1, 0],[0, 3],[1, 6]], [[0, 0],[1, 0],[1, 6],[1, 6]],
+							[[0, 2],[1, 2],[1, 7],[0, 6]], [[0, 7],[1, 2],[0, 1],[0, 6]],
+							[[0, 2],[0, 7],[1, 7],[1, 1]], [[0, 7],[0, 7],[0, 1],[1, 1]],
+							[[1, 7],[0, 6],[1, 7],[0, 6]], [[0, 0],[0, 6],[0, 1],[0, 6]],
+							[[1, 7],[1, 0],[1, 7],[1, 1]], [[0, 0],[1, 0],[0, 1],[1, 1]],
+				][index];
+			else:
+				quarters = [[[0, 2],[1, 2],[0, 3],[1, 3]], [[0, 8],[1, 2],[0, 9],[1, 3]],
+							[[0, 2],[1, 8],[0, 3],[1, 9]], [[0, 8],[1, 8],[0, 9],[1, 9]],
+							[[0, 6],[1, 6],[0, 3],[1, 3]], [[0, 0],[1, 6],[0, 9],[1, 3]],
+							[[0, 6],[1, 0],[0, 3],[1, 9]], [[0, 0],[1, 0],[0, 9],[1, 9]],
+							[[0, 2],[1, 2],[0, 7],[1, 7]], [[0, 8],[1, 2],[0, 1],[1, 7]],
+							[[0, 2],[1, 8],[0, 7],[1, 1]], [[0, 8],[1, 8],[0, 1],[1, 1]],
+							[[0, 6],[1, 6],[0, 7],[1, 7]], [[0, 0],[1, 6],[0, 1],[1, 7]],
+							[[0, 6],[1, 0],[0, 7],[1, 1]], [[0, 0],[1, 0],[0, 1],[1, 1]],
+				][index];
+
+			# Add the inner parts of turns
+			if ((index & 5) == 5) and not match_function(properties, x-1, y-1):
+				quarters[0][0] = 0
+				quarters[0][1] = 4
+			if ((index & 6) == 6) and not match_function(properties, x+1, y-1):
+				quarters[1][0] = 1
+				quarters[1][1] = 4
+			if ((index & 9) == 9) and not match_function(properties, x-1, y+1):
+				quarters[2][0] = 0
+				quarters[2][1] = 5
+			if ((index & 10) == 10) and not match_function(properties, x+1, y+1):
+				quarters[3][0] = 1
+				quarters[3][1] = 5
+			if autotile_layout == 13 or autotile_layout == 15:
+				pic_y -= 1
+
+			# Draw the four tiles
+			src_x, src_y = pic_x*16 + quarters[0][0]*8, pic_y*16 + quarters[0][1]*8
+			self.image.alpha_composite(im=image.crop((src_x, src_y, src_x+8, src_y+8)), dest=(x*16,   y*16))
+			src_x, src_y = pic_x*16 + quarters[1][0]*8, pic_y*16 + quarters[1][1]*8
+			self.image.alpha_composite(im=image.crop((src_x, src_y, src_x+8, src_y+8)), dest=(x*16+8, y*16))
+			src_x, src_y = pic_x*16 + quarters[2][0]*8, pic_y*16 + quarters[2][1]*8
+			self.image.alpha_composite(im=image.crop((src_x, src_y, src_x+8, src_y+8)), dest=(x*16,   y*16+8))
+			src_x, src_y = pic_x*16 + quarters[3][0]*8, pic_y*16 + quarters[3][1]*8
+			self.image.alpha_composite(im=image.crop((src_x, src_y, src_x+8, src_y+8)), dest=(x*16+8, y*16+8))
+			return
 		self.image.alpha_composite(im=image.crop((pic_x*16, pic_y*16, pic_x*16+16, pic_y*16+16)), dest=(x*16, y*16))
 
 	def render(self):
