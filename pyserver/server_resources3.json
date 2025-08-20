@@ -310,8 +310,8 @@
 				"name": "sand",
 				"pic": [
 					-3,
-					0,
-					8
+					1,
+					10
 				]
 			},
 			"grass_sand": {
@@ -359,8 +359,8 @@
 				"name": "color stones",
 				"pic": [
 					-3,
-					0,
-					12
+					1,
+					14
 				]
 			},
 			"trees": {
