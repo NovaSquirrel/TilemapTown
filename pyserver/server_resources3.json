@@ -582,7 +582,7 @@
 					29,
 					54
 				],
-				"autotile_layout": 6
+				"autotile_layout": 7
 			},
 			"carpet2": {
 				"name": "carpet",
@@ -597,6 +597,15 @@
 					46
 				],
 				"autotile_layout": 4
+			},
+			"carpet_stairs2": {
+				"name": "carpet stairs",
+				"pic": [
+					-3,
+					29,
+					55
+				],
+				"autotile_layout": 7
 			},
 			"mat": {
 				"name": "mat",
@@ -848,7 +857,7 @@
 				"name": "cliff top",
 				"pic": [
 					-3,
-					13,
+					19,
 					18
 				]
 			},
@@ -999,7 +1008,7 @@
 					29,
 					56
 				],
-				"autotile_layout": 6
+				"autotile_layout": 7
 			},
 			"cliff_stairs2": {
 				"name": "cliff stairs",
@@ -1008,7 +1017,7 @@
 					29,
 					57
 				],
-				"autotile_layout": 6
+				"autotile_layout": 7
 			},
 			"cliff_stairs3": {
 				"name": "cliff stairs",
@@ -1017,7 +1026,7 @@
 					29,
 					58
 				],
-				"autotile_layout": 76
+				"autotile_layout": 7
 			},
 			"cliff_stairs4": {
 				"name": "cliff stairs",
@@ -1026,7 +1035,7 @@
 					29,
 					59
 				],
-				"autotile_layout": 6
+				"autotile_layout": 7
 			},
 			"stone_stairs": {
 				"name": "stone stairs",
@@ -1035,7 +1044,7 @@
 					29,
 					60
 				],
-				"autotile_layout": 6
+				"autotile_layout": 7
 			},
 			"house_wall1a": {
 				"name": "house wall",
@@ -1223,7 +1232,7 @@
 					51
 				],
 				"obj": true,
-				"autotile_layout": 6,
+				"autotile_layout": 7,
 				"density": true
 			},
 			"pier2": {
@@ -1234,6 +1243,7 @@
 					52
 				],
 				"obj": true,
+				"autotile_layout": 7,
 				"density": true
 			},
 			"pit": {
@@ -1543,7 +1553,7 @@
 					3,
 					30
 				],
-				"autotile_layout": 7,
+				"autotile_layout": 6,
 				"obj": true,
 				"density": true
 			},
@@ -1554,7 +1564,7 @@
 					5,
 					29
 				],
-				"autotile_layout": 10,
+				"autotile_layout": 9,
 				"obj": true,
 				"density": true
 			},
@@ -1866,7 +1876,7 @@
 					1,
 					49
 				],
-				"autotile_layout": 7,
+				"autotile_layout": 6,
 				"density": true
 			},
 			"counter2": {
@@ -1876,7 +1886,7 @@
 					7,
 					49
 				],
-				"autotile_layout": 7,
+				"autotile_layout": 6,
 				"density": true
 			},
 			"painting1": {
