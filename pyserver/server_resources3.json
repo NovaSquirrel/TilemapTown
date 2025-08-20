@@ -1447,9 +1447,9 @@
 			"fence": {
 				"name": "fence",
 				"pic": [
-					-1,
-					7,
-					24
+					-3,
+					10,
+					58
 				],
 				"obj": true,
 				"density": true,
@@ -1458,9 +1458,9 @@
 			"fence2": {
 				"name": "fence",
 				"pic": [
-					-1,
-					11,
-					24
+					-3,
+					14,
+					58
 				],
 				"obj": true,
 				"density": true,
