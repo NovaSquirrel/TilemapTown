@@ -3,7 +3,7 @@
 		"0": "tileset/potluck.png",
 		"-1": "tileset/extra.png",
 		"-2": "tileset/pulp.png",
-		"-3": "tileset/easyrpg.png"
+		"-3": "tileset/easyrpg_v2.png"
 	},
 	"image_names": {
 		"0": "Potluck",

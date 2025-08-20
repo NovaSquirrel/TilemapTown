@@ -2919,7 +2919,6 @@ def fn_updateimageeverywhere(map, client, context, arg):
 		respond(context, "Need to provide old and new URLs" % arg, error=True)
 		return
 	update_image_url_everywhere(None, arg[0], arg[1])
-	print(arg)
 	respond(context, "Switched entities using [url]%s[/url] to use [url]%s[/url]" % tuple(arg))
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True, alias=['fixuserfilesize'])
