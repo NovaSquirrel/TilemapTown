@@ -506,8 +506,8 @@
 				"autotile_class": "snow",
 				"pic": [
 					-3,
-					0,
-					4
+					1,
+					6
 				]
 			},
 			"purple": {
