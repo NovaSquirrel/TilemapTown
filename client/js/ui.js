@@ -36,6 +36,7 @@ let Fly = false;
 // Dictionary of Image objects
 let PlayerImages = {}; // For entities
 let PlayerMiniTilemapImages = {}; // For entities' mini tilemaps
+let PlayerParticleImages = {};
 
 // Dictionary of animation statuses
 let PlayerAnimation = {
