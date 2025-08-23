@@ -3337,6 +3337,56 @@ def fn_message_forwarding(map, client, context, arg):
 			respond(context, 'Set: %s. Not found: %s. Denied: %s.' % (','.join(entities_set), ','.join(entities_not_found), ','.join(entities_not_allowed)), data=data)
 		else:
 			respond(context, 'Please provide a subcommand: set', error=True)
+
+@cmd_command(alias=['usp'])
+def fn_userparticle(map, client, context, arg):
+	params = arg.split(' ')
+	if len(params) < 3:
+		return
+	pic = [int_if_numeric(params[0]), int_if_numeric(params[1]), int_if_numeric(params[2])]
+	if not pic_is_okay(pic):
+		respond(context, 'Invalid picture', error=True)
+	arg = {
+		"pic": pic,
+		"size": [1, 1],
+		"at": "me",
+		"id": client.protocol_id(),
+		"name": client.name,
+		"username": client.username_or_id(),
+		"action": "play"
+	}
+	def is_two_ints(c):
+		return len(comma) == 2 and string_is_int(comma[0]) and string_is_int(comma[1])
+	for a in params[3:]:
+		lowered = a.lower()
+		split = lowered.split("=")
+		if len(split) == 2:
+			if split[0] == "at":
+				comma = split[1].split(",")
+				if is_two_ints(comma):
+					arg["at"] = [int(comma[0]), int(comma[1])]
+			elif split[0] == "atr":
+				comma = split[1].split(",")
+				if is_two_ints(comma):
+					arg["at"] = [int(comma[0]) + client.x, int(comma[1]) + client.y]
+			elif split[0] == "size":
+				comma = split[1].split(",")
+				if is_two_ints(comma):
+					arg["size"] = [min(4, max(1, int(comma[0]))), min(4, max(1, int(comma[1])))]
+			elif split[0] == "offset":
+				comma = split[1].split(",")
+				if is_two_ints(comma):
+					arg["offset"] = [min(48, max(-48, int(comma[0]))), min(48, max(-48, int(comma[1])))]
+			elif split[0] == "duration":
+				arg["duration"] = min(50, max(1, int(split[1])))
+			elif split[0] in ("anim_loops", "anim_frames", "anim_speed", "anim_mode", "anim_offset"):
+				arg[split[0]] = int(split[1])
+		elif lowered == "hide_me":
+			arg["hide_me"] = True
+	if 'duration' not in arg:
+		arg['duration'] = 50 if "anim_loops" in arg else 10
+	map.broadcast("EXT", {"user_particle": arg})
+
 # -------------------------------------
 
 def handle_user_command(map, actor, context, text, script_entity=None, respond_to=None):

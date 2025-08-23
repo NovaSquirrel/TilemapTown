@@ -738,11 +738,14 @@ def fn_IMG(connection, map, client, arg, context):
 def fn_MAP(connection, map, client, arg, context):
 	if "pos" not in arg:
 		connection.protocol_error(context, text='No "pos" provided')
+		return
 	pos = arg["pos"]
 	if pos[2] < pos[0] or pos[3] < pos[1]:
 		connection.protocol_error(context, text='Invalid "pos"')
+		return
 	if (pos[2]-pos[0]) > 10 or (pos[3]-pos[1]) > 10: # Limit it to small sections of the map for now?
 		connection.protocol_error(context, text='Requested area too big')		
+		return
 	client.send("MAP", map.map_section(pos[0], pos[1], pos[2], pos[3]))
 
 @protocol_command(map_only=True)
@@ -1523,7 +1526,7 @@ def ext_user_particle(connection, map, client, context, arg, name):
 		"at":               lambda x: x == "me" or is_list_with_two_ints(x),
 		"offset":           lambda x: is_list_with_two_ints(x) and x[0] >= -48 and x[0] <= 48 and x[1] >= -48 and x[1] <= 48,
 		"duration":         lambda x: isinstance(x, int) and x >= 1 and x <= 50,
-		"anim_repeats":     int,
+		"anim_loops":       int,
 		"anim_frames":      int,
 		"anim_speed":       int,
 		"anim_mode":        int,
@@ -1532,7 +1535,7 @@ def ext_user_particle(connection, map, client, context, arg, name):
 		"action":           lambda x: isinstance(x, str) and x == "play",
 	})
 	if 'duration' not in arg:
-		arg['duration'] = 50 if "anim_repeats" in arg else 10
+		arg['duration'] = 50 if "anim_loops" in arg else 10
 	arg['id'] = client.protocol_id()
 	arg['name'] = client.name
 	arg['username'] = client.username_or_id()

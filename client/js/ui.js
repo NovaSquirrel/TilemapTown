@@ -3060,7 +3060,7 @@ function runAnimation(timestamp) {
 		let newUserParticles = [];
 		for (let particle of UserParticles) {
 			particle.timer++;
-			if(particle.data.anim_repeats && ((particle.data.anim_mode ?? 0) < 2) && particle.timer >= (particle.data.anim_frames * particle.data.anim_speed * particle.data.anim_repeats)) {
+			if(particle.data.anim_loops !== undefined && ((particle.data.anim_mode ?? 0) < 2) && particle.timer >= ((particle.data.anim_frames ?? 1) * (particle.data.anim_speed ?? 1) * (particle.data.anim_loops+1))) {
 				continue;
 			}
 			if(particle.timer >= particle.data.duration) {

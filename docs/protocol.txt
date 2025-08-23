@@ -614,7 +614,7 @@ Fields:
 	"at": [x, y]; position on the map - it can also be the string "me" which will keep the particle's position synchronized to the position of the client's entity
 	"offset": [x, y]; pixel offset, just like for entities. If offset is [0, 0] then the bottom edge should be aligned to the bottom edge of the tile, like for entities.
 	"duration": integer; amount of time this particle should stick around in units of 0.1 seconds
-	"anim_repeats": integer, amount of times to repeat the animation. Animation will stop once the animation has repeated this number of times, or when the duration is up, whichever happens first.
+	"anim_loops": integer, amount of times to repeat the animation. Animation will stop once the animation has looped this number of times, or when the duration is up, whichever happens first. This means that if it's set to 0, it will play once and not repeat. If 1, it will repeat once, and so on.
 	"anim_frames": integer; see tiles.txt
 	"anim_speed": integer; see tiles.txt
 	"anim_mode": integer; see tiles.txt
