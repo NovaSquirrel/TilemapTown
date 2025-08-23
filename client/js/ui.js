@@ -66,6 +66,8 @@ const CameraScaleMax = 8;
 let AudioChatNotifications = true;
 let AudioMiscNotifications = false;
 let mapMusicEnabled = false;
+let mapMusicVolume = 1;
+let gainNode = undefined;
 let playedMusicYet = false;
 
 // Idle settings
@@ -187,6 +189,7 @@ function loadOptions() {
 		document.getElementById("minutes-until-disconnect").value = saved_options.minutes_until_disconnect ?? 720;
 		document.getElementById("warn-invalid-bbcode").value = saved_options.warn_invalid_bbcode ?? true;
 		document.getElementById("focus-map-after-chat").value = saved_options.focus_map_after_chat ?? false;
+		document.getElementById("music-volume").value = (saved_options.audio_map_music_volume ?? 1) * 100;
 	}
 }
 
@@ -209,6 +212,7 @@ function applyOptions() {
 	focusMapAfterChat = document.getElementById("focus-map-after-chat").checked;
 
 	let mapMusicPreviouslyEnabled = mapMusicEnabled;
+	updateMapMusicVolume();
 	mapMusicEnabled = document.getElementById("audiomapmusic").checked;
 	if(!mapMusicEnabled) {
 		if (chiptunejsPlayerObject !== undefined) {
@@ -223,6 +227,7 @@ function applyOptions() {
 		"audio_chat_notify": AudioChatNotifications,
 		"audio_misc_notify": AudioMiscNotifications,
 		"audio_map_music": mapMusicEnabled,
+		"audio_map_music_volume": mapMusicVolume,
 		"entity_animation": entityAnimationEnabled,
 		"tile_animation": tileAnimationEnabled,
 		"user_particles": userParticlesEnabled,
@@ -235,6 +240,12 @@ function applyOptions() {
 	};
 	localStorage.setItem("options", JSON.stringify(saved_options));
 	backdropRerenderAll = true;
+}
+
+function updateMapMusicVolume() {
+	mapMusicVolume = parseInt(document.getElementById("music-volume").value) / 100;
+	if (gainNode)
+		gainNode.gain.value = mapMusicVolume;
 }
 
 function zoomIn() {
