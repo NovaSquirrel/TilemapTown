@@ -622,6 +622,7 @@ Fields:
 	"anim_offset": integer; see tiles.txt
 	"hide_me": boolean; if true, this client's entity is hidden until the particle expires and is removed
 	"action": string; should be "play" or not specified. Client should ignore the whole user_particle message if it is present but isn't "play"
+	May contain "rc_username" and "rc_id" to indicate who is remote controlling the entity to create the particle.
 
 === Extension: bulk_build ===
 This extension allows a client to request multiple map changes in one message, including operations like copies.

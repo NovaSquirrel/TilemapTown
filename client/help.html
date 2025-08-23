@@ -366,7 +366,7 @@ function openTab(evt, tabName) {
 		<br><span class="cmd_name">/mapedgelink edge mapID</span><br><span class="cmd_desc">Allows maps to be linked to another. Edge should be a number from 0 to 7 indicating a direction starting from east and moving clockwise. <kbd>none</kbd> is a valid mapId and will remove the link.</span><br>
 		<br><span class="cmd_name">/mapspawn</span><br><span class="cmd_desc">Sets starting position to the tile you are on.</span><br>
 
-		<br><span class="cmd_name">/mapdefaultfloor tile</span><br><span class="cmd_desc">Sets default ground tile. Set to <kbd>grass</kbd> tile by default.</span><br>
+		<br><span class="cmd_name">/mapdefaultfloor tile</span><br><span class="cmd_desc">Sets default ground tile. Set to <kbd>grass</kbd> tile by default. You can use <kbd>/whatturf</kbd> to get a value you can paste into here.</span><br>
 		<br><span class="cmd_name">/mapwallpaper url (<i>type</i>)</span><br><span class="cmd_desc">Sets a wallpaper for the map. Wallpapers are images overlaid on a map and replaces the default floor (unless <kbd>over_turf</kbd> is enabled, which makes the wallpaper overwrite all ground tiles). Multiple types can be accomplished by putting them in a line (example: <kbd>/mapwallpaper url center repeat repeat_x repeat_y offset=8,8</kbd>). Wallpaper options include: <kbd>absolute</kbd>, <kbd>center</kbd>, <kbd>repeat</kbd>, <kbd>repeat_x</kbd>, <kbd>repeat_y</kbd>, <kbd>over_turf</kbd>, <kbd>offset=x,y</kbd> (where x and y are the offset in pixels). <kbd>/mapwallpaper none</kbd> will remove a wallpaper.</span><br>
 		<br><span class="cmd_name">/mapmusic url</span><br><span class="cmd_desc">Sets background music for the map. You can use MOD, S3M, XM, IT, or MPTM formats. <kbd>/mapmusic none</kbd> will remove music that was previously set.</span><br>
 
@@ -514,6 +514,42 @@ function openTab(evt, tabName) {
 		<br><span class="cmd_name">/keep_entities_loaded (id,id,id...)</span><br><span class="cmd_desc">Creates a list of enties to keep loaded. Using <kbd>/keep_entities_loaded</kbd> will reset the list.</span><br>
 		<br><span class="cmd_name">/test_entities_loaded id,id,id...</span><br><span class="cmd_desc">Tests if specific entities are loaded.</span><br>
 		<br><span class="cmd_name">/message_forwarding set entity_id,entity_id,entity_id... (MAP,MAI,PRI ...)</span><br><span class="cmd_desc">Sets messaging forwarding properties. See <a href="https://github.com/NovaSquirrel/TilemapTown/blob/main/docs/protocol.txt">the protocol document</a> for more info.</span><br>
+
+		<hr><div class="cmd_group">User particles</div>
+		This is a feature that lets you play short animations on the map, either separate from your character or temporarily replacing them.
+		<br><span class="cmd_name">/userparticle sheet/url x y param1=value1 param2=value2 param3=value3</span><br><span class="cmd_desc">
+		Starts the animation using graphics of your choice with parameters of your choice. This can also be done with a protocol message, but this command may be more convenient. You can use <kbd>/usp</kbd> as an alias.
+
+		<p>
+		Examples:
+		<ul>
+			<li><kbd>/userparticle 0 2 24 offset=0,-32</kbd> - Display a happy expression bubble above you for a short time</li>
+			<li><kbd>/userparticle 0 24 29 offset=0,-32 anim_frames=6 anim_loops=1</kbd> - Display a 6-side die rolling from 1 to 6 above you, playing twice and then stopping</li>
+			<li><kbd>/userparticle 0 4 21 random_offset=0,0,8,8 anim_frames=7 anim_loops=0</kbd> - Display an explosion and smoke some random distance from your avatar that plays once and stops</li>
+			<li><kbd>/userparticle 0 10 22 anim_frames=7 duration=20</kbd> - Display a blooming flower that lasts for 2 seconds</li>
+			<li><kbd>/userparticle 0 4 26 anim_frames=2 hide_me</kbd> - Display a fire guy in place of your avatar</li>
+		</ul>
+		</p>
+
+		<p>
+		Parameters available:
+		<ul>
+			<li><kbd>size=width,height</kbd> - Size of each animation frame, measured in 16x16 units</li>
+			<li><kbd>at=x,y</kbd> - Measured in 16x16 units; where on the map the animation should play. Defaults to following you as you move to new tiles, unless a position is given here.</li>
+			<li><kbd>atr=x,y</kbd> - Same as above, but relative to your current position</li>
+			<li><kbd>offset=pixel_x,pixel_y</kbd> - Pixel offset, similar to when you use the /offset command (can also use <kbd>o=</kbd>)</li>
+			<li><kbd>random_offset=base_x,base_y,random_x_range,random_y_range</kbd> - Similar to above, but will add or subtract a number up to the X and Y ranges provided from the X and Y bases (can also use <kbd>ro=</kbd>)</li>
+			<li><kbd>duration=ticks</kbd> - Measured in units of 0.1 seconds (can also use <kbd>d=</kbd>)</li>
+			<li><kbd>anim_loops=integer</kbd> - Number of times to loop the animation; zero means play once, 1 means play twice</li>
+			<li><kbd>anim_frames=integer</kbd> - Number of frames that are in this animation</li>
+			<li><kbd>anim_speed=integer</kbd> - Frame duration in units of 0.1 seconds</li>
+			<li><kbd>anim_mode=integer</kbd> - 0 for forwards, 1 for reverse, 2 for ping-pong, 3 for ping-pong starting in reverse</li>
+			<li><kbd>anim_offset=integer</kbd> - Animation offset; effectively a starting position for the animation tick counter</li>
+			<li><kbd>hide_me</kbd> - Don't display my avatar while this animation is playing</li>
+		</ul>
+		</p>
+
+		</span>
 </div>
 
 </div></div>

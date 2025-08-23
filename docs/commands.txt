@@ -208,19 +208,44 @@ Feature to help with sprites that are not centered at the middle of the image. I
 /userparticle sheet/url x y param1=value1 param2=value2 param3=value3
 Can also use /usp as an alias. Plays a short animation on the map near you using graphics of your choice.
 This exists to make it easier to send animations until the client gets a better way to do it.
-Parameters available (see "user_particle" section in protocol.txt for more information)
-	size=width,height
-	at=x,y
-	offset=x,y
-	random_offset=base_x,base_y,random_x_range,random_y_range
-	duration=ticks
-	anim_loops=integer
-	anim_frames=integer
-	anim_speed=integer
-	anim_mode=integer
-	anim_offset=integer
-	hide_me
 
+Examples:
+	/userparticle 0 2 24 offset=0,-32
+		Display a happy expression bubble above you for a short time
+	/userparticle 0 24 29 offset=0,-32 anim_frames=6 anim_loops=1
+		Display a 6-side die rolling from 1 to 6 above you, playing twice and then stopping
+	/userparticle 0 4 21 random_offset=0,0,8,8 anim_frames=7 anim_loops=0
+		Display an explosion and smoke some random distance from your avatar that plays once and stops
+	/userparticle 0 10 22 anim_frames=7 duration=20
+		Display a blooming flower that lasts for 2 seconds
+	/userparticle 0 4 26 anim_frames=2 hide_me
+		Display a fire guy in place of your avatar
+
+Parameters available:
+    size=width,height
+		Measured in 16x16 units
+    at=x,y
+		Measured in 16x16 units; where on the map the animation should play. Defaults to following you as you move to new tiles, unless a position is given here.
+    atr=x,y
+		Same as above, but relative to your current position
+    offset=pixel_x,pixel_y
+		Pixel offset, similar to when you use the /offset command (can also use o=)
+    random_offset=base_x,base_y,random_x_range,random_y_range
+		Similar to above, but will add or subtract a number up to the X and Y ranges provided from the X and Y bases (can also use ro=)
+    duration=ticks
+		Measured in units of 0.1 seconds (can also use d=)
+    anim_loops=integer
+		Number of times to loop the animation; zero means play once, 1 means play twice
+    anim_frames=integer
+		Number of frames that are in this animation
+    anim_speed=integer
+		Frame duration in units of 0.1 seconds
+    anim_mode=integer
+		0 for forwards, 1 for reverse, 2 for ping-pong, 3 for ping-pong starting in reverse
+    anim_offset=integer
+		Animation offset; effectively a starting position for the animation tick counter
+    hide_me
+		Don't display my avatar while this animation is playing
 
 ---Carrying users---
 /carry user
