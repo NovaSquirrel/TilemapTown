@@ -32,6 +32,7 @@ let edgeMapLookupTable = [
 ];
 let tileAnimationEnabled = true;
 let entityAnimationEnabled = true;
+let userParticlesEnabled = true;
 
 const BACKDROP_DIRTY_RENDER   = 0; // Needs to be rendered and displayed
 const BACKDROP_DIRTY_ANIMATED = 1; // Zone is ready, but contains animated tiles
@@ -140,20 +141,22 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 	for (let index in PlayerWho) {
 		sortedPlayers.push(PlayerWho[index]);
 	}
-	for (let particle of UserParticles) {
-		let entry = {particle, passengers: [], id: null};
-		if (particle.data.at === "me" && (particle.data.id in PlayerWho)) {
-			entry.x = PlayerWho[particle.data.id].x;
-			entry.y = PlayerWho[particle.data.id].y;
-		} else if (Array.isArray(particle.data.at)) {
-			entry.x = particle.data.at[0];
-			entry.y = particle.data.at[1];
+	if (userParticlesEnabled) {
+		for (let particle of UserParticles) {
+			let entry = {particle, passengers: [], id: null};
+			if (particle.data.at === "me" && (particle.data.id in PlayerWho)) {
+				entry.x = PlayerWho[particle.data.id].x;
+				entry.y = PlayerWho[particle.data.id].y;
+			} else if (Array.isArray(particle.data.at)) {
+				entry.x = particle.data.at[0];
+				entry.y = particle.data.at[1];
+			}
+			if (entry.x === undefined || entry.y === undefined)
+				continue;
+			if (particle.data.hide_me)
+				sortedPlayers = sortedPlayers.filter((p) => p.id !== particle.data.id)
+			sortedPlayers.push(entry);
 		}
-		if (entry.x === undefined || entry.y === undefined)
-			continue;
-		if (particle.data.hide_me)
-			sortedPlayers = sortedPlayers.filter((p) => p.id !== particle.data.id)
-		sortedPlayers.push(entry);
 	}
 
 	sortedPlayers.sort(

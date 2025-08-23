@@ -181,6 +181,7 @@ function loadOptions() {
 		document.getElementById("audiomapmusic").checked = saved_options.audio_map_music ?? false;
 		document.getElementById("option-entity-animation").checked = saved_options.entity_animation ?? true;
 		document.getElementById("option-tile-animation").checked = saved_options.tile_animation ?? true;
+		document.getElementById("enable-user-particles").checked = saved_options.user_particles ?? true;
 		document.getElementById("chat-timestamp").checked = saved_options.chat_timestamps ?? true;
 		document.getElementById("minutes-until-idle").value = saved_options.minutes_until_idle ?? 60;
 		document.getElementById("minutes-until-disconnect").value = saved_options.minutes_until_disconnect ?? 720;
@@ -201,6 +202,7 @@ function applyOptions() {
 	Fly = document.getElementById("option-fly").checked;
 	entityAnimationEnabled = document.getElementById("option-entity-animation").checked;
 	tileAnimationEnabled = document.getElementById("option-tile-animation").checked;
+	userParticlesEnabled = document.getElementById("enable-user-particles").checked;
 	chatTimestamps = document.getElementById("chat-timestamp").checked;
 	lockZoomLevel = document.getElementById("lock-zoom-level").checked;
 	warnInvalidBBCode = document.getElementById("warn-invalid-bbcode").checked;
@@ -223,8 +225,9 @@ function applyOptions() {
 		"audio_map_music": mapMusicEnabled,
 		"entity_animation": entityAnimationEnabled,
 		"tile_animation": tileAnimationEnabled,
+		"user_particles": userParticlesEnabled,
 		"chat_timestamps": chatTimestamps,
-		"lock-zoom-level": lockZoomLevel,
+		"lock_zoom_level": lockZoomLevel,
 		"minutes_until_idle": minutesUntilIdle,
 		"minutes_until_disconnect": minutesUntilDisconnect,
 		"warn_invalid_bbcode": warnInvalidBBCode,
