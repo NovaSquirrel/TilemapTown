@@ -3373,17 +3373,17 @@ def fn_userparticle(map, client, context, arg):
 				comma = split[1].split(",")
 				if is_two_ints(comma):
 					arg["size"] = [min(4, max(1, int(comma[0]))), min(4, max(1, int(comma[1])))]
-			elif split[0] == "offset":
+			elif split[0] in ("offset", "o"):
 				comma = split[1].split(",")
 				if is_two_ints(comma):
 					arg["offset"] = [min(48, max(-48, int(comma[0]))), min(48, max(-48, int(comma[1])))]
-			elif split[0] == "random_offset":
+			elif split[0] in ("random_offset", "randomoffset", "ro"):
 				comma = split[1].split(",")
 				if len(comma) == 4 and string_is_int(comma[0]) and string_is_int(comma[1]) and string_is_int(comma[2]) and string_is_int(comma[3]):
 					shake_x = int(comma[2])
 					shake_y = int(comma[3]) 
 					arg["offset"] = [min(48, max(-48, int(comma[0])+random.randint(-shake_x, shake_x))), min(48, max(-48, int(comma[1])+random.randint(-shake_y, shake_y)))]
-			elif split[0] == "duration":
+			elif split[0] in ("duration", "d"):
 				arg["duration"] = min(50, max(1, int(split[1])))
 			elif split[0] in ("anim_loops", "anim_frames", "anim_speed", "anim_mode", "anim_offset"):
 				arg[split[0]] = int(split[1])
@@ -3391,6 +3391,13 @@ def fn_userparticle(map, client, context, arg):
 			arg["hide_me"] = True
 	if 'duration' not in arg:
 		arg['duration'] = 50 if "anim_loops" in arg else 10
+	if context.get('script_entity'):
+		script_entity = context.get('script_entity')
+		arg['rc_username'] = find_username_by_db_id(script_entity.owner_id)
+		arg['rc_id'] = script_entity.owner_id
+	elif context['client'] != None and client is not context['client']:
+		arg['rc_id'] = context['client'].protocol_id()
+		arg['rc_username'] = context['client'].username_or_id()
 	map.broadcast("EXT", {"user_particle": arg})
 
 # -------------------------------------
