@@ -225,7 +225,7 @@ Parameters available:
     size=width,height
 		Measured in 16x16 units
     at=x,y
-		Measured in 16x16 units; where on the map the animation should play. Defaults to following you as you move to new tiles, unless a position is given here.
+		Measured in 16x16 units; where on the map the animation should play. Defaults to being pinned to your current position, unless a different position is given here.
     atr=x,y
 		Same as above, but relative to your current position when you run the command
     offset=pixel_x,pixel_y
