@@ -735,6 +735,17 @@ def fn_IMG(connection, map, client, arg, context):
 	client.finish_batch()
 
 @protocol_command(map_only=True)
+def fn_MAP(connection, map, client, arg, context):
+	if "pos" not in arg:
+		connection.protocol_error(context, text='No "pos" provided')
+	pos = arg["pos"]
+	if pos[2] < pos[0] or pos[3] < pos[1]:
+		connection.protocol_error(context, text='Invalid "pos"')
+	if (pos[2]-pos[0]) > 10 or (pos[3]-pos[1]) > 10: # Limit it to small sections of the map for now?
+		connection.protocol_error(context, text='Requested area too big')		
+	client.send("MAP", map.map_section(pos[0], pos[1], pos[2], pos[3]))
+
+@protocol_command(map_only=True)
 def fn_MAI(connection, map, client, arg, context):
 	send_all_info = must_be_map_owner(connection, client, context, True, give_error=False)
 	client.send("MAI", map.map_info(all_info=send_all_info))

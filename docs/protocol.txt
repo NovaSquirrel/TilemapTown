@@ -115,11 +115,9 @@ The terminology "atom", "turf" and "obj" is taken from BYOND.
 Optional fields:
 	"obj": If present and true, "atom" is an array of tiles, which go onto the map's object layer at the given coordinate
 
---> MAP - requests the whole thing
 --> MAP {"pos":[x1, y1, x2, y2]}
 <-- MAP {"pos":[x1, y1, x2, y2], "default": default_turf, "turf": [turfs], "obj": [objs]}
-Get a partial (or complete) copy of the map
-Currently clients can not request the map from the server, and must hold onto the copy of the map they received when entering the map.
+Get a partial copy of the map
 
 --> MAI
 <-- MAI {parameters that describe the map}

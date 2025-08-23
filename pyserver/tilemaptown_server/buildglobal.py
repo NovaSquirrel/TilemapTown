@@ -113,6 +113,7 @@ def loadConfigJson(clearLogs=True):
 	setConfigDefault("MaxProtocolSize", "TSD", 512)
 	setConfigDefault("MaxProtocolSize", "IMG", 512)
 	setConfigDefault("MaxProtocolSize", "MAI", 512)
+	setConfigDefault("MaxProtocolSize", "MAP", 512)
 	setConfigDefault("MaxProtocolSize", "DEL", 1024)
 	setConfigDefault("MaxProtocolSize", "PUT", 2048)
 	setConfigDefault("MaxProtocolSize", "BLK", 8192)
