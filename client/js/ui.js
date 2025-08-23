@@ -66,6 +66,7 @@ const CameraScaleMax = 8;
 let AudioChatNotifications = true;
 let AudioMiscNotifications = false;
 let mapMusicEnabled = false;
+let playedMusicYet = false;
 
 // Idle settings
 let minutesUntilIdle = 60;
@@ -124,6 +125,7 @@ let chatTimestamps = true;
 let lockZoomLevel = false;
 let focusChatBarOnTabBack = false;
 let warnInvalidBBCode = true;
+let focusMapAfterChat = false;
 
 let FileStorageInfo = null;
 let sampleAvatarList = {};
@@ -183,6 +185,7 @@ function loadOptions() {
 		document.getElementById("minutes-until-idle").value = saved_options.minutes_until_idle ?? 60;
 		document.getElementById("minutes-until-disconnect").value = saved_options.minutes_until_disconnect ?? 720;
 		document.getElementById("warn-invalid-bbcode").value = saved_options.warn_invalid_bbcode ?? true;
+		document.getElementById("focus-map-after-chat").value = saved_options.focus_map_after_chat ?? false;
 	}
 }
 
@@ -201,6 +204,7 @@ function applyOptions() {
 	chatTimestamps = document.getElementById("chat-timestamp").checked;
 	lockZoomLevel = document.getElementById("lock-zoom-level").checked;
 	warnInvalidBBCode = document.getElementById("warn-invalid-bbcode").checked;
+	focusMapAfterChat = document.getElementById("focus-map-after-chat").checked;
 
 	let mapMusicPreviouslyEnabled = mapMusicEnabled;
 	mapMusicEnabled = document.getElementById("audiomapmusic").checked;
@@ -224,6 +228,7 @@ function applyOptions() {
 		"minutes_until_idle": minutesUntilIdle,
 		"minutes_until_disconnect": minutesUntilDisconnect,
 		"warn_invalid_bbcode": warnInvalidBBCode,
+		"focus_map_after_chat": focusMapAfterChat,
 	};
 	localStorage.setItem("options", JSON.stringify(saved_options));
 	backdropRerenderAll = true;
@@ -3247,6 +3252,11 @@ function playMusic(url, force) {
 	function play() {
 		initMusic();
 		chiptunejsPlayerObject.load(url, function(buffer){chiptunejsPlayerObject.play(buffer);});
+	}
+
+	if (!playedMusicYet) {
+		playedMusicYet = true;
+		logMessage('Playing music; you can stop it with <span class="xbbcode-code">/stopmusic</span> or <input type="button" value="Stop music" onclick="stopMusic();"/>', 'server_message',   {'isChat': false});
 	}
 
 	if(libopenmptLoaded) {

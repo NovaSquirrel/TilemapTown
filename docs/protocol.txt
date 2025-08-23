@@ -609,7 +609,7 @@ Experimental feature: Allows you to play temporary animations on the map. Messag
 Fields:
 	"pic": [sprite sheet ID or URL, x, y]; particle appearance
 	"size": [width, height]; size of the particle in units of 16 pixels
-	"at": [x, y]; position on the map
+	"at": [x, y]; position on the map - it can also be the string "me" which will keep the particle's position synchronized to the position of the client's entity
 	"offset": [x, y]; pixel offset, just like for entities. If offset is [0, 0] then the bottom edge should be aligned to the bottom edge of the tile, like for entities.
 	"duration": integer; amount of time this particle should stick around in units of 0.1 seconds
 	"anim_repeats": integer, amount of times to repeat the animation. Animation will stop once the animation has repeated this number of times, or when the duration is up, whichever happens first.
@@ -617,6 +617,7 @@ Fields:
 	"anim_speed": integer; see tiles.txt
 	"anim_mode": integer; see tiles.txt
 	"anim_offset": integer; see tiles.txt
+	"hide_me": boolean; if true, this client's entity is hidden until the particle expires and is removed
 	"action": string; should be "play" or not specified. Client should ignore the whole user_particle message if it is present but isn't "play"
 
 === Extension: bulk_build ===

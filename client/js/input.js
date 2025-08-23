@@ -66,6 +66,7 @@ function runLocalCommand(t) {
 	if (tl == "/clear") {
 		chatArea.innerHTML = "";
 		chatLogForExport = [];
+		playedMusicYet = false;
 		return true;
 	} else if (tl == "/exportmap" || tl == "/mapexport" || tl.startsWith("/exportmap ") || tl.startsWith("/mapexport ")) {
 		//logMessage('<a href="data:,'+encodeURIComponent(exportMap())+'" download="map.txt">Map download (click here)</a>', 'server_message');
@@ -424,6 +425,8 @@ function keyDownHandler(e) {
 			chatInput.value = "";
 
 			sendTyping();
+			if (focusMapAfterChat)
+				chatInput.blur();
 		} else if (document.activeElement == chatInput && e.keyCode == 27) {
 			// escape press
 			chatInput.blur();

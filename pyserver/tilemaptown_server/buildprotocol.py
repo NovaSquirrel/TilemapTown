@@ -1501,14 +1501,15 @@ def ext_user_particle(connection, map, client, context, arg, name):
 	arg = remove_invalid_dict_fields(arg, {
 		"pic":              pic_is_okay,
 		"size":             lambda x: is_list_with_two_ints(x) and x[0] >= 1 and x[0] <= 4 and x[1] >= 1 and x[1] <= 4,
-		"at":               is_list_with_two_ints,
-		"offset":           lambda x: is_list_with_two_ints(x) and x[0] >= -32 and x[0] <= 32 and x[1] >= -32 and x[1] <= 32,
+		"at":               lambda x: x == "me" or is_list_with_two_ints(x),
+		"offset":           lambda x: is_list_with_two_ints(x) and x[0] >= -48 and x[0] <= 48 and x[1] >= -48 and x[1] <= 48,
 		"duration":         lambda x: isinstance(x, int) and x >= 1 and x <= 50,
 		"anim_repeats":     int,
 		"anim_frames":      int,
 		"anim_speed":       int,
 		"anim_mode":        int,
 		"anim_offset":      int,
+		"hide_me":          bool,
 		"action":           lambda x: isinstance(x, str) and x == "play",
 	})
 	if 'duration' not in arg:

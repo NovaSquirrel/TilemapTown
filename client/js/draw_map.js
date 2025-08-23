@@ -141,7 +141,19 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 		sortedPlayers.push(PlayerWho[index]);
 	}
 	for (let particle of UserParticles) {
-		sortedPlayers.push({particle, passengers: [], id: null, x: particle.data.at[0], y: particle.data.at[1]});
+		let entry = {particle, passengers: [], id: null};
+		if (particle.data.at === "me" && (particle.data.id in PlayerWho)) {
+			entry.x = PlayerWho[particle.data.id].x;
+			entry.y = PlayerWho[particle.data.id].y;
+		} else if (Array.isArray(particle.data.at)) {
+			entry.x = particle.data.at[0];
+			entry.y = particle.data.at[1];
+		}
+		if (entry.x === undefined || entry.y === undefined)
+			continue;
+		if (particle.data.hide_me)
+			sortedPlayers = sortedPlayers.filter((p) => p.id !== particle.data.id)
+		sortedPlayers.push(entry);
 	}
 
 	sortedPlayers.sort(
