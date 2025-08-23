@@ -515,6 +515,7 @@ function receiveServerMessage(cmd, arg) {
         PlayerAnimation = {}; // reset animation states
         PlayerBuildMarkers = {}; // reset player build markers
         PlayerMiniTilemapImage = {}; // reset mini tilemap image list
+        PlayerParticleImages = {}; // reset player particle image list
 
         // Set up all of the animation states for each player present in the list
         for (var id in arg.list) {
@@ -977,11 +978,19 @@ function receiveServerMessage(cmd, arg) {
           } else {
             openUserProfileWindow(arg.get_user_profile);
           }
-        } else if(arg.user_particle) {
+        } else if(arg.user_particle && userParticlesEnabled) {
           if(!arg.user_particle.action || arg.user_particle.action === "play") {
             if (!arg.user_particle.duration)
               arg.user_particle.duration = 10;
             UserParticles.push({timer: -1, data: arg.user_particle});
+            if (typeof arg.user_particle.pic[0] === "string" && !(arg.user_particle.pic[0] in PlayerParticleImages)) {
+              var img = new Image();
+              img.onload = function(){
+                NeedMapRedraw = true;
+              };
+              img.src = arg.user_particle.pic[0];
+              PlayerParticleImages[arg.user_particle.pic[0]] = img;
+            }
           }
         }
       }

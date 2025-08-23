@@ -193,16 +193,18 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 				if (!pic)
 					continue;
 				let size = Mob.particle.data.size ?? [1,1];
-				if (pic[0] in IconSheets) {
+				let inIconSheet = pic[0] in IconSheets;
+				let inParticleImages = pic[0] in PlayerParticleImages;
+				if (inIconSheet || inParticleImages) {
 					let animationFrame = calculateAnimationFrame(Mob.particle.data, Mob.particle.timer);
-					ctx.drawImage(IconSheets[pic[0]],
+					ctx.drawImage( (inIconSheet?IconSheets:PlayerParticleImages)[pic[0]],
 						(pic[1]+animationFrame*size[0]) * 16, pic[2] * 16,
 						size[0] * 16, size[1] * 16,
 						(Mob.x * 16 + 8 - size[0]*8) - pixelCameraX + offset[0],
 						(Mob.y * 16 + 16 - size[1]*16) - pixelCameraY + offset[1],
 						size[0] * 16, size[1] * 16);
 					markAreaAroundPointAsDirty(MyMap, Mob.x + (offset[0]/16), Mob.y + (offset[1]/16), 5);
-				} else {
+				} else if (typeof pic[0] === "number") {
 					RequestImageIfNeeded(pic[0]);
 				}
 				continue;
