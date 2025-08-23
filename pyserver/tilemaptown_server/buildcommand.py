@@ -3377,6 +3377,12 @@ def fn_userparticle(map, client, context, arg):
 				comma = split[1].split(",")
 				if is_two_ints(comma):
 					arg["offset"] = [min(48, max(-48, int(comma[0]))), min(48, max(-48, int(comma[1])))]
+			elif split[0] == "random_offset":
+				comma = split[1].split(",")
+				if len(comma) == 4 and string_is_int(comma[0]) and string_is_int(comma[1]) and string_is_int(comma[2]) and string_is_int(comma[3]):
+					shake_x = int(comma[2])
+					shake_y = int(comma[3]) 
+					arg["offset"] = [min(48, max(-48, int(comma[0])+random.randint(-shake_x, shake_x))), min(48, max(-48, int(comma[1])+random.randint(-shake_y, shake_y)))]
 			elif split[0] == "duration":
 				arg["duration"] = min(50, max(1, int(split[1])))
 			elif split[0] in ("anim_loops", "anim_frames", "anim_speed", "anim_mode", "anim_offset"):

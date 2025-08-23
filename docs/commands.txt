@@ -212,6 +212,7 @@ Parameters available (see "user_particle" section in protocol.txt for more infor
 	size=width,height
 	at=x,y
 	offset=x,y
+	random_offset=base_x,base_y,random_x_range,random_y_range
 	duration=ticks
 	anim_loops=integer
 	anim_frames=integer
