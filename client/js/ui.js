@@ -3346,6 +3346,8 @@ function openUserProfileWindow(info) {
 	document.getElementById('userProfileUsername').textContent = info.username || "";
 	document.getElementById('userProfilePronouns').textContent = info.pronouns || "";
 	document.getElementById('userProfilePronounsDot').style.display = (info.pronouns || "").length ? "inline": "none";
+	document.getElementById('userProfileCharacterPronouns').textContent = info.entity_pronouns || "";
+	document.getElementById('userProfileCharacterPronounsDot').style.display = (info.entity_pronouns || "").length ? "inline": "none";
 	document.getElementById('userProfileCharacterName').textContent = info.entity_name || "";
 	document.getElementById('userProfileCharacterDescription').innerHTML = convertBBCode(info.entity_desc || "").replaceAll("\n", "<br>");
 	const birthday = info.birthday;
@@ -3396,6 +3398,7 @@ function userProfileEdit(new_profile) {
 
 	document.getElementById('editUserProfileCharacterName').value = "";
 	document.getElementById('editUserProfileCharacterDesc').value = "";
+	document.getElementById('editUserProfileCharacterPronouns').value = "";
 	document.getElementById('editUserProfileName').value = "";
 	document.getElementById('editUserProfilePronouns').value = "";
 	document.getElementById('editUserProfilePictureUrl').value = "";
@@ -3421,10 +3424,12 @@ function userProfileEdit(new_profile) {
 	if (new_profile) {
 		document.getElementById('editUserProfileCharacterName').value = PlayerWho[PlayerYou]?.name || "";
 		document.getElementById('editUserProfileCharacterDesc').value = PlayerWho[PlayerYou]?.desc || "";
+		document.getElementById('editUserProfileCharacterPronouns').value = PlayerWho[PlayerYou]?.who_tags?.pronouns || "";
 	} else if(userProfileInformation.id == PlayerYou) {
 		let info = userProfileInformation;
 		document.getElementById('editUserProfileCharacterName').value = info.entity_name || "";
 		document.getElementById('editUserProfileCharacterDesc').value = info.entity_desc || "";
+		document.getElementById('editUserProfileCharacterPronouns').value = info.entity_pronouns || "";
 		document.getElementById('editUserProfileName').value = info.name || "";
 		document.getElementById('editUserProfilePronouns').value = info.pronouns || "";
 		document.getElementById('editUserProfilePictureUrl').value = info.picture_url || "";
@@ -3477,6 +3482,7 @@ function editUserProfileUpdate() {
 	const data = {
 		"entity_name": document.getElementById('editUserProfileCharacterName').value,
 		"entity_desc": document.getElementById('editUserProfileCharacterDesc').value,
+		"entity_pronouns": document.getElementById('editUserProfileCharacterPronouns').value,
 		"name": nullIfEmpty(document.getElementById('editUserProfileName').value),
 		"pronouns": nullIfEmpty(document.getElementById('editUserProfilePronouns').value), 
 		"picture_url": nullIfEmpty(document.getElementById('editUserProfilePictureUrl').value),

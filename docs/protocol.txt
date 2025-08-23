@@ -138,7 +138,7 @@ Fields that may appear in MAI on the official server:
 	"build_enabled": boolean; If true, users can build without specifically being given permission to
 	"full_sandbox": boolean; Not currently used, but the intention is that when it's true, users can edit or delete other users' objects on the map
 	"edge_links": List of 8 database IDs for the maps surrounding this one; starts with the west link and goes clockwise and each entry may be null if there is no link
-	"tags": dictionary; Generic entity tags set on this map
+	"tags": dictionary; Arbitrary structure for metadata relating to this map. Intended to be organized as tags[group][item], but no groups or items are standardized currently.
 	"you_allow": List of permission names that the user is granted for this map
 	"you_deny": List of permission names that the user is denied for this map
 	"default_allow": List of permission names that this map grants by default
@@ -236,6 +236,9 @@ Other fields that may appear in WHO messages on the official server:
 	"verbs": list of strings; This is a list of commands that you can /tell this entity
 	"usable": boolean; if True, you can send USE messages at this entity
 	"z_index": integer; an entity with a higher z-index should get shown over another when two entities are on the same Y coordinate
+	"who_tags": dictionary; This contains arbitrary metdata tags that have been set on the entity under the "who" tag group.
+		Standardized fields that can be in here:
+		"pronouns": string; The entity's pronouns as an arbitrary string.
 	Most important fields to support are "id", "name", "pic", "x", "y", "dir" and ideally "offset" too.
 
 
@@ -413,7 +416,7 @@ Item info fields:
 	"type": string; Entity type
 	"folder": integer or string; ID of the entity that contains this entity
 	"data": string, usually? It's specific to the entity type
-	"tags": dictionary; Generic entity tags set on this map
+	"tags": dictionary; Arbitrary structure for metadata relating to this entity. Intended to be organized as tags[group][item], and the "who" tag group will appear in WHO messages.
 	"allow": List of strings, using the permission names earlier in this file. These permissions are granted by default.
 	"deny": List of strings, using the permission names earlier in this file. These permissions are denied by default.
 	"guest_deny": List of strings, using the permission names earlier in this file. These permissions are denied to guests.
@@ -590,6 +593,7 @@ Profile fields (can read and write):
 
 	"entity_name": string; alternative way to access the name of the user's entity
 	"entity_desc": string; alternative way to access the description of the user's entity
+	"entity_pronouns": string; alternate way to access the pronouns of the user's entity (implemented as the "pronouns" tag within the "who" tag group)
 
 Profile fields (can read):
 	"updated_at": string; ISO 8601 format timestamp

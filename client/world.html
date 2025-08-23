@@ -864,7 +864,7 @@
 		<hr>
 		<button onclick="profileTabAbout()">About</button><button id="profileTabPictureButton" onclick="profileTabPicture()">Picture</button><button id="profileTabInterestsButton" onclick="profileTabInterests()">Interests</button><button id="profileTabContactButton" onclick="profileTabContact()">Contact</button><button id="profileTabHomeButton"onclick="profileTabHome()">Home</button>
 		<div id="userProfileAbout">
-			<p>&#x1F407; <strong id="userProfileCharacterName"></strong><br><span id="userProfileCharacterDescription" class="column-of-text-in-window"></span><p>
+			<p>&#x1F407; <strong id="userProfileCharacterName"></strong> <span id="userProfileCharacterPronounsDot">&#8226;</span> <span id="userProfileCharacterPronouns"></span><br><span id="userProfileCharacterDescription" class="column-of-text-in-window"></span><p>
 			<hr>
 			<p>
 				<table border="1" id="userProfileExtraFields">
@@ -925,6 +925,7 @@
 		<p>
 			<table border="1">
 			<tr><th>Character name</th><td><input id="editUserProfileCharacterName"></td></tr>
+			<tr><th>Character pronouns</th><td><input id="editUserProfileCharacterPronouns"></td></tr>
 			<tr><th>Character description</th><td><textarea id="editUserProfileCharacterDesc"></textarea></td></tr>
 			</table>
 		</p>

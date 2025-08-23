@@ -822,6 +822,9 @@ class Entity(PermissionsMixin, object):
 				out['chat_listener'] = True
 		if hasattr(self, 'listening_to_chat_warning') and self.listening_to_chat_warning:
 			out['chat_listener'] = True
+		public_tags = (self.tags or {}).get("who")
+		if public_tags:
+			out['who_tags'] = public_tags
 		return out
 
 	def remote_who(self):

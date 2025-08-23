@@ -1352,6 +1352,7 @@ def get_entity_name_and_desc(user_id, out):
 	if entity:
 		out['entity_name'] = entity.name
 		out['entity_desc'] = entity.desc
+		out['entity_pronouns'] = entity.get_tag("who", "pronouns")
 	else:
 		c = Database.cursor()
 		c.execute('SELECT name, desc FROM Entity WHERE id=?', (user_id,))
@@ -1359,6 +1360,7 @@ def get_entity_name_and_desc(user_id, out):
 		if result != None:
 			out['entity_name'] = result[0]
 			out['entity_desc'] = result[1]
+			# Would it be worth it to fetch and parse the tags just to get the pronouns for an unloaded entity?
 
 def get_user_profile_data(user_id):
 	c = Database.cursor()
@@ -1428,6 +1430,12 @@ def ext_set_user_profile(connection, map, client, context, arg, name):
 		client.desc = arg['entity_desc']
 	if 'entity_name' in arg and arg['entity_name'] != client.name:
 		handle_user_command(client.map, client, context, "nick "+arg['entity_name'])
+	if 'entity_pronouns' in arg:
+		entity_pronouns = arg['entity_pronouns'][:20]
+		if entity_pronouns:
+			client.set_tag('who', 'pronouns', entity_pronouns)
+		else:
+			client.del_tag('who', 'pronouns')
 
 	def fallback(name, c):
 		value = arg.get(name, data[name])
