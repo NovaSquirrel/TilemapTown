@@ -52,9 +52,9 @@ class BuildSession(object):
 		self.maps[map_id].appendleft("o\n%d\n%d\n%s\n%s" % (x, y, json.dumps(new), json.dumps(old)))
 		self.total_put += 1
 
-	def write_del(self, map_id, x1, y1, x2, y2, old):
+	def write_del(self, map_id, x1, y1, x2, y2, old, replace_turf, replace_objs):
 		self.init_map(map_id)
-		self.maps[map_id].appendleft("d\n%d\n%d\n%d\n%d\n%s" % (x1, y1, x2, y2, json.dumps(old)))
+		self.maps[map_id].appendleft("d\n%d\n%d\n%d\n%d\n%s\n%s\n%s" % (x1, y1, x2, y2, json.dumps(old), json.dumps(replace_turf), json.dumps(replace_objs)))
 		self.total_delete += 1
 
 	def rollback_all(self):
@@ -101,7 +101,7 @@ class BuildSession(object):
 					map.objs[x][y] = json.loads(old)
 					map.broadcast("MAP", map.map_section(x, y, x, y), send_to_links=True)
 			elif a[0] == 'd':
-				_, x1, y1, x2, y2, old = a
+				_, x1, y1, x2, y2, old, turf, objs = a
 				map.apply_map_section(json.loads(old))
 
 		# Save changes and unload if needed

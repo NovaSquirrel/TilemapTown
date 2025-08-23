@@ -767,6 +767,26 @@ def fn_DEL(connection, map, client, arg, context):
 		if not map.map_data_loaded:
 			connection.protocol_error(context, text='Map isn\'t loaded, so it can\'t be modified', code='not_loaded', subject_id=map)
 			return
+
+		# Allow using DEL as a rectangle fill by overriding which tile gets put in the deleted area
+		turf_replace = None
+		objs_replace = None
+		custom_turf = isinstance(arg["turf"], str) or isinstance(arg["turf"], dict)
+		custom_objs = isinstance(arg["obj"], list)
+		if "turf" in arg and custom_turf:
+			tile_test = tile_is_okay(arg["turf"])
+			if not tile_test[0]:
+				connection.protocol_error(context, text='Tile [tt]%s[/tt] rejected (%s)' % (arg["turf"], tile_test[1]))
+				return
+			turf_replace = arg["turf"]
+		if "obj" in arg and custom_objs:
+			tile_test = [tile_is_okay(x) for x in arg["obj"]]
+			if all(_[0] for _ in tile_test): # all tiles pass the test
+				objs_replace = arg["obj"]
+			else:
+				connection.protocol_error(context, text='Obj tiles rejected')
+				return
+
 		map.map_data_modified = True
 
 		# Save undo information
@@ -777,15 +797,15 @@ def fn_DEL(connection, map, client, arg, context):
 			connection.delete_count += 1
 			old_data = connection.undo_delete_data
 		write_to_build_log(map, client, "DEL", arg, old_data)
-		connection.build_session.write_del(map.protocol_id(), x1, y1, x2, y2, old_data)
+		connection.build_session.write_del(map.protocol_id(), x1, y1, x2, y2, old_data, turf_replace, objs_replace)
 
 		# Do the delete and tell clients about it
 		for x in range(x1, x2+1):
 			for y in range(y1, y2+1):
 				if arg["turf"]:
-					map.turfs[x][y] = None;
+					map.turfs[x][y] = turf_replace;
 				if arg["obj"]:
-					map.objs[x][y] = None;
+					map.objs[x][y] = objs_replace;
 		# make username available to listeners
 		arg['username'] = client.username_or_id()
 		arg['id'] = client.protocol_id()

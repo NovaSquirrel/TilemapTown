@@ -881,7 +881,10 @@ async def get_rrb(request):
 				elif a[0] == 'o':
 					map_inside += "<li>O %s,%s: %s | %s</li>" % (escape_tags(a[1]), escape_tags(a[2]), escape_tags(a[3]), escape_tags(a[4]))
 				elif a[0] == 'd':
-					map_inside += "<li>D %s,%s,%s,%s | %s</li>" % (escape_tags(a[1]), escape_tags(a[2]), escape_tags(a[3]), escape_tags(a[4]), escape_tags(a[5]))
+					if a[6] == "null" and a[7] == "null":
+						map_inside += "<li>D %s,%s,%s,%s | %s</li>" % (escape_tags(a[1]), escape_tags(a[2]), escape_tags(a[3]), escape_tags(a[4]), escape_tags(a[5]))
+					else:
+						map_inside += "<li>D %s,%s,%s,%s | %s &#8594; %s,%s</li>" % (escape_tags(a[1]), escape_tags(a[2]), escape_tags(a[3]), escape_tags(a[4]), escape_tags(a[5]), escape_tags(a[6]), escape_tags(a[7]))
 
 			map_inside += "</ul>"
 			map_header = "%s \"%s\" - #%d" % (map_key, get_entity_name_by_db_id(map_key), len(map_val))

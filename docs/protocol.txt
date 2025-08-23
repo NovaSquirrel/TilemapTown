@@ -156,9 +156,10 @@ Fields that may appear in MAI on the official server:
 	"remote_map" can be supported by just discarding the entire message when it's present.
 
 --> DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true}
+--> DEL {"pos": [x1, y1, x2, y2], "turf":"grass", "obj":["diamond"]}
 <-- DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true, "username":username, "remote_map": map} (for listeners)
 <-- MAP {"pos": [x1, y1, x2, y2], "default": default_turf, "turf": [turfs], "obj": [objs]}
-Delete a section of map.
+Delete a section of map. You can also turn this into a rectangle fill command by specifying a turf to use instead of the map's default tile, or an object list to use instead of an empty one.
 
 
 === Resources ===
