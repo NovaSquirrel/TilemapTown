@@ -420,7 +420,10 @@ Set text to display upon entry
 (unimplemented)
 
 /mapexport
-Allow the user to download the map
+Allow the user to download the map as a text file
+
+/mapscreenshot
+Renders the entire map as an image that you can download
 
 /mapbuild on/off
 Enable or disable building on the map
