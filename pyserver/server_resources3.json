@@ -1801,7 +1801,7 @@
 					12
 				],
 				"obj": true,
-				"density": true
+				"over": true
 			},
 			"tree_big_bl": {
 				"name": "tree",
@@ -2389,24 +2389,6 @@
 				],
 				"obj": true
 			},
-			"window7": {
-				"name": "window",
-				"pic": [
-					-3,
-					8,
-					70
-				],
-				"obj": true
-			},
-			"window8": {
-				"name": "window",
-				"pic": [
-					-3,
-					9,
-					70
-				],
-				"obj": true
-			},
 			"window10": {
 				"name": "window",
 				"pic": [
@@ -2422,6 +2404,24 @@
 					-3,
 					9,
 					68
+				],
+				"obj": true
+			},
+			"window7": {
+				"name": "window",
+				"pic": [
+					-3,
+					8,
+					70
+				],
+				"obj": true
+			},
+			"window8": {
+				"name": "window",
+				"pic": [
+					-3,
+					9,
+					70
 				],
 				"obj": true
 			},
