@@ -242,7 +242,8 @@
 					-3,
 					1,
 					2
-				]
+				],
+				"autotile_class": "dirt"
 			},
 			"tallgrass": {
 				"name": "tall grass",
@@ -312,7 +313,8 @@
 					-3,
 					1,
 					10
-				]
+				],
+				"autotile_class": "sand"
 			},
 			"grass_sand": {
 				"name": "grass",
