@@ -86,7 +86,7 @@ function runLocalCommand(t) {
 	} else if (tl == "/mapscreenshot") {
 		let win = window.open("about:blank", "Map");
 		win.onload = function() {
-			win.document.body.innerHTML = `<html><head><title>Map screenshot</title></head><body>Map size: ${MyMap.Width}&times;${MyMap.Height}:<br></body></html>`;
+			win.document.body.innerHTML = `<html><head><title>Map screenshot</title></head><body>Map size: ${MyMap.Width}&times;${MyMap.Height}<br></body></html>`;
 
 			let canvas = win.document.createElement('canvas');
 			win.document.body.appendChild(canvas);
