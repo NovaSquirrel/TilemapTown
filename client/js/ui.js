@@ -1340,8 +1340,8 @@ function openMapObjContextMenu(map_x, map_y, index, x, y) {
 	mapObjContextMenuY = map_y;
 	mapObjContextMenuIndex = index;
 	let menu = document.querySelector('#mapobj-contextmenu');
-	menu.style.left = (x) + "px";
-	menu.style.top = (y) + "px";
+	menu.style.left = (x-8) + "px";
+	menu.style.top = (y-8) + "px";
 	menu.style.display = "block";
 }
 
@@ -1350,8 +1350,8 @@ function openTurfContextMenu(map_x, map_y, x, y) {
 	turfContextMenuX = map_x;
 	turfContextMenuY = map_y;
 	let menu = document.querySelector('#turf-contextmenu');
-	menu.style.left = (x) + "px";
-	menu.style.top = (y) + "px";
+	menu.style.left = (x-8) + "px";
+	menu.style.top = (y-8) + "px";
 	menu.style.display = "block";	
 }
 
@@ -1371,8 +1371,8 @@ function openItemContextMenu(id, x, y) {
 		drop.innerText = "Take";
 	}
 	let menu = document.querySelector('#item-contextmenu');
-	menu.style.left = (x) + "px";
-	menu.style.top = (y) + "px";
+	menu.style.left = (x-8) + "px";
+	menu.style.top = (y-8) + "px";
 
 	menu.style.display = "block";
 
@@ -2030,8 +2030,8 @@ function openFileContextMenu(id, x, y) {
 	}
 
 	let menu = isMusic ? document.querySelector('#fileupload-contextmenu-music') : document.querySelector('#fileupload-contextmenu-image');
-	menu.style.left = (x) + "px";
-	menu.style.top = (y) + "px";
+	menu.style.left = (x-8) + "px";
+	menu.style.top = (y-8) + "px";
 	menu.style.display = "block";
 	contextMenuFile = id;
 	if(isMusic)
@@ -2043,8 +2043,8 @@ function openFileContextMenu(id, x, y) {
 let contextMenuFolder = 0;
 function openFolderContextMenu(id, x, y) {
 	let menu = document.querySelector('#filefolder-contextmenu');
-	menu.style.left = (x) + "px";
-	menu.style.top = (y) + "px";
+	menu.style.left = (x-8) + "px";
+	menu.style.top = (y-8) + "px";
 	menu.style.display = "block";
 	contextMenuFolder = id;
 }
@@ -3722,8 +3722,8 @@ function initBuild() {
 		rightClickedBuildTile = window['currentBuildCategoryArrayNames'][index];
 
 		let menu = document.querySelector('#build-contextmenu');
-		menu.style.left = (evt.clientX) + "px";
-		menu.style.top = (evt.clientY) + "px";
+		menu.style.left = (evt.clientX-8) + "px";
+		menu.style.top = (evt.clientY-8) + "px";
 		menu.style.display = "block";
 		evt.preventDefault();
 	}, false);

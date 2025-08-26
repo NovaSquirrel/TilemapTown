@@ -1351,9 +1351,9 @@ function initMouse() {
 		let index = Math.floor(pos.x / oneWidth);
 		rightClickedHotbarIndex = index;
 		let menu = document.querySelector(hotbarData[index] !== null ? '#hotbar-contextmenu' : '#hotbar-no-item-contextmenu');
-		menu.style.left = (evt.clientX) + "px";
+		menu.style.left = (evt.clientX - 8) + "px";
 		menu.style.display = "block";
-		menu.style.top = (evt.clientY - menu.offsetHeight) + "px";
+		menu.style.top = (evt.clientY - menu.offsetHeight + 8) + "px";
 		evt.preventDefault();
 	}, false);
 }
