@@ -49,6 +49,12 @@ Clears the map's current topic
 /oops
 Put the most recent text you tried to send back into the chat bar, so that you can have another attempt at a command.
 
+/focuschat off
+/focuschat distance 5
+/focuschat names name1 name2 name3
+/focuschat distancenames 5 name1 name2 name3
+Make the chat for anyone who doesn't meet the criteria you set here appear small and gray. "Names" uses usernames, and "Distance" is in units of tiles.
+"DistanceNames" will deemphasize messages outside the distance unless they have one of the provided usernames.
 
 ---Utility---
 /getturf
@@ -69,6 +75,9 @@ Starts playing a song
 /stopmusic
 Stops playing whatever music is currently playing
 
+/whatturf
+/whatobjs
+Show how Tilemap Town is storing the tile you're standing on
 
 ---Account/customization---
 /nick newname

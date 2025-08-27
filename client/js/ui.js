@@ -2545,10 +2545,27 @@ function convertBBCodeChat(t) {
 
 let timeFormat = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
 let alreadyPlayedSound = false;
+let focusChatDistance = null;
+let focusChatNames = null;
+
 function logMessage(Message, Class, Params) {
 	Params = Params ?? {};
 	let chatArea = document.getElementById("chatArea");
 	let bottom = chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight<3;
+	let distantChat = false;
+
+	if (Params.id !== undefined && Params.id !== PlayerYou) {
+		if (focusChatDistance && !focusChatNames.length) {
+			if (Params.id in PlayerWho && Math.sqrt(Math.pow(PlayerWho[Params.id].x - PlayerWho[PlayerYou].x, 2) + Math.pow(PlayerWho[Params.id].y - PlayerWho[PlayerYou].y, 2)) > focusChatDistance)
+				distantChat = true;
+		} else if (focusChatNames.length && !focusChatDistance) {
+			if (Params.username && !focusChatNames.includes(Params.username))
+				distantChat = true;
+		} else if (focusChatNames.length && focusChatDistance) {
+			if (Params.username && !focusChatNames.includes(Params.username) && Params.id in PlayerWho && Math.sqrt(Math.pow(PlayerWho[Params.id].x - PlayerWho[PlayerYou].x, 2) + Math.pow(PlayerWho[Params.id].y - PlayerWho[PlayerYou].y, 2)) > focusChatDistance)
+				distantChat = true;
+		}
+	}
 
 	let timestampText = "";
 	if (chatTimestamps) {
@@ -2568,7 +2585,7 @@ function logMessage(Message, Class, Params) {
 	let newMessage = document.createElement("div");
 	if (Class !== "server_message" && Class !== "server_motd" && Class !== "server_stats" && Class.startsWith("server_")) // Color it server color even if the specific class is unknown
 		Class = "server_message";
-	newMessage.className = Class + " log_line";
+	newMessage.className = Class + " log_line" + (distantChat ? " distant_message" : "");
 	if (Params.username) {
 		if (Params.rc_username) {
 			newMessage.title = `Username: ${Params.username} (controlled by ${Params.rc_username})`;
@@ -2587,7 +2604,7 @@ function logMessage(Message, Class, Params) {
 	if (bottom)
 		chatArea.scrollTop = chatArea.scrollHeight;
 
-	if (!alreadyPlayedSound) {
+	if (!alreadyPlayedSound && !distantChat) {
 		if ((Params.isChat || Params.isPrivateChat) && AudioChatNotifications) {
 			if (!Params.isSilent) {
 				let audio = new Audio(Params.isPrivateChat ? 'img/audio/notifyprivate.wav' : 'img/audio/notifychat.wav');

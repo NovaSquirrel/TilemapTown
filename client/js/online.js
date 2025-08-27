@@ -851,19 +851,19 @@ function receiveServerMessage(cmd, arg) {
           let no_space = message.startsWith("'s ") || message.startsWith("'d ") || message.startsWith("'ll ");
           logMessage("* <i>"+escapedName+(no_space?"":" ")+convertBBCodeChat(message)+"</i>", 'user_message',
             {'isChat': true, 'plainText': `* ${escapedName}${no_space?"":" "}${message}`,
-            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
+            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"], "id": arg["id"]});
         } else if(arg.text.slice(0, 5).toLowerCase() == "/ooc ")
           logMessage("[OOC] "+escapedName+": "+convertBBCodeChat(arg.text.slice(5)), 'ooc_message',
             {'isChat': true, 'plainText': `[OOC] ${escapedName}: ${arg.text.slice(5)}`,
-            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
+            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"], "id": arg["id"]});
         else if(arg.text.slice(0, 7).toLowerCase() == "/spoof ")
           logMessage("* <i>"+convertBBCodeChat(arg.text.slice(7)) + "</i> <span class=\"spoof_name\">(by "+escapedName+")</span>", 'spoof_message',
             {'isChat': true, 'plainText': `* ${arg.text.slice(7)} (by ${arg.name})`,
-            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
+            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"], "id": arg["id"]});
         else
           logMessage("&lt;"+escapedName+"&gt; "+convertBBCodeChat(arg.text), 'user_message',
             {'isChat': true, 'plainText': `<${arg.name}> ${arg.text}`,
-            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
+            'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"], "id": arg["id"]});
       } else
         if(arg.buttons) {
           let buttons = "";
@@ -871,7 +871,7 @@ function receiveServerMessage(cmd, arg) {
             buttons += '<input type="button" value="'+arg.buttons[i*2]+'" onclick="sendChatCommand(\''+arg.buttons[i*2+1]+'\');"/>';
           }
           logMessage("! "+convertBBCodeChat(arg.text)+" "+buttons, arg["class"] ?? 'server_message',
-            {'isChat': false, 'username': arg["username"]});
+            {'isChat': false, 'username': arg["username"], 'rc_username': arg["rc_username"] ?? arg["rc_id"], "id": arg["id"]});
         } else {
           if(arg["class"]) {
             if (arg["class"] == "server_motd")
@@ -894,11 +894,11 @@ function receiveServerMessage(cmd, arg) {
             }
             logMessage(convertBBCodeChat(arg.text), arg["class"],
               {'isChat': false, 'plainText': arg.text,
-              'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
+              'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"], "id": arg["id"]});
           } else
             logMessage("Server message: "+convertBBCodeChat(arg.text), 'server_message',
               {'isChat': false, 'plainText': "Server message: "+arg.text,
-              'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
+              'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"], "id": arg["id"]});
         }
       break;
     case "IDN":
