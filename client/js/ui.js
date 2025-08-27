@@ -2546,7 +2546,7 @@ function convertBBCodeChat(t) {
 let timeFormat = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
 let alreadyPlayedSound = false;
 let focusChatDistance = null;
-let focusChatNames = null;
+let focusChatNames = [];
 
 function logMessage(Message, Class, Params) {
 	Params = Params ?? {};
@@ -2554,7 +2554,7 @@ function logMessage(Message, Class, Params) {
 	let bottom = chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight<3;
 	let distantChat = false;
 
-	if (Params.id !== undefined && Params.id !== PlayerYou) {
+	if (Params.id !== undefined && Params.id !== PlayerYou && focusChatNames) {
 		if (focusChatDistance && !focusChatNames.length) {
 			if (Params.id in PlayerWho && Math.sqrt(Math.pow(PlayerWho[Params.id].x - PlayerWho[PlayerYou].x, 2) + Math.pow(PlayerWho[Params.id].y - PlayerWho[PlayerYou].y, 2)) > focusChatDistance)
 				distantChat = true;
