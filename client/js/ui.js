@@ -2621,7 +2621,7 @@ function logMessage(Message, Class, Params) {
 	}
 
 	if (Params.plainText && Class !== "secret_message") {
-		chatLogForExport.push((timestampText.length ? (`[${timestampText}] `) : "") + Params.plainText);
+		chatLogForExport.push((timestampText.length ? (`[${timestampText}] `) : "") + (distantChat ? "~~~ " : "") + Params.plainText);
 	}
 }
 
