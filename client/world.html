@@ -250,6 +250,7 @@
     <!--<input type="button" value="Tileset" onclick="newItemCreate('tileset');" />-->
     <input type="button" value="Folder" onclick="newItemCreate('folder');" />
     <input type="button" value="Gadget" onclick="newItemCreate('gadget');" />
+    <input type="button" value="Command list" onclick="newItemCreate('command_list');" />
     </p>
     <p>
     <label class="unselectable"><input type="checkbox" id="createtempobject">Create as temporary entity</label>
@@ -605,6 +606,16 @@
   </div>
 </widget-window>
 
+<widget-window id="commandlist" style="display: none;">
+  <span id="commandlist-title" slot="title">Command list</span>
+  <div slot="contents" id="commandlist-contents">
+	Click a command to use it:<br>
+    <ul id="commandlistul" class="itemsul unselectable">
+    </ul>
+	<!--<label class="unselectable"><input type="checkbox" id="commandlistgrid" onchange="commandListGrid()">Grid</label>-->
+  </div>
+</widget-window>
+
 <widget-window id="mail" style="display: none;">
   <span slot="title">Mail</span>
   <div slot="contents">
@@ -726,18 +737,23 @@
 		<hr>
 	</div>
 
+	<div id="edittilecommandlist">
+	<strong>Command list</strong><br>
+	<textarea id="edittilecommandlist_text" cols="60" rows="15"></textarea>
+	</div>
+
     <div id="edittiletext">
     <textarea id="edittiletextarea" cols="60" rows="15"></textarea>
     </div>
 
     <div id="edittileobject">
-    <p>
     <strong>Item picture</strong><br>
 	<span id="itemImageTypePicker">Type:
 	<label class="unselectable"><input type="radio" id="itemImageIsSheet" name="itemImageType" onchange="changeItemImageType()" checked>Normal</label>
 	<label class="unselectable"><input type="radio" id="itemImageIsURL" name="itemImageType" onchange="changeItemImageType()">URL</label>
 	</span>
 
+	<p>
 	<div id="tileImageSheetOptions">
     Tile sheet: <select id="edittilesheet" onchange="editItemUpdatePic();">
       <option value="0">Potluck</option>
@@ -758,7 +774,7 @@
     </p>
 	</div>
 	<div id="tileImageURLOptions">URL: <input id="edittileimageurl" type="text" placeholder="Image URL"></div>
-    </p>
+	</p>
 
 	<p><details id="edittileautotileoptions">
 	<summary class="unselectable">Autotiling</summary>

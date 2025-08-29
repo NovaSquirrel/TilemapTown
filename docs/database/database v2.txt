@@ -23,13 +23,14 @@ General:
 		4 text       (stores text, possibly a script. like notecards)
 		5 image      (links to a .png)
 		6 map_tile   (template for a tile that can be placed on a map)
-		7 tileset    (stores a description of the tiles in a tileset)
+		7 tileset    (stores a description of the tiles in a tileset; used with TSD protocol messages)
 		8 reference  (refer to another entity)
 		9 folder     (for categorization; holds any number of other assets)
 		10 landmark  (holds a location and provides the ability to quickly teleport to it)
 		11 generic   (generic entity, used for things like props or puppets)
 		12 chatroom  (entity specifically made to be a chat)
 		13 gadget    (entity with built-in behavior)
+		14 client_data (entity made to be information to be used entirely client-side, like collections of commands, or collections of map tiles)
 
 	name            - text    - name (for display and disambiguation purposes, not to persistently identify a specific entity)
 	desc            - text    - description of the entity

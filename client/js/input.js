@@ -1003,6 +1003,10 @@ function useItemAtXY(Placed, x, y) {
 		case "gadget":
 			SendCmd("USE", { id: Placed.id });
 			break;
+		case "client_data":
+			if (Placed.data.type === "command_list")
+				viewCommandList(Placed);
+			break;
 		}
 		return old;
 }
@@ -1393,9 +1397,9 @@ function initMouse() {
 		let index = Math.floor(pos.x / oneWidth);
 		rightClickedHotbarIndex = index;
 		let menu = document.querySelector(hotbarData[index] !== null ? '#hotbar-contextmenu' : '#hotbar-no-item-contextmenu');
-		menu.style.left = (evt.clientX - 8) + "px";
+		menu.style.left = (evt.clientX - CONTEXT_MENU_OPEN_OFFSET) + "px";
 		menu.style.display = "block";
-		menu.style.top = (evt.clientY - menu.offsetHeight + 8) + "px";
+		menu.style.top = (evt.clientY - menu.offsetHeight + CONTEXT_MENU_OPEN_OFFSET) + "px";
 		evt.preventDefault();
 	}, false);
 }

@@ -147,7 +147,7 @@ def respond(context, text, data=None, error=False, code=None, detail=None, subje
 def parse_equal_list(text):
 	return (x.split('=') for x in text.split())
 
-entity_types_users_can_change_data_for = ('text', 'image', 'map_tile', 'tileset', 'landmark', 'gadget')
+entity_types_users_can_change_data_for = ('text', 'image', 'map_tile', 'tileset', 'landmark', 'gadget', 'client_data')
 def data_disallowed_for_entity_type(type, data):
 	if entity_type_name[type] not in entity_types_users_can_change_data_for:
 		return 'Not a valid type to change data for'

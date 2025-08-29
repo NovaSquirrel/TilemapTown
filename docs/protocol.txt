@@ -36,6 +36,8 @@ List of entity types:
 	generic     No special behavior.
 	chatroom    Entity is supposed to function as a chatroom.
 	gadget      Has special built-in behavior and likely has some sort of action where you can "use" it.
+	client_data Holds information specifically for client use.
+	            Structured as {"type": name, "type_version": version, "client_name": name, "data": data} - can add "client_version" too if desired.
 
 List of permissions:
 	build                       user can build on the map

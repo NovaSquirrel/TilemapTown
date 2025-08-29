@@ -3265,6 +3265,24 @@
 				],
 				"obj": true
 			},
+			"bed3_l": {
+				"name": "bed",
+				"pic": [
+					-3,
+					1,
+					64
+				],
+				"obj": true
+			},
+			"bed4_l": {
+				"name": "bed",
+				"pic": [
+					-3,
+					2,
+					64
+				],
+				"obj": true
+			},
 			"snowman": {
 				"name": "snowman",
 				"autotile_class_edge": "snow",

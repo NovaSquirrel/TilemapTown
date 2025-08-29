@@ -133,6 +133,8 @@ let focusMapAfterChat = false;
 let FileStorageInfo = null;
 let sampleAvatarList = {};
 
+const CONTEXT_MENU_OPEN_OFFSET = 8;
+
 ///////////////////////////////////////////////////////////
 
 function getRandomInt(min, max) {
@@ -1060,6 +1062,9 @@ function itemCard(id) {
 	li.classList.add('inventoryli');
 	li.setAttribute("item_id", id);
 	li.appendChild(itemIcon(id));
+	if (item.title_text) {
+		li.title = item.title_text;
+	}
 
 	let info_div = document.createElement("div");
 
@@ -1340,8 +1345,8 @@ function openMapObjContextMenu(map_x, map_y, index, x, y) {
 	mapObjContextMenuY = map_y;
 	mapObjContextMenuIndex = index;
 	let menu = document.querySelector('#mapobj-contextmenu');
-	menu.style.left = (x-8) + "px";
-	menu.style.top = (y-8) + "px";
+	menu.style.left = (x-CONTEXT_MENU_OPEN_OFFSET) + "px";
+	menu.style.top = (y-CONTEXT_MENU_OPEN_OFFSET) + "px";
 	menu.style.display = "block";
 }
 
@@ -1350,8 +1355,8 @@ function openTurfContextMenu(map_x, map_y, x, y) {
 	turfContextMenuX = map_x;
 	turfContextMenuY = map_y;
 	let menu = document.querySelector('#turf-contextmenu');
-	menu.style.left = (x-8) + "px";
-	menu.style.top = (y-8) + "px";
+	menu.style.left = (x-CONTEXT_MENU_OPEN_OFFSET) + "px";
+	menu.style.top = (y-CONTEXT_MENU_OPEN_OFFSET) + "px";
 	menu.style.display = "block";	
 }
 
@@ -1371,8 +1376,8 @@ function openItemContextMenu(id, x, y) {
 		drop.innerText = "Take";
 	}
 	let menu = document.querySelector('#item-contextmenu');
-	menu.style.left = (x-8) + "px";
-	menu.style.top = (y-8) + "px";
+	menu.style.left = (x-CONTEXT_MENU_OPEN_OFFSET) + "px";
+	menu.style.top = (y-CONTEXT_MENU_OPEN_OFFSET) + "px";
 
 	menu.style.display = "block";
 
@@ -1420,6 +1425,81 @@ function viewTileset(Item) {
 	tileset_title.innerText = "Tileset: " + Item.name;
 }
 
+let commandListItem = null;
+function viewCommandList(Item) {
+	console.log(Item);
+	commandListItem = Item;
+	refreshCommandList();
+
+	let commandlist = document.getElementById('commandlist');
+	toggleDisplay(commandlist);
+
+	let commandlist_title = document.getElementById('commandlist-title');
+	commandlist_title.innerText = "Command list: " + Item.name;
+}
+
+function refreshCommandList() {
+	let ul = document.getElementById("commandlistul");
+	while (ul.firstChild) {
+		ul.removeChild(ul.firstChild);
+	}
+	for(let command of commandListItem.data.data) {
+		let primaryCommand = command.command;
+		if (Array.isArray(primaryCommand))
+			primaryCommand = primaryCommand[0];
+		let pic = [0, 8, 24];
+		let big = false;
+		if (primaryCommand) {
+			console.log("command is", primaryCommand);
+			let s = primaryCommand.split(" ");
+			if (s.length >= 4 && (s[0].toLowerCase() === "usp" || s[0].toLowerCase() === "userparticle")) {
+				pic[0] = parseInt(s[1]); // TODO: Assume it's safe to have a URL here if the item belongs to you?
+				pic[1] = parseInt(s[2]);
+				pic[2] = parseInt(s[3]);
+				if (Number.isNaN(pic[0]) || Number.isNaN(pic[1]) || Number.isNaN(pic[2]))
+					pic = [0, 8, 24];
+				for (let param of s.slice(3)) {
+					if (param.startsWith("size=") && param !== "size=1,1") {
+						big = true;
+						break;
+					}
+				}
+			}
+		}
+
+		let item = {
+			name: command.name,
+			pic,
+			is_uploaded_image: big, // Force 32x32, if big
+			title_text: Array.isArray(command.command) ? command.command.join("\n") : (primaryCommand ?? ""),
+		};
+		let li = itemCard(item);
+		li.addEventListener('click', function (e) {
+			// Figure out which command to run
+			console.log("click", command);
+			const commandSuffix = ["e", "se", "s", "sw", "w", "nw", "n", "ne"];
+			let commandName = "command_" + commandSuffix[PlayerWho[PlayerYou].dir];
+			console.log(commandName);
+			if (!(commandName in command))
+				commandName = "command";
+			console.log(commandName);
+			if (commandName in command) {
+				let commandValue = command[commandName];
+				console.log(commandValue);
+				if (!Array.isArray(commandValue)) {
+					commandValue = [commandValue];
+				}
+				for (let subCommand of commandValue) {
+					if (subCommand.toLowerCase().startsWith("usp ") || subCommand.toLowerCase().startsWith("userparticle ") || confirm('Run command "' + subCommand + '"?')) {
+						if (runLocalCommand("/"+subCommand));
+						else sendChatCommand(subCommand);
+					}
+				}
+			}
+		});
+		ul.appendChild(li);
+	}
+}
 
 
 ///////////////////////////////////////////////////////////
@@ -1430,6 +1510,7 @@ let editItemType = null;
 let editItemID = null;
 let editItemWaitingForDataID = undefined;
 let editItemOriginalSheet = null; // Original tileset image that the tile's pic was set to before the edit
+let edited_client_data = null;
 
 function editItemShared(item) {
 	let itemobj = null;
@@ -1442,6 +1523,7 @@ function editItemShared(item) {
 	document.getElementById('edittiletext').style.display = "none";
 	document.getElementById('edittileimage').style.display = "none";
 	document.getElementById('edittilegadget').style.display = "none";
+	document.getElementById('edittilecommandlist').style.display = "none";
 	document.getElementById('edittilename').value = item.name;
 	if(editTypeIsDirectEdit(item.type)) {
 		document.getElementById('description_or_message').textContent = "Message";
@@ -1657,6 +1739,41 @@ function editItemShared(item) {
 
 			if (IconSheets[itemobj.pic[0] || 0] != undefined)
 				document.getElementById('edittilesheetselect').src = IconSheets[itemobj.pic[0] || 0].src;
+			break;
+		case "client_data":
+			edited_client_data = item.data;
+			if (item.data.type === "command_list") {
+				document.getElementById('edittilecommandlist').style.display = "block";
+				let text = "";
+				for (let command of item.data.data) {
+					if ("comment" in command)    text += "/" + command.command + "\n";
+					if ("name" in command) {
+						if (text !== "")
+							text += "\n"
+						text += "-" + command.name + "\n";
+					}
+					function addField(field, prefix) {
+						if (!(field in command))
+							return;
+						if (Array.isArray(command[field])) {
+							for (let v of command[field])
+								text += prefix + v + "\n";
+						} else {
+							text += prefix + command[field] + "\n";
+						}
+					}
+					addField("command",    "/");
+					addField("command_e",  "e/");
+					addField("command_se", "se/");
+					addField("command_s",  "s/");
+					addField("command_sw", "sw/");
+					addField("command_w",  "w/");
+					addField("command_nw", "nw/");
+					addField("command_n",  "n/");
+					addField("command_ne", "ne/");
+				}
+				document.getElementById('edittilecommandlist_text').value = text;
+			}
 			break;
 	}
 
@@ -1882,6 +1999,63 @@ function editItemApply() {
 			}
 			break;
 
+		case "client_data":
+			if (edited_client_data.type === "command_list" && document.getElementById('edittilecommandlist').style.display === "block") {
+				// Parse the textarea
+				let text = document.getElementById('edittilecommandlist_text').value
+				let commands = [];
+
+				let thisCommand = {};
+				function addCommand() {
+					if (Object.keys(thisCommand).length == 0)
+						return;
+					commands.push(thisCommand);
+					thisCommand = {};
+				}
+				function addField(field, v) {
+					if (thisCommand[field] === undefined)
+						thisCommand[field] = v;
+					else if (Array.isArray(thisCommand[field]))
+						thisCommand[field].push(v);
+					else
+						thisCommand[field] = [thisCommand[field], v];
+				}
+				for (let line of text.split("\n")) {
+					if (line.trim() == "")
+						continue;
+					if (line.startsWith("-")) {
+						addCommand();
+						thisCommand.name = line.slice(1);
+					} else if(line.startsWith("/")) {
+						addField("command", line.slice(1));
+					} else if(line.startsWith("e/")) {
+						addField("command_e", line.slice(2));
+					} else if(line.startsWith("se/")) {
+						addField("command_se", line.slice(3));
+					} else if(line.startsWith("s/")) {
+						addField("command_s", line.slice(2));
+					} else if(line.startsWith("sw/")) {
+						addField("command_sw", line.slice(3));
+					} else if(line.startsWith("w/")) {
+						addField("command_w", line.slice(2));
+					} else if(line.startsWith("nw/")) {
+						addField("command_nw", line.slice(3));
+					} else if(line.startsWith("n/")) {
+						addField("command_n", line.slice(2));
+					} else if(line.startsWith("ne/")) {
+						addField("command_ne", line.slice(3));
+					} else {
+						alert("Couldn't understand line:\n"+line);
+						return;
+					}
+				}
+				addCommand();
+				edited_client_data.data = commands;
+				updates.data = edited_client_data;
+				SendCmd("BAG", { update: updates });
+			}
+			break;
+
 		default: // just update name then
 			SendCmd("BAG", { update: updates });
 			break;
@@ -1910,6 +2084,14 @@ function newItemCreate(type) {
 	let params = { create: { "type": type, "name": document.getElementById('newtilename').value } };
 	if(document.getElementById("createtempobject").checked) {
 		params['create']['temp'] = true;
+	}
+	if(type === "command_list") {
+		params.create.type = "client_data";
+		params.create.data = {"type": "command_list", "type_version": "0.0.1", "client_name": CLIENT_NAME, "data": [
+			{"name": "happy",   "command": "userparticle 0 2 24 offset=0,-16"},
+			{"name": "sad",     "command": "userparticle 0 1 24 offset=0,-16"},
+			{"name": "explode", "command": "userparticle 0 4 21 anim_frames=7 anim_loops=0 hide_me"},
+		]};
 	}
 	SendCmd("BAG", params);
 	newItemCancel();
@@ -2030,8 +2212,8 @@ function openFileContextMenu(id, x, y) {
 	}
 
 	let menu = isMusic ? document.querySelector('#fileupload-contextmenu-music') : document.querySelector('#fileupload-contextmenu-image');
-	menu.style.left = (x-8) + "px";
-	menu.style.top = (y-8) + "px";
+	menu.style.left = (x-CONTEXT_MENU_OPEN_OFFSET) + "px";
+	menu.style.top = (y-CONTEXT_MENU_OPEN_OFFSET) + "px";
 	menu.style.display = "block";
 	contextMenuFile = id;
 	if(isMusic)
@@ -2043,8 +2225,8 @@ function openFileContextMenu(id, x, y) {
 let contextMenuFolder = 0;
 function openFolderContextMenu(id, x, y) {
 	let menu = document.querySelector('#filefolder-contextmenu');
-	menu.style.left = (x-8) + "px";
-	menu.style.top = (y-8) + "px";
+	menu.style.left = (x-CONTEXT_MENU_OPEN_OFFSET) + "px";
+	menu.style.top = (y-CONTEXT_MENU_OPEN_OFFSET) + "px";
 	menu.style.display = "block";
 	contextMenuFolder = id;
 }
@@ -2554,7 +2736,7 @@ function logMessage(Message, Class, Params) {
 	let bottom = chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight<3;
 	let distantChat = false;
 
-	if (Params.id !== undefined && Params.id !== PlayerYou && focusChatNames) {
+	if (Params.id !== undefined && Params.id !== PlayerYou && focusChatNames && Class !== "private_message") {
 		if (focusChatDistance && !focusChatNames.length) {
 			if (Params.id in PlayerWho && Math.sqrt(Math.pow(PlayerWho[Params.id].x - PlayerWho[PlayerYou].x, 2) + Math.pow(PlayerWho[Params.id].y - PlayerWho[PlayerYou].y, 2)) > focusChatDistance)
 				distantChat = true;
@@ -2996,6 +3178,10 @@ function apply_default_pic_for_type(item) {
 			if (item.pic == null)
 				item.pic = FolderClosedPic;
 			break;
+		case "client_data":
+			if (item.data.type === "command_list" && item.pic == null)
+				item.pic = [0, 2, 24];
+			break
 	}
 }
 
@@ -3739,8 +3925,8 @@ function initBuild() {
 		rightClickedBuildTile = window['currentBuildCategoryArrayNames'][index];
 
 		let menu = document.querySelector('#build-contextmenu');
-		menu.style.left = (evt.clientX-8) + "px";
-		menu.style.top = (evt.clientY-8) + "px";
+		menu.style.left = (evt.clientX-CONTEXT_MENU_OPEN_OFFSET) + "px";
+		menu.style.top = (evt.clientY-CONTEXT_MENU_OPEN_OFFSET) + "px";
 		menu.style.display = "block";
 		evt.preventDefault();
 	}, false);
