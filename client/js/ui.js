@@ -1427,7 +1427,6 @@ function viewTileset(Item) {
 
 let commandListItem = null;
 function viewCommandList(Item) {
-	console.log(Item);
 	commandListItem = Item;
 	refreshCommandList();
 
@@ -1482,13 +1481,10 @@ function refreshCommandList() {
 			console.log("click", command);
 			const commandSuffix = ["e", "se", "s", "sw", "w", "nw", "n", "ne"];
 			let commandName = "command_" + commandSuffix[PlayerWho[PlayerYou].dir];
-			console.log(commandName);
 			if (!(commandName in command))
 				commandName = "command";
-			console.log(commandName);
 			if (commandName in command) {
 				let commandValue = command[commandName];
-				console.log(commandValue);
 				if (!Array.isArray(commandValue)) {
 					commandValue = [commandValue];
 				}
@@ -2251,7 +2247,6 @@ function fileUploadContextMenuAppearance() {
 function fileUploadContextMenuTileSheet() {
 	let file = FileStorageInfo.files[contextMenuFile];
 	for (let item of DBInventory) {
-		console.log(item);
 		if (item === undefined)
 			continue;
 		if (item.data == file.url) {
