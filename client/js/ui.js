@@ -1742,7 +1742,7 @@ function editItemShared(item) {
 			break;
 		case "client_data":
 			edited_client_data = item.data;
-			if (item.data.type === "command_list") {
+			if (item?.data?.type === "command_list") {
 				document.getElementById('edittilecommandlist').style.display = "block";
 				let text = "";
 				for (let command of item.data.data) {
@@ -3179,7 +3179,7 @@ function apply_default_pic_for_type(item) {
 				item.pic = FolderClosedPic;
 			break;
 		case "client_data":
-			if (item.data.type === "command_list" && item.pic == null)
+			if (item?.data?.type === "command_list" && item.pic == null)
 				item.pic = [0, 2, 24];
 			break
 	}
