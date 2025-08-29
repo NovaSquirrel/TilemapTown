@@ -1478,7 +1478,6 @@ function refreshCommandList() {
 		let li = itemCard(item);
 		li.addEventListener('click', function (e) {
 			// Figure out which command to run
-			console.log("click", command);
 			const commandSuffix = ["e", "se", "s", "sw", "w", "nw", "n", "ne"];
 			let commandName = "command_" + commandSuffix[PlayerWho[PlayerYou].dir];
 			if (!(commandName in command))
@@ -2052,6 +2051,10 @@ function editItemApply() {
 				edited_client_data.data = commands;
 				updates.data = edited_client_data;
 				SendCmd("BAG", { update: updates });
+				if (commandListItem && commandListItem.id === editItemID) {
+					commandListItem.data = edited_client_data;
+					refreshCommandList();
+				}
 			}
 			break;
 
