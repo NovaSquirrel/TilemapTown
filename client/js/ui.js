@@ -1439,18 +1439,21 @@ function viewCommandList(Item) {
 }
 
 function refreshCommandList() {
+	let searchValue = document.getElementById("commandlistsearch").value.toLowerCase();
+
 	let ul = document.getElementById("commandlistul");
 	while (ul.firstChild) {
 		ul.removeChild(ul.firstChild);
 	}
 	for(let command of commandListItem.data.data) {
+		if (searchValue.length && !command.name.toLowerCase().includes(searchValue))
+			continue;
 		let primaryCommand = command.command;
 		if (Array.isArray(primaryCommand))
 			primaryCommand = primaryCommand[0];
 		let pic = [0, 8, 24];
 		let big = false;
 		if (primaryCommand) {
-			console.log("command is", primaryCommand);
 			let s = primaryCommand.split(" ");
 			if (s.length >= 4 && (s[0].toLowerCase() === "usp" || s[0].toLowerCase() === "userparticle")) {
 				pic[0] = parseInt(s[1]); // TODO: Assume it's safe to have a URL here if the item belongs to you?
@@ -3954,6 +3957,11 @@ function initWorld() {
 				focusChatBarOnTabBack = true;
 			}
 		}
+	});
+
+	document.getElementById("commandlistsearch").addEventListener("keyup", function(event) {
+		if (event.key === "Enter")
+			refreshCommandList();
 	});
 
 	viewInit();
