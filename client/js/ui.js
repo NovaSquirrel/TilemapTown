@@ -3954,7 +3954,7 @@ function initWorld() {
 		}
 	});
 
-	document.getElementById("commandlistsearch").addEventListener("keyup", function(event) {
+	document.getElementById("commandlistsearch").addEventListener("keydown", function(event) {
 		if (event.key === "Enter")
 			refreshCommandList();
 	});
