@@ -679,10 +679,13 @@ def fn_tpaccept(map, client, context, arg):
 			e = e.protocol_id()
 		request_data_for_message = [e, request_data[1]]
 
-	subject.send("MSG", {'text': "%s accepted your %s request" % (client.name_and_username(), request_type_to_friendly[request_type]), "data":
-			{"request_accepted": {"id": client.protocol_id(), "type": request_type, "data": request_data_for_message}}
-		}
-	)
+	if subject.entity_type == entity_type['gadget']:
+		subject.receive_request_result(client, request_type, request_data_for_message, True)
+	else:
+		subject.send("MSG", {'text': "%s accepted your %s request" % (client.name_and_username(), request_type_to_friendly[request_type]), "data":
+				{"request_accepted": {"id": client.protocol_id(), "type": request_type, "data": request_data_for_message}}
+			}
+		)
 
 	def clone_item(item, temp):
 		c = Entity
@@ -799,10 +802,13 @@ def fn_tpdeny(map, client, context, arg):
 
 	subject = find_client_by_username(subject_id)
 	if subject != None:
-		subject.send("MSG", {'text': "%s rejected your %s request" % (client.name_and_username(), request_type_to_friendly[request_type]), "data":
-				{"request_rejected": {"id": client.protocol_id(), "type": request_type, "data": request_data_for_message}}
-			}
-		)
+		if subject.entity_type == entity_type['gadget']:
+			subject.receive_request_result(client, request_type, request_data_for_message, False)
+		else:
+			subject.send("MSG", {'text': "%s rejected your %s request" % (client.name_and_username(), request_type_to_friendly[request_type]), "data":
+					{"request_rejected": {"id": client.protocol_id(), "type": request_type, "data": request_data_for_message}}
+				}
+			)
 
 @cmd_command(category="Teleport", syntax="username")
 def fn_tpcancel(map, client, context, arg):

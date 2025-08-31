@@ -128,6 +128,11 @@ class Gadget(Entity):
 			if trait.on_request(user, request_type, request_data, accept_command, decline_command):
 				return
 
+	def receive_request_result(self, user, request_type, request_data, result):
+		for trait in self.traits:
+			if trait.on_request_result(user, request_type, request_data, result):
+				return
+
 	def receive_key_press(self, user, key, down):
 		for trait in self.traits:
 			if trait.on_key_press(user, key, down):
@@ -264,6 +269,9 @@ class GadgetTrait(object):
 		return None
 
 	def on_request(self, user, request_type, request_data, accept_command, decline_command):
+		return None
+
+	def on_request_result(self, user, request_type, request_data, result):
 		return None
 
 	def on_key_press(self, user, key, down):
@@ -649,6 +657,20 @@ class GadgetScript(GadgetTrait):
 			"type":     request_type,
 			"accept_command": accept_command,
 			"decline_command": decline_command,
+			"id":       user.protocol_id(),
+			"name":     user.name,
+			"username": user.username_or_id()
+		}])
+		return True
+
+	def on_request_result(self, user, request_type, request_data, result):
+		if not self.gadget:
+			return None
+		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_REQUEST_RESULT]:
+			return None
+		self.trigger_script_callback(ScriptingCallbackType.SELF_REQUEST_RESULT, [{
+			"type":     request_type,
+			"result":   result,
 			"id":       user.protocol_id(),
 			"name":     user.name,
 			"username": user.username_or_id()

@@ -67,7 +67,8 @@ class ScriptingCallbackType(IntEnum):
 	SELF_REQUEST_RECEIVED = 14
 	SELF_USE = 15
 	SELF_SWITCH_MAP = 16
-	COUNT = 17
+	SELF_REQUEST_RESULT = 17
+	COUNT = 18
 GlobalData['ScriptingCallbackType'] = ScriptingCallbackType
 
 do_not_return_response = []
