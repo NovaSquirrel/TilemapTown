@@ -336,6 +336,13 @@ widget-contextmenu li:hover {
 	margin: 5px;
 }
 
+#mail-preview-contents {
+	max-width: 600px;
+}
+
+#mail-view-contents {
+	max-width: 600px;
+}
 
 /* Touch UI buttons */
 #touch-button-container {
