@@ -338,10 +338,12 @@ widget-contextmenu li:hover {
 
 #mail-preview-contents {
 	max-width: 600px;
+	overflow: auto;
 }
 
 #mail-view-contents {
 	max-width: 600px;
+	overflow: auto;
 }
 
 /* Touch UI buttons */
