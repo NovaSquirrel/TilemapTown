@@ -2455,7 +2455,7 @@ def fn_whereare(map, client, context, arg):
 		for u in m.contents:
 			if u.is_client() and (override or (u.connection_attr('user_flags') & userflag['hide_location'] == 0)):
 				if arg == 'c' or arg == 'C':
-					users.append('%s<%d,%d>, ' % (u.name_and_username(), u.x, u.y))
+					users.append('%s<%d,%d>' % (u.name_and_username(), u.x, u.y))
 				else:
 					users.append(u.name_and_username())
 		names += ", ".join(sorted(users, key=str.casefold)) + ' | [command]map %d[/command]' % m.db_id
