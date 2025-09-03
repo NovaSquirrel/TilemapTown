@@ -204,7 +204,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 						(Mob.y * 16 + 16 - size[1]*16) - pixelCameraY + offset[1],
 						size[0] * 16, size[1] * 16);
 					markAreaAroundPointAsDirty(MyMap, Mob.x + (offset[0]/16), Mob.y + (offset[1]/16), 5);
-				} else if (typeof pic[0] === "number") {
+				} else if (typeof pic[0] === "number" || !pic[0].toLowerCase().startsWith("http")) {
 					RequestImageIfNeeded(pic[0]);
 				}
 				continue;

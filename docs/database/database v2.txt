@@ -158,10 +158,18 @@ contents        - text    - mail text
 ---SERVER_BAN---
 id              * integer - ban ID
 ip              - text    - IP that was banned
-ip1             - text    - first part of IP address
-ip2             - text    - second part of IP address
-ip3             - text    - third part of IP address
-ip4             - text    - fourth part of IP address
+ip4_1           - text    - first part of IPv4 address
+ip4_2           - text    - second part of IPv4 address
+ip4_3           - text    - third part of IPv4 address
+ip4_4           - text    - fourth part of IPv4 address
+ip6_1           - text    - IPv6 address (part 1)
+ip6_2           - text    - IPv6 address (part 2)
+ip6_3           - text    - IPv6 address (part 3)
+ip6_4           - text    - IPv6 address (part 4)
+ip6_5           - text    - IPv6 address (part 5)
+ip6_6           - text    - IPv6 address (part 6)
+ip6_7           - text    - IPv6 address (part 7)
+ip6_8           - text    - IPv6 address (part 8)
 account         - id      - account that was also banned (unused)
 admin_id        - id      - id of the admin doing the banning
 created_at      -timestamp- time the ban was applied
