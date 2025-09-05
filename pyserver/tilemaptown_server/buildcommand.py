@@ -540,6 +540,13 @@ def fn_tpa(map, client, context, arg):
 def fn_tpahere(map, client, context, arg):
 	send_request_to_user(client, context, arg, "tpahere", None, "tpaccept", "tpdeny", "You requested that %s teleport to you", "%s wants you to teleport to them")
 
+@cmd_command(category="Teleport", syntax="username", alias=['tpainventory'])
+def fn_tpainv(map, client, context, arg):
+	send_request_to_user(client, context, arg, "tpainv", None, "tpaccept", "tpdeny", "You requested a teleport into %s's inventory", "%s wants to teleport into your inventory")
+
+@cmd_command(category="Teleport", syntax="username", alias=['tpamyinventory'])
+def fn_tpamyinv(map, client, context, arg):
+	send_request_to_user(client, context, arg, "tpamyinv", None, "tpaccept", "tpdeny", "You requested that %s teleport into your inventory", "%s wants you to teleport into their inventory")
 
 permission_grant_description = {
 	"move":              "Teleport you around this map",
@@ -647,6 +654,8 @@ def find_request_from_arg(client, context, arg):
 request_type_to_friendly = {
 	"tpa":       "teleport",
 	"tpahere":   "teleport",
+	"tpainv":    "teleport",
+	"tpamyinv":  "teleport",
 	"carry":     "carry",
 	"carryme":   "carryme",
 	"followme":  "follow",
@@ -710,9 +719,13 @@ def fn_tpaccept(map, client, context, arg):
 		client.add_to_contents(new_item)
 
 	if request_type == 'tpa':
-		subject.switch_map(client.map_id, new_pos=[client.x, client.y], on_behalf_of=client)
+		subject.switch_map(client.map or client.map_id, new_pos=[client.x, client.y], on_behalf_of=client)
 	elif request_type == 'tpahere':
-		client.switch_map(subject.map_id, new_pos=[subject.x, subject.y], on_behalf_of=subject)
+		client.switch_map(subject.map or subject.map_id, new_pos=[subject.x, subject.y], on_behalf_of=subject)
+	elif request_type == 'tpainv':
+		subject.switch_map(client, new_pos=[5, 5], on_behalf_of=client)
+	elif request_type == 'tpamyinv':
+		client.switch_map(subject, new_pos=[5, 5], on_behalf_of=subject)
 	elif request_type == 'carry':
 		client.is_following = False
 		client.ride(subject)
@@ -1180,6 +1193,8 @@ def permission_change(map, client, context, arg, command2):
 			map.allow &= ~permission_value
 			map.deny &= ~permission_value
 		map.broadcast("MSG", {'text': "%s sets the default \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[0], command2)})
+		if client not in map.contents:
+			respond(context, "Changed a permission for %s:\nThe default \"%s\" permission is now [b]%s[/b]" % (map.name_and_username(), param[0], command2))
 		map.save_on_clean_up = True
 		if map.is_map():
 			map.resend_map_info_to_users(mai_only=True)
@@ -1191,7 +1206,9 @@ def permission_change(map, client, context, arg, command2):
 		ename = find_entity_name(as_int)
 		if ename != None:
 			map.change_permission_for_entity(as_int, permission_value, True if command2=="grant" else None)
-			map.broadcast("MSG", {'text': "%s sets entity \"%s\"(%d) \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), ename, as_int, param[0], command2)})
+			map.broadcast("MSG", {'text': "%s sets entity \"%s\" (%d) \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), ename, as_int, param[0], command2)})
+			if client not in map.contents:
+				respond(context, "Changed a permission for %s:\nThe entity \"%s\" (%d) \"%s\" permission is now [b]%s[/b]" % (map.name_and_username(), ename, as_int, param[0], command2))
 			return
 		respond(context, '"%d" Not a valid entity ID' % as_int, error=True)
 		return
@@ -1202,7 +1219,9 @@ def permission_change(map, client, context, arg, command2):
 			groupname = find_entity_name(int(groupid))
 			if groupname != None:
 				map.change_permission_for_entity(int(groupid), permission_value, True if command2=="grant" else None)
-				map.broadcast("MSG", {'text': "%s sets group \"%s\"(%s) \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), groupname, groupid, param[0], command2)})
+				map.broadcast("MSG", {'text': "%s sets group \"%s\" (%s) \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), groupname, groupid, param[0], command2)})
+				if client not in map.contents:
+					respond(context, "Changed a permission for %s:\nThe group \"%s\" (%s) \"%s\" permission is now [b]%s[/b]" % (map.name_and_username(), groupname, groupid, param[0], command2))
 				return
 		respond(context, '"%s" Not a valid group number' % groupid, error=True)
 		return
@@ -1214,6 +1233,8 @@ def permission_change(map, client, context, arg, command2):
 		elif command2 == "revoke":
 			map.guest_deny &= ~permission_value
 		map.broadcast("MSG", {'text': "%s sets the guest \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[0], command2)})
+		if client not in map.contents:
+			respond(context, "Changed a permission for %s:\nThe guest \"%s\" permission is now [b]%s[/b]" % (map.name_and_username(), param[0], command2))
 		return
 
 	# Has to be a user that exists
@@ -1230,6 +1251,8 @@ def permission_change(map, client, context, arg, command2):
 		value = False
 	map.change_permission_for_entity(uid, permission_value, value)
 	map.broadcast("MSG", {'text': "%s sets %s's \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[1], param[0], command2)})
+	if client not in map.contents:
+		respond(context, "Changed a permission for %s: %s's \"%s\" permission is now [b]%s[/b]" % (map.name_and_username(), param[1], param[0], command2))
 
 	# Refresh permissions of users on the map so changes take effect immediately
 	# (probably only need to do it for the affected user, if they're even present)
@@ -1251,19 +1274,25 @@ def fn_revoke(map, client, context, arg):
 @cmd_command(category="Map", map_only=True)
 def fn_permlist(map, client, context, arg):
 	c = Database.cursor()
-	perms = "Defaults: "
+	formatted = ["Defaults: "]
 
 	# List map default permissions
 	for k,v in permission.items():
+		perms = ""
 		if (map.allow & v) == v:
 			perms += "+"+k+" "
 		if (map.deny & v) == v:
 			perms += "-"+k+" "
 		if (map.guest_deny & v) == v:
 			perms += "-"+k+"(guest) "
+		if perms != "":
+			formatted.append(perms)
+
+	if len(formatted) == 1:
+		formatted = []
 
 	# User permissions
-	formatted = []
+	user_perm_list = []
 	for row in c.execute('SELECT username, allow, deny FROM Permission mp, User u WHERE mp.subject_id=? AND mp.actor_id=u.entity_id', (map.db_id,)):
 		perms = "[li][b]"+noparse(row[0]) + "[/b]: "
 		for k,v in permission.items():
@@ -1272,31 +1301,48 @@ def fn_permlist(map, client, context, arg):
 			if (row[2] & v) == v: #deny
 				perms += "-"+k+" "
 		perms += "[/li]"
-		formatted.append(perms)
+		user_perm_list.append(perms)
+	if len(user_perm_list):
+		formatted.append("[ul]")
+		formatted.extend(sorted(user_perm_list, key=str.casefold))
+		formatted.append("[/ul]")
 
 	# Group (or anything that isn't a user) permissions
+	group_perm_list = []
 	for row in c.execute('SELECT u.name, u.type, mp.allow, mp.deny, u.id FROM Permission mp, Entity u WHERE mp.subject_id=? AND mp.actor_id=u.id AND u.type != ?', (map.db_id, entity_type['user'])):
-		perms = "[li][b]%s: %s(%s) [/b]: " % (entity_type_name[row[1]].title(), row[4], noparse(row[0]))
+		perms = "[li][b]%s: %s (%s) [/b]: " % (entity_type_name[row[1]].title(), row[4], noparse(row[0]))
 		for k,v in permission.items():
 			if (row[2] & v) == v: # allow
 				perms += "+"+k+" "
 			if (row[3] & v) == v: # deny
 				perms += "-"+k+" "
 		perms += "[/li]"
-		formatted.append(perms)
+		group_perm_list.append(perms)
+	if len(group_perm_list):
+		formatted.append("[ul]")
+		formatted.extend(sorted(group_perm_list, key=str.casefold))
+		formatted.append("[/ul]")
 
 	# Temporary
+	temp_perm_list = []
 	for v in map.temp_permissions_given_to:
-		perms = "[li][b]Temp: %s(%s)[/b]" % (noparse(v.name), v.protocol_id())
+		perms = "[li][b]Temp: %s (%s)[/b]: " % (noparse(v.name), v.protocol_id())
 		perm_bits = v.temp_permissions.get(map)
 		for k,v in permission.items():
 			if (perm_bits & v) == v: # allow
 				perms += "+"+k+" "
 		perms += "[/li]"
-		formatted.append(perms)
+		temp_perm_list.append(perms)
+	if len(temp_perm_list):
+		formatted.append("[ul]")
+		formatted.extend(sorted(temp_perm_list, key=str.casefold))
+		formatted.append("[/ul]")
 
-	perms = "[ul]"+("".join(sorted(formatted, key=str.casefold)))+"[/ul]"
-	respond(context, perms)
+	if len(formatted):
+		perms = ("Permissions for %s:\n" % map.name_and_username())+("".join(formatted))
+		respond(context, perms)
+	else:
+		respond(context, "%s doesn't have any permissions set up" % map.name_and_username())
 
 @cmd_command(privilege_level="registered", no_entity_needed=True)
 def fn_findmyitems(map, client, context, arg):
@@ -2013,6 +2059,9 @@ def fn_map(map, client, context, arg):
 			return
 		if len(s) == 1 and string_is_int(s[0]):
 			map_id = int(s[0])
+			new_pos = None
+		elif len(s) == 1 and valid_id_format(s[0]):
+			map_id = s[0]
 			new_pos = None
 		elif len(s) == 3 and string_is_int(s[0]) and string_is_int(s[1]) and string_is_int(s[2]):
 			map_id = int(s[0])
@@ -3143,7 +3192,7 @@ def fn_entity(map, client, context, arg):
 						e.map.broadcast("MOV", {'id': e.protocol_id(), 'to': [new_x, new_y], 'dir': e.dir}, remote_category=maplisten_type['move'])
 					else:
 						e.map.broadcast("MOV", {'id': e.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e.dir}, remote_category=maplisten_type['move'], mov_user=e)
-	elif subcommand == 'perms':
+	elif subcommand in ('perms', 'permlist', 'permslist'):
 		handlers['permlist'](e, client, context, subarg)
 	elif subcommand == 'permsfor':
 		if subarg.isdecimal():

@@ -702,11 +702,11 @@ class Entity(PermissionsMixin, object):
 
 			# First check if you can even go to that map
 			which_permission = permission['entry'] if self.is_client() else permission['object_entry']
-			have_permission = (self if on_behalf_of == None else on_behalf_of).has_permission(map_load, which_permission, True) # probably don't need to check persistent_object_entry
+			have_permission = (self if on_behalf_of == None else on_behalf_of).has_permission(map_load, which_permission, map_load.is_map()) # probably don't need to check persistent_object_entry
 			if have_permission and on_behalf_of and self.is_banned_from(map_id, which_permission):
 				have_permission = False
 			if not have_permission:
-				self.send("ERR", {'text': 'You don\'t have permission to go to map %d' % (map_id if (isinstance(map_id, int) or isinstance(map_id, str)) else map_id.protocol_id()) })
+				self.send("ERR", {'text': 'You don\'t have permission to go to map %s' % (map_id if (isinstance(map_id, int) or isinstance(map_id, str)) else map_id.protocol_id()) })
 				if added_new_history:
 					self.tp_history.pop()
 				self.finish_batch()

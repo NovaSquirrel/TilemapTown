@@ -188,6 +188,12 @@ Requests a teleport to another user
 /tpahere user (alias msummon)
 Request to teleport another user to you
 
+/tpainv user
+Request to teleport into another user's inventory
+
+/tpamyinv user
+Request that a user teleport into your inventory
+
 /tpaccept user
 Accept a teleport request
 
