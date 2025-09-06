@@ -3230,7 +3230,7 @@ def fn_entity(map, client, context, arg):
 			if params == False:
 				return
 			actor, permission_value = params
-			if actor in e.temp_permissions:
+			if e in actor.temp_permissions:
 				actor.temp_permissions[e] &= ~permission_value
 				if actor.temp_permissions[e] == 0:
 					del actor.temp_permissions[e]
@@ -3244,8 +3244,8 @@ def fn_entity(map, client, context, arg):
 		if permission_check(permission['admin']):
 			actor = find_client_by_username(subarg)
 			if actor != None:
-				actor.temp_permissions_given_to.discard(e)
-				e.temp_permissions.pop(actor, None)
+				e.temp_permissions_given_to.discard(e)
+				actor.temp_permissions.pop(actor, None)
 
 	elif subcommand == 'delete':
 		if e.is_client():
