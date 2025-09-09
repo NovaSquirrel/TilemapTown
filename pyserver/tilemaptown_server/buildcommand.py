@@ -239,7 +239,7 @@ def attach_result_to_context(context, result):
 
 @cmd_command(category="Settings", syntax="newname", no_entity_needed=True)
 def fn_nick(map, client, context, arg):
-	arg = arg[:50].replace('\n', '')
+	arg = filter_displayname(arg[:50])
 	if len(arg) == 0 or arg.isspace():
 		return
 

@@ -518,6 +518,9 @@ def get_entity_by_id(id, load_from_db=True, do_not_load_scripts=False):
 def filter_username(text):
 	return ''.join([i for i in text if (i.isalnum() or i == '_')]).lower()
 
+def filter_displayname(text):
+	return text.replace('\n', '').replace("\u202E", '')
+
 def escape_tags(text):
 	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 

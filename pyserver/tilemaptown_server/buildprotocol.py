@@ -246,7 +246,7 @@ def set_entity_params_from_dict(e, d, connection, client, context):
 	if 'home_position' in d and len(d['home_position']) == 2:
 		e.home_position = d['home_position']
 	if 'name' in d:
-		e.name = d['name'].replace('\n', '')
+		e.name = filter_displayname(d['name'])
 	if 'desc' in d:
 		e.desc = d['desc']
 	if 'pic' in d:
@@ -1172,7 +1172,7 @@ def fn_IDN(connection, map, client, arg, context):
 	else:
 		# Become a guest
 		if "name" in arg:
-			new_client.name = arg["name"].replace('\n', '')
+			new_client.name = filter_displayname(arg["name"])
 		if not override_map or not new_client.switch_map(override_map[0], new_pos=None if (len(override_map) == 1) else (override_map[1:])):
 			connection.entity.switch_map(get_database_meta('default_map'))
 
