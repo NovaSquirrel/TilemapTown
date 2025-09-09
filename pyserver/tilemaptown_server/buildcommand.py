@@ -1420,7 +1420,7 @@ def fn_publicmaps(map, client, context, arg):
 
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="newname")
 def fn_mapname(map, client, context, arg):
-	map.name = arg.replace('\n', '')
+	map.name = filter_displayname(arg)
 	map.save_on_clean_up = True
 	respond(context, 'Map name set to \"%s\"' % map.name)
 	map.resend_map_info_to_users(mai_only=True)
@@ -3089,7 +3089,7 @@ def fn_entity(map, client, context, arg):
 			respond(context, info)
 	elif subcommand == 'name':
 		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
-			e.name = subarg.replace('\n', '')
+			e.name = filter_displayname(subarg)
 			e.broadcast_who()
 		save_entity = True
 	elif subcommand == 'desc':
