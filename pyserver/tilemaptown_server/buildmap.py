@@ -338,7 +338,7 @@ class Map(Entity):
 
 	def map_info(self, user=None, all_info=False):
 		""" MAI message data """
-		out = {'name': self.name, 'desc': self.desc, 'id': self.db_id, 'owner_id': self.owner_id, 'owner_username': find_username_by_db_id(self.owner_id) or '?', 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.map_flags & mapflag['public'] != 0, 'private': (self.deny & permission['entry']) != 0, 'build_enabled': (self.deny & permission['build']) == 0, 'full_sandbox': self.allow & permission['sandbox'] != 0, 'edge_links': self.edge_id_links, 'tags': self.tags, 'default_allow': permission_list_from_bitfield(self.allow), 'default_deny': permission_list_from_bitfield(self.deny)}
+		out = {'name': self.name, 'desc': self.desc, 'id': self.protocol_id(), 'owner_id': self.owner_id, 'owner_username': find_username_by_db_id(self.owner_id) or '?', 'default': self.default_turf, 'size': [self.width, self.height], 'public': self.map_flags & mapflag['public'] != 0, 'private': (self.deny & permission['entry']) != 0, 'build_enabled': (self.deny & permission['build']) == 0, 'full_sandbox': self.allow & permission['sandbox'] != 0, 'edge_links': self.edge_id_links, 'tags': self.tags, 'default_allow': permission_list_from_bitfield(self.allow), 'default_deny': permission_list_from_bitfield(self.deny)}
 		if all_info:
 			out['start_pos'] = self.start_pos
 		#if user:

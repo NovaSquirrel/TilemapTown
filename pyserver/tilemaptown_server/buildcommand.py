@@ -987,7 +987,7 @@ def fn_roll(map, client, context, arg):
 
 @cmd_command(category="Map")
 def fn_mapid(map, client, context, arg):
-	respond(context, 'Map ID is %d' % map.db_id)
+	respond(context, 'Map ID is %s' % map.protocol_id())
 
 @cmd_command(category="Map", map_only=True, alias=['maptempcopy'], privilege_level="no_scripts")
 def fn_tempmapcopy(map, client, context, arg):
@@ -2094,7 +2094,7 @@ def fn_map(map, client, context, arg):
 	try:
 		s = arg.split()
 		if len(s) == 0:
-			respond(context, 'Map ID is %d' % map.db_id)
+			respond(context, 'Map ID is %s' % map.protocol_id)
 			return
 		if len(s) == 1 and string_is_int(s[0]):
 			map_id = int(s[0])
