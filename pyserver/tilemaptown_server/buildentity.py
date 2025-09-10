@@ -165,7 +165,7 @@ class PermissionsMixin(object):
 		return map_value
 
 	def change_permission_for_entity(self, actor_id, perm, value):
-		if actor_id == None:
+		if actor_id == None or self.db_id == None:
 			return
 		# Start blank
 		allow = 0
@@ -554,7 +554,7 @@ class Entity(PermissionsMixin, object):
 			'obj': []
 		})
 
-		connection.loaded_maps = set([self.db_id])
+		connection.loaded_maps = set([self.protocol_id()])
 
 		self.broadcast("MOV", {'id': item.protocol_id(), 'to': [random.randint(0, 9), random.randint(0, 9)]})
 
@@ -687,19 +687,19 @@ class Entity(PermissionsMixin, object):
 				self.tp_history.append([self.map_id, self.x, self.y])
 				added_new_history = True
 
-		if self.map_id != map_id:
-			# Find the entity (map_id may also directly be an entity)
-			if isinstance(map_id, Entity):
-				map_load = map_id
-			else:
-				map_load = get_entity_by_id(map_id)
-				if map_load == None:
-					self.send("ERR", {'text': 'Couldn\'t load map %s' % map_id})
-					if added_new_history:
-						self.tp_history.pop()
-					self.finish_batch()
-					return False
+		# Find the entity (map_id may also directly be an entity)
+		if isinstance(map_id, Entity):
+			map_load = map_id
+		else:
+			map_load = get_entity_by_id(map_id)
+			if map_load == None:
+				self.send("ERR", {'text': 'Couldn\'t load map %s' % map_id})
+				if added_new_history:
+					self.tp_history.pop()
+				self.finish_batch()
+				return False
 
+		if self.map is not map_load and self.map_id != map_id:
 			# First check if you can even go to that map
 			which_permission = permission['entry'] if self.is_client() else permission['object_entry']
 			have_permission = (self if on_behalf_of == None else on_behalf_of).has_permission(map_load, which_permission, map_load.is_map()) # probably don't need to check persistent_object_entry

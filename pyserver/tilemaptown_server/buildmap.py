@@ -141,7 +141,7 @@ class Map(Entity):
 		if mai_only:
 			return
 		# Skip the map data if the client should already have it
-		if self.db_id not in connection.loaded_maps:
+		if self.protocol_id() not in connection.loaded_maps:
 			connection.send("MAP", self.map_section(0, 0, self.width-1, self.height-1))
 
 		if connection.see_past_map_edge and self.edge_id_links:
@@ -170,9 +170,9 @@ class Map(Entity):
 					connection.send("MAI", mai)
 					connection.send("MAP", map)
 
-			connection.loaded_maps = set([x for x in self.edge_id_links if x != None] + [self.db_id])
+			connection.loaded_maps = set([x for x in self.edge_id_links if x != None] + [self.protocol_id()])
 		if connection.see_past_map_edge and not self.edge_id_links:
-			connection.loaded_maps = set([self.db_id])
+			connection.loaded_maps = set([self.protocol_id()])
 
 	def resend_map_info_to_users(self, mai_only=False):
 		for user in self.contents:
@@ -181,7 +181,7 @@ class Map(Entity):
 				if not connection:
 					continue
 				if not mai_only:
-					connection.loaded_maps.discard(self.db_id)
+					connection.loaded_maps.discard(self.protocol_id())
 				connection.start_batch()
 				self.send_map_info(user, mai_only=mai_only)
 				connection.finish_batch()
@@ -232,6 +232,8 @@ class Map(Entity):
 		return super().load(map_id)
 
 	def unload_data(self):
+		if self.temporary and hasattr(self, "map_is_temp_copy") and self.map_is_temp_copy:
+			return
 		if self.map_data_loaded:
 			self.turfs = None
 			self.objs = None

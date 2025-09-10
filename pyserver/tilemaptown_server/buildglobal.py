@@ -73,6 +73,7 @@ def loadConfigJson(clearLogs=True):
 	setConfigDefault("Server",   "BroadcastConnects", True)
 	setConfigDefault("Server",   "BroadcastDisconnects", True)
 	setConfigDefault("Server",   "MaxMapSize",       256)
+	setConfigDefault("Server",   "TempMapCopiesPerUser", 10)
 
 	setConfigDefault("Security", "ProxyOnly",        False)
 	setConfigDefault("Security", "AllowedOrigins",   None)
@@ -658,7 +659,7 @@ def write_to_build_log(map, client, command, args, old_data = None):
 		old_data = " | " + json.dumps(old_data)
 
 	now = datetime.datetime.today().strftime("%Y-%m-%d %I:%M %p")
-	message = '%s map=(%s, %s) ip=%s db=%s name=%s user=%s map=%d | %s %s%s' % (now, json.dumps(map.name), map.protocol_id(), ip, client.db_id if client.db_id != None else "", json.dumps(client.name), client.username if client.is_client() else "", map.db_id, command, json.dumps(args), old_data)
+	message = '%s map=(%s, %s) ip=%s db=%s name=%s user=%s map=%s | %s %s%s' % (now, json.dumps(map.name), map.protocol_id(), ip, client.db_id if client.db_id != None else "", json.dumps(client.name), client.username if client.is_client() else "", map.protocol_id(), command, json.dumps(args), old_data)
 	BuildLog.write(message + "\n")
 	TempLogs[1].append(message)
 

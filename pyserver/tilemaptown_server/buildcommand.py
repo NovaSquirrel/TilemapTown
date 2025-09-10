@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import json, random, datetime, time, ipaddress, hashlib, weakref, asyncio
+import json, random, datetime, time, ipaddress, hashlib, weakref, asyncio, copy
 from .buildglobal import *
 from .buildentity import Entity, GenericEntity
 from .buildmap import Map
@@ -793,7 +793,7 @@ def fn_tpaccept(map, client, context, arg):
 		if subject.map != None:
 			subject.map.broadcast("WHO", {'add': subject.who()}, remote_category=maplisten_type['move'])
 
-		client.switch_map(subject.map_id, new_pos=[subject.x, subject.y], on_behalf_of=subject)
+		client.switch_map(subject.map or subject.map_id, new_pos=[subject.x, subject.y], on_behalf_of=subject)
 		client.finish_batch()
 		subject.finish_batch()
 
@@ -988,6 +988,43 @@ def fn_roll(map, client, context, arg):
 @cmd_command(category="Map")
 def fn_mapid(map, client, context, arg):
 	respond(context, 'Map ID is %d' % map.db_id)
+
+@cmd_command(category="Map", map_only=True, alias=['maptempcopy'], privilege_level="no_scripts")
+def fn_tempmapcopy(map, client, context, arg):
+	my_ip = client.connection_attr('ip')
+	map_copies_so_far = 0
+	for i,v in AllEntitiesByID.items():
+		if hasattr(v, "map_is_temp_copy") and v.map_is_temp_copy and (v.creator_id == client.db_id or v.creator_temp_id == client.id or (hasattr(v, "map_temp_copy_ip") and v.map_temp_copy_ip and v.map_temp_copy_ip == my_ip)):
+			map_copies_so_far += 1
+	if map_copies_so_far >= Config["Server"]["TempMapCopiesPerUser"]:
+		respond(context, 'You have too many temporary map copies (%d)' % map_copies_so_far, error=True)
+		return
+	e = Map(creator_id = client.db_id)
+	map.copy_onto(e)
+	e.creator_id = client.db_id
+	e.creator_temp_id = client.id
+	
+	e.map_flags = mapflag['no_build_logs']
+	e.start_pos = copy.deepcopy(map.start_pos)
+	e.width = map.width
+	e.height = map.height
+	e.default_turf = map.default_turf
+
+	# Copy map data
+	e.blank_map(e.width, e.height)
+	e.turfs = copy.deepcopy(map.turfs)
+	e.objs = copy.deepcopy(map.objs)
+	e.map_wallpaper = copy.deepcopy(map.map_wallpaper)
+	e.map_music = copy.deepcopy(map.map_music)
+	e.name = e.name + " (temp copy)"
+
+	e.temporary = True
+	e.map_data_loaded = True
+	e.map_is_temp_copy = True
+	e.map_temp_copy_ip = my_ip
+
+	client.add_to_contents(e)
+	respond(context, 'Temporary map copy: [tt]%s[/tt] (%d cop%s so far)' % (e.protocol_id(), map_copies_so_far+1, "ies" if map_copies_so_far >= 1 else "y",))
 
 @cmd_command(category="Map", privilege_level="registered")
 def fn_newmap(map, client, context, arg):
@@ -1545,6 +1582,8 @@ def fn_mapbuild(map, client, context, arg):
 
 @cmd_command(category="Map", privilege_level="map_admin", map_only=True, syntax="on/off")
 def fn_mapdisablesave(map, client, context, arg):
+	if hasattr(map, "map_is_temp_copy") and map.map_is_temp_copy:
+		return
 	if arg == "on":
 		map.temporary = True
 	elif arg == "off":
@@ -1866,7 +1905,7 @@ def kick_and_ban(map, client, context, arg, ban):
 	arg = arg.lower()
 	u = find_client_by_username(arg)
 	if u != None:
-		if u.map_id == client.map_id:
+		if u.map is client.map or u.map_id == client.map_id:
 			respond(context, 'Kicked '+u.name_and_username())
 			u.send("MSG", {'text': 'Kicked by '+client.name_and_username()})
 			u.send_home()
@@ -2063,8 +2102,8 @@ def fn_map(map, client, context, arg):
 		elif len(s) == 1 and valid_id_format(s[0]):
 			map_id = s[0]
 			new_pos = None
-		elif len(s) == 3 and string_is_int(s[0]) and string_is_int(s[1]) and string_is_int(s[2]):
-			map_id = int(s[0])
+		elif len(s) == 3 and valid_id_format(s[0]) and string_is_int(s[1]) and string_is_int(s[2]):
+			map_id = s[0]
 			new_pos = (int(s[1]), int(s[2]))
 		else:
 			respond(context, 'Syntax is [tt]/map id[/tt] or [tt]/map id x y[/tt]', error=True)
