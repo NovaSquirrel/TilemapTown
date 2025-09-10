@@ -266,7 +266,7 @@ class Map(Entity):
 	def save(self):
 		""" Save the map to the database """
 		super().save()
-		if self.db_id == None:
+		if self.db_id == None or self.temporary:
 			return
 
 		# Create new map if map doesn't already exist
