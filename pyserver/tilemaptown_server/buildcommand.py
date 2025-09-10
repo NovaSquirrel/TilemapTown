@@ -1388,9 +1388,9 @@ def fn_findmyitems(map, client, context, arg):
 		return
 	c = Database.cursor()
 	formatted = []
-	for row in c.execute('SELECT m.id, m.name, m.type FROM Entity m WHERE m.owner_id=? AND m.type != ? AND m.type != ? AND m.location == NULL', (connection.db_id, entity_type['map'], entity_type['group'])):
+	for row in c.execute('SELECT m.id, m.name, m.type FROM Entity m WHERE m.owner_id=? AND m.type != ? AND m.type != ? AND m.location IS NULL', (connection.db_id, entity_type['map'], entity_type['group'])):
 		formatted.append("[li][b]%s[/b] (%s) [command]e %d take[/command][/li]" % (row[1], noparse(entity_type_name[row[2]]), row[0]))
-	respond(context, "My items: [ul]" + (", ".join(sorted(formatted, key=str.casefold))) + "[/ul]")
+	respond(context, "My items: [ul]" + ("".join(sorted(formatted, key=str.casefold))) + "[/ul]")
 
 @cmd_command()
 def fn_deletemytempitems(map, client, context, arg):
@@ -3160,7 +3160,10 @@ def fn_entity(map, client, context, arg):
 		if (e.map_id == client.db_id and client.db_id != None) or (e.map is client) or (e.map and e.map.owner_id == client.db_id and client.db_id != None) or client.has_permission(e.map_id, (permission['admin'], permission['sandbox']), False):
 			e.send_home()
 			save_entity = True
-
+	elif subcommand == 'nolocation':
+		if permission_check( 0 ) and e.map:
+			e.map.remove_from_contents(e)
+			e.map_id = None
 	elif subcommand == 'tags':
 		respond(context, "Tags: %s" % dumps_if_not_empty(e.tags))
 
