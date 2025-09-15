@@ -345,9 +345,9 @@ def fn_e_move(e, arg): #Eiii
 		from_y = e2.y
 		new_x = arg[1]
 		new_y = arg[2]
-		e2.move_to(new_x, new_y, new_dir=arg[2] if len(arg) == 3 else None)
 		if Config["RateLimit"]["ScriptMove"] and apply_rate_limiting(e2, 'sm', ( (1, 900), (2, 1800) )):
 			return
+		e2.move_to(new_x, new_y, new_dir=arg[3] if len(arg) == 3 else None)
 		e2.map.broadcast("MOV", {'id': e2.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e2.dir}, remote_category=maplisten_type['move'])
 
 @script_api()
@@ -356,9 +356,9 @@ def fn_e_turn(e, arg): #Ei
 	if e2 == None:
 		return
 	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['move']):
-		e2.move_to(e2.x, e2.y, new_dir=arg[1])
 		if Config["RateLimit"]["ScriptMove"] and apply_rate_limiting(e2, 'sm', ( (1, 900), (2, 1800) )):
 			return
+		e2.move_to(e2.x, e2.y, new_dir=arg[1])
 		e2.map.broadcast("MOV", {'id': e2.protocol_id(), 'dir': e2.dir}, remote_category=maplisten_type['move'])
 
 @script_api()
@@ -383,13 +383,14 @@ def fn_e_fly(e, arg): #Ei
 	if e2 == None:
 		return
 	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['move']):
+		steps = arg[2] if len(arg) >= 3 else 1
 		from_x = e2.x
 		from_y = e2.y
-		new_x = from_x + directions[arg[1]][0]
-		new_y = from_y + directions[arg[1]][1]
-		e2.move_to(new_x, new_y, new_dir=arg[1])
+		new_x = from_x + directions[arg[1]][0] * int(steps)
+		new_y = from_y + directions[arg[1]][1] * int(steps)
 		if Config["RateLimit"]["ScriptMove"] and apply_rate_limiting(e2, 'sm', ( (1, 900), (2, 1800) )):
 			return
+		e2.move_to(new_x, new_y, new_dir=arg[1])
 		e2.map.broadcast("MOV", {'id': e2.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e2.dir}, remote_category=maplisten_type['move'])
 
 @script_api()
@@ -416,7 +417,12 @@ def fn_e_tell(e, arg): #EIs
 	if e2 == None:
 		return
 	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['remote_command']):
-		send_private_message(e2, (e, None, e), arg[1], arg[2])
+		context = {
+			"client": e,
+			"script_entity": e
+		}
+		send_private_message(e2, context, arg[1], arg[2])
+
 
 @script_api()
 def fn_e_botmessagebutton(e, arg): #EIs

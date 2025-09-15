@@ -2224,13 +2224,12 @@ def fn_userpic(map, client, context, arg):
 			success = True
 		# Allow custom avatars
 		else:
-			if arg[0].startswith("http"):
-				if image_url_is_okay(arg[0]):
-					client.pic = [arg[0], 0, 0];
-					success = True
-				else:
-					respond(context, 'URL doesn\t match any allowlisted sites', error=True)
-					return
+			if image_url_is_okay(arg[0]):
+				client.pic = [arg[0], 0, 0];
+				success = True
+			else:
+				respond(context, 'URL doesn\t match any allowlisted sites', error=True)
+				return
 	elif len(arg) == 2:
 		if arg[0].isdecimal() and arg[1].isdecimal():
 			client.pic = [0, int(arg[0]), int(arg[1])]

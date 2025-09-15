@@ -68,7 +68,7 @@ def loadConfigJson(clearLogs=True):
 	setConfigDefault("Server",   "Admins",           [])
 	setConfigDefault("Server",   "MaxUsers",         200)
 	setConfigDefault("Server",   "MaxDBMaps",        5000)
-	setConfigDefault("Server",   "WSMaxSize",        0x8000)
+	setConfigDefault("Server",   "WSMaxSize",        0x40000) # 256K
 	setConfigDefault("Server",   "WSMaxQueue",       32)
 	setConfigDefault("Server",   "BroadcastConnects", True)
 	setConfigDefault("Server",   "BroadcastDisconnects", True)
