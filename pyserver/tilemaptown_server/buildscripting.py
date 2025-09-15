@@ -347,7 +347,7 @@ def fn_e_move(e, arg): #Eiii
 		new_y = arg[2]
 		if Config["RateLimit"]["ScriptMove"] and apply_rate_limiting(e2, 'sm', ( (1, 900), (2, 1800) )):
 			return
-		e2.move_to(new_x, new_y, new_dir=arg[3] if len(arg) == 3 else None)
+		e2.move_to(new_x, new_y, new_dir=arg[3] if len(arg) >= 4 else None)
 		e2.map.broadcast("MOV", {'id': e2.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e2.dir}, remote_category=maplisten_type['move'])
 
 @script_api()
