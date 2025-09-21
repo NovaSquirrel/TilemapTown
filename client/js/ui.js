@@ -3961,6 +3961,11 @@ function initWorld() {
 		if (event.key === "Enter")
 			refreshCommandList();
 	});
+	for (let i of ["loginuser", "loginpass", "loginserver"])
+		document.getElementById(i).addEventListener("keydown", function(event) {
+			if (event.key === "Enter")
+				loginButton();
+		});
 
 	viewInit();
 
