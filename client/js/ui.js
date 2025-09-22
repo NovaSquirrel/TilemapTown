@@ -760,6 +760,8 @@ function loginHelpAccount() {
 	document.getElementById("loginPassSpan").style.display = "block";
 	document.getElementById("loginButtonSpan").style.display = "block";
 	document.getElementById("loginServerSpan").style.display = "block";
+	document.getElementById("loginHelpAccountButton").style.fontWeight = "bold";
+	document.getElementById("loginHelpGuestButton").style.fontWeight = "normal";
 	loginHelpEnableDisableConnect();
 }
 
@@ -771,6 +773,8 @@ function loginHelpGuest() {
 	document.getElementById("loginButtonSpan").style.display = "block";
 	document.getElementById("loginServerSpan").style.display = "block";
 	document.getElementById("connectButton").disabled = false;
+	document.getElementById("loginHelpAccountButton").style.fontWeight = "normal";
+	document.getElementById("loginHelpGuestButton").style.fontWeight = "bold";
 }
 
 function loginHelpEnableDisableConnect() {
