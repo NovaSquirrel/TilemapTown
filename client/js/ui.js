@@ -647,16 +647,20 @@ function loginButton() {
 	alreadySeenMail = undefined;
 	MessagesToRetry = [];
 
-	OnlineUsername = document.getElementById("loginuser").value;
-	OnlinePassword = document.getElementById("loginpass").value;
+	if (document.getElementById("loginUserSpan").style.display === "block") {
+		OnlineUsername = document.getElementById("loginuser").value;
+		OnlinePassword = document.getElementById("loginpass").value;
+		// Save the username so that in the future it is prefilled
+		localStorage.setItem("username", OnlineUsername);
+	} else {
+		OnlineUsername = document.getElementById("loginnick").value;
+		OnlinePassword = "";
+	}
 	OnlineServer = document.getElementById("loginserver").value;
 	if (!OnlineIsConnected)
 		ConnectToServer();
 	else
 		SendCmd("CMD", { text: "login " + OnlineUsername + " " + OnlinePassword });
-
-	// Save the username so that in the future it is prefilled
-	localStorage.setItem("username", OnlineUsername);
 
 	document.getElementById('loginWindow').style.display = "none";
 }
@@ -747,6 +751,30 @@ function setUserStatusButton() {
 			sendChatCommand('status ' + newStatus + ' ' + newStatusContext);
 		}
 	}
+}
+
+function loginHelpAccount() {
+	document.getElementById("loginInstructionsGuest").style.display = "none";
+	document.getElementById("loginUserSpan").style.display = "block";
+	document.getElementById("loginNickSpan").style.display = "none";
+	document.getElementById("loginPassSpan").style.display = "block";
+	document.getElementById("loginButtonSpan").style.display = "block";
+	document.getElementById("loginServerSpan").style.display = "block";
+	loginHelpEnableDisableConnect();
+}
+
+function loginHelpGuest() {
+	document.getElementById("loginInstructionsGuest").style.display = "block";
+	document.getElementById("loginUserSpan").style.display = "none";
+	document.getElementById("loginNickSpan").style.display = "block";
+	document.getElementById("loginPassSpan").style.display = "none";
+	document.getElementById("loginButtonSpan").style.display = "block";
+	document.getElementById("loginServerSpan").style.display = "block";
+	document.getElementById("connectButton").disabled = false;
+}
+
+function loginHelpEnableDisableConnect() {
+	document.getElementById("connectButton").disabled = (document.getElementById("loginuser").value.length == 0) || (document.getElementById("loginpass").value.length == 0);
 }
 
 ///////////////////////////////////////////////////////////
@@ -3961,12 +3989,11 @@ function initWorld() {
 		if (event.key === "Enter")
 			refreshCommandList();
 	});
-	for (let i of ["loginuser", "loginpass", "loginserver"])
+	for (let i of ["loginuser", "loginpass", "loginserver", "loginnick"])
 		document.getElementById(i).addEventListener("keydown", function(event) {
-			if (event.key === "Enter")
+			if (event.key === "Enter" && !document.getElementById("connectButton").disabled)
 				loginButton();
 		});
-
 	viewInit();
 
 	panel = document.getElementById("panel");
@@ -4012,6 +4039,7 @@ function initWorld() {
 		const saved_username = localStorage.getItem("username");
 		if (saved_username) {
 			document.getElementById("loginuser").value = saved_username;
+			loginHelpAccount();
 		}
 
 		btn.onclick = function () {

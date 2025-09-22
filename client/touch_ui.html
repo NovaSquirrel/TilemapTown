@@ -135,21 +135,27 @@
 </ul>
 
 <div id="loginWindow" class="modal">
-  <div class="modal-content">
-    <span class="modalclose">&times;</span>
-    <p>
-    <h1>Log into <a href="index.html">Tilemap Town</a></h1>
-    <strong>If you don't have an account, leave the password blank.</strong><br>While connected, you can register with <span class="xbbcode-code">/register username password</span> if you wish.<br>
-    <input type="text" id="loginuser" placeholder="Username"> Username<br>
-    <input type="password" id="loginpass" placeholder="Password"> Password<br>
-    <input type="text" id="loginserver" value="novasquirrel.com/townws/" placeholder="Server"> Server<br>
-    <input type="button" value="Connect" onclick="loginButton();"><br>
-    </p>
-    <p id="passwordResetHint" style="display:none;">
-    <span id="loginErrorText" style="font-weight: bold;"></span><br>
-    If you need a password reset, you can <a href="https://novasquirrel.com/contact.html">contact Tilemap Town's developer</a>.
-    </p>
-  </div>
+	<div class="modal-content">
+		<span class="modalclose">&times;</span>
+		<h1>Log into <a href="index.html">Tilemap Town</a></h1>
+
+		<button onclick="loginHelpAccount()">I already have an account</button>
+		<button onclick="loginHelpGuest()">I'd like to log in as a guest</button>
+		</p>
+
+		<p>
+		<span id="loginUserSpan" style="display: none;"><input type="text" id="loginuser" oninput="loginHelpEnableDisableConnect()" placeholder="Username"> Username<br></span>
+		<span id="loginNickSpan" style="display: none;"><input type="text" id="loginnick" placeholder="Nickname"> Nickname (optional)<br></span>
+		<span id="loginPassSpan" style="display: none;"><input type="password" id="loginpass" oninput="loginHelpEnableDisableConnect()" placeholder="Password"> Password<br></span>
+		<span id="loginButtonSpan" style="display: none;"><input type="button" id="connectButton" value="Connect" style="width: 20em;" onclick="loginButton();"></span>
+		</p>
+		<div id="loginInstructionsGuest" style="display: none;">After you connect, you can create an account with <span class="xbbcode-code">/register username password</span> if you wish.</div>
+		<span id="loginServerSpan" style="display: none;"><p><details><summary class="unselectable">Connection options</summary>Server: <input type="text" id="loginserver" value="novasquirrel.com/townws/" placeholder="novasquirrel.com/townws/"></details></p></span>
+		<p id="passwordResetHint" style="display:none;">
+		<span id="loginErrorText" style="font-weight: bold;"></span><br>
+		If you need a password reset, you can <a href="https://novasquirrel.com/contact.html">contact Tilemap Town's developer</a>.
+		</p>
+	</div>
 </div>
 
 <div id="mapOptionsWindow" class="modal">
