@@ -637,8 +637,8 @@ Applies a series of rectangles to the map.
 Width and height may be omitted, in order to just do a single tile.
 Can take a "temp" optional parameter like PUT can.
 
---> BLK {"copy": [{"turf": true/false, "obj": true/false, "src":[x,y,w,h], "dst":[x,y]}, ...]]}
-<-- BLK {"copy": [{"turf": true/false, "obj": true/false, "src":[x,y,w,h], "dst":[x,y]}, ...]], "username": username, "id" user_id}
+--> BLK {"copy": [{"turf": true/false, "obj": true/false, "src":[x,y,w,h], "dst":[x,y]}, ...]}
+<-- BLK {"copy": [{"turf": true/false, "obj": true/false, "src":[x,y,w,h], "dst":[x,y]}, ...], "username": username, "id" user_id}
 Copies from one portion of the map to another, with overlapped rectangles allowed and supported.
 If "turf" and "obj" are also provided in the same BLK message, "copy" is applied first, then "turf" and finally "obj".
 This makes it easy to move something by copying it somewhere else and erasing the tile where it was.
