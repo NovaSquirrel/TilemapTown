@@ -30,7 +30,7 @@
     <input type="text" id="loginuser" placeholder="Username"> Username<br>
     <input type="password" id="loginpass" placeholder="Password"> Password<br>
     <input type="text" id="loginserver" value="novasquirrel.com/townws/" placeholder="Server"> Server<br>
-    <input type="button" value="Connect" onclick="loginButton();"><br>
+    <input type="button" id="connectButton" value="Connect" onclick="loginButton();"><br>
     </p>
     <p id="passwordResetHint" style="display:none;">
     <span id="loginErrorText" style="font-weight: bold;"></span><br>
@@ -92,6 +92,10 @@
     <label class="unselectable" style="display: none;"><input type="checkbox" id="option-entity-animation" checked>Entity animation</label>
     <label class="unselectable" style="display: none;"><input type="checkbox" id="option-tile-animation" checked>Tile animation</label>
     <label class="unselectable" style="display: none;"><input type="checkbox" id="lock-zoom-level">Lock zoom level</label>
+    <label class="unselectable" style="display: none;"><input type="checkbox" id="enable-user-particles" checked>Show user particles</label>
+    <label class="unselectable" style="display: none;"><input type="checkbox" id="warn-invalid-bbcode" checked>Warn about invalid BBCode</label>
+    <label class="unselectable" style="display: none;"><input type="checkbox" id="focus-map-after-chat">Refocus map after sending chat</label>
+    <label class="unselectable" style="display: none;"><input type="range" id="music-volume" name="music_volume" min="0" max="100" value="100" step="5" onchange="updateMapMusicVolume()" />Music volume</label>
 
     <label class="unselectable"><input type="checkbox" id="audiochatnotify" checked>Notify when people talk</label><br>
     <label class="unselectable"><input type="checkbox" id="audiomiscnotify">Notify on other messages</label><br>

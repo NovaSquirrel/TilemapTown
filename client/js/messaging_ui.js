@@ -262,4 +262,10 @@ function initMessagingUI() {
 			loginmodal.style.display = "block";
 		}
 	}
+
+	for (let i of ["loginuser", "loginpass", "loginserver"])
+		document.getElementById(i).addEventListener("keydown", function(event) {
+			if (event.key === "Enter" && !document.getElementById("connectButton").disabled)
+				loginButton();
+		});
 }

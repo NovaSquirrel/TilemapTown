@@ -647,7 +647,7 @@ function loginButton() {
 	alreadySeenMail = undefined;
 	MessagesToRetry = [];
 
-	if (document.getElementById("loginUserSpan").style.display === "block") {
+	if (messaging_mode || document.getElementById("loginUserSpan").style.display === "block") {
 		OnlineUsername = document.getElementById("loginuser").value;
 		OnlinePassword = document.getElementById("loginpass").value;
 		// Save the username so that in the future it is prefilled
