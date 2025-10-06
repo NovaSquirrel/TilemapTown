@@ -28,7 +28,7 @@ List of entity types:
 	text        Holds any amount of text, like Second Life's notecards.
 	image       Currently just holds a URL to an image, which can be used as a tileset for map tiles and entities.
 	map_tile    A template for a tile that can be placed on a map.
-	tileset		Holds a series of map tiles. Stored as a JSON array that alternates between names and map tile definitions.
+	tileset		Holds a series of map tiles. Stored as a JSON object, formatted like tilesets in RSC.
 	            Map tiles can reference this tileset with tileset_id:name_of_tile.
 	reference   A reference to another entity. Interacting with it should redirect to the entity it points at.
 	folder      Holds other entities. Any entity can hold other entities, so this is more of a UI hint.
@@ -557,7 +557,7 @@ The message the other user receives will have the name, ID, and username added o
 For notifying the people listening to chat within an entity that you are typing.
 
 <-- EXT {"settings": {"client_settings": text, "watch_list": [list], "ignore_list": [list]}}
-Gives you the text you most recently put into the /client_settings command
+Gives you the text you most recently put into the /client_settings command, as well as your watch list and ignore list
 
 --> EXT {"listen": {"types": ["move", "build", "entry", "chat", "chat_listen"], "list": [id, id, id...]}}
 <-- EXT {"listen_status": {"maps": {"map1": ["move", "build"], "map2": ["move", "build"], ...}}}

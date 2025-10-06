@@ -205,6 +205,11 @@ function runLocalCommand(t) {
 		let tile = MyMap.Objs[PlayerWho[PlayerYou].x][PlayerWho[PlayerYou].y];
 		logMessage(convertBBCodeChat(`You're standing on [tt]${JSON.stringify(tile)}[/tt] (objects)`), 'server_message',   {'isChat': false});		
 		return true;
+	} else if(tl == "/focuschat") {
+		focusChatDistance = null;
+		focusChatNames = [];
+		logMessage("Not focusing chat", 'server_message',   {'isChat': false});		
+		return true;
 	} else if(tl.startsWith("/focuschat ")) {
 		let args = tl.slice(11);
 		if (args == "off") {

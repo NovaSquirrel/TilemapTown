@@ -359,7 +359,7 @@ def fn_MOV(connection, map, client, arg, context):
 			client.offset = [offset_x, offset_y]
 		if client.vehicle != None and client in client.vehicle.passengers and client.vehicle.vehicle is client:
 			client.vehicle.offset = client.offset
-			map.broadcast("MOV", {"id": client.vehicle.protocl_id(), "offset": client.offset}, remote_category=maplisten_type['move'])
+			map.broadcast("MOV", {"id": client.vehicle.protocol_id(), "offset": client.offset}, remote_category=maplisten_type['move'])
 
 	# Update this entity's position
 	new_dir = data['dir'] if 'dir' in data else None
