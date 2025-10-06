@@ -95,25 +95,6 @@ def failed_to_find(context, username):
 	else:
 		respond(context, '"'+username+'" not found', error=True)
 
-def in_blocked_username_list(client, banlist, action):
-	# Use the player, instead of whatever entity they're acting through
-	if not client.is_client():
-		if '!objects' in banlist:
-			client.send("ERR", {'text': 'Only clients may %s' % action, 'code': 'clients_only'})
-			return True
-		username = find_username_by_db_id(client.owner_id)
-		if username != None and username in banlist:
-			return True
-		return False
-	username = client.username
-	if username == None and '!guests' in banlist:
-		client.send("ERR", {'text': 'Guests may not %s' % action, 'code': 'no_guests', 'detail': action})
-		return True
-	if username in banlist:
-		client.send("ERR", {'text': 'You may not %s' % action, 'code': 'blocked', 'detail': action})
-		return True
-	return False
-
 def respond(context, text, data=None, error=False, code=None, detail=None, subject_id=None, buttons=None, class_type=None):
 	args = {}
 	client = context['client']
@@ -244,7 +225,7 @@ def fn_nick(map, client, context, arg):
 		return
 
 	if is_entity(client):
-		map.broadcast("MSG", {'text': "\""+noparse(client.name)+"\" is now known as \""+noparse(arg)+"\""})
+		map.broadcast("MSG", {'text': "\""+noparse(client.name)+"\" is now known as \""+noparse(arg)+"\""}, ignore_user=client)
 		client.name = arg
 		session = client.connection_attr('build_session')
 		if session:
@@ -312,7 +293,7 @@ def apply_rate_limiting(client, limit_type, count_limits):
 			return True
 	return False
 
-def send_message_to_map(map, actor, text, context, acknowledge_only=False):
+def send_message_to_map(map, actor, text, context, acknowledge_only=False, ignore_action="chat"):
 	if text == '':
 		return
 	if not acknowledge_only and Config["RateLimit"]["MSG"] and apply_rate_limiting(actor, 'msg', ( (1, Config["RateLimit"]["MSG1"]),(5, Config["RateLimit"]["MSG5"])) ):
@@ -351,7 +332,7 @@ def send_message_to_map(map, actor, text, context, acknowledge_only=False):
 					connection.send('MSG', fields)
 				return
 			else:
-				map.broadcast("MSG", fields, remote_category=maplisten_type['chat'])
+				map.broadcast("MSG", fields, remote_category=maplisten_type['chat'], ignore_user=actor, ignore_action=ignore_action)
 				for e in map.contents:
 					if e.entity_type == entity_type['gadget'] and hasattr(e, 'listening_to_chat') and e.listening_to_chat and e is not actor and e is not context['client']:
 						e.receive_chat(actor, text)
@@ -397,7 +378,7 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 					if not acknowledge_only:
 						u.receive_tell(client, text)
 				elif u.is_client() or "PRI" in u.forward_message_types:
-					if not u.is_client() or not in_blocked_username_list(client, u.connection_attr('ignore_list'), 'message %s' % u.name):
+					if not u.is_client() or not in_blocked_username_list(client, u.connection_attr('ignore_list'), display_action='message %s' % u.name, check_action="pm"):
 						client.send("PRI", {'text': text, 'name': u.name, 'id': u.protocol_id(), 'username': u.username_or_id(), 'receive': False})
 						recipient_params = {'text': text, 'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'receive': True}
 						if respond_to is not client:
@@ -427,9 +408,11 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 					c = Database.cursor()
 					c.execute('SELECT ignore FROM User WHERE entity_id=?', (recipient_db_id,))
 					result = c.fetchone()
-					if result != None and (client.username in json.loads(result[0] or "[]")):
-						respond(context, 'You can\'t message that person', error=True)
-						return False
+					if result != None:
+						ignore_list = json.loads(result[0] or "[]")
+						if (client.username in ignore_list) or (("pm:"+client.username) in ignore_list):
+							respond(context, 'You can\'t message that person', error=True)
+							return False
 
 					if not acknowledge_only:
 						if not queue_offline_private_message(client, recipient_db_id, text):
@@ -492,7 +475,7 @@ def send_request_to_user(client, context, arg, request_type, request_data, accep
 			respond(context, 'You\'ve already sent them a request', error=True)
 			u.requests[request_key][0] = 600
 			return
-	if not is_client_and_entity(u) or not in_blocked_username_list(client, u.connection_attr('ignore_list'), 'message %s' % u.name):
+	if not is_client_and_entity(u) or not in_blocked_username_list(client, u.connection_attr('ignore_list'), display_action='send requests to %s' % u.name, check_action="request"):
 		respond(context, you_message % arg)
 
 		u.requests[request_key] = [600 if u.is_client() else 60, next_request_id, request_data]
@@ -983,7 +966,7 @@ def fn_roll(map, client, context, arg):
 			return
 		for i in range(dice):
 			sum += random.randint(1, sides)
-		map.broadcast("MSG", {'text': client.name+" rolled %dd%d and got %d"%(dice, sides, sum)})
+		map.broadcast("MSG", {'text': client.name+" rolled %dd%d and got %d"%(dice, sides, sum), 'username': client.username_or_id(), 'id': client.protocol_id()}, ignore_user=client)
 
 @cmd_command(category="Map")
 def fn_mapid(map, client, context, arg):

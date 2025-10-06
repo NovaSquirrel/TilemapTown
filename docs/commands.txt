@@ -21,6 +21,13 @@ Send text marked as being out-of-character
 /unignore username
 /ignorelist
 Manage ignore list
+You can use "!objects" as a special username to block entities that are not users, and "!guests" to block entities that are not registered accounts.
+You can prefix the username with a specific action you want to block:
+	chat:username    | Public map chat (and output from some commands)
+	mail:username    | Mail
+	request:username | Requests (like /tpa)
+	pm:username      | Private messages
+These prefixes can be combined with the special usernames, so you can ignore "pm:!guests" to prevent guests from sending you private messages, but still see public messages
 
 /watch username
 /unwatch username

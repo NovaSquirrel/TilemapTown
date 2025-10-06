@@ -727,6 +727,30 @@ def get_tile_density(name):
 		return False
 	return properties.get('density', False)
 
+def in_blocked_username_list(client, banlist, display_action=None, check_action=""):
+	if not banlist:
+		return False
+	# Use the player, instead of whatever entity they're acting through
+	if not client.is_client():
+		if ('!objects' in banlist) or (check_action+':!objects') in banlist:
+			if display_action:
+				client.send("ERR", {'text': 'Only clients may %s' % display_action, 'code': 'clients_only'})
+			return True
+		username = find_username_by_db_id(client.owner_id)
+		if username != None and ((username in banlist) or (check_action+":"+username) in banlist):
+			return True
+		return False
+	username = client.username
+	if username == None and (('!guests' in banlist) or ((check_action+':!guests') in banlist)):
+		if display_action:
+			client.send("ERR", {'text': 'Guests may not %s' % display_action, 'code': 'no_guests', 'detail': check_action})
+		return True
+	if username != None and ((username in banlist) or ((check_action+":"+username) in banlist)):
+		if display_action:
+			client.send("ERR", {'text': 'You may not %s' % display_action, 'code': 'blocked', 'detail': check_action})
+		return True
+	return False
+
 from .buildentity import Entity, EntityWithPlainData, GenericEntity
 from .buildgadget import Gadget
 from .buildmap import Map

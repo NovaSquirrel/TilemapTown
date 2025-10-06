@@ -644,7 +644,7 @@ def fn_EML(connection, map, client, arg, context):
 
 				# Drop mail sent to people who have you ignored
 				if recipient_connection:
-					if client.username in recipient_connection.ignore_list:
+					if (client.username in recipient_connection.ignore_list) or (("mail:"+client.username) in recipient_connection.ignore_list):
 						connection.protocol_error(context, text='You cannot mail '+recipient_connection.username)
 						print("Dropping mail sent to "+str(id))
 						failed_count += 1
@@ -652,11 +652,13 @@ def fn_EML(connection, map, client, arg, context):
 				else:
 					c.execute('SELECT ignore FROM User WHERE entity_id=?', (id,))
 					result = c.fetchone()
-					if result != None and (client.username in json.loads(result[0] or "[]")):
-						connection.protocol_error(context, text='You cannot mail '+find_username_by_db_id(id))
-						print("Dropping mail sent to "+str(id))
-						failed_count += 1
-						continue
+					if result != None:
+						ignore_list = json.loads(result[0] or "[]")
+						if (client.username in ignore_list) or (("mail:"+client.username) in ignore_list):
+							connection.protocol_error(context, text='You cannot mail '+find_username_by_db_id(id))
+							print("Dropping mail sent to "+str(id))
+							failed_count += 1
+							continue
 
 				c.execute("INSERT INTO Mail (owner_id, sender_id, recipients, subject, contents, created_at, flags) VALUES (?, ?, ?, ?, ?, ?, ?)", (id, client.db_id, recipient_string, arg['send']['subject'], arg['send']['contents'], datetime.datetime.now(), 0))
 

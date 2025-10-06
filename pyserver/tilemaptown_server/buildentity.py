@@ -368,13 +368,15 @@ class Entity(PermissionsMixin, object):
 		pass
 
 	# Send a message to all contents
-	def broadcast(self, command_type, command_params, remote_category=None, remote_only=False, send_to_links=False, require_extension=None, only_send_if=None, mov_user=None):
+	def broadcast(self, command_type, command_params, remote_category=None, remote_only=False, send_to_links=False, require_extension=None, only_send_if=None, mov_user=None, ignore_user=None, ignore_action="chat"):
 		""" Send a message to everyone on the map """
 		if not remote_only and self.contents:
 			is_chat = command_type == 'MSG' and command_params and 'name' in command_params
 			send_me = make_protocol_message_string(command_type, command_params) # Get the string once and reuse it
 			for client in self.contents:
 				if only_send_if and not only_send_if(client):
+					continue
+				if ignore_user and client.is_client() and in_blocked_username_list(ignore_user, client.connection_attr('ignore_list'), check_action=ignore_action):
 					continue
 				if require_extension == None:
 					client.send_string(send_me, is_chat=is_chat)
