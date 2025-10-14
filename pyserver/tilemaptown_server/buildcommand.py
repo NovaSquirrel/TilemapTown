@@ -2427,6 +2427,9 @@ def fn_z(map, client, context, arg):
 		client.z_index = 0
 	elif string_is_int(arg):
 		client.z_index = min(10, max(-10, int(arg)))
+	else:
+		respond(context, '/z requires a number from -10 to 10', error=True)
+		return
 	map.broadcast("MOV", {"id": client.protocol_id(), "z_index": client.z_index}, remote_category=maplisten_type['move'])
 
 @cmd_command(category="Who", no_entity_needed=True)

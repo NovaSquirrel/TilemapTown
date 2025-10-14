@@ -512,7 +512,7 @@ def fn_BAG(connection, map, client, arg, context):
 		elif 'folder' in move and client.has_permission(move['folder'], (permission['object_entry'], permission['persistent_object_entry']), False):
 			if 'pos' in move:
 				if client.has_permission(move_me, permission['move_new_map'], False):
-					move_me.switch_map(move['folder'], new_pos=move['pos'])
+					move_me.switch_map(move['folder'], new_pos=move['pos'], on_behalf_of=client)
 					if not move_me.temporary:
 						move_me.save()
 					client.send('BAG', {'move': move})
@@ -520,7 +520,7 @@ def fn_BAG(connection, map, client, arg, context):
 					connection.protocol_error(context, text='Don\'t have permission to move entity', code='missing_permission', detail='move_new_map', subject_id=move['id'])
 			else:
 				if client.has_permission(move_me, (permission['move'], permission['move_new_map']), False):
-					move_me.switch_map(move['folder'])
+					move_me.switch_map(move['folder'], on_behalf_of=client)
 					if not move_me.temporary:
 						move_me.save()
 					client.send('BAG', {'move': move})
