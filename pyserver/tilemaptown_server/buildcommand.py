@@ -1047,6 +1047,7 @@ def fn_ignore(map, client, context, arg):
 	if connection:
 		connection.ignore_list.add(arg)
 		respond(context, '\"%s\" added to ignore list' % arg)
+		connection.send("EXT", {"settings": {"ignore_list": list(connection.ignore_list)}})
 
 @cmd_command(category="Settings", syntax="username", no_entity_needed=True, privilege_level="no_scripts")
 def fn_unignore(map, client, context, arg):
@@ -1057,6 +1058,7 @@ def fn_unignore(map, client, context, arg):
 	if connection and arg in connection.ignore_list:
 		connection.ignore_list.discard(arg)
 		respond(context, '\"%s\" removed from ignore list' % arg)
+		connection.send("EXT", {"settings": {"ignore_list": list(connection.ignore_list)}})
 
 @cmd_command(category="Settings", no_entity_needed=True, privilege_level="no_scripts")
 def fn_ignorelist(map, client, context, arg):
@@ -1081,6 +1083,7 @@ def fn_watch(map, client, context, arg):
 	# Add to watch list
 	connection.watch_list.add(arg)
 	respond(context, '\"%s\" added to watch list' % arg)
+	connection.send("EXT", {"settings": {"watch_list": list(connection.watch_list)}})
 
 	# Update watch list
 	if connection.user_watch_with_who:
@@ -1097,6 +1100,7 @@ def fn_unwatch(map, client, context, arg):
 	if connection:
 		connection.watch_list.discard(arg)
 		respond(context, '\"%s\" removed from watch list' % arg)
+		connection.send("EXT", {"settings": {"watch_list": list(connection.watch_list)}})
 
 		# Update watch list
 		if connection.user_watch_with_who:
