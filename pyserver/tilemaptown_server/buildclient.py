@@ -703,7 +703,7 @@ class Connection(object):
 				out['subject_id'] = subject_id.protocol_id()
 			else:
 				out['subject_id'] = subject_id
-		if context['echo'] != None:
+		if context and context['echo'] != None:
 			out['echo'] = context['echo']
 		self.send("ERR", out)
 
