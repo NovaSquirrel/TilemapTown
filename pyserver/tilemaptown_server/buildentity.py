@@ -376,7 +376,7 @@ class Entity(PermissionsMixin, object):
 			for client in self.contents:
 				if only_send_if and not only_send_if(client):
 					continue
-				if ignore_user and client.is_client() and in_blocked_username_list(ignore_user, client.connection_attr('ignore_list'), check_action=ignore_action):
+				if ignore_user and client.is_client() and in_blocked_username_list(ignore_user, client.connection_attr('ignore_list'), check_action=ignore_action, friends_list=client.connection_attr('watch_list'), recipient=client):
 					continue
 				if require_extension == None:
 					client.send_string(send_me, is_chat=is_chat)

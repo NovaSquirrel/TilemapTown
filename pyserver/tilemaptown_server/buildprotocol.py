@@ -644,18 +644,17 @@ def fn_EML(connection, map, client, arg, context):
 
 				# Drop mail sent to people who have you ignored
 				if recipient_connection:
-					if (client.username in recipient_connection.ignore_list) or (("mail:"+client.username) in recipient_connection.ignore_list):
-						connection.protocol_error(context, text='You cannot mail '+recipient_connection.username)
+					if in_blocked_username_list(client, recipient_connection.ignore_list, friends_list=recipient_connection.watch_list, check_action="mail", display_action="mail %s" % recipient_connection.username):
 						print("Dropping mail sent to "+str(id))
 						failed_count += 1
 						continue
 				else:
-					c.execute('SELECT ignore FROM User WHERE entity_id=?', (id,))
+					c.execute('SELECT ignore, watch FROM User WHERE entity_id=?', (id,))
 					result = c.fetchone()
 					if result != None:
 						ignore_list = json.loads(result[0] or "[]")
-						if (client.username in ignore_list) or (("mail:"+client.username) in ignore_list):
-							connection.protocol_error(context, text='You cannot mail '+find_username_by_db_id(id))
+						watch_list = json.loads(result[1] or "[]")
+						if in_blocked_username_list(client, ignore_list, friends_list=watch_list, check_action="mail", display_action="mail %s" % find_username_by_db_id(id)):
 							print("Dropping mail sent to "+str(id))
 							failed_count += 1
 							continue

@@ -378,7 +378,7 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 					if not acknowledge_only:
 						u.receive_tell(client, text)
 				elif u.is_client() or "PRI" in u.forward_message_types:
-					if not u.is_client() or not in_blocked_username_list(client, u.connection_attr('ignore_list'), display_action='message %s' % u.name, check_action="pm"):
+					if not u.is_client() or not in_blocked_username_list(client, u.connection_attr('ignore_list'), display_action='message %s' % u.name, check_action="pm", friends_list=u.connection_attr('watch_list'), recipient=u):
 						client.send("PRI", {'text': text, 'name': u.name, 'id': u.protocol_id(), 'username': u.username_or_id(), 'receive': False})
 						recipient_params = {'text': text, 'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'receive': True}
 						if respond_to is not client:
@@ -406,12 +406,12 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 						return
 
 					c = Database.cursor()
-					c.execute('SELECT ignore FROM User WHERE entity_id=?', (recipient_db_id,))
+					c.execute('SELECT ignore, watch FROM User WHERE entity_id=?', (recipient_db_id,))
 					result = c.fetchone()
 					if result != None:
 						ignore_list = json.loads(result[0] or "[]")
-						if (client.username in ignore_list) or (("pm:"+client.username) in ignore_list):
-							respond(context, 'You can\'t message that person', error=True)
+						watch_list = json.loads(result[1] or "[]")
+						if in_blocked_username_list(client, ignore_list, friends_list=watch_list, check_action="pm", display_action="message %s" % recipient_username):
 							return False
 
 					if not acknowledge_only:
@@ -475,7 +475,7 @@ def send_request_to_user(client, context, arg, request_type, request_data, accep
 			respond(context, 'You\'ve already sent them a request', error=True)
 			u.requests[request_key][0] = 600
 			return
-	if not is_client_and_entity(u) or not in_blocked_username_list(client, u.connection_attr('ignore_list'), display_action='send requests to %s' % u.name, check_action="request"):
+	if not is_client_and_entity(u) or not in_blocked_username_list(client, u.connection_attr('ignore_list'), display_action='send requests to %s' % u.name, check_action="request", friends_list=u.connection_attr('watch_list'), recipient=u):
 		respond(context, you_message % arg)
 
 		u.requests[request_key] = [600 if u.is_client() else 60, next_request_id, request_data]
@@ -1055,7 +1055,11 @@ def fn_unignore(map, client, context, arg):
 	if not arg:
 		return
 	connection = client.connection()
-	if connection and arg in connection.ignore_list:
+	if connection and arg == "!clear":
+		connection.ignore_list.clear()
+		respond(context, 'Ignore list cleared')
+		connection.send("EXT", {"settings": {"ignore_list": []}})
+	elif connection and arg in connection.ignore_list:
 		connection.ignore_list.discard(arg)
 		respond(context, '\"%s\" removed from ignore list' % arg)
 		connection.send("EXT", {"settings": {"ignore_list": list(connection.ignore_list)}})
@@ -1098,9 +1102,16 @@ def fn_unwatch(map, client, context, arg):
 		return
 	connection = client.connection()
 	if connection:
-		connection.watch_list.discard(arg)
-		respond(context, '\"%s\" removed from watch list' % arg)
-		connection.send("EXT", {"settings": {"watch_list": list(connection.watch_list)}})
+		if "!clear":
+			connection.watch_list.clear()
+			respond(context, 'Watch list cleared')
+			connection.send("EXT", {"settings": {"watch_list": []}})
+			# TODO: Do user_watch_with_who
+			return
+		else:
+			connection.watch_list.discard(arg)
+			respond(context, '\"%s\" removed from watch list' % arg)
+			connection.send("EXT", {"settings": {"watch_list": list(connection.watch_list)}})
 
 		# Update watch list
 		if connection.user_watch_with_who:

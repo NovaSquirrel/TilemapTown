@@ -254,9 +254,15 @@ function SendStatusMessageFromBeforeDisconnect() {
 	}
 }
 
+function customReceiveMessageFilter(cmd, arg) {
+	// Can override this to add filter logic at runtime
+	return true;
+}
 function receiveServerMessage(cmd, arg) {
   if (arg && arg.ack_req)
     SendCmd("ACK", { key: arg.ack_req, type: cmd });
+  if (!customReceiveMessageFilter(cmd, arg))
+    return;
   switch(cmd) {
     case "MOV":
       if("to" in arg && (arg.id != PlayerYou || !arg.from)) {
