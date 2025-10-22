@@ -248,6 +248,31 @@ function runLocalCommand(t) {
 			logMessage("Unrecognized /focuschat option", 'server_message', {'isChat': false});					
 		}
 		return true;
+	} else if(tl == "/noaudionotify") {
+		AudioChatNotifications = false;
+		AudioMiscNotifications = false;
+		return true;
+	} else if(tl.startsWith("/notifications ")) {
+		let args = tl.slice(15);
+		desktopNotificationNoAudio = args == "noaudio";
+		if (args == "on" || args == "noaudio") {
+			if (!("Notification" in window)) {
+				alert("This browser does not support desktop notifications");
+			} else if (Notification.permission === "granted") {
+				const notification = new Notification("Tilemap Town", {body: "Notifications turned on", icon: desktopNotificationIcon, badge: desktopNotificationIcon});
+				enableDesktopNotifications = true;
+			} else if (Notification.permission !== "denied") {
+				Notification.requestPermission().then((permission) => {
+				if (permission === "granted") {
+					const notification = new Notification("Tilemap Town", {body: "Notifications turned on", icon: desktopNotificationIcon, badge: desktopNotificationIcon});
+					enableDesktopNotifications = true;
+				}
+				});
+			}
+		} else if (args == "off") {
+			enableDesktopNotifications = false;
+		}
+		return true;
 	}
 	return false;
 }

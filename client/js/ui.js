@@ -71,6 +71,12 @@ let mapMusicVolume = 1;
 let gainNode = undefined;
 let playedMusicYet = false;
 
+// Desktop notifications
+let enableDesktopNotifications = false;
+let desktopNotificationNoAudio = false;
+let desktopNotificationIcon = "https://tilemap.town/img/pwa/icon-96.png";
+let activeNotifications = [];
+
 // Idle settings
 let minutesUntilIdle = 60;
 let minutesUntilDisconnect = 720;
@@ -2822,15 +2828,27 @@ function logMessage(Message, Class, Params) {
 	if (!alreadyPlayedSound && !distantChat) {
 		if ((Params.isChat || Params.isPrivateChat) && AudioChatNotifications) {
 			if (!Params.isSilent) {
-				let audio = new Audio(Params.isPrivateChat ? 'img/audio/notifyprivate.wav' : 'img/audio/notifychat.wav');
-				audio.play();
-				alreadyPlayedSound = true;
+				if (!desktopNotificationNoAudio) {
+					let audio = new Audio(Params.isPrivateChat ? 'img/audio/notifyprivate.wav' : 'img/audio/notifychat.wav');
+					audio.play();
+					alreadyPlayedSound = true;
+				}
+				if (enableDesktopNotifications && document.visibilityState !== "visible") {
+					const notification = new Notification(Params.username?`Tilemap Town: ${Params.username}`:"Tilemap Town", {body: Params.plainText, icon: desktopNotificationIcon, badge: desktopNotificationIcon});
+					activeNotifications.push(notification);
+				}
 			}
 		} else if (!Params.isChat && AudioMiscNotifications) {
 			if (!Params.isSilent) {
-				let audio = new Audio('img/audio/notifymisc.wav');
-				audio.play();
-				alreadyPlayedSound = true;
+				if (!desktopNotificationNoAudio) {
+					let audio = new Audio('img/audio/notifymisc.wav');
+					audio.play();
+					alreadyPlayedSound = true;
+				}
+				if (enableDesktopNotifications && document.visibilityState !== "visible") {
+					const notification = new Notification(Params.username?`Tilemap Town: ${Params.username}`:"Tilemap Town", {body: Params.plainText, icon: desktopNotificationIcon, badge: desktopNotificationIcon, silent: true});
+					activeNotifications.push(notification);
+				}
 			}
 		}
 	}
@@ -4136,5 +4154,9 @@ document.addEventListener("visibilitychange", (event) => {
 			chatInput.focus();
 			focusChatBarOnTabBack = false;
 		}
+		for (let notification of activeNotifications) {
+			notification.close();
+		}
+		activeNotifications = [];
 	}
 });
