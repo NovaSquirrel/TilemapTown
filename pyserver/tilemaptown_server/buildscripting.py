@@ -99,10 +99,21 @@ def fn_ownersay(e, arg):
 	}
 	send_private_message(e, context, owner.protocol_id(), arg[0], lenient_rate_limit=True)
 
+def entity_allowed_to_read_text(e, arg):
+	c = Database.cursor()
+	c.execute('SELECT owner_id, location, allow FROM Entity WHERE id=?', (arg,))
+	result = c.fetchone()
+	if result == None:
+		return False
+	owner_id, location, allow = result
+	return (owner_id != None and owner_id == e.owner_id) or (location != None and location == e.db_id) or (allow & permission['list_contents'])
+
 @script_api()
 def fn_runitem(e, arg):
 	if Config["RateLimit"]["ScriptCompile"] and apply_rate_limiting(e, 'compile', ( (1, 15), (2, 30) )):
 		return
+	if not entity_allowed_to_read_text(e, arg[0]):
+		return False
 	text = text_from_text_item(arg[0])
 	if text:
 		send_scripting_message(VM_MessageType.RUN_CODE, user_id=e.owner_id, entity_id=e.db_id if e.db_id else -e.id, data=text.encode())
@@ -113,6 +124,8 @@ def fn_runitem(e, arg):
 def fn_callitem(e, arg):
 	if Config["RateLimit"]["ScriptCompile"] and apply_rate_limiting(e, 'compile', ( (1, 15), (2, 30) )):
 		return
+	if not entity_allowed_to_read_text(e, arg[0]):
+		return None
 	text = text_from_text_item(arg[0])
 	if text:
 		send_scripting_message(VM_MessageType.RUN_CODE, user_id=e.owner_id, entity_id=e.db_id if e.db_id else -e.id, other_id=arg[1], status=1, data=text.encode())
@@ -123,6 +136,8 @@ def fn_callitem(e, arg):
 
 @script_api()
 def fn_readitem(e, arg):
+	if not entity_allowed_to_read_text(e, arg[0]):
+		return False
 	return text_from_text_item(arg[0])
 
 @script_api()

@@ -427,7 +427,7 @@ persistent_object_entry : Allowed to bring non-player entities here persistently
 modify_properties       : Allowed to modify properties of the map
 remote_command          : Allowed to make the entity do a command
 modify_appearance       : Allowed to modify certain properties of the map or other entity
-list_contents           : Allowed to get a list of the entities on the map remotely
+list_contents           : Allowed to get a list of the entities in this entity remotely (for text items, this also allows someone to read the text remotely)
 set_owner_to_this       : Allowed to set the owner of their entities to this entity
 set_topic               : Allowed to change the topic on this map
 
@@ -586,6 +586,9 @@ Remove a temporary permission that has been given to this entity.
 
 /entity id summon
 Move entity to your position within the map you're on.
+
+/entity id nolocation
+Teleport entity to nowhere (use /findmyitems to get it back).
 
 /entity id move x y
 /entity id move x y direction

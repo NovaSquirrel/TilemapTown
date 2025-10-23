@@ -53,7 +53,7 @@ List of permissions:
 	modify_properties           user can modify the properties of this entity
 	remote_command              user can make this entity do arbitrary commands
 	modify_appearance           user can modify visual properties, like picture or description
-	list_contents               user can look at the contents of this entity
+	list_contents               user can look at the contents of this entity (for text and client_data items, that also means looking at the data the item holds)
 	set_owner_to_this           user can set change the owner of any of their entities to this entity
 	set_topic                   user can set the map's discussion topic
 	remote_chat                 user is allowed to send chat to this entity, and listen to chat in this entity

@@ -584,7 +584,8 @@ def fn_BAG(connection, map, client, arg, context):
 			if (info_me.connection_attr('user_flags') or 0) & userflag['secret_pic']:
 				bag_info.pop('pic', None)
 				bag_info.pop('desc', None)
-		if bag_info['type'] not in entity_types_users_can_change_data_for:
+		if (not client.has_permission(info_me, permission['list_contents'], (info_me.map is client) or bag_info['type'] not in ('text', 'client_data'))) \
+		or bag_info['type'] not in entity_types_users_can_change_data_for:
 			bag_info.pop('data')
 		client.send("BAG", {'info': bag_info})
 
