@@ -87,6 +87,19 @@ Stops playing whatever music is currently playing
 /whatobjs
 Show how Tilemap Town is storing the tile you're standing on
 
+/openprofile username
+Open an arbitrary user's profile, regardless of if they're online
+
+/edititem id
+Edit item regardless of if it's in your inventory
+
+/clearhotbar
+Clears the hotbar
+
+/cameraxy
+/cameraxy x y
+Lock the camera to a specific place, or unlock it if no coordinates are provided
+
 ---Account/customization---
 /nick newname
 Change display name
