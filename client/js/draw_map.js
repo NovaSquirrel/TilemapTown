@@ -865,13 +865,13 @@ function drawMap() {
 	}
 
 	// Draw markers that show that people are building
-	let potluck = document.getElementById('potluck');
+	let webclientGraphics = document.getElementById('webclientGraphics');
 	for (let id in PlayerBuildMarkers) {
 		let marker = PlayerBuildMarkers[id];
 		let nameText = " " + marker.name + " ";
 		let del = marker.del;
 		drawTextSmall(ctx, (marker.pos[0] * 16 + 8) - pixelCameraX - (nameText.length * 4 / 2),   (marker.pos[1] * 16) - pixelCameraY - 8, nameText);
-		ctx.drawImage(potluck, del?(17 * 16):(9 * 16), del?(19 * 16):(22 * 16), 16, 16, marker.pos[0] * 16 - pixelCameraX, marker.pos[1] * 16 - pixelCameraY, 16, 16);
+		ctx.drawImage(webclientGraphics, del?(5 * 16):(4 * 16), 0, 16, 16, marker.pos[0] * 16 - pixelCameraX, marker.pos[1] * 16 - pixelCameraY, 16, 16);
 		markAreaAroundPointAsDirty(MyMap, marker.pos[0], marker.pos[1], 7);
 	}
 
