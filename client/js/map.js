@@ -41,6 +41,7 @@ const Directions = {
 // for converting direction IDs to actual offsets
 const DirX = [ 1,  1,  0, -1, -1, -1,  0,  1];
 const DirY = [ 0,  1,  1,  1,  0, -1, -1, -1];
+const INTERNAL_TILESET_ID = "#";
 
 class TownMap {
 	constructor(MapWidth, MapHeight) {
@@ -215,6 +216,7 @@ function AtomCompact2JSON(t) {
 
 function initMap() {
 	if(Object.keys(IconSheets).length === 0) {
+		IconSheets[INTERNAL_TILESET_ID] = document.getElementById("webclientGraphics");
 		IconSheets[0] = document.getElementById("potluck");
 		IconSheets[-1] = document.getElementById("extras");
 		IconSheets[-2] = document.getElementById("pulp");

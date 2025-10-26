@@ -28,7 +28,7 @@ touch_mode = false;
 let PlayerYou = "me";
 
 // The list of entities on the map
-let PlayerWho = { me: { name: "Player", pic: [0, 2, 25], x: 5, y: 5, dir: 2, passengers: [] } };
+let PlayerWho = { me: { name: "Player", pic: ["#", 0, 0], x: 5, y: 5, dir: 2, passengers: [] } };
 
 // Walk through walls?
 let Fly = false;
@@ -946,8 +946,8 @@ function refreshLocalMapList() {
 // Inventory
 ///////////////////////////////////////////////////////////
 
-const FolderOpenPic = [0, 2, 20];
-const FolderClosedPic = [0, 1, 20];
+const FolderOpenPic = ["#", 1, 2];
+const FolderClosedPic = ["#", 0, 2];
 
 // options!
 // eventlisteners: an object of listener name => function. added to each card
@@ -1191,12 +1191,14 @@ function itemIcon(key) {
 
 	// allow custom avatars
 	// as well as built-in ones
-	pic = [0, 8, 24];
+	pic = ["#", 7, 2];
 
 	if (item.is_uploaded_image) {
 		img.style.width = "32px";
 		img.style.height = "32px";
+		console.log("Uploaded");
 	} else 	if (key in PlayerImages) {
+		console.log("Player image");
 		if (PlayerImages[key].naturalWidth != 16 || PlayerImages[key].naturalHeight != 16) {
 			img.style.width = "32px";
 			img.style.height = "32px";
@@ -1488,7 +1490,7 @@ function refreshCommandList() {
 		let primaryCommand = command.command;
 		if (Array.isArray(primaryCommand))
 			primaryCommand = primaryCommand[0];
-		let pic = [0, 8, 24];
+		let pic = ["#", 7, 2];
 		let big = false;
 		if (primaryCommand) {
 			let s = primaryCommand.split(" ");
@@ -1497,7 +1499,7 @@ function refreshCommandList() {
 				pic[1] = parseInt(s[2]);
 				pic[2] = parseInt(s[3]);
 				if (Number.isNaN(pic[0]) || Number.isNaN(pic[1]) || Number.isNaN(pic[2]))
-					pic = [0, 8, 24];
+					pic = ["#", 7, 2];
 				for (let param of s.slice(3)) {
 					if (param.startsWith("size=") && param !== "size=1,1") {
 						big = true;
@@ -1693,13 +1695,13 @@ function editItemShared(item) {
 				document.getElementById('edittileanimationoptions').style.display = "block";
 				itemobj = AtomFromName(item.data);
 				if (itemobj == null && item.pic !== null) {
-					itemobj = { pic: [0, 8, 24] };
+					itemobj = { pic: ["#", 7, 2] };
 				}
 			} else {
 				if ("pic" in item && item.pic !== null)
 					itemobj = { pic: item.pic };
 				else
-					itemobj = { pic: [0, 8, 24] };
+					itemobj = { pic: ["#", 7, 2] };
 			}
 			editItemOriginalSheet = itemobj.pic[0];
 			document.getElementById("tileImageSheetOptions").style.display = document.getElementById("itemImageIsSheet").checked ? "inline" : "none";
@@ -3175,7 +3177,7 @@ function apply_default_pic_for_type(item) {
 		return;
 	switch (item.type) {
 		default: // dummy
-			item.pic = [0, 8, 24];
+			item.pic = ["#", 7, 2];
 			break;
 		case "user":
 			// make sure a custom pic is in PlayerImages
@@ -3190,7 +3192,7 @@ function apply_default_pic_for_type(item) {
 			break;
 		case "generic":
 			if (item.pic == null)
-				item.pic = [0, 8, 24];
+				item.pic = ["#", 0, 1];
 			break;
 		case "map_tile": // object
 			// allow for string data like "grass"
@@ -3198,40 +3200,48 @@ function apply_default_pic_for_type(item) {
 			if (temp && temp.pic) {
 				item.pic = temp.menu_pic ?? temp.pic;
 			} else {
-				item.pic = [0, 8, 24];
+				item.pic = ["#", 7, 2];
 			}
 			break;
 		case "text":
 			if (item.pic == null)
-				item.pic = [0, 0, 24];
+				item.pic = ["#", 1, 1];
 			break;
 		case "image":
 			if (item.pic == null)
-				item.pic = [0, 11, 20];
+				item.pic = ["#", 2, 1];
 			break;
 		case "tileset":
 			if (item.pic == null)
-				item.pic = [0, 19, 18];
+				item.pic = ["#", 5, 1];
 			break;
 		case "reference":
 			if (item.pic == null)
-				item.pic = [0, 9, 20];
+				item.pic = ["#", 5, 2];
 			break;
 		case "landmark":
 			if (item.pic == null)
-				item.pic = [0, 7, 22];
+				item.pic = ["#", 6, 2];
 			break;
 		case "gadget":
 			if (item.pic == null)
-				item.pic = [0, 18, 7];
+				item.pic = ["#", 3, 1];
 			break;
 		case "folder":
 			if (item.pic == null)
 				item.pic = FolderClosedPic;
 			break;
+		case "map":
+			if (item.pic == null)
+				item.pic = ["#", 7, 1];
+			break;
+		case "chatroom":
+			if (item.pic == null)
+				item.pic = ["#", 6, 1];
+			break;
 		case "client_data":
 			if (item?.data?.type === "command_list" && item.pic == null)
-				item.pic = [0, 2, 24];
+				item.pic = ["#", 4, 1];
 			break
 	}
 }

@@ -267,7 +267,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 			} else {
 				let pic = Mob.pic;
 				if (pic == null)
-					pic = [0, 8, 24];
+					pic = ["#", 7, 2];
 				if (pic[0] in IconSheets) {
 					ctx.drawImage(IconSheets[pic[0]], pic[1] * 16, pic[2] * 16, 16, 16, (Mob.x * 16) - pixelCameraX + MobOffset[0], (Mob.y * 16) - pixelCameraY + MobOffset[1], 16, 16);
 					markAreaAroundPointAsDirty(MyMap, Mob.x + (MobOffset[0]/16), Mob.y + (MobOffset[1]/16), 5);
@@ -323,7 +323,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 
 			// typing indicators
 			if (Mob.typing) {
-				ctx.drawImage(IconSheets[0], 0, 24 * 16, 16, 16, (Mob.x * 16) - pixelCameraX + MobOffset[0], (Mob.y * 16) - pixelCameraY - heightForPlayerStatus + MobOffset[1] + 6 + 5, 16, 16);
+				ctx.drawImage(IconSheets["#"], (Mob.typing === "pause" ? 6 : 7) * 16, 0 * 16, 16, 16, (Mob.x * 16) - pixelCameraX + MobOffset[0], (Mob.y * 16) - pixelCameraY - heightForPlayerStatus + MobOffset[1] + 6 + 5, 16, 16);
 				// Should this mark tiles as dirty? Probably unneeded due to WHO updates doing this too
 			}
 
@@ -385,7 +385,7 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 	if (!IconSheets[tile.pic[0]]) {
 		RequestImageIfNeeded(tile.pic[0]);
 		// Draw a "?" fallback so users can notice tiles with invalid pic[0] and delete/fix them
-		ctx.drawImage(IconSheets[0], 8 * 16, 24 * 16, 16, 16, drawAtX, drawAtY, 16, 16);
+		ctx.drawImage(IconSheets["#"], 1 * 16, 0 * 16, 16, 16, drawAtX, drawAtY, 16, 16);
 		return;
 	}
 

@@ -619,7 +619,7 @@ function receiveServerMessage(cmd, arg) {
       // has anyone's avatars updated?
       for (var key in PlayerWho) {
         var pic = PlayerWho[key].pic;
-        var is_custom = pic != null && typeof pic[0] == "string";
+        var is_custom = pic != null && typeof pic[0] == "string" && pic[0] !== INTERNAL_TILESET_ID;
 
         // if no longer using a custom pic, delete the one that was used
         if (key in PlayerImages && !is_custom) {
