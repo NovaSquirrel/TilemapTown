@@ -39,6 +39,7 @@ let MessagesToRetry = []; // Each entry is {commandType, commandArgs, key, map_i
 let MessageAckReqPrefix = Math.random() + "_";
 let MessageAckReqNumber = 0; // Incremented every time a key is required, and added to the prefix to get the key that's sent out
 let JoinedMapYet = false;
+let DefaultPics = {};
 const SupportedTakeControlsKeys = ["turn-ne", "move-ne", "turn-se", "move-se", "turn-nw", "move-nw", "turn-sw", "move-sw", "turn-w", "move-w", "turn-s", "move-s", "turn-n", "move-n", "turn-e", "move-e", "use-item", "cancel", "hotbar-1", "hotbar-2", "hotbar-3", "hotbar-4", "hotbar-5", "hotbar-6", "hotbar-7", "hotbar-8", "hotbar-9", "hotbar-10"];
 const CLIENT_NAME = "Tilemap Town Web Client";
 
@@ -737,6 +738,9 @@ function receiveServerMessage(cmd, arg) {
       }
       if('sample_avatars' in arg) {
         sampleAvatarList = arg['sample_avatars'];
+      }
+      if('default_pics' in arg) {
+        DefaultPics = arg['default_pics'];
       }
       changedBuildToolCategory();
       break;

@@ -27,6 +27,13 @@
 		"Green turtle": "userpic/greenturtle.png",
 		"Yellow turtle": "userpic/yellowturtle.png"
 	},
+	"default_pics": {
+		"default": [0, 8, 24],
+		"invisible": [-1, 3, 5],
+		"sampleEmote1": [0, 2, 24],
+		"sampleEmote2": [0, 1, 24],
+		"hearts": [0, 14, 21]
+	},
 	"tilesets": {
 		"": {
 			"grass": {

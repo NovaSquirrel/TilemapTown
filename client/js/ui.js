@@ -1695,19 +1695,22 @@ function editItemShared(item) {
 				document.getElementById('edittileanimationoptions').style.display = "block";
 				itemobj = AtomFromName(item.data);
 				if (itemobj == null && item.pic !== null) {
-					itemobj = { pic: ["#", 7, 2] };
+					itemobj = { pic: DefaultPics['default'] ?? [0, 8, 24] };
 				}
 			} else {
 				if ("pic" in item && item.pic !== null)
 					itemobj = { pic: item.pic };
 				else
-					itemobj = { pic: ["#", 7, 2] };
+					itemobj = { pic: DefaultPics['default'] ?? [0, 8, 24] };
+			}
+			if (itemobj.pic[0] === INTERNAL_TILESET_ID) {
+				itemobj.pic = DefaultPics['default'] ?? [0, 8, 24];
 			}
 			editItemOriginalSheet = itemobj.pic[0];
 			document.getElementById("tileImageSheetOptions").style.display = document.getElementById("itemImageIsSheet").checked ? "inline" : "none";
 			document.getElementById("tileImageURLOptions").style.display = document.getElementById("itemImageIsURL").checked ? "inline" : "none";
 			document.getElementById('itemImageTypePicker').style.display = (item.type === "generic" || item.type === "gadget") ? "block" : "none";
-			const isURLPic = (typeof itemobj.pic[0] === "string");
+			const isURLPic = (typeof itemobj.pic[0] === "string") && itemobj.pic[0] !== INTERNAL_TILESET_ID;
 			document.getElementById('edittileimageurl').value = isURLPic ? itemobj.pic[0] : "";
 			document.getElementById("itemImageIsSheet").checked = !isURLPic;
 			document.getElementById("itemImageIsURL").checked = isURLPic;
@@ -2128,10 +2131,12 @@ function newItemCreate(type) {
 		params['create']['temp'] = true;
 	}
 	if(type === "command_list") {
+		let sampleEmote1Pic = DefaultPics.sampleEmote1 ?? [0, 2, 24];
+		let sampleEmote2Pic = DefaultPics.sampleEmote2 ?? [0, 1, 24];
 		params.create.type = "client_data";
 		params.create.data = {"type": "command_list", "type_version": "0.0.1", "client_name": CLIENT_NAME, "data": [
-			{"name": "happy",   "command": "userparticle 0 2 24 offset=0,-16"},
-			{"name": "sad",     "command": "userparticle 0 1 24 offset=0,-16"},
+			{"name": "happy",   "command": `userparticle ${sampleEmote1Pic[0]} ${sampleEmote1Pic[1]} ${sampleEmote1Pic[2]} offset=0,-16`},
+			{"name": "sad",     "command": `userparticle ${sampleEmote2Pic[0]} ${sampleEmote2Pic[1]} ${sampleEmote2Pic[2]} offset=0,-16`},
 			{"name": "explode", "command": "userparticle 0 4 21 anim_frames=7 anim_loops=0 hide_me"},
 		]};
 	}
