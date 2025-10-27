@@ -1196,9 +1196,7 @@ function itemIcon(key) {
 	if (item.is_uploaded_image) {
 		img.style.width = "32px";
 		img.style.height = "32px";
-		console.log("Uploaded");
 	} else 	if (key in PlayerImages) {
-		console.log("Player image");
 		if (PlayerImages[key].naturalWidth != 16 || PlayerImages[key].naturalHeight != 16) {
 			img.style.width = "32px";
 			img.style.height = "32px";
