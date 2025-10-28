@@ -380,7 +380,7 @@ function calculateAnimationFrame(tile, timer, mapCoordX, mapCoordY) {
 				}
 				break;
 			case 4: // Random frames
-				let randomKey = `${animationFrameCount}-${mapCoordX}-${mapCoordY}`;
+				let randomKey = `${animationFrameCount}-${mapCoordX}-${mapCoordY}-${tile.pic[0]}-${tile.pic[1]}-${tile.pic[2]}`;
 				let value = previousRandomFramesMap.get(randomKey);
 				if (value === undefined || (canPickNewRandomFrame && (animationTimer % animationSpeed == 0))) {
 					value = getRandomInt(0, animationFrameCount);
