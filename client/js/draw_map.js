@@ -39,6 +39,12 @@ const BACKDROP_DIRTY_ANIMATED = 1; // Zone is ready, but contains animated tiles
 const BACKDROP_DIRTY_REDRAW   = 2; // Needs to be displayed again
 const BACKDROP_DIRTY_SKIP     = 3; // Skip this zone because it's all ready
 
+// Map of what tile picked which random frame, for consistency when a tile is drawn multiple times before it's supposed to change
+let previousRandomFramesMap = new Map();
+let currentRandomFramesMap  = new Map();
+let tenthOfSecondTimerAtPreviousDraw = null;
+let canPickNewRandomFrame = true;
+
 ///////////////////////////////////////////////////////////
 // Autotile related functions
 ///////////////////////////////////////////////////////////
@@ -196,7 +202,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 				let inIconSheet = pic[0] in IconSheets;
 				let inParticleImages = pic[0] in PlayerParticleImages;
 				if (inIconSheet || inParticleImages) {
-					let animationFrame = calculateAnimationFrame(Mob.particle.data, Mob.particle.timer);
+					let animationFrame = calculateAnimationFrame(Mob.particle.data, Mob.particle.timer, Mob.x, Mob.y);
 					ctx.drawImage( (inIconSheet?IconSheets:PlayerParticleImages)[pic[0]],
 						(pic[1]+animationFrame*size[0]) * 16, pic[2] * 16,
 						size[0] * 16, size[1] * 16,
@@ -347,7 +353,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 	}
 }
 
-function calculateAnimationFrame(tile, timer) {
+function calculateAnimationFrame(tile, timer, mapCoordX, mapCoordY) {
 	if (timer < 0)
 		timer = 0;
 	let animationFrameCount = Math.max(1, tile.anim_frames ?? 1);
@@ -373,6 +379,14 @@ function calculateAnimationFrame(tile, timer) {
 					return subAnimationFrame;
 				}
 				break;
+			case 4: // Random frames
+				let randomKey = `${animationFrameCount}-${mapCoordX}-${mapCoordY}`;
+				let value = previousRandomFramesMap.get(randomKey);
+				if (value === undefined || (canPickNewRandomFrame && (animationTimer % animationSpeed == 0))) {
+					value = getRandomInt(0, animationFrameCount);
+				}
+				currentRandomFramesMap.set(randomKey, value);
+				return value;
 		}
 	}
 	return 0;
@@ -396,7 +410,7 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 
 	let animationFrame = 0;
 	if(tileAnimationEnabled) {
-		animationFrame = calculateAnimationFrame(tile, tenthOfSecondTimer);
+		animationFrame = calculateAnimationFrame(tile, tenthOfSecondTimer, mapCoordX, mapCoordY);
 
 		let animationFrameCount = Math.max(1, tile.anim_frames ?? 1);
 		if (animationFrameCount > 1)
@@ -705,6 +719,9 @@ function drawMap() {
 
 	let edgeLinks = MyMap?.Info?.edge_links ?? null;
 
+	canPickNewRandomFrame = tenthOfSecondTimerAtPreviousDraw !== tenthOfSecondTimer;
+	tenthOfSecondTimerAtPreviousDraw = tenthOfSecondTimer;
+
 	// Attempt to draw one "zone" on the backdrop
 	function processBackdropGrid(zoneDrawGridX, zoneDrawGridY, redraw) {
 		// Which zone is used on the backdrop canvas
@@ -899,6 +916,16 @@ function drawMap() {
 		ctx.rect(AX - pixelCameraX, AY - pixelCameraY, 16, 16);
 		ctx.stroke();
 		ctx.globalAlpha = 1;
+	}
+
+	// Update animation frame map
+	if (currentRandomFramesMap.size || previousRandomFramesMap.size) {
+		if (currentRandomFramesMap.size) {
+			previousRandomFramesMap = currentRandomFramesMap;
+			currentRandomFramesMap = new Map();
+		} else {
+			previousRandomFramesMap.clear();
+		}
 	}
 
 	FlushIconSheetRequestList();

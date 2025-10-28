@@ -239,6 +239,7 @@ Tiles are defined with a JSON object, which can have the following fields:
 	1 = Play in reverse
 	2 = Play in a ping-pong style (which means play forward, then backwards, then forward again, then backwards again, and on and on)
 	3 = Same as 2, but starts in reverse
+	4 = Random frames
 
 	If a tile is animated (which means its anim_frames value is greater than 1), that means that whenever the tile is drawn, the x portion of the tile's pic will change over time to create an animation. For a forwards animation, this means that the tile will be drawn with the specified pic with an offset of +0, +1, +2, all the way through +animation_frames-1.
 
