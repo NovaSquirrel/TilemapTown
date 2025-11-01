@@ -52,6 +52,7 @@ let ctrlZUndoType = null;
 let lastChatUsed = "";
 let alreadyShowedSign = false;
 let alreadyBumped = false;
+let waitingOnMapScreenshot = 0; // Counts up every tick if nonzero
 
 const OK_DRAW_DISTANCE = 5;
 
@@ -84,35 +85,10 @@ function runLocalCommand(t) {
 		document.body.removeChild(element);
 		return true;
 	} else if (tl == "/mapscreenshot") {
-		let win = window.open("about:blank", "Map");
-		win.onload = function() {
-			win.document.body.innerHTML = `<html><head><title>Map screenshot</title></head><body>Map size: ${MyMap.Width}&times;${MyMap.Height}<br></body></html>`;
-
-			let canvas = win.document.createElement('canvas');
-			win.document.body.appendChild(canvas);
-
-			canvas.width = MyMap.Width * 16;
-			canvas.height = MyMap.Height * 16;
-			let ctx = canvas.getContext("2d");
-			ctx.beginPath();
-			ctx.fillStyle = "#000000";
-			ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-			let oldTimer = tenthOfSecondTimer;
-			tenthOfSecondTimer = 0;
-			for (let y=0; y<MyMap.Height; y++) {
-				for (let x=0; x<MyMap.Width; x++) {
-					let turfAtom = AtomFromName(MyMap.Tiles[x][y]);
-					drawTurf(ctx, x*16, y*16, AtomFromName(MyMap.Tiles[x][y]), MyMap, x, y);
-					let Objs = MyMap.Objs[x][y];
-					if (Objs.length) {
-						for (let o of Objs) {
-							drawObj(ctx, x*16, y*16, AtomFromName(o), MyMap, x, y);
-						}
-					}
-				}
-			}
-			tenthOfSecondTimer = oldTimer;
+		if (allMapImagesLoaded()) {
+			openMapScreenshot();
+		} else {
+			waitingOnMapScreenshot = 1;
 		}
 		return true;
 	} else if (tl.startsWith("/playmusic ")) {
@@ -297,6 +273,69 @@ function sendTyping() {
 		SendCmd("WHO", { update: { id: PlayerYou, typing: isTyping } });
 		PlayerWho[PlayerYou].typing = isTyping;
 		drawMap();
+	}
+}
+
+function allMapImagesLoaded() {
+	function havePic(atom) {
+		let pic = atom.pic;
+		if (!pic)
+			return true;
+		if (pic[0] in IconSheets)
+			return true;
+		RequestImageIfNeeded(pic[0]);
+		return false;
+	}
+	let allLoaded = true;
+	for (let y=0; y<MyMap.Height; y++) {
+		for (let x=0; x<MyMap.Width; x++) {
+			let turfAtom = AtomFromName(MyMap.Tiles[x][y]);
+			if (!havePic(turfAtom))
+				allLoaded = false;
+			let Objs = MyMap.Objs[x][y];
+			if (Objs.length) {
+				for (let o of Objs) {
+					let objAtom = AtomFromName(o);
+					if (!havePic(objAtom))
+						allLoaded = false;
+				}
+			}
+		}
+	}
+	FlushIconSheetRequestList();
+	return allLoaded;
+}
+
+function openMapScreenshot() {
+	let win = window.open("about:blank", "Map");
+	win.onload = function() {
+		win.document.body.innerHTML = `<html><head><title>Map screenshot</title></head><body>Map size: ${MyMap.Width}&times;${MyMap.Height}<br></body></html>`;
+
+		let canvas = win.document.createElement('canvas');
+		win.document.body.appendChild(canvas);
+
+		canvas.width = MyMap.Width * 16;
+		canvas.height = MyMap.Height * 16;
+		let ctx = canvas.getContext("2d");
+		ctx.beginPath();
+		ctx.fillStyle = "#000000";
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+		let oldTimer = tenthOfSecondTimer;
+		tenthOfSecondTimer = 0;
+		for (let y=0; y<MyMap.Height; y++) {
+			for (let x=0; x<MyMap.Width; x++) {
+				let turfAtom = AtomFromName(MyMap.Tiles[x][y]);
+				drawTurf(ctx, x*16, y*16, turfAtom, MyMap, x, y);
+				let Objs = MyMap.Objs[x][y];
+				if (Objs.length) {
+					for (let o of Objs) {
+						drawObj(ctx, x*16, y*16, AtomFromName(o), MyMap, x, y);
+					}
+				}
+			}
+		}
+		tenthOfSecondTimer = oldTimer;
 	}
 }
 

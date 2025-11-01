@@ -3478,6 +3478,14 @@ function runAnimation(timestamp) {
 		drawMap();
 	}
 
+	if (waitingOnMapScreenshot) {
+		waitingOnMapScreenshot++;
+		if (waitingOnMapScreenshot == 300 || allMapImagesLoaded()) {
+			openMapScreenshot();
+			waitingOnMapScreenshot = 0;
+		}
+	}
+
 	NeedMapRedraw = false;
 	TickCounter = (TickCounter + 1) & 0xffffff; // Currently only used for offline mode simulation of BAG
 	alreadyPlayedSound = false;
