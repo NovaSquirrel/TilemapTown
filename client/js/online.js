@@ -18,7 +18,7 @@
  */
 let OnlineMode = false;
 let OnlineServer = null;
-let OnlineMap = "";
+let OnlineMap = undefined;
 let OnlineSocket = null;
 let OnlineSSL = true;
 let OnlinePort = 443;
@@ -1120,6 +1120,16 @@ function ConnectToServer() {
 		}
 		if (touch_mode) {
 			idn_args["client_name"] = CLIENT_NAME + " (touch)";
+		}
+		let initialMap = document.getElementById("loginMapID").value.trim();
+		if (initialMap) {
+			let split = initialMap.split(' ');
+			for (let i=0; i<split.length; i++) {
+				let asInt = parseInt(split[i]);
+				if (!Number.isNaN(asInt))
+					split[i] = asInt;
+			}
+			idn_args["map"] = split;
 		}
 
 		JoinedMapYet = false;

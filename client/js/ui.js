@@ -4000,6 +4000,8 @@ function initWorld() {
 	// initialize the world map
 	initMap();
 
+	document.getElementById('loginMapID').value = OnlineMap ? OnlineMap : "";
+
 	chatInput = document.getElementById("chatInput");
 	mapCanvas = document.getElementById("map");
 	backdropCanvas = document.createElement("canvas");
@@ -4024,7 +4026,7 @@ function initWorld() {
 		if (event.key === "Enter")
 			refreshCommandList();
 	});
-	for (let i of ["loginuser", "loginpass", "loginserver", "loginnick"])
+	for (let i of ["loginuser", "loginpass", "loginserver", "loginnick", "loginMapID"])
 		document.getElementById(i).addEventListener("keydown", function(event) {
 			if (event.key === "Enter" && !document.getElementById("connectButton").disabled)
 				loginButton();
