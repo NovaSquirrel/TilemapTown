@@ -157,7 +157,7 @@ Flags available:
 	hide_api      : Makes this user not show up on the API
 	no_watch      : Prevents the watch feature from working on this user
 	secret_pic    : Prevents checking this user's "pic" and "desc" remotely
-	no_offline_pm_mail : Never convert private messages sent or received by this user to mail (which normally happens during a server restart)
+	no_offline_pm_mail : Never convert private messages sent or received by this user to mail (which normally happens when the user hasn't received it by the time the server restarts)
 
 ---User information---
 /who
