@@ -1123,7 +1123,7 @@ def fn_unwatch(map, client, context, arg):
 def fn_watchlist(map, client, context, arg):
 	respond(context, 'Watch list: '+str(client.connection_attr('watch_list')))
 
-user_changeable_flags = ('bot', 'hide_location', 'hide_api', 'no_watch', 'secret_pic')
+user_changeable_flags = ('bot', 'hide_location', 'hide_api', 'no_watch', 'secret_pic', 'no_offline_pm_mail')
 @cmd_command(category="Settings", alias=['userflag'], privilege_level="no_scripts")
 def fn_userflags(map, client, context, arg):
 	connection = client.connection()
@@ -1154,7 +1154,7 @@ def fn_userflags(map, client, context, arg):
 		respond(context, 'Syntax: add/del list of flags', error=True)
 
 
-admin_changeable_flags = ('bot', 'hide_location', 'hide_api', 'no_watch', 'secret_pic', 'file_uploads', 'trusted_builder', 'scripter', 'no_login')
+admin_changeable_flags = ('bot', 'hide_location', 'hide_api', 'no_watch', 'secret_pic', 'file_uploads', 'trusted_builder', 'scripter', 'no_login', 'no_offline_pm_mail')
 @cmd_command(category="Settings", alias=['adminuserflag'])
 def fn_adminuserflags(map, client, context, arg):
 	username, arg = separate_first_word(arg)

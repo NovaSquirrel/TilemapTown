@@ -319,6 +319,7 @@ userflag['no_watch']        = 0x00000020 # Don't allow other users to have you o
 userflag['secret_pic']      = 0x00000040 # Hide your pic from remote view
 userflag['trusted_builder'] = 0x00000080 # User can still build when building is locked down
 userflag['scripter']        = 0x00000100 # User can use server-side scripting
+userflag['no_offline_pm_mail'] = 0x00000200 # Never convert offline messages sent or received to mail
 userflag['no_login']        = 0x80000000 # Account can't be logged into
 
 # Entity types

@@ -110,8 +110,19 @@ def save_everything():
 	# Convert offline messages to mail
 	c = Database.cursor()
 	for recipient_db_id, senders in OfflineMessages.items():
+		c.execute('SELECT flags FROM User WHERE entity_id=?', (recipient_db_id,))
+		result = c.fetchone()
+		if result == None or (result[0] & userflag['no_offline_pm_mail']) != 0:
+			print("Discarding offline messages queued for %d" % recipient_db_id)
+			continue
 		print("Converting offline messages for %d into mail" % recipient_db_id)
+
 		for sender_db_id, queue in senders.items():
+			c.execute('SELECT flags FROM User WHERE entity_id=?', (sender_db_id,))
+			result = c.fetchone()
+			if result == None or (result[0] & userflag['no_offline_pm_mail']) != 0:
+				print("Discarding offline messages queued for %d, sent by %d" % (recipient_db_id, sender_db_id))
+				continue
 			if len(queue) == 0:
 				continue
 			messages_in_queue = ''.join(["[li]%s: %s[/li]" % (_[1].strftime("%Y-%m-%d"), _[0]) for _ in queue])

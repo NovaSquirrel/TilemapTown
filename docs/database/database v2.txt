@@ -139,6 +139,7 @@ flags           - integer - user-specific flags
 	0x00000040 don't include this user's pic and desc when their information is viewed remotely (as in a BAG info message)
 	0x00000080 user is a trusted builder, and will still be able to build if building is locked down
 	0x00000100 user can run scripts
+	0x00000200 never convert offline messages sent or received to mail
 	0x80000000 user's account can't be logged into currently
 
 ---MAIL---
