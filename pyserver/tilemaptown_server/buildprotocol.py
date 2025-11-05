@@ -332,6 +332,8 @@ def fn_MOV(connection, map, client, arg, context):
 				# Allow changing direction while changing maps
 				if "dir" in arg:
 					client.dir = arg["dir"]
+				if "offset" in arg and is_list_with_two_ints(arg["offset"]) and arg["offset"][0] >= -32 and arg["offset"][0] <= 32 and arg["offset"][1] >= -32 and arg["offset"][1] <= 32:
+					client.offset = arg["offset"]
 
 				# If the client can move to the new map, then it'll remove them from this one,
 				# and this function shouldn't continue.
