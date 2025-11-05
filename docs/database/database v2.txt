@@ -80,7 +80,7 @@ Permissions:
 		0x00000100 for maps: bulk build (can use the BLK command)
 		       for groups: anyone can get a list of the members
 		0x00000200 allowed to bring non-player entities here temporarily
-		0x00000400 allowed to bring non-player entities here that can be here without the player's owner
+		0x00000400 allowed to bring non-player entities here persistently (if not, they'll be kicked out when the map unloads)
 		0x00000800 allowed to modify properties on this entity
 		0x00001000 allowed to make this entity do arbitrary commands
 		0x00002000 allowed to change visual properties, like picture or description 
