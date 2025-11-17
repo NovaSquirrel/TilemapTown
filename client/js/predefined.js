@@ -1,47 +1,83 @@
 let GlobalTiles = {
 	"grass": {
 		"name": "grass",
-		"pic": [0, 0, 4],
+		"pic": [
+			0,
+			0,
+			19
+		],
 		"density": false
 	},
 	"grass2": {
 		"name": "grass",
-		"pic": [-1, 3, 0],
+		"pic": [
+			0,
+			0,
+			10
+		],
 		"density": false
 	},
 	"grass3": {
 		"name": "grass",
-		"pic": [-1, 3, 1],
+		"pic": [
+			0,
+			1,
+			10
+		],
 		"density": false
 	},
 	"grass4": {
 		"name": "grass",
-		"pic": [-1, 0, 3],
+		"pic": [
+			0,
+			0,
+			11
+		],
 		"density": false
 	},
 	"grass5": {
 		"name": "grass",
-		"pic": [-1, 9, 13],
+		"pic": [
+			0,
+			1,
+			19
+		],
 		"density": false
 	},
 	"dirt": {
 		"name": "dirt",
-		"pic": [0, 6, 4],
+		"pic": [
+			0,
+			2,
+			20
+		],
 		"density": false
 	},
 	"dirt2": {
 		"name": "dirt",
-		"pic": [-1, 2, 0],
+		"pic": [
+			0,
+			3,
+			20
+		],
 		"density": false
 	},
 	"dirt3": {
 		"name": "dirt",
-		"pic": [-1, 7, 2],
+		"pic": [
+			0,
+			7,
+			20
+		],
 		"density": false
 	},
 	"water": {
 		"name": "water",
-		"pic": [-1, 1, 1],
+		"pic": [
+			0,
+			9,
+			28
+		],
 		"density": true,
 		"type": "water",
 		"anim_frames": 2,
@@ -49,794 +85,1362 @@ let GlobalTiles = {
 	},
 	"water3": {
 		"name": "water",
-		"pic": [-1, 9, 14],
+		"pic": [
+			0,
+			16,
+			30
+		],
 		"density": true,
 		"type": "water"
 	},
 	"water2": {
 		"name": "water",
-		"pic": [-1, 10, 3],
+		"pic": [
+			0,
+			14,
+			31
+		],
 		"density": true,
 		"type": "water"
 	},
 	"waterfall": {
 		"name": "waterfall",
-		"pic": [-1, 1, 0],
+		"pic": [
+			0,
+			11,
+			28
+		],
+		"anim_frames": 4,
+		"anim_speed": 2,
 		"density": false,
 		"type": "escalator",
 		"dir": 2
 	},
 	"brownsand": {
 		"name": "brown sand",
-		"pic": [0, 10, 3],
+		"pic": [
+			0,
+			4,
+			26
+		],
 		"density": false
 	},
 	"purplesand": {
 		"name": "purple sand",
-		"pic": [0, 10, 4],
+		"pic": [
+			0,
+			5,
+			26
+		],
 		"density": false
 	},
 	"brownsand2": {
 		"name": "brown sand",
-		"pic": [-1, 0, 13]
+		"pic": [
+			0,
+			0,
+			26
+		]
 	},
 	"snow": {
 		"name": "snow",
-		"pic": [-1, 1, 13]
+		"pic": [
+			0,
+			1,
+			26
+		]
 	},
 	"redbrickfloor": {
 		"name": "red brick floor",
-		"pic": [0, 10, 8],
+		"pic": [
+			0,
+			0,
+			27
+		],
 		"density": false
 	},
 	"graybrickfloor": {
 		"name": "gray brick floor",
-		"pic": [0, 11, 8],
+		"pic": [
+			0,
+			1,
+			27
+		],
 		"density": false
 	},
 	"stonewall": {
 		"name": "stone wall",
-		"pic": [0, 9, 1],
+		"pic": [
+			0,
+			5,
+			30
+		],
 		"density": true
 	},
 	"xblock": {
 		"name": "x block",
-		"pic": [0, 15, 0],
+		"pic": [
+			0,
+			31,
+			47
+		],
 		"density": true
 	},
 	"ice": {
 		"name": "ice",
-		"pic": [0, 15, 10],
+		"pic": [
+			0,
+			25,
+			26
+		],
 		"density": false,
 		"type": "ice"
 	},
 	"brownbricks": {
 		"name": "brown bricks",
 		"autotile_layout": 2,
-		"pic": [-1, 5, 22],
+		"pic": [
+			-5,
+			1,
+			5
+		],
 		"density": true
 	},
 	"woodfloor2": {
 		"name": "wood floor",
-		"pic": [-1, 10, 2],
+		"pic": [
+			0,
+			0,
+			41
+		],
 		"density": false
 	},
 	"woodfloor": {
 		"name": "wood floor",
-		"pic": [0, 1, 6],
+		"pic": [
+			0,
+			5,
+			40
+		],
 		"density": false
 	},
 	"woodwall": {
 		"name": "wood wall",
-		"pic": [0, 3, 8],
+		"pic": [
+			-5,
+			7,
+			1
+		],
 		"density": true
 	},
 	"floor1": {
 		"name": "floor",
-		"pic": [0, 6, 15],
+		"pic": [
+			0,
+			10,
+			9
+		],
 		"density": false
 	},
 	"floor2": {
 		"name": "floor",
-		"pic": [0, 7, 15],
+		"pic": [
+			0,
+			11,
+			9
+		],
 		"density": false
 	},
 	"floor3": {
 		"name": "floor",
-		"pic": [0, 7, 14],
+		"pic": [
+			0,
+			12,
+			9
+		],
 		"density": false
 	},
 	"floor4": {
 		"name": "floor",
-		"pic": [0, 7, 13],
+		"pic": [
+			0,
+			4,
+			9
+		],
 		"density": false
 	},
 	"floor5": {
 		"name": "floor",
-		"pic": [0, 6, 17],
+		"pic": [
+			0,
+			15,
+			80
+		],
 		"density": false
 	},
 	"floor6": {
 		"name": "floor",
-		"pic": [-1, 12, 13]
+		"pic": [
+			0,
+			9,
+			29
+		]
 	},
 	"floor7": {
 		"name": "floor",
-		"pic": [-1, 13, 13]
+		"pic": [
+			0,
+			9,
+			30
+		]
 	},
 	"floor8": {
 		"name": "floor",
-		"pic": [-1, 14, 13]
+		"pic": [
+			0,
+			9,
+			31
+		]
 	},
 	"floor9": {
 		"name": "floor",
-		"pic": [-1, 11, 3]
+		"pic": [
+			0,
+			5,
+			20
+		]
 	},
 	"floor10": {
 		"name": "floor",
-		"pic": [-1, 12, 3]
+		"pic": [
+			0,
+			13,
+			9
+		]
 	},
 	"cobblestone": {
 		"name": "cobblestone",
-		"pic": [-1, 0, 14]
+		"pic": [
+			0,
+			0,
+			24
+		]
 	},
 	"cobblestone2": {
 		"name": "mossy cobblestone",
-		"pic": [-1, 1, 14]
+		"pic": [
+			0,
+			1,
+			24
+		]
 	},
 	"hellrock": {
 		"name": "hell rock",
-		"pic": [-1, 2, 14]
+		"pic": [
+			0,
+			2,
+			25
+		]
 	},
 	"hellrock2": {
 		"name": "hell rock",
-		"pic": [-1, 3, 14]
+		"pic": [
+			0,
+			3,
+			25
+		]
 	},
 	"lightsand": {
 		"name": "sand",
-		"pic": [-1, 4, 14]
+		"pic": [
+			0,
+			5,
+			24
+		]
 	},
 	"granite": {
 		"name": "granite",
-		"pic": [-1, 5, 14]
+		"pic": [
+			0,
+			4,
+			24
+		]
 	},
 	"gravel": {
 		"name": "gravel",
-		"pic": [-1, 6, 14]
+		"pic": [
+			0,
+			1,
+			22
+		]
 	},
 	"brickwall": {
 		"name": "brick wall",
 		"density": true,
-		"pic": [-1, 2, 13]
+		"pic": [
+			0,
+			16,
+			38
+		]
 	},
 	"brickwall2": {
 		"name": "brick wall",
 		"density": true,
-		"pic": [-1, 3, 13]
+		"pic": [
+			0,
+			21,
+			38
+		]
 	},
 	"brickwall3": {
 		"name": "brick wall",
 		"density": true,
-		"pic": [-1, 4, 13]
+		"pic": [
+			0,
+			0,
+			28
+		]
 	},
 	"brickwall4": {
 		"name": "brick wall",
 		"density": true,
-		"pic": [-1, 5, 13]
+		"pic": [
+			0,
+			1,
+			28
+		]
 	},
 	"brickwall5": {
 		"name": "brick wall",
 		"density": true,
-		"pic": [-1, 6, 13]
+		"pic": [
+			0,
+			2,
+			28
+		]
 	},
 	"darkfloor": {
 		"name": "dark floor",
-		"pic": [-1, 7, 13]
+		"pic": [
+			0,
+			3,
+			28
+		]
 	},
 	"forcedown": {
 		"name": "force",
-		"pic": [0, 12, 19],
+		"pic": [
+			0,
+			28,
+			83
+		],
 		"density": false,
 		"type": "escalator",
 		"dir": 2
 	},
 	"forceup": {
 		"name": "force",
-		"pic": [0, 13, 19],
+		"pic": [
+			0,
+			28,
+			82
+		],
 		"density": false,
 		"type": "escalator",
 		"dir": 6
 	},
 	"forceleft": {
 		"name": "force",
-		"pic": [0, 14, 19],
+		"pic": [
+			0,
+			28,
+			84
+		],
 		"density": false,
 		"type": "escalator",
 		"dir": 4
 	},
 	"forceright": {
 		"name": "force",
-		"pic": [0, 15, 19],
+		"pic": [
+			0,
+			28,
+			85
+		],
 		"density": false,
 		"type": "escalator",
 		"dir": 0
 	},
 	"bluewall": {
 		"name": "blue wall",
-		"pic": [0, 16, 27],
+		"pic": [
+			0,
+			10,
+			1
+		],
 		"density": true
 	},
 	"pinkwall": {
 		"name": "pink wall",
-		"pic": [0, 17, 27],
+		"pic": [
+			0,
+			0,
+			1
+		],
 		"density": true
 	},
 	"greenwall": {
 		"name": "green wall",
-		"pic": [0, 18, 27],
+		"pic": [
+			0,
+			7,
+			1
+		],
 		"density": true
 	},
 	"orangewall": {
 		"name": "orange wall",
-		"pic": [0, 19, 27],
+		"pic": [
+			0,
+			4,
+			1
+		],
 		"density": true
 	},
-
-
 	"skull": {
 		"name": "skull",
-		"pic": [0, 11, 10],
+		"pic": [
+			0,
+			19,
+			19
+		],
 		"density": true,
 		"obj": true
 	},
 	"bush1": {
 		"name": "bush",
-		"pic": [0, 13, 16],
+		"pic": [
+			0,
+			3,
+			12
+		],
 		"density": true,
 		"obj": true
 	},
 	"bush2": {
 		"name": "bush",
-		"pic": [0, 14, 16],
+		"pic": [
+			0,
+			4,
+			12
+		],
 		"density": true,
 		"obj": true
 	},
 	"bush3": {
 		"name": "bush",
-		"pic": [-1, 8, 3],
+		"pic": [
+			0,
+			4,
+			11
+		],
 		"density": true,
 		"obj": true
 	},
 	"rocks1": {
 		"name": "mushrooms",
-		"pic": [0, 15, 16],
+		"pic": [
+			0,
+			14,
+			10
+		],
 		"density": true,
 		"obj": true
 	},
 	"rocks2": {
 		"name": "rocks",
-		"pic": [0, 16, 16],
+		"pic": [
+			0,
+			21,
+			16
+		],
 		"density": true,
 		"obj": true
 	},
 	"rocks3": {
 		"name": "rocks",
-		"pic": [0, 17, 16],
+		"pic": [
+			0,
+			19,
+			16
+		],
 		"density": true,
 		"obj": true
 	},
 	"flower1": {
 		"name": "flowers",
-		"pic": [0, 15, 15],
+		"pic": [
+			0,
+			11,
+			11
+		],
 		"density": false,
 		"obj": true
 	},
 	"flower2": {
 		"name": "flowers",
-		"pic": [0, 16, 15],
+		"pic": [
+			0,
+			12,
+			11
+		],
 		"density": false,
 		"obj": true
 	},
 	"flower3": {
 		"name": "flower",
-		"pic": [0, 17, 15],
+		"pic": [
+			0,
+			13,
+			11
+		],
 		"density": false,
 		"obj": true
 	},
 	"flower4": {
 		"name": "flowers",
-		"pic": [0, 18, 15],
+		"pic": [
+			0,
+			14,
+			11
+		],
 		"density": false,
 		"obj": true
 	},
 	"sign": {
 		"name": "sign",
-		"pic": [0, 16, 17],
+		"pic": [
+			0,
+			1,
+			70
+		],
 		"density": true,
 		"obj": true,
 		"type": "sign"
 	},
 	"redwhitesign": {
 		"name": "sign",
-		"pic": [0, 17, 17],
+		"pic": [
+			0,
+			23,
+			62
+		],
 		"density": true,
 		"obj": true
 	},
 	"pot1": {
 		"name": "pot",
-		"pic": [0, 16, 18],
+		"pic": [
+			0,
+			10,
+			61
+		],
 		"density": true,
 		"obj": true
 	},
 	"pot2": {
 		"name": "pot",
-		"pic": [0, 17, 18],
+		"pic": [
+			0,
+			10,
+			60
+		],
 		"density": true,
 		"obj": true
 	},
 	"barrel": {
 		"name": "barrel",
-		"pic": [0, 18, 18],
+		"pic": [
+			0,
+			24,
+			81
+		],
 		"density": true,
 		"obj": true
 	},
 	"barrel2": {
 		"name": "barrel",
-		"pic": [-1, 2, 3],
+		"pic": [
+			0,
+			9,
+			60
+		],
 		"density": true,
 		"obj": true
 	},
 	"books": {
 		"name": "bookshelves",
-		"pic": [0, 19, 18],
+		"pic": [
+			0,
+			26,
+			61
+		],
 		"density": true,
 		"obj": true
 	},
 	"tv1": {
 		"name": "television",
-		"pic": [0, 21, 18],
+		"pic": [
+			0,
+			18,
+			68
+		],
 		"density": true,
 		"obj": true
 	},
 	"tv2": {
 		"name": "television",
-		"pic": [0, 22, 18],
+		"pic": [
+			0,
+			18,
+			69
+		],
 		"density": true,
 		"obj": true
 	},
 	"cherry": {
 		"name": "cherry",
-		"pic": [0, 0, 19],
+		"pic": [
+			0,
+			6,
+			73
+		],
 		"density": false,
 		"obj": true
 	},
 	"corn": {
 		"name": "corn",
-		"pic": [0, 1, 19],
+		"pic": [
+			0,
+			4,
+			73
+		],
 		"density": false,
 		"obj": true
 	},
 	"eggplant": {
 		"name": "eggplant",
-		"pic": [0, 2, 19],
+		"pic": [
+			0,
+			5,
+			73
+		],
 		"density": false,
 		"obj": true
 	},
 	"eggplant2": {
 		"name": "eggplant",
-		"pic": [-1, 3, 10],
+		"pic": [
+			0,
+			5,
+			72
+		],
 		"density": false,
 		"obj": true
 	},
 	"watermelon": {
 		"name": "watermelon",
-		"pic": [-1, 0, 10],
+		"pic": [
+			0,
+			6,
+			72
+		],
 		"density": false,
 		"obj": true
 	},
 	"cookie": {
 		"name": "cookie",
-		"pic": [-1, 1, 10],
+		"pic": [
+			0,
+			10,
+			73
+		],
 		"density": false,
 		"obj": true
 	},
 	"chickenleg": {
 		"name": "chicken leg",
-		"pic": [-1, 2, 10],
+		"pic": [
+			0,
+			3,
+			73
+		],
 		"density": false,
 		"obj": true
 	},
 	"pie": {
 		"name": "pie",
-		"pic": [-1, 4, 10],
+		"pic": [
+			0,
+			13,
+			72
+		],
 		"density": false,
 		"obj": true
 	},
 	"pickle": {
 		"name": "pickle",
-		"pic": [-1, 7, 10],
+		"pic": [
+			0,
+			4,
+			72
+		],
 		"density": false,
 		"obj": true
 	},
 	"potato": {
 		"name": "potato",
-		"pic": [-1, 8, 10],
+		"pic": [
+			0,
+			2,
+			72
+		],
 		"density": false,
 		"obj": true
 	},
 	"cheese": {
 		"name": "cheese",
-		"pic": [-1, 10, 10],
+		"pic": [
+			0,
+			1,
+			72
+		],
 		"density": false,
 		"obj": true
 	},
 	"pretzel": {
 		"name": "pretzel",
-		"pic": [-1, 13, 10],
+		"pic": [
+			0,
+			10,
+			72
+		],
 		"density": false,
 		"obj": true
 	},
 	"turnip": {
 		"name": "turnip",
-		"pic": [-1, 15, 10],
+		"pic": [
+			0,
+			4,
+			74
+		],
 		"density": false,
 		"obj": true
 	},
 	"bread": {
 		"name": "bread",
-		"pic": [0, 3, 19],
+		"pic": [
+			0,
+			0,
+			74
+		],
 		"density": false,
 		"obj": true
 	},
 	"bread2": {
 		"name": "bread",
-		"pic": [-1, 7, 6],
+		"pic": [
+			0,
+			0,
+			73
+		],
 		"density": false,
 		"obj": true
 	},
 	"eggs": {
 		"name": "bacon and eggs",
-		"pic": [0, 4, 19],
+		"pic": [
+			0,
+			2,
+			74
+		],
 		"density": false,
 		"obj": true
 	},
 	"eggs2": {
 		"name": "egg",
-		"pic": [0, 5, 19],
+		"pic": [
+			0,
+			3,
+			74
+		],
 		"density": false,
 		"obj": true
 	},
 	"candy": {
 		"name": "candy",
-		"pic": [0, 6, 19],
+		"pic": [
+			0,
+			8,
+			74
+		],
 		"density": false,
 		"obj": true
 	},
 	"cake": {
 		"name": "cake",
-		"pic": [0, 8, 19],
+		"pic": [
+			0,
+			11,
+			73
+		],
 		"density": false,
 		"obj": true
 	},
 	"icecream": {
 		"name": "icecream",
-		"pic": [0, 9, 19],
+		"pic": [
+			0,
+			13,
+			73
+		],
 		"density": false,
 		"obj": true
 	},
 	"icecream2": {
 		"name": "icecream",
-		"pic": [-1, 6, 6],
+		"pic": [
+			0,
+			15,
+			73
+		],
 		"density": false,
 		"obj": true
 	},
 	"pizza": {
 		"name": "pizza",
-		"pic": [-1, 5, 6],
+		"pic": [
+			0,
+			1,
+			73
+		],
 		"density": false,
 		"obj": true
 	},
 	"soda": {
 		"name": "soda",
-		"pic": [-1, 4, 6],
+		"pic": [
+			0,
+			12,
+			74
+		],
 		"density": false,
 		"obj": true
 	},
 	"apple": {
 		"name": "apple",
-		"pic": [-1, 3, 6],
+		"pic": [
+			0,
+			8,
+			73
+		],
 		"density": false,
 		"obj": true
 	},
 	"apple2": {
 		"name": "apple",
-		"pic": [-1, 9, 10],
+		"pic": [
+			0,
+			8,
+			72
+		],
 		"density": false,
 		"obj": true
 	},
 	"box": {
 		"name": "box",
-		"pic": [0, 0, 20],
+		"pic": [
+			0,
+			14,
+			55
+		],
 		"density": true,
 		"obj": true
 	},
 	"chest": {
 		"name": "chest",
-		"pic": [0, 1, 20],
-		"closedpic": [0, 1, 20],
-		"openpic": [0, 2, 20],
+		"pic": [
+			0,
+			10,
+			65
+		],
+		"closedpic": [
+			0,
+			1,
+			20
+		],
+		"openpic": [
+			0,
+			2,
+			20
+		],
 		"density": true,
 		"obj": true
 	},
 	"chest2": {
 		"name": "chest",
-		"pic": [-1, 3, 3],
+		"pic": [
+			0,
+			12,
+			62
+		],
 		"density": true,
 		"obj": true
 	},
 	"chest3": {
 		"name": "chest",
-		"pic": [-1, 11, 6],
+		"pic": [
+			0,
+			11,
+			62
+		],
 		"density": true,
 		"obj": true
 	},
 	"coin": {
 		"name": "coin",
-		"pic": [0, 3, 20],
+		"pic": [
+			0,
+			6,
+			77
+		],
 		"density": false,
 		"obj": true
 	},
 	"goldpile": {
 		"name": "gold pile",
-		"pic": [-1, 3, 4],
+		"pic": [
+			0,
+			16,
+			75
+		],
 		"obj": true
 	},
 	"gempile": {
 		"name": "gem pile",
-		"pic": [-1, 4, 4],
+		"pic": [
+			0,
+			10,
+			77
+		],
 		"obj": true
 	},
 	"diamond": {
 		"name": "diamond",
-		"pic": [0, 4, 20],
+		"pic": [
+			0,
+			17,
+			77
+		],
 		"density": false,
 		"obj": true
 	},
 	"diamond2": {
 		"name": "diamond",
-		"pic": [-1, 8, 6],
+		"pic": [
+			0,
+			12,
+			77
+		],
 		"density": false,
 		"obj": true
 	},
 	"diamond3": {
 		"name": "diamond",
-		"pic": [-1, 9, 6],
+		"pic": [
+			0,
+			13,
+			77
+		],
 		"density": false,
 		"obj": true
 	},
 	"diamond4": {
 		"name": "diamond",
-		"pic": [-1, 10, 6],
+		"pic": [
+			0,
+			14,
+			77
+		],
 		"density": false,
 		"obj": true
 	},
 	"stopwatch": {
 		"name": "stopwatch",
-		"pic": [0, 5, 20],
+		"pic": [
+			0,
+			2,
+			77
+		],
 		"density": false,
 		"obj": true
 	},
 	"potion1": {
 		"name": "potion",
-		"pic": [0, 6, 20],
+		"pic": [
+			0,
+			2,
+			76
+		],
 		"density": false,
 		"obj": true
 	},
 	"potion2": {
 		"name": "potion",
-		"pic": [0, 7, 20],
+		"pic": [
+			0,
+			2,
+			75
+		],
 		"density": false,
 		"obj": true
 	},
 	"potion3": {
 		"name": "potion",
-		"pic": [0, 8, 20],
+		"pic": [
+			0,
+			4,
+			76
+		],
 		"density": false,
 		"obj": true
 	},
 	"tree": {
 		"name": "tree",
-		"pic": [-1, 0, 0],
+		"pic": [
+			0,
+			3,
+			10
+		],
 		"density": true,
 		"obj": true
 	},
 	"tree2": {
 		"name": "tree",
-		"pic": [-1, 0, 1],
+		"pic": [
+			0,
+			3,
+			11
+		],
 		"density": true,
 		"obj": true
 	},
 	"tree3": {
 		"name": "tree",
-		"pic": [-1, 8, 13],
+		"pic": [
+			0,
+			2,
+			12
+		],
 		"density": true,
 		"obj": true
 	},
 	"treefall": {
 		"name": "tree",
-		"pic": [-1, 9, 5],
+		"pic": [
+			0,
+			3,
+			13
+		],
 		"density": true,
 		"obj": true
 	},
 	"treefall2": {
 		"name": "tree",
-		"pic": [-1, 7, 5],
+		"pic": [
+			0,
+			3,
+			14
+		],
 		"density": true,
 		"obj": true
 	},
 	"treewinter": {
 		"name": "tree",
-		"pic": [-1, 10, 5],
+		"pic": [
+			0,
+			3,
+			16
+		],
 		"density": true,
 		"obj": true
 	},
 	"treewinter2": {
 		"name": "tree",
-		"pic": [-1, 8, 5],
+		"pic": [
+			0,
+			3,
+			17
+		],
 		"density": true,
 		"obj": true
 	},
 	"treetop": {
 		"name": "tree",
-		"pic": [-1, 6, 3],
+		"pic": [
+			0,
+			2,
+			10
+		],
 		"density": false,
 		"obj": true,
 		"over": true
 	},
 	"treebot": {
 		"name": "tree",
-		"pic": [-1, 7, 3],
+		"pic": [
+			0,
+			2,
+			11
+		],
 		"density": true,
 		"obj": true
 	},
 	"well": {
 		"name": "well",
-		"pic": [-1, 15, 1],
+		"pic": [
+			0,
+			5,
+			32
+		],
 		"density": true,
 		"obj": true
 	},
 	"well2": {
 		"name": "well",
-		"pic": [-1, 12, 15],
+		"pic": [
+			0,
+			8,
+			30
+		],
 		"density": true,
 		"obj": true
 	},
 	"table": {
 		"name": "table",
-		"pic": [-1, 13, 3],
+		"pic": [
+			0,
+			5,
+			56
+		],
 		"density": true,
 		"obj": true
 	},
 	"table2": {
 		"name": "table",
-		"pic": [-1, 11, 4],
+		"pic": [
+			0,
+			6,
+			61
+		],
 		"density": true,
 		"obj": true
 	},
 	"table3": {
 		"name": "table",
-		"pic": [-1, 12, 4],
+		"pic": [
+			0,
+			7,
+			61
+		],
 		"density": true,
 		"obj": true
 	},
 	"table4": {
 		"name": "table",
-		"pic": [-1, 15, 5],
+		"pic": [
+			0,
+			5,
+			61
+		],
 		"density": true,
 		"obj": true
 	},
 	"cabinet": {
 		"name": "cabinet",
-		"pic": [-1, 13, 5],
+		"pic": [
+			0,
+			29,
+			57
+		],
 		"density": true,
 		"obj": true
 	},
 	"cabinet2": {
 		"name": "cabinet",
-		"pic": [-1, 14, 5],
+		"pic": [
+			0,
+			30,
+			57
+		],
 		"density": true,
 		"obj": true
 	},
 	"throne": {
 		"name": "throne",
-		"pic": [-1, 8, 4],
+		"pic": [
+			0,
+			9,
+			66
+		],
 		"density": false,
 		"obj": true
 	},
 	"stool": {
 		"name": "stool",
-		"pic": [-1, 10, 4],
+		"pic": [
+			0,
+			9,
+			64
+		],
 		"density": false,
 		"obj": true
 	},
 	"rockwall": {
 		"name": "rock wall",
-		"pic": [-1, 6, 4],
+		"pic": [
+			0,
+			5,
+			21
+		],
 		"density": true
 	},
 	"rockwall2": {
 		"name": "rock wall",
-		"pic": [-1, 11, 13],
+		"pic": [
+			0,
+			2,
+			21
+		],
 		"density": true
 	},
 	"statue": {
 		"name": "statue",
-		"pic": [-1, 7, 4],
+		"pic": [
+			0,
+			28,
+			71
+		],
 		"density": true,
 		"obj": true
 	},
 	"stump": {
 		"name": "stump",
-		"pic": [-1, 5, 5],
+		"pic": [
+			0,
+			8,
+			12
+		],
 		"obj": true
 	},
 	"window": {
 		"name": "window",
-		"pic": [-1, 6, 5],
+		"pic": [
+			0,
+			24,
+			66
+		],
 		"obj": true
 	},
 	"pillar": {
 		"name": "pillar",
-		"pic": [-1, 9, 4],
+		"pic": [
+			0,
+			26,
+			71
+		],
 		"density": true,
 		"obj": true
 	},
 	"pillar2": {
 		"name": "pillar2",
-		"pic": [0, 21, 16],
-		"autotile_layout": 9, 
+		"pic": [
+			0,
+			17,
+			35
+		],
+		"autotile_layout": 10,
 		"obj": true,
 		"over": true
 	},
 	"drawers": {
 		"name": "drawers",
-		"pic": [-1, 14, 3],
+		"pic": [
+			0,
+			28,
+			56
+		],
 		"density": true,
 		"obj": true
 	},
 	"drawers2": {
 		"name": "drawers",
-		"pic": [-1, 13, 4],
+		"pic": [
+			0,
+			28,
+			57
+		],
 		"density": true,
 		"obj": true
 	},
 	"glasswall": {
 		"name": "glass wall",
-		"pic": [-1, 1, 5],
+		"pic": [
+			0,
+			29,
+			1
+		],
 		"density": true,
 		"obj": true
 	},
 	"tombstone": {
 		"name": "tombstone",
-		"pic": [-1, 12, 5],
+		"pic": [
+			0,
+			20,
+			18
+		],
 		"density": true,
 		"obj": true
 	},
 	"mossrock": {
 		"name": "mossrock",
-		"pic": [-1, 11, 5],
+		"pic": [
+			0,
+			22,
+			15
+		],
 		"density": true,
 		"obj": true
 	},
 	"grasstuft": {
 		"name": "grasstuft",
-		"pic": [-1, 5, 4],
+		"pic": [
+			0,
+			4,
+			10
+		],
 		"density": false,
 		"obj": true
 	},
 	"lava": {
 		"name": "lava",
-		"pic": [-1, 11, 2],
+		"pic": [
+			0,
+			4,
+			23
+		],
 		"density": true,
 		"obj": false,
 		"anim_frames": 2,
@@ -844,560 +1448,984 @@ let GlobalTiles = {
 	},
 	"lava2": {
 		"name": "lava",
-		"pic": [-1, 10, 13],
+		"pic": [
+			0,
+			3,
+			23
+		],
 		"density": true
 	},
 	"door": {
 		"name": "door",
-		"pic": [-1, 15, 0],
+		"pic": [
+			0,
+			0,
+			61
+		],
 		"density": false,
 		"obj": true
 	},
 	"goldchalice": {
 		"name": "gold chalice",
-		"pic": [-1, 5, 11],
+		"pic": [
+			0,
+			11,
+			75
+		],
 		"density": false,
 		"obj": true
 	},
 	"goldbars": {
 		"name": "gold bars",
-		"pic": [-1, 6, 11],
+		"pic": [
+			0,
+			12,
+			75
+		],
 		"density": false,
 		"obj": true
 	},
 	"book": {
 		"name": "book",
-		"pic": [-1, 0, 9],
+		"pic": [
+			0,
+			27,
+			74
+		],
 		"density": false,
 		"obj": true
 	},
 	"bottle": {
 		"name": "bottle",
-		"pic": [-1, 1, 9],
+		"pic": [
+			0,
+			1,
+			77
+		],
 		"density": false,
 		"obj": true
 	},
 	"orb": {
 		"name": "orb",
-		"pic": [-1, 2, 9],
+		"pic": [
+			0,
+			8,
+			77
+		],
 		"density": false,
 		"obj": true
 	},
 	"mushroom": {
 		"name": "mushroom",
-		"pic": [-1, 3, 9],
+		"pic": [
+			0,
+			7,
+			73
+		],
 		"density": false,
 		"obj": true
 	},
 	"scroll": {
 		"name": "scroll",
-		"pic": [-1, 6, 9],
+		"pic": [
+			0,
+			0,
+			77
+		],
 		"density": false,
 		"obj": true
 	},
 	"sword": {
 		"name": "sword",
-		"pic": [-1, 7, 9],
+		"pic": [
+			0,
+			23,
+			76
+		],
 		"density": false,
 		"obj": true
 	},
 	"colorwall1": {
 		"name": "colored wall",
-		"pic": [-1, 0, 7],
+		"pic": [
+			0,
+			1,
+			1
+		],
 		"density": true
 	},
 	"colorwall2": {
 		"name": "colored wall",
-		"pic": [-1, 1, 7],
+		"pic": [
+			0,
+			3,
+			1
+		],
 		"density": true
 	},
 	"colorwall3": {
 		"name": "colored wall",
-		"pic": [-1, 2, 7],
+		"pic": [
+			0,
+			5,
+			1
+		],
 		"density": true
 	},
 	"colorwall4": {
 		"name": "colored wall",
-		"pic": [-1, 3, 7],
+		"pic": [
+			0,
+			6,
+			1
+		],
 		"density": true
 	},
 	"colorwall5": {
 		"name": "colored wall",
-		"pic": [-1, 4, 7],
+		"pic": [
+			0,
+			8,
+			1
+		],
 		"density": true
 	},
 	"colorwall6": {
 		"name": "colored wall",
-		"pic": [-1, 5, 7],
+		"pic": [
+			0,
+			9,
+			1
+		],
 		"density": true
 	},
 	"colorwall7": {
 		"name": "colored wall",
-		"pic": [-1, 6, 7],
+		"pic": [
+			0,
+			11,
+			1
+		],
 		"density": true
 	},
 	"colorwall8": {
 		"name": "colored wall",
-		"pic": [-1, 7, 7],
+		"pic": [
+			0,
+			13,
+			1
+		],
 		"density": true
 	},
 	"colorwall9": {
 		"name": "colored wall",
-		"pic": [-1, 8, 7],
+		"pic": [
+			0,
+			14,
+			1
+		],
 		"density": true
 	},
 	"colorwall10": {
 		"name": "colored wall",
-		"pic": [-1, 9, 7],
+		"pic": [
+			0,
+			15,
+			1
+		],
 		"density": true
 	},
 	"colorwall11": {
 		"name": "colored wall",
-		"pic": [-1, 10, 7],
+		"pic": [
+			0,
+			16,
+			1
+		],
 		"density": true
 	},
 	"colorwall12": {
 		"name": "colored wall",
-		"pic": [-1, 11, 7],
+		"pic": [
+			0,
+			17,
+			1
+		],
 		"density": true
 	},
 	"colorwall13": {
 		"name": "colored wall",
-		"pic": [-1, 12, 7],
+		"pic": [
+			0,
+			18,
+			1
+		],
 		"density": true
 	},
 	"colorwall14": {
 		"name": "colored wall",
-		"pic": [-1, 13, 7],
+		"pic": [
+			0,
+			12,
+			1
+		],
 		"density": true
 	},
 	"colorwall15": {
 		"name": "colored wall",
-		"pic": [-1, 14, 7],
+		"pic": [
+			0,
+			2,
+			1
+		],
 		"density": true
 	},
 	"colorfloor1": {
 		"name": "colored floor",
-		"pic": [-1, 0, 8]
+		"pic": [
+			0,
+			1,
+			5
+		]
 	},
 	"colorfloor2": {
 		"name": "colored floor",
-		"pic": [-1, 1, 8]
+		"pic": [
+			0,
+			3,
+			5
+		]
 	},
 	"colorfloor3": {
 		"name": "colored floor",
-		"pic": [-1, 2, 8]
+		"pic": [
+			0,
+			5,
+			5
+		]
 	},
 	"colorfloor4": {
 		"name": "colored floor",
-		"pic": [-1, 3, 8]
+		"pic": [
+			0,
+			6,
+			5
+		]
 	},
 	"colorfloor5": {
 		"name": "colored floor",
-		"pic": [-1, 4, 8]
+		"pic": [
+			0,
+			8,
+			5
+		]
 	},
 	"colorfloor6": {
 		"name": "colored floor",
-		"pic": [-1, 5, 8]
+		"pic": [
+			0,
+			9,
+			5
+		]
 	},
 	"colorfloor7": {
 		"name": "colored floor",
-		"pic": [-1, 6, 8]
+		"pic": [
+			0,
+			11,
+			5
+		]
 	},
 	"colorfloor8": {
 		"name": "colored floor",
-		"pic": [-1, 7, 8]
+		"pic": [
+			0,
+			13,
+			5
+		]
 	},
 	"colorfloor9": {
 		"name": "colored floor",
-		"pic": [-1, 8, 8]
+		"pic": [
+			0,
+			14,
+			5
+		]
 	},
 	"colorfloor10": {
 		"name": "colored floor",
-		"pic": [-1, 9, 8]
+		"pic": [
+			0,
+			15,
+			5
+		]
 	},
 	"colorfloor11": {
 		"name": "colored floor",
-		"pic": [-1, 10, 8]
+		"pic": [
+			0,
+			16,
+			5
+		]
 	},
 	"colorfloor12": {
 		"name": "colored floor",
-		"pic": [-1, 11, 8]
+		"pic": [
+			0,
+			17,
+			5
+		]
 	},
 	"colorfloor13": {
 		"name": "colored floor",
-		"pic": [-1, 12, 8]
+		"pic": [
+			0,
+			18,
+			5
+		]
 	},
 	"colorfloor14": {
 		"name": "colored floor",
-		"pic": [-1, 13, 8]
+		"pic": [
+			0,
+			12,
+			5
+		]
 	},
 	"colorfloor15": {
 		"name": "colored floor",
-		"pic": [-1, 14, 8]
+		"pic": [
+			0,
+			2,
+			5
+		]
 	},
-
 	"upstairs": {
 		"name": "stairs (up)",
-		"pic": [-1, 13, 2],
+		"pic": [
+			0,
+			27,
+			66
+		],
 		"obj": true
 	},
 	"downstairs": {
 		"name": "stairs (down)",
-		"pic": [-1, 14, 2]
+		"pic": [
+			0,
+			27,
+			64
+		]
 	},
-
 	"shadow": {
 		"name": "shadow",
-		"pic": [-1, 0, 19],
+		"pic": [
+			-4,
+			0,
+			4
+		],
 		"obj": true,
 		"over": true
 	},
 	"shadow_dr": {
 		"name": "shadow",
-		"pic": [-1, 1, 19],
+		"pic": [
+			-4,
+			10,
+			12
+		],
 		"obj": true,
 		"over": true
 	},
 	"shadow_dl": {
 		"name": "shadow",
-		"pic": [-1, 2, 19],
+		"pic": [
+			-4,
+			10,
+			14
+		],
 		"obj": true,
 		"over": true
 	},
 	"shadow_ur": {
 		"name": "shadow",
-		"pic": [-1, 3, 19],
+		"pic": [
+			-4,
+			10,
+			13
+		],
 		"obj": true,
 		"over": true
 	},
 	"shadow_ul": {
 		"name": "shadow",
-		"pic": [-1, 4, 19],
+		"pic": [
+			-4,
+			10,
+			15
+		],
 		"obj": true,
 		"over": true
 	},
-
 	"shadow2": {
 		"name": "shadow",
-		"pic": [-1, 5, 19],
+		"pic": [
+			-4,
+			0,
+			56
+		],
 		"obj": true,
 		"over": true
 	},
 	"shadow2_dr": {
 		"name": "shadow",
-		"pic": [-1, 6, 19],
+		"pic": [
+			-4,
+			10,
+			52
+		],
 		"obj": true,
 		"over": true
 	},
 	"shadow2_dl": {
 		"name": "shadow",
-		"pic": [-1, 7, 19],
+		"pic": [
+			-4,
+			10,
+			54
+		],
 		"obj": true,
 		"over": true
 	},
 	"shadow2_ur": {
 		"name": "shadow",
-		"pic": [-1, 8, 19],
+		"pic": [
+			-4,
+			10,
+			53
+		],
 		"obj": true,
 		"over": true
 	},
 	"shadow2_ul": {
 		"name": "shadow",
-		"pic": [-1, 9, 19],
+		"pic": [
+			-4,
+			10,
+			55
+		],
 		"obj": true,
 		"over": true
 	},
 	"icewall": {
 		"name": "ice wall",
-		"pic": [-1, 3, 20],
+		"pic": [
+			0,
+			24,
+			33
+		],
 		"density": true,
 		"autotile_layout": 3
 	},
 	"monitor": {
 		"name": "monitor",
-		"pic": [-1, 11, 20],
+		"pic": [
+			0,
+			6,
+			48
+		],
+		"obj": true,
 		"density": true,
-		"autotile_layout": 3
+		"autotile_layout": 13
 	},
 	"metalwall": {
 		"name": "metal wall",
-		"pic": [-1, 15, 20],
+		"pic": [
+			0,
+			0,
+			43
+		],
 		"density": true,
-		"autotile_layout": 3
+		"autotile_layout": 15
 	},
 	"woodwall2": {
 		"name": "wood wall",
-		"pic": [-1, 0, 24],
-		"autotile_layout": 5,
+		"pic": [
+			0,
+			1,
+			34
+		],
+		"autotile_layout": 15,
 		"density": true
 	},
 	"invisible_wall": {
 		"name": "Invisible wall",
-		"pic": [-1, 3, 5],
+		"pic": [
+			0,
+			20,
+			0
+		],
 		"obj": true,
 		"density": true
 	},
 	"windows_logo": {
 		"name": "Windows logo",
-		"pic": [0, 19, 31],
+		"pic": [
+			0,
+			12,
+			87
+		],
 		"obj": true
 	},
 	"linux_logo": {
 		"name": "Linux logo",
-		"pic": [0, 18, 31],
+		"pic": [
+			0,
+			12,
+			89
+		],
 		"obj": true
 	},
 	"apple_logo": {
 		"name": "Apple logo",
-		"pic": [0, 17, 31],
+		"pic": [
+			0,
+			12,
+			88
+		],
 		"obj": true
 	},
 	"python_logo": {
 		"name": "Python logo",
-		"pic": [0, 16, 31],
+		"pic": [
+			0,
+			12,
+			90
+		],
 		"obj": true
 	},
 	"floppy": {
 		"name": "floppy disk",
-		"pic": [0, 19, 30],
+		"pic": [
+			0,
+			30,
+			78
+		],
 		"obj": true
 	},
-
 	"rainbow_flag": {
 		"name": "rainbow flag",
-		"pic": [0, 26, 28],
+		"pic": [
+			0,
+			14,
+			88
+		],
 		"obj": true
 	},
 	"trans_flag": {
 		"name": "trans flag",
-		"pic": [0, 27, 28],
+		"pic": [
+			0,
+			14,
+			92
+		],
 		"obj": true
 	},
 	"ace_flag": {
 		"name": "asexual flag",
-		"pic": [0, 28, 28],
+		"pic": [
+			0,
+			14,
+			89
+		],
 		"obj": true
 	},
 	"nb_flag": {
 		"name": "nonbinary flag",
-		"pic": [0, 29, 28],
+		"pic": [
+			0,
+			16,
+			92
+		],
 		"obj": true
 	},
 	"pan_flag": {
 		"name": "pansexual flag",
-		"pic": [-1, 0, 12],
+		"pic": [
+			0,
+			16,
+			89
+		],
 		"obj": true
 	},
 	"bi_flag": {
 		"name": "bisexual flag",
-		"pic": [-1, 1, 12],
+		"pic": [
+			0,
+			18,
+			89
+		],
 		"obj": true
 	},
 	"intersex_flag": {
 		"name": "intersex flag",
-		"pic": [-1, 2, 12],
+		"pic": [
+			0,
+			18,
+			91
+		],
 		"obj": true
 	},
 	"lesbian_flag": {
 		"name": "lesbian flag",
-		"pic": [-1, 3, 12],
+		"pic": [
+			0,
+			14,
+			90
+		],
 		"obj": true
 	},
 	"chick": {
 		"name": "chick",
-		"pic": [0, 0, 27],
+		"pic": [
+			-1,
+			12,
+			8
+		],
 		"obj": true
 	},
 	"chicken": {
 		"name": "chicken",
-		"pic": [0, 1, 27],
+		"pic": [
+			-1,
+			12,
+			10
+		],
 		"obj": true
 	},
 	"turtle": {
 		"name": "turtle",
-		"pic": [0, 5, 25],
+		"pic": [
+			-1,
+			22,
+			4
+		],
 		"obj": true
 	},
 	"playstation_controller": {
 		"name": "PlayStation controller",
-		"pic": [0, 14, 30],
+		"pic": [
+			0,
+			14,
+			82
+		],
 		"obj": true
 	},
 	"xbox_controller": {
 		"name": "Xbox controller",
-		"pic": [0, 14, 31],
+		"pic": [
+			0,
+			14,
+			83
+		],
 		"obj": true
 	},
-
 	"kitty_block": {
 		"name": "kitty face block",
-		"pic": [0, 5, 27],
+		"pic": [
+			0,
+			1,
+			31
+		],
 		"density": true,
 		"obj": true
 	},
 	"kitty_block2": {
 		"name": "kitty face block",
-		"pic": [0, 6, 27],
+		"pic": [
+			0,
+			2,
+			31
+		],
 		"density": true,
 		"obj": true
 	},
 	"textured_block": {
 		"name": "textured block",
-		"pic": [0, 4, 27],
+		"pic": [
+			0,
+			0,
+			31
+		],
 		"density": true,
 		"obj": true
 	},
-
 	"redbed_top": {
 		"name": "bed",
-		"pic": [-1, 11, 0],
+		"pic": [
+			0,
+			15,
+			62
+		],
 		"obj": true
 	},
 	"redbed_bottom": {
 		"name": "bed",
-		"pic": [-1, 11, 1],
+		"pic": [
+			0,
+			15,
+			63
+		],
 		"obj": true
 	},
-
 	"bluebed_top": {
 		"name": "bed",
-		"pic": [-1, 15, 2],
+		"pic": [
+			0,
+			14,
+			60
+		],
 		"obj": true
 	},
 	"bluebed_bottom": {
 		"name": "bed",
-		"pic": [-1, 15, 3],
+		"pic": [
+			0,
+			18,
+			61
+		],
 		"obj": true
 	},
-
 	"flower_red": {
 		"name": "red flower",
-		"pic": [0, 19, 21],
+		"pic": [
+			0,
+			9,
+			14
+		],
 		"obj": true
 	},
 	"flower_blue": {
 		"name": "blue flower",
-		"pic": [0, 20, 21],
+		"pic": [
+			0,
+			12,
+			14
+		],
 		"obj": true
 	},
 	"flower_yellow": {
 		"name": "yellow flower",
-		"pic": [0, 21, 21],
+		"pic": [
+			0,
+			11,
+			14
+		],
 		"obj": true
 	},
 	"flower_white": {
 		"name": "white flower",
-		"pic": [0, 22, 21],
+		"pic": [
+			0,
+			14,
+			14
+		],
 		"obj": true
 	},
 	"flower_magenta": {
 		"name": "magenta flower",
-		"pic": [0, 23, 21],
+		"pic": [
+			0,
+			13,
+			14
+		],
 		"obj": true
 	},
 	"rocks_extra_1": {
 		"name": "rocks",
-		"pic": [-1, 13, 6],
+		"pic": [
+			0,
+			19,
+			15
+		],
 		"density": true,
 		"obj": true
 	},
 	"rocks_extra_2": {
 		"name": "rocks",
-		"pic": [-1, 14, 6],
+		"pic": [
+			0,
+			20,
+			15
+		],
 		"density": true,
 		"obj": true
 	},
 	"rocks_extra_3": {
 		"name": "rocks",
-		"pic": [-1, 15, 6],
+		"pic": [
+			0,
+			21,
+			15
+		],
 		"density": true,
 		"obj": true
 	},
-
 	"border_lu": {
 		"name": "border",
-		"pic": [-1, 0, 4],
+		"pic": [
+			0,
+			5,
+			79
+		],
 		"obj": true
 	},
 	"border_u": {
 		"name": "border",
-		"pic": [-1, 1, 4],
+		"pic": [
+			0,
+			6,
+			79
+		],
 		"obj": true
 	},
 	"border_ru": {
 		"name": "border",
-		"pic": [-1, 2, 4],
+		"pic": [
+			0,
+			7,
+			79
+		],
 		"obj": true
 	},
 	"border_l": {
 		"name": "border",
-		"pic": [-1, 0, 5],
+		"pic": [
+			0,
+			5,
+			80
+		],
 		"obj": true
 	},
 	"border_r": {
 		"name": "border",
-		"pic": [-1, 2, 5],
+		"pic": [
+			0,
+			7,
+			80
+		],
 		"obj": true
 	},
 	"border_ld": {
 		"name": "border",
-		"pic": [-1, 0, 6],
+		"pic": [
+			0,
+			5,
+			81
+		],
 		"obj": true
 	},
 	"border_d": {
 		"name": "border",
-		"pic": [-1, 1, 6],
+		"pic": [
+			0,
+			6,
+			81
+		],
 		"obj": true
 	},
 	"border_rd": {
 		"name": "border",
-		"pic": [-1, 2, 6],
+		"pic": [
+			0,
+			7,
+			81
+		],
 		"obj": true
 	},
 	"cushion": {
 		"name": "cushion",
-		"pic": [-1, 4, 5],
+		"pic": [
+			0,
+			6,
+			69
+		],
 		"obj": true
 	},
 	"redbrickwall": {
 		"name": "brick wall",
-		"pic": [0, 12, 4],
+		"pic": [
+			0,
+			27,
+			44
+		],
 		"density": true
 	},
 	"redgreenbrickwall": {
 		"name": "brick wall",
-		"pic": [0, 16, 4],
+		"pic": [
+			0,
+			30,
+			44
+		],
 		"density": true
 	},
 	"torch": {
 		"name": "torch",
-		"pic": [-1, 5, 15],
+		"pic": [
+			0,
+			3,
+			55
+		],
 		"density": true,
 		"obj": true
 	},
 	"conveyor": {
 		"name": "conveyer belt",
-		"pic": [0, 19, 19],
+		"pic": [
+			0,
+			9,
+			42
+		],
 		"density": true,
 		"anim_frames": 4,
 		"anim_speed": 1,
-		"autotile_layout": 6,
+		"autotile_layout": 14,
 		"obj": true
 	},
 	"pipes": {
 		"name": "pipes",
-		"pic": [-1, 13, 26],
+		"pic": [
+			0,
+			12,
+			49
+		],
 		"density": true,
 		"autotile_layout": 2,
 		"obj": true
 	},
 	"counter": {
 		"name": "counter",
-		"pic": [-1, 2, 18],
+		"pic": [
+			0,
+			8,
+			33
+		],
 		"autotile_layout": 7,
 		"obj": true,
 		"density": true
+	},
+	"white": {
+		"name": "white",
+		"pic": [
+			0, 15, 8
+		]
+	},
+	"black": {
+		"name": "black",
+		"pic": [
+			0, 19, 8
+		]
 	}
 };
 
