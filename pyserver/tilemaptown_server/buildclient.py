@@ -180,7 +180,7 @@ class Client(ClientMixin, Entity):
 		self.connection = weakref.ref(connection)
 		self.name = 'Guest '+ str(userEntityCounter)
 		userEntityCounter += 1
-		self.pic = [0, 2, 25]
+		self.pic = [-1, 0, 9]
 
 		self.saved_pics = {}
 		self.morphs = {}

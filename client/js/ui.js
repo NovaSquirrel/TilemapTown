@@ -2135,7 +2135,7 @@ function newItemCreate(type) {
 		params.create.data = {"type": "command_list", "type_version": "0.0.1", "client_name": CLIENT_NAME, "data": [
 			{"name": "happy",   "command": `userparticle ${sampleEmote1Pic[0]} ${sampleEmote1Pic[1]} ${sampleEmote1Pic[2]} offset=0,-16`},
 			{"name": "sad",     "command": `userparticle ${sampleEmote2Pic[0]} ${sampleEmote2Pic[1]} ${sampleEmote2Pic[2]} offset=0,-16`},
-			{"name": "explode", "command": "userparticle 0 4 21 anim_frames=7 anim_loops=0 hide_me"},
+			{"name": "explode", "command": "userparticle 0 13 53 anim_frames=7 anim_loops=0 hide_me"},
 		]};
 	}
 	SendCmd("BAG", params);

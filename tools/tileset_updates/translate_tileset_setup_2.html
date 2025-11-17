@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+<img src="../../client/img/tileset/potluck.png"    style="display: none;" id="tileset_old0">
+<img src="../../client/img/tileset/extra.png"      style="display: none;" id="tileset_old-1">
+<img src="../../client/img/tileset/pulp.png"       style="display: none;" id="tileset_old-2">
+<img src="../../client/img/tileset/easyrpg_v2.png" style="display: none;" id="tileset_old-3">
+<img src="../../client/img/tileset/global.png"     style="display: none;" id="tileset_new0">
+<img src="../../client/img/tileset/npc.png"        style="display: none;" id="tileset_new-1">
+<img src="../../client/img/tileset/pulp.png"       style="display: none;" id="tileset_new-2">
+<img src="../../client/img/tileset/easyrpg_v2.png" style="display: none;" id="tileset_new-3">
+<img src="../../client/img/tileset/shadows.png"    style="display: none;" id="tileset_new-4">
+<img src="../../client/img/tileset/extra_v2.png"   style="display: none;" id="tileset_new-5">
+<script>
+	let old_canvas, old_ctx, old_img, new_canvas, new_ctx, new_img;
+	let clickIsNew = false;
+	highlightRow = undefined;
+	function hightlightAtCursor() {
+		let textarea = document.getElementById("mapList");
+		let textLines = textarea.value.substr(0, textarea.selectionStart).split("\n");
+		let currentLineNumber = textLines.length;
+		highlightRow = currentLineNumber - 1;
+
+		// Select the right tilesets
+		let s = document.getElementById("mapList").value.split("\n");
+		let line = s[highlightRow];
+		if (line !== "") {
+			let c = line.split(",");
+			if(c.length >= 6) {
+				let lineFromTileset = parseInt(c[0]);
+				let lineNewTileset = parseInt(c[5]);
+				let currentOldTileset = parseInt(document.getElementById("pickTilesetOld").value);
+				let currentNewTileset = parseInt(document.getElementById("pickTilesetNew").value);
+				if (lineFromTileset !== currentOldTileset) {
+					document.getElementById("pickTilesetOld").value = lineFromTileset;
+					changeOldTileset();
+				}
+				if (lineNewTileset !== currentNewTileset) {
+					document.getElementById("pickTilesetNew").value = lineNewTileset;
+					changeNewTileset();
+				}
+			}
+		}
+
+		redraw();
+	}
+	function redraw() {
+		old_ctx.clearRect(0, 0, old_canvas.width, old_canvas.height);
+		old_ctx.drawImage(old_img, 0, 0);
+		new_ctx.clearRect(0, 0, new_canvas.width, new_canvas.height);
+		new_ctx.drawImage(new_img, 0, 0);
+
+		if(document.getElementById("showList").checked) {
+			let currentOldTileset = parseInt(document.getElementById("pickTilesetOld").value);
+			let currentNewTileset = parseInt(document.getElementById("pickTilesetNew").value);
+
+			old_ctx.globalAlpha = 0.5;
+			new_ctx.globalAlpha = 0.5;
+			let s = document.getElementById("mapList").value.split("\n");
+			let lineNumber = -1;
+			for(let line of s) {
+				lineNumber++;
+				if(line == "")
+					continue;
+				let c = line.split(",");
+				if(c.length >= 6) {
+					let lineFromTileset = parseInt(c[0]);
+					let lineFromX = parseInt(c[1]);
+					let lineFromY = parseInt(c[2]);
+					let lineToX = parseInt(c[3]);
+					let lineToY = parseInt(c[4]);
+					let lineNewTileset = parseInt(c[5]);
+					let lineNewX = parseInt(c[6]);
+					let lineNewY = parseInt(c[7]);
+					let lineBecomeObj = parseInt(c[8]);
+					let lineMarker = c[9] || "";
+					if(Number.isNaN(lineFromX) || Number.isNaN(lineFromY) || Number.isNaN(lineToX) || Number.isNaN(lineToY) || Number.isNaN(lineNewX) || Number.isNaN(lineNewY))
+						continue;
+					let lineWidth  = (lineToX-lineFromX+1)*16;
+					let lineHeight = (lineToY-lineFromY+1)*16;
+					old_ctx.fillStyle = "#00ff00";
+					new_ctx.fillStyle = "#00ff00";
+					if (lineMarker.startsWith("%"))
+						continue;
+					if (lineMarker.startsWith("!")) {
+						old_ctx.fillStyle = "#ff0000";
+						new_ctx.fillStyle = "#ff0000";
+					}
+					if (document.getElementById("mapList") == document.activeElement && lineNumber == highlightRow) {
+						old_ctx.fillStyle = "#ffff00";
+						new_ctx.fillStyle = "#ffff00";
+					}
+					if(currentOldTileset === lineFromTileset)
+						old_ctx.fillRect(lineFromX*16, lineFromY*16, lineWidth, lineHeight);
+					if(currentNewTileset === lineNewTileset)
+						new_ctx.fillRect(lineNewX*16, lineNewY*16, lineWidth, lineHeight);
+				}
+			}
+			old_ctx.globalAlpha = 1;
+			new_ctx.globalAlpha = 1;
+		}
+
+		let clickX = parseInt(document.getElementById('txtClickX').value);
+		let clickY = parseInt(document.getElementById('txtClickY').value);
+		let fromX = parseInt(document.getElementById('txtFromX').value);
+		let fromY = parseInt(document.getElementById('txtFromY').value);
+		let toX = parseInt(document.getElementById('txtToX').value);
+		let toY = parseInt(document.getElementById('txtToY').value);
+		let newX = parseInt(document.getElementById('txtNewX').value);
+		let newY = parseInt(document.getElementById('txtNewY').value);
+
+		old_ctx.lineWidth = 2;
+		new_ctx.lineWidth = 2;
+		if(!Number.isNaN(clickX) && !Number.isNaN(clickY)) {
+			new_ctx.strokeStyle = "#00FFFF";
+			old_ctx.strokeStyle = "#00FFFF";
+			(clickIsNew?new_ctx:old_ctx).strokeRect(clickX*16, clickY*16, 16, 16);
+		}
+		let fromWidth = 16, fromHeight = 16;
+		if(!Number.isNaN(fromX) && !Number.isNaN(fromY)) {
+			if(Number.isNaN(toX) || Number.isNaN(toY) || (toX < fromX) || (toY < fromY)) {
+				toX = fromX;
+				toY = fromY;
+			}
+			old_ctx.strokeStyle = "#00FF00";
+			fromWidth  = (toX-fromX+1)*16;
+			fromHeight = (toY-fromY+1)*16;
+			old_ctx.strokeRect(fromX*16, fromY*16, fromWidth, fromHeight);
+		}
+		if(!Number.isNaN(newX) && !Number.isNaN(newY)) {
+			new_ctx.strokeStyle = "#00FF00";
+			new_ctx.strokeRect(newX*16, newY*16, fromWidth, fromHeight);
+		}
+	}
+	function copyToFrom() {
+		document.getElementById('txtFromX').value = document.getElementById('txtClickX').value;
+		document.getElementById('txtFromY').value = document.getElementById('txtClickY').value;
+		redraw();
+	}
+	function copyToTo() {
+		document.getElementById('txtToX').value = document.getElementById('txtClickX').value;
+		document.getElementById('txtToY').value = document.getElementById('txtClickY').value;
+		redraw();
+	}
+	function copyToNew() {
+		document.getElementById('txtNewX').value = document.getElementById('txtClickX').value;
+		document.getElementById('txtNewY').value = document.getElementById('txtClickY').value;
+		redraw();
+	}
+	function clearText() {
+		document.getElementById('txtClickX').value = "";
+		document.getElementById('txtClickY').value = "";
+		document.getElementById('txtFromX').value  = "";
+		document.getElementById('txtFromY').value  = "";
+		document.getElementById('txtToX').value    = "";
+		document.getElementById('txtToY').value    = "";
+		document.getElementById('txtNewX').value   = "";
+		document.getElementById('txtNewY').value   = "";
+		document.getElementById('txtBecomeObj').value = "";
+		redraw();
+	}
+	function addMapping() {
+		let fromTileset = parseInt(document.getElementById('pickTilesetOld').value);
+		let fromX = parseInt(document.getElementById('txtFromX').value);
+		let fromY = parseInt(document.getElementById('txtFromY').value);
+		let toX = parseInt(document.getElementById('txtToX').value);
+		let toY = parseInt(document.getElementById('txtToY').value);
+		let newTileset = parseInt(document.getElementById('pickTilesetNew').value);
+		let newX = parseInt(document.getElementById('txtNewX').value);
+		let newY = parseInt(document.getElementById('txtNewY').value);
+		let becomeObj = document.getElementById('txtBecomeObj').value.trim();
+		if(Number.isNaN(fromX) || Number.isNaN(fromY) || Number.isNaN(toX) || Number.isNaN(toY) || Number.isNaN(newX) || Number.isNaN(newY))
+			return;
+		document.getElementById("mapList").value += `${fromTileset},${fromX},${fromY}, ${toX},${toY}, ${newTileset},${newX},${newY},${becomeObj},\n`
+		redraw();
+	}
+	function changeOldTileset() {
+		old_img = document.getElementById("tileset_old"+document.getElementById("pickTilesetOld").value);
+		old_canvas.width  = old_img.naturalWidth;
+		old_canvas.height = old_img.naturalHeight;
+	}
+	function changeNewTileset() {
+		new_img = document.getElementById("tileset_new"+document.getElementById("pickTilesetNew").value);
+		new_canvas.width  = new_img.naturalWidth;
+		new_canvas.height = new_img.naturalHeight;
+	}
+	function load() {
+		old_canvas = document.getElementById("canvas_old");
+		old_ctx = old_canvas.getContext("2d");
+		new_canvas = document.getElementById("canvas_new");
+		new_ctx = new_canvas.getContext("2d");
+
+		changeOldTileset();
+		changeNewTileset();
+		redraw();
+
+		canvas_old.addEventListener('mousedown', function (evt) {
+			document.getElementById('txtClickX').value = (evt.clientX - evt.target.getBoundingClientRect().x) >> 4;
+			document.getElementById('txtClickY').value = (evt.clientY - evt.target.getBoundingClientRect().y) >> 4;
+			clickIsNew = false;
+			redraw();
+		}, false);
+		canvas_new.addEventListener('mousedown', function (evt) {
+			document.getElementById('txtClickX').value = (evt.clientX - evt.target.getBoundingClientRect().x) >> 4;
+			document.getElementById('txtClickY').value = (evt.clientY - evt.target.getBoundingClientRect().y) >> 4;
+			clickIsNew = true;
+			redraw();
+		}, false);
+
+	}
+</script>
+</head>
+<body onload="load();">
+	<table>
+		<tr>
+			<td>
+				<select id="pickTilesetOld" onchange="changeOldTileset(); redraw();">
+					<option value="0">Potluck</option>
+					<option value="-1">Extra</option>
+					<option value="-2">Pulp</option>
+					<option value="-3">EasyRPG</option>
+				</select>
+			</td>
+			<td>
+				<select id="pickTilesetNew" onchange="changeNewTileset(); redraw();">
+					<option value="0">Global</option>
+					<option value="-1">NPC</option>
+					<option value="-2">Pulp</option>
+					<option value="-3">EasyRPG</option>
+					<option value="-4">Shadows</option>
+					<option value="-5">Extras</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<div style="overflow:scroll; width:528px; height:500px; background: url('../../client/img/scrolling_grid.gif');">
+					<canvas id="canvas_old"></canvas>
+				</div>
+			</td>
+			<td>
+				<div style="overflow:scroll; width:528px; height:500px; background: url('../../client/img/scrolling_grid.gif');">
+					<canvas id="canvas_new"></canvas>
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="1">
+				<p>
+					Click: <input size="4" id="txtClickX">,<input size="4" id="txtClickY">
+				</p>
+				<p>
+					<table>
+						<tr>
+							<td><input size="4" id="txtFromX">,<input size="4" id="txtFromY"> to</td>
+							<td><input size="4" id="txtToX">,<input size="4" id="txtToY"> --></td>
+							<td><input size="4" id="txtNewX">,<input size="4" id="txtNewY"></td>
+							<td rowspan="2"><button style="height: 64px;" onclick="addMapping()">Add to list</button></td>
+						</tr>
+						<tr>
+							<td><button onclick="copyToFrom()">Copy here</button></td>
+							<td><button onclick="copyToTo()">Copy here</button></td>
+							<td><button onclick="copyToNew()">Copy here</button></td>
+						</tr>
+					</table>
+				</p>
+				<p>
+					<button onclick="clearText()">Clear</button>
+					<label><input type="checkbox" id="showList" checked>Show list</label>
+					<button onclick="redraw()">Update preview</button>
+					<input id="txtBecomeObj" placeholder="Become obj">
+				</p>
+			</td>
+			<td>
+				<textarea rows="15" cols="50" id="mapList" onkeyup="hightlightAtCursor()" onmouseup="hightlightAtCursor()"></textarea>
+			</tr>
+		</tr>
+	</table>
+</body>
+
+</html>

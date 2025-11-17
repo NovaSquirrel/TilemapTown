@@ -1,3 +1,13 @@
+#!/usr/bin/env python3
+#
+# Tilemap Town tileset version migrator
+# Copyright 2025 NovaSquirrel
+#
+# Copying and distribution of this file, with or without
+# modification, are permitted in any medium without royalty
+# provided the copyright notice and this notice are preserved.
+# This file is offered as-is, without any warranty.
+#
 import json, sqlite3, zlib
 
 dry_run = False

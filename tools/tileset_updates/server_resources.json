@@ -171,8 +171,6 @@
 					11,
 					28
 				],
-				"anim_frames": 4,
-				"anim_speed": 2,
 				"density": false,
 				"type": "escalator",
 				"dir": 2
@@ -1431,7 +1429,7 @@
 					17,
 					35
 				],
-				"autotile_layout": 10,
+				"autotile_layout": 9,
 				"obj": true,
 				"over": true
 			},
@@ -1933,7 +1931,7 @@
 				"pic": [
 					-4,
 					0,
-					56
+					68
 				],
 				"obj": true,
 				"over": true
@@ -1943,7 +1941,7 @@
 				"pic": [
 					-4,
 					10,
-					52
+					76
 				],
 				"obj": true,
 				"over": true
@@ -1953,7 +1951,7 @@
 				"pic": [
 					-4,
 					10,
-					54
+					78
 				],
 				"obj": true,
 				"over": true
@@ -1963,7 +1961,7 @@
 				"pic": [
 					-4,
 					10,
-					53
+					77
 				],
 				"obj": true,
 				"over": true
@@ -1973,7 +1971,7 @@
 				"pic": [
 					-4,
 					10,
-					55
+					79
 				],
 				"obj": true,
 				"over": true
@@ -1995,9 +1993,8 @@
 					6,
 					48
 				],
-				"obj": true,
 				"density": true,
-				"autotile_layout": 13
+				"autotile_layout": 3
 			},
 			"metalwall": {
 				"name": "metal wall",
@@ -2007,16 +2004,16 @@
 					43
 				],
 				"density": true,
-				"autotile_layout": 15
+				"autotile_layout": 3
 			},
 			"woodwall2": {
 				"name": "wood wall",
 				"pic": [
-					0,
-					1,
-					34
+					-5,
+					4,
+					2
 				],
-				"autotile_layout": 15,
+				"autotile_layout": 5,
 				"density": true
 			},
 			"invisible_wall": {
