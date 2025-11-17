@@ -217,8 +217,8 @@ function AtomCompact2JSON(t) {
 function initMap() {
 	if(Object.keys(IconSheets).length === 0) {
 		IconSheets[INTERNAL_TILESET_ID] = document.getElementById("webclientGraphics");
-		IconSheets[0] = document.getElementById("potluck");
-		IconSheets[-1] = document.getElementById("extras");
+		IconSheets[0]  = document.getElementById("global");
+		IconSheets[-1] = document.getElementById("npc");
 		IconSheets[-2] = document.getElementById("pulp");
 		IconSheets[-3] = document.getElementById("easyrpg");
 	}
