@@ -132,105 +132,6 @@
 				],
 				"density": false
 			},
-			"water": {
-				"name": "water",
-				"pic": [
-					0,
-					9,
-					28
-				],
-				"density": true,
-				"type": "water",
-				"anim_frames": 2,
-				"anim_speed": 8
-			},
-			"water3": {
-				"name": "water",
-				"pic": [
-					0,
-					16,
-					30
-				],
-				"density": true,
-				"type": "water"
-			},
-			"water2": {
-				"name": "water",
-				"pic": [
-					0,
-					14,
-					31
-				],
-				"density": true,
-				"type": "water"
-			},
-			"water4": {
-				"name": "water",
-				"pic": [
-					0,
-					21,
-					28
-				],
-				"menu_pic": [0, 21, 29],
-				"obj": true,
-				"autotile_layout": 14,
-				"anim_mode": 2,
-				"anim_frames": 3,
-				"anim_speed": 8,
-				"density": true,
-				"type": "water"
-			},
-			"waterfall": {
-				"name": "waterfall",
-				"pic": [
-					0,
-					11,
-					28
-				],
-				"anim_frames": 4,
-				"anim_speed": 2,
-				"density": false,
-				"type": "escalator",
-				"dir": 2
-			},
-			"waterfall2": {
-				"name": "waterfall",
-				"pic": [
-					0,
-					11,
-					29
-				],
-				"anim_frames": 4,
-				"anim_speed": 2,
-				"density": false,
-				"type": "escalator",
-				"dir": 2
-			},
-			"waterfall3": {
-				"name": "waterfall",
-				"pic": [
-					0,
-					11,
-					30
-				],
-				"obj": true,
-				"anim_frames": 4,
-				"anim_speed": 2,
-				"density": false,
-				"type": "escalator",
-				"dir": 2
-			},
-			"whirlpool": {
-				"name": "whirlpool",
-				"obj": true,
-				"pic": [
-					0,
-					24,
-					31
-				],
-				"anim_frames": 4,
-				"anim_speed": 2
-			},
 			"brownsand": {
 				"name": "brown sand",
 				"pic": [
@@ -265,6 +166,115 @@
 					26
 				]
 			},
+			"water": {
+				"name": "water",
+				"pic": [
+					0,
+					9,
+					28
+				],
+				"density": true,
+				"type": "water",
+				"anim_frames": 2,
+				"anim_speed": 8
+			},
+			"water3": {
+				"name": "water",
+				"pic": [
+					0,
+					16,
+					30
+				],
+				"density": true,
+				"type": "water"
+			},
+			"water2": {
+				"name": "water",
+				"pic": [
+					0,
+					14,
+					31
+				],
+				"density": true,
+				"type": "water"
+			},
+			"ice": {
+				"name": "ice",
+				"pic": [
+					0,
+					25,
+					26
+				],
+				"density": false,
+				"type": "ice"
+			},
+			"waterfall": {
+				"name": "waterfall",
+				"pic": [
+					0,
+					11,
+					28
+				],
+				"anim_frames": 4,
+				"anim_speed": 2,
+				"density": false,
+				"type": "escalator",
+				"dir": 2
+			},
+			"waterfall2": {
+				"name": "waterfall",
+				"pic": [
+					0,
+					11,
+					29
+				],
+				"anim_frames": 4,
+				"anim_speed": 2,
+				"density": false,
+				"type": "escalator",
+				"dir": 2
+			},
+			"water4": {
+				"name": "water",
+				"pic": [
+					0,
+					21,
+					28
+				],
+				"menu_pic": [0, 21, 29],
+				"obj": true,
+				"autotile_layout": 14,
+				"anim_mode": 2,
+				"anim_frames": 3,
+				"anim_speed": 8,
+				"density": true,
+				"type": "water"
+			},
+			"waterfall3": {
+				"name": "waterfall",
+				"pic": [
+					0,
+					11,
+					30
+				],
+				"obj": true,
+				"anim_frames": 4,
+				"anim_speed": 2,
+				"density": false,
+				"type": "escalator",
+				"dir": 2
+			},
+			"whirlpool": {
+				"name": "whirlpool",
+				"obj": true,
+				"pic": [
+					0,
+					24,
+					31
+				],
+				"anim_frames": 4,
+				"anim_speed": 2
+			},
 			"redbrickfloor": {
 				"name": "red brick floor",
 				"pic": [
@@ -282,44 +292,6 @@
 					27
 				],
 				"density": false
-			},
-			"stonewall": {
-				"name": "stone wall",
-				"pic": [
-					0,
-					5,
-					30
-				],
-				"density": true
-			},
-			"xblock": {
-				"name": "x block",
-				"pic": [
-					0,
-					31,
-					47
-				],
-				"density": true
-			},
-			"ice": {
-				"name": "ice",
-				"pic": [
-					0,
-					25,
-					26
-				],
-				"density": false,
-				"type": "ice"
-			},
-			"brownbricks": {
-				"name": "brown bricks",
-				"autotile_layout": 2,
-				"pic": [
-					-5,
-					1,
-					5
-				],
-				"density": true
 			},
 			"woodfloor2": {
 				"name": "wood floor",
@@ -357,14 +329,29 @@
 				],
 				"density": false
 			},
-			"woodwall": {
-				"name": "wood wall",
+			"darkfloor": {
+				"name": "dark floor",
 				"pic": [
-					-5,
-					7,
-					1
-				],
-				"density": true
+					0,
+					3,
+					28
+				]
+			},
+			"darkfloor2": {
+				"name": "dark floor",
+				"pic": [
+					0,
+					4,
+					28
+				]
+			},
+			"darkfloor3": {
+				"name": "dark floor",
+				"pic": [
+					0,
+					5,
+					28
+				]
 			},
 			"floor1": {
 				"name": "floor",
@@ -434,6 +421,60 @@
 					9,
 					31
 				]
+			},
+			"carpet": {
+				"name": "carpet",
+				"pic": [0, 16, 57],
+				"menu_pic": [0, 15, 55],
+				"autotile_layout": 4
+			},
+			"carpet_stairs": {
+				"name": "carpet stairs",
+				"pic": [0, 16, 59],
+				"menu_pic": [0, 18, 59],
+				"autotile_layout": 7
+			},
+			"carpet2": {
+				"name": "carpet",
+				"pic": [0, 20, 57],
+				"menu_pic": [0, 19, 55],
+				"autotile_layout": 4
+			},
+			"carpet2_stairs": {
+				"name": "carpet stairs",
+				"pic": [0, 20, 59],
+				"menu_pic": [0, 22, 59],
+				"autotile_layout": 7
+			},
+			"carpet3": {
+				"name": "carpet",
+				"pic": [0, 24, 57],
+				"menu_pic": [0, 23, 55],
+				"autotile_layout": 4
+			},
+			"carpet3_stairs": {
+				"name": "carpet stairs",
+				"pic": [0, 24, 59],
+				"menu_pic": [0, 26, 59],
+				"autotile_layout": 7
+			},
+			"carpet4": {
+				"name": "carpet",
+				"pic": [0, 18, 55],
+				"menu_pic": [0, 18, 56],
+				"autotile_layout": 12
+			},
+			"carpet5": {
+				"name": "carpet",
+				"pic": [0, 22, 55],
+				"menu_pic": [0, 22, 56],
+				"autotile_layout": 12
+			},
+			"carpet6": {
+				"name": "carpet",
+				"pic": [0, 26, 55],
+				"menu_pic": [0, 26, 56],
+				"autotile_layout": 12
 			},
 			"floor9": {
 				"name": "floor",
@@ -507,59 +548,144 @@
 					22
 				]
 			},
-			"carpet": {
-				"name": "carpet",
-				"pic": [0, 16, 57],
-				"menu_pic": [0, 15, 55],
-				"autotile_layout": 4
+			"forcedown": {
+				"name": "force",
+				"pic": [
+					0,
+					28,
+					83
+				],
+				"anim_frames": 4,
+				"anim_speed": 3,
+				"density": false,
+				"type": "escalator",
+				"dir": 2
 			},
-			"carpet_stairs": {
-				"name": "carpet stairs",
-				"pic": [0, 16, 59],
-				"menu_pic": [0, 18, 59],
-				"autotile_layout": 7
+			"forceup": {
+				"name": "force",
+				"pic": [
+					0,
+					28,
+					82
+				],
+				"anim_frames": 4,
+				"anim_speed": 3,
+				"density": false,
+				"type": "escalator",
+				"dir": 6
 			},
-			"carpet2": {
-				"name": "carpet",
-				"pic": [0, 20, 57],
-				"menu_pic": [0, 19, 55],
-				"autotile_layout": 4
+			"forceleft": {
+				"name": "force",
+				"pic": [
+					0,
+					28,
+					84
+				],
+				"anim_frames": 4,
+				"anim_speed": 3,
+				"density": false,
+				"type": "escalator",
+				"dir": 4
 			},
-			"carpet2_stairs": {
-				"name": "carpet stairs",
-				"pic": [0, 20, 59],
-				"menu_pic": [0, 22, 59],
-				"autotile_layout": 7
+			"forceright": {
+				"name": "force",
+				"pic": [
+					0,
+					28,
+					85
+				],
+				"anim_frames": 4,
+				"anim_speed": 3,
+				"density": false,
+				"type": "escalator",
+				"dir": 0
 			},
-			"carpet3": {
-				"name": "carpet",
-				"pic": [0, 24, 57],
-				"menu_pic": [0, 23, 55],
-				"autotile_layout": 4
+			"conveyor2": {
+				"name": "conveyor belt",
+				"pic": [
+					0,
+					5,
+					45
+				],
+				"obj": true,
+				"autotile_layout": 2
 			},
-			"carpet3_stairs": {
-				"name": "carpet stairs",
-				"pic": [0, 24, 59],
-				"menu_pic": [0, 26, 59],
-				"autotile_layout": 7
+			"xblock": {
+				"name": "x block",
+				"pic": [
+					0,
+					31,
+					47
+				],
+				"density": true
 			},
-			"carpet4": {
-				"name": "carpet",
-				"pic": [0, 18, 55],
-				"menu_pic": [0, 18, 56],
-				"autotile_layout": 12
+			"stonewall": {
+				"name": "stone wall",
+				"pic": [
+					0,
+					5,
+					30
+				],
+				"density": true
 			},
-			"carpet5": {
-				"name": "carpet",
-				"pic": [0, 22, 55],
-				"menu_pic": [0, 22, 56],
-				"autotile_layout": 12
+			"brownbricks": {
+				"name": "brown bricks",
+				"autotile_layout": 2,
+				"pic": [
+					-5,
+					1,
+					5
+				],
+				"density": true
 			},
-			"carpet6": {
-				"name": "carpet",
-				"pic": [0, 26, 55],
-				"menu_pic": [0, 26, 56],
-				"autotile_layout": 12
+			"woodwall": {
+				"name": "wood wall",
+				"pic": [
+					-5,
+					7,
+					1
+				],
+				"density": true
+			},
+			"woodwall2": {
+				"name": "wood wall",
+				"pic": [
+					0,
+					1,
+					34
+				],
+				"autotile_layout": 15,
+				"density": true
+			},
+			"woodwall3": {
+				"name": "wood wall",
+				"pic": [
+					0,
+					0,
+					34
+				],
+				"autotile_layout": 15,
+				"density": true
+			},
+			"icewall": {
+				"name": "marble wall",
+				"pic": [
+					0,
+					20,
+					33
+				],
+				"density": true,
+				"autotile_layout": 15
+			},
+			"icewall2": {
+				"name": "marble wall",
+				"pic": [
+					0,
+					24,
+					33
+				],
+				"density": true,
+				"autotile_layout": 3
 			},
 			"brickwall": {
 				"name": "brick wall",
@@ -730,81 +856,238 @@
 					28
 				]
 			},
-			"darkfloor": {
-				"name": "dark floor",
+			"redbrickwall": {
+				"name": "brick wall",
 				"pic": [
 					0,
-					3,
-					28
-				]
+					27,
+					44
+				],
+				"density": true
 			},
-			"darkfloor2": {
-				"name": "dark floor",
+			"redgreenbrickwall": {
+				"name": "brick wall",
 				"pic": [
 					0,
-					4,
-					28
-				]
+					30,
+					44
+				],
+				"density": true
 			},
-			"darkfloor3": {
-				"name": "dark floor",
+			"rockwall2": {
+				"name": "rock wall",
+				"pic": [
+					0,
+					2,
+					21
+				],
+				"density": true
+			},
+			"rockwall": {
+				"name": "rock wall",
 				"pic": [
 					0,
 					5,
-					28
-				]
+					21
+				],
+				"density": true
 			},
-			"forcedown": {
-				"name": "force",
+			"rockwall_b": {
+				"name": "rock wall",
+				"pic": [
+					0,
+					5,
+					22
+				],
+				"density": true
+			},
+			"rockwall3": {
+				"name": "rock wall",
+				"pic": [
+					0,
+					3,
+					21
+				],
+				"density": true
+			},
+			"rockwall3_b": {
+				"name": "rock wall",
+				"pic": [
+					0,
+					3,
+					22
+				],
+				"density": true
+			},
+			"rockwall4": {
+				"name": "rock wall",
+				"pic": [
+					0,
+					4,
+					21
+				],
+				"density": true
+			},
+			"rockwall4_b": {
+				"name": "rock wall",
+				"pic": [
+					0,
+					4,
+					22
+				],
+				"density": true
+			},
+			"metalwall": {
+				"name": "metal wall",
+				"pic": [
+					0,
+					0,
+					43
+				],
+				"density": true,
+				"anim_frames": 4,
+				"anim_speed": 4,
+				"autotile_layout": 15
+			},
+			"cyber_wall": {
+				"name": "cyber wall",
+				"pic": [0, 0, 78],
+				"menu_pic": [0, 0, 79],
+				"density": true,
+				"obj": true,
+				"autotile_layout": 12
+			},
+			"glasswall": {
+				"name": "glass wall",
+				"pic": [
+					0,
+					29,
+					1
+				],
+				"autotile_layout": 15,
+				"density": true,
+				"obj": true
+			},
+			"glasswall_tint1": {
+				"name": "glass wall",
+				"pic": [
+					0,
+					21,
+					6
+				],
+				"autotile_layout": 15,
+				"density": true,
+				"obj": true
+			},
+			"glasswall_tint2": {
+				"name": "glass wall",
+				"pic": [
+					0,
+					22,
+					6
+				],
+				"autotile_layout": 15,
+				"density": true,
+				"obj": true
+			},
+			"glasswall_tint3": {
+				"name": "glass wall",
+				"pic": [
+					0,
+					23,
+					6
+				],
+				"autotile_layout": 15,
+				"density": true,
+				"obj": true
+			},
+			"glasswall_tint4": {
+				"name": "glass wall",
+				"pic": [
+					0,
+					24,
+					6
+				],
+				"autotile_layout": 15,
+				"density": true,
+				"obj": true
+			},
+			"glasswall_tint5": {
+				"name": "glass wall",
+				"pic": [
+					0,
+					25,
+					6
+				],
+				"autotile_layout": 15,
+				"density": true,
+				"obj": true
+			},
+			"glasswall_tint6": {
+				"name": "glass wall",
+				"pic": [
+					0,
+					26,
+					6
+				],
+				"autotile_layout": 15,
+				"density": true,
+				"obj": true
+			},
+			"glasswall_tint7": {
+				"name": "glass wall",
+				"pic": [
+					0,
+					27,
+					6
+				],
+				"autotile_layout": 15,
+				"density": true,
+				"obj": true
+			},
+			"glasswall_tint8": {
+				"name": "glass wall",
 				"pic": [
 					0,
 					28,
-					83
+					6
 				],
-				"anim_frames": 4,
-				"anim_speed": 3,
-				"density": false,
-				"type": "escalator",
-				"dir": 2
+				"autotile_layout": 15,
+				"density": true,
+				"obj": true
 			},
-			"forceup": {
-				"name": "force",
+			"glasswall_tint9": {
+				"name": "glass wall",
 				"pic": [
 					0,
-					28,
-					82
+					29,
+					6
 				],
-				"anim_frames": 4,
-				"anim_speed": 3,
-				"density": false,
-				"type": "escalator",
-				"dir": 6
+				"autotile_layout": 15,
+				"density": true,
+				"obj": true
 			},
-			"forceleft": {
-				"name": "force",
+			"glasswall_tint10": {
+				"name": "glass wall",
 				"pic": [
 					0,
-					28,
-					84
+					30,
+					6
 				],
-				"anim_frames": 4,
-				"anim_speed": 3,
-				"density": false,
-				"type": "escalator",
-				"dir": 4
+				"autotile_layout": 15,
+				"density": true,
+				"obj": true
 			},
-			"forceright": {
-				"name": "force",
+			"glasswall_tint11": {
+				"name": "glass wall",
 				"pic": [
 					0,
-					28,
-					85
+					31,
+					6
 				],
-				"anim_frames": 4,
-				"anim_speed": 3,
-				"density": false,
-				"type": "escalator",
-				"dir": 0
+				"autotile_layout": 15,
+				"density": true,
+				"obj": true
 			},
 			"skull": {
 				"name": "skull",
@@ -1626,6 +1909,16 @@
 				"density": true,
 				"obj": true
 			},
+			"stool": {
+				"name": "stool",
+				"pic": [
+					0,
+					9,
+					64
+				],
+				"density": false,
+				"obj": true
+			},
 			"table": {
 				"name": "table",
 				"pic": [
@@ -1696,26 +1989,6 @@
 				"density": false,
 				"obj": true
 			},
-			"stool": {
-				"name": "stool",
-				"pic": [
-					0,
-					9,
-					64
-				],
-				"density": false,
-				"obj": true
-			},
-			"stool2": {
-				"name": "stool",
-				"pic": [
-					0,
-					9,
-					63
-				],
-				"density": false,
-				"obj": true
-			},
 			"chair_r": {
 				"name": "chair",
 				"pic": [
@@ -1750,6 +2023,26 @@
 					8,
 					65
 				],
+				"obj": true
+			},
+			"table6": {
+				"name": "table",
+				"pic": [
+					0,
+					7,
+					59
+				],
+				"density": true,
+				"obj": true
+			},
+			"stool2": {
+				"name": "stool",
+				"pic": [
+					0,
+					9,
+					63
+				],
+				"density": false,
 				"obj": true
 			},
 			"chair_r2": {
@@ -1797,33 +2090,6 @@
 				],
 				"density": true,
 				"obj": true
-			},
-			"rockwall": {
-				"name": "rock wall",
-				"pic": [
-					0,
-					5,
-					21
-				],
-				"density": true
-			},
-			"rockwall2": {
-				"name": "rock wall",
-				"pic": [
-					0,
-					2,
-					21
-				],
-				"density": true
-			},
-			"rockwall3": {
-				"name": "rock wall",
-				"pic": [
-					0,
-					13,
-					21
-				],
-				"density": true
 			},
 			"statue": {
 				"name": "statue",
@@ -1915,138 +2181,6 @@
 				"autotile_layout": 3,
 				"obj": true,
 				"density": true
-			},
-			"glasswall": {
-				"name": "glass wall",
-				"pic": [
-					0,
-					29,
-					1
-				],
-				"autotile_layout": 15,
-				"density": true,
-				"obj": true
-			},
-			"glasswall_tint1": {
-				"name": "glass wall",
-				"pic": [
-					0,
-					21,
-					6
-				],
-				"autotile_layout": 15,
-				"density": true,
-				"obj": true
-			},
-			"glasswall_tint2": {
-				"name": "glass wall",
-				"pic": [
-					0,
-					22,
-					6
-				],
-				"autotile_layout": 15,
-				"density": true,
-				"obj": true
-			},
-			"glasswall_tint3": {
-				"name": "glass wall",
-				"pic": [
-					0,
-					23,
-					6
-				],
-				"autotile_layout": 15,
-				"density": true,
-				"obj": true
-			},
-			"glasswall_tint4": {
-				"name": "glass wall",
-				"pic": [
-					0,
-					24,
-					6
-				],
-				"autotile_layout": 15,
-				"density": true,
-				"obj": true
-			},
-			"glasswall_tint5": {
-				"name": "glass wall",
-				"pic": [
-					0,
-					25,
-					6
-				],
-				"autotile_layout": 15,
-				"density": true,
-				"obj": true
-			},
-			"glasswall_tint6": {
-				"name": "glass wall",
-				"pic": [
-					0,
-					26,
-					6
-				],
-				"autotile_layout": 15,
-				"density": true,
-				"obj": true
-			},
-			"glasswall_tint7": {
-				"name": "glass wall",
-				"pic": [
-					0,
-					27,
-					6
-				],
-				"autotile_layout": 15,
-				"density": true,
-				"obj": true
-			},
-			"glasswall_tint8": {
-				"name": "glass wall",
-				"pic": [
-					0,
-					28,
-					6
-				],
-				"autotile_layout": 15,
-				"density": true,
-				"obj": true
-			},
-			"glasswall_tint9": {
-				"name": "glass wall",
-				"pic": [
-					0,
-					29,
-					6
-				],
-				"autotile_layout": 15,
-				"density": true,
-				"obj": true
-			},
-			"glasswall_tint10": {
-				"name": "glass wall",
-				"pic": [
-					0,
-					30,
-					6
-				],
-				"autotile_layout": 15,
-				"density": true,
-				"obj": true
-			},
-			"glasswall_tint11": {
-				"name": "glass wall",
-				"pic": [
-					0,
-					31,
-					6
-				],
-				"autotile_layout": 15,
-				"density": true,
-				"obj": true
 			},
 			"tombstone": {
 				"name": "tombstone",
@@ -2653,26 +2787,6 @@
 				"obj": true,
 				"over": true
 			},
-			"icewall": {
-				"name": "marble wall",
-				"pic": [
-					0,
-					20,
-					33
-				],
-				"density": true,
-				"autotile_layout": 15
-			},
-			"icewall2": {
-				"name": "marble wall",
-				"pic": [
-					0,
-					24,
-					33
-				],
-				"density": true,
-				"autotile_layout": 3
-			},
 			"monitor": {
 				"name": "monitor",
 				"pic": [
@@ -2685,26 +2799,6 @@
 				"obj": true,
 				"density": true,
 				"autotile_layout": 13
-			},
-			"woodwall2": {
-				"name": "wood wall",
-				"pic": [
-					0,
-					1,
-					34
-				],
-				"autotile_layout": 15,
-				"density": true
-			},
-			"woodwall3": {
-				"name": "wood wall",
-				"pic": [
-					0,
-					0,
-					34
-				],
-				"autotile_layout": 15,
-				"density": true
 			},
 			"invisible_wall": {
 				"name": "Invisible wall",
@@ -3278,24 +3372,6 @@
 				],
 				"obj": true
 			},
-			"redbrickwall": {
-				"name": "brick wall",
-				"pic": [
-					0,
-					27,
-					44
-				],
-				"density": true
-			},
-			"redgreenbrickwall": {
-				"name": "brick wall",
-				"pic": [
-					0,
-					30,
-					44
-				],
-				"density": true
-			},
 			"torch": {
 				"name": "torch",
 				"pic": [
@@ -3345,28 +3421,6 @@
 				"autotile_layout": 14,
 				"obj": true
 			},
-			"metalwall": {
-				"name": "metal wall",
-				"pic": [
-					0,
-					0,
-					43
-				],
-				"density": true,
-				"anim_frames": 4,
-				"anim_speed": 4,
-				"autotile_layout": 15
-			},
-			"conveyor2": {
-				"name": "conveyor belt",
-				"pic": [
-					0,
-					5,
-					45
-				],
-				"obj": true,
-				"autotile_layout": 2
-			},
 			"gear": {
 				"name": "gear",
 				"pic": [
@@ -3410,14 +3464,6 @@
 				"pic": [
 					0, 19, 8
 				]
-			},
-			"cyber_wall": {
-				"name": "cyber wall",
-				"pic": [0, 0, 78],
-				"menu_pic": [0, 0, 79],
-				"density": true,
-				"obj": true,
-				"autotile_layout": 12
 			},
 			"fence": {
 				"name": "fence",
