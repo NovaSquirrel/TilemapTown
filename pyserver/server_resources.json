@@ -548,6 +548,27 @@
 					22
 				]
 			},
+			"lava": {
+				"name": "lava",
+				"pic": [
+					0,
+					4,
+					23
+				],
+				"density": true,
+				"obj": false,
+				"anim_frames": 2,
+				"anim_speed": 8
+			},
+			"lava2": {
+				"name": "lava",
+				"pic": [
+					0,
+					3,
+					23
+				],
+				"density": true
+			},
 			"forcedown": {
 				"name": "force",
 				"pic": [
@@ -1169,6 +1190,36 @@
 				"density": true,
 				"obj": true
 			},
+			"rocks_extra_1": {
+				"name": "rocks",
+				"pic": [
+					0,
+					19,
+					15
+				],
+				"density": true,
+				"obj": true
+			},
+			"rocks_extra_2": {
+				"name": "rocks",
+				"pic": [
+					0,
+					20,
+					15
+				],
+				"density": true,
+				"obj": true
+			},
+			"rocks_extra_3": {
+				"name": "rocks",
+				"pic": [
+					0,
+					21,
+					15
+				],
+				"density": true,
+				"obj": true
+			},
 			"flower1": {
 				"name": "flowers",
 				"pic": [
@@ -1207,6 +1258,60 @@
 					11
 				],
 				"density": false,
+				"obj": true
+			},
+			"flower_red": {
+				"name": "red flower",
+				"pic": [
+					0,
+					9,
+					14
+				],
+				"obj": true
+			},
+			"flower_orange": {
+				"name": "orange flower",
+				"pic": [
+					0,
+					10,
+					14
+				],
+				"obj": true
+			},
+			"flower_yellow": {
+				"name": "yellow flower",
+				"pic": [
+					0,
+					11,
+					14
+				],
+				"obj": true
+			},
+			"flower_blue": {
+				"name": "blue flower",
+				"pic": [
+					0,
+					12,
+					14
+				],
+				"obj": true
+			},
+			"flower_magenta": {
+				"name": "magenta flower",
+				"pic": [
+					0,
+					13,
+					14
+				],
+				"obj": true
+			},
+			"flower_white": {
+				"name": "white flower",
+				"pic": [
+					0,
+					14,
+					14
+				],
 				"obj": true
 			},
 			"sign": {
@@ -1979,6 +2084,26 @@
 				"density": true,
 				"obj": true
 			},
+			"drawers": {
+				"name": "drawers",
+				"pic": [
+					0,
+					28,
+					56
+				],
+				"density": true,
+				"obj": true
+			},
+			"drawers2": {
+				"name": "drawers",
+				"pic": [
+					0,
+					28,
+					57
+				],
+				"density": true,
+				"obj": true
+			},
 			"throne": {
 				"name": "throne",
 				"pic": [
@@ -2140,26 +2265,6 @@
 				"obj": true,
 				"over": true
 			},
-			"drawers": {
-				"name": "drawers",
-				"pic": [
-					0,
-					28,
-					56
-				],
-				"density": true,
-				"obj": true
-			},
-			"drawers2": {
-				"name": "drawers",
-				"pic": [
-					0,
-					28,
-					57
-				],
-				"density": true,
-				"obj": true
-			},
 			"counter": {
 				"name": "counter",
 				"pic": [
@@ -2211,27 +2316,6 @@
 				],
 				"density": false,
 				"obj": true
-			},
-			"lava": {
-				"name": "lava",
-				"pic": [
-					0,
-					4,
-					23
-				],
-				"density": true,
-				"obj": false,
-				"anim_frames": 2,
-				"anim_speed": 8
-			},
-			"lava2": {
-				"name": "lava",
-				"pic": [
-					0,
-					3,
-					23
-				],
-				"density": true
 			},
 			"door": {
 				"name": "door",
@@ -3183,90 +3267,6 @@
 					18,
 					61
 				],
-				"obj": true
-			},
-			"flower_red": {
-				"name": "red flower",
-				"pic": [
-					0,
-					9,
-					14
-				],
-				"obj": true
-			},
-			"flower_orange": {
-				"name": "orange flower",
-				"pic": [
-					0,
-					10,
-					14
-				],
-				"obj": true
-			},
-			"flower_yellow": {
-				"name": "yellow flower",
-				"pic": [
-					0,
-					11,
-					14
-				],
-				"obj": true
-			},
-			"flower_blue": {
-				"name": "blue flower",
-				"pic": [
-					0,
-					12,
-					14
-				],
-				"obj": true
-			},
-			"flower_magenta": {
-				"name": "magenta flower",
-				"pic": [
-					0,
-					13,
-					14
-				],
-				"obj": true
-			},
-			"flower_white": {
-				"name": "white flower",
-				"pic": [
-					0,
-					14,
-					14
-				],
-				"obj": true
-			},
-			"rocks_extra_1": {
-				"name": "rocks",
-				"pic": [
-					0,
-					19,
-					15
-				],
-				"density": true,
-				"obj": true
-			},
-			"rocks_extra_2": {
-				"name": "rocks",
-				"pic": [
-					0,
-					20,
-					15
-				],
-				"density": true,
-				"obj": true
-			},
-			"rocks_extra_3": {
-				"name": "rocks",
-				"pic": [
-					0,
-					21,
-					15
-				],
-				"density": true,
 				"obj": true
 			},
 			"border_lu": {
