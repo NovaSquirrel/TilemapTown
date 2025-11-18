@@ -68,6 +68,8 @@ Tileset credits by file:
 
 	global.png
 		Contains tiles from potluck.png and extra.png (with new tiles pulled from the original tilesets that extra.png pulled from), with edits by JustThePulp (mostly for animation and additional variations)
+		Contains original tiles by JustThePulp (button icons, controller icons, flags, logos, Macintosh style window border, clock parts)
+		One of the portraits includes sprites of Ichugo, Button, and Cherry, by NovaSquirrel
 		Ace card sprite by Firecakes
 
 	npc.png
