@@ -2213,7 +2213,7 @@
 				"obj": true
 			},
 			"workbench": {
-				"name": "table",
+				"name": "workbench",
 				"pic": [
 					0,
 					4,
@@ -2223,7 +2223,7 @@
 				"obj": true
 			},
 			"cookware": {
-				"name": "table",
+				"name": "cookware",
 				"pic": [
 					0,
 					4,
