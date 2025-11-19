@@ -2106,6 +2106,26 @@
 				"density": true,
 				"obj": true
 			},
+			"books2": {
+				"name": "books",
+				"pic": [
+					0,
+					26,
+					62
+				],
+				"density": true,
+				"obj": true
+			},
+			"books2_empty": {
+				"name": "shelves",
+				"pic": [
+					0,
+					27,
+					62
+				],
+				"density": true,
+				"obj": true
+			},
 			"throne": {
 				"name": "throne",
 				"pic": [
@@ -2158,6 +2178,56 @@
 					0,
 					7,
 					59
+				],
+				"density": true,
+				"obj": true
+			},
+			"drawers3": {
+				"name": "drawers",
+				"pic": [
+					0,
+					29,
+					58
+				],
+				"density": true,
+				"obj": true
+			},
+			"books3": {
+				"name": "books",
+				"pic": [
+					0,
+					30,
+					62
+				],
+				"density": true,
+				"obj": true
+			},
+			"books3_empty": {
+				"name": "shelves",
+				"pic": [
+					0,
+					31,
+					62
+				],
+				"density": true,
+				"obj": true
+			},
+			"workbench": {
+				"name": "table",
+				"pic": [
+					0,
+					4,
+					60
+				],
+				"density": true,
+				"obj": true
+			},
+			"cookware": {
+				"name": "table",
+				"pic": [
+					0,
+					4,
+					61
 				],
 				"density": true,
 				"obj": true
@@ -2242,6 +2312,36 @@
 				"pic": [0, 8, 60],
 				"obj": true,
 				"density": true
+			},
+			"drawers4": {
+				"name": "drawers",
+				"pic": [
+					0,
+					28,
+					58
+				],
+				"density": true,
+				"obj": true
+			},
+			"books4": {
+				"name": "books",
+				"pic": [
+					0,
+					28,
+					62
+				],
+				"density": true,
+				"obj": true
+			},
+			"books4_empty": {
+				"name": "shelves",
+				"pic": [
+					0,
+					29,
+					62
+				],
+				"density": true,
+				"obj": true
 			},
 			"statue": {
 				"name": "statue",
