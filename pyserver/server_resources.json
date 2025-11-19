@@ -2026,11 +2026,13 @@
 			},
 			"table": {
 				"name": "table",
+				"autotile_class": "table0",
 				"pic": [
 					0,
 					5,
 					56
 				],
+				"autotile_layout": 13,
 				"density": true,
 				"obj": true
 			},
@@ -2215,6 +2217,31 @@
 				],
 				"density": true,
 				"obj": true
+			},
+			"stool3": {
+				"name": "stool",
+				"pic": [0, 9, 65],
+				"obj": true
+			},
+			"table7": {
+				"name": "table",
+				"autotile_class": "table7",
+				"pic": [0, 6, 56],
+				"obj": true,
+				"density": true,
+				"autotile_layout": 13
+			},
+			"table8": {
+				"name": "table",
+				"pic": [0, 7, 60],
+				"obj": true,
+				"density": true
+			},
+			"table9": {
+				"name": "table",
+				"pic": [0, 8, 60],
+				"obj": true,
+				"density": true
 			},
 			"statue": {
 				"name": "statue",
