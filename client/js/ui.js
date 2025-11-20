@@ -3477,7 +3477,6 @@ function copyHereHotbarSlot() {
 	drawHotbar();  
 }
 
-
 ///////////////////////////////////////////////////////////
 // Animation
 ///////////////////////////////////////////////////////////
@@ -4231,6 +4230,14 @@ function changedBuildToolCategory() {
 		for (let i in DBInventory) {
 			if (DBInventory[i].type == "map_tile" && DBInventory[i].data) {
 				currentBuildCategoryArrayNames.push(DBInventory[i].data);
+			} else if (DBInventory[i].type == "client_data" && DBInventory[i]?.data && DBInventory[i]?.data?.type === "map_tile_list" && DBInventory[i]?.data?.data?.length) {
+				for (let tile of DBInventory[i].data.data) {
+					currentBuildCategoryArrayNames.push(tile);
+				}
+			} else if (DBInventory[i].type == "tileset" && DBInventory[i].data) {
+				for (let tile in DBInventory[i].data) {
+					currentBuildCategoryArrayNames.push(i + ":" + tile);
+				}
 			}
 		}
 	} else {
