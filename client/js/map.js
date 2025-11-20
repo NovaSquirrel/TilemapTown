@@ -163,11 +163,14 @@ function AtomFromName(str) {
 						SendCmd("TSD", {id: s[0]});
 					}
 				}
-			console.log("Unknown atom: "+str);
-			return GlobalTiles.grass;
+			//console.log("Unknown atom: "+str);
+			return {"name": `Unknown (${str})`, "pic":DefaultPics['default'] ?? [0,0,0]};
 		}
+	} else if(typeof str === 'object') {
+		return str
+	} else {
+		return {"name": `Bad tile (${str})`, "pic":DefaultPics['default'] ?? [0,0,0]};
 	}
-	return str;
 }
 
 // Convert an atom's JSON definition into a lower bandwidth version

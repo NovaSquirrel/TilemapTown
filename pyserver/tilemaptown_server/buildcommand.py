@@ -132,18 +132,27 @@ entity_types_users_can_change_data_for = ('text', 'image', 'map_tile', 'tileset'
 def data_disallowed_for_entity_type(type, data):
 	if entity_type_name[type] not in entity_types_users_can_change_data_for:
 		return 'Not a valid type to change data for'
-	if type == entity_type['gadget']:
+	elif type == entity_type['gadget']:
 		if not isinstance(data, list):
 			return 'Invalid gadget data'
 		for step in data:
 			if not isinstance(step, list) or len(step) != 2 or not isinstance(step[0], str):
 				return 'Invalid gadget step'
-	if type == entity_type['image'] and not image_url_is_okay(data):
-		return 'Image asset URL doesn\'t match any allowlisted sites'
-	if type == entity_type['map_tile']:
+	elif type == entity_type['image'] and not image_url_is_okay(data):
+		return 'Tile sheet URL doesn\'t match any allowlisted sites'
+	elif type == entity_type['map_tile']:
 		tile_ok, tile_reason = tile_is_okay(data, parse_json=True)
 		if not tile_ok:
 			return 'Tile [tt]%s[/tt] rejected (%s)' % (data, tile_reason)
+	elif type == entity_type['tileset']:
+		if isinstance(data, str):
+			data = loads_if_not_none(data)
+		if not isinstance(data, dict):
+			return 'Bad data type for tileset definition item'
+		for k,v in data.items():
+			tile_ok, tile_reason = tile_is_okay(v, parse_json=True)
+			if not tile_ok:
+				return 'Bad tile in tileset definition: %s (%s)' % (json.dumps(v), tile_reason)
 	return None
 
 def tile_is_okay(tile, parse_json=False):
@@ -151,7 +160,7 @@ def tile_is_okay(tile, parse_json=False):
 		if not len(tile):
 			return (False, 'Empty string')
 		if tile.strip() != tile:
-			return (False, '')
+			return (False, 'Tile has unneeded padding')
 
 		# Sometimes it's a string containing JSON 
 		if tile[0] == '{':

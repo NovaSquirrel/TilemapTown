@@ -1040,7 +1040,6 @@ function useItemAtXY(Placed, x, y) {
 	switch (Placed.type) {
 		case "tileset":
 			viewTileset(Placed);
-			console.log("Open tileset thing");
 			break;
 		case "map_tile":
 			let ActualAtom = AtomFromName(Placed.data);
@@ -1075,6 +1074,8 @@ function useItemAtXY(Placed, x, y) {
 		case "client_data":
 			if (Placed.data.type === "command_list")
 				viewCommandList(Placed);
+			else if (Placed.data.type === "map_tile_list")
+				viewMapTileList(Placed);
 			break;
 		}
 		return old;
@@ -1469,6 +1470,7 @@ function initMouse() {
 		menu.style.left = (evt.clientX - CONTEXT_MENU_OPEN_OFFSET) + "px";
 		menu.style.display = "block";
 		menu.style.top = (evt.clientY - menu.offsetHeight + CONTEXT_MENU_OPEN_OFFSET) + "px";
+		showCopyToTilesetLiIfNeeded("copyHotbarSlotToTilesetLi");
 		evt.preventDefault();
 	}, false);
 }

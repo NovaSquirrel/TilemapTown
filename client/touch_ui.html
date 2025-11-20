@@ -253,21 +253,27 @@
     <input type="text" id="newtilename" value="new item"/>
     </p>
 
+	<p>
     <input type="button" value="Generic" onclick="newItemCreate('generic');" />
-    <input type="button" value="Map tile" onclick="newItemCreate('map_tile');" />
     <input type="button" value="Text" onclick="newItemCreate('text');" />
-    <input type="button" value="Tile sheet" onclick="newItemCreate('image');" />
-    <!--<input type="button" value="Tileset" onclick="newItemCreate('tileset');" />-->
     <input type="button" value="Folder" onclick="newItemCreate('folder');" />
     <input type="button" value="Gadget" onclick="newItemCreate('gadget');" />
     <input type="button" value="Command list" onclick="newItemCreate('command_list');" />
+	</p>
+	<p>
+    <input type="button" value="Map tile" onclick="newItemCreate('map_tile');" />
+    <input type="button" value="Map tile list" onclick="newItemCreate('map_tile_list');" />
+    <input type="button" value="Tile sheet" onclick="newItemCreate('image');" />
+    <input type="button" value="Tileset definition" onclick="newItemCreate('tileset');" />
+	</p>
     </p>
     <p>
     <label class="unselectable"><input type="checkbox" id="createtempobject">Create as temporary entity</label>
     </p>
     <p>
 	<ul>
-	<li>Map tiles are templates for tiles to place down on the map, like how the build menu works.</li>
+	<li>Map tiles are templates for tiles to place onto maps. Tiles placed are independent from the item and will not change when the item changes.</li>
+	<li>Tiles placed via tileset definitions <em>will</em> change when the item changes, and are lost if the item is deleted.</li>
 	<li>Generic items are more like standard video game items, and you can drop them onto maps to have them act as props!</li>
 	<li>Tile sheet items add additional images you can pick when editing tiles. If you delete the item, tiles referencing it will lose their appearance.</li>
 	</ul>
@@ -601,9 +607,9 @@
 <widget-window id="tileset" style="display: none;">
   <span id="tileset-title" slot="title">Tileset</span>
   <div slot="contents">
-    <canvas class="unselectable" id="tilesetCanvas'+Item.id+'" width="256" height="16" oncontextmenu="return false;" imageSmoothingEnabled="false"></canvas>
-    <br>
-    <button>Add tile</button>
+	<input placeholder="Search" id="tileset_search"><button onclick="editItemShared({'type':'tileset_new','name':'','desc':'','data':AtomFromName('grass')});">Add tile</button>
+    <ul id="tileset_ul" class="itemsul unselectable">
+    </ul>
   </div>
 </widget-window>
 
@@ -683,6 +689,13 @@
     <p>This should be an image uploaded to this server, or on<br><a href="https://filegarden.com/" target="_blank">File Garden</a>, <a href="https://imgbb.com/" target="_blank">ImgBB</a> or <a href="https://postimages.org/" target="_blank">Postimages</a>.<br>More image hosts can be added on request.</p>
 	<p>You can select this item in the tile editing window<br>to use it for tile graphics.</p>
     </div>
+
+	<div id="edittiletileset">
+	<p><button onclick="document.getElementById('tileset').style.display='none';useItem(editItemID);editItemCancel();">Open item in tileset editor</button></p>
+	<p>Raw JSON:<br>
+	<textarea id="edittiletileset_json" placeholder="Tile list in JSON form"></textarea>
+	</p>
+	</div>
 
 	<div id="edittilegadget">
 		<strong>Gadget</strong><br>
@@ -1030,10 +1043,21 @@
     <li onclick="moveItem(contextMenuItem)">Move to...</li>
     <li onclick="cloneItem(contextMenuItem)">Clone</li>
     <li onclick="cloneItem(contextMenuItem, true)">Clone (Temporary)</li>
+    <li id="copyItemToTilesetLi" onclick="copyItemToTileset(contextMenuItem)">Copy to tileset/</li>
     <li id="copyItemToHotbarLi" onclick="copyItemToHotbar(contextMenuItem)">Copy to hotbar</li>
     <li onclick="sendPrivateMessageToItem(contextMenuItem)">Private message</li>
     <li onclick="deleteItem(contextMenuItem)">Delete</li>
     <!-- <li onclick="referenceItem(contextMenuItem)">Create Reference</li> -->
+  </ul>
+</widget-contextmenu>
+
+<widget-contextmenu id="tileset-contextmenu" style="display: none;">
+  <ul slot="menu" id="tileset-contextmenu-menu">
+    <li onclick="editTilesetItem()">Edit</li>
+    <li onclick="cloneTilesetItem()">Clone</li>
+    <li onclick="copyTilesetItemToHotbar()">Copy to hotbar</li>
+    <li id="changeTilesetItemIDLi" onclick="changeTilesetItemID()">Change ID</li>
+    <li onclick="deleteTilesetItem()">Delete</li>
   </ul>
 </widget-contextmenu>
 
@@ -1044,6 +1068,7 @@
     <li id="mapobj_moveup" onclick="moveUpMapObj()">Move up</li>
     <li id="mapobj_movedown" onclick="moveDownMapObj()">Move down</li>
     <li id="mapobj_movebottom" onclick="moveBottomMapObj()">Move to bottom</li>
+    <li id="copyMapObjToTilesetLi" onclick="copyMapObjToTileset()">Copy to tileset/</li>
     <li onclick="copyMapObjToHotbar()">Copy to hotbar</li>
     <li onclick="deleteMapObj()">Delete</li>
   </ul>
@@ -1052,12 +1077,14 @@
 <widget-contextmenu id="turf-contextmenu" style="display: none;">
   <ul slot="menu" id="turf-contextmenu-menu">
     <li onclick="editTurf()">Edit</li>
+    <li id="copyItemToTilesetLi" onclick="copyTurfToTileset()">Copy to tileset</li>
     <li onclick="copyTurfToHotbar()">Copy to hotbar</li>
   </ul>
 </widget-contextmenu>
 
 <widget-contextmenu id="build-contextmenu" style="display: none;">
   <ul slot="menu" id="build-contextmenu-menu">
+    <li id="copyBuildToTilesetLi" onclick="copyBuildToTileset()">Copy to tileset</li>
     <li onclick="copyBuildToHotbar();">Copy to hotbar</li>
     <li onclick="copyBuildToInventory();">Copy to inventory</li>
   </ul>
@@ -1065,6 +1092,7 @@
 
 <widget-contextmenu id="hotbar-contextmenu" style="display: none; z-index: 10;">
   <ul slot="menu" id="hotbar-contextmenu-menu">
+    <li id="copyHotbarSlotToTilesetLi" onclick="copyHotbarSlotToTileset();">Copy to tileset</li>
     <li onclick="copyHotbarSlotToInventory();">Copy to inventory</li>
     <li onclick="copyHereHotbarSlot();">Copy here</li>
     <li onclick="editHotbarSlot();">Edit</li>

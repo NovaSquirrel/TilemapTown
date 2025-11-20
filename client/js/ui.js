@@ -1279,7 +1279,7 @@ function deleteItem(id) {
 	if(item == undefined)
 		item = {name: "?"};
 	if (
-		confirm(`Really delete ${item.name} with ID ${item.id}?${item.type === 'image' ? '\nIf you do, any tiles linked to this image will lose their appearance.': ''}`)
+		confirm(`Really delete ${item.name} with ID ${item.id}?${(item.type === 'image'||item.type === 'tileset') ? ('\nIf you do, any tiles linked to this '+(item.type === 'image'?'image':'tileset')+' will lose their appearance.'): ''}`)
 	) {
 		SendCmd("BAG", { delete: { id: id } });
 	}
@@ -1358,6 +1358,16 @@ function moveBottomMapObj() {
 	stack.unshift(item);
 	finishMapObjMenuChange();
 }
+
+function copyTurfToTileset() {
+	let tile;
+	if(withinCurrentMap(turfContextMenuX, turfContextMenuY)) {
+		tile = MyMap.Tiles[turfContextMenuX][turfContextMenuY];
+	} else {
+		return;
+	}
+	addTileToActiveTilesetItem(tile);
+}
 function copyTurfToHotbar() {
 	let tile;
 	if(withinCurrentMap(turfContextMenuX, turfContextMenuY)) {
@@ -1366,6 +1376,11 @@ function copyTurfToHotbar() {
 		return;
 	}
 	addTileToHotbar(tile);
+}
+
+function copyMapObjToTileset() {
+	let stack = getStackForMapObjMenu();
+	addTileToActiveTilesetItem(stack[mapObjContextMenuIndex]);
 }
 function copyMapObjToHotbar() {
 	let stack = getStackForMapObjMenu();
@@ -1386,6 +1401,7 @@ function openMapObjContextMenu(map_x, map_y, index, x, y) {
 	menu.style.left = (x-CONTEXT_MENU_OPEN_OFFSET) + "px";
 	menu.style.top = (y-CONTEXT_MENU_OPEN_OFFSET) + "px";
 	menu.style.display = "block";
+	showCopyToTilesetLiIfNeeded("copyMapObjToTilesetLi");
 }
 
 let turfContextMenuX, turfContextMenuY;
@@ -1396,6 +1412,7 @@ function openTurfContextMenu(map_x, map_y, x, y) {
 	menu.style.left = (x-CONTEXT_MENU_OPEN_OFFSET) + "px";
 	menu.style.top = (y-CONTEXT_MENU_OPEN_OFFSET) + "px";
 	menu.style.display = "block";	
+	showCopyToTilesetLiIfNeeded("copyItemToTilesetLi");
 }
 
 let contextMenuItem = 0;
@@ -1405,11 +1422,14 @@ function openItemContextMenu(id, x, y) {
 	viewProfileLi.style.display = (item?.in_user_list) ? "block" : "none";
 
 	let drop = document.querySelector('#droptakeitem');
-	copyItemToHotbarLi.style.display = "none";
+	document.getElementById("copyItemToHotbarLi").style.display = "none";
+	document.getElementById("copyItemToTilesetLi").style.display = "none";
 	if (id in DBInventory) {
 		drop.innerText = "Drop";
-	if(DBInventory[id].type == "map_tile")
-		copyItemToHotbarLi.style.display = "block";
+		if(DBInventory[id].type == "map_tile") {
+			document.getElementById("copyItemToHotbarLi").style.display = "block";
+			showCopyToTilesetLiIfNeeded("copyItemToTilesetLi");
+		}
 	} else {
 		drop.innerText = "Take";
 	}
@@ -1455,12 +1475,65 @@ function updateInventoryUL() {
 	ul.appendChild(newitem);
 }
 
-function viewTileset(Item) {
-	let tileset = document.getElementById('tileset');
-	toggleDisplay(tileset);
+function addTileToActiveTilesetItem(tile) {
+	if (!activeTilesetItem)
+		return;
+	let item = DBInventory[activeTilesetItem.id];
+	if (!item)
+		return;
 
-	let tileset_title = document.getElementById('tileset-title');
-	tileset_title.innerText = "Tileset: " + Item.name;
+	if (activeTilesetItemIsTileset) {
+		let data = item?.data ?? {};
+		item.data = data;
+		let tryIndex = 0;
+		while (tryIndex in data)
+			tryIndex++;
+		if (typeof tile === "string")
+			tile = AtomFromName(tile);
+		data[tryIndex] = tile;
+
+		SendCmd("BAG", { update: {id: activeTilesetItem.id, data} });
+	} else {
+		let data = item?.data?.data ?? [];
+		item.data.data = data;
+		data.push(tile);
+
+		// Sort by name
+		data.sort(function (a, b) {
+			let atomA = AtomFromName(a);
+			let atomB = AtomFromName(b);
+			return atomA.name.localeCompare(atomB.name);
+		});
+
+		SendCmd("BAG", { update: {id: activeTilesetItem.id, data: {"type": "map_tile_list", "type_version": "0.0.1", "client_name": CLIENT_NAME, data} }});
+	}
+	refreshTilesetList();
+}
+
+let activeTilesetItemIsTileset = false;
+let activeTilesetItem = null;
+function viewTileset(Item) {
+	activeTilesetItem = Item;
+	activeTilesetItemIsTileset = true;
+	let tileset = document.getElementById('tileset');
+	if (toggleDisplay(tileset)) {
+
+		let tileset_title = document.getElementById('tileset-title');
+		tileset_title.innerText = "Tileset definition: " + Item.name;
+		refreshTilesetList();
+	}
+}
+
+function viewMapTileList(Item) {
+	activeTilesetItem = Item;
+	activeTilesetItemIsTileset = false;
+	let tileset = document.getElementById('tileset');
+	if (toggleDisplay(tileset)) {
+
+		let tileset_title = document.getElementById('tileset-title');
+		tileset_title.innerText = "Map tile list: " + Item.name;
+		refreshTilesetList();
+	}
 }
 
 let commandListItem = null;
@@ -1537,6 +1610,175 @@ function refreshCommandList() {
 	}
 }
 
+let tilesetContextMenuItem = null;
+function refreshTilesetList() {
+	let searchValue = document.getElementById("tileset_search").value.toLowerCase();
+
+	let ul = document.getElementById("tileset_ul");
+	while (ul.firstChild) {
+		ul.removeChild(ul.firstChild);
+	}
+
+	if (!activeTilesetItem)
+		return;
+	let item = DBInventory[activeTilesetItem.id];
+	if (!item)
+		return;
+
+	if (activeTilesetItemIsTileset) {
+		let data = item?.data ?? {};
+
+		// Sort by name
+		let sortedKeys = Object.keys(data);
+		sortedKeys.sort(function (a, b) {
+			let atomA = AtomFromName(data[a]);
+			let atomB = AtomFromName(data[b]);
+			return atomA.name.localeCompare(atomB.name);
+		});
+
+		for (let key of sortedKeys) {
+			let tile = data[key];
+			let attributes = CloneAtom(AtomFromName(tile));
+			if (searchValue.length && !attributes.name.toLowerCase().includes(searchValue))
+				continue;
+			attributes.id = key;
+
+			let li = itemCard(attributes);
+			li.addEventListener('click', function (e) {
+				let name = activeTilesetItem.id + ":" + key;
+				if(buildTool == BUILD_TOOL_SELECT) {
+					useItem({type: 'map_tile', data: name});
+				} else if(buildTool == BUILD_TOOL_DRAW) {
+					unselectDrawToolTile();
+					tileDataForDraw = name;
+				}
+			});
+			li.addEventListener('contextmenu', function (e) {
+				tilesetContextMenuItem = key;
+				let menu = document.querySelector('#tileset-contextmenu');
+				menu.style.left = (e.clientX-CONTEXT_MENU_OPEN_OFFSET) + "px";
+				menu.style.top = (e.clientY-CONTEXT_MENU_OPEN_OFFSET) + "px";
+				menu.style.display = "block";
+				document.getElementById('changeTilesetItemIDLi').style.display = "block";
+				e.preventDefault();
+			});
+			ul.appendChild(li);
+		}
+	} else {
+		let data = item?.data?.data ?? [];
+		for (let index in data) {
+			let tile = data[index];
+			let attributes = AtomFromName(tile);
+			if (searchValue.length && !attributes.name.toLowerCase().includes(searchValue))
+				continue;
+
+			let li = itemCard(attributes);
+			li.addEventListener('click', function (e) {
+				if(buildTool == BUILD_TOOL_SELECT) {
+					useItem({type: 'map_tile', data: tile});
+				} else if(buildTool == BUILD_TOOL_DRAW) {
+					unselectDrawToolTile();
+					tileDataForDraw = tile;
+				}
+			});
+			li.addEventListener('contextmenu', function (e) {
+				tilesetContextMenuItem = index;
+				let menu = document.querySelector('#tileset-contextmenu');
+				menu.style.left = (e.clientX-CONTEXT_MENU_OPEN_OFFSET) + "px";
+				menu.style.top = (e.clientY-CONTEXT_MENU_OPEN_OFFSET) + "px";
+				menu.style.display = "block";
+				document.getElementById('changeTilesetItemIDLi').style.display = "none";
+				e.preventDefault();
+			});
+			ul.appendChild(li);
+		}
+	}
+}
+
+function showCopyToTilesetLiIfNeeded(id) {
+	let e = document.getElementById(id);
+	e.style.display = document.getElementById("tileset").style.display;
+	e.innerText = `Copy to ${activeTilesetItemIsTileset ? 'tileset definition' : 'map tile list'}`;
+}
+
+function getActiveTilesetItem() {
+	if (!activeTilesetItem)
+		return null;
+	let item = DBInventory[activeTilesetItem.id];
+	return item;
+}
+function getActiveTilesetData() {
+	let item = getActiveTilesetItem();
+	if (!item) return null;
+	if (item.type === "client_data") {
+		return item?.data?.data;
+	} else if(item.type === "tileset") {
+		return item?.data;
+	}
+}
+function editTilesetItem() {
+	let data = getActiveTilesetData();
+	if (!data) return;
+	let tile = data[tilesetContextMenuItem];
+	if (!tile) return;
+
+	editItemID = activeTilesetItem.id;
+	let atom = AtomFromName(tile);
+	editItemShared({ "type": "tileset_edit", "name": atom.name, "desc": "", "data": atom });
+}
+
+function cloneTilesetItem() {
+	let data = getActiveTilesetData();
+	if (!data) return;
+	let tile = data[tilesetContextMenuItem];
+	if (!tile) return;
+	addTileToActiveTilesetItem(tile);
+}
+
+function copyTilesetItemToHotbar() {
+	let data = getActiveTilesetData();
+	if (!data) return;
+	let tile = data[tilesetContextMenuItem];
+	if (!tile) return;
+	addTileToHotbar(tile);
+}
+
+function changeTilesetItemID() {
+	let item = getActiveTilesetItem();
+	if (!item) return;
+
+	if(item.type === "tileset") {
+		let newID = prompt("Enter a new ID for this tile.\nNote: If this tile has been placed onto any maps, changing the ID will break the reference.");
+		if (!newID) return;
+		newID = newID.trim();
+		let item_data = item?.data ?? {};
+
+		let tile_data = item_data[tilesetContextMenuItem];
+		delete item_data[tilesetContextMenuItem];
+		item_data[newID] = tile_data;
+
+		SendCmd("BAG", { update: {id: activeTilesetItem.id, data: item_data} });
+		refreshTilesetList();
+	}
+}
+
+function deleteTilesetItem() {
+	let item = getActiveTilesetItem();
+	if (!item) return;
+
+	if(!confirm(`Really delete ${item.name}?`)) return;
+
+	if (item.type === "client_data") {
+		let item_data = item?.data?.data ?? [];
+		item_data = item_data.splice(tilesetContextMenuItem, 1);
+		SendCmd("BAG", { update: {id: activeTilesetItem.id, data: {"type": "map_tile_list", "type_version": "0.0.1", "client_name": CLIENT_NAME, data: item_data} }});
+	} else if(item.type === "tileset") {
+		let item_data = item?.data ?? {};
+		delete item_data[tilesetContextMenuItem];
+		SendCmd("BAG", { update: {id: activeTilesetItem.id, data: item_data} });
+	}
+	refreshTilesetList();
+}
 
 ///////////////////////////////////////////////////////////
 // Item editing
@@ -1559,6 +1801,7 @@ function editItemShared(item) {
 	document.getElementById('edittiletext').style.display = "none";
 	document.getElementById('edittileimage').style.display = "none";
 	document.getElementById('edittilegadget').style.display = "none";
+	document.getElementById('edittiletileset').style.display = "none";
 	document.getElementById('edittilecommandlist').style.display = "none";
 	document.getElementById('edittilename').value = item.name;
 	if(editTypeIsDirectEdit(item.type)) {
@@ -1583,6 +1826,10 @@ function editItemShared(item) {
 			document.getElementById('edittileimage').style.display = "block";
 			document.getElementById('edittileurl').value = item.data;
 			break;
+		case "tileset":
+			document.getElementById('edittiletileset').style.display = "block";
+			document.getElementById('edittiletileset_json').value = JSON.stringify(item.data ?? {}, null, 2);
+			break;
 
 		case "generic":
 		case "gadget":
@@ -1590,6 +1837,8 @@ function editItemShared(item) {
 		case "map_tile_mapobj_edit":
 		case "map_tile_turf_edit":
 		case "map_tile":
+		case "tileset_new":
+		case "tileset_edit":
 			if (item.type === "gadget") {
 				let traits = item.data;
 				document.getElementById('gadgetTypeScript').checked = false;
@@ -1688,7 +1937,7 @@ function editItemShared(item) {
 				changeGadgetPreset();
 			}
 
-			if (item.type == "map_tile" || item.type == "map_tile_hotbar" || item.type == "map_tile_mapobj_edit" || item.type == "map_tile_turf_edit") {
+			if (item.type === "map_tile" || item.type == "map_tile_hotbar" || item.type === "map_tile_mapobj_edit" || item.type === "map_tile_turf_edit" || item.type === "tileset_new" || item.type === "tileset_edit") {
 				document.getElementById('edittileautotileoptions').style.display = "block";
 				document.getElementById('edittileanimationoptions').style.display = "block";
 				itemobj = AtomFromName(item.data);
@@ -1812,6 +2061,9 @@ function editItemShared(item) {
 					addField("command_ne", "ne/");
 				}
 				document.getElementById('edittilecommandlist_text').value = text;
+			} else if (item?.data?.type === "map_tile_list") {
+				document.getElementById('edittiletileset').style.display = "block";
+				document.getElementById('edittiletileset_json').value = JSON.stringify(item?.data?.data ?? [], null, 2);
 			}
 			break;
 	}
@@ -1852,7 +2104,7 @@ function editItem(key) {
 }
 
 function editTypeIsDirectEdit(type) {
-	return type == "map_tile_hotbar" || type == "map_tile_mapobj_edit" || type == "map_tile_turf_edit";
+	return type === "map_tile_hotbar" || type === "map_tile_mapobj_edit" || type === "map_tile_turf_edit" || type === "tileset_edit" || type === "tileset_new";
 }
 
 function editItemApply() {
@@ -1879,9 +2131,21 @@ function editItemApply() {
 			SendCmd("BAG", { update: updates });
 			break;
 
+		case "tileset":
+			try {
+				updates.data = JSON.parse(document.getElementById('edittiletileset_json').value);
+			} catch(error) {
+				alert(error);
+				return;
+			}
+			SendCmd("BAG", { update: updates });
+			break;
+
 		case "map_tile_turf_edit":
 		case "map_tile_mapobj_edit":
 		case "map_tile_hotbar":
+		case "tileset_new":
+		case "tileset_edit":
 		case "map_tile":
 		case "generic":
 		case "gadget":
@@ -1966,6 +2230,32 @@ function editItemApply() {
 					if(MouseActive && MouseStartX == turfContextMenuX && MouseStartY == turfContextMenuY && MouseStartX == MouseEndX && MouseStartY == MouseEndY) {
 						updateSelectedTurfUL(MouseStartX, MouseStartY);
 					}
+				} else if(editItemType === "tileset_edit") {
+					if (!editItemID)
+						return;
+					let item = DBInventory[editItemID];
+					if (!item)
+						return;
+					if (item.type === "client_data") {
+						let item_data = item?.data?.data ?? [];
+						item_data[tilesetContextMenuItem] = data;
+
+						// Sort by name
+						item_data.sort(function (a, b) {
+							let atomA = AtomFromName(a);
+							let atomB = AtomFromName(b);
+							return atomA.name.localeCompare(atomB.name);
+						});
+
+						SendCmd("BAG", { update: {id: activeTilesetItem.id, data: {"type": "map_tile_list", "type_version": "0.0.1", "client_name": CLIENT_NAME, data: item_data} }});
+					} else if(item.type === "tileset") {
+						let item_data = item?.data ?? {};
+						item_data[tilesetContextMenuItem] = data;
+						SendCmd("BAG", { update: {id: activeTilesetItem.id, data: item_data} });
+					}
+					refreshTilesetList();
+				} else if(editItemType === "tileset_new") {
+					addTileToActiveTilesetItem(data);
 				}
 			}
 
@@ -2096,6 +2386,15 @@ function editItemApply() {
 					commandListItem.data = edited_client_data;
 					refreshCommandList();
 				}
+			} else if (edited_client_data.type === "map_tile_list") {
+				try {
+					updates.data = {"type": "map_tile_list", "type_version": "0.0.1", "client_name": CLIENT_NAME, 
+						"data": JSON.parse(document.getElementById('edittiletileset_json').value)};
+				} catch(error) {
+					alert(error);
+					return;
+				}
+				SendCmd("BAG", { update: updates }); // Just update name and description
 			}
 			break;
 
@@ -2137,6 +2436,9 @@ function newItemCreate(type) {
 			{"name": "sad",     "command": `userparticle ${sampleEmote2Pic[0]} ${sampleEmote2Pic[1]} ${sampleEmote2Pic[2]} offset=0,-16`},
 			{"name": "explode", "command": "userparticle 0 13 53 anim_frames=7 anim_loops=0 hide_me"},
 		]};
+	} else if (type === "map_tile_list") {
+		params.create.type = "client_data";
+		params.create.data = {"type": "map_tile_list", "type_version": "0.0.1", "client_name": CLIENT_NAME, "data": []};
 	}
 	SendCmd("BAG", params);
 	newItemCancel();
@@ -3048,15 +3350,27 @@ function drawHotbar() {
 	}
 }
 
+function copyBuildToTileset() {
+	addTileToActiveTilesetItem(rightClickedBuildTile);
+}
+
 function copyBuildToHotbar() {
 	addTileToHotbar(rightClickedBuildTile);
 }
 
+function copyItemToTileset(id) {
+	if(!(id in DBInventory))
+		return;
+	let item = DBInventory[id];
+	if(item.type !== 'map_tile')
+		return;
+	addTileToActiveTilesetItem(item.data);
+}
 function copyItemToHotbar(id) {
 	if(!(id in DBInventory))
 		return;
 	let item = DBInventory[id];
-	if(item.type != 'map_tile')
+	if(item.type !== 'map_tile')
 		return;
 	addTileToHotbar(item.data);
 }
@@ -3101,6 +3415,14 @@ function unselectDrawToolTile() {
 		hotbarSelectIndex = null;
 		drawHotbar();
 	}
+}
+
+function copyHotbarSlotToTileset() {
+	if (rightClickedHotbarIndex === null)
+		return;
+	if (hotbarData[rightClickedHotbarIndex] === null)
+		return;
+	addTileToActiveTilesetItem(hotbarData[rightClickedHotbarIndex]);
 }
 
 function copyHotbarSlotToInventory() {
@@ -3245,6 +3567,10 @@ function apply_default_pic_for_type(item) {
 		case "client_data":
 			if (item?.data?.type === "command_list" && item.pic == null)
 				item.pic = ["#", 4, 1];
+			else if (item?.data?.type === "map_tile_list" && item.pic == null)
+				item.pic = ["#", 4, 2];
+			else if (item.pic == null)
+				item.pic = ["#", 7, 2];
 			break
 	}
 }
@@ -4001,6 +4327,7 @@ function initBuild() {
 		menu.style.top = (evt.clientY-CONTEXT_MENU_OPEN_OFFSET) + "px";
 		menu.style.display = "block";
 		evt.preventDefault();
+		showCopyToTilesetLiIfNeeded("copyBuildToTilesetLi");
 	}, false);
 }
 
@@ -4034,6 +4361,11 @@ function initWorld() {
 		if (event.key === "Enter")
 			refreshCommandList();
 	});
+	document.getElementById("tileset_search").addEventListener("keydown", function(event) {
+		if (event.key === "Enter")
+			refreshTilesetList();
+	});
+
 	for (let i of ["loginuser", "loginpass", "loginserver", "loginnick", "loginMapID"])
 		document.getElementById(i).addEventListener("keydown", function(event) {
 			if (event.key === "Enter" && !document.getElementById("connectButton").disabled)
