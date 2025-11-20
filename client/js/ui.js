@@ -1736,11 +1736,15 @@ function cloneTilesetItem() {
 }
 
 function copyTilesetItemToHotbar() {
-	let data = getActiveTilesetData();
-	if (!data) return;
-	let tile = data[tilesetContextMenuItem];
-	if (!tile) return;
-	addTileToHotbar(tile);
+	if (activeTilesetItemIsTileset) {
+		addTileToHotbar(activeTilesetItem.id+":"+tilesetContextMenuItem);
+	} else {
+		let data = getActiveTilesetData();
+		if (!data) return;
+		let tile = data[tilesetContextMenuItem];
+		if (!tile) return;
+		addTileToHotbar(tile);
+	}
 }
 
 function changeTilesetItemID() {
