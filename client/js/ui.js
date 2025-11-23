@@ -3104,7 +3104,7 @@ function logMessage(Message, Class, Params) {
 		if (Params.timestamp) {
 			let date = new Date(Date.parse(Params.timestamp));
 			let now = new Date();
-			if (date.getMonth() !== now.getMonth() || date.getDay() !== now.getDay())
+			if (date.toLocaleDateString() !== now.toLocaleDateString())
 				timestampText = date.toLocaleDateString() + " " + timeFormat.format(date);
 			else
 				timestampText = timeFormat.format(date);

@@ -399,7 +399,7 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 						if not acknowledge_only:
 							if u.is_client() and u.db_id and u.connection_attr('can_acknowledge'):
 								queue_offline_private_message(client, u.db_id, text)
-								recipient_params['ack_req'] = datetime.datetime.now().isoformat()
+								recipient_params['ack_req'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
 							u.send("PRI", recipient_params)
 				else:
 					respond(context, 'That entity isn\'t a user', error=True)
