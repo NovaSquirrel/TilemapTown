@@ -354,7 +354,7 @@ def queue_offline_private_message(client, recipient_db_id, text):
 	queue = OfflineMessages[recipient_db_id][client.db_id]
 	if len(queue) >= 10:
 		return False
-	queue.append((text, datetime.datetime.now(), client.name, client.username_or_id()))
+	queue.append((text, datetime.datetime.now(datetime.timezone.utc), client.name, client.username_or_id()))
 	return True
 
 #respond(context, 'You have too many messages queued up for \"%s\" already' % recipient_username, error=True)
@@ -2008,7 +2008,7 @@ def fn_ipban(map, client, context, arg):
 		return
 
 	reason = params[1]
-	now = datetime.datetime.now()
+	now = datetime.datetime.now(datetime.timezone.utc)
 	expiry = params[2]
 	expiry_value = expiry[:-1]
 	expiry_unit = expiry[-1:]
@@ -2722,7 +2722,7 @@ def fn_joingroup(map, client, context, arg):
 	if groupid.isdecimal() and client.db_id and sql_exists('SELECT * FROM Entity WHERE data=? AND type=?', (password, entity_type['group'])):
 		if not sql_exists('SELECT member_id from Group_Member WHERE member_id=? AND group_id=?', (client.db_id, int(groupid))):
 			c = Database.cursor()
-			c.execute("INSERT INTO Group_Member (group_id, member_id, flags, accepted_at) VALUES (?, ?, ?, ?)", (int(groupid), client.db_id, 0, datetime.datetime.now(),))
+			c.execute("INSERT INTO Group_Member (group_id, member_id, flags, accepted_at) VALUES (?, ?, ?, ?)", (int(groupid), client.db_id, 0, datetime.datetime.now(datetime.timezone.utc),))
 			respond(context, 'Joined group %s' % groupid)
 		else:
 			respond(context, 'Already in group %s' % groupid, error=True)

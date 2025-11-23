@@ -485,7 +485,7 @@ def fn_BAG(connection, map, client, arg, context):
 			c.execute('SELECT created_at FROM Entity WHERE id=?', (clone_me.db_id,))
 			result = c.fetchone()
 			if result != None:
-				c.execute('UPDATE Entity SET created_at=?, acquired_at=? WHERE id=?', (result[0], datetime.datetime.now(), new_item.db_id))
+				c.execute('UPDATE Entity SET created_at=?, acquired_at=? WHERE id=?', (result[0], datetime.datetime.now(datetime.timezone.utc), new_item.db_id))
 
 		arg["clone"]["new_id"] = new_item.protocol_id()
 		client.send("BAG", {'clone': arg['clone']}) # Acknowledge
@@ -630,7 +630,7 @@ def fn_EML(connection, map, client, arg, context):
 
 			# Let the client know who sent it, since the 'send' argument will get passed along directly
 			arg["send"]["from"] = client.username
-			arg["send"]["timestamp"] = datetime.datetime.now().isoformat()
+			arg["send"]["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
 			failed_count = 0
 
@@ -662,7 +662,7 @@ def fn_EML(connection, map, client, arg, context):
 							failed_count += 1
 							continue
 
-				c.execute("INSERT INTO Mail (owner_id, sender_id, recipients, subject, contents, created_at, flags) VALUES (?, ?, ?, ?, ?, ?, ?)", (id, client.db_id, recipient_string, arg['send']['subject'], arg['send']['contents'], datetime.datetime.now(), 0))
+				c.execute("INSERT INTO Mail (owner_id, sender_id, recipients, subject, contents, created_at, flags) VALUES (?, ?, ?, ?, ?, ?, ?)", (id, client.db_id, recipient_string, arg['send']['subject'], arg['send']['contents'], datetime.datetime.now(datetime.timezone.utc), 0))
 
 				# Is that person online? tell them!
 				if recipient_connection:
@@ -670,7 +670,7 @@ def fn_EML(connection, map, client, arg, context):
 					recipient_connection.send("EML", {'receive': arg['send']})
 
 			# Give the sender a copy of the mail that was sent, and tell them about it
-			c.execute("INSERT INTO Mail (owner_id, sender_id, recipients, subject, contents, created_at, flags) VALUES (?, ?, ?, ?, ?, ?, ?)", (client.db_id, client.db_id, recipient_string, arg['send']['subject'], arg['send']['contents'], datetime.datetime.now(), 2))
+			c.execute("INSERT INTO Mail (owner_id, sender_id, recipients, subject, contents, created_at, flags) VALUES (?, ?, ?, ?, ?, ?, ?)", (client.db_id, client.db_id, recipient_string, arg['send']['subject'], arg['send']['contents'], datetime.datetime.now(datetime.timezone.utc), 2))
 			arg['send']['id'] = c.execute('SELECT last_insert_rowid()').fetchone()[0]
 			client.send("EML", {'sent': arg["send"] }) # Tell the sender their mail sent
 
@@ -1487,7 +1487,7 @@ def ext_set_user_profile(connection, map, client, context, arg, name):
 		home_location = home[0] if len(home) >= 1 else None
 		home_position = home[1:] if len(home) == 3 else None
 	flags = int((arg.get('hide_birthday', data['hide_birthday']) * 1) + (arg.get('hide_email', data['hide_email']) * 2))
-	values = (datetime.datetime.now(), fallback('name', str), fallback('text', str), fallback('pronouns', str), fallback('picture_url', str), fallback('birthday', str), home_location, dumps_if_not_empty(home_position), fallback('interests', str), fallback('looking_for', str), fallback('email', str), fallback('website', str), dumps_if_not_empty(fallback('contact', list)), dumps_if_not_empty(fallback('fields', list)), flags, connection.db_id)
+	values = (datetime.datetime.now(datetime.timezone.utc), fallback('name', str), fallback('text', str), fallback('pronouns', str), fallback('picture_url', str), fallback('birthday', str), home_location, dumps_if_not_empty(home_position), fallback('interests', str), fallback('looking_for', str), fallback('email', str), fallback('website', str), dumps_if_not_empty(fallback('contact', list)), dumps_if_not_empty(fallback('fields', list)), flags, connection.db_id)
 	c.execute("UPDATE User_Profile SET updated_at=?, name=?, text=?, pronouns=?, picture_url=?, birthday=?, home_location=?, home_position=?, interests=?, looking_for=?, email=?, website=?, contact=?, extra_fields=?, flags=? WHERE user_id=?", values)
 	connection.send("EXT", {name: True})
 

@@ -1015,7 +1015,7 @@ class Entity(PermissionsMixin, object):
 		c = Database.cursor()
 
 		if self.db_id == None:
-			c.execute("INSERT INTO Entity (created_at, creator_id) VALUES (?, ?)", (datetime.datetime.now(), self.creator_id))
+			c.execute("INSERT INTO Entity (created_at, creator_id) VALUES (?, ?)", (datetime.datetime.now(datetime.timezone.utc), self.creator_id))
 			self.assign_db_id(c.lastrowid)
 			if self.db_id == None:
 				return
