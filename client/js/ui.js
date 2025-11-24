@@ -135,6 +135,7 @@ let lockZoomLevel = false;
 let focusChatBarOnTabBack = false;
 let warnInvalidBBCode = true;
 let focusMapAfterChat = false;
+let safeForCommandLists = [];
 
 let FileStorageInfo = null;
 let sampleAvatarList = {};
@@ -199,6 +200,7 @@ function loadOptions() {
 		document.getElementById("warn-invalid-bbcode").value = saved_options.warn_invalid_bbcode ?? true;
 		document.getElementById("focus-map-after-chat").value = saved_options.focus_map_after_chat ?? false;
 		document.getElementById("music-volume").value = (saved_options.audio_map_music_volume ?? 1) * 100;
+		document.getElementById("safe-for-command-lists").value = (saved_options.safe_for_command_lists ?? []).join();
 	}
 }
 
@@ -219,6 +221,9 @@ function applyOptions() {
 	lockZoomLevel = document.getElementById("lock-zoom-level").checked;
 	warnInvalidBBCode = document.getElementById("warn-invalid-bbcode").checked;
 	focusMapAfterChat = document.getElementById("focus-map-after-chat").checked;
+	safeForCommandLists = document.getElementById("safe-for-command-lists").value.split(",");
+	for (let i in safeForCommandLists)
+		safeForCommandLists[i] = safeForCommandLists[i].trim();
 
 	let mapMusicPreviouslyEnabled = mapMusicEnabled;
 	updateMapMusicVolume();
@@ -246,6 +251,8 @@ function applyOptions() {
 		"minutes_until_disconnect": minutesUntilDisconnect,
 		"warn_invalid_bbcode": warnInvalidBBCode,
 		"focus_map_after_chat": focusMapAfterChat,
+		"safe_for_command_lists": safeForCommandLists,
+		"version": 1,
 	};
 	localStorage.setItem("options", JSON.stringify(saved_options));
 	backdropRerenderAll = true;
@@ -1599,7 +1606,7 @@ function refreshCommandList() {
 					commandValue = [commandValue];
 				}
 				for (let subCommand of commandValue) {
-					if (subCommand.toLowerCase().startsWith("usp ") || subCommand.toLowerCase().startsWith("userparticle ") || confirm('Run command "' + subCommand + '"?')) {
+					if (subCommand.toLowerCase().startsWith("usp ") || subCommand.toLowerCase().startsWith("userparticle ") || safeForCommandLists.includes(subCommand.toLowerCase().split(" ")[0]) || safeForCommandLists.includes(commandListItem.id.toString()) || confirm('Run command "' + subCommand + '"?')) {
 						if (runLocalCommand("/"+subCommand));
 						else sendChatCommand(subCommand);
 					}
