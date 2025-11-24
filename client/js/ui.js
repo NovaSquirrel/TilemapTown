@@ -223,7 +223,7 @@ function applyOptions() {
 	focusMapAfterChat = document.getElementById("focus-map-after-chat").checked;
 	safeForCommandLists = document.getElementById("safe-for-command-lists").value.split(",");
 	for (let i in safeForCommandLists)
-		safeForCommandLists[i] = safeForCommandLists[i].trim();
+		safeForCommandLists[i] = safeForCommandLists[i].trim().toLowerCase();
 
 	let mapMusicPreviouslyEnabled = mapMusicEnabled;
 	updateMapMusicVolume();
