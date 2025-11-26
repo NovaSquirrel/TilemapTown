@@ -1923,8 +1923,8 @@
 				"name": "table",
 				"pic": [
 					-5,
-					7,
-					3
+					9,
+					4
 				],
 				"autotile_layout": 9,
 				"obj": true,
