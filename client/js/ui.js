@@ -1419,7 +1419,7 @@ function openTurfContextMenu(map_x, map_y, x, y) {
 	menu.style.left = (x-CONTEXT_MENU_OPEN_OFFSET) + "px";
 	menu.style.top = (y-CONTEXT_MENU_OPEN_OFFSET) + "px";
 	menu.style.display = "block";	
-	showCopyToTilesetLiIfNeeded("copyItemToTilesetLi");
+	showCopyToTilesetLiIfNeeded("copyTurfToTilesetLi");
 }
 
 let contextMenuItem = 0;
