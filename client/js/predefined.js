@@ -1,4 +1,4 @@
-let GlobalTiles = {
+GlobalTiles = {
 	"grass": {
 		"name": "grass",
 		"pic": [
@@ -71,51 +71,6 @@ let GlobalTiles = {
 		],
 		"density": false
 	},
-	"water": {
-		"name": "water",
-		"pic": [
-			0,
-			9,
-			28
-		],
-		"density": true,
-		"type": "water",
-		"anim_frames": 2,
-		"anim_speed": 8
-	},
-	"water3": {
-		"name": "water",
-		"pic": [
-			0,
-			16,
-			30
-		],
-		"density": true,
-		"type": "water"
-	},
-	"water2": {
-		"name": "water",
-		"pic": [
-			0,
-			14,
-			31
-		],
-		"density": true,
-		"type": "water"
-	},
-	"waterfall": {
-		"name": "waterfall",
-		"pic": [
-			0,
-			11,
-			28
-		],
-		"anim_frames": 4,
-		"anim_speed": 2,
-		"density": false,
-		"type": "escalator",
-		"dir": 2
-	},
 	"brownsand": {
 		"name": "brown sand",
 		"pic": [
@@ -150,6 +105,115 @@ let GlobalTiles = {
 			26
 		]
 	},
+	"water": {
+		"name": "water",
+		"pic": [
+			0,
+			9,
+			28
+		],
+		"density": true,
+		"type": "water",
+		"anim_frames": 2,
+		"anim_speed": 8
+	},
+	"water3": {
+		"name": "water",
+		"pic": [
+			0,
+			16,
+			30
+		],
+		"density": true,
+		"type": "water"
+	},
+	"water2": {
+		"name": "water",
+		"pic": [
+			0,
+			14,
+			31
+		],
+		"density": true,
+		"type": "water"
+	},
+	"ice": {
+		"name": "ice",
+		"pic": [
+			0,
+			25,
+			26
+		],
+		"density": false,
+		"type": "ice"
+	},
+	"waterfall": {
+		"name": "waterfall",
+		"pic": [
+			0,
+			11,
+			28
+		],
+		"anim_frames": 4,
+		"anim_speed": 2,
+		"density": false,
+		"type": "escalator",
+		"dir": 2
+	},
+	"waterfall2": {
+		"name": "waterfall",
+		"pic": [
+			0,
+			11,
+			29
+		],
+		"anim_frames": 4,
+		"anim_speed": 2,
+		"density": false,
+		"type": "escalator",
+		"dir": 2
+	},
+	"water4": {
+		"name": "water",
+		"pic": [
+			0,
+			21,
+			28
+		],
+		"menu_pic": [0, 21, 29],
+		"obj": true,
+		"autotile_layout": 14,
+		"anim_mode": 2,
+		"anim_frames": 3,
+		"anim_speed": 8,
+		"density": true,
+		"type": "water"
+	},
+	"waterfall3": {
+		"name": "waterfall",
+		"pic": [
+			0,
+			11,
+			30
+		],
+		"obj": true,
+		"anim_frames": 4,
+		"anim_speed": 2,
+		"density": false,
+		"type": "escalator",
+		"dir": 2
+	},
+	"whirlpool": {
+		"name": "whirlpool",
+		"obj": true,
+		"pic": [
+			0,
+			24,
+			31
+		],
+		"anim_frames": 4,
+		"anim_speed": 2
+	},
 	"redbrickfloor": {
 		"name": "red brick floor",
 		"pic": [
@@ -167,44 +231,6 @@ let GlobalTiles = {
 			27
 		],
 		"density": false
-	},
-	"stonewall": {
-		"name": "stone wall",
-		"pic": [
-			0,
-			5,
-			30
-		],
-		"density": true
-	},
-	"xblock": {
-		"name": "x block",
-		"pic": [
-			0,
-			31,
-			47
-		],
-		"density": true
-	},
-	"ice": {
-		"name": "ice",
-		"pic": [
-			0,
-			25,
-			26
-		],
-		"density": false,
-		"type": "ice"
-	},
-	"brownbricks": {
-		"name": "brown bricks",
-		"autotile_layout": 2,
-		"pic": [
-			-5,
-			1,
-			5
-		],
-		"density": true
 	},
 	"woodfloor2": {
 		"name": "wood floor",
@@ -224,14 +250,47 @@ let GlobalTiles = {
 		],
 		"density": false
 	},
-	"woodwall": {
-		"name": "wood wall",
+	"woodfloor3": {
+		"name": "wood floor",
 		"pic": [
-			-5,
-			7,
-			1
+			0,
+			2,
+			41
 		],
-		"density": true
+		"density": false
+	},
+	"woodfloor4": {
+		"name": "wood floor",
+		"pic": [
+			0,
+			3,
+			41
+		],
+		"density": false
+	},
+	"darkfloor": {
+		"name": "dark floor",
+		"pic": [
+			0,
+			3,
+			28
+		]
+	},
+	"darkfloor2": {
+		"name": "dark floor",
+		"pic": [
+			0,
+			4,
+			28
+		]
+	},
+	"darkfloor3": {
+		"name": "dark floor",
+		"pic": [
+			0,
+			5,
+			28
+		]
 	},
 	"floor1": {
 		"name": "floor",
@@ -301,6 +360,60 @@ let GlobalTiles = {
 			9,
 			31
 		]
+	},
+	"carpet": {
+		"name": "carpet",
+		"pic": [0, 16, 57],
+		"menu_pic": [0, 15, 55],
+		"autotile_layout": 4
+	},
+	"carpet_stairs": {
+		"name": "carpet stairs",
+		"pic": [0, 16, 59],
+		"menu_pic": [0, 18, 59],
+		"autotile_layout": 7
+	},
+	"carpet2": {
+		"name": "carpet",
+		"pic": [0, 20, 57],
+		"menu_pic": [0, 19, 55],
+		"autotile_layout": 4
+	},
+	"carpet2_stairs": {
+		"name": "carpet stairs",
+		"pic": [0, 20, 59],
+		"menu_pic": [0, 22, 59],
+		"autotile_layout": 7
+	},
+	"carpet3": {
+		"name": "carpet",
+		"pic": [0, 24, 57],
+		"menu_pic": [0, 23, 55],
+		"autotile_layout": 4
+	},
+	"carpet3_stairs": {
+		"name": "carpet stairs",
+		"pic": [0, 24, 59],
+		"menu_pic": [0, 26, 59],
+		"autotile_layout": 7
+	},
+	"carpet4": {
+		"name": "carpet",
+		"pic": [0, 18, 55],
+		"menu_pic": [0, 18, 56],
+		"autotile_layout": 12
+	},
+	"carpet5": {
+		"name": "carpet",
+		"pic": [0, 22, 55],
+		"menu_pic": [0, 22, 56],
+		"autotile_layout": 12
+	},
+	"carpet6": {
+		"name": "carpet",
+		"pic": [0, 26, 55],
+		"menu_pic": [0, 26, 56],
+		"autotile_layout": 12
 	},
 	"floor9": {
 		"name": "floor",
@@ -374,21 +487,306 @@ let GlobalTiles = {
 			22
 		]
 	},
+	"lava": {
+		"name": "lava",
+		"pic": [
+			0,
+			4,
+			23
+		],
+		"density": true,
+		"obj": false,
+		"anim_frames": 2,
+		"anim_speed": 8
+	},
+	"lava2": {
+		"name": "lava",
+		"pic": [
+			0,
+			3,
+			23
+		],
+		"density": true
+	},
+	"forcedown": {
+		"name": "force",
+		"pic": [
+			0,
+			28,
+			83
+		],
+		"anim_frames": 4,
+		"anim_speed": 3,
+		"density": false,
+		"type": "escalator",
+		"dir": 2
+	},
+	"forceup": {
+		"name": "force",
+		"pic": [
+			0,
+			28,
+			82
+		],
+		"anim_frames": 4,
+		"anim_speed": 3,
+		"density": false,
+		"type": "escalator",
+		"dir": 6
+	},
+	"forceleft": {
+		"name": "force",
+		"pic": [
+			0,
+			28,
+			84
+		],
+		"anim_frames": 4,
+		"anim_speed": 3,
+		"density": false,
+		"type": "escalator",
+		"dir": 4
+	},
+	"forceright": {
+		"name": "force",
+		"pic": [
+			0,
+			28,
+			85
+		],
+		"anim_frames": 4,
+		"anim_speed": 3,
+		"density": false,
+		"type": "escalator",
+		"dir": 0
+	},
+	"conveyor2": {
+		"name": "conveyor belt",
+		"pic": [
+			0,
+			5,
+			45
+		],
+		"obj": true,
+		"autotile_layout": 2
+	},
+	"xblock": {
+		"name": "x block",
+		"pic": [
+			0,
+			31,
+			47
+		],
+		"density": true
+	},
+	"stonewall": {
+		"name": "stone wall",
+		"pic": [
+			0,
+			5,
+			30
+		],
+		"density": true
+	},
+	"brownbricks": {
+		"name": "brown bricks",
+		"autotile_layout": 2,
+		"pic": [
+			-5,
+			1,
+			5
+		],
+		"density": true
+	},
+	"woodwall": {
+		"name": "wood wall",
+		"pic": [
+			-5,
+			7,
+			1
+		],
+		"autotile_layout": 15,
+		"density": true
+	},
+	"woodwall2": {
+		"name": "wood wall",
+		"pic": [
+			0,
+			1,
+			34
+		],
+		"autotile_layout": 15,
+		"density": true
+	},
+	"woodwall3": {
+		"name": "wood wall",
+		"pic": [
+			0,
+			0,
+			34
+		],
+		"autotile_layout": 15,
+		"density": true
+	},
+	"icewall": {
+		"name": "marble wall",
+		"pic": [
+			0,
+			20,
+			33
+		],
+		"density": true,
+		"autotile_layout": 15
+	},
+	"icewall2": {
+		"name": "marble wall",
+		"pic": [
+			0,
+			24,
+			33
+		],
+		"density": true,
+		"autotile_layout": 3
+	},
 	"brickwall": {
 		"name": "brick wall",
 		"density": true,
+		"obj": true,
+		"autotile_layout": 15,
 		"pic": [
 			0,
-			16,
+			12,
 			38
 		]
 	},
 	"brickwall2": {
 		"name": "brick wall",
 		"density": true,
+		"obj": true,
+		"autotile_layout": 15,
 		"pic": [
 			0,
-			21,
+			17,
+			38
+		]
+	},
+	"colorbrickwall_1": {
+		"name": "brick wall",
+		"autotile_class": "colorbrickwall_1",
+		"density": true,
+		"obj": true,
+		"autotile_layout": 15,
+		"pic": [
+			0,
+			22,
+			38
+		]
+	},
+	"colorbrickwall_2": {
+		"name": "brick wall",
+		"autotile_class": "colorbrickwall_2",
+		"density": true,
+		"obj": true,
+		"autotile_layout": 15,
+		"pic": [
+			0,
+			23,
+			38
+		]
+	},
+	"colorbrickwall_3": {
+		"name": "brick wall",
+		"autotile_class": "colorbrickwall_3",
+		"density": true,
+		"obj": true,
+		"autotile_layout": 15,
+		"pic": [
+			0,
+			24,
+			38
+		]
+	},
+	"colorbrickwall_4": {
+		"name": "brick wall",
+		"autotile_class": "colorbrickwall_4",
+		"density": true,
+		"obj": true,
+		"autotile_layout": 15,
+		"pic": [
+			0,
+			25,
+			38
+		]
+	},
+	"colorbrickwall_5": {
+		"name": "brick wall",
+		"autotile_class": "colorbrickwall_5",
+		"density": true,
+		"obj": true,
+		"autotile_layout": 15,
+		"pic": [
+			0,
+			26,
+			38
+		]
+	},
+	"colorbrickwall_6": {
+		"name": "brick wall",
+		"autotile_class": "colorbrickwall_6",
+		"density": true,
+		"obj": true,
+		"autotile_layout": 15,
+		"pic": [
+			0,
+			27,
+			38
+		]
+	},
+	"colorbrickwall_7": {
+		"name": "brick wall",
+		"autotile_class": "colorbrickwall_7",
+		"density": true,
+		"obj": true,
+		"autotile_layout": 15,
+		"pic": [
+			0,
+			28,
+			38
+		]
+	},
+	"colorbrickwall_8": {
+		"name": "brick wall",
+		"autotile_class": "colorbrickwall_8",
+		"density": true,
+		"obj": true,
+		"autotile_layout": 15,
+		"pic": [
+			0,
+			29,
+			38
+		]
+	},
+	"colorbrickwall_9": {
+		"name": "brick wall",
+		"autotile_class": "colorbrickwall_9",
+		"density": true,
+		"obj": true,
+		"autotile_layout": 15,
+		"pic": [
+			0,
+			30,
+			38
+		]
+	},
+	"colorbrickwall_10": {
+		"name": "brick wall",
+		"autotile_class": "colorbrickwall_10",
+		"density": true,
+		"obj": true,
+		"autotile_layout": 15,
+		"pic": [
+			0,
+			31,
 			38
 		]
 	},
@@ -419,93 +817,258 @@ let GlobalTiles = {
 			28
 		]
 	},
-	"darkfloor": {
-		"name": "dark floor",
+	"redbrickwall": {
+		"name": "brick wall",
+		"pic": [
+			0,
+			27,
+			44
+		],
+		"density": true
+	},
+	"redgreenbrickwall": {
+		"name": "brick wall",
+		"pic": [
+			0,
+			30,
+			44
+		],
+		"density": true
+	},
+	"stonewall2": {
+		"name": "stone wall",
+		"pic": [
+			0,
+			8,
+			38
+		],
+		"autotile_layout": 15,
+		"density": true
+	},
+	"stonewall3": {
+		"name": "stone wall",
+		"pic": [
+			0,
+			9,
+			38
+		],
+		"autotile_layout": 15,
+		"density": true
+	},
+	"rockwall2": {
+		"name": "rock wall",
+		"pic": [
+			0,
+			2,
+			21
+		],
+		"density": true
+	},
+	"rockwall": {
+		"name": "rock wall",
+		"pic": [
+			0,
+			5,
+			21
+		],
+		"density": true
+	},
+	"rockwall_b": {
+		"name": "rock wall",
+		"pic": [
+			0,
+			5,
+			22
+		],
+		"density": true
+	},
+	"rockwall3": {
+		"name": "rock wall",
 		"pic": [
 			0,
 			3,
-			28
-		]
-	},
-	"forcedown": {
-		"name": "force",
-		"pic": [
-			0,
-			28,
-			83
-		],
-		"density": false,
-		"type": "escalator",
-		"dir": 2
-	},
-	"forceup": {
-		"name": "force",
-		"pic": [
-			0,
-			28,
-			82
-		],
-		"density": false,
-		"type": "escalator",
-		"dir": 6
-	},
-	"forceleft": {
-		"name": "force",
-		"pic": [
-			0,
-			28,
-			84
-		],
-		"density": false,
-		"type": "escalator",
-		"dir": 4
-	},
-	"forceright": {
-		"name": "force",
-		"pic": [
-			0,
-			28,
-			85
-		],
-		"density": false,
-		"type": "escalator",
-		"dir": 0
-	},
-	"bluewall": {
-		"name": "blue wall",
-		"pic": [
-			0,
-			10,
-			1
+			21
 		],
 		"density": true
 	},
-	"pinkwall": {
-		"name": "pink wall",
+	"rockwall3_b": {
+		"name": "rock wall",
 		"pic": [
 			0,
-			0,
-			1
+			3,
+			22
 		],
 		"density": true
 	},
-	"greenwall": {
-		"name": "green wall",
-		"pic": [
-			0,
-			7,
-			1
-		],
-		"density": true
-	},
-	"orangewall": {
-		"name": "orange wall",
+	"rockwall4": {
+		"name": "rock wall",
 		"pic": [
 			0,
 			4,
-			1
+			21
 		],
 		"density": true
+	},
+	"rockwall4_b": {
+		"name": "rock wall",
+		"pic": [
+			0,
+			4,
+			22
+		],
+		"density": true
+	},
+	"metalwall": {
+		"name": "metal wall",
+		"pic": [
+			0,
+			0,
+			43
+		],
+		"density": true,
+		"anim_frames": 4,
+		"anim_speed": 4,
+		"autotile_layout": 15
+	},
+	"cyber_wall": {
+		"name": "cyber wall",
+		"pic": [0, 0, 78],
+		"menu_pic": [0, 0, 79],
+		"density": true,
+		"obj": true,
+		"autotile_layout": 12
+	},
+	"glasswall": {
+		"name": "glass wall",
+		"pic": [
+			0,
+			29,
+			1
+		],
+		"autotile_layout": 15,
+		"density": true,
+		"obj": true
+	},
+	"glasswall_tint1": {
+		"name": "glass wall",
+		"pic": [
+			0,
+			21,
+			6
+		],
+		"autotile_layout": 15,
+		"density": true,
+		"obj": true
+	},
+	"glasswall_tint2": {
+		"name": "glass wall",
+		"pic": [
+			0,
+			22,
+			6
+		],
+		"autotile_layout": 15,
+		"density": true,
+		"obj": true
+	},
+	"glasswall_tint3": {
+		"name": "glass wall",
+		"pic": [
+			0,
+			23,
+			6
+		],
+		"autotile_layout": 15,
+		"density": true,
+		"obj": true
+	},
+	"glasswall_tint4": {
+		"name": "glass wall",
+		"pic": [
+			0,
+			24,
+			6
+		],
+		"autotile_layout": 15,
+		"density": true,
+		"obj": true
+	},
+	"glasswall_tint5": {
+		"name": "glass wall",
+		"pic": [
+			0,
+			25,
+			6
+		],
+		"autotile_layout": 15,
+		"density": true,
+		"obj": true
+	},
+	"glasswall_tint6": {
+		"name": "glass wall",
+		"pic": [
+			0,
+			26,
+			6
+		],
+		"autotile_layout": 15,
+		"density": true,
+		"obj": true
+	},
+	"glasswall_tint7": {
+		"name": "glass wall",
+		"pic": [
+			0,
+			27,
+			6
+		],
+		"autotile_layout": 15,
+		"density": true,
+		"obj": true
+	},
+	"glasswall_tint8": {
+		"name": "glass wall",
+		"pic": [
+			0,
+			28,
+			6
+		],
+		"autotile_layout": 15,
+		"density": true,
+		"obj": true
+	},
+	"glasswall_tint9": {
+		"name": "glass wall",
+		"pic": [
+			0,
+			29,
+			6
+		],
+		"autotile_layout": 15,
+		"density": true,
+		"obj": true
+	},
+	"glasswall_tint10": {
+		"name": "glass wall",
+		"pic": [
+			0,
+			30,
+			6
+		],
+		"autotile_layout": 15,
+		"density": true,
+		"obj": true
+	},
+	"glasswall_tint11": {
+		"name": "glass wall",
+		"pic": [
+			0,
+			31,
+			6
+		],
+		"autotile_layout": 15,
+		"density": true,
+		"obj": true
 	},
 	"skull": {
 		"name": "skull",
@@ -547,6 +1110,16 @@ let GlobalTiles = {
 		"density": true,
 		"obj": true
 	},
+	"bush4": {
+		"name": "bush",
+		"pic": [
+			0,
+			6,
+			12
+		],
+		"density": true,
+		"obj": true
+	},
 	"rocks1": {
 		"name": "mushrooms",
 		"pic": [
@@ -573,6 +1146,36 @@ let GlobalTiles = {
 			0,
 			19,
 			16
+		],
+		"density": true,
+		"obj": true
+	},
+	"rocks_extra_1": {
+		"name": "rocks",
+		"pic": [
+			0,
+			19,
+			15
+		],
+		"density": true,
+		"obj": true
+	},
+	"rocks_extra_2": {
+		"name": "rocks",
+		"pic": [
+			0,
+			20,
+			15
+		],
+		"density": true,
+		"obj": true
+	},
+	"rocks_extra_3": {
+		"name": "rocks",
+		"pic": [
+			0,
+			21,
+			15
 		],
 		"density": true,
 		"obj": true
@@ -617,6 +1220,60 @@ let GlobalTiles = {
 		"density": false,
 		"obj": true
 	},
+	"flower_red": {
+		"name": "red flower",
+		"pic": [
+			0,
+			9,
+			14
+		],
+		"obj": true
+	},
+	"flower_orange": {
+		"name": "orange flower",
+		"pic": [
+			0,
+			10,
+			14
+		],
+		"obj": true
+	},
+	"flower_yellow": {
+		"name": "yellow flower",
+		"pic": [
+			0,
+			11,
+			14
+		],
+		"obj": true
+	},
+	"flower_blue": {
+		"name": "blue flower",
+		"pic": [
+			0,
+			12,
+			14
+		],
+		"obj": true
+	},
+	"flower_magenta": {
+		"name": "magenta flower",
+		"pic": [
+			0,
+			13,
+			14
+		],
+		"obj": true
+	},
+	"flower_white": {
+		"name": "white flower",
+		"pic": [
+			0,
+			14,
+			14
+		],
+		"obj": true
+	},
 	"sign": {
 		"name": "sign",
 		"pic": [
@@ -634,6 +1291,16 @@ let GlobalTiles = {
 			0,
 			23,
 			62
+		],
+		"density": true,
+		"obj": true
+	},
+	"blueyellowsign": {
+		"name": "sign",
+		"pic": [
+			0,
+			23,
+			61
 		],
 		"density": true,
 		"obj": true
@@ -977,12 +1644,32 @@ let GlobalTiles = {
 		],
 		"closedpic": [
 			0,
-			1,
+			10,
+			65
+		],
+		"openpic": [
+			0,
+			11,
+			65
+		],
+		"density": true,
+		"obj": true
+	},
+	"chest4": {
+		"name": "chest",
+		"pic": [
+			0,
+			12,
+			65
+		],
+		"closedpic": [
+			0,
+			12,
 			20
 		],
 		"openpic": [
 			0,
-			2,
+			13,
 			20
 		],
 		"density": true,
@@ -1146,6 +1833,66 @@ let GlobalTiles = {
 		"density": true,
 		"obj": true
 	},
+	"tree4": {
+		"name": "tree",
+		"pic": [
+			0,
+			6,
+			10
+		],
+		"density": true,
+		"obj": true
+	},
+	"tree5": {
+		"name": "tree",
+		"pic": [
+			0,
+			6,
+			11
+		],
+		"density": true,
+		"obj": true
+	},
+	"tree6": {
+		"name": "tree",
+		"pic": [
+			0,
+			10,
+			12
+		],
+		"density": true,
+		"obj": true
+	},
+	"palmtree": {
+		"name": "tree",
+		"pic": [
+			0,
+			7,
+			10
+		],
+		"density": true,
+		"obj": true
+	},
+	"palmtree2": {
+		"name": "tree",
+		"pic": [
+			0,
+			7,
+			11
+		],
+		"density": true,
+		"obj": true
+	},
+	"cactus": {
+		"name": "cactus",
+		"pic": [
+			0,
+			16,
+			12
+		],
+		"density": true,
+		"obj": true
+	},
 	"treefall": {
 		"name": "tree",
 		"pic": [
@@ -1227,13 +1974,25 @@ let GlobalTiles = {
 		"density": true,
 		"obj": true
 	},
+	"stool": {
+		"name": "stool",
+		"pic": [
+			0,
+			9,
+			64
+		],
+		"density": false,
+		"obj": true
+	},
 	"table": {
 		"name": "table",
+		"autotile_class": "table0",
 		"pic": [
 			0,
 			5,
 			56
 		],
+		"autotile_layout": 13,
 		"density": true,
 		"obj": true
 	},
@@ -1287,6 +2046,46 @@ let GlobalTiles = {
 		"density": true,
 		"obj": true
 	},
+	"drawers": {
+		"name": "drawers",
+		"pic": [
+			0,
+			28,
+			56
+		],
+		"density": true,
+		"obj": true
+	},
+	"drawers2": {
+		"name": "drawers",
+		"pic": [
+			0,
+			28,
+			57
+		],
+		"density": true,
+		"obj": true
+	},
+	"books2": {
+		"name": "books",
+		"pic": [
+			0,
+			26,
+			62
+		],
+		"density": true,
+		"obj": true
+	},
+	"books2_empty": {
+		"name": "shelves",
+		"pic": [
+			0,
+			27,
+			62
+		],
+		"density": true,
+		"obj": true
+	},
 	"throne": {
 		"name": "throne",
 		"pic": [
@@ -1297,33 +2096,226 @@ let GlobalTiles = {
 		"density": false,
 		"obj": true
 	},
-	"stool": {
+	"chair_r": {
+		"name": "chair",
+		"pic": [
+			0,
+			5,
+			65
+		],
+		"obj": true
+	},
+	"chair_l": {
+		"name": "chair",
+		"pic": [
+			0,
+			6,
+			65
+		],
+		"obj": true
+	},
+	"chair_u": {
+		"name": "chair",
+		"pic": [
+			0,
+			7,
+			65
+		],
+		"obj": true
+	},
+	"chair_d": {
+		"name": "chair",
+		"pic": [
+			0,
+			8,
+			65
+		],
+		"obj": true
+	},
+	"table6": {
+		"name": "table",
+		"pic": [
+			0,
+			7,
+			59
+		],
+		"density": true,
+		"obj": true
+	},
+	"drawers3": {
+		"name": "drawers",
+		"pic": [
+			0,
+			29,
+			58
+		],
+		"density": true,
+		"obj": true
+	},
+	"books3": {
+		"name": "books",
+		"pic": [
+			0,
+			30,
+			62
+		],
+		"density": true,
+		"obj": true
+	},
+	"books3_empty": {
+		"name": "shelves",
+		"pic": [
+			0,
+			31,
+			62
+		],
+		"density": true,
+		"obj": true
+	},
+	"workbench": {
+		"name": "workbench",
+		"pic": [
+			0,
+			4,
+			60
+		],
+		"density": true,
+		"obj": true
+	},
+	"cookware": {
+		"name": "cookware",
+		"pic": [
+			0,
+			4,
+			61
+		],
+		"density": true,
+		"obj": true
+	},
+	"stool2": {
 		"name": "stool",
 		"pic": [
 			0,
 			9,
-			64
+			63
 		],
 		"density": false,
 		"obj": true
 	},
-	"rockwall": {
-		"name": "rock wall",
+	"chair_r2": {
+		"name": "chair",
 		"pic": [
 			0,
 			5,
-			21
+			62
 		],
-		"density": true
+		"obj": true
 	},
-	"rockwall2": {
-		"name": "rock wall",
+	"chair_l2": {
+		"name": "chair",
 		"pic": [
 			0,
-			2,
-			21
+			6,
+			62
 		],
+		"obj": true
+	},
+	"chair_u2": {
+		"name": "chair",
+		"pic": [
+			0,
+			7,
+			62
+		],
+		"obj": true
+	},
+	"chair_d2": {
+		"name": "chair",
+		"pic": [
+			0,
+			8,
+			62
+		],
+		"obj": true
+	},
+	"table5": {
+		"name": "table",
+		"pic": [
+			0,
+			4,
+			59
+		],
+		"density": true,
+		"obj": true
+	},
+	"darkcounter": {
+		"name": "counter",
+		"pic": [0, 30, 55],
+		"obj": true,
+		"density": true,
+		"autotile_layout": 8
+	},
+	"darkcounter_v": {
+		"name": "counter",
+		"pic": [0, 31, 55],
+		"obj": true,
+		"density": true,
+		"autotile_layout": 11
+	},
+	"stool3": {
+		"name": "stool",
+		"pic": [0, 9, 65],
+		"obj": true
+	},
+	"table7": {
+		"name": "table",
+		"autotile_class": "table7",
+		"pic": [0, 6, 56],
+		"obj": true,
+		"density": true,
+		"autotile_layout": 13
+	},
+	"table8": {
+		"name": "table",
+		"pic": [0, 7, 60],
+		"obj": true,
 		"density": true
+	},
+	"table9": {
+		"name": "table",
+		"pic": [0, 8, 60],
+		"obj": true,
+		"density": true
+	},
+	"drawers4": {
+		"name": "drawers",
+		"pic": [
+			0,
+			28,
+			58
+		],
+		"density": true,
+		"obj": true
+	},
+	"books4": {
+		"name": "books",
+		"pic": [
+			0,
+			28,
+			62
+		],
+		"density": true,
+		"obj": true
+	},
+	"books4_empty": {
+		"name": "shelves",
+		"pic": [
+			0,
+			29,
+			62
+		],
+		"density": true,
+		"obj": true
 	},
 	"statue": {
 		"name": "statue",
@@ -1374,35 +2366,27 @@ let GlobalTiles = {
 		"obj": true,
 		"over": true
 	},
-	"drawers": {
-		"name": "drawers",
+	"counter": {
+		"name": "counter",
 		"pic": [
 			0,
-			28,
-			56
+			10,
+			33
 		],
-		"density": true,
-		"obj": true
+		"autotile_layout": 3,
+		"obj": true,
+		"density": true
 	},
-	"drawers2": {
-		"name": "drawers",
+	"counter_tall": {
+		"name": "tall counter",
 		"pic": [
 			0,
-			28,
-			57
+			14,
+			33
 		],
-		"density": true,
-		"obj": true
-	},
-	"glasswall": {
-		"name": "glass wall",
-		"pic": [
-			0,
-			29,
-			1
-		],
-		"density": true,
-		"obj": true
+		"autotile_layout": 3,
+		"obj": true,
+		"density": true
 	},
 	"tombstone": {
 		"name": "tombstone",
@@ -1433,27 +2417,6 @@ let GlobalTiles = {
 		],
 		"density": false,
 		"obj": true
-	},
-	"lava": {
-		"name": "lava",
-		"pic": [
-			0,
-			4,
-			23
-		],
-		"density": true,
-		"obj": false,
-		"anim_frames": 2,
-		"anim_speed": 8
-	},
-	"lava2": {
-		"name": "lava",
-		"pic": [
-			0,
-			3,
-			23
-		],
-		"density": true
 	},
 	"door": {
 		"name": "door",
@@ -1547,137 +2510,229 @@ let GlobalTiles = {
 	},
 	"colorwall1": {
 		"name": "colored wall",
+		"autotile_class": "colorwall1",
 		"pic": [
 			0,
 			1,
 			1
 		],
+		"autotile_layout": 13,
 		"density": true
 	},
 	"colorwall2": {
 		"name": "colored wall",
+		"autotile_class": "colorwall2",
 		"pic": [
 			0,
 			3,
 			1
 		],
+		"autotile_layout": 13,
 		"density": true
 	},
 	"colorwall3": {
 		"name": "colored wall",
+		"autotile_class": "colorwall3",
 		"pic": [
 			0,
 			5,
 			1
 		],
+		"autotile_layout": 13,
 		"density": true
 	},
 	"colorwall4": {
 		"name": "colored wall",
+		"autotile_class": "colorwall4",
 		"pic": [
 			0,
 			6,
 			1
 		],
+		"autotile_layout": 13,
 		"density": true
 	},
 	"colorwall5": {
 		"name": "colored wall",
+		"autotile_class": "colorwall5",
 		"pic": [
 			0,
 			8,
 			1
 		],
+		"autotile_layout": 13,
 		"density": true
 	},
 	"colorwall6": {
 		"name": "colored wall",
+		"autotile_class": "colorwall6",
 		"pic": [
 			0,
 			9,
 			1
 		],
+		"autotile_layout": 13,
 		"density": true
 	},
 	"colorwall7": {
 		"name": "colored wall",
+		"autotile_class": "colorwall7",
 		"pic": [
 			0,
 			11,
 			1
 		],
+		"autotile_layout": 13,
 		"density": true
 	},
 	"colorwall8": {
 		"name": "colored wall",
+		"autotile_class": "colorwall8",
 		"pic": [
 			0,
 			13,
 			1
 		],
+		"autotile_layout": 13,
 		"density": true
 	},
 	"colorwall9": {
 		"name": "colored wall",
+		"autotile_class": "colorwall9",
 		"pic": [
 			0,
 			14,
 			1
 		],
+		"autotile_layout": 13,
 		"density": true
 	},
 	"colorwall10": {
 		"name": "colored wall",
+		"autotile_class": "colorwall10",
 		"pic": [
 			0,
 			15,
 			1
 		],
+		"autotile_layout": 13,
 		"density": true
 	},
 	"colorwall11": {
 		"name": "colored wall",
+		"autotile_class": "colorwall11",
 		"pic": [
 			0,
 			16,
 			1
 		],
+		"autotile_layout": 13,
 		"density": true
 	},
 	"colorwall12": {
 		"name": "colored wall",
+		"autotile_class": "colorwall12",
 		"pic": [
 			0,
 			17,
 			1
 		],
+		"autotile_layout": 13,
 		"density": true
 	},
 	"colorwall13": {
 		"name": "colored wall",
+		"autotile_class": "colorwall13",
 		"pic": [
 			0,
 			18,
 			1
 		],
+		"autotile_layout": 13,
+		"density": true
+	},
+	"colorwall16": {
+		"name": "colored wall",
+		"autotile_class": "colorwall16",
+		"pic": [
+			0,
+			19,
+			1
+		],
+		"autotile_layout": 13,
 		"density": true
 	},
 	"colorwall14": {
 		"name": "colored wall",
+		"autotile_class": "colorwall14",
 		"pic": [
 			0,
 			12,
 			1
 		],
+		"autotile_layout": 13,
 		"density": true
 	},
 	"colorwall15": {
 		"name": "colored wall",
+		"autotile_class": "colorwall15",
 		"pic": [
 			0,
 			2,
 			1
 		],
+		"autotile_layout": 13,
+		"density": true
+	},
+	"bluewall": {
+		"name": "blue wall",
+		"pic": [
+			0,
+			10,
+			1
+		],
+		"autotile_layout": 13,
+		"density": true
+	},
+	"pinkwall": {
+		"name": "pink wall",
+		"pic": [
+			0,
+			0,
+			1
+		],
+		"autotile_layout": 13,
+		"density": true
+	},
+	"greenwall": {
+		"name": "green wall",
+		"pic": [
+			0,
+			7,
+			1
+		],
+		"autotile_layout": 13,
+		"density": true
+	},
+	"orangewall": {
+		"name": "orange wall",
+		"pic": [
+			0,
+			4,
+			1
+		],
+		"autotile_layout": 13,
+		"density": true
+	},
+	"colorwall_clear": {
+		"name": "colored wall (clear)",
+		"pic": [
+			0,
+			20,
+			1
+		],
+		"obj": true,
+		"autotile_layout": 13,
 		"density": true
 	},
 	"colorfloor1": {
@@ -1917,16 +2972,6 @@ let GlobalTiles = {
 		"obj": true,
 		"over": true
 	},
-	"icewall": {
-		"name": "ice wall",
-		"pic": [
-			0,
-			24,
-			33
-		],
-		"density": true,
-		"autotile_layout": 3
-	},
 	"monitor": {
 		"name": "monitor",
 		"pic": [
@@ -1934,29 +2979,11 @@ let GlobalTiles = {
 			6,
 			48
 		],
+		"anim_frames": 2,
+		"anim_speed": 8,
 		"obj": true,
 		"density": true,
 		"autotile_layout": 13
-	},
-	"metalwall": {
-		"name": "metal wall",
-		"pic": [
-			0,
-			0,
-			43
-		],
-		"density": true,
-		"autotile_layout": 15
-	},
-	"woodwall2": {
-		"name": "wood wall",
-		"pic": [
-			0,
-			1,
-			34
-		],
-		"autotile_layout": 15,
-		"density": true
 	},
 	"invisible_wall": {
 		"name": "Invisible wall",
@@ -2020,6 +3047,30 @@ let GlobalTiles = {
 			14,
 			88
 		],
+		"anim_frames": 2,
+		"anim_speed": 8,
+		"obj": true
+	},
+	"progress_flag": {
+		"name": "progress flag",
+		"pic": [
+			0,
+			16,
+			88
+		],
+		"anim_frames": 2,
+		"anim_speed": 8,
+		"obj": true
+	},
+	"rainbow_flag2": {
+		"name": "rainbow flag",
+		"pic": [
+			0,
+			14,
+			87
+		],
+		"anim_frames": 6,
+		"anim_speed": 2,
 		"obj": true
 	},
 	"trans_flag": {
@@ -2029,6 +3080,8 @@ let GlobalTiles = {
 			14,
 			92
 		],
+		"anim_frames": 2,
+		"anim_speed": 8,
 		"obj": true
 	},
 	"ace_flag": {
@@ -2038,6 +3091,30 @@ let GlobalTiles = {
 			14,
 			89
 		],
+		"anim_frames": 2,
+		"anim_speed": 8,
+		"obj": true
+	},
+	"aro_flag": {
+		"name": "aromantic flag",
+		"pic": [
+			0,
+			14,
+			91
+		],
+		"anim_frames": 2,
+		"anim_speed": 8,
+		"obj": true
+	},
+	"demi_flag": {
+		"name": "demisexual flag",
+		"pic": [
+			0,
+			18,
+			90
+		],
+		"anim_frames": 2,
+		"anim_speed": 8,
 		"obj": true
 	},
 	"nb_flag": {
@@ -2047,6 +3124,8 @@ let GlobalTiles = {
 			16,
 			92
 		],
+		"anim_frames": 2,
+		"anim_speed": 8,
 		"obj": true
 	},
 	"pan_flag": {
@@ -2056,6 +3135,8 @@ let GlobalTiles = {
 			16,
 			89
 		],
+		"anim_frames": 2,
+		"anim_speed": 8,
 		"obj": true
 	},
 	"bi_flag": {
@@ -2065,6 +3146,8 @@ let GlobalTiles = {
 			18,
 			89
 		],
+		"anim_frames": 2,
+		"anim_speed": 8,
 		"obj": true
 	},
 	"intersex_flag": {
@@ -2074,6 +3157,19 @@ let GlobalTiles = {
 			18,
 			91
 		],
+		"anim_frames": 2,
+		"anim_speed": 8,
+		"obj": true
+	},
+	"genderfluid_flag": {
+		"name": "genderfluid flag",
+		"pic": [
+			0,
+			18,
+			92
+		],
+		"anim_frames": 2,
+		"anim_speed": 8,
 		"obj": true
 	},
 	"lesbian_flag": {
@@ -2083,6 +3179,74 @@ let GlobalTiles = {
 			14,
 			90
 		],
+		"anim_frames": 2,
+		"anim_speed": 8,
+		"obj": true
+	},
+	"mlm_flag": {
+		"name": "gay men flag",
+		"pic": [
+			0,
+			16,
+			90
+		],
+		"anim_frames": 2,
+		"anim_speed": 8,
+		"obj": true
+	},
+	"poly_flag": {
+		"name": "polyamorous flag",
+		"pic": [
+			0,
+			16,
+			91
+		],
+		"anim_frames": 2,
+		"anim_speed": 8,
+		"obj": true
+	},
+	"leather_flag": {
+		"name": "leather flag",
+		"pic": [
+			0,
+			14,
+			93
+		],
+		"anim_frames": 2,
+		"anim_speed": 8,
+		"obj": true
+	},
+	"tt_flag": {
+		"name": "Tilemap Town flag",
+		"pic": [
+			0,
+			18,
+			88
+		],
+		"anim_frames": 2,
+		"anim_speed": 8,
+		"obj": true
+	},
+	"pirate_flag": {
+		"name": "pirate flag",
+		"pic": [
+			0,
+			16,
+			93
+		],
+		"anim_frames": 2,
+		"anim_speed": 8,
+		"obj": true
+	},
+	"aldi_flag": {
+		"name": "ALDI flag",
+		"pic": [
+			0,
+			18,
+			93
+		],
+		"anim_frames": 2,
+		"anim_speed": 8,
 		"obj": true
 	},
 	"chick": {
@@ -2150,6 +3314,16 @@ let GlobalTiles = {
 		"density": true,
 		"obj": true
 	},
+	"kitty_block3": {
+		"name": "kitty face block",
+		"pic": [
+			0,
+			3,
+			31
+		],
+		"density": true,
+		"obj": true
+	},
 	"textured_block": {
 		"name": "textured block",
 		"pic": [
@@ -2194,81 +3368,6 @@ let GlobalTiles = {
 			18,
 			61
 		],
-		"obj": true
-	},
-	"flower_red": {
-		"name": "red flower",
-		"pic": [
-			0,
-			9,
-			14
-		],
-		"obj": true
-	},
-	"flower_blue": {
-		"name": "blue flower",
-		"pic": [
-			0,
-			12,
-			14
-		],
-		"obj": true
-	},
-	"flower_yellow": {
-		"name": "yellow flower",
-		"pic": [
-			0,
-			11,
-			14
-		],
-		"obj": true
-	},
-	"flower_white": {
-		"name": "white flower",
-		"pic": [
-			0,
-			14,
-			14
-		],
-		"obj": true
-	},
-	"flower_magenta": {
-		"name": "magenta flower",
-		"pic": [
-			0,
-			13,
-			14
-		],
-		"obj": true
-	},
-	"rocks_extra_1": {
-		"name": "rocks",
-		"pic": [
-			0,
-			19,
-			15
-		],
-		"density": true,
-		"obj": true
-	},
-	"rocks_extra_2": {
-		"name": "rocks",
-		"pic": [
-			0,
-			20,
-			15
-		],
-		"density": true,
-		"obj": true
-	},
-	"rocks_extra_3": {
-		"name": "rocks",
-		"pic": [
-			0,
-			21,
-			15
-		],
-		"density": true,
 		"obj": true
 	},
 	"border_lu": {
@@ -2343,6 +3442,28 @@ let GlobalTiles = {
 		],
 		"obj": true
 	},
+	"border_a": {
+		"name": "border",
+		"pic": [
+			0,
+			6,
+			80
+		],
+		"menu_pic": [0, 8, 78],
+		"autotile_layout": 2,
+		"obj": true
+	},
+	"border_mac": {
+		"name": "border",
+		"pic": [
+			0,
+			2,
+			80
+		],
+		"menu_pic": [0, 4, 78],
+		"autotile_layout": 2,
+		"obj": true
+	},
 	"cushion": {
 		"name": "cushion",
 		"pic": [
@@ -2352,24 +3473,6 @@ let GlobalTiles = {
 		],
 		"obj": true
 	},
-	"redbrickwall": {
-		"name": "brick wall",
-		"pic": [
-			0,
-			27,
-			44
-		],
-		"density": true
-	},
-	"redgreenbrickwall": {
-		"name": "brick wall",
-		"pic": [
-			0,
-			30,
-			44
-		],
-		"density": true
-	},
 	"torch": {
 		"name": "torch",
 		"pic": [
@@ -2377,7 +3480,43 @@ let GlobalTiles = {
 			3,
 			55
 		],
+		"anim_frames": 2,
+		"anim_speed": 4,
 		"density": true,
+		"obj": true
+	},
+	"torch2": {
+		"name": "torch",
+		"pic": [
+			0,
+			3,
+			56
+		],
+		"anim_frames": 2,
+		"anim_speed": 4,
+		"density": true,
+		"obj": true
+	},
+	"torch_small": {
+		"name": "torch",
+		"pic": [
+			0,
+			3,
+			57
+		],
+		"anim_frames": 2,
+		"anim_speed": 4,
+		"obj": true
+	},
+	"torch2_small": {
+		"name": "torch",
+		"pic": [
+			0,
+			3,
+			58
+		],
+		"anim_frames": 2,
+		"anim_speed": 4,
 		"obj": true
 	},
 	"conveyor": {
@@ -2393,6 +3532,53 @@ let GlobalTiles = {
 		"autotile_layout": 14,
 		"obj": true
 	},
+	"conveyor_green": {
+		"name": "conveyer belt",
+		"pic": [
+			0,
+			13,
+			42
+		],
+		"density": true,
+		"anim_frames": 4,
+		"anim_speed": 1,
+		"autotile_layout": 14,
+		"obj": true
+	},
+	"conveyor_purple": {
+		"name": "conveyer belt",
+		"pic": [
+			0,
+			17,
+			42
+		],
+		"density": true,
+		"anim_frames": 4,
+		"anim_speed": 1,
+		"autotile_layout": 14,
+		"obj": true
+	},
+	"gear": {
+		"name": "gear",
+		"pic": [
+			0,
+			7,
+			42
+		],
+		"obj": true,
+		"density": true,
+		"anim_frames": 2,
+		"anim_speed": 2
+	},
+	"blinkenlights": {
+		"name": "blinkenlights",
+		"pic": [0,20,49],
+		"obj": true,
+		"autotile_layout": 2,
+		"anim_mode": 4,
+		"anim_frames": 2,
+		"anim_speed": 4
+	},
 	"pipes": {
 		"name": "pipes",
 		"pic": [
@@ -2403,17 +3589,6 @@ let GlobalTiles = {
 		"density": true,
 		"autotile_layout": 2,
 		"obj": true
-	},
-	"counter": {
-		"name": "counter",
-		"pic": [
-			0,
-			8,
-			33
-		],
-		"autotile_layout": 7,
-		"obj": true,
-		"density": true
 	},
 	"white": {
 		"name": "white",
@@ -2426,20 +3601,25 @@ let GlobalTiles = {
 		"pic": [
 			0, 19, 8
 		]
+	},
+	"fence": {
+		"name": "fence",
+		"pic": [0, 21, 66],
+		"density": true,
+		"obj": true,
+		"autotile_layout": 2
+	},
+	"card": {
+		"name": "card",
+		"obj": true,
+		"pic": [0, 21, 94]
 	}
 };
 
-var GlobalTilesArrayNames = [];
-var i=0;
-for (var key in GlobalTiles) {
+GlobalTilesArrayNames = [];
+i=0;
+for (let key in GlobalTiles) {
   GlobalTilesArrayNames[i++] = key;
 }
-
-/*
-for (var key in GlobalTiles) {
-  var obj = GlobalTiles[key];
-  console.log(obj.name);
-}
-*/
 
 currentBuildCategoryArrayNames = GlobalTilesArrayNames;

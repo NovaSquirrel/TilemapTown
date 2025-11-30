@@ -224,6 +224,8 @@ function initMap() {
 		IconSheets[-1] = document.getElementById("npc");
 		IconSheets[-2] = document.getElementById("pulp");
 		IconSheets[-3] = document.getElementById("easyrpg");
+		IconSheets[-4] = document.getElementById("shadows");
+		IconSheets[-5] = document.getElementById("extra");
 	}
 }
 
@@ -322,3 +324,31 @@ function tileSheetUses(sheet) {
 			console.log(`Uses for sheet ${sheet} on map ${mapId}:`, uses)
 	}
 }
+
+// Set up a very basic minimal tileset to be overridden by the server
+let GlobalTiles = {
+	"grass": {
+		"name": "grass",
+		"pic": [0, 0, 19]
+	},
+	"dirt": {
+		"name": "dirt",
+		"pic": [0, 2, 20]
+	},
+	"brownsand": {
+		"name": "brown sand",
+		"pic": [0, 4, 26]
+	},
+	"stonewall": {
+		"name": "stone wall",
+		"pic": [0, 5, 30],
+		"density": true
+	}
+};
+
+GlobalTilesArrayNames = [];
+let i=0;
+for (let key in GlobalTiles) {
+  GlobalTilesArrayNames[i++] = key;
+}
+currentBuildCategoryArrayNames = GlobalTilesArrayNames;

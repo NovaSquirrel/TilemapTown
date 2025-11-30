@@ -129,6 +129,7 @@ let currentBuildCategoryName = "!global";
 //currentBuildCategoryArrayNames; <-- will be set in predefined.js
 var GlobalTilesArray = [];
 var GlobalTilesArrayNames = [];
+let loadedBuiltInTilesetYet = false;
 
 let chatTimestamps = true;
 let lockZoomLevel = false;
@@ -4489,12 +4490,24 @@ function initWorld() {
 				editfilemodal.style.display = "none";
 				editfoldermodal.style.display = "none";
 				itemedittilepickermodal.style.display = "none";
+				if(!loadedBuiltInTilesetYet && !OnlineMode && Object.keys(GlobalTiles).length <= 4) {
+					loadedBuiltInTilesetYet = true;
+					let script = document.createElement("script");
+					script.src = "js/predefined.js";
+					document.head.appendChild(script);
+				}
 			}
 		}
 
 		window.onclick = function (event) {
 			if (event.target == loginmodal) {
 				loginmodal.style.display = "none";
+				if(!loadedBuiltInTilesetYet && !OnlineMode && Object.keys(GlobalTiles).length <= 4) {
+					loadedBuiltInTilesetYet = true;
+					let script = document.createElement("script");
+					script.src = "js/predefined.js";
+					document.head.appendChild(script);
+				}
 			} else if (event.target == newitemmodal) {
 				newitemmodal.style.display = "none";
 			} else if (event.target == mapmodal) {
