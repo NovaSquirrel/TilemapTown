@@ -3616,10 +3616,12 @@ GlobalTiles = {
 	}
 };
 
-GlobalTilesArrayNames = [];
-i=0;
-for (let key in GlobalTiles) {
-  GlobalTilesArrayNames[i++] = key;
+{
+	GlobalTilesArrayNames = [];
+	i=0;
+	for (let key in GlobalTiles) {
+	  GlobalTilesArrayNames[i++] = key;
+	}
 }
 
 currentBuildCategoryArrayNames = GlobalTilesArrayNames;

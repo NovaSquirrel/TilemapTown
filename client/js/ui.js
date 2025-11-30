@@ -3523,7 +3523,7 @@ function apply_default_pic_for_type(item) {
 				(item.id in PlayerImages && PlayerImages[item.id].src != item.pic[0] && is_custom)) {
 				let img = new Image();
 				img.src = item.pic[0];
-				PlayerImages[key] = img;
+				PlayerImages[item.id] = img;
 			}
 			break;
 		case "generic":
