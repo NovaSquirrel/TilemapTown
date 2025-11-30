@@ -2839,6 +2839,14 @@ GlobalTiles = {
 			5
 		]
 	},
+	"colorfloor16": {
+		"name": "colored floor",
+		"pic": [
+			0,
+			19,
+			5
+		]
+	},
 	"colorfloor14": {
 		"name": "colored floor",
 		"pic": [
