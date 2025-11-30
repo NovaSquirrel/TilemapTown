@@ -896,6 +896,26 @@
 				],
 				"density": true
 			},
+			"stonewall2": {
+				"name": "stone wall",
+				"pic": [
+					0,
+					8,
+					38
+				],
+				"autotile_layout": 15,
+				"density": true
+			},
+			"stonewall3": {
+				"name": "stone wall",
+				"pic": [
+					0,
+					9,
+					38
+				],
+				"autotile_layout": 15,
+				"density": true
+			},
 			"rockwall2": {
 				"name": "rock wall",
 				"pic": [
@@ -2289,6 +2309,20 @@
 				"density": true,
 				"obj": true
 			},
+			"darkcounter": {
+				"name": "counter",
+				"pic": [0, 30, 55],
+				"obj": true,
+				"density": true,
+				"autotile_layout": 8
+			},
+			"darkcounter_v": {
+				"name": "counter",
+				"pic": [0, 31, 55],
+				"obj": true,
+				"density": true,
+				"autotile_layout": 11
+			},
 			"stool3": {
 				"name": "stool",
 				"pic": [0, 9, 65],
@@ -3522,6 +3556,28 @@
 				"anim_frames": 2,
 				"anim_speed": 4,
 				"density": true,
+				"obj": true
+			},
+			"torch_small": {
+				"name": "torch",
+				"pic": [
+					0,
+					3,
+					57
+				],
+				"anim_frames": 2,
+				"anim_speed": 4,
+				"obj": true
+			},
+			"torch2_small": {
+				"name": "torch",
+				"pic": [
+					0,
+					3,
+					58
+				],
+				"anim_frames": 2,
+				"anim_speed": 4,
 				"obj": true
 			},
 			"conveyor": {
