@@ -151,7 +151,7 @@ async def map_info(request):
 
 @routes.get('/v1/tsd/{id}')
 async def get_tsd(request):
-	entity_id = request.match_info['id']
+	s = request.match_info['id'].split(",")
 	if not s:
 		return web.Response(status=400, text="No image IDs provided", headers=MAIN_API_CORS_HEADERS)
 	if len(s) == 1:
@@ -176,7 +176,7 @@ async def get_tsd(request):
 
 			# Get and return the data
 			c = Database.cursor()
-			c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type('tileset'), entity_id,))
+			c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type['tileset'], i,))
 			result = c.fetchone()
 			if result == None:
 				continue
