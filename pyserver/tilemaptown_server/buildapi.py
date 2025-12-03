@@ -977,6 +977,7 @@ async def get_map_page(request):
 	MapID    = html.escape(str(map_info.get("id", "")))
 	MapDesc  = html.escape(map_info.get("desc") or "") or "No description set"
 	MetaMapDesc = html.escape(map_info.get("desc") or (map_info.get("owner_username", "Someone")+"'s map"))
+	DataMapDesc = html.escape(map_info.get("desc") or "")
 	MapOwner = html.escape(map_info.get("owner_username", ""))
 	WebClientURL = "%s?map=%s"%(Config["Server"]["WebClientURL"],MapID)
 	WebClientTouchURL = "%s?map=%s"%(Config["Server"]["WebClientTouchURL"],MapID)
@@ -988,6 +989,7 @@ async def get_map_page(request):
 		MapName=MapName,
 		MapID=MapID,
 		MapDesc=MapDesc,
+		DataMapDesc=DataMapDesc,
 		MetaMapDesc=MetaMapDesc,
 		MapOwner=MapOwner,
 		MapCoordX=map_x or "",

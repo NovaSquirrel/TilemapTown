@@ -58,12 +58,14 @@ function init() {
 	apiURL = document.body.dataset["tilemapTownApiUrl"];
 	loadMapInfo();
 
-	let result = XBBCODE.process({
-		text: document.body.dataset["tilemapTownMapDesc"],
-		removeMisalignedTags: false,
-		addInLineBreaks: true
-	});
-	document.getElementById("mapDesc").innerHTML = result.html;
+	if (document.body.dataset["tilemapTownMapDesc"] != "") {
+		let result = XBBCODE.process({
+			text: document.body.dataset["tilemapTownMapDesc"],
+			removeMisalignedTags: false,
+			addInLineBreaks: true
+		});
+		document.getElementById("mapDesc").innerHTML = result.html;
+	}
 
 	let mapCanvas = document.getElementById("mapCanvas");
 	mapCanvas.addEventListener('mousedown', function (evt) {
