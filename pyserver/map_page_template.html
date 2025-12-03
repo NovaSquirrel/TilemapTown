@@ -19,6 +19,8 @@ body {
 blockquote {
 	border:dashed #80ff80 3px;
 	background: #eeffee;
+	max-width: 600px;
+	margin: 1em auto;
 }
 .join {
 	font-size:24px;
@@ -27,12 +29,36 @@ blockquote {
 	font-size:24px;
 	display: none;
 }
+#margins {
+	margin-left: 10px;
+	margin-right: 10px;
+}
+#mapCanvasContainer {
+	max-width: 100%;
+	max-height: 800px;
+	overflow: auto;
+	margin: 8px auto;
+}
+#mapCanvas {
+	background: #6abe30;
+	max-width: 600px;
+	max-height: 600px;
+	display: block;
+	margin: auto;
+}
 @media (hover: none) or (pointer: coarse) {
 	.join {
 		display: none;
 	}
 	.join_touch {
 		display: inline;
+	}
+	#edge-link-buttons {
+		font-size: 24px;
+	}
+	#mapCanvas {
+		max-width: 800px;
+		max-height: 800px;
 	}
 }
 .center {
@@ -90,13 +116,13 @@ blockquote {
 <div style="background:black;color:white;"><div class="center">Collaborative map building and hangout/roleplay</div></div>
 <br>
 
-<div style="border:dashed #80ff80 3px;"><div style="margin-left:100px; margin-right:100px;">
+<div style="border:dashed #80ff80 3px;"><div id="margins">
 <div>
 	<div>
 		<noscript>Map view requires JavaScript</noscript>
 
-		<div style="max-width:600px; max-height:600px; overflow:auto; margin:8px auto;">
-			<canvas style="background:#6abe30; max-width:600px; max-height:600px; display:block; margin:auto;" width="600" height="600" id="mapCanvas"></canvas>
+		<div id="mapCanvasContainer">
+			<canvas width="600" height="600" id="mapCanvas"></canvas>
 		</div>
 		<table border="1" style="margin: auto;">
 			<tbody>

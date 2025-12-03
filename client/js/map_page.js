@@ -26,6 +26,7 @@ let DefaultPics = {};
 let zoomedIn = false;
 let haveServerResourcesYet = false;
 let edgeLinks = null;
+let originalMapCanvasWidth, originalMapCanvasHeight;
 
 async function SendCmd(type, params) {
 	if (type === "IMG") {
@@ -102,6 +103,9 @@ function init() {
 
 	// Zoom in the canvas when it's clicked
 	let mapCanvas = document.getElementById("mapCanvas");
+	const originalMapCanvasStyle = getComputedStyle(mapCanvas);
+	originalMapCanvasWidth = originalMapCanvasStyle.getPropertyValue("max-width");
+	originalMapCanvasHeight = originalMapCanvasStyle.getPropertyValue("max-height");
 	mapCanvas.addEventListener('mousedown', function (evt) {
 		if (evt.button != 0)
 			return;
@@ -111,8 +115,8 @@ function init() {
 			mapCanvas.style.maxHeight = "unset";
 		} else {
 			zoomedIn = false;
-			mapCanvas.style.maxWidth = "600px";
-			mapCanvas.style.maxHeight = "600px";
+			mapCanvas.style.maxWidth = originalMapCanvasWidth;
+			mapCanvas.style.maxHeight = originalMapCanvasHeight;
 		}
 	}, false);
 
