@@ -69,6 +69,8 @@ function init() {
 
 	let mapCanvas = document.getElementById("mapCanvas");
 	mapCanvas.addEventListener('mousedown', function (evt) {
+		if (evt.button != 0)
+			return;
 		if (!zoomedIn) {
 			zoomedIn = true;
 			mapCanvas.style.maxWidth = "unset";
