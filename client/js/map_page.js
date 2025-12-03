@@ -24,6 +24,8 @@ let zoomedIn = false;
 
 async function SendCmd(type, params) {
 	if (type === "IMG") {
+		if (typeof params.id === "number")
+			params.id = [params.id];
 		let response = await fetch(`${apiURL}/v1/img/${params.id.join()},`);
 		if (!response.ok) {
 			console.error(`Couldn't reach Tilemap Town API for image: ${response.status}`);
@@ -32,8 +34,17 @@ async function SendCmd(type, params) {
 			for (let key in j) {
 				FetchTilesetImage(j[key].id, j[key].url);
 			}
+			// If any IDs in the request aren't in the response, there was an error on those, so stop waiting for them
+			for (let originalID of params.id) {
+				if (!(originalID in j)) {
+					IconSheets[originalID] = new Image();
+					delete IconSheetsRequested[originalID];
+				}
+			}
 		}
 	} else if (type === "TSD") {
+		if (typeof params.id === "number")
+			params.id = [params.id];
 		let response = await fetch(`${apiURL}/v1/tsd/${params.id.join()},`);
 		if (!response.ok) {
 			console.error(`Couldn't reach Tilemap Town API for tileset: ${response.status}`);
@@ -41,6 +52,13 @@ async function SendCmd(type, params) {
 			let j = await response.json();
 			for (let key in j) {
 				InstallTileset(j[key].id, (typeof j[key].data === 'string') ? JSON.parse(j[key].data) : j[key].data);
+			}
+			// If any IDs in the request aren't in the response, there was an error on those, so stop waiting for them
+			for (let originalID of params.id) {
+				if (!(originalID in j)) {
+					Tilesets[originalID] = {};
+					delete TilesetsRequested[originalID];
+				}
 			}
 		}
 	}
