@@ -372,7 +372,7 @@ function allMapImagesLoaded() {
 		}
 	}
 	FlushIconSheetRequestList();
-	return allLoaded;
+	return allLoaded && Object.keys(TilesetsRequested).length === 0;
 }
 
 // Set up a very basic minimal tileset to be overridden by the server

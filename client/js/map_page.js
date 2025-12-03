@@ -43,8 +43,8 @@ async function SendCmd(type, params) {
 			for (let originalID of params.id) {
 				if (!(originalID in j)) {
 					IconSheets[originalID] = new Image();
-					delete IconSheetsRequested[originalID];
 				}
+				delete IconSheetsRequested[originalID];
 			}
 		}
 	} else if (type === "TSD") {
@@ -62,8 +62,8 @@ async function SendCmd(type, params) {
 			for (let originalID of params.id) {
 				if (!(originalID in j)) {
 					Tilesets[originalID] = {};
-					delete TilesetsRequested[originalID];
 				}
+				delete TilesetsRequested[originalID];
 			}
 		}
 	}
@@ -267,7 +267,7 @@ async function loadMapInfo() {
 
 function waitForImagesToLoad(timestamp) {
 	MyMap = mapsByID[mapID];
-	if (allMapImagesLoaded()) {
+	if (MyMap && allMapImagesLoaded()) {
 		let canvas = document.getElementById("mapCanvas");
 
 		let map = mapsByID[mapID];
