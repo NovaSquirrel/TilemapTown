@@ -11,41 +11,66 @@
 <meta property="og:url"   content="$ThisPageURL" />
 <style>
 .green1 {
-  background:#80ff80;border:8px outset #a0ffa0;color:black;
+	background:#80ff80;border:8px outset #a0ffa0;color:black;
 }
 body {
-  font-size:16px;
+	font-size:16px;
 }
 blockquote {
-  border:dashed #80ff80 3px;
-  background: #eeffee;
+	border:dashed #80ff80 3px;
+	background: #eeffee;
 }
 .join {
-  font-size:24px;
+	font-size:24px;
 }
 .join_touch {
-  font-size:24px;
-  display: none;
+	font-size:24px;
+	display: none;
 }
 @media (hover: none) or (pointer: coarse) {
-  .join {
-    display: none;
-  }
-  .join_touch {
-    display: inline;
-  }
+	.join {
+		display: none;
+	}
+	.join_touch {
+		display: inline;
+	}
 }
 .center {
-  text-align: center;
+	text-align: center;
 }
 #mapCanvas {
-  cursor: pointer;
+	cursor: pointer;
+}
+.unselectable {
+	user-select: none;
+}
+#edge-link-buttons td {
+	display: inline-block;
+	color: white;
+	background-color: #333;
+	border-radius: 5px;
+	border: 1px solid #000;
+	width: 2em;
+	height: 2em;
+	text-align: center;
+	cursor: pointer;
+}
+#edge-link-buttons td:hover {
+	background-color: lightpink;
+}
+#edge-link-buttons td.disabled {
+	background-color: #ccc;
+	cursor: unset;
+}
+#edge-link-buttons td.disabled:hover {
+	background-color: #ccc;
 }
 </style>
 <script src="${AssetsBaseURL}/js/draw_map.js"></script>
 <script src="${AssetsBaseURL}/js/map.js"></script>
 <script src="${AssetsBaseURL}/js/xbbcode.js"></script>
 <script src="${AssetsBaseURL}/js/map_page.js"></script>
+<img src="${AssetsBaseURL}/img/tileset/webclient.png"  style="display: none;" id="webclientGraphics">
 </head>
 <body onLoad="init();"
 	data-tilemap-town-metadata-format="1"
@@ -77,18 +102,38 @@ blockquote {
 			<tbody>
 				<tr>
 					<th scope="row">Name</th>
-					<td>$MapName</td>
+					<td id="mapNameTd">$MapName</td>
 				</tr>
 				<tr>
 					<th scope="row">Owner</th>
-					<td>$MapOwner</td>
+					<td id="mapOwnerTd">$MapOwner</td>
 				</tr>
 			</tbody>
 		</table>
 		<blockquote class="center" id="mapDesc">$MapDesc</blockquote>
 
+		<div id="edge-link-buttons" style="display: none;" class="unselectable">
+			<table border="0" style="margin: auto;">
+				<tr>
+					<td id="edge_button_5">&nwarr;</td>
+					<td id="edge_button_6">&uarr;</td>
+					<td id="edge_button_7">&nearr;</td>
+				</tr>
+				<tr>
+					<td id="edge_button_4">&larr;</td>
+					<td id="edge_button_home">&#x1F3E0;</td>
+					<td id="edge_button_0">&rarr;</td>
+				</tr>
+				<tr>
+					<td id="edge_button_3">&swarr;</td>
+					<td id="edge_button_2">&darr;</td>
+					<td id="edge_button_1">&searr;</td>
+				</tr>
+			</table>
+		</div>
+
 		<p class="center">
-			<a href="$WebClientURL" class="join">Visit this map</a><a href="$WebClientTouchURL" class="join_touch">Visit this map</a><noscript><br>Though maybe not with this browser, because the web client requires JavaScript.</noscript><br>If you're already connected, teleport here with <kbd>/map $MapID</kbd>
+			<a href="$WebClientURL" class="join">Visit this map</a><a href="$WebClientTouchURL" class="join_touch">Visit this map</a><noscript><br>Though maybe not with this browser, because the web client requires JavaScript.</noscript><br>If you're already connected, teleport here with <kbd>/map <span id="teleportMapID">$MapID</span></kbd>
 		</p>
 	</div>
 </div>

@@ -18,13 +18,18 @@
  */
 function redrawBuildCanvas(){}
 function markTilesAsDirty() {}
-let mapID, apiURL;
+let originalMapID, mapID, apiURL;
+let originalWebClientURL;
+let originalTouchClientURL;
+let mapsByID = {};
 let DefaultPics = {};
 let zoomedIn = false;
+let haveServerResourcesYet = false;
+let edgeLinks = null;
 
 async function SendCmd(type, params) {
 	if (type === "IMG") {
-		if (typeof params.id === "number")
+		if (!Array.isArray(params.id))
 			params.id = [params.id];
 		let response = await fetch(`${apiURL}/v1/img/${params.id.join()},`);
 		if (!response.ok) {
@@ -43,7 +48,7 @@ async function SendCmd(type, params) {
 			}
 		}
 	} else if (type === "TSD") {
-		if (typeof params.id === "number")
+		if (!Array.isArray(params.id))
 			params.id = [params.id];
 		let response = await fetch(`${apiURL}/v1/tsd/${params.id.join()},`);
 		if (!response.ok) {
@@ -64,6 +69,12 @@ async function SendCmd(type, params) {
 	}
 }
 
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
 function asIntIfPossible(i) {
 	let asInt = parseInt(i);
 	if(asInt != NaN)
@@ -72,9 +83,13 @@ function asIntIfPossible(i) {
 }
 
 function init() {
+	IconSheets[INTERNAL_TILESET_ID] = document.getElementById("webclientGraphics");
 	mapID  = document.body.dataset["tilemapTownMapId"];
 	apiURL = document.body.dataset["tilemapTownApiUrl"];
-	loadMapInfo();
+	originalMapID = mapID;
+	drawMap(mapID);
+	originalWebClientURL = document.getElementsByClassName("join")[0]?.href;
+	originalTouchClientURL  = document.getElementsByClassName("join_touch")[0]?.href;
 
 	if (document.body.dataset["tilemapTownMapDesc"] != "") {
 		let result = XBBCODE.process({
@@ -85,6 +100,7 @@ function init() {
 		document.getElementById("mapDesc").innerHTML = result.html;
 	}
 
+	// Zoom in the canvas when it's clicked
 	let mapCanvas = document.getElementById("mapCanvas");
 	mapCanvas.addEventListener('mousedown', function (evt) {
 		if (evt.button != 0)
@@ -99,9 +115,23 @@ function init() {
 			mapCanvas.style.maxHeight = "600px";
 		}
 	}, false);
+
+	// Edge link button click handlers
+	for (let i=0; i<8; i++) {
+		document.getElementById("edge_button_"+i).addEventListener('mousedown', function mouseHandler(evt) {
+			if(!edgeLinks[i])
+				return;
+			mapID = edgeLinks[i];
+			drawMap(mapID);
+		}, false);
+	}
+	document.getElementById("edge_button_home").addEventListener('mousedown', function mouseHandler(evt) {
+		mapID = originalMapID;
+		drawMap(mapID);
+	}, false);
 }
 
-async function loadMapInfo() {
+async function loadServerResources() {
 	let response = await fetch(apiURL+"/v1/server_resources");
 	if (!response.ok) {
 		console.error(`Couldn't reach Tilemap Town API for server resources: ${response.status}`);
@@ -126,69 +156,141 @@ async function loadMapInfo() {
 		if('default_pics' in resources) {
 			DefaultPics = resources['default_pics'];
 		}
+		return true;
+	}
+	return false;
+}
 
-		// Get and parse the actual map
-		let mapResponse = await fetch(`${apiURL}/v1/map/${mapID}?data=1`);
-		if (!response.ok) {
-			console.error(`Couldn't reach Tilemap Town API for map data: ${response.status}`);
+async function drawMap(i) {
+	mapID = i;
+	loadMapInfo();
+}
+
+function updateEdgeLinkButtons() {
+	if (!edgeLinks) {
+		edgeLinks = [null, null, null, null, null, null, null, null];
+	} else if(edgeLinks.some((element) => element !== null)) {
+		document.getElementById("edge-link-buttons").style.display = "unset";
+	}
+	for (let edgeLinkIndex in edgeLinks) {
+		if (edgeLinks[edgeLinkIndex] != null) {
+			document.getElementById("edge_button_"+edgeLinkIndex).classList.remove("disabled");
 		} else {
-			const mapJson = await mapResponse.json();
-			const mapInfo = mapJson.info;
-			const mapData = mapJson.data;
-
-			MyMap = new TownMap(mapInfo.size[0], mapInfo.size[1])
-			MyMap.Info = mapInfo;
-			//updateWallpaperOnMap(MyMap);
-
-			const Fill = mapData.default;
-			const x1 = mapData.pos[0];
-			const y1 = mapData.pos[1];
-			const x2 = mapData.pos[2];
-			const y2 = mapData.pos[3];
-	
-			// Clear out the area
-			for(let x=x1; x<=x2; x++) {
-				for(let y=y1; y<=y2; y++) {
-					MyMap.Tiles[x][y] = Fill;
-					MyMap.Objs[x][y] = [];
-				}
-			}
-
-			// Write in tiles and objects
-			for (let key in mapData.turf) {
-				let turf = mapData.turf[key];
-				MyMap.Tiles[turf[0]][turf[1]] = turf[2];
-			}
-			for (let key in mapData.obj) {
-				let obj = mapData.obj[key];
-				MyMap.Objs[obj[0]][obj[1]] = obj[2];
-			}
-
-			window.requestAnimationFrame(waitForImagesToLoad);
+			document.getElementById("edge_button_"+edgeLinkIndex).classList.add("disabled");
 		}
 	}
 }
 
+function updateMapFields() {
+	document.getElementById("mapNameTd").textContent = mapsByID[mapID].Info.name;
+	document.getElementById("mapOwnerTd").textContent = mapsByID[mapID].Info.owner_username;
+	if (mapsByID[mapID].Info.desc != "") {
+		let result = XBBCODE.process({
+			text: mapsByID[mapID].Info.desc ?? "No description set",
+			removeMisalignedTags: false,
+			addInLineBreaks: true
+		});
+		document.getElementById("mapDesc").innerHTML = result.html;
+	} else {
+		document.getElementById("mapDesc").innerHTML = "No description set";
+	}
+	document.getElementById("teleportMapID").textContent = mapID;
+
+	if(mapID === originalMapID) {
+		document.getElementsByClassName("join")[0].href = originalWebClientURL;
+		document.getElementsByClassName("join_touch")[0].href = originalTouchClientURL;
+	} else {
+		document.getElementsByClassName("join")[0].href = originalWebClientURL.slice(0, originalWebClientURL.indexOf("?")) + "?map=" + mapID;
+		document.getElementsByClassName("join_touch")[0].href = originalTouchClientURL.slice(0, originalTouchClientURL.indexOf("?")) + "?map=" + mapID;
+	}
+}
+
+async function loadMapInfo() {
+	if (!haveServerResourcesYet) {
+		if(!await loadServerResources())
+			return false;
+		haveServerResourcesYet = true;
+	}
+	if (mapID in mapsByID) {
+		window.requestAnimationFrame(waitForImagesToLoad);
+		edgeLinks = mapsByID[mapID].Info?.edge_links;
+		updateEdgeLinkButtons();
+		updateMapFields();
+		return true;
+	}
+
+	// Get and parse the actual map
+	let mapResponse = await fetch(`${apiURL}/v1/map/${mapID}?data=1`);
+	if (!mapResponse.ok) {
+		console.error(`Couldn't reach Tilemap Town API for map data (${mapID}): ${response.status}`);
+	} else {
+		const mapJson = await mapResponse.json();
+		const mapInfo = mapJson.info;
+		const mapData = mapJson.data;
+
+		let map = new TownMap(mapInfo.size[0], mapInfo.size[1])
+		mapsByID[mapID] = map;
+		map.Info = mapInfo;
+		edgeLinks = map.Info?.edge_links;
+		updateEdgeLinkButtons();
+		updateMapFields();
+
+		//updateWallpaperOnMap(map);
+
+		const Fill = mapData.default;
+		const x1 = mapData.pos[0];
+		const y1 = mapData.pos[1];
+		const x2 = mapData.pos[2];
+		const y2 = mapData.pos[3];
+
+		// Clear out the area
+		for(let x=x1; x<=x2; x++) {
+			for(let y=y1; y<=y2; y++) {
+				map.Tiles[x][y] = Fill;
+				map.Objs[x][y] = [];
+			}
+		}
+
+		// Write in tiles and objects
+		for (let key in mapData.turf) {
+			let turf = mapData.turf[key];
+			map.Tiles[turf[0]][turf[1]] = turf[2];
+		}
+		for (let key in mapData.obj) {
+			let obj = mapData.obj[key];
+			map.Objs[obj[0]][obj[1]] = obj[2];
+		}
+
+		window.requestAnimationFrame(waitForImagesToLoad);
+	}
+}
+
 function waitForImagesToLoad(timestamp) {
+	MyMap = mapsByID[mapID];
 	if (allMapImagesLoaded()) {
 		let canvas = document.getElementById("mapCanvas");
 
-		canvas.width = MyMap.Width * 16;
-		canvas.height = MyMap.Height * 16;
+		let map = mapsByID[mapID];
+		canvas.width = map.Width * 16;
+		canvas.height = map.Height * 16;
 		let ctx = canvas.getContext("2d");
 		ctx.beginPath();
 		ctx.fillStyle = "#000000";
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 		tenthOfSecondTimer = 0;
-		for (let y=0; y<MyMap.Height; y++) {
-			for (let x=0; x<MyMap.Width; x++) {
-				let turfAtom = AtomFromName(MyMap.Tiles[x][y]);
-				drawTurf(ctx, x*16, y*16, turfAtom, MyMap, x, y);
-				let Objs = MyMap.Objs[x][y];
+		for (let y=0; y<map.Height; y++) {
+			for (let x=0; x<map.Width; x++) {
+				let turfAtom = AtomFromName(map.Tiles[x][y]);
+				try {
+					drawTurf(ctx, x*16, y*16, turfAtom, map, x, y);
+				} catch (error) {}
+				let Objs = map.Objs[x][y];
 				if (Objs.length) {
 					for (let o of Objs) {
-						drawObj(ctx, x*16, y*16, AtomFromName(o), MyMap, x, y);
+						try {
+							drawObj(ctx, x*16, y*16, AtomFromName(o), map, x, y);
+						} catch (error) {}
 					}
 				}
 			}
