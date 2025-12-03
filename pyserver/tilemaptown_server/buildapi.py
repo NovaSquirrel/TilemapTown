@@ -990,6 +990,8 @@ async def get_map_page(request):
 		MapDesc=MapDesc,
 		MetaMapDesc=MetaMapDesc,
 		MapOwner=MapOwner,
+		MapCoordX=map_x or "",
+		MapCoordY=map_y or "",
 		WSURL=Config["Server"]["WSURL"],
 		APIURL=Config["API"]["URL"],
 		AssetsBaseURL=Config["MapPage"]["AssetsBaseURL"],
