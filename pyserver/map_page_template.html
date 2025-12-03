@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head><title>"$MapName" on Tilemap Town</title>
+<meta charset="UTF-8">
+<link rel="canonical" href="$ThisPageURL">
+<link rel="stylesheet" type="text/css" href="${AssetsBaseURL}/css/chat.css" />
+<link rel="stylesheet" type="text/css" href="${AssetsBaseURL}/css/xbbcode.css" />
+<meta property="og:title" content="&quot;$MapName&quot; on Tilemap Town" />
+<meta property="og:description" content="$MetaMapDesc" />
+<meta property="og:type"  content="website" />
+<meta property="og:url"   content="$ThisPageURL" />
+<style>
+.green1 {
+  background:#80ff80;border:8px outset #a0ffa0;color:black;
+}
+body {
+  font-size:16px;
+}
+blockquote {
+  border:dashed #80ff80 3px;
+  background: #eeffee;
+}
+.join {
+  font-size:24px;
+}
+.join_touch {
+  font-size:24px;
+  display: none;
+}
+@media (hover: none) or (pointer: coarse) {
+  .join {
+    display: none;
+  }
+  .join_touch {
+    display: inline;
+  }
+}
+.center {
+  text-align: center;
+}
+#mapCanvas {
+  cursor: pointer;
+}
+</style>
+<script src="${AssetsBaseURL}/js/draw_map.js"></script>
+<script src="${AssetsBaseURL}/js/map.js"></script>
+<script src="${AssetsBaseURL}/js/xbbcode.js"></script>
+<script src="${AssetsBaseURL}/js/map_page.js"></script>
+</head>
+<body onLoad="init();"
+	data-tilemap-town-metadata-format="1"
+	data-tilemap-town-websocket-url="$WSURL"
+	data-tilemap-town-api-url="$APIURL"
+	data-tilemap-town-map-id="$MapID"
+	data-tilemap-town-map-name="$MapName"
+	data-tilemap-town-map-desc="$MapDesc"
+	data-tilemap-town-map-owner="$MapOwner"
+>
+<a href="https://github.com/NovaSquirrel/TilemapTown"><img decoding="async" loading="lazy" width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149" alt="Fork me on GitHub" data-recalc-dims="1" style="position: absolute; top: 0; right: 0; border: 0;"></a>
+
+<div style="max-width:900px; margin-left:auto; margin-right:auto;">
+<div class="green1">
+<span class="center"><h1><a href="index.html"><img src="${AssetsBaseURL}/img/logo.png" alt="Tilemap Town"></a></h1></span>
+</div>
+<div style="background:black;color:white;"><div class="center">Collaborative map building and hangout/roleplay</div></div>
+<br>
+
+<div style="border:dashed #80ff80 3px;"><div style="margin-left:100px; margin-right:100px;">
+<div>
+	<div>
+		<noscript>Map view requires JavaScript</noscript>
+
+		<div style="max-width:600px; max-height:600px; overflow:auto; margin:8px auto;">
+			<canvas style="background:#6abe30; max-width:600px; max-height:600px;" width="600" height="600" id="mapCanvas"></canvas>
+		</div>
+		<table border="1" style="margin: auto;">
+			<tbody>
+				<tr>
+					<th scope="row">Name</th>
+					<td>$MapName</td>
+				</tr>
+				<tr>
+					<th scope="row">Owner</th>
+					<td>$MapOwner</td>
+				</tr>
+			</tbody>
+		</table>
+		<blockquote class="center" id="mapDesc">$MapDesc</blockquote>
+
+		<p class="center">
+			<a href="$WebClientURL" class="join">Visit this map</a><a href="$WebClientTouchURL" class="join_touch">Visit this map</a><noscript><br>Though maybe not with this browser, because the web client requires JavaScript.</noscript><br>If you're already connected, teleport here with <kbd>/map $MapID</kbd>
+		</p>
+	</div>
+</div>
+
+</div></div></div>
+
+</body></html>

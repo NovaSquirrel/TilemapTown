@@ -16,6 +16,7 @@
 
 import sqlite3, json, sys, os.path, weakref, datetime, zlib, re
 from collections import deque
+from string import Template
 
 # Config information
 Config = {}
@@ -68,12 +69,15 @@ def loadConfigJson(clearLogs=True):
 	setConfigDefault("Server",   "Admins",           [])
 	setConfigDefault("Server",   "MaxUsers",         200)
 	setConfigDefault("Server",   "MaxDBMaps",        5000)
+	setConfigDefault("Server",   "WSURL",            "")
 	setConfigDefault("Server",   "WSMaxSize",        0x40000) # 256K
 	setConfigDefault("Server",   "WSMaxQueue",       32)
 	setConfigDefault("Server",   "BroadcastConnects", True)
 	setConfigDefault("Server",   "BroadcastDisconnects", True)
 	setConfigDefault("Server",   "MaxMapSize",       256)
 	setConfigDefault("Server",   "TempMapCopiesPerUser", 10)
+	setConfigDefault("Server",   "WebClientURL",     "")
+	setConfigDefault("Server",   "WebClientTouchURL","")
 
 	setConfigDefault("Security", "ProxyOnly",        False)
 	setConfigDefault("Security", "AllowedOrigins",   None)
@@ -130,6 +134,11 @@ def loadConfigJson(clearLogs=True):
 	setConfigDefault("API",      "URL",              "")
 	setConfigDefault("API",      "AdminPassword",    "")
 
+	setConfigDefault("MapPage",  "Enabled",          True)
+	setConfigDefault("MapPage",  "TemplateFile",     "map_page_template.html")
+	setConfigDefault("MapPage",  "AssetsBaseURL",    "")
+	setConfigDefault("MapPage",  "PageBaseURL",      "")
+
 	setConfigDefault("Scripting","Enabled",          False)
 	setConfigDefault("Scripting","ProgramPath",      None)
 	setConfigDefault("Scripting","DataStorageLimit", 0x8000)
@@ -166,7 +175,7 @@ def loadConfigJson(clearLogs=True):
 	if "ResourceFiles" in Config["Server"]:
 		for fn in Config["Server"]["ResourceFiles"]:
 			if os.path.isfile(fn):
-				with open(fn) as f:
+				with open(fn, encoding="utf-8") as f:
 					LoadedAnyServerResources[0] = True
 					for key,value in json.load(f).items():
 						if key not in ServerResources:
@@ -195,6 +204,10 @@ def loadConfigJson(clearLogs=True):
 				url = ServerResources["sample_avatars"][i]
 				if not url.startswith("http://") and not url.startswith("https://"):
 					ServerResources["sample_avatars"][i] = base + url
+	if Config["MapPage"]["TemplateFile"] and os.path.isfile(Config["MapPage"]["TemplateFile"]):
+		with open(Config["MapPage"]["TemplateFile"], encoding="utf-8") as f:
+			Config["MapPage"]["Template"] = Template(f.read())
+
 	if clearLogs:
 		TempLogs[0] = deque(maxlen=Config["TempLogs"]["ConnectSize"])
 		TempLogs[1] = deque(maxlen=Config["TempLogs"]["BuildSize"])

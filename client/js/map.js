@@ -120,6 +120,26 @@ function FetchTilesetImage(id, url) {
 	delete IconSheetsRequested[id];
 }
 
+function updateWallpaperOnMap(map) {
+	// Check on the wallpaper
+	if(map.Info["wallpaper"] && Object.keys(map.Info["wallpaper"]).length != 0) {
+		if(map.WallpaperImage == null || map.WallpaperImage.src != map.Info["wallpaper"].url) {
+			let img = new Image();
+			img.onload = function(){
+				NeedMapRedraw = true;
+				backdropRerenderAll = true;
+				updateWallpaperData(map);
+			};
+			img.src = map.Info["wallpaper"].url;
+			map.WallpaperImage = img;
+		}
+		updateWallpaperData(map);
+	} else {
+		map.WallpaperImage = null;
+		map.WallpaperData = null;
+	}
+}
+
 // Add a new tileset to the list
 function InstallTileset(name, list) {
 
@@ -323,6 +343,36 @@ function tileSheetUses(sheet) {
 		if (uses.length > 0)
 			console.log(`Uses for sheet ${sheet} on map ${mapId}:`, uses)
 	}
+}
+
+function allMapImagesLoaded() {
+	function havePic(atom) {
+		let pic = atom.pic;
+		if (!pic)
+			return true;
+		if (pic[0] in IconSheets)
+			return true;
+		RequestImageIfNeeded(pic[0]);
+		return false;
+	}
+	let allLoaded = true;
+	for (let y=0; y<MyMap.Height; y++) {
+		for (let x=0; x<MyMap.Width; x++) {
+			let turfAtom = AtomFromName(MyMap.Tiles[x][y]);
+			if (!havePic(turfAtom))
+				allLoaded = false;
+			let Objs = MyMap.Objs[x][y];
+			if (Objs.length) {
+				for (let o of Objs) {
+					let objAtom = AtomFromName(o);
+					if (!havePic(objAtom))
+						allLoaded = false;
+				}
+			}
+		}
+	}
+	FlushIconSheetRequestList();
+	return allLoaded;
 }
 
 // Set up a very basic minimal tileset to be overridden by the server

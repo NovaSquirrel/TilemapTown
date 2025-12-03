@@ -276,36 +276,6 @@ function sendTyping() {
 	}
 }
 
-function allMapImagesLoaded() {
-	function havePic(atom) {
-		let pic = atom.pic;
-		if (!pic)
-			return true;
-		if (pic[0] in IconSheets)
-			return true;
-		RequestImageIfNeeded(pic[0]);
-		return false;
-	}
-	let allLoaded = true;
-	for (let y=0; y<MyMap.Height; y++) {
-		for (let x=0; x<MyMap.Width; x++) {
-			let turfAtom = AtomFromName(MyMap.Tiles[x][y]);
-			if (!havePic(turfAtom))
-				allLoaded = false;
-			let Objs = MyMap.Objs[x][y];
-			if (Objs.length) {
-				for (let o of Objs) {
-					let objAtom = AtomFromName(o);
-					if (!havePic(objAtom))
-						allLoaded = false;
-				}
-			}
-		}
-	}
-	FlushIconSheetRequestList();
-	return allLoaded;
-}
-
 function openMapScreenshot() {
 	let win = window.open("about:blank", "Map");
 	win.onload = function() {

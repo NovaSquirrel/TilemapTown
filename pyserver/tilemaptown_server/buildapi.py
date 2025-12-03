@@ -13,14 +13,19 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import time, os, random, json
+import time, os, random, json, html
 from aiohttp import web, ClientSession
+from string import Template
 from .buildglobal import *
 from .buildentity import Entity
 
 start_time = int(time.time())
 
 MAIN_API_CORS_HEADERS = {
+	"Access-Control-Allow-Origin": "*",
+	"Access-Control-Allow-Methods": "GET"
+}
+MAIN_API_CORS_HEADERS_CACHED = {
 	"Access-Control-Allow-Origin": "*",
 	"Access-Control-Allow-Methods": "GET"
 }
@@ -35,7 +40,7 @@ async def town_info(request):
 	for m in AllMaps:
 		if m.map_flags & mapflag['public'] == 0:
 			continue
-		user_count = m.count_users_inside()
+		user_count = m.count_users_inside(recursive=False)
 		if user_count == 0:
 			continue
 
@@ -94,23 +99,31 @@ async def server_version(request):
 
 @routes.get('/v1/server_resources')
 async def server_resources(request):
-	return web.json_response(ServerResources, headers=MAIN_API_CORS_HEADERS)
+	return web.json_response(ServerResources, headers=MAIN_API_CORS_HEADERS_CACHED)
 
-@routes.get('/v1/map/{map_id}')
-async def map_info(request):
-	map_id = request.match_info['map_id']
+def map_from_id(map_id):
 	if not map_id.isdecimal():
-		return web.Response(status=400, text="Map ID is invalid", headers=MAIN_API_CORS_HEADERS)
+		return (False,web.Response(status=400, text="Map ID is invalid", headers=MAIN_API_CORS_HEADERS))
 	map_id = int(map_id)
 
 	if not map_id_exists(map_id):
-		return web.Response(status=404, text="Couldn't find map", headers=MAIN_API_CORS_HEADERS)
+		return (False,web.Response(status=404, text="Couldn't find map", headers=MAIN_API_CORS_HEADERS))
 	map = get_entity_by_id(map_id)
 
 	if map == None:
-		return web.Response(status=400, text="Couldn't load map", headers=MAIN_API_CORS_HEADERS)
-	if map.map_flags & mapflag['public'] == 0:
-		return web.Response(status=401, text="Map isn't public", headers=MAIN_API_CORS_HEADERS)
+		return (False,web.Response(status=400, text="Couldn't load map", headers=MAIN_API_CORS_HEADERS))
+	#if map.map_flags & mapflag['public'] == 0:
+	#	return (False,web.Response(status=401, text="Map isn't public", headers=MAIN_API_CORS_HEADERS))
+	if map.deny & permission['entry']:
+		return (False,web.Response(status=401, text="That map is private", headers=MAIN_API_CORS_HEADERS))
+
+	return (True,map)
+
+@routes.get('/v1/map/{map_id}')
+async def map_info(request):
+	map_ok, map = map_from_id(request.match_info['map_id'])
+	if not map_ok:
+		return map
 
 	data = {}
 	if int(request.query.get('info', 1)):
@@ -139,34 +152,73 @@ async def map_info(request):
 @routes.get('/v1/tsd/{id}')
 async def get_tsd(request):
 	entity_id = request.match_info['id']
-	if not entity_id.isdecimal():
-		return web.Response(status=400, text="Tileset ID is invalid", headers=MAIN_API_CORS_HEADERS)
-	entity_id = int(entity_id)
+	if not s:
+		return web.Response(status=400, text="No image IDs provided", headers=MAIN_API_CORS_HEADERS)
+	if len(s) == 1:
+		if not entity_id.isdecimal():
+			return web.Response(status=400, text="Tileset ID is invalid", headers=MAIN_API_CORS_HEADERS)
+		entity_id = int(entity_id)
 
-	# Get and return the data
-	c = Database.cursor()
-	c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type('tileset'), entity_id,))
-	result = c.fetchone()
-	if result == None:
-		return web.Response(status=404, text="Couldn't find tileset", headers=MAIN_API_CORS_HEADERS)
+		# Get and return the data
+		c = Database.cursor()
+		c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type('tileset'), entity_id,))
+		result = c.fetchone()
+		if result == None:
+			return web.Response(status=404, text="Couldn't find tileset", headers=MAIN_API_CORS_HEADERS)
+		else:
+			return web.json_response({'id': entity_id, 'data': decompress_entity_data(result[0], result[1])}, headers=MAIN_API_CORS_HEADERS_CACHED)
 	else:
-		return web.json_response({'id': entity_id, 'data': decompress_entity_data(result[0], result[1])}, headers=MAIN_API_CORS_HEADERS)
+		out = {}
+		for i in s:
+			if not i.isdecimal():
+				continue
+			i = int(i)
+
+			# Get and return the data
+			c = Database.cursor()
+			c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type('tileset'), entity_id,))
+			result = c.fetchone()
+			if result == None:
+				continue
+			else:
+				out[i] = {'id': i, 'data': loads_if_not_none(decompress_entity_data(result[0], result[1]))}
+		return web.json_response(out, headers=MAIN_API_CORS_HEADERS_CACHED)
 
 @routes.get('/v1/img/{id}')
 async def get_img(request):
-	entity_id = request.match_info['id']
-	if not entity_id.isdecimal():
-		return web.Response(status=400, text="Image ID is invalid", headers=MAIN_API_CORS_HEADERS)
-	entity_id = int(entity_id)
+	s = request.match_info['id'].split(",")
+	if not s:
+		return web.Response(status=400, text="No image IDs provided", headers=MAIN_API_CORS_HEADERS)
+	if len(s) == 1:
+		entity_id = s[0]
+		if not entity_id.isdecimal():
+			return web.Response(status=400, text="Image ID is invalid", headers=MAIN_API_CORS_HEADERS)
+		entity_id = int(entity_id)
 
-	# Get and return the data
-	c = Database.cursor()
-	c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type['image'], entity_id,))
-	result = c.fetchone()
-	if result == None:
-		return web.Response(status=404, text="Couldn't find image", headers=MAIN_API_CORS_HEADERS)
+		# Get and return the data
+		c = Database.cursor()
+		c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type['image'], entity_id,))
+		result = c.fetchone()
+		if result == None:
+			return web.Response(status=404, text="Couldn't find image", headers=MAIN_API_CORS_HEADERS)
+		else:
+			return web.json_response({'id': entity_id, 'url': loads_if_not_none(decompress_entity_data(result[0], result[1]))}, headers=MAIN_API_CORS_HEADERS_CACHED)
 	else:
-		return web.json_response({'id': entity_id, 'url': loads_if_not_none(decompress_entity_data(result[0], result[1]))}, headers=MAIN_API_CORS_HEADERS)
+		out = {}
+		for i in s:
+			if not i.isdecimal():
+				continue
+			i = int(i)
+
+			# Get and return the data
+			c = Database.cursor()
+			c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type['image'], i,))
+			result = c.fetchone()
+			if result == None:
+				continue
+			else:
+				out[i] = {'id': i, 'url': loads_if_not_none(decompress_entity_data(result[0], result[1]))}
+		return web.json_response(out, headers=MAIN_API_CORS_HEADERS_CACHED)
 
 # ---------------------------------------------------------
 global_file_upload_size = 0
@@ -896,6 +948,55 @@ async def get_rrb(request):
 		response += "Nothing so far!"
 
 	response += "</body></html>"
+	return web.Response(text=response, content_type="text/html", charset="utf-8")
+
+
+# ---------------------------------------------------------
+
+@routes.get('/v1/map_page/{map_id}')
+async def get_map_page(request):
+	if not Config["MapPage"]["Enabled"]:
+		web.Response(status=503, text="Map pages are disabled", headers=MAIN_API_CORS_HEADERS)
+	map_ok, map = map_from_id(request.match_info['map_id'])
+	if not map_ok:
+		return map
+
+	map_x = request.query.get('x', '')
+	if map_x.isdecimal():
+		map_x = int(map_x)
+	else:
+		map_x = None
+	map_y = request.query.get('y', '')
+	if map_y.isdecimal():
+		map_y = int(map_y)
+	else:
+		map_y = None
+
+	map_info = map.map_info()
+	MapName  = html.escape(map_info.get("name", ""))
+	MapID    = html.escape(str(map_info.get("id", "")))
+	MapDesc  = html.escape(map_info.get("desc") or "") or "No description set"
+	MetaMapDesc = html.escape(map_info.get("desc") or (map_info.get("owner_username", "Someone")+"'s map"))
+	MapOwner = html.escape(map_info.get("owner_username", ""))
+	WebClientURL = "%s?map=%s"%(Config["Server"]["WebClientURL"],MapID)
+	WebClientTouchURL = "%s?map=%s"%(Config["Server"]["WebClientTouchURL"],MapID)
+	if map_x != None and map_y != None:
+		params = "%%20%d%%20%d" % (map_x, map_y)
+		WebClientURL += params
+		WebClientTouchURL += params
+	response = Config["MapPage"]["Template"].substitute(
+		MapName=MapName,
+		MapID=MapID,
+		MapDesc=MapDesc,
+		MetaMapDesc=MetaMapDesc,
+		MapOwner=MapOwner,
+		WSURL=Config["Server"]["WSURL"],
+		APIURL=Config["API"]["URL"],
+		AssetsBaseURL=Config["MapPage"]["AssetsBaseURL"],
+		WebClientURL=WebClientURL,
+		WebClientTouchURL=WebClientTouchURL,
+		ThisPageURL="%s/%s"%(Config["MapPage"]["PageBaseURL"], MapID)
+	)
 	return web.Response(text=response, content_type="text/html", charset="utf-8")
 
 # ---------------------------------------------------------

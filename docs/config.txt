@@ -61,6 +61,18 @@ Server.WSMaxQueue
 Default: 32
 Maximum number of incoming websocket messages allowed to queue up before the server stops processing incoming data.
 
+Server.WSURL
+Default: ""
+Publicly accessible URL that can be used to connect to this server with a WebSocket.
+
+Server.WebClientURL
+Default: ""
+Publicly accessible URL for the web client, if there is one.
+
+Server.WebClientTouchURL
+Default: ""
+Publicly accessible URL for the web client (touch UI version), if there is one.
+
 Server.BroadcastConnects
 Default: true
 If true, tell everyone on the server about users connecting.
@@ -302,6 +314,22 @@ Path to a https://github.com/NovaSquirrel/TilemapTownScriptingService executable
 
 Scripting.DataStorageLimit
 Limit for how much persistent information each script is allowed to store
+
+MapPage.Enabled
+Default: true
+If true, enables the "map page" feature, where every map gets its own URL
+
+MapPage.TemplateFile
+Default: ""
+If provided, this is the filename of the HTML template that will be used for map pages
+
+MapPage.AssetsBaseURL
+Default: ""
+If provided, this is the base URL for any files that the map page template may need to reference (like JavaScript files or CSS).
+
+MapPage.PageBaseURL
+Default: ""
+Public base URL of the page, to have the map ID appended to it
 
 .--------------------------------------------------------------------------------------------------
 | Resource files:

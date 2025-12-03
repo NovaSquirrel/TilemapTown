@@ -219,26 +219,6 @@ function updateWallpaperData(map) {
 	map.WallpaperData = {hasWallpaper, defaultTurf, wallpaperStartX, wallpaperStartY, wallpaperEndX, wallpaperEndY, wallpaperTileX, wallpaperTileY, wallpaperDrawX, wallpaperDrawY, wallpaperHasRepeat};
 }
 
-function updateWallpaperOnMap(map) {
-	// Check on the wallpaper
-	if(map.Info["wallpaper"] && Object.keys(map.Info["wallpaper"]).length != 0) {
-		if(map.WallpaperImage == null || map.WallpaperImage.src != map.Info["wallpaper"].url) {
-			let img = new Image();
-			img.onload = function(){
-				NeedMapRedraw = true;
-				backdropRerenderAll = true;
-				updateWallpaperData(map);
-			};
-			img.src = map.Info["wallpaper"].url;
-			map.WallpaperImage = img;
-		}
-		updateWallpaperData(map);
-	} else {
-		map.WallpaperImage = null;
-		map.WallpaperData = null;
-	}
-}
-
 function SendStatusMessageFromBeforeDisconnect() {
 	if(StatusOnDisconnect) {
 		const length = MessagesToRetry.length;
