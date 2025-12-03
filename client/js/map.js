@@ -350,7 +350,7 @@ function allMapImagesLoaded() {
 		let pic = atom.pic;
 		if (!pic)
 			return true;
-		if (pic[0] in IconSheets)
+		if (pic[0] in IconSheets && IconSheets[pic[0]].complete)
 			return true;
 		RequestImageIfNeeded(pic[0]);
 		return false;
