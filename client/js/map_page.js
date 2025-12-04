@@ -134,17 +134,11 @@ function init() {
 		document.getElementById("edge_button_"+i).addEventListener('mousedown', function mouseHandler(evt) {
 			if(!edgeLinks[i])
 				return;
-			zoomedIn = false;
-			mapCanvas.style.maxWidth = originalMapCanvasWidth;
-			mapCanvas.style.maxHeight = originalMapCanvasHeight;
 			mapID = edgeLinks[i];
 			drawMap(mapID);
 		}, false);
 	}
 	document.getElementById("edge_button_home").addEventListener('mousedown', function mouseHandler(evt) {
-		zoomedIn = false;
-		mapCanvas.style.maxWidth = originalMapCanvasWidth;
-		mapCanvas.style.maxHeight = originalMapCanvasHeight;
 		mapID = originalMapID;
 		drawMap(mapID);
 	}, false);
@@ -314,6 +308,10 @@ function waitForImagesToLoad(timestamp) {
 				}
 			}
 		}
+
+		zoomedIn = false;
+		mapCanvas.style.maxWidth = originalMapCanvasWidth;
+		mapCanvas.style.maxHeight = originalMapCanvasHeight;
 	} else {
 		window.requestAnimationFrame(waitForImagesToLoad);
 	}
