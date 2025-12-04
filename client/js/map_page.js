@@ -106,13 +106,22 @@ function init() {
 	const originalMapCanvasStyle = getComputedStyle(mapCanvas);
 	originalMapCanvasWidth = originalMapCanvasStyle.getPropertyValue("max-width");
 	originalMapCanvasHeight = originalMapCanvasStyle.getPropertyValue("max-height");
+
 	mapCanvas.addEventListener('mousedown', function (evt) {
 		if (evt.button != 0)
 			return;
+
+		let rect = mapCanvas.getBoundingClientRect();
+		let X = (evt.clientX - rect.left) / rect.width;
+		let Y = (evt.clientY - rect.top) / rect.height;
+
 		if (!zoomedIn) {
 			zoomedIn = true;
 			mapCanvas.style.maxWidth = "unset";
 			mapCanvas.style.maxHeight = "unset";
+			let containerStyle = getComputedStyle(mapCanvasContainer);
+			mapCanvasContainer.scrollLeft = X * (MyMap.Width * 16) - parseFloat(containerStyle.getPropertyValue("width"))/2;
+			mapCanvasContainer.scrollTop = Y * (MyMap.Height * 16) - parseFloat(containerStyle.getPropertyValue("height"))/2;
 		} else {
 			zoomedIn = false;
 			mapCanvas.style.maxWidth = originalMapCanvasWidth;
@@ -133,6 +142,9 @@ function init() {
 		}, false);
 	}
 	document.getElementById("edge_button_home").addEventListener('mousedown', function mouseHandler(evt) {
+		zoomedIn = false;
+		mapCanvas.style.maxWidth = originalMapCanvasWidth;
+		mapCanvas.style.maxHeight = originalMapCanvasHeight;
 		mapID = originalMapID;
 		drawMap(mapID);
 	}, false);
