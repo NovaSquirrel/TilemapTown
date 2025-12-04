@@ -114,7 +114,7 @@ def map_from_id(map_id):
 		return (False,web.Response(status=400, text="Couldn't load map", headers=MAIN_API_CORS_HEADERS))
 	#if map.map_flags & mapflag['public'] == 0:
 	#	return (False,web.Response(status=401, text="Map isn't public", headers=MAIN_API_CORS_HEADERS))
-	if map.deny & permission['entry']:
+	if (map.deny & permission['entry']) or (map.guest_deny & permission['entry']):
 		return (False,web.Response(status=401, text="That map is private", headers=MAIN_API_CORS_HEADERS))
 
 	return (True,map)
