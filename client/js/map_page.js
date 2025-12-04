@@ -125,6 +125,9 @@ function init() {
 		document.getElementById("edge_button_"+i).addEventListener('mousedown', function mouseHandler(evt) {
 			if(!edgeLinks[i])
 				return;
+			zoomedIn = false;
+			mapCanvas.style.maxWidth = originalMapCanvasWidth;
+			mapCanvas.style.maxHeight = originalMapCanvasHeight;
 			mapID = edgeLinks[i];
 			drawMap(mapID);
 		}, false);
