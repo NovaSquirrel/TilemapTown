@@ -4451,6 +4451,7 @@ function initWorld() {
 				document.getElementById('mapdesc').value = MyMap.Info.desc ?? "";
 				document.getElementById('mapowner').value = MyMap.Info.owner_username ?? "";
 				document.getElementById('mapid').value = MyMap.Info.id;
+				document.getElementById('shareMapLink').href = "/map/"+MyMap.Info.id;
 				document.getElementById('permission_build').checked = true;
 				document.getElementById('permission_object_entry').checked = true;
 				document.getElementById('permission_persistent_object').checked = true;
