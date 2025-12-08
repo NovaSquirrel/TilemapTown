@@ -3134,6 +3134,8 @@ def fn_entity(map, client, context, arg):
 				info += ' is at ' + e.map.name_and_username()
 			if not e.map or (e.map and e.map.db_id != e.map_id):
 				info += ' (or %s?)' % e.map_id
+			if not e.is_client():
+				info += " <%d,%d>" % (e.x,e.y)
 			respond(context, info)
 	elif subcommand == 'name':
 		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
