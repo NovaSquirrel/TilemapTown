@@ -500,7 +500,10 @@ function receiveServerMessage(cmd, arg) {
       if(arg.list) {
         PlayerWho = arg.list;
         PlayerImages = {}; // reset images list
+        let yourPlayerAnimation = PlayerAnimation[PlayerYou];
         PlayerAnimation = {}; // reset animation states
+        if (yourPlayerAnimation)
+          PlayerAnimation[PlayerYou] = yourPlayerAnimation;
         PlayerBuildMarkers = {}; // reset player build markers
         PlayerMiniTilemapImage = {}; // reset mini tilemap image list
         PlayerParticleImages = {}; // reset player particle image list
