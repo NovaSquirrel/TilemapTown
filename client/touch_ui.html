@@ -510,23 +510,36 @@
 <widget-window id="options" style="display: none;">
   <span slot="title">Options</span>
   <div slot="contents">
-    <label class="unselectable"><input type="checkbox" id="alwayscenter" checked="true">Always center camera</label><br>
     <label class="unselectable"><input type="checkbox" id="audiochatnotify" checked>Notify when people talk</label><br>
     <label class="unselectable"><input type="checkbox" id="audiomiscnotify">Notify on other messages</label><br>
     <label class="unselectable"><input type="checkbox" id="audiomapmusic">Play map background music</label><br>
     <label class="unselectable"><input type="checkbox" id="option-fly">Walk through walls</label><br>
-    <label class="unselectable"><input type="checkbox" id="option-entity-animation" checked>Entity animation</label><br>
-    <label class="unselectable"><input type="checkbox" id="option-tile-animation" checked>Tile animation</label><br>
-	<details>
-		<summary class="unselectable">More options</summary>
+	<details class="options-section">
+		<summary class="unselectable">Map display options</summary>
+		<label class="unselectable"><input type="checkbox" id="option-entity-animation" checked>Entity animation</label><br>
+		<label class="unselectable"><input type="checkbox" id="option-tile-animation" checked>Tile animation</label><br>
+		<label class="unselectable"><input type="checkbox" id="enable-user-particles" checked>Show user particles</label><br>
 		<label class="unselectable"><input type="checkbox" id="lock-zoom-level">Lock zoom level</label><br>
+		<label class="unselectable"><input type="checkbox" id="alwayscenter" checked="true">Always center camera</label><br>
+	</details>
+	<details class="options-section">
+		<summary class="unselectable">Chat options</summary>
 		<label class="unselectable"><input type="checkbox" id="warn-invalid-bbcode" checked>Warn about invalid BBCode</label><br>
 		<label class="unselectable"><input type="checkbox" id="chat-timestamp" checked>Show chat timestamps</label><br>
 		<label class="unselectable"><input type="checkbox" id="focus-map-after-chat">Refocus map after sending chat</label><br>
-		<label class="unselectable"><input type="checkbox" id="enable-user-particles" checked>Show user particles</label><br>
+	</details>
+	<details class="options-section">
+		<summary class="unselectable">Automatic idle options</summary>
+		<label class="unselectable">Mark self as idle after <input type="number" id="minutes-until-idle" size="4" value="60"> minutes</label><br>
+		<label class="unselectable">Disconnect after <input type="number" id="minutes-until-disconnect" size="4" value="720"> minutes</label><br>
+		Disable by entering 0
+	</details>
+	<details class="options-section">
+		<summary class="unselectable">More options</summary>
 		<label class="unselectable"><input type="range" id="music-volume" name="music_volume" min="0" max="100" value="100" step="5" onchange="updateMapMusicVolume()" />Music volume</label><br>
 		<label class="unselectable"><input type="text" id="safe-for-command-lists" size="14" placeholder="map,userpic,roll">Safe for command lists</label>
 	</details>
+	<hr>
 
     <ul>
       <li>
@@ -537,12 +550,6 @@
         <input id="zoomin" type="button" onclick="zoomIn();" value="+">
       </li>
     </ul>
-
-    <p>
-    <label class="unselectable">Mark self as idle after <input type="number" id="minutes-until-idle" size="4" value="60"> minutes</label><br>
-    <label class="unselectable">Disconnect after <input type="number" id="minutes-until-disconnect" size="4" value="720"> minutes</label><br>
-    Disable by entering 0
-    </p>
 
     <input type="button" onclick="applyOptions(); viewOptions();" value="OK">
     <input type="button" onclick="applyOptions();" value="Apply changes">
