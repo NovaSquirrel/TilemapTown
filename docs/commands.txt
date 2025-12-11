@@ -284,6 +284,14 @@ Parameters available:
     hide_me
 		Don't display my avatar while this animation is playing
 
+/bigpic
+/bigpic url frameWidth frameHeight
+/bigpic url frameWidth frameHeight d=directionCount o=offsetX,offsetY to=tileOffsetX,tileOffsetY
+Experimental feature that uses the mini tilemap feature to display a big, non-animated avatar in addition to your regular one. Optional parameters can be added.
+If the direction count is 2, 4, or 8 then the client will select a row from the image the same way it does for regular avatar images.
+Tile offsets choose a base row and column in the image, in frame sized units.
+
+
 ---Carrying users---
 /carry user
 /carryme user

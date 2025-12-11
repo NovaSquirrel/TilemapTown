@@ -57,6 +57,10 @@ let waitingOnMapScreenshot = 0; // Counts up every tick if nonzero
 const OK_DRAW_DISTANCE = 5;
 
 let autoOffsetSide = 0; // Subtract this from X offset if facing right, and add it to X offset if facing right.
+let bigPicEnabled = false;
+let bigPicDirectionCount = 0;
+let bigPicCurrentDirection = 0;
+let bigPicTileOffset = 0;
 
 ///////////////////////////////////////////////////////////
 // Chat
@@ -170,6 +174,60 @@ function runLocalCommand(t) {
 			}
 		}
 		return true;
+	} else if(tl === "/bigpic") {
+		bigPicEnabled = false;
+		bigPicDirectionCount = 0;
+		SendCmd("WHO", { update: { mini_tilemap: null } });
+		return true;
+	} else if(tl.startsWith("/bigpic ")) {
+		bigPicEnabled = false;
+		bigPicDirectionCount = 0;
+		bigPicTileOffset = 0;
+		let args = tl.slice(8);
+		if (args !== "off") {
+			args = args.split(' ');
+			if (args.length >= 3) {
+				let url = t.slice(8).split(' ')[0];
+				let frameWidth = parseInt(args[1]);
+				let frameHeight = parseInt(args[2]);
+				if ((url.startsWith("http://") || url.startsWith("https://")) && !Number.isNaN(frameWidth) && !Number.isNaN(frameHeight)) {
+					let out = {"map_size": [1,1], "tile_size": [frameWidth, frameHeight], "tileset_url": url, "transparent_tile": 4095};
+					for (let i=3; i<args.length; i++) {
+						let a = args[i].split("=");
+						if (a.length !== 2)
+							continue;
+						if (a[0] === "d") {
+							bigPicDirectionCount = parseInt(a[1]);
+							if (Number.isNaN(bigPicDirectionCount) || (bigPicDirectionCount<1))
+								bigPicDirectionCount = 1;
+						} else if (a[0] === "o") {
+							let c = a[1].split(",");
+							if (c.length === 2) {
+								let ox = parseInt(c[0]);
+								let oy = parseInt(c[1]);
+								if (!Number.isNaN(ox) && !Number.isNaN(oy))
+									out.offset = [ox, oy];
+							}
+						} else if (a[0] === "to") {
+							let c = a[1].split(",");
+							if (c.length === 2) {
+								let ox = parseInt(c[0]);
+								let oy = parseInt(c[1]);
+								if (!Number.isNaN(ox) && !Number.isNaN(oy))
+									bigPicTileOffset = ox | (oy<<6);
+							}
+						}
+					}
+					bigPicEnabled = true;
+					bigPicCurrentDirection = getBigPicDirection();
+					SendCmd("WHO", { update: { mini_tilemap: out, mini_tilemap_data: {data: [Math.min(4095, Math.max(0, bigPicCurrentDirection+bigPicTileOffset))]} } });
+					return true;
+				}
+			}
+		}
+
+		SendCmd("WHO", { update: { mini_tilemap: null } });
+		return true;
 	} else if(tl === "/cancelcommands") {
 		MessagesToRetry = [];
 		return true;
@@ -270,7 +328,7 @@ function sendTyping() {
 	const isTyping = document.activeElement === chatInput && chatInput.value.length > 0 && (!lowercase.startsWith("/") || lowercase.startsWith("/me ") || lowercase.startsWith("/ooc ") || lowercase.startsWith("/spoof "));
 
 	if (PlayerWho[PlayerYou].typing != isTyping) {
-		SendCmd("WHO", { update: { id: PlayerYou, typing: isTyping } });
+		SendCmd("WHO", { update: { typing: isTyping } });
 		PlayerWho[PlayerYou].typing = isTyping;
 		drawMap();
 	}
@@ -783,10 +841,33 @@ function keyDownHandler(e) {
 			}
 			movePlayer(PlayerYou, PlayerX, PlayerY, PlayerDir, new Set([PlayerYou]));
 		}
+
+		// Apply bigpic feature
+		if (bigPicEnabled) {
+			let newDirection = getBigPicDirection();
+			if (newDirection !== bigPicCurrentDirection) {
+				bigPicCurrentDirection = newDirection;
+				SendCmd("WHO", { update: { mini_tilemap_data: {data: [Math.min(4095, Math.max(0, bigPicCurrentDirection+bigPicTileOffset))]} } });
+			}
+		}
 	}
 }
 document.onkeydown = keyDownHandler;
 document.onkeyup = keyUpHandler;
+
+function getBigPicDirection() {
+	switch (bigPicDirectionCount) {
+		case 1:
+			return 0;
+		case 2:
+			return ((PlayerAnimation[PlayerYou]?.lastDirectionLR ?? 0) / 4) << 6;
+		case 4:
+			return ((PlayerAnimation[PlayerYou]?.lastDirection4 ?? 0) / 2) << 6;
+		case 8:
+			return PlayerWho[PlayerYou].dir << 6;
+	}
+	return 0;
+}
 
 ///////////////////////////////////////////////////////////
 // Mouse utilities

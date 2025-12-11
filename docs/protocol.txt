@@ -483,11 +483,11 @@ map_size, tile_size, and tileset_url are required. Total pixel size of the map c
 "mini_tilemap_data": {
 	"data": [tile, ...]
 }
-The tilemap's data is a list of integers. Formatted like a binary number it would look like:
+The tilemap's data is a list of integers, with run-length encoding. Formatted like a binary number, each integer would look like:
   rrrrrrryyyyyyxxxxxx
   |||||||||||||++++++- X position in the tileset, in tile units
   |||||||++++++------- Y position in the tileset, in tile units
-  +++++++------------- Number of time to repeat this tile (minus 1)
+  +++++++------------- Length of this run of tiles. (minus 1)
 This means the maximum tileset size is 64x64 tiles, for 4096 tile types.
 Tiles are specified top to bottom, going through each line from left to right. If tiles match "transparent_tile" it's not drawn.
 
