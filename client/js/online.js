@@ -1189,7 +1189,7 @@ function ConnectToServer() {
 		} else {
 			if (reason)
 				display += "<br>Reason: " + convertBBCode(reason);
-			should_reconnect = event.code == 1006;
+			should_reconnect = event.code == 1006 || event.code == 1011;
 		}
 
 		if(DidConnectOnce && (should_reconnect || !event.wasClean)) {
