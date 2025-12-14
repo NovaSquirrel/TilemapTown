@@ -1954,16 +1954,16 @@ function editItemShared(item) {
 				document.getElementById('edittileanimationoptions').style.display = "block";
 				itemobj = AtomFromName(item.data);
 				if (itemobj == null && item.pic !== null) {
-					itemobj = { pic: DefaultPics['default'] ?? [0, 8, 24] };
+					itemobj = { pic: DefaultPics['default'] ?? [0, 0, 91] };
 				}
 			} else {
 				if ("pic" in item && item.pic !== null)
 					itemobj = { pic: item.pic };
 				else
-					itemobj = { pic: DefaultPics['default'] ?? [0, 8, 24] };
+					itemobj = { pic: DefaultPics['default'] ?? [0, 0, 91] };
 			}
 			if (itemobj.pic[0] === INTERNAL_TILESET_ID) {
-				itemobj.pic = DefaultPics['default'] ?? [0, 8, 24];
+				itemobj.pic = DefaultPics['default'] ?? [0, 0, 91];
 			}
 			editItemOriginalSheet = itemobj.pic[0];
 			document.getElementById("tileImageSheetOptions").style.display = document.getElementById("itemImageIsSheet").checked ? "inline" : "none";
@@ -2440,8 +2440,8 @@ function newItemCreate(type) {
 		params['create']['temp'] = true;
 	}
 	if(type === "command_list") {
-		let sampleEmote1Pic = DefaultPics.sampleEmote1 ?? [0, 2, 24];
-		let sampleEmote2Pic = DefaultPics.sampleEmote2 ?? [0, 1, 24];
+		let sampleEmote1Pic = DefaultPics.sampleEmote1 ?? [0, 8, 89];
+		let sampleEmote2Pic = DefaultPics.sampleEmote2 ?? [0, 9, 89];
 		params.create.type = "client_data";
 		params.create.data = {"type": "command_list", "type_version": "0.0.1", "client_name": CLIENT_NAME, "data": [
 			{"name": "happy",   "command": `userparticle ${sampleEmote1Pic[0]} ${sampleEmote1Pic[1]} ${sampleEmote1Pic[2]} offset=0,-16`},
