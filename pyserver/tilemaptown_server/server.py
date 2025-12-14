@@ -306,7 +306,7 @@ async def client_handler(websocket):
 global loop
 
 async def async_main():
-	websocket_server = await websockets.serve(client_handler, None, Config["Server"]["Port"], max_size=Config["Server"]["WSMaxSize"], max_queue=Config["Server"]["WSMaxQueue"], origins=Config["Security"]["AllowedOrigins2"])
+	websocket_server = await websockets.serve(client_handler, None, Config["Server"]["Port"], max_size=Config["Server"]["WSMaxSize"], max_queue=Config["Server"]["WSMaxQueue"], origins=Config["Security"]["AllowedOrigins2"], ping_interval=Config["Server"]["WSPingInterval"], ping_timeout=Config["Server"]["WSPingTimeout"])
 	server_task = asyncio.create_task(websocket_server.serve_forever())
 	timer_task = asyncio.create_task(main_timer())
 	if Config["Scripting"]["Enabled"]:

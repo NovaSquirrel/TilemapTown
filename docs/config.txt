@@ -65,6 +65,15 @@ Server.WSURL
 Default: ""
 Publicly accessible URL that can be used to connect to this server with a WebSocket.
 
+Server.WSPingInterval
+Default: 20
+See https://websockets.readthedocs.io/en/stable/topics/keepalive.html
+Number of seconds between each keepalive ping.
+
+Server.WSPingTimeout
+Default: 20
+Number of seconds to wait until timing out a client for failure to respond to a ping.
+
 Server.WebClientURL
 Default: ""
 Publicly accessible URL for the web client, if there is one.

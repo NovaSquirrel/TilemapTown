@@ -72,6 +72,8 @@ def loadConfigJson(clearLogs=True):
 	setConfigDefault("Server",   "WSURL",            "")
 	setConfigDefault("Server",   "WSMaxSize",        0x40000) # 256K
 	setConfigDefault("Server",   "WSMaxQueue",       32)
+	setConfigDefault("Server",   "WSPingInterval",   20)
+	setConfigDefault("Server",   "WSPingTimeout",    20)
 	setConfigDefault("Server",   "BroadcastConnects", True)
 	setConfigDefault("Server",   "BroadcastDisconnects", True)
 	setConfigDefault("Server",   "MaxMapSize",       256)
