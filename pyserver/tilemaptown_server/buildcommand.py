@@ -747,7 +747,7 @@ def fn_tpaccept(map, client, context, arg):
 	elif request_type == 'tempgrant':
 		handlers['entity'](map, client, context, "me tempgrant %s %s" % (request_data, subject_id))
 	elif request_type == 'giveitem':
-		is_script = context.get('script_entity') != None
+		is_script = (not client.is_client()) or (context.get('script_entity') != None)
 		item, givetype = request_data
 		item = item()
 		if item == None:
