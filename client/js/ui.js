@@ -3194,7 +3194,7 @@ function logMessage(Message, Class, Params) {
 }
 
 function offerCommand(t) {
-	if (confirm('Run command "' + t + '"?')) {
+	if (t.startsWith("map ") || confirm('Run command "' + t + '"?')) {
 		if (runLocalCommand("/"+t));
 		else sendChatCommand(t);
 	}
