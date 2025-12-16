@@ -43,6 +43,8 @@ let DefaultPics = {};
 const SupportedTakeControlsKeys = ["turn-ne", "move-ne", "turn-se", "move-se", "turn-nw", "move-nw", "turn-sw", "move-sw", "turn-w", "move-w", "turn-s", "move-s", "turn-n", "move-n", "turn-e", "move-e", "use-item", "cancel", "hotbar-1", "hotbar-2", "hotbar-3", "hotbar-4", "hotbar-5", "hotbar-6", "hotbar-7", "hotbar-8", "hotbar-9", "hotbar-10"];
 const CLIENT_NAME = "Tilemap Town Web Client";
 
+const colorCodeRegex = /^#(?:[0-9a-f]{3}){1,2}$/i;
+
 // For messaging mode
 let alreadySeenStats = false;
 // For all modes
@@ -840,6 +842,28 @@ function receiveServerMessage(cmd, arg) {
       if(arg.name) {
         let escapedName = escape_tags(arg.name || "");
 
+		if (chatCustomNameColors) {
+			let color = PlayerWho[arg.id]?.who_tags?.name_color;
+			if (color && color.match(colorCodeRegex)) {
+				// Parse the color
+				let color6 = color;
+				if (color6.length === 4) {
+					color6 = `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`
+				}
+				let rgb = {
+					r: parseInt(color6.substr(1,2),16) / 255,
+					g: parseInt(color6.substr(3,2),16) / 255,
+					b: parseInt(color6.substr(5,2),16) / 255
+				};
+				let lab = RGBToOklab(rgb);
+				if (lab.L < 0.65) { // If the color is too dark, make it brighter
+					escapedName = `<span style="color: oklab(0.65 ${lab.a} ${lab.b});">${escapedName}</span>`
+				} else {
+					escapedName = `<span style="color: ${color};">${escapedName}</span>`
+				}
+			}
+		}
+
         if(arg.text.slice(0, 4).toLowerCase() == "/me ") {
           let message = arg.text.slice(4);
           let no_space = message.startsWith("'s ") || message.startsWith("'d ") || message.startsWith("'ll ");
@@ -1238,4 +1262,36 @@ function ConnectToServer() {
 	}
 
 	OnlineSocket.onmessage = receiveServerMessageEvent;
+}
+
+// Adapted from https://bottosson.github.io/posts/oklab/
+function RGBToOklab(rgb) {
+	let l = 0.4122214708 * rgb.r + 0.5363325363 * rgb.g + 0.0514459929 * rgb.b;
+	let m = 0.2119034982 * rgb.r + 0.6806995451 * rgb.g + 0.1073969566 * rgb.b;
+	let s = 0.0883024619 * rgb.r + 0.2817188376 * rgb.g + 0.6299787005 * rgb.b;
+
+	let l_ = Math.cbrt(l);
+	let m_ = Math.cbrt(m);
+	let s_ = Math.cbrt(s);
+
+	return {
+		L: 0.2104542553*l_ + 0.7936177850*m_ - 0.0040720468*s_,
+		a: 1.9779984951*l_ - 2.4285922050*m_ + 0.4505937099*s_,
+		b: 0.0259040371*l_ + 0.7827717662*m_ - 0.8086757660*s_,
+	};
+}
+function OklabToRGB(lab) {
+	let l_ = lab.L + 0.3963377774 * lab.a + 0.2158037573 * lab.b;
+	let m_ = lab.L - 0.1055613458 * lab.a - 0.0638541728 * lab.b;
+	let s_ = lab.L - 0.0894841775 * lab.a - 1.2914855480 * lab.b;
+
+	let l = l_*l_*l_;
+	let m = m_*m_*m_;
+	let s = s_*s_*s_;
+
+	return {
+		r: +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+		g: -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+		b: -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s,
+    };
 }

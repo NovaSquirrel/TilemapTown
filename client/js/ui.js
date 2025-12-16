@@ -132,6 +132,7 @@ var GlobalTilesArrayNames = [];
 let loadedBuiltInTilesetYet = false;
 
 let chatTimestamps = true;
+let chatCustomNameColors = true;
 let lockZoomLevel = false;
 let focusChatBarOnTabBack = false;
 let warnInvalidBBCode = true;
@@ -196,6 +197,7 @@ function loadOptions() {
 		document.getElementById("option-tile-animation").checked = saved_options.tile_animation ?? true;
 		document.getElementById("enable-user-particles").checked = saved_options.user_particles ?? true;
 		document.getElementById("chat-timestamp").checked = saved_options.chat_timestamps ?? true;
+		document.getElementById("chat-custom-name-colors").checked = saved_options.chat_custom_name_colors ?? true;
 		document.getElementById("minutes-until-idle").value = saved_options.minutes_until_idle ?? 60;
 		document.getElementById("minutes-until-disconnect").value = saved_options.minutes_until_disconnect ?? 720;
 		document.getElementById("warn-invalid-bbcode").value = saved_options.warn_invalid_bbcode ?? true;
@@ -219,6 +221,7 @@ function applyOptions() {
 	tileAnimationEnabled = document.getElementById("option-tile-animation").checked;
 	userParticlesEnabled = document.getElementById("enable-user-particles").checked;
 	chatTimestamps = document.getElementById("chat-timestamp").checked;
+	chatCustomNameColors = document.getElementById("chat-custom-name-colors").checked;
 	lockZoomLevel = document.getElementById("lock-zoom-level").checked;
 	warnInvalidBBCode = document.getElementById("warn-invalid-bbcode").checked;
 	focusMapAfterChat = document.getElementById("focus-map-after-chat").checked;
@@ -247,6 +250,7 @@ function applyOptions() {
 		"tile_animation": tileAnimationEnabled,
 		"user_particles": userParticlesEnabled,
 		"chat_timestamps": chatTimestamps,
+		"chat_custom_name_colors": chatCustomNameColors,
 		"lock_zoom_level": lockZoomLevel,
 		"minutes_until_idle": minutesUntilIdle,
 		"minutes_until_disconnect": minutesUntilDisconnect,
@@ -401,6 +405,7 @@ function viewCustomize() {
 	document.getElementById("quickstatus").value = PlayerWho[PlayerYou].status ?? "";
 	document.getElementById("quickstatus").value = PlayerWho[PlayerYou].status_message ?? "";
 	document.getElementById("newnick").value = PlayerWho[PlayerYou].name ?? "";
+	document.getElementById("myNameColor").value = PlayerWho[PlayerYou]?.who_tags?.name_color ?? "#ffffff";
 	if (typeof PlayerWho[PlayerYou].pic[0] === "string") {
 		document.getElementById("newcustompic").value = PlayerWho[PlayerYou].pic[0];
 	} else {
@@ -793,6 +798,17 @@ function loginHelpGuest() {
 
 function loginHelpEnableDisableConnect() {
 	document.getElementById("connectButton").disabled = (document.getElementById("loginuser").value.length == 0) || (document.getElementById("loginpass").value.length == 0);
+}
+
+function setCustomNameColor() {
+	let color = document.getElementById("myNameColor").value;
+	SendCmd("CMD", {text: "e me addtag who name_color " + color});
+	logMessage("Changed your name color to "+convertBBCode(`[color=${color}]${color}[/color]`), 'server_message',   {'isChat': false});
+}
+
+function clearCustomNameColor() {
+	SendCmd("CMD", {text: "e me deltag who name_color"});
+	logMessage("Changed your name back to the default color", 'server_message',   {'isChat': false});
 }
 
 ///////////////////////////////////////////////////////////

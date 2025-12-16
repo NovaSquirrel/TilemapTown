@@ -240,6 +240,7 @@ Other fields that may appear in WHO messages on the official server:
 	"who_tags": dictionary; This contains arbitrary metdata tags that have been set on the entity under the "who" tag group.
 		Standardized fields that can be in here:
 		"pronouns": string; The entity's pronouns as an arbitrary string.
+		"name_color": string; What color to display the entity's name in, formatted as #RRGGBB or #RGB. Client is responsible for verifying that the color is properly formatted. If this color is used in a chat log, it might be a good idea to check if the color would have enough contrast against the chat log's background color.
 	Most important fields to support are "id", "name", "pic", "x", "y", "dir" and ideally "offset" too.
 
 

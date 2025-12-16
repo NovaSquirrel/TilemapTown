@@ -526,6 +526,7 @@
 		<summary class="unselectable">Chat options</summary>
 		<label class="unselectable"><input type="checkbox" id="warn-invalid-bbcode" checked>Warn about invalid BBCode</label><br>
 		<label class="unselectable"><input type="checkbox" id="chat-timestamp" checked>Show chat timestamps</label><br>
+		<label class="unselectable"><input type="checkbox" id="chat-custom-name-colors" checked>Show custom name colors</label><br>
 		<label class="unselectable"><input type="checkbox" id="focus-map-after-chat">Refocus map after sending chat</label><br>
 	</details>
 	<details class="options-section">
@@ -563,6 +564,7 @@
   <strong>Name:</strong><br>
   <input type="text" placeholder="New name" id="newnick">
   <input type="button" value="Rename" onclick="sendChatCommand('nick '+document.getElementById('newnick').value);"><br>
+  <input type="color" id="myNameColor"> <button onclick="setCustomNameColor();">Set name color</button> <button onclick="clearCustomNameColor();">Clear name color</button><br><br>
 
   <strong>Status:</strong><br>
   <select id="quickstatus">

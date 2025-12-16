@@ -879,9 +879,13 @@ class Entity(PermissionsMixin, object):
 			self.tags = {}
 		if group != None and group not in self.tags:
 			self.tags[group] = {name: value}
+			if group == "who":
+				self.broadcast_who()
 			return
 		if group != None:
 			self.tags[group][name] = value
+			if group == "who":
+				self.broadcast_who()
 		else:
 			self.tags[name] = value
 
@@ -904,7 +908,9 @@ class Entity(PermissionsMixin, object):
 				return
 			look_in.pop(name, None)
 			if look_in == {}:
-				self.tags.pop(group, None)
+				self.tags.pop(group, None) # Clean up if this group is now empty
+			if group == "who":
+				self.broadcast_who()
 		if self.tags == {}:
 			self.tags = None
 
