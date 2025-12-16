@@ -841,9 +841,14 @@ function receiveServerMessage(cmd, arg) {
       senderIdForBbcode = arg.id ?? null;
       if(arg.name) {
         let escapedName = escape_tags(arg.name || "");
+
+        let lowerText = arg.text.toLowerCase();
+        if (escapedName && !lowerText.startsWith("/me ") && !lowerText.startsWith("/ooc ") && !lowerText.startsWith("/spoof ")) {
+          escapedName = `&lt;${escapedName}&gt;`;
+        }
         let colorName = escapedName;
 
-        if (chatCustomNameColors) {
+        if (chatCustomNameColors && !lowerText.startsWith("/spoof ")) {
           let color = PlayerWho[arg.id]?.who_tags?.name_color;
           if (color && color.match(colorCodeRegex)) {
             // Parse the color to check on its perceptual lightness
@@ -880,7 +885,7 @@ function receiveServerMessage(cmd, arg) {
             {'isChat': true, 'plainText': `* ${arg.text.slice(7)} (by ${arg.name})`,
             'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"], "id": arg["id"]});
         else
-          logMessage("&lt;"+colorName+"&gt; "+convertBBCodeChat(arg.text), 'user_message',
+          logMessage(colorName+" "+convertBBCodeChat(arg.text), 'user_message', // Will have <> added on by the earlier logic
             {'isChat': true, 'plainText': `<${arg.name}> ${arg.text}`,
             'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"], "id": arg["id"]});
       } else
