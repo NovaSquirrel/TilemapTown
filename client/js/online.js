@@ -807,7 +807,7 @@ function receiveServerMessage(cmd, arg) {
         let no_space = new_text.startsWith("'s ") || new_text.startsWith("'d ") || new_text.startsWith("'ll ");
         if(arg.receive)
           logMessage(respond+"&larr;["+escapedName+"("+escapedUsername+")"+"] * <i>"+escape_tags(arg.name)+(no_space?"":" ")+convertBBCodeChat(new_text)+'</i></span>', 'private_message',
-            {'isPrivateChat': true, 'plainText': `<-- [${escapedName}(${arg.username + typeMarker})] * ${arg.name}${no_space?"":" "}${new_text}`,
+            {'isPrivateChat': true, 'plainText': `<-- [${arg.name}(${arg.username + typeMarker})] * ${arg.name}${no_space?"":" "}${new_text}`,
             'timestamp': arg.timestamp, 'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"]});
         else
           logMessage(respond+"&rarr;["+escapedName+"("+escapedUsername+")"+"] * <i>"+escape_tags(PlayerWho[PlayerYou].name)+(no_space?"":" ")+convertBBCodeChat(new_text)+'</i></span>', 'private_message',
