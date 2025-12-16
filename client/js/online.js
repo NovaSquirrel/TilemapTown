@@ -841,45 +841,46 @@ function receiveServerMessage(cmd, arg) {
       senderIdForBbcode = arg.id ?? null;
       if(arg.name) {
         let escapedName = escape_tags(arg.name || "");
+        let colorName = escapedName;
 
-		if (chatCustomNameColors) {
-			let color = PlayerWho[arg.id]?.who_tags?.name_color;
-			if (color && color.match(colorCodeRegex)) {
-				// Parse the color
-				let color6 = color;
-				if (color6.length === 4) {
-					color6 = `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`;
-				}
-				let rgb = {
-					r: parseInt(color6.substr(1,2),16) / 255,
-					g: parseInt(color6.substr(3,2),16) / 255,
-					b: parseInt(color6.substr(5,2),16) / 255
-				};
-				let lab = RGBToOklab(rgb);
-				if (lab.L < 0.65) { // If the color is too dark, make it brighter
-					escapedName = `<span style="color: oklab(0.65 ${lab.a} ${lab.b});">${escapedName}</span>`;
-				} else {
-					escapedName = `<span style="color: ${color};">${escapedName}</span>`;
-				}
-			}
-		}
+        if (chatCustomNameColors) {
+          let color = PlayerWho[arg.id]?.who_tags?.name_color;
+          if (color && color.match(colorCodeRegex)) {
+            // Parse the color to check on its perceptual lightness
+            let color6 = color;
+            if (color6.length === 4) {
+              color6 = `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`;
+            }
+            let rgb = {
+              r: parseInt(color6.substr(1,2),16) / 255,
+              g: parseInt(color6.substr(3,2),16) / 255,
+              b: parseInt(color6.substr(5,2),16) / 255
+            };
+            let lab = RGBToOklab(rgb);
+            if (lab.L < 0.65) { // If the color is too dark, make it brighter
+              colorName = `<span style="color: oklab(0.65 ${lab.a} ${lab.b});">${escapedName}</span>`;
+            } else {
+              colorName = `<span style="color: ${color};">${escapedName}</span>`;
+            }
+          }
+        }
 
         if(arg.text.slice(0, 4).toLowerCase() == "/me ") {
           let message = arg.text.slice(4);
           let no_space = message.startsWith("'s ") || message.startsWith("'d ") || message.startsWith("'ll ");
-          logMessage("* <i>"+escapedName+(no_space?"":" ")+convertBBCodeChat(message)+"</i>", 'user_message',
-            {'isChat': true, 'plainText': `* ${escapedName}${no_space?"":" "}${message}`,
+          logMessage("* <i>"+colorName+(no_space?"":" ")+convertBBCodeChat(message)+"</i>", 'user_message',
+            {'isChat': true, 'plainText': `* ${arg.name}${no_space?"":" "}${message}`,
             'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"], "id": arg["id"]});
         } else if(arg.text.slice(0, 5).toLowerCase() == "/ooc ")
-          logMessage("[OOC] "+escapedName+": "+convertBBCodeChat(arg.text.slice(5)), 'ooc_message',
-            {'isChat': true, 'plainText': `[OOC] ${escapedName}: ${arg.text.slice(5)}`,
+          logMessage("[OOC] "+colorName+": "+convertBBCodeChat(arg.text.slice(5)), 'ooc_message',
+            {'isChat': true, 'plainText': `[OOC] ${arg.name}: ${arg.text.slice(5)}`,
             'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"], "id": arg["id"]});
         else if(arg.text.slice(0, 7).toLowerCase() == "/spoof ")
-          logMessage("* <i>"+convertBBCodeChat(arg.text.slice(7)) + "</i> <span class=\"spoof_name\">(by "+escapedName+")</span>", 'spoof_message',
+          logMessage("* <i>"+convertBBCodeChat(arg.text.slice(7)) + "</i> <span class=\"spoof_name\">(by "+colorName+")</span>", 'spoof_message',
             {'isChat': true, 'plainText': `* ${arg.text.slice(7)} (by ${arg.name})`,
             'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"], "id": arg["id"]});
         else
-          logMessage("&lt;"+escapedName+"&gt; "+convertBBCodeChat(arg.text), 'user_message',
+          logMessage("&lt;"+colorName+"&gt; "+convertBBCodeChat(arg.text), 'user_message',
             {'isChat': true, 'plainText': `<${arg.name}> ${arg.text}`,
             'username': arg["username"] ?? arg["id"], 'rc_username': arg["rc_username"] ?? arg["rc_id"], "id": arg["id"]});
       } else
