@@ -848,7 +848,7 @@ function receiveServerMessage(cmd, arg) {
 				// Parse the color
 				let color6 = color;
 				if (color6.length === 4) {
-					color6 = `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`
+					color6 = `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`;
 				}
 				let rgb = {
 					r: parseInt(color6.substr(1,2),16) / 255,
@@ -857,9 +857,9 @@ function receiveServerMessage(cmd, arg) {
 				};
 				let lab = RGBToOklab(rgb);
 				if (lab.L < 0.65) { // If the color is too dark, make it brighter
-					escapedName = `<span style="color: oklab(0.65 ${lab.a} ${lab.b});">${escapedName}</span>`
+					escapedName = `<span style="color: oklab(0.65 ${lab.a} ${lab.b});">${escapedName}</span>`;
 				} else {
-					escapedName = `<span style="color: ${color};">${escapedName}</span>`
+					escapedName = `<span style="color: ${color};">${escapedName}</span>`;
 				}
 			}
 		}

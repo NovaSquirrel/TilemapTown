@@ -237,19 +237,19 @@ function runLocalCommand(t) {
 		return true;
 	} else if(tl === "/whatobjs" || tl === "/whatobj") {
 		let tile = MyMap.Objs[PlayerWho[PlayerYou].x][PlayerWho[PlayerYou].y];
-		logMessage(convertBBCodeChat(`You're standing on [tt]${JSON.stringify(tile)}[/tt] (objects)`), 'server_message',   {'isChat': false});		
+		logMessage(convertBBCodeChat(`You're standing on [tt]${JSON.stringify(tile)}[/tt] (objects)`), 'server_message',   {'isChat': false});
 		return true;
 	} else if(tl == "/focuschat") {
 		focusChatDistance = null;
 		focusChatNames = [];
-		logMessage("Not focusing chat", 'server_message',   {'isChat': false});		
+		logMessage("Not focusing chat", 'server_message',   {'isChat': false});
 		return true;
 	} else if(tl.startsWith("/focuschat ")) {
 		let args = tl.slice(11);
 		if (args == "off") {
 			focusChatDistance = null;
 			focusChatNames = [];
-			logMessage("Not focusing chat", 'server_message',   {'isChat': false});		
+			logMessage("Not focusing chat", 'server_message',   {'isChat': false});
 			return true;
 		}
 		args = args.split(' ');
@@ -258,7 +258,7 @@ function runLocalCommand(t) {
 		if (args[0] === "names" || args[0] === "name" || args[0] === "username" || args[0] === "n") {
 			focusChatDistance = null;
 			focusChatNames = args.slice(1);
-			logMessage(convertBBCodeChat("Focusing chat on: "+(focusChatNames.join(", "))), 'server_message',   {'isChat': false});		
+			logMessage(convertBBCodeChat("Focusing chat on: "+(focusChatNames.join(", "))), 'server_message',   {'isChat': false});
 		} else if (args[0] === "distance" || args[0] === "d") {
 			focusChatNames = [];
 			focusChatDistance = parseInt(args[1]);
@@ -266,7 +266,7 @@ function runLocalCommand(t) {
 				logMessage("Invalid distance", 'server_message', {'isChat': false});		
 				focusChatDistance = null;
 			} else {
-				logMessage("Setting chat focus distance to "+focusChatDistance, 'server_message', {'isChat': false});		
+				logMessage("Setting chat focus distance to "+focusChatDistance, 'server_message', {'isChat': false});
 			}
 		} else if (args[0] === "distancenames" || args[0] === "distancename" || args[0] === "dn") {
 			focusChatDistance = parseInt(args[1]);
