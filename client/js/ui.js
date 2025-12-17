@@ -3104,24 +3104,27 @@ let alreadyPlayedSound = false;
 let focusChatDistance = null;
 let focusChatNames = [];
 
+function isDistantChat(Params) {
+	if (focusChatNames && Params.id !== undefined && Params.id !== PlayerYou) {
+		if (focusChatDistance && !focusChatNames.length) {
+			if (Params.id in PlayerWho && Math.sqrt(Math.pow(PlayerWho[Params.id].x - PlayerWho[PlayerYou].x, 2) + Math.pow(PlayerWho[Params.id].y - PlayerWho[PlayerYou].y, 2)) > focusChatDistance)
+				return true;
+		} else if (focusChatNames.length && !focusChatDistance) {
+			if (Params.username && !focusChatNames.includes(Params.username))
+				return true;
+		} else if (focusChatNames.length && focusChatDistance) {
+			if (Params.username && !focusChatNames.includes(Params.username) && Params.id in PlayerWho && Math.sqrt(Math.pow(PlayerWho[Params.id].x - PlayerWho[PlayerYou].x, 2) + Math.pow(PlayerWho[Params.id].y - PlayerWho[PlayerYou].y, 2)) > focusChatDistance)
+				return true;
+		}
+	}
+	return false;
+}
+
 function logMessage(Message, Class, Params) {
 	Params = Params ?? {};
 	let chatArea = document.getElementById("chatArea");
 	let bottom = chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight<3;
-	let distantChat = false;
-
-	if (Params.id !== undefined && Params.id !== PlayerYou && focusChatNames && Class !== "private_message") {
-		if (focusChatDistance && !focusChatNames.length) {
-			if (Params.id in PlayerWho && Math.sqrt(Math.pow(PlayerWho[Params.id].x - PlayerWho[PlayerYou].x, 2) + Math.pow(PlayerWho[Params.id].y - PlayerWho[PlayerYou].y, 2)) > focusChatDistance)
-				distantChat = true;
-		} else if (focusChatNames.length && !focusChatDistance) {
-			if (Params.username && !focusChatNames.includes(Params.username))
-				distantChat = true;
-		} else if (focusChatNames.length && focusChatDistance) {
-			if (Params.username && !focusChatNames.includes(Params.username) && Params.id in PlayerWho && Math.sqrt(Math.pow(PlayerWho[Params.id].x - PlayerWho[PlayerYou].x, 2) + Math.pow(PlayerWho[Params.id].y - PlayerWho[PlayerYou].y, 2)) > focusChatDistance)
-				distantChat = true;
-		}
-	}
+	let distantChat = (Class !== "private_message") && isDistantChat(Params);
 
 	let timestampText = "";
 	if (chatTimestamps) {

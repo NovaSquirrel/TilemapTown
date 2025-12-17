@@ -850,7 +850,7 @@ function receiveServerMessage(cmd, arg) {
 
         if (chatCustomNameColors && !lowerText.startsWith("/spoof ")) {
           let color = PlayerWho[arg.id]?.who_tags?.name_color;
-          if (color && color.match(colorCodeRegex)) {
+          if (color && color.match(colorCodeRegex) && !isDistantChat({id: arg.id, username: arg.username})) {
             // Parse the color to check on its perceptual lightness
             let color6 = color;
             if (color6.length === 4) {
