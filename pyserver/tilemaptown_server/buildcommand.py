@@ -2590,7 +2590,7 @@ def fn_operoverride(map, client, context, arg):
 @cmd_command(category="Server Admin", privilege_level="server_admin", no_entity_needed=True)
 def fn_broadcast(map, client, context, arg):
 	if len(arg) > 0:
-		broadcast_to_all("Admin broadcast: "+arg)
+		broadcast_to_all("Admin broadcast: "+arg, username=client.username_or_id())
 
 @cmd_command(category="Server Admin", privilege_level="server_admin", no_entity_needed=True)
 def fn_kill(map, client, context, arg):

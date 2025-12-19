@@ -382,9 +382,12 @@ def is_entity(e):
 def is_client_and_entity(e):
 	return isinstance(e, Entity) and e.is_client()
 
-def broadcast_to_all(text):
+def broadcast_to_all(text, username=None):
+	out = {'text': text, 'class': 'broadcast_message'}
+	if username:
+		out['username'] = username
 	for u in AllConnections:
-		u.send("MSG", {'text': text, 'class': 'broadcast_message'})
+		u.send("MSG", out)
 
 def find_client_by_db_id(id, inside=None):
 	for u in inside or AllClients:
