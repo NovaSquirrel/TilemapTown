@@ -1292,8 +1292,8 @@ def entity_drag(connection, map, client, context, arg, name):
 	else:
 		e.send("EXT", {name: arg})
 
-@ext_protocol_command("entity_click_end")
-def entity_click_end(connection, map, client, context, arg, name):
+@ext_protocol_command("entity_drag_end")
+def entity_drag_end(connection, map, client, context, arg, name):
 	#e = forward_ext_if_needed(arg['id'], 'CLICK')
 	e = get_entity_by_id(arg['id'], load_from_db=False)
 	if e == None:

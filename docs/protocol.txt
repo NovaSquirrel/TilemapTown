@@ -523,8 +523,8 @@ Notify an entity that the user clicked on it and has now moved their cursor over
 <-- EXT {"entity_drag": {"from_map_x": x, "from_map_y", y, "tile_x": x, "tile_y": y, "button": 0, "target": "entity"/"mini_tilemap", "id": id}}
 Same as above, but uses map coordinates
 
---> EXT {"entity_click_end": {"button": 0, "target": "entity"/"mini_tilemap"}}
-<-- EXT {"entity_click_end": {"button": 0, "target": "entity"/"mini_tilemap", "id": id}}
+--> EXT {"entity_drag_end": {"button": 0, "target": "entity"/"mini_tilemap"}}
+<-- EXT {"entity_drag_end": {"button": 0, "target": "entity"/"mini_tilemap", "id": id}}
 Notify an entity that the user has released the mouse button after clicking on it. (Whether or not drag messages were also sent)
 
 --> EXT {"key_press": {"id": id, "key": key_name, "down": true/false}}

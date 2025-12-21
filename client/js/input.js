@@ -1298,7 +1298,7 @@ function initMouse() {
 			return;
 		if (MousedOverEntityIsDragging) {
 			MousedOverEntityIsDragging = false;
-			SendCmd("EXT", { "entity_click_end":
+			SendCmd("EXT", { "entity_drag_end":
 				{"id": MousedOverEntityClickId, "target": MousedOverEntityClickIsTilemap ? "mini_tilemap" : "entity"}
 			});
 		}
