@@ -153,6 +153,11 @@ class Gadget(Entity):
 			if trait.on_entity_click(user, arg):
 				return
 
+	def receive_entity_drag(self, user, arg):
+		for trait in self.traits:
+			if trait.on_entity_drag(user, arg):
+				return
+
 	def receive_join(self, user):
 		for trait in self.traits:
 			if trait.on_entity_join(user):
@@ -284,6 +289,9 @@ class GadgetTrait(object):
 		return None
 
 	def on_entity_click(self, user, arg):
+		return None
+
+	def on_entity_drag(self, user, arg):
 		return None
 
 	def on_switch_map(self):

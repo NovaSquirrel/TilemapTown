@@ -812,7 +812,9 @@ class Entity(PermissionsMixin, object):
 		if hasattr(self, "mini_tilemap_data") and self.mini_tilemap_data != None:
 			out['mini_tilemap_data'] = self.mini_tilemap_data
 		if (hasattr(self, "clickable") and self.clickable) or 'CLICK' in self.forward_message_types:
-			out['clickable'] = True
+			out['clickable'] = self.clickable if hasattr(self, "clickable") else True
+		if (hasattr(self, "verbs") and self.verbs):
+			out['verbs'] = self.verbs
 
 		if self.offset and self.offset != [0,0]:
 			out['offset'] = self.offset

@@ -213,9 +213,12 @@ For client-to-server WHO updates, "id" is ignored if provided.
 
 Fields you can update with client-->server WHO update:
 	"typing": boolean, shows a currently-typing marker above your character if true
+		May also be the string "pause" to indicate that you haven't typed recently, but still have text in the client's text input box
 	"mini_tilemap": null, or an object (see Mini Tilemap section)
 	"mini_tilemap_data": null, or object (see Mini Tilemap section)
-	"clickable": boolean; If true, clicking this entity will send the entity a notification it can act on
+	"clickable": boolean or string; If true, this client/entity wants to be sent "entity_click" EXT messages when it is clicked. "drag" and "map_drag" are also valid values for this, which signal that this entity would like to receive "entity_drag" and "entity_click_end" EXT messages.
+	"usable": boolean; if True, you can send USE messages at this entity (web client will do this when the entity is clicked on)
+	"verbs": list of strings; This is a list of commands that you can /tell this entity. Server limits this list to 10 items currently.
 
 Other fields that may appear in WHO messages on the official server:
 	"name": string; Name of the entity
@@ -234,8 +237,6 @@ Other fields that may appear in WHO messages on the official server:
 	"offset": [x,y]; Offset in pixels away from where this entity would normally be drawn
 	"is_forwarding": boolean; If true, this entity is not a user, but some events that happen on the map this entity is on are being forwarded to a user
 	"chat_listener": boolean; If true, this entity is not a user, but chat messages that are sent to this entity's map are being forwarded to a user
-	"verbs": list of strings; This is a list of commands that you can /tell this entity
-	"usable": boolean; if True, you can send USE messages at this entity
 	"z_index": integer; an entity with a higher z-index should get shown over another when two entities are on the same Y coordinate
 	"who_tags": dictionary; This contains arbitrary metdata tags that have been set on the entity under the "who" tag group.
 		Standardized fields that can be in here:
@@ -355,10 +356,13 @@ Allows servers to explicitly provide tilesets, both to allow for custom ones and
 === Items ===
 --> MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "rc": 0}
 <-- MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "rc": 0}
-Move something else within the same container as you, if you are allowed to
+Move something else within the container it's in, if you are allowed to
 
 --> USE {"id": id}
 Use item
+
+<-- USE {"name": name, "id": id, "username": username}
+Message that you'll receive if USE is sent to your entity, or an entity you're listening for USE messages on.
 
 --> BAG {"create": {"name": name, "type": type}}
 --> BAG {"create": {"name": name, "type": type, "temp": true/false}}
@@ -472,7 +476,8 @@ Entities can display a little tilemap that overlays their graphic. You can use W
 
 "mini_tilemap": {              _Default___Purpose_
 	"visible": boolean,      | True    | If true, display the mini-tilemap; if false, hide it
-	"clickable", boolean,    | False   | If true, clients can click on the mini-tilemap to send the entity messages
+	"clickable", boolean,    | False   | If true, this entity wants to be sent "entity_click" EXT messages when it is clicked.
+		"drag" is also a valid value for this, which signals that this entity would like to receive "entity_drag" and "entity_click_end" EXT messages
 	"map_size": [w, h],      | N/A     | Size of the mini-tilemap, in tiles; max is [24, 24]
 	"tile_size": [w, h],     | N/A     | Size of each tile in the mini-tilemap, in pixels; max is [64, 64]
 	"tileset_url": string,   | N/A     | Image URL to use for the tiles
@@ -506,9 +511,21 @@ Here are the currently official types, supported by the official server:
 Get a list of EXT message types that the server can handle.
 
 --> EXT {"entity_click": {"x": x, "y": y, "button": 0, "target": "entity"/"mini_tilemap"}}
-<-- EXT {"entity_click": {"x": x, "y": y, "button": 0, "target": "entity"/"mini_tilemap"}}
+<-- EXT {"entity_click": {"x": x, "y": y, "button": 0, "target": "entity"/"mini_tilemap", "id": id}}
 Notify an entity that they were clicked on. X and Y are in pixels, starting from the top left of the entity or mini tilemap.
 "0" means left click, or a stylus tap, or anything like that.
+
+--> EXT {"entity_drag": {"from_x": x, "from_y", y, "x": x, "y": y, "button": 0, "target": "entity"/"mini_tilemap"}}
+<-- EXT {"entity_drag": {"from_x": x, "from_y", y, "x": x, "y": y, "button": 0, "target": "entity"/"mini_tilemap", "id": id}}
+Notify an entity that the user clicked on it and has now moved their cursor over the entity without releasing the mouse
+
+--> EXT {"entity_drag": {"from_map_x": x, "from_map_y", y, "tile_x": x, "tile_y": y, "button": 0, "target": "entity"/"mini_tilemap"}}
+<-- EXT {"entity_drag": {"from_map_x": x, "from_map_y", y, "tile_x": x, "tile_y": y, "button": 0, "target": "entity"/"mini_tilemap", "id": id}}
+Same as above, but uses map coordinates
+
+--> EXT {"entity_click_end": {"button": 0, "target": "entity"/"mini_tilemap"}}
+<-- EXT {"entity_click_end": {"button": 0, "target": "entity"/"mini_tilemap", "id": id}}
+Notify an entity that the user has released the mouse button after clicking on it. (Whether or not drag messages were also sent)
 
 --> EXT {"key_press": {"id": id, "key": key_name, "down": true/false}}
 Message gets forwarded to the entity specified in "id". Notifies the client

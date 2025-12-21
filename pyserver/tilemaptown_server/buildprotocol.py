@@ -81,7 +81,7 @@ def who_mini_tilemap(data):
 	if isinstance(data, dict):
 		filtered = remove_invalid_dict_fields(data, {
 			"visible":          bool,
-			"clickable":        bool,
+			"clickable":        lambda x: isinstance(x, bool) or x == "drag" or x == "map_drag",
 			"map_size":         lambda x: is_list_with_two_ints(x) and x[0] >= 1   and x[0] <= 24 and x[1] >= 1 and x[1] <= 24,
 			"tile_size":        lambda x: is_list_with_two_ints(x) and x[0] >= 1   and x[0] <= 64 and x[1] >= 1 and x[1] <= 64,
 			"offset":           lambda x: is_list_with_two_ints(x) and x[0] >= -32 and x[0] <= 32 and x[1] >= -32 and x[1] <= 32,
@@ -111,11 +111,12 @@ GlobalData['who_mini_tilemap'] = who_mini_tilemap
 GlobalData['who_mini_tilemap_data'] = who_mini_tilemap_data
 
 CLIENT_WHO_WHITELIST = {
-	"typing": bool,
-	"clickable": bool,
+	"typing": lambda x: bool(x) if x != "pause" else x,
+	"clickable": lambda x: bool(x) if (x != "drag" and x != "map_drag") else x,
 	"mini_tilemap": who_mini_tilemap,
 	"mini_tilemap_data": who_mini_tilemap_data,
 	"usable": bool,
+	"verbs": lambda x: x if (isinstance(x, list) and len(x) < 10 and all(isinstance(_, str) and len(_) < 40 for _ in x)) else None,
 }
 
 def validate_client_who(id, data):
@@ -1191,14 +1192,23 @@ def fn_USE(connection, map, client, arg, context):
 		actor = find_remote_control_entity(connection, client, arg['rc'], context)
 		if actor == None:
 			return
-		else:
-			map = actor.map
 
 	if 'id' not in arg:
 		return
 	e = get_entity_by_id(arg['id'], load_from_db=False)
-	if e != None and e.entity_type == entity_type['gadget']:
+	if e == None:
+		return
+	if e.entity_type == entity_type['gadget']:
 		e.receive_use(client)
+	else:
+		arg = {}
+		arg['id'] = actor.protocol_id()
+		arg['name'] = actor.name
+		arg['username'] = actor.username_or_id()
+		if actor is not client:
+			fields['rc_id'] = client.protocol_id()
+			fields['rc_username'] = client.username_or_id()
+		e.send("USE", arg)
 
 # -------------------------------------
 
@@ -1251,6 +1261,54 @@ def entity_click(connection, map, client, context, arg, name):
 
 	if e.entity_type == entity_type['gadget']:
 		e.receive_entity_click(client, arg)
+	else:
+		e.send("EXT", {name: arg})
+
+@ext_protocol_command("entity_drag")
+def entity_drag(connection, map, client, context, arg, name):
+	#e = forward_ext_if_needed(arg['id'], 'CLICK')
+	e = get_entity_by_id(arg['id'], load_from_db=False)
+	if e == None:
+		ext_error(context, code="not_found", subject_id=arg['id'])
+		return
+	arg = remove_invalid_dict_fields(arg, {
+		"x":                int, # Where 0,0 is the top left of the mini tilemap or the entity
+		"y":                int,
+		"from_x":           int,
+		"from_y":           int,
+		"map_x":            int,
+		"map_y":            int,
+		"from_map_x":       int,
+		"from_map_y":       int,
+		"button":           int, # Usually 0?
+		"target":           lambda x: x in (None, "entity", "mini_tilemap"),
+	})
+	if "button" not in arg:
+		arg["button"] = 0
+	arg['id'] = client.protocol_id()
+
+	if e.entity_type == entity_type['gadget']:
+		e.receive_entity_drag(client, arg)
+	else:
+		e.send("EXT", {name: arg})
+
+@ext_protocol_command("entity_click_end")
+def entity_click_end(connection, map, client, context, arg, name):
+	#e = forward_ext_if_needed(arg['id'], 'CLICK')
+	e = get_entity_by_id(arg['id'], load_from_db=False)
+	if e == None:
+		ext_error(context, code="not_found", subject_id=arg['id'])
+		return
+	arg = remove_invalid_dict_fields(arg, {
+		"button":           int, # Usually 0?
+		"target":           lambda x: x in (None, "entity", "mini_tilemap"),
+	})
+	if "button" not in arg:
+		arg["button"] = 0
+	arg['id'] = client.protocol_id()
+
+	if e.entity_type == entity_type['gadget']:
+		pass # Not currently notifying gadgets about click end messages
 	else:
 		e.send("EXT", {name: arg})
 

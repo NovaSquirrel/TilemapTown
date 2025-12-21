@@ -33,6 +33,12 @@ let MousedOverEntityClickIsTilemap = false;
 let MousedOverEntityClickIsUse = false;
 let MousedOverEntityClickX = undefined;
 let MousedOverEntityClickY = undefined;
+let MousedOverEntityIsDragging = false;
+let MousedOverEntityDragId = undefined;
+let MousedOverEntityDragIsMapMode = false;
+let MousedOverEntityDragIsTilemap = false;
+let MousedOverEntityDragLastX = undefined;
+let MousedOverEntityDragLastY = undefined;
 let MouseRawPos = null;
 
 let ShiftPressed = false;
@@ -1236,10 +1242,19 @@ function initMouse() {
 		if (MousedOverEntityClickAvailable && !ShiftPressed) {
 			if(MousedOverEntityClickIsUse)
 				SendCmd("USE", { "id": MousedOverEntityClickId })
-			else
+			else {
 				SendCmd("EXT", { "entity_click":
 					{"id": MousedOverEntityClickId, "x": MousedOverEntityClickX, "y": MousedOverEntityClickY, "target": MousedOverEntityClickIsTilemap ? "mini_tilemap" : "entity"}
 				});
+				if (PlayerWho[MousedOverEntityClickId]?.clickable === "drag" || PlayerWho[MousedOverEntityClickId]?.clickable === "map_drag") {
+					MousedOverEntityIsDragging = true;
+					MousedOverEntityDragId = MousedOverEntityClickId;
+					MousedOverEntityDragIsMapMode = PlayerWho[MousedOverEntityClickId]?.clickable === "map_drag";
+					MousedOverEntityDragIsTilemap = MousedOverEntityClickIsTilemap;
+					MousedOverEntityDragLastX = MousedOverEntityDragIsMapMode ? PlayerWho[MousedOverEntityClickId]?.x : MousedOverEntityClickX;
+					MousedOverEntityDragLastY = MousedOverEntityDragIsMapMode ? PlayerWho[MousedOverEntityClickId]?.y : MousedOverEntityClickY;
+				}
+			}
 		return;
 	}
 
@@ -1281,6 +1296,12 @@ function initMouse() {
 	mapCanvas.addEventListener('mouseup', function (evt) {
 		if (evt.button != 0)
 			return;
+		if (MousedOverEntityIsDragging) {
+			MousedOverEntityIsDragging = false;
+			SendCmd("EXT", { "entity_click_end":
+				{"id": MousedOverEntityClickId, "target": MousedOverEntityClickIsTilemap ? "mini_tilemap" : "entity"}
+			});
+		}
 		if(!MouseDown) {
 			return;
 		}
@@ -1460,7 +1481,64 @@ function initMouse() {
 		MousedOverPlayers = Around;
 		mapCanvas.style.cursor = MousedOverEntityClickAvailable ? "pointer" : "auto";
 
-		handleDragging(pos);
+		// Potentially send drag updates too, if you're currently dragging something
+		if (MousedOverEntityIsDragging && (MousedOverEntityDragId in PlayerWho)) {
+			let Mob = PlayerWho[MousedOverEntityDragId];
+			let MobOffset = Mob.offset ?? [0,0];
+
+			if (MousedOverEntityDragIsMapMode) {
+				if (pos.x !== MousedOverEntityDragLastX || pos.y !== MousedOverEntityDragLastY)
+					SendCmd("EXT", { "entity_drag":
+						{"id": MousedOverEntityDragId, "map_x": pos.x, "map_y": pos.y, "from_map_x": MousedOverEntityDragLastX ?? null, "from_map_y": MousedOverEntityDragLastY ?? null, "target": MousedOverEntityDragIsMapMode ? "mini_tilemap" : "entity"}
+					});
+				MousedOverEntityDragLastX = pos.x;
+				MousedOverEntityDragLastY = pos.y;
+			} else {
+				// Determine the bounding box of the entity being dragged over
+				let rectX = undefined, rectY = undefined, rectWidth = undefined, rectHeight = undefined;
+				if (MousedOverEntityDragIsTilemap) {
+					let mini_tilemap = Mob.mini_tilemap;
+					let mini_tilemap_offset = Mob.mini_tilemap.offset ?? [0,0];
+					let mini_tilemap_transparent_tile = Mob.mini_tilemap.transparent_tile ?? 0;
+					rectWidth = Mob.mini_tilemap.map_size[0] * Mob.mini_tilemap.tile_size[0];
+					rectHeight = Mob.mini_tilemap.map_size[1] * Mob.mini_tilemap.tile_size[1];
+					rectX = Math.round((Mob.x * 16) - PixelCameraX + MobOffset[0] + mini_tilemap_offset[0] + 8  - rectWidth / 2);
+					rectY = Math.round((Mob.y * 16) - PixelCameraY + MobOffset[1] + mini_tilemap_offset[1] + 16 - rectHeight);
+				} else {
+					let playerIs16x16 = true;
+					if (MousedOverEntityDragId in PlayerImages) {
+						let tilesetWidth = PlayerImages[MousedOverEntityDragId].naturalWidth;
+						let tilesetHeight = PlayerImages[MousedOverEntityDragId].naturalHeight;
+						playerIs16x16 = tilesetWidth == 16 && tilesetHeight == 16;
+					}
+					if(playerIs16x16) {
+						rectX = (Mob.x * 16) - PixelCameraX + MobOffset[0];
+						rectY = (Mob.y * 16) - PixelCameraY + MobOffset[1];
+						rectWidth = 16;
+						rectHeight = 16;
+					} else {
+						rectX = (Mob.x * 16 - 8) - PixelCameraX + MobOffset[0];
+						rectY = (Mob.y * 16 - 16) - PixelCameraY + MobOffset[1];
+						rectWidth = 32;
+						rectHeight = 32;
+					}
+				}
+
+				let within = rectX !== undefined && pixelPos.x >= rectX && pixelPos.y >= rectY && pixelPos.x < (rectX+rectWidth) && pixelPos.y < (rectY+rectHeight);
+				let dragX = Math.floor(pixelPos.x - rectX);
+				let dragY = Math.floor(pixelPos.y - rectY);
+				if (within && (dragX !== MousedOverEntityDragLastX || dragY !== MousedOverEntityDragLastY)) {
+					SendCmd("EXT", { "entity_drag":
+						{"id": MousedOverEntityDragId, "x": dragX, "y": dragY, "from_x": MousedOverEntityDragLastX ?? null, "from_y": MousedOverEntityDragLastY ?? null, "target": MousedOverEntityDragIsMapMode ? "mini_tilemap" : "entity"}
+					});
+				}
+				MousedOverEntityDragLastX = dragX;
+				MousedOverEntityDragLastY = dragY;
+			}
+		}
+
+		if (!MousedOverEntityIsDragging)
+			handleDragging(pos);
 	}, false);
 
 	// ----------------------------------------------------------------
