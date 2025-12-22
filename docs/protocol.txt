@@ -477,7 +477,8 @@ Entities can display a little tilemap that overlays their graphic. You can use W
 "mini_tilemap": {              _Default___Purpose_
 	"visible": boolean,      | True    | If true, display the mini-tilemap; if false, hide it
 	"clickable", boolean,    | False   | If true, this entity wants to be sent "entity_click" EXT messages when it is clicked.
-		"drag" is also a valid value for this, which signals that this entity would like to receive "entity_drag" and "entity_click_end" EXT messages
+		"drag" is also a valid value for this, which signals that this entity would like to receive "entity_drag" and "entity_drag_end" EXT messages
+		"map_drag" can be used as well, and works the same as if it were to appear on the entity itself
 	"map_size": [w, h],      | N/A     | Size of the mini-tilemap, in tiles; max is [24, 24]
 	"tile_size": [w, h],     | N/A     | Size of each tile in the mini-tilemap, in pixels; max is [64, 64]
 	"tileset_url": string,   | N/A     | Image URL to use for the tiles
@@ -519,8 +520,8 @@ Notify an entity that they were clicked on. X and Y are in pixels, starting from
 <-- EXT {"entity_drag": {"from_x": x, "from_y", y, "x": x, "y": y, "button": 0, "target": "entity"/"mini_tilemap", "id": id}}
 Notify an entity that the user clicked on it and has now moved their cursor over the entity without releasing the mouse
 
---> EXT {"entity_drag": {"from_map_x": x, "from_map_y", y, "tile_x": x, "tile_y": y, "button": 0, "target": "entity"/"mini_tilemap"}}
-<-- EXT {"entity_drag": {"from_map_x": x, "from_map_y", y, "tile_x": x, "tile_y": y, "button": 0, "target": "entity"/"mini_tilemap", "id": id}}
+--> EXT {"entity_drag": {"from_map_x": x, "from_map_y", y, "map_x": x, "map_y": y, "button": 0, "target": "entity"/"mini_tilemap"}}
+<-- EXT {"entity_drag": {"from_map_x": x, "from_map_y", y, "map_x": x, "map_y": y, "button": 0, "target": "entity"/"mini_tilemap", "id": id}}
 Same as above, but uses map coordinates
 
 --> EXT {"entity_drag_end": {"button": 0, "target": "entity"/"mini_tilemap"}}

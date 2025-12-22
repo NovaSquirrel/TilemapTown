@@ -1308,7 +1308,7 @@ def entity_drag_end(connection, map, client, context, arg, name):
 	arg['id'] = client.protocol_id()
 
 	if e.entity_type == entity_type['gadget']:
-		pass # Not currently notifying gadgets about click end messages
+		pass # Not currently notifying gadgets about drag end messages
 	else:
 		e.send("EXT", {name: arg})
 

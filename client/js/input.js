@@ -1489,7 +1489,7 @@ function initMouse() {
 			if (MousedOverEntityDragIsMapMode) {
 				if (pos.x !== MousedOverEntityDragLastX || pos.y !== MousedOverEntityDragLastY)
 					SendCmd("EXT", { "entity_drag":
-						{"id": MousedOverEntityDragId, "map_x": pos.x, "map_y": pos.y, "from_map_x": MousedOverEntityDragLastX ?? null, "from_map_y": MousedOverEntityDragLastY ?? null, "target": MousedOverEntityDragIsMapMode ? "mini_tilemap" : "entity"}
+						{"id": MousedOverEntityDragId, "map_x": pos.x, "map_y": pos.y, "from_map_x": MousedOverEntityDragLastX ?? null, "from_map_y": MousedOverEntityDragLastY ?? null, "target": MousedOverEntityDragIsTilemap ? "mini_tilemap" : "entity"}
 					});
 				MousedOverEntityDragLastX = pos.x;
 				MousedOverEntityDragLastY = pos.y;
@@ -1529,7 +1529,7 @@ function initMouse() {
 				let dragY = Math.floor(pixelPos.y - rectY);
 				if (within && (dragX !== MousedOverEntityDragLastX || dragY !== MousedOverEntityDragLastY)) {
 					SendCmd("EXT", { "entity_drag":
-						{"id": MousedOverEntityDragId, "x": dragX, "y": dragY, "from_x": MousedOverEntityDragLastX ?? null, "from_y": MousedOverEntityDragLastY ?? null, "target": MousedOverEntityDragIsMapMode ? "mini_tilemap" : "entity"}
+						{"id": MousedOverEntityDragId, "x": dragX, "y": dragY, "from_x": MousedOverEntityDragLastX ?? null, "from_y": MousedOverEntityDragLastY ?? null, "target": MousedOverEntityDragIsTilemap ? "mini_tilemap" : "entity"}
 					});
 				}
 				MousedOverEntityDragLastX = dragX;

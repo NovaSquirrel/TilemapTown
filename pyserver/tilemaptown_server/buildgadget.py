@@ -27,6 +27,12 @@ take_controls_options = {
 	"move": move_keys
 }
 
+def become_clickable(gadget, t):
+	if not gadget:
+		return
+	gadget.clickable = t
+	gadget.map.broadcast("WHO", {'update': {'id': gadget.protocol_id(), 'clickable': t}})
+
 class Gadget(Entity):
 	def __init__(self, entity_type_gadget, creator_id=None, do_not_load_scripts=False):
 		self.traits = []
@@ -559,6 +565,24 @@ class GadgetPushable(GadgetTrait):
 			self.gadget.map.broadcast("MOV", {'id': self.gadget.protocol_id(), 'from': [tx, ty], 'to': [new_x, new_y]}, remote_category=maplisten_type['move'])
 		return True
 
+class GadgetDraggable(GadgetTrait):
+	def on_init(self):
+		if not self.gadget:
+			return None
+		become_clickable(self.gadget, 'map_drag')
+
+	def on_shutdown(self):
+		if not self.gadget:
+			return
+		become_clickable(self.gadget, False)		
+
+	def on_entity_drag(self, user, arg):
+		if not self.gadget:
+			return None
+		if (not self.get_config("owner_only", False) or user.has_permission(self.gadget)) and (arg["map_x"] != self.gadget.x or arg["map_y"] != self.gadget.y):
+			self.gadget.move_to(arg["map_x"], arg["map_y"])
+			self.gadget.map.broadcast("MOV", {'id': self.gadget.protocol_id(), 'to': [self.gadget.x, self.gadget.y]}, remote_category=maplisten_type['move'])
+
 class GadgetScript(GadgetTrait):
 	def __init__(self, gadget, config):
 		super().__init__(gadget, config)
@@ -888,6 +912,8 @@ gadget_trait_class['random_tell'] = GadgetUseRandomTell
 gadget_trait_class['random_say'] = GadgetUseRandomSay
 gadget_trait_class['rc_car'] = GadgetRCCar
 gadget_trait_class['pushable'] = GadgetPushable
+gadget_trait_class['draggable'] = GadgetDraggable
+
 gadget_trait_class['auto_script'] = GadgetAutoScript
 gadget_trait_class['use_script'] = GadgetManualScript
 gadget_trait_class['map_script'] = GadgetMapScript
