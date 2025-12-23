@@ -1246,7 +1246,8 @@ function initMouse() {
 				SendCmd("EXT", { "entity_click":
 					{"id": MousedOverEntityClickId, "x": MousedOverEntityClickX, "y": MousedOverEntityClickY, "target": MousedOverEntityClickIsTilemap ? "mini_tilemap" : "entity"}
 				});
-				if (PlayerWho[MousedOverEntityClickId]?.clickable === "drag" || PlayerWho[MousedOverEntityClickId]?.clickable === "map_drag") {
+				if (!MousedOverEntityClickIsTilemap && (PlayerWho[MousedOverEntityClickId]?.clickable === "drag" || PlayerWho[MousedOverEntityClickId]?.clickable === "map_drag")
+				|| (MousedOverEntityClickIsTilemap && (PlayerWho[MousedOverEntityClickId]?.mini_tilemap?.clickable === "drag" || PlayerWho[MousedOverEntityClickId]?.mini_tilemap?.clickable === "map_drag"))) {
 					MousedOverEntityIsDragging = true;
 					MousedOverEntityDragId = MousedOverEntityClickId;
 					MousedOverEntityDragIsMapMode = PlayerWho[MousedOverEntityClickId]?.clickable === "map_drag";
