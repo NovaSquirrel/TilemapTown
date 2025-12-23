@@ -1966,7 +1966,7 @@ function editItemShared(item) {
 								document.getElementById('gadgetTypeRaw').checked = false;
 								document.getElementById('gadgetTypePreset').checked = true;
 							} else if(trait[0] === "random_tell" || trait[0] === "random_say") {
-								if (Array.isArray(trait[0].text)) {
+								if (Array.isArray(trait[1].text)) {
 									document.getElementById('edittilegadget_preset_random_message_text').value = trait[1].text.join('\n');
 								} else {
 									document.getElementById('edittilegadget_preset_random_message_text').value = trait[1].text ?? "";

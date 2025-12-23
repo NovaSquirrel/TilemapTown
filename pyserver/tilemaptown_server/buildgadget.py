@@ -1167,9 +1167,9 @@ gadget_trait_class['pushable'] = GadgetPushable
 gadget_trait_class['draggable'] = GadgetDraggable
 gadget_trait_class['mini_tilemap'] = GadgetMiniTilemap
 gadget_trait_class['user_particle'] = GadgetUserParticle
-gadget_trait_class['doodle_board'] = GadgetDoodleBoard # TODO
+gadget_trait_class['doodle_board'] = GadgetDoodleBoard
 gadget_trait_class['pic_cycle'] = GadgetPicCycle
-gadget_trait_class['projectile_shooter'] = GadgetProjectileShooter # TODO
+gadget_trait_class['projectile_shooter'] = GadgetProjectileShooter
 
 gadget_trait_class['auto_script'] = GadgetAutoScript
 gadget_trait_class['use_script'] = GadgetManualScript
