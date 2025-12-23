@@ -77,7 +77,7 @@ def remove_invalid_dict_fields(data, whitelist):
 	return out
 def is_list_with_two_ints(data):
 	return isinstance(data, list) and len(data) == 2 and isinstance(data[0], int) and isinstance(data[1], int)
-def who_mini_tilemap(data):
+def who_mini_tilemap(data, max_pixel_size=64):
 	if isinstance(data, dict):
 		filtered = remove_invalid_dict_fields(data, {
 			"visible":          bool,
@@ -90,7 +90,7 @@ def who_mini_tilemap(data):
 		})
 		if "map_size" not in filtered or "tile_size" not in filtered or "tileset_url" not in filtered:
 			return None
-		if (filtered["map_size"][0] * filtered["tile_size"][0] > 64) or (filtered["map_size"][1] * filtered["tile_size"][1] > 64):
+		if (filtered["map_size"][0] * filtered["tile_size"][0] > max_pixel_size) or (filtered["map_size"][1] * filtered["tile_size"][1] > max_pixel_size):
 			return None
 		# Fill in default values
 		if "visible" not in filtered:

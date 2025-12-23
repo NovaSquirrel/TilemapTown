@@ -728,13 +728,19 @@
 		</div>
 		<div id="edittilegadget_preset">
 			Preset: <select id="edittilegadget_preset_choice" onchange="changeGadgetPreset()">
-			  <option value="rc_car">Remote control car</option>
 			  <option value="accept_requests">Accept requests</option>
-			  <option value="random_say">Say random message</option>
-			  <option value="random_tell">Random private message</option>
-			  <option value="dice">Dice</option>
 			  <option value="bot_message_button">Bot message button</option>
+			  <option value="pic_cycle">Cycle through frames</option>
+			  <option value="dice">Dice</option>
+			  <!--<option value="doodle_board">Doodle board</option>-->
+			  <option value="draggable">Draggable</option>
+			  <option value="mini_tilemap">Mini tilemap</option>
+			  <!--<option value="projectile_shooter">Projectile shooter</option>-->
 			  <option value="pushable">Pushable</option>
+			  <option value="random_tell">Random private message</option>
+			  <option value="rc_car">Remote control car</option>
+			  <option value="random_say">Say random message</option>
+			  <option value="user_particle">User particle</option>
 			</select>
 			<div id="edittilegadget_preset_rc_car">
 				<label class="unselectable" for="edittilegadget_preset_rc_car_owner_only"><input type="checkbox" id="edittilegadget_preset_rc_car_owner_only">Only the owner can use this</label><br>
@@ -762,6 +768,51 @@
 			</div>
 			<div id="edittilegadget_preset_pushable">
 				<label class="unselectable" for="edittilegadget_preset_pushable_fly"><input type="checkbox" id="edittilegadget_preset_pushable_fly">Gadget can move through walls</label>
+			</div>
+			<div id="edittilegadget_preset_draggable">
+				<label class="unselectable" for="edittilegadget_preset_draggable_owner_only"><input type="checkbox" id="edittilegadget_preset_draggable_owner_only">Only the owner can drag this</label>
+			</div>
+			<div id="edittilegadget_preset_mini_tilemap">
+				<table border="0">
+				<tr><td>Tileset URL</td><td><input type="text" id="edittilegadget_preset_mini_tilemap_tileset_url" /></td></tr>
+				<tr><td>Tile width</td><td><input type="number" min="1" max="64" id="edittilegadget_preset_mini_tilemap_tile_width" /></td></tr>
+				<tr><td>Tile height</td><td><input type="number" min="1" max="64" id="edittilegadget_preset_mini_tilemap_tile_height" /></td></tr>
+				<tr><td>Offset</td><td><input type="number" size="5" id="edittilegadget_preset_mini_tilemap_offset_x" /> &times; <input type="number" size="5" id="edittilegadget_preset_mini_tilemap_offset_y" /></td></tr>
+				<tr><td>Type</td><td><select id="edittilegadget_preset_mini_tilemap_type">
+				  <option value="text">ASCII Text</option>
+				  <option value="single">x,y in tileset</option>
+				</select></td></tr>
+				<tr><td>What to show</td></td><td><textarea id="edittilegadget_preset_mini_tilemap_data"></textarea></td></tr>
+				</table>
+			</div>
+			<div id="edittilegadget_preset_user_particle">
+				<label class="unselectable" for="edittilegadget_preset_user_particle_owner_only"><input type="checkbox" id="edittilegadget_preset_user_particle_owner_only">Only the owner can use this</label><br>
+				<label class="unselectable">Particle to use: <input id="edittilegadget_preset_user_particle_particle" size="40" placeholder="0 13 53 anim_frames=7 anim_loops=0 hide_me"></label>
+			</div>
+			<div id="edittilegadget_preset_doodle_board">
+				<table border="0">
+				</table>
+			</div>
+			<div id="edittilegadget_preset_pic_cycle">
+				<table border="0">
+				<tr><td>First frame's pic</td><td><input type="text" placeholder="sheet x y" id="edittilegadget_preset_pic_cycle_first_pic" /> <button onclick="copyTraitPicFromGadget();">Copy from entity</button></td></tr>
+				<tr><td><label class="unselectable" for="edittilegadget_preset_pic_cycle_length">Number of frames</label></td><td><input type="number" value="1" min="1" id="edittilegadget_preset_pic_cycle_length" placeholder="1" size="3" /></td></tr>
+				<tr><td><label class="unselectable" for="edittilegadget_preset_pic_cycle_index">Current index</label></td><td><input type="number" value="0" min="0" id="edittilegadget_preset_pic_cycle_index" placeholder="0" size="3" /></td></tr>
+				<tr><td><label class="unselectable" for="edittilegadget_preset_pic_cycle_owner_only">Owner only</label></td><td><input type="checkbox" id="edittilegadget_preset_pic_cycle_owner_only" /></td></tr>
+				<tr><td><label class="unselectable" for="edittilegadget_preset_pic_cycle_random">Random frames</label></td><td><input type="checkbox" id="edittilegadget_preset_pic_cycle_random" /></td></tr>
+				<tr><td><label class="unselectable" for="edittilegadget_preset_pic_cycle_destroy_on_end">Destroy on end</label></td><td><input type="checkbox" id="edittilegadget_preset_pic_cycle_destroy_on_end" /></td></tr>
+				</table>
+			</div>
+			<div id="edittilegadget_preset_projectile_shooter">
+				<table border="0">
+				<tr><td><label class="unselectable" for="edittilegadget_preset_projectile_shooter_pic">Projectile pic</label></td><td><input type="text" id="edittilegadget_preset_projectile_shooter_pic" placeholder="0 0 0" /> <button onclick="copyTraitPicFromGadget();">Copy from entity</button></td></tr>
+				<tr><td><label class="unselectable" for="edittilegadget_preset_projectile_shooter_max_distance">Max distance</label></td><td><input type="number" id="edittilegadget_preset_projectile_shooter_max_distance" placeholder="100" /></td></tr>
+				<tr><td><label class="unselectable" for="edittilegadget_preset_projectile_shooter_speed">Flight speed (units of 0.1s)</label></td><td><input type="number" min="2" id="edittilegadget_preset_projectile_shooter_speed" placeholder="1" /></td></tr>
+				<tr><td><label class="unselectable" for="edittilegadget_preset_projectile_shooter_break_particle">Projectile break particle</label></td><td><input type="text" id="edittilegadget_preset_projectile_shooter_break_particle" placeholder="0 0 0" /></td></tr>
+				<tr><td><label class="unselectable" for="edittilegadget_preset_projectile_shooter_break_wall_hit">Break on wall hit</label></td><td><input type="checkbox" id="edittilegadget_preset_projectile_shooter_break_wall_hit" /></td></tr>
+				<tr><td><label class="unselectable" for="edittilegadget_preset_projectile_shooter_break_player_hit">Break on player hit</label></td><td><input type="checkbox" id="edittilegadget_preset_projectile_shooter_break_player_hit" /></td></tr>
+				<tr><td><label class="unselectable" for="edittilegadget_preset_projectile_shooter_break_max_distance">Break on max distance</label></td><td><input type="checkbox" id="edittilegadget_preset_projectile_shooter_break_max_distance" /></td></tr>
+				</table>
 			</div>
 		</div>
 		<div id="edittilegadget_raw">

@@ -31,7 +31,15 @@ def become_clickable(gadget, t):
 	if not gadget:
 		return
 	gadget.clickable = t
-	gadget.map.broadcast("WHO", {'update': {'id': gadget.protocol_id(), 'clickable': t}})
+	if gadget.map:
+		gadget.map.broadcast("WHO", {'update': {'id': gadget.protocol_id(), 'clickable': t}})
+
+def set_and_update_who(gadget, entity_field, who_field, value):
+	if not gadget:
+		return
+	setattr(gadget, entity_field, value)
+	if gadget.map:
+		gadget.map.broadcast("WHO", {'update': {'id': gadget.protocol_id(), who_field: value}})
 
 class Gadget(Entity):
 	def __init__(self, entity_type_gadget, creator_id=None, do_not_load_scripts=False):
@@ -116,73 +124,115 @@ class Gadget(Entity):
 	# '----------------------
 	def receive_switch_map(self):
 		for trait in self.traits:
-			if trait.on_switch_map():
-				return
+			try:
+				if trait.on_switch_map():
+					return
+			except:
+				pass
 
 	def receive_use(self, user):
 		for trait in self.traits:
-			if trait.on_use(user):
-				return
+			try:
+				if trait.on_use(user):
+					return
+			except:
+				pass
 
 	def receive_tell(self, user, text):
 		for trait in self.traits:
-			if trait.on_tell(user, text):
-				return
+			try:
+				if trait.on_tell(user, text):
+					return
+			except:
+				pass
 
 	def receive_request(self, user, request_type, request_data, accept_command, decline_command):
 		for trait in self.traits:
-			if trait.on_request(user, request_type, request_data, accept_command, decline_command):
-				return
+			try:
+				if trait.on_request(user, request_type, request_data, accept_command, decline_command):
+					return
+			except:
+				pass
 
 	def receive_request_result(self, user, request_type, request_data, result):
 		for trait in self.traits:
-			if trait.on_request_result(user, request_type, request_data, result):
-				return
+			try:
+				if trait.on_request_result(user, request_type, request_data, result):
+					return
+			except:
+				pass
 
 	def receive_key_press(self, user, key, down):
 		for trait in self.traits:
-			if trait.on_key_press(user, key, down):
-				return
+			try:
+				if trait.on_key_press(user, key, down):
+					return
+			except:
+				pass
 
 	def receive_bot_message_button(self, user, arg):
 		for trait in self.traits:
-			if trait.on_bot_message_button(user, arg):
-				return
+			try:
+				if trait.on_bot_message_button(user, arg):
+					return
+			except:
+				pass
 
 	def receive_took_controls(self, user, arg):
 		for trait in self.traits:
-			if trait.on_took_controls(user, arg):
-				return
+			try:
+				if trait.on_took_controls(user, arg):
+					return
+			except:
+				pass
 
 	def receive_entity_click(self, user, arg):
 		for trait in self.traits:
-			if trait.on_entity_click(user, arg):
-				return
+			try:
+				if trait.on_entity_click(user, arg):
+					return
+			except:
+				pass
 
 	def receive_entity_drag(self, user, arg):
 		for trait in self.traits:
-			if trait.on_entity_drag(user, arg):
-				return
+			try:
+				if trait.on_entity_drag(user, arg):
+					return
+			except:
+				pass
 
 	def receive_join(self, user):
 		for trait in self.traits:
-			if trait.on_entity_join(user):
-				return
+			try:
+				if trait.on_entity_join(user):
+					return
+			except:
+				pass
 
 	def receive_leave(self, user):
 		for trait in self.traits:
-			if trait.on_entity_leave(user):
-				return
+			try:
+				if trait.on_entity_leave(user):
+					return
+			except:
+				pass
 
 	def receive_chat(self, user, text):
 		for trait in self.traits:
-			if trait.on_chat(user, text):
-				return
+			try:
+				if trait.on_chat(user, text):
+					return
+			except:
+				pass
 
 	def receive_zone(self, user, fx, fy, tx, ty, dir, zone_index, callback):
 		for trait in self.traits:
-			if trait.on_zone(user, fx, fy, tx, ty, dir, zone_index, callback):
-				return
+			try:
+				if trait.on_zone(user, fx, fy, tx, ty, dir, zone_index, callback):
+					return
+			except:
+				pass
 
 	# .----------------------
 	# | Miscellaneous
@@ -577,11 +627,129 @@ class GadgetDraggable(GadgetTrait):
 		become_clickable(self.gadget, False)		
 
 	def on_entity_drag(self, user, arg):
-		if not self.gadget:
+		if not self.gadget or not self.gadget.map:
 			return None
-		if (not self.get_config("owner_only", False) or user.has_permission(self.gadget)) and (arg["map_x"] != self.gadget.x or arg["map_y"] != self.gadget.y):
+		if (not self.get_config("owner_only", False) or user.has_permission(self.gadget)) and (arg["map_x"] != self.gadget.x or arg["map_y"] != self.gadget.y) and arg["map_x"] >= 0 and arg["map_y"] >= 0 and arg["map_x"] < self.gadget.map.width and arg["map_y"] < self.gadget.map.height:
 			self.gadget.move_to(arg["map_x"], arg["map_y"])
 			self.gadget.map.broadcast("MOV", {'id': self.gadget.protocol_id(), 'to': [self.gadget.x, self.gadget.y]}, remote_category=maplisten_type['move'])
+
+class GadgetMiniTilemap(GadgetTrait):
+	def on_init(self):
+		if not self.gadget:
+			return None
+		tileset_url = self.get_config("tileset_url", None)
+		tile_size = self.get_config("tile_size", [4,6])
+		offset = self.get_config("offset", [0,0])
+		if not tileset_url:
+			tileset_url = Config["Server"]["ResourceIMGBase"] + "font/tomthumb.png"
+		if not tileset_url.startswith("https://") and not tileset_url.startswith("http://"):
+			tileset_url = Config["Server"]["ResourceIMGBase"] + "mini_tilemap/" + tileset_url
+
+		map_width = 1
+		map_height = 1
+		map_data = [0]
+		text = self.get_config("text", "")[:128]
+		if text:
+			lines = text.split("\n")
+			map_height = len(lines)
+			map_width = max(len(_) for _ in lines)
+			map_data = []
+			for line in lines:
+				for char in line:
+					c = ord(char) - 0x20
+					map_data.append(((c&0xF0) << 2) | (c & 0x0F))
+				map_data.extend([0] * (map_width - len(line)))
+		else:
+			single = self.get_config("single", "")
+			if single:
+				map_data = [single[0] | (single[1]<<6)]
+
+		mini_tilemap = GlobalData['who_mini_tilemap']({
+			"map_size": [map_width, map_height],
+			"tile_size": tile_size,
+			"offset": offset,
+			"transparent_tile": -1,
+			"tileset_url": tileset_url,
+		}, max_pixel_size=128)
+		mini_tilemap_data = GlobalData['who_mini_tilemap_data']({
+			"data": map_data
+		})
+		self.gadget.mini_tilemap = mini_tilemap;
+		self.gadget.mini_tilemap_data = mini_tilemap_data;
+		if self.gadget.map:
+			self.gadget.map.broadcast("WHO", {"update": {"id": self.gadget.protocol_id(), "mini_tilemap": mini_tilemap, "mini_tilemap_data": mini_tilemap_data}})
+
+	def on_shutdown(self):
+		if not self.gadget:
+			return
+		self.gadget.mini_tilemap      = None
+		self.gadget.mini_tilemap_data = None
+		if self.gadget.map:
+			self.gadget.map.broadcast("WHO", {'update': {'id': self.gadget.protocol_id(), 'mini_tilemap': None, 'mini_tilemap_data': None}})
+
+class GadgetUserParticle(GadgetTrait):
+	usable = True
+
+	def on_use(self, user):
+		if not self.gadget:
+			return None
+		if self.get_config('owner_only') and not user.has_permission(self.gadget):
+			return False
+		actor = self.gadget if self.gadget.map is user.map else user
+		handle_user_command(actor.map, actor, None, "userparticle " + self.get_config('particle', '0 0 0'))
+		return False
+
+class GadgetDoodleBoard(GadgetTrait):
+	def on_init(self):
+		if not self.gadget:
+			return None
+
+class GadgetPicCycle(GadgetTrait):
+	usable = True
+
+	def on_init(self):
+		self.current_frame  = self.get_config('index', 0)
+		self.length         = self.get_config('length', 1)
+		self.pic            = self.get_config('first_pic', [0,0,0])
+		if not pic_is_okay(self.pic):
+			self.pic = [0,0,0]
+		if not self.gadget:
+			return None
+		set_and_update_who(self.gadget, 'pic', 'pic', [self.pic[0], self.pic[1]+self.current_frame, self.pic[2]])
+
+	def on_use(self, user):
+		if not self.gadget:
+			return None
+		if self.get_config('owner_only') and not user.has_permission(self.gadget):
+			return True
+		if self.get_config('random', False):
+			self.current_frame = random.randint(0, self.length-1)
+		else:
+			self.current_frame += 1
+
+		if self.current_frame >= self.length:
+			if self.get_config('destroy_on_end', False):
+				self.gadget.clean_up()
+				return False
+			else:
+				self.current_frame = 0
+		self.set_config('index', self.current_frame)
+		set_and_update_who(self.gadget, 'pic', 'pic', [self.pic[0], self.pic[1]+self.current_frame, self.pic[2]])
+		return False
+
+class GadgetProjectile(GadgetTrait):
+	usable = True
+
+	def on_use(self, user):
+		if not self.gadget:
+			return None
+
+class GadgetProjectileShooter(GadgetTrait):
+	usable = True
+
+	def on_use(self, user):
+		if not self.gadget:
+			return None
 
 class GadgetScript(GadgetTrait):
 	def __init__(self, gadget, config):
@@ -913,6 +1081,12 @@ gadget_trait_class['random_say'] = GadgetUseRandomSay
 gadget_trait_class['rc_car'] = GadgetRCCar
 gadget_trait_class['pushable'] = GadgetPushable
 gadget_trait_class['draggable'] = GadgetDraggable
+gadget_trait_class['mini_tilemap'] = GadgetMiniTilemap
+gadget_trait_class['user_particle'] = GadgetUserParticle
+gadget_trait_class['doodle_board'] = GadgetDoodleBoard # TODO
+gadget_trait_class['pic_cycle'] = GadgetPicCycle
+gadget_trait_class['projectile'] = GadgetProjectile # TODO
+gadget_trait_class['projectile_shooter'] = GadgetProjectileShooter # TODO
 
 gadget_trait_class['auto_script'] = GadgetAutoScript
 gadget_trait_class['use_script'] = GadgetManualScript

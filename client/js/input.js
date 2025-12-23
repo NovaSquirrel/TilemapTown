@@ -197,7 +197,7 @@ function runLocalCommand(t) {
 				let frameWidth = parseInt(args[1]);
 				let frameHeight = parseInt(args[2]);
 				if ((url.startsWith("http://") || url.startsWith("https://")) && !Number.isNaN(frameWidth) && !Number.isNaN(frameHeight)) {
-					let out = {"map_size": [1,1], "tile_size": [frameWidth, frameHeight], "tileset_url": url, "transparent_tile": 4095};
+					let out = {"map_size": [1,1], "tile_size": [frameWidth, frameHeight], "tileset_url": url, "transparent_tile": -1};
 					for (let i=3; i<args.length; i++) {
 						let a = args[i].split("=");
 						if (a.length !== 2)
