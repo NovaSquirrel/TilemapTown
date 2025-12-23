@@ -26,6 +26,7 @@ move_keys = set(("move-n", "move-ne", "move-e", "move-se", "move-s", "move-sw", 
 take_controls_options = {
 	"move": move_keys
 }
+directions = ((1,0), (1,1), (0,1), (-1,1), (-1,0), (-1,-1), (0,-1), (1,-1))
 
 def become_clickable(gadget, t):
 	if not gadget:
@@ -69,13 +70,19 @@ class Gadget(Entity):
 	def clean_up(self):
 		self.release_all_controls()
 		for trait in self.traits:
-			trait.on_shutdown()
+			try:
+				trait.on_shutdown()
+			except:
+				pass
 		super().clean_up()
 
 	def reload_traits(self):
 		self.release_all_controls()
 		for trait in self.traits:
-			trait.on_shutdown()
+			try:
+				trait.on_shutdown()
+			except:
+				pass
 		self.traits = []
 		for trait in self.data:
 			trait_type = trait[0]
@@ -83,7 +90,10 @@ class Gadget(Entity):
 			if trait_type in gadget_trait_class:
 				self.traits.append(gadget_trait_class[trait_type](self, trait_data))
 		for trait in self.traits:
-			trait.on_init()
+			try:
+				trait.on_init()
+			except:
+				pass
 
 	def load_data(self):
 		try:
@@ -648,7 +658,7 @@ class GadgetMiniTilemap(GadgetTrait):
 		map_width = 1
 		map_height = 1
 		map_data = [0]
-		text = self.get_config("text", "")[:128]
+		text = self.get_config("text", "")[:256]
 		if text:
 			lines = text.split("\n")
 			map_height = len(lines)
@@ -670,7 +680,7 @@ class GadgetMiniTilemap(GadgetTrait):
 			"offset": offset,
 			"transparent_tile": -1,
 			"tileset_url": tileset_url,
-		}, max_pixel_size=128)
+		}, max_pixel_width=128)
 		mini_tilemap_data = GlobalData['who_mini_tilemap_data']({
 			"data": map_data
 		})
@@ -737,19 +747,93 @@ class GadgetPicCycle(GadgetTrait):
 		set_and_update_who(self.gadget, 'pic', 'pic', [self.pic[0], self.pic[1]+self.current_frame, self.pic[2]])
 		return False
 
-class GadgetProjectile(GadgetTrait):
-	usable = True
-
-	def on_use(self, user):
-		if not self.gadget:
-			return None
-
 class GadgetProjectileShooter(GadgetTrait):
 	usable = True
 
+	def on_init(self):
+		self.projectile_count = 0
+
 	def on_use(self, user):
-		if not self.gadget:
+		if not self.gadget or self.projectile_count >= 5:
 			return None
+
+		# Is the starting position a wall? If so, don't even make the projectile
+		start_position = self.gadget if self.gadget.map is user.map else user
+		dir = min(7, max(0, self.get_config('dir', user.dir)))
+		offset_x, offset_y = directions[dir]
+		try_x = start_position.x+offset_x
+		try_y = start_position.y+offset_y
+		if self.get_config('break_wall_hit', False) and try_x >= 0 and try_y >= 0 and start_position.map and try_x < start_position.map.width and try_y < start_position.map.height:
+			if get_tile_density(start_position.map.turfs[try_x][try_y]) or any((get_tile_density(o) for o in (start_position.map.objs[try_x][try_y] or []))):
+				return
+
+		# Create the projectile entity and set it up
+		projectile = Entity(entity_type['generic'])
+		projectile.temporary = True
+		projectile.allow = permission['all']
+		projectile.deny = 0
+		projectile.guest_deny = 0
+		projectile.owner_id = self.gadget.owner_id
+		projectile.creator_temp_id = self.gadget.creator_temp_id
+		projectile.dir = dir
+		projectile._distance = 0
+		pic = self.get_config('pic')
+		if pic_is_okay(pic):
+			projectile.pic = pic
+
+		if not projectile.switch_map(user.map, new_pos=[try_x, try_y]):
+			projectile.clean_up()
+			return
+		self.projectile_count += 1
+		asyncio.get_event_loop().call_later(0.15, self.projectile_fly, projectile)
+
+	def projectile_fly(self, projectile):
+		if self.gadget == None:
+			self.projectile_count = max(0, self.projectile_count-1)
+			return
+
+		offset_x, offset_y = directions[projectile.dir]
+		try_x = projectile.x + offset_x
+		try_y = projectile.y + offset_y
+		break_now = False
+		do_break_animation = True
+
+		# Time to destroy particle?
+		projectile._distance += 1
+		if projectile._distance >= min(50, self.get_config('max_distance', 50)):
+			break_now = True
+			do_break_animation = self.get_config('break_max_distance', False)
+		elif projectile.map and projectile.map.is_map() and projectile.map.map_data_loaded:
+			if try_x >= 0 and try_y >= 0 and try_x < projectile.map.width and try_y < projectile.map.height:
+				if self.get_config('break_wall_hit', False):
+					if get_tile_density(projectile.map.turfs[try_x][try_y]) or any((get_tile_density(o) for o in (projectile.map.objs[try_x][try_y] or []))):
+						break_now = True
+			else:
+				break_now = True
+		# Can destroy when hitting a user too, if configured to do that
+		if not break_now and self.get_config('break_user_hit', False):
+			for entity in projectile.map.contents:
+				if entity is projectile or not entity.is_client():
+					continue
+				if entity.x == try_x and entity.y == try_y:
+					break_now = True
+					break
+
+		# Destroy projectile if needed
+		if break_now:
+			self.projectile_count = max(0, self.projectile_count-1)
+			if do_break_animation and self.get_config('break_particle'):
+				handle_user_command(projectile.map, self.gadget, None, "userparticle %s at=%d,%d" % (self.get_config('break_particle'), projectile.x, projectile.y))
+			projectile.clean_up()
+			return
+
+		old_x = projectile.x
+		old_y = projectile.y
+		projectile.move_to(try_x, try_y)
+		if projectile.map:
+			projectile.map.broadcast("MOV", {'id': projectile.protocol_id(), 'from': [old_x, old_y], 'to': [try_x, try_y]}) # Don't set remote category to avoid spamming
+
+		asyncio.get_event_loop().call_later(0.15, self.projectile_fly, projectile)
 
 class GadgetScript(GadgetTrait):
 	def __init__(self, gadget, config):
@@ -1085,7 +1169,6 @@ gadget_trait_class['mini_tilemap'] = GadgetMiniTilemap
 gadget_trait_class['user_particle'] = GadgetUserParticle
 gadget_trait_class['doodle_board'] = GadgetDoodleBoard # TODO
 gadget_trait_class['pic_cycle'] = GadgetPicCycle
-gadget_trait_class['projectile'] = GadgetProjectile # TODO
 gadget_trait_class['projectile_shooter'] = GadgetProjectileShooter # TODO
 
 gadget_trait_class['auto_script'] = GadgetAutoScript

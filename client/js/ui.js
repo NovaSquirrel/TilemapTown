@@ -1928,10 +1928,10 @@ function editItemShared(item) {
 				document.getElementById('edittilegadget_preset_pic_cycle_destroy_on_end').checked = false
 				document.getElementById('edittilegadget_preset_projectile_shooter_pic').value = "";
 				document.getElementById('edittilegadget_preset_projectile_shooter_max_distance').value = "";
-				document.getElementById('edittilegadget_preset_projectile_shooter_speed').value = "";
+				document.getElementById('edittilegadget_preset_projectile_shooter_dir').value = "none";
 				document.getElementById('edittilegadget_preset_projectile_shooter_break_particle').value = "";
 				document.getElementById('edittilegadget_preset_projectile_shooter_break_wall_hit').checked = false;
-				document.getElementById('edittilegadget_preset_projectile_shooter_break_player_hit').checked = false;
+				document.getElementById('edittilegadget_preset_projectile_shooter_break_user_hit').checked = false;
 				document.getElementById('edittilegadget_preset_projectile_shooter_break_max_distance').checked = false;
 
 				if (Array.isArray(traits)) {
@@ -2043,10 +2043,10 @@ function editItemShared(item) {
 							} else if(trait[0] === "projectile_shooter") {
 								document.getElementById('edittilegadget_preset_projectile_shooter_pic').value = (trait[1].pic ?? []).join(" ");
 								document.getElementById('edittilegadget_preset_projectile_shooter_max_distance').value = trait[1].max_distance ?? "";
-								document.getElementById('edittilegadget_preset_projectile_shooter_speed').value = trait[1].speed ?? 2;
+								document.getElementById('edittilegadget_preset_projectile_shooter_dir').value = trait[1].dir ?? "none";
 								document.getElementById('edittilegadget_preset_projectile_shooter_break_particle').value = trait[1].break_particle ?? "";
 								document.getElementById('edittilegadget_preset_projectile_shooter_break_wall_hit').checked = trait[1].break_wall_hit ?? false;
-								document.getElementById('edittilegadget_preset_projectile_shooter_break_player_hit').checked = trait[1].break_player_hit ?? false;
+								document.getElementById('edittilegadget_preset_projectile_shooter_break_user_hit').checked = trait[1].break_user_hit ?? false;
 								document.getElementById('edittilegadget_preset_projectile_shooter_break_max_distance').checked = trait[1].break_max_distance ?? false;
 
 								document.getElementById('edittilegadget_preset_choice').value = trait[0];
@@ -2508,15 +2508,14 @@ function editItemApply() {
 							t.max_distance = parseInt(document.getElementById('edittilegadget_preset_projectile_shooter_max_distance').value);
 							if (Number.isNaN(t.max_distance))
 								delete t.max_distance;
-							t.speed = parseInt(document.getElementById('edittilegadget_preset_projectile_shooter_speed').value);
-							if (Number.isNaN(t.speed))
-								delete t.speed;
+							if (document.getElementById('edittilegadget_preset_projectile_shooter_dir').value !== "none")
+								t.dir = parseInt(document.getElementById('edittilegadget_preset_projectile_shooter_dir').value);
 							if (document.getElementById('edittilegadget_preset_projectile_shooter_break_particle').value.length)
 								t.break_particle = document.getElementById('edittilegadget_preset_projectile_shooter_break_particle').value;
 							if (document.getElementById('edittilegadget_preset_projectile_shooter_break_wall_hit').checked)
 								t.break_wall_hit = true;
-							if (document.getElementById('edittilegadget_preset_projectile_shooter_break_player_hit').checked)
-								t.break_player_hit = true;
+							if (document.getElementById('edittilegadget_preset_projectile_shooter_break_user_hit').checked)
+								t.break_user_hit = true;
 							if (document.getElementById('edittilegadget_preset_projectile_shooter_break_max_distance').checked)
 								t.break_max_distance = true;
 							break;

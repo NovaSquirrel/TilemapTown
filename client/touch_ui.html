@@ -735,7 +735,7 @@
 			  <!--<option value="doodle_board">Doodle board</option>-->
 			  <option value="draggable">Draggable</option>
 			  <option value="mini_tilemap">Mini tilemap</option>
-			  <!--<option value="projectile_shooter">Projectile shooter</option>-->
+			  <option value="projectile_shooter">Projectile shooter</option>
 			  <option value="pushable">Pushable</option>
 			  <option value="random_tell">Random private message</option>
 			  <option value="rc_car">Remote control car</option>
@@ -806,11 +806,14 @@
 			<div id="edittilegadget_preset_projectile_shooter">
 				<table border="0">
 				<tr><td><label class="unselectable" for="edittilegadget_preset_projectile_shooter_pic">Projectile pic</label></td><td><input type="text" id="edittilegadget_preset_projectile_shooter_pic" placeholder="0 0 0" /> <button onclick="copyTraitPicFromGadget();">Copy from entity</button></td></tr>
-				<tr><td><label class="unselectable" for="edittilegadget_preset_projectile_shooter_max_distance">Max distance</label></td><td><input type="number" id="edittilegadget_preset_projectile_shooter_max_distance" placeholder="100" /></td></tr>
-				<tr><td><label class="unselectable" for="edittilegadget_preset_projectile_shooter_speed">Flight speed (units of 0.1s)</label></td><td><input type="number" min="2" id="edittilegadget_preset_projectile_shooter_speed" placeholder="1" /></td></tr>
+				<tr><td><label class="unselectable" for="edittilegadget_preset_projectile_shooter_max_distance">Max distance</label></td><td><input type="number" id="edittilegadget_preset_projectile_shooter_max_distance" placeholder="50" /></td></tr>
+				<tr><td><label class="unselectable" for="edittilegadget_preset_projectile_shooter_dir">Projectile direction</label></td><td><select id="edittilegadget_preset_projectile_shooter_dir">
+				  <option value="none">Same as user</option>
+				  <option value="0">East</option><option value="1">South east</option><option value="2">South</option><option value="3">South west</option><option value="4">West</option><option value="5">North west</option><option value="6">North</option><option value="7">North east</option>
+				</select></td></tr>
 				<tr><td><label class="unselectable" for="edittilegadget_preset_projectile_shooter_break_particle">Projectile break particle</label></td><td><input type="text" id="edittilegadget_preset_projectile_shooter_break_particle" placeholder="0 0 0" /></td></tr>
 				<tr><td><label class="unselectable" for="edittilegadget_preset_projectile_shooter_break_wall_hit">Break on wall hit</label></td><td><input type="checkbox" id="edittilegadget_preset_projectile_shooter_break_wall_hit" /></td></tr>
-				<tr><td><label class="unselectable" for="edittilegadget_preset_projectile_shooter_break_player_hit">Break on player hit</label></td><td><input type="checkbox" id="edittilegadget_preset_projectile_shooter_break_player_hit" /></td></tr>
+				<tr><td><label class="unselectable" for="edittilegadget_preset_projectile_shooter_break_user_hit">Break on user hit</label></td><td><input type="checkbox" id="edittilegadget_preset_projectile_shooter_break_user_hit" /></td></tr>
 				<tr><td><label class="unselectable" for="edittilegadget_preset_projectile_shooter_break_max_distance">Break on max distance</label></td><td><input type="checkbox" id="edittilegadget_preset_projectile_shooter_break_max_distance" /></td></tr>
 				</table>
 			</div>
