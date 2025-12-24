@@ -3519,6 +3519,9 @@ function undoDrawStroke() {
 			SendCmd("PUT", { pos: [x, y], obj: false, atom: value });
 		}
 	}
+	backdropRerenderAll = true;
+	backdropDrawAll = true;
+	NeedMapRedraw = true;
 }
 
 
