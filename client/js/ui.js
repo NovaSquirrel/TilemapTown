@@ -1933,6 +1933,8 @@ function editItemShared(item) {
 				document.getElementById('edittilegadget_preset_projectile_shooter_break_wall_hit').checked = false;
 				document.getElementById('edittilegadget_preset_projectile_shooter_break_user_hit').checked = false;
 				document.getElementById('edittilegadget_preset_projectile_shooter_break_max_distance').checked = false;
+				document.getElementById('edittilegadget_preset_doodle_board_tileset_url').value = "";
+				document.getElementById('edittilegadget_preset_doodle_board_data').value = "";
 
 				if (Array.isArray(traits)) {
 					document.getElementById('edittilegadget_raw_textarea').value = JSON.stringify(item.data);
@@ -2028,7 +2030,12 @@ function editItemShared(item) {
 								document.getElementById('gadgetTypeRaw').checked = false;
 								document.getElementById('gadgetTypePreset').checked = true;
 							} else if(trait[0] === "doodle_board") {
-								// TODO
+								document.getElementById('edittilegadget_preset_doodle_board_tileset_url').value = trait[1].tileset_url ?? "";
+								document.getElementById('edittilegadget_preset_doodle_board_data').value = trait[1].data ?? "";
+
+								document.getElementById('edittilegadget_preset_choice').value = trait[0];
+								document.getElementById('gadgetTypeRaw').checked = false;
+								document.getElementById('gadgetTypePreset').checked = true;
 							} else if(trait[0] === "pic_cycle") {
 								document.getElementById('edittilegadget_preset_pic_cycle_first_pic').value = (trait[1].first_pic ?? []).join(" ");
 								document.getElementById('edittilegadget_preset_pic_cycle_length').value = trait[1].length ?? 1;
@@ -2474,6 +2481,8 @@ function editItemApply() {
 							t.particle = document.getElementById('edittilegadget_preset_user_particle_particle').value;
 							break;
 						case "doodle_board":
+							t.tileset_url = document.getElementById('edittilegadget_preset_doodle_board_tileset_url').value;
+							t.data = document.getElementById('edittilegadget_preset_doodle_board_data').value.split(",").map((v) => parseInt(v.trim())).filter((v) => !Number.isNaN(v));
 							break;
 						case "pic_cycle":
 							t.first_pic = document.getElementById('edittilegadget_preset_pic_cycle_first_pic').value.split(" ");

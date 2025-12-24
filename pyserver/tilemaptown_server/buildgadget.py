@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import random, weakref, asyncio
+from collections import deque
 from .buildglobal import *
 from .buildentity import Entity, save_generic_data, load_generic_data
 from .buildcommand import handle_user_command, send_private_message
@@ -22,18 +23,34 @@ from .buildscripting import send_scripting_message, encode_scripting_message_val
 
 SCRIPT_DEBUG_PRINTS = False
 
+BITMAP_COLOR_MASK = 0b110000110000
+BITMAP_PIXEL_MASK = 0b001111001111
+
 move_keys = set(("move-n", "move-ne", "move-e", "move-se", "move-s", "move-sw", "move-w", "move-nw", "turn-n", "turn-ne", "turn-e", "turn-se", "turn-s", "turn-sw", "turn-w", "turn-nw", "use-item"))
 take_controls_options = {
 	"move": move_keys
 }
 directions = ((1,0), (1,1), (0,1), (-1,1), (-1,0), (-1,-1), (0,-1), (1,-1))
 
-def become_clickable(gadget, t):
-	if not gadget:
-		return
-	gadget.clickable = t
-	if gadget.map:
-		gadget.map.broadcast("WHO", {'update': {'id': gadget.protocol_id(), 'clickable': t}})
+def compress_mini_tilemap_data(data):
+	if not data:
+		return []
+	out = []
+	for tile in data:
+		if len(out) and (tile == (out[-1] & 4095)) and (out[-1] < 0b1111111000000000000):
+			out[-1] += 4096 # 1 << 12
+		else:
+			out.append(tile)
+	return out
+def expand_mini_tilemap_data(data, limit=128):
+	out = []
+	for d in data:
+		t = d & 4095
+		r = ((d >> 12) & 127) + 1
+		if len(out) + r > limit:
+			return out
+		out.extend([t] * r)
+	return out
 
 def set_and_update_who(gadget, entity_field, who_field, value):
 	if not gadget:
@@ -629,12 +646,12 @@ class GadgetDraggable(GadgetTrait):
 	def on_init(self):
 		if not self.gadget:
 			return None
-		become_clickable(self.gadget, 'map_drag')
+		set_and_update_who(self.gadget, 'clickable', 'clickable', 'map_drag')
 
 	def on_shutdown(self):
 		if not self.gadget:
 			return
-		become_clickable(self.gadget, False)		
+		set_and_update_who(self.gadget, 'clickable', 'clickable', False)
 
 	def on_entity_drag(self, user, arg):
 		if not self.gadget or not self.gadget.map:
@@ -642,6 +659,7 @@ class GadgetDraggable(GadgetTrait):
 		if (not self.get_config("owner_only", False) or user.has_permission(self.gadget)) and (arg["map_x"] != self.gadget.x or arg["map_y"] != self.gadget.y) and arg["map_x"] >= 0 and arg["map_y"] >= 0 and arg["map_x"] < self.gadget.map.width and arg["map_y"] < self.gadget.map.height:
 			self.gadget.move_to(arg["map_x"], arg["map_y"])
 			self.gadget.map.broadcast("MOV", {'id': self.gadget.protocol_id(), 'to': [self.gadget.x, self.gadget.y]}, remote_category=maplisten_type['move'])
+			return True
 
 class GadgetMiniTilemap(GadgetTrait):
 	def on_init(self):
@@ -682,7 +700,7 @@ class GadgetMiniTilemap(GadgetTrait):
 			"tileset_url": tileset_url,
 		}, max_pixel_width=128)
 		mini_tilemap_data = GlobalData['who_mini_tilemap_data']({
-			"data": map_data
+			"data": compress_mini_tilemap_data(map_data)
 		})
 		self.gadget.mini_tilemap = mini_tilemap;
 		self.gadget.mini_tilemap_data = mini_tilemap_data;
@@ -710,9 +728,251 @@ class GadgetUserParticle(GadgetTrait):
 		return False
 
 class GadgetDoodleBoard(GadgetTrait):
+	MAP_WIDTH = 8
+	MAP_HEIGHT = 16
+	verbs = ['menu', 'colors', 'get as text']
+
+	###################################
+	# Setup/shutdown
+	###################################
 	def on_init(self):
 		if not self.gadget:
 			return None
+		self.sent_help_yet = False
+		self.map_width = self.MAP_WIDTH
+		self.map_height = self.MAP_HEIGHT
+		self.undo_stack = deque(maxlen=8)
+
+		# Get tileset URL
+		tileset_url = self.get_config("tileset_url", None)
+		if not tileset_url:
+			tileset_url = "bitmap.png"
+		if not tileset_url.startswith("https://") and not tileset_url.startswith("http://"):
+			tileset_url = Config["Server"]["ResourceIMGBase"] + "mini_tilemap/" + tileset_url
+
+		# Load data and set up map
+		map_data = self.get_config("data", [])[:128]
+		if not map_data:
+			map_data = [127 << 12]
+		self.map_data = expand_mini_tilemap_data(map_data)
+
+		mini_tilemap = GlobalData['who_mini_tilemap']({
+			"clickable": "drag",
+			"map_size": [self.map_width, self.map_height],
+			"tile_size": [4, 2],
+			"transparent_tile": -1,
+			"tileset_url": tileset_url,
+		}, max_pixel_width=128)
+		mini_tilemap_data = GlobalData['who_mini_tilemap_data']({
+			"data": map_data
+		})
+
+		# Broadcast
+		self.gadget.mini_tilemap = mini_tilemap;
+		self.gadget.mini_tilemap_data = mini_tilemap_data;
+
+		if self.gadget.map:
+			self.gadget.map.broadcast("WHO", {'update': {'id': self.gadget.protocol_id(), 'mini_tilemap': self.gadget.mini_tilemap, 'mini_tilemap_data': self.gadget.mini_tilemap_data}})
+
+		# Tool states
+		self.tool_color = 0
+		self.tool_type  = "1px"
+		self.tool_mode  = "toggle"
+
+	def broadcast_mini_tilemap(self):
+		self.set_config('data', self.gadget.mini_tilemap_data['data'])
+		if self.gadget.map:
+			self.gadget.map.broadcast("WHO", {'update': {'id': self.gadget.protocol_id(), 'mini_tilemap_data': self.gadget.mini_tilemap_data}})
+
+	def on_shutdown(self):
+		if not self.gadget:
+			return
+		# Broadcast
+		self.gadget.mini_tilemap      = None
+		self.gadget.mini_tilemap_data = None
+		if self.gadget.map:
+			self.gadget.map.broadcast("WHO", {'update': {'id': self.gadget.protocol_id(), 'mini_tilemap': None, 'mini_tilemap_data': None}})
+
+	def on_tell(self, user, text):
+		if not self.gadget:
+			return None
+		self.handle_command(user, text)
+		return True
+		
+	def on_bot_message_button(self, user, arg):
+		if not self.gadget:
+			return None
+		self.handle_command(user, arg.get('text'))
+		return True
+
+	def handle_command(self, user, text):
+		text = text.strip().lower()
+
+		if text == "get as text":
+			self.tell(user, "Doodle board pixel data: " + ", ".join([str(_) for _ in self.gadget.mini_tilemap_data['data']]))
+		if not user.has_permission(self.gadget):
+			if text == "menu":
+				self.tell(user, "Only the board's owner can draw on it, but you may [bot-message-button]Get as text[/bot-message-button]")
+			return
+		if text == "menu":
+			self.tell(user, '[table][tr][td]Commands[/td][td][bot-message-button]Colors[/bot-message-button] [bot-message-button]Get as text[/bot-message-button] [bot-message-button]Menu[/bot-message-button] [bot-message-button]Undo[/bot-message-button][/td][/tr][tr][td]Tools[/td][td][bot-message-button]1px[/bot-message-button] [bot-message-button]2px[/bot-message-button] [bot-message-button]3px[/bot-message-button] [bot-message-button]+[/bot-message-button] [bot-message-button]Recolor[/bot-message-button][/td][/tr][tr][td]Draw mode[/td][td][bot-message-button]Toggle[/bot-message-button] [bot-message-button]Draw on[/bot-message-button] [bot-message-button]Draw off[/bot-message-button] [/td][/tr][tr][td]Whole canvas[/td][td][bot-message-button]Fill off[/bot-message-button] [bot-message-button]Fill on[/bot-message-button] [bot-message-button]Recolor all[/bot-message-button] [bot-message-button]Invert[/bot-message-button][/td][/tr][/table]')
+		elif text == "fill off":
+			self.make_undo_step()
+			self.map_data = [self.get_color_bits(self.tool_color)] * (self.map_width * self.map_height)
+			self.gadget.mini_tilemap_data['data'] = compress_mini_tilemap_data(self.map_data)
+			self.broadcast_mini_tilemap()
+		elif text == "fill on":
+			self.make_undo_step()
+			self.map_data = [BITMAP_PIXEL_MASK | self.get_color_bits(self.tool_color)] * (self.map_width * self.map_height)
+			self.gadget.mini_tilemap_data['data'] = compress_mini_tilemap_data(self.map_data)
+			self.broadcast_mini_tilemap()
+		elif text == "recolor all":
+			self.make_undo_step()
+			color = self.get_color_bits(self.tool_color)
+			self.map_data = [((_ & BITMAP_PIXEL_MASK) | color) for _ in self.map_data]
+			self.gadget.mini_tilemap_data['data'] = compress_mini_tilemap_data(self.map_data)
+			self.broadcast_mini_tilemap()
+		elif text == "invert":
+			self.make_undo_step()
+			self.map_data = [(_ ^ BITMAP_PIXEL_MASK) for _ in self.map_data]
+			self.gadget.mini_tilemap_data['data'] = compress_mini_tilemap_data(self.map_data)
+			self.broadcast_mini_tilemap()
+		elif text == "colors":
+			self.tell(user,
+				'[table]' +
+					'[tr][td][color=#000000]█[/color][color=#ffffff]█[/color][bot-message-button]color 0[/bot-message-button][/td][td][color=#0a2e44]█[/color][color=#fcffcc]█[/color][bot-message-button]color 1[/bot-message-button][/td][td][color=#5d4242]█[/color][color=#5dafa7]█[/color][bot-message-button]color 2[/bot-message-button][/td][td][color=#292b30]█[/color][color=#cfab4a]█[/color][bot-message-button]color 3[/bot-message-button][/td][/tr]'+
+					'[tr][td][color=#920244]█[/color][color=#fec28c]█[/color][bot-message-button]color 4[/bot-message-button][/td][td][color=#c62b69]█[/color][color=#edf4ff]█[/color][bot-message-button]color 5[/bot-message-button][/td][td][color=#004c3d]█[/color][color=#ffeaf9]█[/color][bot-message-button]color 6[/bot-message-button][/td][td][color=#413652]█[/color][color=#6493ff]█[/color][bot-message-button]color 7[/bot-message-button][/td][/tr]'+
+					'[tr][td][color=#000000]█[/color][color=#83b07e]█[/color][bot-message-button]color 8[/bot-message-button][/td][td][color=#212c28]█[/color][color=#72a488]█[/color][bot-message-button]color 9[/bot-message-button][/td][td][color=#210009]█[/color][color=#00ffae]█[/color][bot-message-button]color 10[/bot-message-button][/td][td][color=#702963]█[/color][color=#ffbf00]█[/color][bot-message-button]color 11[/bot-message-button][/td][/tr]'+
+					'[tr][td][color=#5b88e2]█[/color][color=#f5f4e9]█[/color][bot-message-button]color 12[/bot-message-button][/td][td][color=#10368f]█[/color][color=#ff8e42]█[/color][bot-message-button]color 13[/bot-message-button][/td][td][color=#1e1c32]█[/color][color=#c6baac]█[/color][bot-message-button]color 14[/bot-message-button][/td][td][color=#4b475c]█[/color][color=#f5f4e9]█[/color][bot-message-button]color 15[/bot-message-button][/td][/tr]'+
+				'[/table]'
+			)
+		elif text.startswith("color "):
+			self.tool_color = int(text[6:])
+		elif text in ("1px", "2px", "3px", "+", "recolor"):
+			self.tool_type = text
+		elif text in ("draw on", "draw off", "toggle"):
+			self.tool_mode = text
+		elif text == "undo":
+			if len(self.undo_stack):
+				self.map_data = self.undo_stack.pop()
+				self.gadget.mini_tilemap_data['data'] = compress_mini_tilemap_data(self.map_data)
+				self.broadcast_mini_tilemap()
+
+	def make_undo_step(self):
+		self.undo_stack.append(self.map_data.copy())
+
+	###################################
+	# Pixel changing
+	###################################
+	def get_color_bits(self, color):
+		return ((color & 0x3) << 4) | ((color & 0xC) << 8)
+
+	def get_pixel(self, pixel_x, pixel_y):
+		if pixel_x < 0 or pixel_y < 0:
+			return False
+		x = pixel_x // 4
+		y = pixel_y // 2
+		if x >= 0 and y >= 0 and x < self.map_width and y < self.map_height:
+			pixel_mask = 1 << ( (pixel_x&3) + ((pixel_y&1)*6) )
+			index = y*self.map_width+x
+			return bool(self.map_data[index] & pixel_mask)
+		return False
+
+	def change_pixel(self, pixel_x, pixel_y, color_bits, toggle_if):
+		if pixel_x < 0 or pixel_y < 0:
+			return False
+		x = pixel_x // 4
+		y = pixel_y // 2
+		if x >= 0 and y >= 0 and x < self.map_width and y < self.map_height:
+			pixel_mask = 1 << ( (pixel_x&3) + ((pixel_y&1)*6) )
+			index = y*self.map_width+x
+			if toggle_if != "recolor" and ((not toggle_if and 0 == (self.map_data[index] & pixel_mask)) or (toggle_if and (self.map_data[index] & pixel_mask))):
+				self.map_data[index] = ((self.map_data[index] ^ pixel_mask) & BITMAP_PIXEL_MASK) | color_bits
+				return True
+			elif (self.map_data[index] & BITMAP_COLOR_MASK) != color_bits:
+				self.map_data[index] = (self.map_data[index] & BITMAP_PIXEL_MASK) | color_bits
+				return True
+		return False
+
+	def put_with_tool(self, x, y, color_bits, toggle_if):
+		changed_any = False
+		if self.tool_type == "1px":
+			changed_any = self.change_pixel(x, y, color_bits, toggle_if) or changed_any
+		elif self.tool_type == "2px":
+			changed_any = self.change_pixel(x,    y, color_bits, toggle_if) or changed_any
+			changed_any = self.change_pixel(x+1,  y, color_bits, toggle_if) or changed_any
+			changed_any = self.change_pixel(x,  y+1, color_bits, toggle_if) or changed_any
+			changed_any = self.change_pixel(x+1,y+1, color_bits, toggle_if) or changed_any
+		elif self.tool_type == "3px":
+			for cx in range(3):
+				for cy in range(3):
+					changed_any = self.change_pixel(x-1+cx, y-1+cy, color_bits, toggle_if) or changed_any
+		elif self.tool_type == "+":
+			changed_any = self.change_pixel(x,   y, color_bits, toggle_if) or changed_any
+			changed_any = self.change_pixel(x-1, y, color_bits, toggle_if) or changed_any
+			changed_any = self.change_pixel(x+1, y, color_bits, toggle_if) or changed_any
+			changed_any = self.change_pixel(x, y-1, color_bits, toggle_if) or changed_any
+			changed_any = self.change_pixel(x, y+1, color_bits, toggle_if) or changed_any
+		elif self.tool_type == "recolor":
+			changed_any = self.change_pixel(x, y, color_bits, "recolor") or changed_any
+		return changed_any
+
+	def draw_line(self, x1, y1, x2, y2, color_bits, toggle_if):
+		if x1 < -32 or x1 > 32*2 or y1 < -32 or y1 > 32*2 or x2 < -32 or x2 > 32*2 or y2 < -32 or y2 > 32*2:
+			return
+		# Brensenham's line algorithm, from Wikipedia
+		dx = abs(x2 - x1)
+		sx = 1 if (x1 < x2) else -1;
+		dy = -abs(y2 - y1)
+		sy = 1 if (y1 < y2) else -1
+		error = dx + dy
+		x = x1
+		y = y1
+		changed_any = False
+		while True:
+			changed_any = self.put_with_tool(x, y, color_bits, toggle_if) or changed_any
+			if x == x2 and y == y2:
+				break
+			e2 = 2 * error
+			if e2 >= dy:
+				if x == x2:
+					break
+				error += dy
+				x += sx
+			if e2 <= dx:
+				if y == y2:
+					break
+				error += dx
+				y += sy
+		return changed_any
+
+	def on_entity_click(self, user, arg):
+		if not self.gadget or not self.gadget.map:
+			return None
+		if not user.has_permission(self.gadget):
+			self.handle_command(user, "menu")
+			return None
+		if not self.sent_help_yet:
+			self.sent_help_yet = True
+			self.handle_command(user, "menu")
+		self.make_undo_step()
+
+		if self.tool_mode == "draw on": 
+			self.current_toggle_if = False
+		elif self.tool_mode == "draw off":
+			self.current_toggle_if = True
+		else:
+			self.current_toggle_if = self.get_pixel(arg['x'], arg['y'])
+		if self.put_with_tool(arg['x'], arg['y'], self.get_color_bits(self.tool_color), self.current_toggle_if):
+			self.gadget.mini_tilemap_data['data'] = compress_mini_tilemap_data(self.map_data)
+			self.broadcast_mini_tilemap()
+
+	def on_entity_drag(self, user, arg):
+		if not self.gadget or not self.gadget.map or not user.has_permission(self.gadget):
+			return None
+		if self.draw_line(arg['from_x'], arg['from_y'], arg['x'], arg['y'], self.get_color_bits(self.tool_color), self.current_toggle_if) if ('from_x' in arg) else self.put_with_tool(arg['x'], arg['y'], self.get_color_bits(self.tool_color), self.current_toggle_if):
+			self.gadget.mini_tilemap_data['data'] = compress_mini_tilemap_data(self.map_data)
+			self.broadcast_mini_tilemap()
 
 class GadgetPicCycle(GadgetTrait):
 	usable = True
