@@ -1003,62 +1003,27 @@ function PlayersAroundTile(FindX, FindY, Radius) {
 	return Found;
 }
 
-// Helper function to get an element's exact position
-// from https://www.kirupa.com/html5/getting_mouse_click_position.htm
-function getExactPosition(el) {
-	// Actually maybe getBoundingClientRect() does what I want just fine
-	let rect = el.getBoundingClientRect();
-	return {
-		x: rect.left,
-		y: rect.top,
-	};
-	/*
-	let xPosition = 0;
-	let yPosition = 0;
-
-	while (el) {
-		if (el.tagName == "BODY") {
-			// deal with browser quirks with body/window/document and page scroll
-			let xScrollPos = el.scrollLeft || document.documentElement.scrollLeft;
-			let yScrollPos = el.scrollTop || document.documentElement.scrollTop;
-
-			xPosition += (el.offsetLeft - xScrollPos + el.clientLeft);
-			yPosition += (el.offsetTop - yScrollPos + el.clientTop);
-		} else {
-			xPosition += (el.offsetLeft - el.scrollLeft + el.clientLeft);
-			yPosition += (el.offsetTop - el.scrollTop + el.clientTop);
-		}
-
-		el = el.offsetParent;
-	}
-	return {
-		x: xPosition,
-		y: yPosition
-	};
-	*/
-}
-
 function getMousePosRaw(canvas, evt) {
-	let rect = getExactPosition(canvas);
+	let rect = canvas.getBoundingClientRect();
 	return {
-		x: (evt.clientX - rect.x) | 0,
-		y: (evt.clientY - rect.y) | 0
+		x: (evt.clientX - rect.left) | 0,
+		y: (evt.clientY - rect.top) | 0
 	};
 }
 
 function getMousePos(canvas, evt) {
-	let rect = getExactPosition(canvas);
+	let rect = canvas.getBoundingClientRect();
 
 	return {
-		x: ((evt.clientX - rect.x) / CameraScale) | 0,
-		y: ((evt.clientY - rect.y) / CameraScale) | 0
+		x: ((evt.clientX - rect.left) / CameraScale) | 0,
+		y: ((evt.clientY - rect.top) / CameraScale) | 0
 	};
 }
 
 function getTilePos(evt) {
 	let PixelCameraX = Math.round(CameraX - mapCanvas.width / 2);
 	let PixelCameraY = Math.round(CameraY - mapCanvas.height / 2);
-	pos = getMousePos(mapCanvas, evt);
+	let pos = getMousePos(mapCanvas, evt);
 	pos.x = (pos.x + PixelCameraX) >> 4;
 	pos.y = (pos.y + PixelCameraY) >> 4;
 	return pos;
@@ -1235,150 +1200,8 @@ function initMouse() {
 		document.getElementById('itemEditTilePickerWindow').style.display = "none";
 	}, false);
 
-	mapCanvas.addEventListener('mousedown', function (evt) {
+	function handleMouseMove(pos, pixelPos) {
 		markNotIdle();
-		if (evt.button != 0)
-			return;
-		if (MousedOverEntityClickAvailable && !ShiftPressed) {
-			if(MousedOverEntityClickIsUse)
-				SendCmd("USE", { "id": MousedOverEntityClickId })
-			else {
-				SendCmd("EXT", { "entity_click":
-					{"id": MousedOverEntityClickId, "x": MousedOverEntityClickX, "y": MousedOverEntityClickY, "target": MousedOverEntityClickIsTilemap ? "mini_tilemap" : "entity"}
-				});
-				if (!MousedOverEntityClickIsTilemap && (PlayerWho[MousedOverEntityClickId]?.clickable === "drag" || PlayerWho[MousedOverEntityClickId]?.clickable === "map_drag")
-				|| (MousedOverEntityClickIsTilemap && (PlayerWho[MousedOverEntityClickId]?.mini_tilemap?.clickable === "drag" || PlayerWho[MousedOverEntityClickId]?.mini_tilemap?.clickable === "map_drag"))) {
-					MousedOverEntityIsDragging = true;
-					MousedOverEntityDragId = MousedOverEntityClickId;
-					MousedOverEntityDragIsMapMode = PlayerWho[MousedOverEntityClickId]?.clickable === "map_drag";
-					MousedOverEntityDragIsTilemap = MousedOverEntityClickIsTilemap;
-					MousedOverEntityDragLastX = MousedOverEntityDragIsMapMode ? PlayerWho[MousedOverEntityClickId]?.x : MousedOverEntityClickX;
-					MousedOverEntityDragLastY = MousedOverEntityDragIsMapMode ? PlayerWho[MousedOverEntityClickId]?.y : MousedOverEntityClickY;
-				}
-			}
-		return;
-	}
-
-	panel.innerHTML = "";
-	let pos = getTilePos(evt);
-	MouseRawPos = getMousePos(mapCanvas, evt);
-	MouseDown = true;
-
-	if (buildTool == BUILD_TOOL_SELECT) {
-		MouseStartX = pos.x;
-		MouseStartY = pos.y;
-		MouseEndX = pos.x;
-		MouseEndY = pos.y;
-		MouseActive = true;
-		NeedMapRedraw = true;
-		backdropDrawAll = true;
-		selectionInfoVisibility(false);
-	} else if(buildTool == BUILD_TOOL_DRAW) {
-		let data = getDataForDraw();
-		let atom = AtomFromName(data);
-		if(data === null)
-			return;
-		drawToolCurrentStroke = {};
-		drawToolCurrentStrokeIsObj = "obj" in atom;
-
-		// ---
-
-		if(drawingTooFar(pos.x, pos.y, OK_DRAW_DISTANCE)) {
-			return;
-		}
-		let old = useItemAtXY({ type: 'map_tile', data: data }, pos.x, pos.y);
-		if(old === undefined)
-			return;
-		drawToolCurrentStroke[(pos.x + "," + pos.y)] = old;
-		ctrlZUndoType = "put";
-		}
-	}, false);
-
-	mapCanvas.addEventListener('mouseup', function (evt) {
-		if (evt.button != 0)
-			return;
-		if (MousedOverEntityIsDragging) {
-			MousedOverEntityIsDragging = false;
-			SendCmd("EXT", { "entity_drag_end":
-				{"id": MousedOverEntityClickId, "target": MousedOverEntityClickIsTilemap ? "mini_tilemap" : "entity"}
-			});
-		}
-		if(!MouseDown) {
-			return;
-		}
-		MouseRawPos = getMousePos(mapCanvas, evt);
-		MouseDown = false;
-		NeedMapRedraw = true;
-		backdropDrawAll = true;
-
-		if (buildTool == BUILD_TOOL_SELECT) {
-			// adjust the selection box
-			let AX = Math.min(MouseStartX, MouseEndX);
-			let AY = Math.min(MouseStartY, MouseEndY);
-			let BX = Math.max(MouseStartX, MouseEndX);
-			let BY = Math.max(MouseStartY, MouseEndY);
-			MouseStartX = AX;
-			MouseStartY = AY;
-			MouseEndX = BX;
-			MouseEndY = BY;
-
-			if(withinCurrentMap(MouseStartX, MouseStartY) && MouseStartX == MouseEndX && MouseStartY == MouseEndY) {
-				document.getElementById("getTileObjSpan").style.display = 'block';
-				document.getElementById("selectedobjects_span").style.display = 'block';
-				document.getElementById("selectedfloor_span").style.display = 'block';
-				updateSelectedTurfUL(AX, AY);
-				updateSelectedObjectsUL(AX, AY);
-			} else {
-				document.getElementById("getTileObjSpan").style.display = 'none';
-				document.getElementById("selectedobjects_span").style.display = 'none';
-				document.getElementById("selectedfloor_span").style.display = 'none';
-			}
-
-			let panelHTML = (BX - AX + 1) + "x" + (BY - AY + 1);
-			if(MouseStartX == MouseEndX && MouseStartY == MouseEndY)
-				panelHTML += " at " + MouseStartX + "," + MouseStartY;
-			panelHTML += "<br>";
-			updateSelectedEntitiesUL();
-
-			let selectionWidth = BX-AX;
-			let selectionHeight = BY-AY;
-			let selectionCenterX = (AX+BX)/2;
-			let selectionCenterY = (AY+BY)/2;
-			let distanceTooFar = drawingTooFar(selectionCenterX, selectionCenterY, 10);
-			document.getElementById("deleteTurfObj").style.display = (!distanceTooFar && (selectionWidth * selectionHeight) < 120) ? "block" : "none";
-			selectionInfoVisibility(true);
-
-			panel.innerHTML = panelHTML;
-		} else if(buildTool == BUILD_TOOL_DRAW) {
-			drawToolUndoHistory.push({
-				'data': drawToolCurrentStroke,
-				'obj': drawToolCurrentStrokeIsObj,
-			});
-			drawToolCurrentStroke = {};
-		}
-	}, false);
-
-	mapCanvas.addEventListener('wheel', function (event) {
-		markNotIdle();
-		event.preventDefault();
-		if(lockZoomLevel)
-			return;
-
-		CameraScale += event.deltaY * -0.01;
-
-		// Restrict CameraScale
-		if (Number.isNaN(CameraScale))
-			CameraScale = 3;
-		CameraScale = Math.min(Math.max(CameraScaleMin, CameraScale), CameraScaleMax);
-
-		updateZoomLevelDisplay();
-		resizeCanvas();
-	}, false);
-
-	mapCanvas.addEventListener('mousemove', function (evt) {
-		markNotIdle();
-		let pos = getTilePos(evt);
-		let pixelPos = getMousePos(mapCanvas, evt); // Pixel position, for finding click position within a mini tilemap
 		MouseRawPos = pixelPos;
 		MouseNowX = pos.x;
 		MouseNowY = pos.y;
@@ -1540,6 +1363,199 @@ function initMouse() {
 
 		if (!MousedOverEntityIsDragging)
 			handleDragging(pos);
+	}
+
+	function handleMouseDown(pos, pixelPos) {
+		markNotIdle();
+		if (MousedOverEntityClickAvailable && !ShiftPressed) {
+			if(MousedOverEntityClickIsUse)
+				SendCmd("USE", { "id": MousedOverEntityClickId })
+			else {
+				SendCmd("EXT", { "entity_click":
+					{"id": MousedOverEntityClickId, "x": MousedOverEntityClickX, "y": MousedOverEntityClickY, "target": MousedOverEntityClickIsTilemap ? "mini_tilemap" : "entity"}
+				});
+				if (!MousedOverEntityClickIsTilemap && (PlayerWho[MousedOverEntityClickId]?.clickable === "drag" || PlayerWho[MousedOverEntityClickId]?.clickable === "map_drag")
+				|| (MousedOverEntityClickIsTilemap && (PlayerWho[MousedOverEntityClickId]?.mini_tilemap?.clickable === "drag" || PlayerWho[MousedOverEntityClickId]?.mini_tilemap?.clickable === "map_drag"))) {
+					MousedOverEntityIsDragging = true;
+					MousedOverEntityDragId = MousedOverEntityClickId;
+					MousedOverEntityDragIsMapMode = PlayerWho[MousedOverEntityClickId]?.clickable === "map_drag";
+					MousedOverEntityDragIsTilemap = MousedOverEntityClickIsTilemap;
+					MousedOverEntityDragLastX = MousedOverEntityDragIsMapMode ? PlayerWho[MousedOverEntityClickId]?.x : MousedOverEntityClickX;
+					MousedOverEntityDragLastY = MousedOverEntityDragIsMapMode ? PlayerWho[MousedOverEntityClickId]?.y : MousedOverEntityClickY;
+				}
+			}
+			return;
+		}
+
+		panel.innerHTML = "";
+		MouseRawPos = pixelPos;
+		MouseDown = true;
+
+		if (buildTool == BUILD_TOOL_SELECT) {
+			MouseStartX = pos.x;
+			MouseStartY = pos.y;
+			MouseEndX = pos.x;
+			MouseEndY = pos.y;
+			MouseActive = true;
+			NeedMapRedraw = true;
+			backdropDrawAll = true;
+			selectionInfoVisibility(false);
+		} else if(buildTool == BUILD_TOOL_DRAW) {
+			let data = getDataForDraw();
+			let atom = AtomFromName(data);
+			if(data === null)
+				return;
+			drawToolCurrentStroke = {};
+			drawToolCurrentStrokeIsObj = "obj" in atom;
+
+			// ---
+
+			if(drawingTooFar(pos.x, pos.y, OK_DRAW_DISTANCE)) {
+				return;
+			}
+			let old = useItemAtXY({ type: 'map_tile', data: data }, pos.x, pos.y);
+			if(old === undefined)
+				return;
+			drawToolCurrentStroke[(pos.x + "," + pos.y)] = old;
+			ctrlZUndoType = "put";
+		}
+	}
+
+	function handleMouseUp(pos, pixelPos) {
+		if (MousedOverEntityIsDragging) {
+			MousedOverEntityIsDragging = false;
+			SendCmd("EXT", { "entity_drag_end":
+				{"id": MousedOverEntityClickId, "target": MousedOverEntityClickIsTilemap ? "mini_tilemap" : "entity"}
+			});
+		}
+		if(!MouseDown) {
+			return;
+		}
+		MouseRawPos = pixelPos;
+		MouseDown = false;
+		NeedMapRedraw = true;
+		backdropDrawAll = true;
+
+		if (buildTool == BUILD_TOOL_SELECT) {
+			// adjust the selection box
+			let AX = Math.min(MouseStartX, MouseEndX);
+			let AY = Math.min(MouseStartY, MouseEndY);
+			let BX = Math.max(MouseStartX, MouseEndX);
+			let BY = Math.max(MouseStartY, MouseEndY);
+			MouseStartX = AX;
+			MouseStartY = AY;
+			MouseEndX = BX;
+			MouseEndY = BY;
+
+			if(withinCurrentMap(MouseStartX, MouseStartY) && MouseStartX == MouseEndX && MouseStartY == MouseEndY) {
+				document.getElementById("getTileObjSpan").style.display = 'block';
+				document.getElementById("selectedobjects_span").style.display = 'block';
+				document.getElementById("selectedfloor_span").style.display = 'block';
+				updateSelectedTurfUL(AX, AY);
+				updateSelectedObjectsUL(AX, AY);
+			} else {
+				document.getElementById("getTileObjSpan").style.display = 'none';
+				document.getElementById("selectedobjects_span").style.display = 'none';
+				document.getElementById("selectedfloor_span").style.display = 'none';
+			}
+
+			let panelHTML = (BX - AX + 1) + "x" + (BY - AY + 1);
+			if(MouseStartX == MouseEndX && MouseStartY == MouseEndY)
+				panelHTML += " at " + MouseStartX + "," + MouseStartY;
+			panelHTML += "<br>";
+			updateSelectedEntitiesUL();
+
+			let selectionWidth = BX-AX;
+			let selectionHeight = BY-AY;
+			let selectionCenterX = (AX+BX)/2;
+			let selectionCenterY = (AY+BY)/2;
+			let distanceTooFar = drawingTooFar(selectionCenterX, selectionCenterY, 10);
+			document.getElementById("deleteTurfObj").style.display = (!distanceTooFar && (selectionWidth * selectionHeight) < 120) ? "block" : "none";
+			selectionInfoVisibility(true);
+
+			panel.innerHTML = panelHTML;
+		} else if(buildTool == BUILD_TOOL_DRAW) {
+			drawToolUndoHistory.push({
+				'data': drawToolCurrentStroke,
+				'obj': drawToolCurrentStrokeIsObj,
+			});
+			drawToolCurrentStroke = {};
+		}
+	}
+
+	let hadTouchEventYet = false;
+
+	mapCanvas.addEventListener('mousedown', function (evt) {
+		if (evt.button != 0 || hadTouchEventYet)
+			return;
+		let pos = getTilePos(evt);
+		let pixelPos = getMousePos(mapCanvas, evt);
+		handleMouseDown(pos, pixelPos);
+	}, false);
+
+	mapCanvas.addEventListener('mouseup', function (evt) {
+		if (evt.button != 0 || hadTouchEventYet)
+			return;
+		let pos = getTilePos(evt);
+		let pixelPos = getMousePos(mapCanvas, evt);
+		handleMouseUp(pos, pixelPos);
+	}, false);
+
+	mapCanvas.addEventListener('mousemove', function (evt) {
+		if (hadTouchEventYet)
+			return;
+		let pos = getTilePos(evt);
+		let pixelPos = getMousePos(mapCanvas, evt);
+		handleMouseMove(pos, pixelPos);
+	}, false);
+
+	mapCanvas.addEventListener('wheel', function (event) {
+		markNotIdle();
+		event.preventDefault();
+		if(lockZoomLevel)
+			return;
+
+		CameraScale += event.deltaY * -0.01;
+
+		// Restrict CameraScale
+		if (Number.isNaN(CameraScale))
+			CameraScale = 3;
+		CameraScale = Math.min(Math.max(CameraScaleMin, CameraScale), CameraScaleMax);
+
+		updateZoomLevelDisplay();
+		resizeCanvas();
+	}, false);
+
+	function getTouchPositions(evt) {
+		hadTouchEventYet = true;
+		let rect = mapCanvas.getBoundingClientRect();
+		let pixelPos = {
+			x: ((evt.changedTouches[0].pageX - rect.left) / CameraScale) | 0,
+			y: ((evt.changedTouches[0].pageY - rect.top) / CameraScale) | 0
+		};
+		let PixelCameraX = Math.round(CameraX - mapCanvas.width / 2);
+		let PixelCameraY = Math.round(CameraY - mapCanvas.height / 2);
+		let pos = {
+			x: (pixelPos.x + PixelCameraX) >> 4,
+			y: (pixelPos.y + PixelCameraY) >> 4
+		}
+		return [pos, pixelPos];
+	}
+
+	mapCanvas.addEventListener('touchstart', function (evt) {
+		let [pos, pixelPos] = getTouchPositions(evt);
+		handleMouseMove(pos, pixelPos);
+		handleMouseDown(pos, pixelPos);
+	}, false);
+
+	mapCanvas.addEventListener('touchmove', function (evt) {
+		let [pos, pixelPos] = getTouchPositions(evt);
+		handleMouseMove(pos, pixelPos);
+	}, false);
+
+	mapCanvas.addEventListener('touchend', function (evt) {
+		let [pos, pixelPos] = getTouchPositions(evt);
+		handleMouseUp(pos, pixelPos);
 	}, false);
 
 	// ----------------------------------------------------------------

@@ -51,9 +51,8 @@ customElements.define(
         dy = event.changedTouches[0].pageY - container.offsetTop;
 
         document.ontouchmove = function(event) {
-          container.style.left = Math.max(0, event.changedTouches[0].pageX - dx) + "px";
-          container.style.top = Math.max(32, event.changedTouches[0].pageY - dy) + "px";
-
+          container.style.left = Math.max(-128, Math.min(document.documentElement.clientWidth-64, event.changedTouches[0].pageX - dx)) + "px";
+          container.style.top = Math.max(32, Math.min(document.documentElement.clientHeight-64, event.changedTouches[0].pageY - dy)) + "px";
         }
 
         document.ontouchend = function (event) {
