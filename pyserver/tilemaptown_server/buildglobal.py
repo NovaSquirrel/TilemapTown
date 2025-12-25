@@ -29,7 +29,7 @@ TempLogs = [None, None, None, None] # Connect, Build, Upload, Rollback info
 available_server_features = {
 	"see_past_map_edge": {"version": "0.0.1", "minimum_version": "0.0.1"},
 	"batch": {"version": "0.0.1", "minimum_version": "0.0.1"},
-	"receive_build_messages": {"version": "0.0.1", "minimum_version": "0.0.1"},
+	"bulk_build": {"version": "0.0.1", "minimum_version": "0.0.1"},
 	"entity_message_forwarding": {"version": "0.0.1", "minimum_version": "0.0.1"},
 	"user_watch_with_who": {"version": "0.0.1", "minimum_version": "0.0.1"},
 	"message_acknowledgement": {"version": "0.0.1", "minimum_version": "0.0.1"},

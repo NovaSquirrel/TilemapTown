@@ -814,8 +814,7 @@ def fn_DEL(connection, map, client, arg, context):
 		# make username available to listeners
 		arg['username'] = client.username_or_id()
 		arg['id'] = client.protocol_id()
-		map.broadcast("DEL", arg, remote_only=True, remote_category=maplisten_type['build'])
-		map.broadcast("DEL", arg, require_extension="receive_build_messages")
+		map.broadcast("DEL", arg, remote_category=maplisten_type['build'])
 
 		# send map update to everyone on the map
 		map.broadcast("MAP", map.map_section(x1, y1, x2, y2), send_to_links=True)
@@ -829,8 +828,7 @@ def fn_PUT(connection, map, client, arg, context):
 		# make username available to listeners
 		arg['username'] = client.username_or_id()
 		arg['id'] = client.protocol_id()
-		map.broadcast("PUT", arg, remote_only=True, remote_category=maplisten_type['build'])
-		map.broadcast("PUT", arg, require_extension="receive_build_messages")
+		map.broadcast("PUT", arg, remote_category=maplisten_type['build'])
 
 	temporary = arg.get('temp', False)
 	x = arg["pos"][0]
@@ -1030,7 +1028,6 @@ def fn_VER(connection, map, client, arg, context):
 server_feature_attribute = {
 	"see_past_map_edge": "see_past_map_edge",
 	"batch": "can_batch_messages",
-	"receive_build_messages": "receive_build_messages",
 	"entity_message_forwarding": "can_forward_messages_to",
 	"user_watch_with_who": "user_watch_with_who",
 	"message_acknowledgement": "can_acknowledge",
