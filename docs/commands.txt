@@ -499,7 +499,7 @@ Roll dice, but only show the result to you
 Start or stop listening in on a comma separated list of categories and maps. The client's account must be registered and have been granted the map_bot permission for the map being listened in on. "chat" and "chat_listen" may alternatively be done through the remote_chat permission.
 
 Protocol messages relayed will have a "remote_map" parameter added to them, with the map ID.
-Messages will also have "username" and "user_id", for PUT, DEL and BLK.
+Messages will also have "username" and "id", for PUT, DEL and BLK.
 
 Categories available (and protocol messages that get relayed):
 move:  MOV

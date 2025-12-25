@@ -510,9 +510,12 @@ def fn_BAG(connection, map, client, arg, context):
 	elif "move" in arg:
 		move = arg['move']
 		move_me = get_entity_by_id(move['id'])
-		if 'folder' not in move and client.has_permission(move['move']):
-			move_me.move_to(x, y)
-		elif 'folder' in move and client.has_permission(move['folder'], (permission['object_entry'], permission['persistent_object_entry']), False):
+		if move_me and ('folder' not in move) and ('pos' in move) and client.has_permission(move['id']):
+			move_me.move_to(move['pos'][0], move['pos'][1])
+			client.send('BAG', {'move': move})
+			if move_me.map:
+				move_me.map.broadcast("MOV", {'id': move_me.protocol_id(), 'to': [move_me.x, move_me.y]}, remote_category=maplisten_type['move'])
+		elif move_me and 'folder' in move and client.has_permission(move['folder'], (permission['object_entry'], permission['persistent_object_entry']), False):
 			if 'pos' in move:
 				if client.has_permission(move_me, permission['move_new_map'], False):
 					move_me.switch_map(move['folder'], new_pos=move['pos'], on_behalf_of=client)
@@ -751,12 +754,18 @@ def fn_MAP(connection, map, client, arg, context):
 	if (pos[2]-pos[0]) > 10 or (pos[3]-pos[1]) > 10: # Limit it to small sections of the map for now?
 		connection.protocol_error(context, text='Requested area too big')		
 		return
-	client.send("MAP", map.map_section(pos[0], pos[1], pos[2], pos[3]))
+	map_section = map.map_section(pos[0], pos[1], pos[2], pos[3])
+	if "remote_map" in arg:
+		map_section["remote_map"] = arg["remote_map"]
+	client.send("MAP", map_section)
 
 @protocol_command(map_only=True)
 def fn_MAI(connection, map, client, arg, context):
 	send_all_info = must_be_map_owner(connection, client, context, True, give_error=False)
-	client.send("MAI", map.map_info(all_info=send_all_info))
+	map_info = map.map_info(all_info=send_all_info)
+	if "remote_map" in arg:
+		map_info["remote_map"] = arg["remote_map"]
+	client.send("MAI", map_info)
 
 @protocol_command(map_only=True)
 def fn_DEL(connection, map, client, arg, context):
@@ -1387,7 +1396,7 @@ def pm_typing_notification(connection, map, client, context, arg, name):
 		if target == None:
 			return
 		arg = remove_invalid_dict_fields(arg, {
-			"status":             bool,
+			"status": lambda x: isinstance(x, bool) or x == "pause",
 		})
 		arg['id'] = client.protocol_id()
 		arg['name'] = client.name

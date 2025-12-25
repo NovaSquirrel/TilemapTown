@@ -1,59 +1,90 @@
-Tilemap Town's protocol is built around WebSocket and JSON. Each message consists of a 3-character message type, a space, then a JSON formatted object. Unrecognized message types and unrecognized fields in messages should be ignored.
+=== Tilemap Town protocol ===
+By NovaSquirrel. Last updated 2025-12-25.
 
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119 when, and only when, they appear in all capitals, as shown here.
+
+
+--- Overview ---
+Tilemap Town's protocol is built around WebSocket and JSON. A client SHOULD support WebSocket compression ("permessage-deflate") if possible, and MUST support encrypted communication over TLS. WebSocket Subprotocols are not used. Each message is sent in text format, and MUST start with a 3-character message type. If the message contains additional information, the 3-character message type will be followed with one space character and a JSON object. Some extensions (specifically "entity_message_forwarding" and "batch") extend the format, which is described in their sections in this document.
+
+A client MUST ignore unrecognized message types (discarding the whole message), as well as unrecognized fields with message types that are otherwise supported (in which case, the client can just handle the fields it does recognize). This allows clients to work with custom servers that add additional features, or with servers that implement a newer version of the protocol. This protocol was designed with the goal of making it easy to extend while also allowing clients with fewer features to provide a meaningfully useful experience (progressive enhancement).
+
+It's also designed so that extensions that come from different sources can avoid interfering with each other. One of the ways this is done is through using short names to differentiate between different types of things rather than magic numbers. Names allow for prefixes, and prefixes allow for for multiple people defining their own values to avoid conflicts.
+
+
+--- How to read examples ---
 This document covers messages sent by clients as well as messages sent by servers, so these are differentiated as follows:
-"-->" means that the message would be sent by a client, and received by a server
-"<--" means that the message would be sent by a server, and received by a client
+"-->" means that the message would be sent by a client, and received by a server.
+"<--" means that the message would be sent by a server, and received by a client.
+When a "R" is next to a field, that means that the field is required. The server will expect it to always be there, and clients can expect the server to always provide it.
 
-This protocol was designed with the goal of making it easy to extend while also allowing clients with fewer features to provide a meaningfully useful experience (progressive enhancement).
-It's also designed so that extensions that come from different places can avoid interfering with each other. One of the ways this is done is through using short names to differentiate between different types of things rather than magic numbers. Names allow for prefixes, and prefixes allow for for multiple people defining their own values to avoid conflicts.
 
-For a basic graphical client, a good minimal set of message types to support are:
-	IDN (logging in)
+--- General message information---
+"remote_map" is a valid field for all messages sent by the client, though may not be meaningful for all of them. If provided, it's interpreted as an ID and will specify what map the message should apply to. The user's account will need to have "map_bot" permission for the chosen map, or for MSG messages specifically "remote_chat" will work.
+
+"remote_map" will also appear in messages sent by the server when a client listens in on events happening on other maps (with /listen) to indicate which map the message came from.
+
+All messages sent by the client can have an "echo" field, which requests that any server responses that result from this message should have an "echo" field with the same value. It's not yet guaranteed that this will work on all message types, but should work on "CMD" messages.
+
+IDs can be integers or strings. Clients MAY convert all received IDs to strings (and send them to the server that way) if that simplifies the code.
+
+A "pic" field references a tile sheet and a position on it. They are structured as [tile sheet ID, x, y], where X and Y are in 16-pixel units. Clients will receive an initial list of tile sheet IDs and corresponding URLs upon connecting (via the "RSC" message), and can request to know the URL for an unknown tile sheet ID with "IMG" messages.
+When "pic" appears on an entity, the tile sheet ID may be replaced with a URL, in which case X and Y are reserved and MUST be zero. When an entity uses a URL for its appearance, and the image pointed to is larger than 16 pixels in width and height, the entity uses 32x32 animation frames, with the width and height determining animation frame count and direction count. The way this works is explained on https://tilemap.town/help/tutorials
+
+An ID can usually be sent in a field named "username", instead of an actual username.
+
+
+--- Minimal client features ---
+A basic graphical client SHOULD support the following message types:
+	IDN (logging into the server)
 	MSG, ERR, CMD, PRI (sending and receiving text, sending chat commands)
-	MAP (map data)
-	MAI (information about the current map you're on)
+	MAP (data for tiles on the map)
+	MAI (map information, such as its name and owner)
 	PIN (pings)
-	RSC (defines the global tilesets)
+	RSC (defines the server's global tilesets)
 	IMG (request URL for an image ID that was seen on a map)
-	WHO (list of entities, and entity property management)
+	TSD (request tileset information for a tile that was seen on a map)
+	WHO (list of entities present on the map, and entity property management)
 	MOV (entity movement)
-Building, mail, inventory management, and all extensions are optional (but "batch" support is highly recommended!)
-PNG is the only officially supported image format, so clients only need to be able to handle PNG.
-If you are making a web client, you are responsible for escaping text when inserting it into something like innerHTML.
+Building, mail, inventory management, and all extensions are OPTIONAL (but "batch" extension support is RECOMMENDED).
+Images used in Tilemap Town MUST be in PNG format, so clients MUST support PNG images.
+A web client MUST escape text received from the server when inserting it onto the page as HTML, such as in an element's innerHTML property.
 
+
+--- Lists ---
 List of entity types:
 	user        An entity controlled by a client.
 	map         A map.
-	group       A user group.
-	text        Holds any amount of text, like Second Life's notecards.
-	image       Currently just holds a URL to an image, which can be used as a tileset for map tiles and entities.
+	group       A user group. Permissions can be granted to a group, which will act as granting it to all users in the group.
+	text        Stores plain text.
+	image       Stores a URL pointing to an image, which can be used as a tileset for map tiles and entities.
 	map_tile    A template for a tile that can be placed on a map.
-	tileset		Holds a series of map tiles. Stored as a JSON object, formatted like tilesets in RSC.
+	tileset		Stores a series of map tiles as a JSON object. It's formatted like global tilesets are in RSC messages.
 	            Map tiles can reference this tileset with tileset_id:name_of_tile.
 	reference   A reference to another entity. Interacting with it should redirect to the entity it points at.
-	folder      Holds other entities. Any entity can hold other entities, so this is more of a UI hint.
-	landmark    Holds a location, allowing a user to teleport to it easily.
+	folder      Entity that specifically exists to contain other entities inside. Any entity can hold other entities, so this is more of a UI hint.
+	landmark    Stores a location, allowing a user to teleport to it easily.
 	generic     No special behavior.
 	chatroom    Entity is supposed to function as a chatroom.
 	gadget      Has special built-in behavior and likely has some sort of action where you can "use" it.
-	client_data Holds information specifically for client use.
+	client_data Stores information specifically for client use.
 	            Structured as {"type": name, "type_version": version, "client_name": name, "data": data} - can add "client_version" too if desired.
 
 List of permissions:
 	build                       user can build on the map
-	sandbox                     users can delete any part of the map freely (or kick any item from a container)
+	sandbox                     users can kick any non-user entity from this map (intended for an earlier vision of what Tilemap Town would be)
 	admin                       user is an admin on the map
 	copy                        user can make copies of this object
 	map_bot                     user is given bot-related permissions (like the ability to use /listen)
 	move                        user can move this object around within the same container
-	move_new_map                user can move this object to a new map
+	move_new_map                user can move this object to a new map/container
 	bulk_build                  user can use the builk building protocol commands
-	object_entry                user can bring non-client entities here
-	persistent_object_entry     user can bring non-client entities here persistently (will kick clients out when unloading if not true)
+	object_entry                user can bring non-user entities here
+	persistent_object_entry     user can bring non-user entities here persistently (will kick clients out when unloading if this permission is not given)
 	modify_properties           user can modify the properties of this entity
 	remote_command              user can make this entity do arbitrary commands
 	modify_appearance           user can modify visual properties, like picture or description
-	list_contents               user can look at the contents of this entity (for text and client_data items, that also means looking at the data the item holds)
+	list_contents               user can look at the contents of this entity (for text and client_data items, that also grants looking at the data the item holds)
 	set_owner_to_this           user can set change the owner of any of their entities to this entity
 	set_topic                   user can set the map's discussion topic
 	remote_chat                 user is allowed to send chat to this entity, and listen to chat in this entity
@@ -71,252 +102,407 @@ List of directions (used for "dir" values):
 
 
 === Movement on the map ===
+--- MOV ---
+The "MOV" protocol message type allows a client to move its own entity or another entity around on a map, or onto another map.
+
+Client-->Server "MOV" messages can contain the following fields:
+	"to": [x, y]; New position to move onto.
+	"from": [x, y]; Old position; optional, specifies what position the entity was on previously.
+	"dir": integer from 0 to 7; Changes the entity's direction.
+	"offset": [x, y]; Changes the entity's pixel offset.
+	"bump": [x, y]; Client is signaling to the server that it attempted to move onto a dense tile or the edge of the map, and stopped itself. Position given is the tile that it attempted to move itself onto, which will be outside the map in the case of map edges.
+	"if_map": ID; Do not process this command if the client's current map does not match the ID given here. (Helps avoid race conditions; clients SHOULD include "if_map" whenever "bump" is used.)
+	"new_map": ID; Map that this client would like to move to.
+	"rc": ID; Entity that this client would like to move, instead of itself. Client must have the necessary permission to do that.
+These fields can be combined freely and all of them are optional.
+
+Server-->Client "MOV" messages can contain the following fields:
+	R"id": ID; Indicates which entity moved.
+	"to", "from", "dir", "offset": Same as for Client-->Server.
+	"edge_warp": boolean; If true, indicates that this entity was put into this position by moving off of the edge of a map, which teleported them onto another.
+The web client currently ignores MOV messages with its own entity ID unless "from" is omitted. A client MAY present a "MOV" message with a "from" field as the entity deciding to move, and a "MOV" message without as a teleport.
+
+Examples:
 --> MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0}
-Move yourself
+Move yourself to another position on the map.
 
 --> MOV {"bump": [x,y], "dir": 0}
 Tell the server you attempted to move into a tile but stopped yourself because it was dense.
 Also sent when attempting to move off of the edge of the map, which the server may respond to by sending you to another map.
 
 --> MOV {"bump": [x,y], "dir": 0, "if_map": id}
-"if_map" signals that a MOV is only valid for a specific map, and should be ignored if the client is on another one.
-This helps avoid race conditions where a MOV changes the client's map and the client sends another before it knows it's on the new map.
+"if_map" signals that a "MOV" is only valid for a specific map, and should be ignored if the client is on another one.
+This helps avoid race conditions where a "MOV" changes the client's map and the client sends another before it knows it's on the new map.
 
 --> MOV {"new_map": id}
-Request to move to another map
+Request to move to another map.
 
 --> MOV {"new_map": id, "to": [x,y]}
-Request to move to a specific position on another map
+Request to move to a specific position on another map.
 
 --> MOV {"dir": 0}
-Change direction only
-
 --> MOV {"offset": [x,y]}
-Change your pixel offset
+Change direction or pixel offset only.
 
 <-- MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "id": 0}
-Move a player on the map.
-"from" may be left out, and if so, a client won't ignore MOVs for its own ID.
-
-<-- MOV {"to": [x,y], "dir": 0, "id": 0, "edge_warp": true}
-Indicates a character was put into this position via moving off the edge of a map and onto another.
+An entity moved.
 
 
-=== Map contents ===
-When a client enters into a map, it will receive a MAI, MAP, and WHO. MAP will be omitted when using the "see_past_map_edge" extension, when the map you enter is linked to the edge of the one you were previously in. This saves on bandwidth.
+=== Map data ===
+Map tile data can be changed with "PUT" and "DEL" messages, or read/received with "MAP" messages. "MAI" messages provide metadata about the map that the client is on.
+When the client's entity enters into a map, it will automatically receive "MAI", "MAP", and "WHO" messages, though the server will omit "MAP" if the client is using the "see_past_map_edge" extension, and if map the client's entity entered was edge-linked to the map they were previously in.
 
+Tiles in this protocol may be strings or objects; if they are objects, they are expected to have fields describing the tile (see tiles.txt for information). If they are strings, they will be assumed to come from the global tileset unless they contain a colon, in which case they are interpreted to be "tileset:tile_name" and the client should request the tileset (with a "TSD" message) if the client does not have that tileset.
+
+The terminology "atom", "turf" and "obj" is taken from BYOND. Maps contain a "turf" layer of floor tiles, and every position on the map can have a list of one or more "obj" tiles stacked on top of each other.
+
+
+--- PUT ---
+Client-->Server "PUT" messages request that the server should change one tile. They can contain the following fields:
+	R"pos": [x,y]; Position on the map to change.
+	R"atom": string or JSON object; New tile to put in this location.
+	R"obj": boolean; If present and true, "atom" is an array of tiles, which will put the list of objects on the map's object layer at the provided position.
+	"remote_map": ID; Change the tiles on a different map, if present.
+When a client sends a "PUT" message, everyone on that map will receive the "PUT" message as well as a "MAP" message.
+
+Server-->Client "PUT" messages are sent to all clients on a map when someone sends a "PUT" message. They can contain the following fields:
+	R"pos", R"atom", R"obj": Same as for Client-->Server.
+	R"username": string or ID; Username of the user who did the "PUT".
+	R"id": ID; Which user did the "PUT".
+
+Examples:
 --> PUT {"pos": [x,y], "atom": {tile definition}}
 --> PUT {"pos": [x,y], "atom": "global_tileset_tile"}
 --> PUT {"pos": [x,y], "atom": "tileset:tile_name"}
 <-- PUT {"pos": [x,y], "atom": {tile definition}, "username": username, "remote_map": map} (for listeners)
-<-- MAP {"pos": [x, y, x, y], "default": default_turf, "turf": [turfs], "obj": [objs]}
-Place a tile on the map.
-"atom" is the tile to place, and it may be a whole tile definition itself, or a reference to the main global tileset, or a reference to a tile within a tileset.
-The terminology "atom", "turf" and "obj" is taken from BYOND.
+<-- MAP {"pos": [x,y,x,y], "default": default_turf, "turf": [[x, y, tile], [x, y, tile], ...], "obj": [[x, y, [tile, ...]], [x, y, [tile, ...]]]}
 
-Optional fields:
-	"obj": If present and true, "atom" is an array of tiles, which go onto the map's object layer at the given coordinate
 
---> MAP {"pos":[x1, y1, x2, y2]}
-<-- MAP {"pos":[x1, y1, x2, y2], "default": default_turf, "turf": [turfs], "obj": [objs]}
-Get a partial copy of the map
+--- DEL ---
+Client-->Server "DEL" messages request that the server should change multiple tiles. They can contain the following fields:
+	R"pos": [x1,y1,x2,y2]: Area that should be changed.
+	R"turf": boolean or tile data; if True, the area that should be changed is set to the default turf/floor for the map. If a tile is provided instead, the area is changed to that tile instead of the default.
+	R"obj": boolean or tile data; if True, the object layer in the area that should be changed is set to an empty list of objects. If a list of objects is provided, it's used instead of the empty list.
+	"remote_map": ID; Change the tiles on a different map, if present.
 
---> MAI
-<-- MAI {parameters that describe the map}
+Server-->Client "DEL" messages are sent to all clients on a map when someone sends a "DEL" message. They can contain the following fields:
+	R"pos", "turf", "obj": Same as for Client-->Server.
+	R"username": string or ID; Username of the user who did the "DEL".
+	R"id": ID; Which user did the "DEL".
 
-Fields that may appear in MAI on the official server:
-	"name": string; Name of the map
-	"desc": string; Map description
-	"id": string or integer; Map's database ID
-	"owner_id": integer; Database ID of the person the map belongs to
-	"owner_username": string; Username of the person the map belongs to; may be "?"
-	"default": string or object; Default type of turf; may be a string or JSON object
-	"size": 2-element list; [width, height]
-	"start_pos": 2-element list; [x, y]. It's the position users are put at when they teleport to the map; only sent to map admins
-	"public": boolean; If true, the map shows up in commands like /whereare
-	"private": boolean; If true, users can not join the map unless given entry permission
-	"build_enabled": boolean; If true, users can build without specifically being given permission to
-	"full_sandbox": boolean; Not currently used, but the intention is that when it's true, users can edit or delete other users' objects on the map
-	"edge_links": List of 8 database IDs for the maps surrounding this one; starts with the west link and goes clockwise and each entry may be null if there is no link
-	"tags": dictionary; Arbitrary structure for metadata relating to this map. Intended to be organized as tags[group][item], but no groups or items are standardized currently.
-	"you_allow": List of permission names that the user is granted for this map
-	"you_deny": List of permission names that the user is denied for this map
-	"default_allow": List of permission names that this map grants by default
-	"default_deny": List of permission names that this map denies by default
-	"topic": string; Current topic, if there is one
-	"topic_username": string; Username of the person who set the topic
-	"remote_map": integer; If set, this MAI is actually for a different map, and not the one you're on; the parameter is the database ID of that other map
-	"wallpaper": object, containing:
-		"url": string; image link
-		"center": boolean; if true, the wallpaper's origin point is the middle of the map, not the top left
-		"repeat": boolean; if true, the wallpaper repeats across the entire map
-		"repeat_x": boolean; if true, the wallpaper repeats across the map horizontally
-		"repeat_y": boolean; if true, the wallpaper repeats across the map vertically
-		"over_turf": boolean; if true, draw over all turf, not just default turf
-		"offset": 2-element list; [x,y]. Number of pixels to shift the image horizontally and vertically from the default spot it would be at
-	Most important fields to support are "id", "name", "desc", "default", "size" and "remote_map". Most of the others are just informational.
-	"remote_map" can be supported by just discarding the entire message when it's present.
-
+Examples:
 --> DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true}
 --> DEL {"pos": [x1, y1, x2, y2], "turf":"grass", "obj":["diamond"]}
 <-- DEL {"pos": [x1, y1, x2, y2], "turf":true, "obj":true, "username":username, "remote_map": map} (for listeners)
-<-- MAP {"pos": [x1, y1, x2, y2], "default": default_turf, "turf": [turfs], "obj": [objs]}
-Delete a section of map. You can also turn this into a rectangle fill command by specifying a turf to use instead of the map's default tile, or an object list to use instead of an empty one.
+<-- MAP {"pos": [x1, y1, x2, y2], "default": default_turf, "turf": [[x, y, tile], [x, y, tile], ...], "obj": [[x, y, [tile, ...]], [x, y, [tile, ...]]]}
+
+
+--- MAP ---
+Client-->Server "MAP" messages request the tile data for a portion of the map. They may contain the following fields, if present:
+	R"pos": [x1,y1,x2,y2]: Area that is requested
+	"remote_map": ID; Check a different map's tiles, if present.
+
+Server-->Client "MAP" messages will happen when joining a map, when explicitly requesting it with a Client-->Server "MAP" message, or when a portion of the map is changed (or when a change fails, causing the client to receive a "MAP" with the unchanged area to overwrite that section in their client-side copy of the map). They will contain the following fields:
+	R"pos": [x1,y1,x2,y2]: Area that is represented in the "MAP" message.
+	R"default": tile; Default turf/floor type, to be used across this area anywhere that a different turf is not specified.
+	R"turfs": list of turfs, in [x, y, tile] format.
+	R"objs": list of object lists, in [x, y, [tile, tile, tile...]] format.
+Clients can implement "MAP" messages by clearing out the specified area and then filling it in with the provided information.
+
+Examples:
+--> MAP {"pos":[x1, y1, x2, y2]}
+<-- MAP {"pos":[x1, y1, x2, y2], "default": default_turf, "turf": [[x, y, tile], [x, y, tile], ...], "obj": [[x, y, [tile, ...]], [x, y, [tile, ...]]]}
+
+
+--- MAI ---
+Client-->Server "MAI" messages have no parameters (except for "remote_map" potentially), and they request a Server-->Client "MAI" message.
+
+Server-->Client "MAI" messages 
+Fields that may appear in MAI on the official server:
+	R"name": string; Name of the map.
+	R"desc": string; Map description.
+	R"id": string or integer; Map's database ID.
+	R"owner_id": integer; Database ID of the person the map belongs to, or null.
+	R"owner_username": string; Username of the person the map belongs to, or null.
+	R"default": string or object; Default type of turf; may be a string or JSON object.
+	R"size": 2-element list; [width, height].
+	"start_pos": 2-element list; [x, y]. It's the position users are put at when they teleport to the map; only sent to map admins.
+	"public": boolean; If true, the map shows up in commands like /whereare.
+	"private": boolean; If true, users can not join the map unless given entry permission.
+	"build_enabled": boolean; If true, users can build without specifically being given permission to.
+	"full_sandbox": boolean; Not currently used, but the intention is that when it's true, users can edit or delete other users' objects on the map.
+	"edge_links": List of 8 database IDs for the maps surrounding this one; starts with the west link and goes clockwise and each entry may be null if there is no link.
+	"tags": dictionary; Arbitrary structure for metadata relating to this map. Intended to be organized as tags[group][item], but no groups or items are standardized currently.
+	"you_allow": List of permission names that the user is granted for this map.
+	"you_deny": List of permission names that the user is denied for this map.
+	"default_allow": List of permission names that this map grants by default.
+	"default_deny": List of permission names that this map denies by default.
+	"topic": string; Current topic, if there is one.
+	"topic_username": string; Username of the person who set the topic.
+	"remote_map": integer; If set, this MAI is actually for a different map, and not the one you're on; the parameter is the database ID of that other map.
+	"wallpaper": object, containing:
+		"url": string; image link.
+		"center": boolean; if true, the wallpaper's origin point is the middle of the map, not the top left.
+		"repeat": boolean; if true, the wallpaper repeats across the entire map.
+		"repeat_x": boolean; if true, the wallpaper repeats across the map horizontally.
+		"repeat_y": boolean; if true, the wallpaper repeats across the map vertically.
+		"over_turf": boolean; if true, draw over all turf, not just default turf.
+		"offset": [x,y]. Number of pixels to shift the image horizontally and vertically from the default spot it would be at.
+	"music": string; Link to a song that should be played on this map.
+	Most important fields to support are "id", "name", "desc", "default", "size" and "remote_map". Most of the others are just informational.
+	"remote_map" MUST be handled, even if the handling is just discarding the entire message when it's present.
 
 
 === Resources ===
---> IMG {"id": number}
---> IMG {"id": [number, number, number...]}
-Request an image asset's URL.
-Can request multiple image assets at once. When this is done, the client will receive multiple IMG messages in response.
+--- IMG ---
+Client-->Server "IMG" messages request a Server-->Client "IMG" message, and must contain the following field:
+	R"id": ID or list of IDs: Image entity (or entities) that the client wants to read.
 
-<-- IMG {"id": number, "url": string}
-Have the client load an image, for tilesets or avatars or other purposes.
-There may be an additional boolean field named "update" which is set to true when the IMG message was sent because the image was previously requested during the client's current session, but the image has been updated to point at a new URL.
+Server-->Client "IMG" messages can contain the following fields:
+	R"id": ID of the entity 
+	"update": boolean; If true, this "IMG" was sent because the client previously read this image entity (during the same connection session) and the entity's URL has changed.
+If multiple entity IDs are requested, that will result in one response per ID, collected together in a batch (if the client is using the "batch" extension.)
 
---> TSD {"id": number}
---> TSD {"id": [number, number, number]}
-Request tileset data from the server.
-Can request multiple tilesets at once. When this is done, the client will receive multiple TSD messages in response.
+Examples:
+--> IMG {"id": ID}
+--> IMG {"id": [ID, ID, ID...]}
+<-- IMG {"id": ID, "url": string}
 
-<-- TSD {"id": number, "data": "{\"id\": {info}, \"id\": {info}, \"id\": {info}...}"}
-Tileset received from the server.
+
+--- TSD ---
+Client-->Server "TSD" messages request a Server-->Client "TSD" message, and must contain the following field:
+	R"id": ID or list of IDs: Tileset entity (or entities) that the client wants to read.
+
+Server-->Client "TSD" messages can contain the following fields:
+	R"id": ID of the entity 
+	"update": boolean; If true, this "TSD" was sent because the client previously read this tileset (during the same connection session) and the entity's data has changed.
+If multiple entity IDs are requested, that will result in one response per ID, collected together in a batch (if the client is using the "batch" extension.)
 Received data may be in string format, which would require parsing into JSON.
-There may be an additional boolean field named "update" which is set to true when the TSD message was sent because the tileset was previously requested during the client's current session, but the tileset has been updated.
+
+Examples:
+--> TSD {"id": ID}
+--> TSD {"id": [ID, ID, ID...]}
+<-- TSD {"id": ID, "data": "data": "{\"id\": {info}, \"id\": {info}, \"id\": {info}...}"}
+
+
+--- RSC ---
+Server-->Client "RSC" messages happen once after connecting to the server. The data is structured like this:
+{
+	"images": {
+		"0": "URL for tile sheet number 0",
+		"-1": "URL for tile sheet number -1",
+		"-2": "URL for tile sheet number -2",
+		...
+	},
+	"image_names": {
+		"0": "Name to show in the tile editor for tile sheet number 0",
+		"-1": "Name to show in the tile editor for tile sheet number -1",
+		"-2": "Name to show in the tile editor for tile sheet number -2",
+		...
+	},
+	"sample_avatars": {
+		"Avatar name": "URL for this avatar",
+		"Avatar name": "URL for this avatar",
+		...
+	},
+	"default_pics": {
+		"default": [sheet, x, y],
+		"invisible": [sheet, x, y],
+		"sampleEmote1": [sheet, x, y],
+		"sampleEmote2": [sheet, x, y],
+		"hearts": [sheet, x, y],
+		...
+	},
+	"tilesets": {
+		"": {
+			"grass": {tile data},
+			"sand": {tile data}
+		},
+		"other_tileset": {
+			"dirt": {tile data},
+			"water": {tile data}
+		}
+	},
+	"build_categories": {
+		"Name to show in the build menu": "other_tileset"
+	}
+}
+This message type allows servers to provide tilesets and other information, to allow for servers to customize things and avoid needing to bundle everything with each client. Entity IDs in Tilemap Town are never negative or zero, so negative and zero IDs are used here for server-provided tile sheet IDs.
+"default_pics" avoids putting hardcoded pics into clients. If a client needs an invisible tile for instance, it can use the tile that the server told it was invisible.
 
 
 === People on the map ===
---> WHO
---> WHO {"update": {fields}}
---> WHO {"update": {fields}, "rc": id}
-<-- WHO {"list": {"[id]": {"name": name, "pic": [s, x, y], "x": x, "y": y, "dir": dir, "id": id}, "you":id}
-<-- WHO {"add": {"name": name, "pic": [s, x, y], "x": x, "y": y, "dir", dir, "id": id}}
-<-- WHO {"update": {"id": id, other fields}}
-<-- WHO {"remove": id}
-<-- WHO {"new_id": {"id": old_id, "new_id", id}}
-"add" can be used to do an update too, where it will replace a whole entry with new data.
-"update" can be used for partial updates, where only the fields present in the message are updated and other fields are left alone.
-"remove" requests that a specific item be removed.
-"new_id" is used when a temporary object gets saved to the database, or when a user logs in after starting as a guest.
-For WHO update, you can supply another ID instead of yours with the "rc" parameter, if you have "remote_command" permission for that entity.
+--- WHO ---
+"WHO" messages manage the list of entities that are on the map. This message type can perform different commands, which in turn have their own fields.
 
-A server-->client WHO may have a "type" parameter on it, which indicates which user list specifically is being managed here.
-If it's not present, treat it like it's "map"; values are:
-	"map" - User list for a map (usually the one the player is currently in; "remote_map" will be provided if not)
-	"watch" - Users in your watch list that are currently online; only received if you specify the extension "user_watch_with_who"
-		Will contain "id", "username", "status", "stats_message", "in_world"
-	"chat_listeners" - User list currently listening in on chat on a map (which will be specified with "remote_map"); only received if you specifically opt into receiving this information with a /listen
-		Will contain "id", "name" and "username"
+Client-->Server "WHO" messages can currently only contain one kind of command:
+--> WHO {"update": {properties}}
+--> WHO {"update": {properties}, "rc": ID}
+	Client wants to modify its own properties (or the properties of another entity, if "rc" is provided - requires "remote_command" permission).
+	The property list is an object where each key is a property name. For example, {"update": {"typing": true, "usable": false}} will change two properties.
 
-Clients can send updates about themselves, but only keys that the servers knows to be OK, such as "typing".
-For client-to-server WHO updates, "id" is ignored if provided.
+	Clients can modify the following properties using a "WHO" update message:
+		"typing": boolean, or string; shows a currently-typing marker above your entity if true, or stops showing it if false.
+			May also be the string "pause" to indicate that you haven't typed recently, but still have text in the client's text input box. No other values are allowed.
+		"mini_tilemap": null, or an object (see Mini Tilemap section.)
+		"mini_tilemap_data": null, or object (see Mini Tilemap section.)
+		"clickable": boolean or string; If true, this client/entity wants to be sent "entity_click" EXT messages when it is clicked. "drag" and "map_drag" are also valid values for this, which signal that this entity would like to receive "entity_drag" and "entity_click_end" EXT messages.
+		"usable": boolean; if True, you can send USE messages at this entity (web client will do this when the entity is clicked on.)
+		"verbs": list of strings; This is a list of commands that you can /tell this entity to get some sort of action to happen. Server limits this list to 10 items currently.
 
-Fields you can update with client-->server WHO update:
-	"typing": boolean, shows a currently-typing marker above your character if true
-		May also be the string "pause" to indicate that you haven't typed recently, but still have text in the client's text input box
-	"mini_tilemap": null, or an object (see Mini Tilemap section)
-	"mini_tilemap_data": null, or object (see Mini Tilemap section)
-	"clickable": boolean or string; If true, this client/entity wants to be sent "entity_click" EXT messages when it is clicked. "drag" and "map_drag" are also valid values for this, which signal that this entity would like to receive "entity_drag" and "entity_click_end" EXT messages.
-	"usable": boolean; if True, you can send USE messages at this entity (web client will do this when the entity is clicked on)
-	"verbs": list of strings; This is a list of commands that you can /tell this entity. Server limits this list to 10 items currently.
+Server-->Client "WHO" messages can contain these commands:
+<-- WHO {"list": {"[id]": {"name": name, "pic": [s, x, y], "x": x, "y": y, "dir": dir, "id": ID}, "you":ID}
+	Replaces the client's list of entities with a new list, and tells the client which ID corresponds to their entity.
 
-Other fields that may appear in WHO messages on the official server:
-	"name": string; Name of the entity
-	"username": string; This use's username
-	"pic": [sprite sheet ID or URL, x, y]; Entity appearance
-	"x": integer; X coordinate on the map
-	"y": integer; Y coordinate on the map
-	"dir": integer; Direction from 0 to 7
-	"id": integer or string; An ID to reference this entity with
-	"passengers": List of IDs this entity is carrying (note that there may be recursion here that you need to be careful about)
-	"vehicle": integer or string; ID of the entity this entity is being carried by
-	"is_following": boolean; If true, entity is following behind its vehicle, instead of being carried
-	"type": string; Entity type, like "user" or "generic"
-	"bot": boolean; If true, entity is a bot
-	"in_user_list": boolean; True if this entity is a real user, and should therefore go in the user list
-	"offset": [x,y]; Offset in pixels away from where this entity would normally be drawn
-	"is_forwarding": boolean; If true, this entity is not a user, but some events that happen on the map this entity is on are being forwarded to a user
-	"chat_listener": boolean; If true, this entity is not a user, but chat messages that are sent to this entity's map are being forwarded to a user
-	"z_index": integer; an entity with a higher z-index should get shown over another when two entities are on the same Y coordinate
-	"who_tags": dictionary; This contains arbitrary metdata tags that have been set on the entity under the "who" tag group.
-		Standardized fields that can be in here:
-		"pronouns": string; The entity's pronouns as an arbitrary string.
-		"name_color": string; What color to display the entity's name in, formatted as #RRGGBB or #RGB. Client is responsible for verifying that the color is properly formatted. If this color is used in a chat log, it might be a good idea to check if the color would have enough contrast against the chat log's background color.
-	Most important fields to support are "id", "name", "pic", "x", "y", "dir" and ideally "offset" too.
+	In addition to the above list of modifiable properties, these may be seen on entities:
+		R"id": ID to reference this entity with.
+		"type": string; Entity type, like "user" or "generic".
+		"in_user_list": boolean; True if this entity is a real user, and should therefore go in the user list (because users and other entities on the map go in the same "WHO" list).
+
+		"name": string; Name of the entity.
+		"desc": string; Description for the entity.
+		"username": string; The username for the account this entity is logged into.
+		"pic": [sprite sheet ID or URL, x, y]; Entity appearance.
+		"x": integer; X coordinate on the map.
+		"y": integer; Y coordinate on the map.
+		"dir": integer; Direction from 0 to 7.
+		"offset": [x,y]; Offset in pixels away from where this entity would normally be drawn.
+		"z_index": integer; An entity with a higher z-index should get shown over another when two entities are on the same Y coordinate.
+
+		"passengers": List of IDs this entity is carrying (Note: recursion MUST be handled properly if the client intends on following through the chain)
+		"vehicle": integer or string; ID of the entity this entity is being carried by.
+		"is_following": boolean; If true, entity is following behind its vehicle, instead of being carried.
+
+		"bot": boolean; If true, entity is a bot.
+		"is_forwarding": boolean; If true, this entity is not a user, but some events that happen on the map this entity is on are being forwarded to a user.
+		"chat_listener": boolean; If true, this entity is not a user, but chat messages that are sent to this entity's map are being forwarded to a user.
+
+		"status": string; Arbitrary text for a user status.
+		"status_message": Arbitrary text for a user status message.
+
+		"who_tags": object; This contains arbitrary metadata tags that have been set on the entity under the "who" tag group.
+			Standardized fields that can be in here:
+			"pronouns": string; The entity's pronouns as an arbitrary string.
+			"name_color": string; What color to display the entity's name in, formatted as #RRGGBB or #RGB. Client is responsible for verifying that the color is properly formatted. If this color is used in a chat log, it might be a good idea to check if the color would have enough contrast against the chat log's background color.
+
+		Most important fields to support are "id", "name", "pic", "x", "y", "dir" and ideally "offset" too.
+
+<-- WHO {"add": {"name": name, "pic": [s, x, y], "x": x, "y": y, "dir", dir, "id": ID}}
+	Replaces one entry in the client's list of entities with new information (or adds a new entry to the list, if the provided ID didn't previously exist.)
+
+<-- WHO {"update": {"id": ID, other properties}}
+	Modifies one or more properties for one entry in the client's list of entities, like Client-->Server "WHO" updates.
+
+<-- WHO {"remove": ID}
+	Removes one entry from the client's list of entities.
+
+<-- WHO {"new_id": {"id": old_id, "new_id", ID}}
+	Change the ID on one entity in the client's list of entities. This usually happens when a temporary entity gets saved to the database (such as when a user registers an account.)
+
+A Server-->Client "WHO" may have a "type" parameter on it, which indicates which user list specifically is being managed here.
+If it's not present, treat it like it's "map"; possible values are:
+	"map" - User list for a map (usually the one the client's entity is currently in; "remote_map" will be provided if not).
+	"watch" - Users in your watch list that are currently online; only received if you specify the extension "user_watch_with_who".
+		Will contain "id", "username", "status", "stats_message", "in_world".
+	"chat_listeners" - User list currently listening in on chat on a map (which will be specified with "remote_map"); only received if you specifically opt into receiving this information with a /listen.
+		Will contain "id", "name" and "username".
+"type" MUST be handled, even if the handling is just discarding the entire message when it's present and isn't "map".
 
 
 === Miscellaneous ===
---> IDN
---> IDN {"username": username, "password": password}
---> IDN {"name": display name}
---> IDN {"map" [map_id]}
---> IDN {"map" [map_id, x, y]}
---> IDN {"features": {"feature_name": {"version": "1.0.0"}}}
---> IDN {"client_name": "name", "client_version": "1.0.0"}
-<-- IDN
-<-- IDN {"features": {"feature_name": {"version": "1.0.0"}}}
-<-- IDN {"api_key": key, "api_url": "https://novasquirrel.com/townapi/", "api_version": 1}
-Log into the server with or without an account. Server sends an acknowledgement if the IDN was accepted.
-Can optionally start on a specific map, with optional map coordinates.
-Clients can request features and the server can confirm some amount of them.
-Clients can report what name and version they're running if they like.
-The server may report back information for accessing a HTTP API. The version number is currently 1.
+--- IDN ---
+Client-->Server "IDN" messages can contain the following fields:
+	"name": string; Name to use for your entity if you log in as a guest.
+	"username": string; Username to attempt to log into, if provided.
+	"password": string; Password to use for the login attempt, if provided.
+	"map": [map_ID] or [map_ID, x, y]: Override putting the client on the map the account logged out of most recently, and instead put them on a different map.
+	"features": Features that the client is signaling support for and is requesting.
+	"client_name": string; What software the user is using to connect.
+	"client_version": string; What software the user is using to connect.
+	"client_mode": string; May be "messaging" to request that the client should not enter into the world as a character, and instead only wants to connect for private messages and mail. "normal" will connect as normal, and that will also be the default if "client_mode" is not specified.
 
---> IDN {"username": username, "password": password, "client_mode": "messaging"}
-Experimental feature: If you specify a "client_mode" parameter and set it to "messaging", you'll log in but not be placed into the world as a character.
-This is for creating clients that treat Tilemap Town as an instant messaging platform. You can specify "normal" or leave client_mode unspecified for the regular mode.
+Server-->Client "IDN" messages can contain the following fields:
+	"features": Features that the server has acknowledged and will use.
+	"api_key": string; Per-connection session unique key that can be passed to API functions for authentication.
+	"api_url": string; API base URL, like https://tilemap.town/api/.
+	"api_version": integer; API version number; currently just 1.
+Receiving an "IDN" message means the server has accepted an attempt to log into the server.
 
---> MSG {"text": "[text]"}
---> MSG {"text": "[text]", "rc": id}
-Send a chat message to the current room. Will cause you to receive the MSG you sent as a result of being in that room.
-If "rc" is supplied, the server will have the entity with the specified ID send a chat message to its own current room.
+"features" fields look like this, with a list of supported extensions and version numbers for each:
+{
+	"see_past_map_edge": {"version": "0.0.1"},
+	"batch": {"version": "0.0.1"},
+	"bulk_build": {"version": "0.0.1"},
+	"message_acknowledgement": {"version": "0.0.1"},
+}
 
---> CMD {"text": "[text]", "echo": value, "rc": id}
-<-- CMD {"text": "[text]", "echo": value, "data": {}}
-Do a command.
-"echo" is optional, and will be returned in the response, if there is one.
-Command may have a machine-readable response if "echo" is provided, provided in "data".
 
-If "rc" is supplied, the server will act as if the entity specified in the ID did the command instead, returning the command results to you instead.
-For "rc", you need to either be the owner or have "remote_command" permissions on the object.
+--- MSG ---
+Client-->Server "MSG" messages send a chat message to a map, and can contain the following fields:
+	R"text": string; Text to send to the other clients.
+	"rc": ID; Send the chat message as a different entity, from whichever map they're on. Requires the "remote_command" permission for the entity.
+	"remote_map": ID; Send the chat message to a different map, if present.
+The client that sends a "MSG" message will receive the message they sent if their entity is on the map they sent it to.
 
-<-- MSG {"text": "[text]", "name": speaker, "class": classname, "username": username, "id": id}
-<-- MSG {"text": "[text]", "name": speaker, "class": classname, "buttons": ["name 1", "command 1", "name 2", "command 2"]}
-Display message in log.
-"class" is a CSS class to style the image with.
-"buttons" provides a list of choices to present that will execute commands.
-May contain "rc_username" and "rc_id" to indicate who is remote controlling the entity to send a chat message.
+Client-->Server "CMD" messages send a chat message to a map, and can contain the following fields:
+	R"text": string; Text for the command; does not include a starting /
+	"echo": arbitrary value; Request that the server's response (if any) should contain an "echo" field with the same value.
+	"rc": ID; Send the command as a different entity, from whichever map they're on. (But send the results to you). Requires the "remote_command" permission for the entity.
+	"remote_map": ID; Send the command to a different map, if present.
 
---> PRI {"text": "[text]", "username": username}
-Send a private message. You can also do this with CMD and the "tell" command.
-Can take "echo" and "rc" like CMD can.
+Server-->Client "MSG" and "CMD" messages can contain the following fields:
+	R"text": string; Text to display. Messages may literally start with /me or /ooc or /spoof when those are used.
+	"name": string; Name of the entity that sent this message. May not be provided for messages sent by the server!
+	"username": string; The username for the account this entity is logged into.
+	"ID": ID; Which entity sent this message.
+	"class": string; What kind of visual style to apply to the message. You may see (not an exhaustive list): "server_message", "server_motd", "server stats", "event_notice", "broadcast_message". In the web client, this is a CSS class.
+	"buttons": list, ["name 1", "command 1", "name 2", "command 2"]; Offer one or more buttons to the user that will run commands when clicked.
+	"echo": arbitrary value; Sent in response to Client->Server "CMD" messages that specified an "echo" field.
+	"data": object; Arbitrary machine-readable data associated with this message; should probably write a formal specification for this.
+	"rc_username": string; Username of the entity that controlled this entity to make it send this message.
+	"rc_id": ID; ID of the entity that controlled this entity to make it send this message.
 
-<-- PRI {"text": "[text]", "name": display name, "id": id, "username": username, "receive": true/false}
-Private message, displays in the log
-Receive is false for sender, true for recipient. You will get a PRI acknowledging a private message you sent, just like with MSG.
 
-Possible fields:
-	"rc_username" and "rc_id" to indicate who is remote controlling the entity to send a private message.
+--- PRI ---
+Client--->Server "PRI" messages send a private message to one other entity. Clients MAY send private messages with a "CMD" message and the /tell command as an alternative to a "PRI" message. They can contain the following fields:
+	R"text": string; Message to send.
+	R"username": string or ID; entity to send the message to.
+	"rc": ID; Send the private message as a different entity. Requires the "remote_command" permission for the entity.
+
+Server-->Client "PRI" messages can contain the following fields:
+	R"text": string; Message that was received.
+	R"receive": boolean; True if you received this message, false if you sent it. You will get a "PRI" in return acknowledging a "PRI" you sent.
+	"name": string; Name of the entity that sent this message.
+	"id": string; Name of the entity that sent this message.
+	"username": string; Name of the entity that sent this message.
+	"rc_username": string; Username of the entity that controlled this entity to make it send this message.
+	"rc_id": ID; ID of the entity that controlled this entity to make it send this message.
 	"timestamp": string; an ISO 8601 timestamp for when the message was sent (if the sending and receiving times are different).
-	"offline": boolean; if true and receive is false, the message will be stored temporarily and sent to the person when they're online. If true and receive is true, the message you're receiving was stored temporarily while you were offline.
+	"offline": boolean; if true and receive is false, the message will be stored temporarily and sent to the person when they're online. If true and "receive" is true, the message you're receiving was stored temporarily while you were offline.
+
+
+--- EML ---
+"EML" messages have multiple actions available, like "WHO".
 
 --> EML {"send": {"subject": subject, "contents": contents, "to": [username, ...]}}
 <-- EML {"sent": {"subject": subject, "contents": contents, "to": [username, ...]}}
+	Send a mail message, and receive acknowledgement that you did so.
 --> EML {"read": id}
+	Mark a mail message as read.
 --> EML {"delete": id}
-Send mail or manipulate your inbox
-
-<-- EML {"receive": {"id": id, "subject": subject, "contents": contents, "to": [username, ...], "from": username}}
+	Delete a mail message.
+<-- EML {"receive": {"id": id, "subject": subject, "contents": contents, "to": [username, ...], "from": username, "timestamp", ISO 8601 timestamp}}
+	You received a mail message.
 <-- EML {"list": [{"id": id, "subject": subject, "contents": contents, "to": [username, ...], "from": username, "flags": flags, "timestamp": ISO 8601 timestamp}]}
 Receive mail from someone, or get a list upon logging in.
-Flags is an array of strings, which may contain one or more of the following:
-	"read": You have already read this mail
-	"sent": You sent this mail, and this is your copy of it
 
-<-- ERR {"text": "[text]"}
-Receive an error.
+	Flags is an list of strings, which may contain one or more of the following:
+		"read": You have already read this mail.
+		"sent": You sent this mail, and this is your copy of it.
 
-Possible fields:
+
+--- ERR ---
+Server-->Client ERR messages provide an error message to the client. They can contain the following fields:
 	"text": Text to display to the user
 	"echo": A repeat of the "echo" field in the protocol message
 	"data": Miscellaneous machine-friendly information about the error
@@ -324,118 +510,131 @@ Possible fields:
 	"detail": Additional information that further clarifies the code
 	"subject_id": ID the error is about
 
-Error codes you might find:
-	"missing_permission": Don't have permission to do the thing you're trying to do; permission needed may be in "detail" (which may be an array)
-	"owner_only": Can't do that unless you own the subject
-	"map_only": Can't do that unless you're on a map
-	"clients_only": Can't do that unless you're a user
-	"server_admin_only": Can't do that unless you're a server admin
-	"invalid_command": Command isn't recognized
-	"invalid_subcommand": Subcommand isn't recognized
-	"not_found": Supplied name isn't found
-	"not_loaded": Entity you're referencing is not currently loaded
-	"identify": Can't use that command until you identify
-	"bad_value": Value wasn't accepted for whatever reason; "detail" may provide a field or something.
-	"no_guests": Guests cannot do this
-	"exception": Exception was thrown
-	"blocked": Can't do that because you're on a block list of some sort
+	Error codes you might find:
+		"missing_permission": Don't have permission to do the thing you're trying to do; permission needed may be in "detail" (which may be an array)
+		"owner_only": Can't do that unless you own the subject
+		"map_only": Can't do that unless you're on a map
+		"clients_only": Can't do that unless you're a user
+		"server_admin_only": Can't do that unless you're a server admin
+		"invalid_command": Command isn't recognized
+		"invalid_subcommand": Subcommand isn't recognized
+		"not_found": Supplied name isn't found
+		"not_loaded": Entity you're referencing is not currently loaded
+		"identify": Can't use that command until you identify
+		"bad_value": Value wasn't accepted for whatever reason; "detail" may provide a field or something.
+		"no_guests": Guests cannot do this
+		"exception": Exception was thrown
+		"blocked": Can't do that because you're on a block list of some sort
 
---> PIN
-<-- PIN
-ping, if you don't respond fast enough you disconnect
 
+--- PIN ---
+Server-->Client "PIN" messages have no fields, and MUST be responded to with a Client-->Server "PIN" message (or else the client will be considered to have disconnected after a period of time.) Websockets already have pings built-in and this is an additional application-level ping.
+
+
+--- VER ---
 --> VER {"name": client_name, "version":1.0, "code": "https://github.com/NovaSquirrel/TilemapTown"}
-<-- VER {"name": server_name, "version":1.0, "code": "https://github.com/NovaSquirrel/TilemapTown"}
-version information for client and server
-
-<-- RSC {"images": {"id": "url", ...}, "tilesets": {"id": {}, ...}}
-Resources for the client to preload.
-Allows servers to explicitly provide tilesets, both to allow for custom ones and to make it so that clients don't need to include a copy of the default tilesets.
+<-- VER {"name": server_name, "version":1.0, "code": "https://github.com/NovaSquirrel/TilemapTown", "features": Supported features}
+Send server information about your client software, and receive information about the server software and its supported extensions. "VER" can be sent *before* "IDN" so that a client can query information about the supported features before making a decision about which features to request.
 
 
 === Items ===
---> MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "rc": 0}
-<-- MOV {"from": [x1,y1], "to": [x2,y2], "dir": 0, "rc": 0}
-Move something else within the container it's in, if you are allowed to
-
+--- USE ---
 --> USE {"id": id}
-Use item
+Use item; what this means exactly is dependent on what kind of entity it is.
 
 <-- USE {"name": name, "id": id, "username": username}
-Message that you'll receive if USE is sent to your entity, or an entity you're listening for USE messages on.
+Message that you'll receive if USE is sent to your entity, or an entity you're listening for "USE" messages on.
 
---> BAG {"create": {"name": name, "type": type}}
---> BAG {"create": {"name": name, "type": type, "temp": true/false}}
-<-- BAG {"create": {"name": name, "type": type, "temp": true/false, "id": new_id}}
-Create a new item of a given type. Valid types include: text, image, map_tile, tileset, reference, folder, landmark, generic
-Can create a temporary object instead if you like
 
---> BAG {"update": {"id": id, "name": name, "desc": desc, "flags": flags, "folder": folder, "data": data, "allow": allow, "deny": deny, "guest_deny": deny, "tags": tags, ...}}
-Update one specific item.
-Allow, deny, and guest_deny are sent as a list of strings, using the permission names earlier in this file.
+--- BAG ---
+"BAG" message manage entities, and have multiple actions available, like "WHO" and "EML". These are intended for managing the client's inventory, but the entity doesn't need to be in the inventory.
 
---> BAG {"move": {"id": id, "folder": map, "pos": [x,y]}}
-Moves an entity to another position. "pos" is optional.
+Client-->Server "BAG" message can contain the following parts:
+	"create"
+		"name": string; Name of the entity to create.
+		R"type": string; Type of the entity to create; Valid types include: text, image, map_tile, tileset, reference, folder, landmark, generic, chatroom, gadget, client_data.
+		"temp" boolean; If true, make the newly created entity temporary. If false, it should be saved to the database.
+		(Include entity property names and values as additional fields to set them on the new entity)
 
---> BAG {"delete": {"id": id}}
-<-- BAG {"delete": {"id": id}}
-Delete an item
+		Will receive a "BAG" "create" message in response as acknowledgement if successful, with the same fields and "id" included for the newly created entity ID.
 
---> BAG {"kick": {"id": id}}
-<-- BAG {"kick": {"id": id}}
-Send an entity to its home
+	"clone"
+		R"id": ID; Entity to clone
+		"temp": boolean; If true, make the newly created entity temporary. If false, it should be saved to the database.
+		(Include entity property names and values as additional fields to change them)
 
---> BAG {"clone": {"id": id}}
---> BAG {"clone": {"id": id, "temp": true/false}}
-<-- BAG {"clone": {"id": id, "temp": true/false, "new_id": new_id}}
-Make an exact clone of an item with a new ID.
-Can make the new object temporary or non-temporary regardless of if the original object was.
+		Will receive a "BAG" "clone" message in response as acknowledgement if successful, with the same fields and "new_id" included for the newly created entity ID.
 
---> BAG {"info": {"id": id}}
-<-- BAG {"info": {"id": id, ...}}
-Request information on an item, whether or not it's in your inventory.
+	"update"
+		R"id": ID; Which entity to update.
+		(Include entity property names and values as additional fields to change them)
 
---> BAG {"list_contents": {"id": id}}
---> BAG {"list_contents": {"id": id, "recursive": true}}
-<-- BAG {"list_contents": {"id": id, "contents": [{item info}]}}
-Get a BAG "list" in return for the container you picked, if you have permission. If "recursive" is present and true, you will also get the contents of all of the contents.
+		Will receive a "BAG" "update" message in response as acknowledgement if successful.
 
-<-- BAG {"update": {item info}}
-<-- BAG {"list": [{item info}], "clear": false}
-Receive an item or list of items from the server. Lists don't replace the client-side list, unless "clear" is specified.
-"clear" specifies that the client-side inventory list for this container should be cleared before adding these. Optional.
+	"move"
+		R"id": ID; Which entity to move.
+		"folder": ID; Which entity to move the other entity inside.
+		"pos": [x,y]; Position within the folder that the entity should be moved to.
 
-<-- BAG {"new_id": {"id": old_id, "new_id": id}}
-Update the ID of one item in the player's inventory
+		Will receive a "BAG" "move" message in response as acknowledgement if successful.
 
-<-- BAG {"remove": {"id": id}}
-Remove one item from the inventory
+	"delete"
+		R"id": ID; Which entity to delete.
 
-BAG messages can have a "container" field with an entity ID, which indicate what entity's inventory is being managed here.
-Currently this isn't used or supported though.
+		Will receive a "BAG" "delete" message in response as acknowledgement if successful.
 
-Item info fields:
-(Used for "update", "list", and "info")
-	"id": string or integer; Item's database ID, or a temporary ID if there isn't a database one
-	"name": string; Name of the item
-	"desc": string; Item description
-	"type": string; Entity type
-	"folder": integer or string; ID of the entity that contains this entity
-	"data": string, usually? It's specific to the entity type
+	"kick"
+		R"id": ID; Which entity to kick (which will send it to its home.)
+
+		Will receive a "BAG" "kick" message in response as acknowledgement if successful.
+
+	"info"
+		R"id": ID; Request properties of this entity.
+
+		Will receive a "BAG" "info" message in response as acknowledgement if successful, with the properties of the entity included.
+
+	"list_contents"
+		R"id": ID; Request the contents of this entity.
+		"recursive": boolean; If true, get the contents of all entities contained within this one, recursively.
+
+		Will receive a "BAG" "list_contents" message in response as acknowledgement, with the contents included in the "contents" field as a list.
+
+Server-->Client "BAG" messages can contain the following parts:
+	Information about actions:
+		"container": ID; Which entity's inventory is being managed here.
+		"clear": boolean; If true, clear client-side copy of entity list before adding new items to it with a "list" sent in the same message.
+
+	Actions:
+		"list": List of entities; Adds all listed entities to the client's inventory. Preexisting items are note replaced unless "clear" is sent and true.
+		"remove": Contains a field "id" with the ID to remove from the client's inventory.
+		"new_id": Contains a field "id" and "new_id" - Updates the ID of one item in the client's inventory.
+		"update": {"id": ID, properties}
+
+Item properties (Used for "create", "clone", "update", "list", and "info"):
+	"id": string or integer; Item's database ID, or a temporary ID if this entity is not stored in the database.
+	"name": string; Name of the item.
+	"desc": string; Item description.
+	"type": string; Entity type.
+	"folder": integer or string; ID of the entity that contains this entity.
+	"data": string, usually? What is stored here is specific to the entity type.
 	"tags": dictionary; Arbitrary structure for metadata relating to this entity. Intended to be organized as tags[group][item], and the "who" tag group will appear in WHO messages.
 	"allow": List of strings, using the permission names earlier in this file. These permissions are granted by default.
 	"deny": List of strings, using the permission names earlier in this file. These permissions are denied by default.
 	"guest_deny": List of strings, using the permission names earlier in this file. These permissions are denied to guests.
-	"owner_id": integer; Database ID of the user this entity belongs to; can be written to to give the item to someone else
-	"owner_username" string; Username of the user this etity belongs to; can be written to to give the item to someone else
-	"username"; string; Read-only and may not be present (for when you check a user entity's information)
-	"temporary": boolean; Changes to this entity do not get saved to the database
+	"owner_id": integer; Database ID of the user this entity belongs to; can be written to to give the item to someone else.
+	"owner_username" string; Username of the user this etity belongs to; can be written to to give the item to someone else.
+	"username"; string; Read-only and may not be present (for when you check a user entity's information).
+	"temp": boolean; Changes to this entity do not get saved to the database.
+
+Item properties that will not be sent in "info" or "list" but can be changed with "create", "clone", "update":
 	"delete_on_logout": boolean; Causes the entity to get removed when the owner logs out
+	"home": ID; Entity that is this entity's "home".
+	"home_position": [x, y]; Position within this entity's "home".
 
 
 === Optional features ===
 Clients and servers can advertise having extra features on top of the basic ones.
-VER will tell the client what features are available. A VER message can be sent before IDN, so a client can check out what's available before making its own decisions about what to request.
+"VER" messages will tell the client what features are available. A "VER" message can be sent before "IDN", so a client can check out what's available before making its own decisions about what to request.
 
 --> VER {
 	"name": client_name,
@@ -479,13 +678,13 @@ Entities can display a little tilemap that overlays their graphic. You can use W
 	"clickable", boolean,    | False   | If true, this entity wants to be sent "entity_click" EXT messages when it is clicked.
 		"drag" is also a valid value for this, which signals that this entity would like to receive "entity_drag" and "entity_drag_end" EXT messages
 		"map_drag" can be used as well, and works the same as if it were to appear on the entity itself
-	"map_size": [w, h],      | N/A     | Size of the mini-tilemap, in tiles; max is [24, 24]
-	"tile_size": [w, h],     | N/A     | Size of each tile in the mini-tilemap, in pixels; max is [64, 64]
-	"tileset_url": string,   | N/A     | Image URL to use for the tiles
+	R"map_size": [w, h],     | N/A     | Size of the mini-tilemap, in tiles; max is [24, 24]
+	R"tile_size": [w, h],    | N/A     | Size of each tile in the mini-tilemap, in pixels; max is [64, 64]
+	R"tileset_url": string,  | N/A     | Image URL to use for the tiles
 	"offset": [x, y],        | [0,0]   | X and Y offset from the entity, in pixels
 	"transparent_tile": int, | 0       | Which tile is treated as transparent
 }
-map_size, tile_size, and tileset_url are required. Total pixel size of the map can't be bigger than 64x64.
+Total pixel size of the map can't be bigger than 64x64.
 
 "mini_tilemap_data": {
 	"data": [tile, ...]
@@ -501,9 +700,9 @@ Tiles are specified top to bottom, going through each line from left to right. I
 
 === EXT messages ===
 There's a protocol message type "EXT" which is used for sending protocol messages with a type that's longer than three characters. (EXTended type names?)
-This is especially helpful for Tilemap Town forks or other extensions (EXTensions?) that want to define their own protocol message types and want to avoid any potential conflicts with later versions of the official protocol. For this kind of usage, it could be a good idea to prefix the message type name with something specific to the thing you're making. Something like "tilemap_town:key_press".
+This is especially helpful for Tilemap Town forks or other extensions (EXTensions?) that want to define their own protocol message types and want to avoid any potential conflicts with later versions of the official protocol. For this kind of usage, it could be a good idea to prefix the message type name with something specific to the thing you're making. For example, something like "tilemap_town:key_press".
 Sending an unrecognized type currently does not result in an error, and you can request a list of the types that are recognized.
-You can add an "rc" parameter just like on WHO, CMD, MOV, etc. and it will act as if the specified entity sent the EXT message.
+You can add an "rc" parameter just like on "WHO", "CMD", "MOV", etc. and the server will act as if the specified entity sent the "EXT" message.
 
 Here are the currently official types, supported by the official server:
 
@@ -514,22 +713,22 @@ Get a list of EXT message types that the server can handle.
 --> EXT {"entity_click": {"x": x, "y": y, "button": 0, "target": "entity"/"mini_tilemap"}}
 <-- EXT {"entity_click": {"x": x, "y": y, "button": 0, "target": "entity"/"mini_tilemap", "id": id}}
 Notify an entity that they were clicked on. X and Y are in pixels, starting from the top left of the entity or mini tilemap.
-"0" means left click, or a stylus tap, or anything like that.
+"0" means left click, or a stylus tap, or whatever else is the primary means of "clicking" on something.
 
 --> EXT {"entity_drag": {"from_x": x, "from_y", y, "x": x, "y": y, "button": 0, "target": "entity"/"mini_tilemap"}}
 <-- EXT {"entity_drag": {"from_x": x, "from_y", y, "x": x, "y": y, "button": 0, "target": "entity"/"mini_tilemap", "id": id}}
-Notify an entity that the user clicked on it and has now moved their cursor over the entity without releasing the mouse
+Notify an entity that the user clicked on it and has now moved their cursor over the entity without releasing the mouse.
 
 --> EXT {"entity_drag": {"from_map_x": x, "from_map_y", y, "map_x": x, "map_y": y, "button": 0, "target": "entity"/"mini_tilemap"}}
 <-- EXT {"entity_drag": {"from_map_x": x, "from_map_y", y, "map_x": x, "map_y": y, "button": 0, "target": "entity"/"mini_tilemap", "id": id}}
-Same as above, but uses map coordinates
+Same as above, but uses map coordinates.
 
 --> EXT {"entity_drag_end": {"button": 0, "target": "entity"/"mini_tilemap"}}
 <-- EXT {"entity_drag_end": {"button": 0, "target": "entity"/"mini_tilemap", "id": id}}
-Notify an entity that the user has released the mouse button after clicking on it. (Whether or not drag messages were also sent)
+Notify an entity that the user has released the mouse button after clicking on it (Whether or not drag messages were also sent.)
 
 --> EXT {"key_press": {"id": id, "key": key_name, "down": true/false}}
-Message gets forwarded to the entity specified in "id". Notifies the client
+Message gets forwarded to the entity specified in "id". Notifies the client that a key was pressed or released.
 Fields:
 	"key": Which key was pressed.
 	"down": If true, key was pressed. If false, key was released.
@@ -563,12 +762,12 @@ Key names:
 		"action-n", "action-e", "action-s", "action-w"
 
 --> EXT {"bot_message_button": {"id": id, "text": text}}
-Message gets forwarded to the entity specified in "id", in order to tell it that a [bot-message-button] button was clicked on.
+Message gets forwarded to the entity specified in "id", in order to tell it that a [bot-message-button] button was clicked on. This is a side channel that's similar to, but separate from, priivate message, and the sender doesn't have the message echoed back to them.
 The forwarded copy has additional fields for "name" and "username" as in PRI.
 
 --> EXT {"typing": {"username": username, "status": status}}
 <-- EXT {"typing": {"name": name, "id": id, "username": username, "status": status}}
-Message gets forwarded to the entity specified in "username". "status" should be treated the same way as the "typing" field in WHO (true if typing, false if not typing).
+Message gets forwarded to the entity specified in "username". "status" should be treated the same way as the "typing" field in WHO (true if typing, false if not typing, or "pause").
 The message the other user receives will have the name, ID, and username added onto it.
 
 --> EXT {"typing": {"map": ID, "status": status}}
@@ -583,7 +782,7 @@ Gives you the text you most recently put into the /client_settings command, as w
 
 --> EXT {"unlisten": {"types": ["move", "build", "entry", "chat", "chat_listen"], "list": [id, id, id...]}}
 <-- EXT {"listen_status": {"maps": {"map1": ["move", "build"], "map2": ["move", "build"], ...}}}
-These are alternatives to the /listen and /unlisten commands (described in the command document) that do not create ERR messages, and send a status messages with a complete list of listens.
+These are alternatives to the /listen and /unlisten commands (described in the command document) that do not create "ERR" messages, and send a status messages with a complete list of listens.
 
 --> EXT {"set_user_profile": {info...}}
 --> EXT {"get_user_profile": {"username": "username"}}
@@ -645,6 +844,7 @@ Fields:
 	"action": string; should be "play" or not specified. Client should ignore the whole user_particle message if it is present but isn't "play"
 	May contain "rc_username" and "rc_id" to indicate who is remote controlling the entity to create the particle.
 
+
 === Extension: bulk_build ===
 This extension allows a client to request multiple map changes in one message, including operations like copies.
 Clients that support it will receive a BLK to communicate the changes, but clients that don't will receive the map changes via MAP.
@@ -683,11 +883,6 @@ Messages for linked maps are marked with a remote_map field, just like the /list
 
 A client is expected to keep copies of the linked maps in memory, and the server takes this into account to reduce bandwidth usage.
 When a client moves to a new map, the server will send a MAI for the new map, but will not send MAIs or MAPs for the new map or any linked maps if they match the client's old map or any maps adjacent to it.
-
-
-=== Extension: receive_build_messages ===
-When the server receives any PUT or DEL messages, it will also send them to any clients on the same map supports receive_build_messages.
-These relayed messages will have additional "id" and "username" fields on them.
 
 
 === Extension: entity_message_forwarding ===
