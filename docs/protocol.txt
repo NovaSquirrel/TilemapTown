@@ -553,14 +553,14 @@ Client-->Server "BAG" message can contain the following parts:
 	"create"
 		"name": string; Name of the entity to create.
 		R"type": string; Type of the entity to create; Valid types include: text, image, map_tile, tileset, reference, folder, landmark, generic, chatroom, gadget, client_data.
-		"temp" boolean; If true, make the newly created entity temporary. If false, it should be saved to the database.
+		"temporary" boolean; If true, make the newly created entity temporary. If false, it should be saved to the database. ("temp" is accepted as an alternative name.)
 		(Include entity property names and values as additional fields to set them on the new entity)
 
 		Will receive a "BAG" "create" message in response as acknowledgement if successful, with the same fields and "id" included for the newly created entity ID.
 
 	"clone"
 		R"id": ID; Entity to clone
-		"temp": boolean; If true, make the newly created entity temporary. If false, it should be saved to the database.
+		"temporary": boolean; If true, make the newly created entity temporary. If false, it should be saved to the database. ("temp" is accepted as an alternative name.)
 		(Include entity property names and values as additional fields to change them)
 
 		Will receive a "BAG" "clone" message in response as acknowledgement if successful, with the same fields and "new_id" included for the newly created entity ID.
@@ -624,7 +624,7 @@ Item properties (Used for "create", "clone", "update", "list", and "info"):
 	"owner_id": integer; Database ID of the user this entity belongs to; can be written to to give the item to someone else.
 	"owner_username" string; Username of the user this etity belongs to; can be written to to give the item to someone else.
 	"username"; string; Read-only and may not be present (for when you check a user entity's information).
-	"temp": boolean; Changes to this entity do not get saved to the database.
+	"temporary": boolean; Changes to this entity do not get saved to the database. ("temp" is accepted as an alternative name.)
 
 Item properties that will not be sent in "info" or "list" but can be changed with "create", "clone", "update":
 	"delete_on_logout": boolean; Causes the entity to get removed when the owner logs out
