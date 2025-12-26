@@ -266,8 +266,10 @@ class Gadget(Entity):
 	# '----------------------
 	def who(self):
 		w = super().who()
-		w['usable'] = any(_.usable for _ in self.traits)
-		w['verbs'] = list(dict.fromkeys(sum((_.verbs for _ in self.traits), [])))
+		if 'usable' not in w:
+			w['usable'] = any(_.usable for _ in self.traits)
+		if 'verbs' not in w:
+			w['verbs'] = list(dict.fromkeys(sum((_.verbs for _ in self.traits), [])))
 		return w
 
 	def take_controls(self, client, key_set, pass_on=False, key_up=False):

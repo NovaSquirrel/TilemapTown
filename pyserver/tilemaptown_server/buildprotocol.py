@@ -273,6 +273,11 @@ def set_entity_params_from_dict(e, d, connection, client, context):
 			connection.cleanup_entities_on_logout.add(e)
 		else:
 			connection.cleanup_entities_on_logout.discard(e)
+	if 'usable' in d and (d['usable'] == None or isinstance(d['usable'], bool)):
+		e.usable = d['usable']
+	if 'verbs' in d and ((d['verbs'] == None) or (isinstance(d['verbs'], list) and len(d['verbs']) < 10 and all(isinstance(_, str) and len(_) < 40 for _ in d['verbs']))):
+		e.verbs = d['verbs']
+
 
 # -------------------------------------
 

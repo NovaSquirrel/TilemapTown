@@ -630,6 +630,8 @@ Item properties that will not be sent in "info" or "list" but can be changed wit
 	"delete_on_logout": boolean; Causes the entity to get removed when the owner logs out
 	"home": ID; Entity that is this entity's "home".
 	"home_position": [x, y]; Position within this entity's "home".
+	"verbs": boolean or null; Causes this entity to have the "verbs" property in "WHO" messages. Will be persistent when set on "generic" entities. Same restrictions as when setting the property via "WHO" messages.
+	"usable": boolean or null; Causes this entity to have the "usable" property in "WHO" messages. Will be persistent when set on "generic" entities.
 
 
 === Optional features ===
