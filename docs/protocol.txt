@@ -16,7 +16,7 @@ It's also designed so that extensions that come from different sources can avoid
 This document covers messages sent by clients as well as messages sent by servers, so these are differentiated as follows:
 "-->" means that the message would be sent by a client, and received by a server.
 "<--" means that the message would be sent by a server, and received by a client.
-When a "R" is next to a field, that means that the field is required. The server will expect it to always be there, and clients can expect the server to always provide it.
+When a "R" is next to a field name, that means that the field is required. The server will expect it to always be there, and clients can expect the server to always provide it.
 
 
 --- General message information---
@@ -671,18 +671,18 @@ Clients and servers can advertise having extra features on top of the basic ones
 
 
 === Mini-tilemaps ===
-Entities can display a little tilemap that overlays their graphic. You can use WHO messages to update an entity's "mini_tilemap" and "mini_tilemap_data" fields, which will be broadcast to the people on the map.
+Entities can display a little tilemap overlaid on top of their graphic. You can use "WHO" messages to update an entity's "mini_tilemap" and "mini_tilemap_data" properties, which will be broadcast to the other entities on the map.
 
 "mini_tilemap": {              _Default___Purpose_
-	"visible": boolean,      | True    | If true, display the mini-tilemap; if false, hide it
+	"visible": boolean,      | True    | If true, display the mini-tilemap; if false, hide it.
 	"clickable", boolean,    | False   | If true, this entity wants to be sent "entity_click" EXT messages when it is clicked.
-		"drag" is also a valid value for this, which signals that this entity would like to receive "entity_drag" and "entity_drag_end" EXT messages
-		"map_drag" can be used as well, and works the same as if it were to appear on the entity itself
-	R"map_size": [w, h],     | N/A     | Size of the mini-tilemap, in tiles; max is [24, 24]
-	R"tile_size": [w, h],    | N/A     | Size of each tile in the mini-tilemap, in pixels; max is [64, 64]
-	R"tileset_url": string,  | N/A     | Image URL to use for the tiles
-	"offset": [x, y],        | [0,0]   | X and Y offset from the entity, in pixels
-	"transparent_tile": int, | 0       | Which tile is treated as transparent
+		"drag" is also a valid value for this, which signals that this entity would like to receive "entity_drag" and "entity_drag_end" EXT messages.
+		"map_drag" can be used as well, and works the same as if it were to appear on the entity itself.
+	R"map_size": [w, h],     | N/A     | Size of the mini-tilemap, in tiles; max is [24, 24].
+	R"tile_size": [w, h],    | N/A     | Size of each tile in the mini-tilemap, in pixels; max is [64, 64].
+	R"tileset_url": string,  | N/A     | Image URL to use for the tiles.
+	"offset": [x, y],        | [0,0]   | X and Y offset from the entity, in pixels.
+	"transparent_tile": int, | 0       | Which tile is treated as transparent; can be -1 or another invalid tile to disable this feature.
 }
 Total pixel size of the map can't be bigger than 64x64.
 
@@ -695,14 +695,14 @@ The tilemap's data is a list of integers, with run-length encoding. Formatted li
   |||||||++++++------- Y position in the tileset, in tile units
   +++++++------------- Length of this run of tiles. (minus 1)
 This means the maximum tileset size is 64x64 tiles, for 4096 tile types.
-Tiles are specified top to bottom, going through each line from left to right. If tiles match "transparent_tile" it's not drawn.
+Tiles are specified top to bottom, going through each line from left to right. If a tile matches "transparent_tile" then it's not drawn, and the tile isn't considered clickable.
 
 
 === EXT messages ===
 There's a protocol message type "EXT" which is used for sending protocol messages with a type that's longer than three characters. (EXTended type names?)
 This is especially helpful for Tilemap Town forks or other extensions (EXTensions?) that want to define their own protocol message types and want to avoid any potential conflicts with later versions of the official protocol. For this kind of usage, it could be a good idea to prefix the message type name with something specific to the thing you're making. For example, something like "tilemap_town:key_press".
 Sending an unrecognized type currently does not result in an error, and you can request a list of the types that are recognized.
-You can add an "rc" parameter just like on "WHO", "CMD", "MOV", etc. and the server will act as if the specified entity sent the "EXT" message.
+You can add an "rc" field just like on "WHO", "CMD", "MOV", etc. and the server will act as if the specified entity sent the "EXT" message.
 
 Here are the currently official types, supported by the official server:
 
@@ -717,11 +717,11 @@ Notify an entity that they were clicked on. X and Y are in pixels, starting from
 
 --> EXT {"entity_drag": {"from_x": x, "from_y", y, "x": x, "y": y, "button": 0, "target": "entity"/"mini_tilemap"}}
 <-- EXT {"entity_drag": {"from_x": x, "from_y", y, "x": x, "y": y, "button": 0, "target": "entity"/"mini_tilemap", "id": id}}
-Notify an entity that the user clicked on it and has now moved their cursor over the entity without releasing the mouse.
+Notify an entity that the user clicked on it and has now moved their cursor over the entity without releasing the mouse. Web client will not send coordinates outside the bounds of the entity or its mini tilemap.
 
 --> EXT {"entity_drag": {"from_map_x": x, "from_map_y", y, "map_x": x, "map_y": y, "button": 0, "target": "entity"/"mini_tilemap"}}
 <-- EXT {"entity_drag": {"from_map_x": x, "from_map_y", y, "map_x": x, "map_y": y, "button": 0, "target": "entity"/"mini_tilemap", "id": id}}
-Same as above, but uses map coordinates.
+Same as above, but uses map coordinates. The intention is that the client can click on the entity and drag over it to move it somewhere else, or at least aim somewhere else on the map.
 
 --> EXT {"entity_drag_end": {"button": 0, "target": "entity"/"mini_tilemap"}}
 <-- EXT {"entity_drag_end": {"button": 0, "target": "entity"/"mini_tilemap", "id": id}}
@@ -736,7 +736,7 @@ Fields:
 --> EXT {"take_controls": {"id": id, "keys": [key_name, key_name, key_name...], "pass_on": true/false, "key_up": true/false}}
 --> EXT {"take_controls": {"id": id, "keys": []}}
 <-- ERR {"ext_type": "take_controls", "code": "missing_permission", "detail": "minigame", "subject_id": id}
-Message gets forwarded to the entity specified in "id", if that entity has granted you the "minigame" permission.
+Message gets forwarded to the entity specified in "id". The "minigame" permission is required to take controls.
 Similar to https://wiki.secondlife.com/wiki/LlTakeControls
 Fields:
 	"keys": List of keys the entity wants to track. Can be an empty list in order to release all of the keys.
@@ -762,7 +762,7 @@ Key names:
 		"action-n", "action-e", "action-s", "action-w"
 
 --> EXT {"bot_message_button": {"id": id, "text": text}}
-Message gets forwarded to the entity specified in "id", in order to tell it that a [bot-message-button] button was clicked on. This is a side channel that's similar to, but separate from, priivate message, and the sender doesn't have the message echoed back to them.
+Message gets forwarded to the entity specified in "id", in order to tell it that a [bot-message-button] button was clicked on. This is a side channel that's similar to (but separate from) private message, and the sender doesn't have the message echoed back to them.
 The forwarded copy has additional fields for "name" and "username" as in PRI.
 
 --> EXT {"typing": {"username": username, "status": status}}
@@ -772,17 +772,17 @@ The message the other user receives will have the name, ID, and username added o
 
 --> EXT {"typing": {"map": ID, "status": status}}
 <-- WHO {"update": {"id": user ID, "typing": status}, "remote_map": ID, "type": "chat_listeners"}
-For notifying the people listening to chat within an entity that you are typing.
+For notifying the people listening to chat within an entity that your typing status has changed.
 
 <-- EXT {"settings": {"client_settings": text, "watch_list": [list], "ignore_list": [list]}}
-Gives you the text you most recently put into the /client_settings command, as well as your watch list and ignore list
+Gives you the text you most recently put into the /client_settings command, as well as your watch list and ignore list. Sent upon logging in.
 
 --> EXT {"listen": {"types": ["move", "build", "entry", "chat", "chat_listen"], "list": [id, id, id...]}}
 <-- EXT {"listen_status": {"maps": {"map1": ["move", "build"], "map2": ["move", "build"], ...}}}
 
 --> EXT {"unlisten": {"types": ["move", "build", "entry", "chat", "chat_listen"], "list": [id, id, id...]}}
 <-- EXT {"listen_status": {"maps": {"map1": ["move", "build"], "map2": ["move", "build"], ...}}}
-These are alternatives to the /listen and /unlisten commands (described in the command document) that do not create "ERR" messages, and send a status messages with a complete list of listens.
+These are alternatives to the /listen and /unlisten commands (described in the command document) that do not create "ERR" messages, and send the complete list of current listens after the command.
 
 --> EXT {"set_user_profile": {info...}}
 --> EXT {"get_user_profile": {"username": "username"}}
@@ -827,67 +827,65 @@ Deletes your user profile.
 
 --> EXT {"user_particle": {"pic": [sheet, x, y], "size": [1, 1], "at": [x, y], "offset": [0, 0], "anim_duration": ticks, "anim_frames": frames, "anim_speed": speed, "anim_mode": mode, "anim_offset": offset}}
 <-- EXT {"user_particle": {"id": user_id, "name": user_name, "username": user_username, and the other fields are repeated again}}
-Experimental feature: Allows you to play temporary animations on the map. Message is forwarded to everyone else on the map you're on with some additional fields for the user that did it.
+Allows you to play temporary animations on the map. Message is forwarded to all other entities on the map, with some additional fields to indicate which user sent the particle ("id", "name", "username", and potentially "rc_username" and "rc_id".)
 
 Fields:
-	"pic": [sprite sheet ID or URL, x, y]; particle appearance
-	"size": [width, height]; size of the particle in units of 16 pixels
+	"pic": [sprite sheet ID or URL, x, y]; particle appearance.
+	"size": [width, height]; size of the particle in units of 16 pixels.
 	"at": [x, y]; position on the map - it can also be the string "me" which will keep the particle's position synchronized to the position of the client's entity
 	"offset": [x, y]; pixel offset, just like for entities. If offset is [0, 0] then the bottom edge should be aligned to the bottom edge of the tile, like for entities.
-	"duration": integer; amount of time this particle should stick around in units of 0.1 seconds
+	"duration": integer; amount of time this particle should stick around in units of 0.1 seconds.
 	"anim_loops": integer, amount of times to repeat the animation. Animation will stop once the animation has looped this number of times, or when the duration is up, whichever happens first. This means that if it's set to 0, it will play once and not repeat. If 1, it will repeat once, and so on.
 	"anim_frames": integer; see tiles.txt
 	"anim_speed": integer; see tiles.txt
 	"anim_mode": integer; see tiles.txt
 	"anim_offset": integer; see tiles.txt
-	"hide_me": boolean; if true, this client's entity is hidden until the particle expires and is removed
-	"action": string; should be "play" or not specified. Client should ignore the whole user_particle message if it is present but isn't "play"
+	"hide_me": boolean; if true, this client's entity is hidden until the particle expires and is removed.
+	"action": string; should be "play" or not specified. Client MUST ignore the whole user_particle message if "action" is present but isn't "play".
 	May contain "rc_username" and "rc_id" to indicate who is remote controlling the entity to create the particle.
 
 
 === Extension: bulk_build ===
 This extension allows a client to request multiple map changes in one message, including operations like copies.
-Clients that support it will receive a BLK to communicate the changes, but clients that don't will receive the map changes via MAP.
+Clients that support it will receive a "BLK" to communicate the changes, but clients that don't will receive the map changes via "MAP".
 
 --> BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...]}
 <-- BLK {"turf": [[x, y, type, w, h], ...], "obj": [[x, y, [type], w, h], ...], "username": username, "id": user_id}
 Bulk building command. Requires the "bulk_build" permission.
-Applies a series of rectangles to the map.
-Width and height may be omitted, in order to just do a single tile.
-Can take a "temp" optional parameter like PUT can.
+Applies a series of rectangle fills to the map.
+Width and height may be omitted, in order to just change a single tile.
 
 --> BLK {"copy": [{"turf": true/false, "obj": true/false, "src":[x,y,w,h], "dst":[x,y]}, ...]}
 <-- BLK {"copy": [{"turf": true/false, "obj": true/false, "src":[x,y,w,h], "dst":[x,y]}, ...], "username": username, "id" user_id}
 Copies from one portion of the map to another, with overlapped rectangles allowed and supported.
 If "turf" and "obj" are also provided in the same BLK message, "copy" is applied first, then "turf" and finally "obj".
 This makes it easy to move something by copying it somewhere else and erasing the tile where it was.
-Can take a "temp" optional parameter like PUT can.
 
 
 === Extension: batch ====
-This extension allows the server to send multiple protocol messages to the client in one websocket message.
+This extension allows the server to send multiple protocol messages to the client with one websocket message.
 When a client supports it, the server may send messages formatted like the following:
 
 BAT MAI {params}
 MAP {params}
 MOV {params}
 
-Where BAT signals that it's a batch message, and newline characters (\n) separate the characters that make up each sub-message. Carriage returns (\r) are not used.
-Batch messages cannot be nested, so none of the sub-messages can be BAT.
+Where BAT signals that the client should interpret the rest of the message as a batch message, and newline characters (\n) separate each sub-message. Carriage returns (\r) are not used.
+Batch messages MUST NOT be nested, so none of the sub-messages can be "BAT" messages themselves.
 
 
 === Extension: see_past_map_edge ====
-If a client signals that it supports see_past_map_edge, then it will receive a MAI and MAP message for all of the maps linked from the one they have just joined.
-After this point, they'll receive MAP messages broadcast to those maps.
+If a client signals that it supports "see_past_map_edge", then it will receive a "MAI" and "MAP" message for all of the maps linked from the one they have just joined.
+A client will receive a copy of all "MAP" messages broadcast to the linked maps, so that they can be notified of any building that happened.
 Messages for linked maps are marked with a remote_map field, just like the /listen command adds.
 
 A client is expected to keep copies of the linked maps in memory, and the server takes this into account to reduce bandwidth usage.
-When a client moves to a new map, the server will send a MAI for the new map, but will not send MAIs or MAPs for the new map or any linked maps if they match the client's old map or any maps adjacent to it.
+When a client moves to a new map, teh server will always send a "MAI" for the new map, but will not send "MAI" or "MAP" messages for the map the user was previously in, or any maps that were linked from the map that the user was previously in.
 
 
 === Extension: entity_message_forwarding ===
 When you own an entity, you can ask to have all messages with specific command types forwarded to you, instead of just being ignored.
-This is persistent when you set it up. Indicating that you support this extension is required to receive the messages.
+This is persistent when configured on "generic" entities. Clients will not receive these messages unless it indicates that it supports the "entity_message_forwarding" extension.
 
 -----------------------------
 
@@ -917,12 +915,12 @@ If an entity is forwarding messages, it will have a WHO field named "is_forwardi
 
 
 === Extension: user_watch_with_who ===
-When enabled, you may receive WHO messages when users on your watch list log in, log out, or change status. All of the WHO messages will be labeled with "type": "watch" and the user information provided is a limited subset of what's usually there, consisting of "id", "username", "status", "status_message" and a new boolean named "in_world" which is true if the user is fully logged in rather than being in instant messaging mode.
+When enabled, clients may receive "WHO" messages when users on the account's watch list log in, log out, or change status. All of the "WHO" messages will be labeled with "type": "watch" and the user information provided is a limited subset of what's usually there, consisting of "id", "username", "status", "status_message" and a new boolean named "in_world" which is true if the user is fully logged in rather than being in instant messaging mode.
 
 
 === Extension: message_acknowledgement ===
-This extension allows you to specify that you want the server to acknowledge that it received the message; this is done by adding a field named "ack_req" with a key of your choice.
-This key will be echoed back with an ACK message.
+This extension allows clients to specify that it wants the server to acknowledge that it received the message; this is done by adding a field named "ack_req" with an arbitrary value; it may be a good idea to use a timestamp or a counter. "ack_req" can be included in any Client-->Server message or Server-->Client message.
+This key will be echoed back with an "ACK" message.
 
 --> PRI {"text": "[text]", "username": username, "ack_req": key}
 <-- ACK {"key": key, "type": "PRI"}
@@ -937,7 +935,7 @@ The server will still send an ACK in response to the messages it's otherwise ign
 
 
 === WebSocket disconnect reasons ===
-The server may send the following WebSocket disconnect reasons:
+The server may send the following WebSocket disconnect reasons (communicated in the text "reason" field)
 	"Quit": User requested a disconnect
 	"Shutdown": Server is shutting down, with no guarantee on when or if it will be back
 	"Restart": Server is shutting down, but is expected to be back very soon
@@ -955,8 +953,8 @@ The server may send the following WebSocket disconnect reasons:
 
 The server will always set the disconnect close code to 1000; if it's not 1000 then refer to the WebSocket spec: https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4.1
 
-A client may choose to automatically reconnect in response to a "Restart" reason or code other than 1000 that warrants it (such as 1006), but should *not* automatically reconnect in response to the other reasons.
-There will probably be other reasons in the future for things like a private server, or the client's version being too old, or not supporting a required extension.
+A client MAY choose to automatically reconnect in response to a "Restart" reason or code other than 1000 that warrants it (such as 1006 or 1011), but SHOULD NOT automatically reconnect in response to the other reasons.
+There will probably be other reasons in the future for situations like a private server, or the client's version being too old, or not supporting a required extension.
 
 A disconnect reason can have additional text in it that's meant to give additional context to the user about why the disconnect happened. If it's present, there will be a newline separating the two parts of the disconnect message, for example:
-"Restart\nRestarting to update nginx"
+"Restart\nRestarting to update the server"
