@@ -633,6 +633,13 @@ Item properties that will not be sent in "info" or "list" but can be changed wit
 	"verbs": boolean or null; Causes this entity to have the "verbs" property in "WHO" messages. Will be persistent when set on "generic" entities. Same restrictions as when setting the property via "WHO" messages.
 	"usable": boolean or null; Causes this entity to have the "usable" property in "WHO" messages. Will be persistent when set on "generic" entities.
 
+Generic entities can have the following extra fields in "info" and "list", because these properties actually get saved to the database, unlike for other entity types.
+	"status": string; The entity's "status" property in "WHO" messages.
+	"status_message": string; The entity's "status_message" property in "WHO" messages.
+	"forward_messages_to": ID; Entity that messages will be forwarded to.
+	"forward_messages_types": list of strings; Message types that will be forwarded from this entity to another.
+	"verbs" and "usable" as described above.
+
 
 === Optional features ===
 Clients and servers can advertise having extra features on top of the basic ones.

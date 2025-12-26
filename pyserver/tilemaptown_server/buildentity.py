@@ -1144,6 +1144,22 @@ class GenericEntity(Entity):
 			data = None
 		self.save_data_as_text(dumps_if_not_none(data))
 
+	def bag_info(self):
+		b = super().bag_info()
+		if self.status_type:
+			b['status'] = self.status_type
+		if self.status_message:
+			b['status_message'] = self.status_message
+		if self.forward_messages_to:
+			b['forward_messages_to'] = self.forward_messages_to
+		if self.forward_message_types:
+			b['forward_messages_types'] = list(self.forward_message_types)
+		if hasattr(self, 'usable') and self.usable:
+			b['usable'] = True
+		if hasattr(self, 'verbs') and self.verbs:
+			b['verbs'] = self.verbs
+		return b
+
 	def who(self):
 		w = super().who()
 		return w
