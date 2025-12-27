@@ -41,7 +41,7 @@ html, body {
 
 #map-container {
     width: 100%;
-    overflow-y: hidden;
+    overflow: hidden;
 }
 
 body {

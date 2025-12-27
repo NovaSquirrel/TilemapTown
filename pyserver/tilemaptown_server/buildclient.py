@@ -349,7 +349,6 @@ class Connection(object):
 		self.loaded_maps = set() # maps the client should have loaded currently
 
 		# Other extensions
-		self.receive_build_messages = False
 		self.can_forward_messages_to = False
 		self.user_watch_with_who = False
 		self.can_acknowledge = False

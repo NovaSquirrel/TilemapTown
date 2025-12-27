@@ -1569,36 +1569,44 @@ function initMouse() {
 		editItemUpdatePic();
 	}, false);
 
-	selector.addEventListener('mousedown', function (evt) {
-		if (evt.button == 2)
-			return;
-		let pos = getMousePosRaw(selector, evt);
+	function hotbarMouseDown(x) {
 		let oneWidth = selector.width / 10;
-		let index = Math.floor(pos.x / oneWidth);
+		let index = Math.floor(x / oneWidth);
 		setHotbarIndex(index);
 		hotbarDragging = true;
+	}
+
+	function hotbarDrag(x) {
+		let oneWidth = selector.width / 10;
+		let index = Math.floor(x / oneWidth);
+		if(index == hotbarSelectIndex)
+			return;
+		if(index < 0 || index >= hotbarData.length)
+			return;
+		if(hotbarSelectIndex !== null) {
+			let temp = hotbarData[hotbarSelectIndex]
+			hotbarData[hotbarSelectIndex] = hotbarData[index];
+			hotbarData[index] = temp;
+			setHotbarIndex(index);
+		}
+	}
+
+	selector.addEventListener('mousedown', function (evt) {
+		if (evt.button == 2 || hadTouchEventYet)
+			return;
+		let pos = getMousePosRaw(selector, evt);
+		hotbarMouseDown(pos.x);
 	}, false);
 
 	selector.addEventListener('mousemove', function (evt) {
-		if(hotbarDragging) {
+		if(hotbarDragging && !hadTouchEventYet) {
 			let pos = getMousePosRaw(selector, evt);
-			let oneWidth = selector.width / 10;
-			let index = Math.floor(pos.x / oneWidth);
-			if(index == hotbarSelectIndex)
-				return;
-			if(index < 0 || index >= hotbarData.length)
-				return;
-			if(hotbarSelectIndex !== null) {
-				let temp = hotbarData[hotbarSelectIndex]
-				hotbarData[hotbarSelectIndex] = hotbarData[index];
-				hotbarData[index] = temp;
-				setHotbarIndex(index);
-			}
+			hotbarDrag(pos.x);
 		}
 	}, false);
 
 	selector.addEventListener('mouseup', function (evt) {
-		if (evt.button == 2)
+		if (evt.button == 2 || hadTouchEventYet)
 			return;
 		hotbarDragging = false;
 	}, false);
@@ -1618,5 +1626,21 @@ function initMouse() {
 		menu.style.top = (evt.clientY - menu.offsetHeight + CONTEXT_MENU_OPEN_OFFSET) + "px";
 		showCopyToTilesetLiIfNeeded("copyHotbarSlotToTilesetLi");
 		evt.preventDefault();
+	}, false);
+
+	selector.addEventListener('touchstart', function (evt) {
+		hadTouchEventYet = true;
+		hotbarMouseDown(evt.changedTouches[0].pageX - selector.getBoundingClientRect().left);
+	}, false);
+
+	selector.addEventListener('touchmove', function (evt) {
+		hadTouchEventYet = true;
+		if(hotbarDragging) {
+			hotbarDrag(evt.changedTouches[0].pageX - selector.getBoundingClientRect().left);
+		}
+	}, false);
+
+	selector.addEventListener('touchend', function (evt) {
+		hotbarDragging = false;
 	}, false);
 }
