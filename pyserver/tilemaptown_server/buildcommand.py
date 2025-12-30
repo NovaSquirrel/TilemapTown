@@ -898,24 +898,16 @@ def broadcast_status_change(map, client, status_type, message):
 def fn_away(map, client, context, arg):
 	if len(arg) < 1:
 		broadcast_status_change(map, client, None, None)
-		respond(context, 'You are no longer marked as away')
 	else:
 		broadcast_status_change(map, client, 'away', arg)
-		respond(context, 'You are now marked as away ("%s")' % arg)
 
 @cmd_command(alias=['stat'], syntax="message", no_entity_needed=True)
 def fn_status(map, client, context, arg):
 	if len(arg) < 1:
 		broadcast_status_change(map, client, None, None)
-		respond(context, 'Your status has been cleared')
 	else:
 		status_type, status_message = separate_first_word(arg)
 		broadcast_status_change(map, client, status_type[0:16], status_message if status_message != '' else None)
-
-		if client.status_message:
-			respond(context, 'Your status is now \"%s\" ("%s")' % (client.status_type, client.status_message))
-		else:
-			respond(context, 'Your status is now \"%s\"' % (client.status_type))
 
 @cmd_command(alias=['findrp'])
 def fn_findiic(map, client, context, arg):

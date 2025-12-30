@@ -550,11 +550,17 @@ function receiveServerMessage(cmd, arg) {
         backdropDrawAll = true;
       } else if(arg.update) {
         if("status" in arg.update && ((arg.update["status"] !== PlayerWho[arg.update.id]["status"]) || (("status_message" in arg.update) && arg.update["status_message"] !== PlayerWho[arg.update.id]["status_message"]))) {
-          if(arg.update["status"] && arg.update.id != PlayerYou) {
+          if(arg.update["status"]) {
             if(arg.update["status"] == "." && arg.update["status_message"]) {
-              let message = escape_tags(PlayerWho[arg.update.id].name) + "'s status is now \"" + convertBBCode(arg.update["status_message"]) + "\"";
-              let plain_message = PlayerWho[arg.update.id].name + "'s status is now \"" + arg.update["status_message"] + "\"";
-              logMessage(message, 'status_change', {'isSilent': true, 'plainText': plain_message});
+              if (arg.update.id == PlayerYou) {
+                let message = "Your status is now \"" + convertBBCode(arg.update["status_message"]) + "\"";
+                let plain_message = "Your status is now \"" + arg.update["status_message"] + "\"";
+                logMessage(message, 'status_change', {'isSilent': true, 'plainText': plain_message});
+              } else {
+                let message = escape_tags(PlayerWho[arg.update.id].name) + "'s status is now \"" + convertBBCode(arg.update["status_message"]) + "\"";
+                let plain_message = PlayerWho[arg.update.id].name + "'s status is now \"" + arg.update["status_message"] + "\"";
+                logMessage(message, 'status_change', {'isSilent': true, 'plainText': plain_message});
+              }
             } else {
               let status_name = '"' + escape_tags(arg.update["status"]) + '"';
               let plain_status_name = '"' + arg.update["status"] + '"';
@@ -572,8 +578,15 @@ function receiveServerMessage(cmd, arg) {
               }
               if(status_name[0] != '"')
                 plain_status_name = status_name;
-              let message = PlayerWho[arg.update.id].name + (status_name[0] == '"' ? "'s status is now ": " is now ") + status_name;
-              let plain_message = PlayerWho[arg.update.id].name + (plain_status_name[0] == '"' ? "'s status is now ": " is now ") + plain_status_name;
+
+              let message, plain_message;
+              if (arg.update.id == PlayerYou) {
+                message = (status_name[0] == '"' ? "Your status is now " : "You are now ") + status_name;
+                plain_message = (plain_status_name[0] == '"' ? "Your status is now " : "You are now ") + plain_status_name;
+              } else {
+                message = PlayerWho[arg.update.id].name + (status_name[0] == '"' ? "'s status is now " : " is now ") + status_name;
+                plain_message = PlayerWho[arg.update.id].name + (plain_status_name[0] == '"' ? "'s status is now " : " is now ") + plain_status_name;
+              }
 
               if(arg.update["status_message"]) {
                 message += ' ("' + convertBBCode(arg.update["status_message"]) + '")';
@@ -582,8 +595,12 @@ function receiveServerMessage(cmd, arg) {
 
               logMessage(message, 'status_change', {'isSilent': true, 'plainText': plain_message});
            }
-          } else if(arg.update.id != PlayerYou) {
-            logMessage(escape_tags(PlayerWho[arg.update.id].name) + " cleared their status", 'status_change', {'isSilent': true, 'plainText': PlayerWho[arg.update.id].name + " cleared their status"});
+          } else {
+            if (arg.update.id == PlayerYou) {
+              logMessage("Your status has been cleared", 'status_change', {'isSilent': true, 'plainText': "Your status has been cleared"});
+            } else {
+              logMessage(escape_tags(PlayerWho[arg.update.id].name) + " cleared their status", 'status_change', {'isSilent': true, 'plainText': PlayerWho[arg.update.id].name + " cleared their status"});
+            }
           }
         }
         markAreaAroundEntityAsDirty(arg.update.id);
