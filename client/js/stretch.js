@@ -66,8 +66,8 @@ customElements.define(
         dy = event.clientY - container.offsetTop;
 
         document.onmousemove = function(event) {
-          container.style.left = Math.max(16, event.clientX - dx) + "px";
-          container.style.top = Math.max(32, event.clientY - dy) + "px";
+          container.style.left = Math.max(16, Math.min(document.documentElement.clientWidth-32, event.clientX - dx)) + "px";
+          container.style.top = Math.max(32, Math.min(document.documentElement.clientHeight-64, event.clientY - dy)) + "px";
         }
 
         document.onmouseup = function (event) {

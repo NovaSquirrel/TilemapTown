@@ -17,6 +17,8 @@
 <script src="js/map.js"></script>
 <script src="js/online.js"></script>
 <script src="js/custom_code.js"></script>
+</head>
+<body onLoad="initWorld();" ondragstart="return false;" ondrop="return false;">
 <!-- Image resources -->
 <img src="img/tileset/webclient.png"  style="display: none;" id="webclientGraphics">
 <img src="img/tileset/global.png"     style="display: none;" id="global">
@@ -25,11 +27,10 @@
 <img src="img/tileset/easyrpg_v2.png" style="display: none;" id="easyrpg">
 <img src="img/tileset/shadows.png"    style="display: none;" id="shadows">
 <img src="img/tileset/extra_v2.png"   style="display: none;" id="extra">
-<img src="img/font/chicago.png"  style="display: none;" id="chicago">
-<img src="img/font/tomthumb.png" style="display: none;" id="tomthumb">
-<img src="img/font/tilemapsans.png" style="display: none;" id="tilemapsans">
-</head>
-<body onLoad="initWorld();" ondragstart="return false;" ondrop="return false;">
+<img src="img/font/chicago.png"       style="display: none;" id="chicago">
+<img src="img/font/tomthumb.png"      style="display: none;" id="tomthumb">
+<img src="img/font/tilemapsans.png"   style="display: none;" id="tilemapsans">
+<img src="img/mini_tilemap/bitmap.png" style="display: none;" id="bitmap_tileset">
 <noscript>The Tilemap Town web client requires JavaScript</noscript>
 <template id="widget-window-template">
   <style>
@@ -537,7 +538,7 @@
 	</details>
 	<details class="options-section">
 		<summary class="unselectable">More options</summary>
-		<label class="unselectable"><input type="range" id="music-volume" name="music_volume" min="0" max="100" value="100" step="5" onchange="updateMapMusicVolume()" />Music volume</label><br>
+		<label class="unselectable"><input type="range" id="music-volume" name="music_volume" min="0" max="100" value="100" step="5" onchange="updateMapMusicVolume()" oninput="updateMapMusicVolume()" />Music volume</label><br>
 		<label class="unselectable"><input type="text" id="safe-for-command-lists" size="14" placeholder="map,userpic,roll">Safe for command lists</label>
 	</details>
 	<hr>

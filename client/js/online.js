@@ -288,7 +288,7 @@ function receiveServerMessage(cmd, arg) {
       }
       if("dir" in arg) {
         if (arg.id === PlayerYou) {
-          let offset = applyTailShift(PlayerWho[arg.id], arg.dir);
+          let offset = applyTailShift(PlayerWho[arg.id].dir, arg.dir);
           if (offset !== null)
             SendCmd("MOV", { offset });
         }

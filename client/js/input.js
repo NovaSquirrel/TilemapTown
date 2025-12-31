@@ -63,6 +63,7 @@ let waitingOnMapScreenshot = 0; // Counts up every tick if nonzero
 const OK_DRAW_DISTANCE = 5;
 
 let autoOffsetSide = 0; // Subtract this from X offset if facing right, and add it to X offset if facing right.
+let autoOffsetDiagonal = 0; // Amount to shift for diagonals specifically
 let bigPicEnabled = false;
 let bigPicDirectionCount = 0;
 let bigPicCurrentDirection = 0;
@@ -159,12 +160,20 @@ function runLocalCommand(t) {
 		return true;
 	} else if(tl === "/tailshift") {
 		autoOffsetSide = 0;
+		autoOffsetDiagonal = 0;
 		SendCmd("MOV", {offset: [0, 0]});
 		return true;
 	} else if(tl.startsWith("/tailshift ")) {
-		autoOffsetSide = parseInt(tl.slice(11));
+		let s = tl.slice(11).split(" ");
+		autoOffsetSide = parseInt(s[0]);
 		if (Number.isNaN(autoOffsetSide))
 			autoOffsetSide = 0;
+		autoOffsetDiagonal = 0;
+		if (s.length > 1) {
+			autoOffsetDiagonal = parseInt(s[1]);
+			if (Number.isNaN(autoOffsetDiagonal))
+				autoOffsetDiagonal = 0;
+		}
 		if (PlayerImages[PlayerYou]) {
 			const direction = (PlayerImages[PlayerYou].naturalHeight >= 128) ? PlayerAnimation[PlayerYou].lastDirection4 : PlayerAnimation[PlayerYou].lastDirectionLR;
 			switch (direction) {
@@ -176,6 +185,12 @@ function runLocalCommand(t) {
 					break;
 				case Directions.NORTH: case Directions.SOUTH:
 					SendCmd("MOV", {offset: [0, 0]});
+					break;
+				case Directions.NORTHEAST: case Directions.SOUTHEAST:
+					SendCmd("MOV", {offset: [-autoOffsetDiagonal, 0]});
+					break;
+				case Directions.NORTHWEST: case Directions.SOUTHWEST:
+					SendCmd("MOV", {offset: [autoOffsetDiagonal, 0]});
 					break;
 			}
 		}
@@ -511,31 +526,43 @@ function applyTailShift(OldPlayerDir, PlayerDir) {
 			const directionCount = PlayerImages[PlayerYou].naturalHeight / 32;
 			const lastDirection = (directionCount == 8) ? OldPlayerDir : ((directionCount == 4) ? PlayerAnimation[PlayerYou].lastDirection4 : PlayerAnimation[PlayerYou].lastDirectionLR);
 			const offset = PlayerWho[PlayerYou].offset ?? [0,0];
-			if (PlayerDir !== lastDirection) {
-				if (directionCount === 2) {
-					if (PlayerDir === Directions.WEST && lastDirection === Directions.EAST) {
-						return [offset[0] + autoOffsetSide*2, offset[1]]
-					} else if (PlayerDir === Directions.EAST && lastDirection === Directions.WEST) {
-						return [offset[0] - autoOffsetSide*2, offset[1]]
-					}
-				} else if (directionCount == 4) {
-					if (PlayerDir === Directions.WEST || PlayerDir === Directions.NORTHWEST || PlayerDir === Directions.SOUTHWEST) {
-						if (lastDirection === Directions.NORTH || lastDirection === Directions.SOUTH)
-							return [offset[0] + autoOffsetSide, offset[1]]
-						else
-							return [offset[0] + autoOffsetSide*2, offset[1]]
-					} else if (PlayerDir === Directions.EAST || PlayerDir === Directions.NORTHEAST || PlayerDir === Directions.SOUTHEAST) {
-						if (lastDirection === Directions.NORTH || lastDirection === Directions.SOUTH)
-							return [offset[0] - autoOffsetSide, offset[1]]
-						else
-							return [offset[0] - autoOffsetSide*2, offset[1]]
-					} else if (PlayerDir === Directions.NORTH || PlayerDir === Directions.SOUTH) {
-						if (lastDirection === Directions.WEST || lastDirection === Directions.NORTHWEST || lastDirection === Directions.SOUTHWEST)
-							return [offset[0] - autoOffsetSide, offset[1]]
-						else if (lastDirection === Directions.EAST || lastDirection === Directions.NORTHEAST || lastDirection === Directions.SOUTHEAST)
-							return [offset[0] + autoOffsetSide, offset[1]]
-					}
+			if (
+				(directionCount === 8
+				|| (directionCount === 4 && ((PlayerDir & 1) == 0))
+				|| (directionCount === 2 && (PlayerDir === Directions.EAST || PlayerDir === Directions.WEST) ))) {
+				let undoShift = 0;
+				switch(lastDirection) {
+					case Directions.EAST:
+						undoShift = autoOffsetSide;
+						break;
+					case Directions.WEST:
+						undoShift = -autoOffsetSide;
+						break;
+					case Directions.SOUTHEAST: case Directions.NORTHEAST:
+						undoShift = autoOffsetDiagonal;
+						break;
+					case Directions.SOUTHWEST: case Directions.NORTHWEST:
+						undoShift = -autoOffsetDiagonal;
+						break;
 				}
+				let newShift = 0;
+				switch(PlayerDir) {
+					case Directions.EAST:
+						newShift = -autoOffsetSide;
+						break;
+					case Directions.WEST:
+						newShift = autoOffsetSide;
+						break;
+					case Directions.SOUTHEAST: case Directions.NORTHEAST:
+						newShift = -autoOffsetDiagonal;
+						break;
+					case Directions.SOUTHWEST: case Directions.NORTHWEST:
+						newShift = autoOffsetDiagonal;
+						break;
+				}
+				let newXOffset = offset[0] + undoShift + newShift;
+				if (newXOffset !== offset[0])
+					return [newXOffset, offset[1]];
 			}
 		}
 	}
