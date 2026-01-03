@@ -218,7 +218,8 @@ function openTab(evt, tabName) {
 
 		<h4>Some projects that interface with Tilemap Town</h4>
 		<ul>
-		<li><a href="https://github.com/NovaSquirrel/TilemapTown3DS">3DS client</a>, which is pretty minimal and allows you to move and chat. Currently kind of crashy! Written in C++ and could be a good base for another client.</li>
+		<li><a href="https://github.com/NovaSquirrel/TilemapTownDesktop">Desktop client</a>, made with Qt 6 in C++; has very basic features where you can explore and chat, but not build yet. Part of the goal of this client is to have a reusable C++ core for handling the protocol across clients for different platforms, and the protocol code is kept separate from the UI code where feasible.</li>
+		<li><a href="https://github.com/NovaSquirrel/TilemapTown3DS">3DS client</a>, using the same core as the desktop app with similar features, also in C++. Currently crashy and map rendering is a bit buggy.</li>
 		<li><a href="https://github.com/NovaSquirrel/TilemapTown2MU">MU* gateway</a>, which allows you to connect through a MU* client. It allows you to use commands to view a "graphical" version of the map made out of text, and is really mostly a proof of concept.</li>
 		<li><a href="https://gist.github.com/NovaSquirrel/39d72c1fe79f5c7bb68166b66f82df19">Example bot</a> that implements a very small portion of the protocol, enough to receive and respond to messages.</li>
 		</ul>
