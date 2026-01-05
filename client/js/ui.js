@@ -1914,6 +1914,8 @@ function editItemShared(item) {
 				document.getElementById('edittilegadget_preset_mini_tilemap_tileset_url').value = "";
 				document.getElementById('edittilegadget_preset_mini_tilemap_tile_width').value = 4;
 				document.getElementById('edittilegadget_preset_mini_tilemap_tile_height').value = 6;
+				document.getElementById('edittilegadget_preset_mini_tilemap_map_width').value = "";
+				document.getElementById('edittilegadget_preset_mini_tilemap_map_height').value = "";
 				document.getElementById('edittilegadget_preset_mini_tilemap_offset_x').value = 0;
 				document.getElementById('edittilegadget_preset_mini_tilemap_offset_y').value = 0;
 				document.getElementById('edittilegadget_preset_mini_tilemap_type').value = "text";
@@ -2005,18 +2007,26 @@ function editItemShared(item) {
 								document.getElementById('gadgetTypePreset').checked = true;
 							} else if(trait[0] === "mini_tilemap") {
 								document.getElementById('edittilegadget_preset_mini_tilemap_tileset_url').value = trait[1].tileset_url ?? "";
+
 								let tile_size = trait[1].tile_size ?? [0,0];
 								document.getElementById('edittilegadget_preset_mini_tilemap_tile_width').value = tile_size[0];
 								document.getElementById('edittilegadget_preset_mini_tilemap_tile_height').value = tile_size[1];
+								let map_size = trait[1].map_size ?? ["",""];
+								document.getElementById('edittilegadget_preset_mini_tilemap_map_width').value = map_size[0];
+								document.getElementById('edittilegadget_preset_mini_tilemap_map_height').value = map_size[1];
 								let offset = trait[1].offset ?? [0,0];
 								document.getElementById('edittilegadget_preset_mini_tilemap_offset_x').value = offset[0];
 								document.getElementById('edittilegadget_preset_mini_tilemap_offset_y').value = offset[1];
+
 								if ("text" in trait[1]) {
 									document.getElementById('edittilegadget_preset_mini_tilemap_type').value = "text";
 									document.getElementById('edittilegadget_preset_mini_tilemap_data').value = trait[1].text;
 								} else if ("single" in trait[1]) {
 									document.getElementById('edittilegadget_preset_mini_tilemap_type').value = "single";
 									document.getElementById('edittilegadget_preset_mini_tilemap_data').value = trait[1].single.join();
+								} else if ("raw" in trait[1]) {
+									document.getElementById('edittilegadget_preset_mini_tilemap_type').value = "raw";
+									document.getElementById('edittilegadget_preset_mini_tilemap_data').value = trait[1].raw.join();
 								}
 
 								document.getElementById('edittilegadget_preset_choice').value = trait[0];
@@ -2453,6 +2463,13 @@ function editItemApply() {
 								t.tile_size[0] = 0;
 							if (Number.isNaN(t.tile_size[1]))
 								t.tile_size[1] = 0;
+							t.map_size = [parseInt(document.getElementById('edittilegadget_preset_mini_tilemap_map_width').value), parseInt(document.getElementById('edittilegadget_preset_mini_tilemap_map_height').value)];
+							if (Number.isNaN(t.map_size[0]))
+								t.map_size[0] = 0;
+							if (Number.isNaN(t.map_size[1]))
+								t.map_size[1] = 0;
+							if (t.map_size[0] <= 0 && t.map_size[1] <= 0)
+								delete t.map_size;
 							t.offset = [parseInt(document.getElementById('edittilegadget_preset_mini_tilemap_offset_x').value), parseInt(document.getElementById('edittilegadget_preset_mini_tilemap_offset_y').value)];
 							if (Number.isNaN(t.offset[0]))
 								t.offset[0] = 0;
@@ -2472,6 +2489,9 @@ function editItemApply() {
 									} else {
 										delete t.single;
 									}
+									break;
+								case "raw":
+									t.raw = document.getElementById('edittilegadget_preset_mini_tilemap_data').value.split(",").map((v) => parseInt(v.trim())).filter((v) => !Number.isNaN(v));
 									break;
 							}
 							break;

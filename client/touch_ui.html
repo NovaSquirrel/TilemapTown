@@ -33,7 +33,6 @@
 <img src="img/font/chicago.png"       style="display: none;" id="chicago">
 <img src="img/font/tomthumb.png"      style="display: none;" id="tomthumb">
 <img src="img/font/tilemapsans.png"   style="display: none;" id="tilemapsans">
-<img src="img/mini_tilemap/bitmap.png" style="display: none;" id="bitmap_tileset">
 <noscript>The Tilemap Town web client requires JavaScript</noscript>
 <template id="widget-window-template">
   <style>
@@ -776,12 +775,13 @@
 			<div id="edittilegadget_preset_mini_tilemap">
 				<table border="0">
 				<tr><td>Tileset URL</td><td><input type="text" id="edittilegadget_preset_mini_tilemap_tileset_url" /></td></tr>
-				<tr><td>Tile width</td><td><input type="number" min="1" max="64" id="edittilegadget_preset_mini_tilemap_tile_width" /></td></tr>
-				<tr><td>Tile height</td><td><input type="number" min="1" max="64" id="edittilegadget_preset_mini_tilemap_tile_height" /></td></tr>
+				<tr><td>Tile size</td><td><input type="number" min="1" max="64" id="edittilegadget_preset_mini_tilemap_tile_width" /> &times; <input type="number" min="1" max="64" id="edittilegadget_preset_mini_tilemap_tile_height" /></td></tr>
+				<tr><td>Map size</td><td><input type="number" min="1" max="64" id="edittilegadget_preset_mini_tilemap_map_width" /> &times; <input type="number" min="1" max="64" id="edittilegadget_preset_mini_tilemap_map_height" /> (if type is "raw map")</td></tr>
 				<tr><td>Offset</td><td><input type="number" size="5" id="edittilegadget_preset_mini_tilemap_offset_x" /> , <input type="number" size="5" id="edittilegadget_preset_mini_tilemap_offset_y" /></td></tr>
 				<tr><td>Type</td><td><select id="edittilegadget_preset_mini_tilemap_type">
 				  <option value="text">ASCII Text</option>
 				  <option value="single">x,y in tileset</option>
+				  <option value="raw">Raw map</option>
 				</select></td></tr>
 				<tr><td>What to show</td></td><td><textarea id="edittilegadget_preset_mini_tilemap_data"></textarea></td></tr>
 				</table>

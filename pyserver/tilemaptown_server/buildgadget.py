@@ -319,6 +319,9 @@ class GadgetTrait(object):
 		self.gadget = gadget
 		self.config = config
 
+	def has_config(self, field):
+		return field in self.config
+
 	def get_config(self, field, default=None):
 		return self.config.get(field, default)
 
@@ -675,27 +678,37 @@ class GadgetMiniTilemap(GadgetTrait):
 		if not tileset_url.startswith("https://") and not tileset_url.startswith("http://"):
 			tileset_url = Config["Server"]["ResourceIMGBase"] + "mini_tilemap/" + tileset_url
 
-		map_width = 1
-		map_height = 1
+		self.map_width = 1
+		self.map_height = 1
 		map_data = [0]
-		text = self.get_config("text", "")[:256]
-		if text:
+		self.mode = None
+		if self.has_config("text"):
+			text = self.get_config("text", "")[:256]
 			lines = text.split("\n")
-			map_height = len(lines)
-			map_width = max(len(_) for _ in lines)
+			self.map_height = len(lines)
+			self.map_width = max(len(_) for _ in lines)
 			map_data = []
 			for line in lines:
 				for char in line:
 					c = ord(char) - 0x20
 					map_data.append(((c&0xF0) << 2) | (c & 0x0F))
-				map_data.extend([0] * (map_width - len(line)))
-		else:
+				map_data.extend([0] * (self.map_width - len(line)))
+			self.mode = "text"
+		elif self.has_config("single"):
 			single = self.get_config("single", "")
 			if single:
 				map_data = [single[0] | (single[1]<<6)]
+			self.mode = "single"
+		elif self.has_config("raw"):
+			map_data = expand_mini_tilemap_data(self.get_config("raw", []), limit=256)
+			map_size = self.get_config("map_size", [8, 8])
+			self.map_width = min(map_size[0], 24)
+			self.map_height = min(map_size[1], 24)
+			map_data.extend([0] * (self.map_width * self.map_height - len(map_data)))
+			self.mode = "raw"
 
 		mini_tilemap = GlobalData['who_mini_tilemap']({
-			"map_size": [map_width, map_height],
+			"map_size": [self.map_width, self.map_height],
 			"tile_size": tile_size,
 			"offset": offset,
 			"transparent_tile": -1,
