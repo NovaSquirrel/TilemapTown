@@ -1468,6 +1468,20 @@ function openItemContextMenu(id, x, y) {
 	let drop = document.querySelector('#droptakeitem');
 	document.getElementById("copyItemToHotbarLi").style.display = "none";
 	document.getElementById("copyItemToTilesetLi").style.display = "none";
+	document.getElementById("itemVerbsLi").style.display = "none";
+	if (item?.verbs?.length) {
+		let ul = document.getElementById("itemverbs_ul");
+		while (ul.firstChild) {
+			ul.removeChild(ul.firstChild);
+		}
+		for (let verb of item.verbs) {
+			let newitem = document.createElement("li");
+			newitem.appendChild(document.createTextNode(verb));
+			newitem.onclick = function () { botMessageButton(item.id, verb); };
+			ul.appendChild(newitem);
+		}
+		document.getElementById("itemVerbsLi").style.display = "block";
+	}
 	if (id in DBInventory) {
 		drop.innerText = "Drop";
 		if(DBInventory[id].type == "map_tile") {
@@ -1484,6 +1498,15 @@ function openItemContextMenu(id, x, y) {
 	menu.style.display = "block";
 
 	contextMenuItem = id;
+}
+
+function viewItemVerbs(event) {
+	const itemMenu = document.querySelector('#item-contextmenu');
+	itemMenu.style.display = "none";
+	const menu = document.querySelector('#verbs-contextmenu');
+	menu.style.left = (event.clientX-CONTEXT_MENU_OPEN_OFFSET) + "px";
+	menu.style.top = (event.clientY-CONTEXT_MENU_OPEN_OFFSET) + "px";
+	menu.style.display = "block";
 }
 
 function updateInventoryUL() {

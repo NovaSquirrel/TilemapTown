@@ -1114,9 +1114,15 @@
     <li onclick="cloneItem(contextMenuItem, true)">Clone (Temporary)</li>
     <li id="copyItemToTilesetLi" onclick="copyItemToTileset(contextMenuItem)">Copy to tileset/</li>
     <li id="copyItemToHotbarLi" onclick="copyItemToHotbar(contextMenuItem)">Copy to hotbar</li>
+    <li id="itemVerbsLi" onclick="viewItemVerbs(event)">Send command</li>
     <li onclick="sendPrivateMessageToItem(contextMenuItem)">Private message</li>
     <li onclick="deleteItem(contextMenuItem)">Delete</li>
     <!-- <li onclick="referenceItem(contextMenuItem)">Create Reference</li> -->
+  </ul>
+</widget-contextmenu>
+
+<widget-contextmenu id="verbs-contextmenu" style="display: none;">
+  <ul id="itemverbs_ul" slot="menu" id="verbs-contextmenu-menu">
   </ul>
 </widget-contextmenu>
 
