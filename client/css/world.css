@@ -185,37 +185,18 @@ body {
     color: #fff;
 }
 
-#chat-container:not(.pinned) {
-    pointer-events: none;
-}
-
 #chatInput {
     pointer-events: initial;
     box-sizing: border-box;
 }
 
-/*
-#chat-container .chatarea * {
-    padding: 4px;
-}
-*/
-
-#chat-container:not(.pinned) .chatarea * {
-    opacity: 0;
-    user-select: none;
+#chat-container:not(.pinned) .chatarea {
     background-color: #3338;
-}
-
-#chat-container:not(.pinned) .chatarea *:nth-last-child(-n+6) {
-    animation-name: fadeOut;
-    animation-duration: 10s;
-    animation-iteration-count: 1;
-}
-
-@keyframes fadeOut {
-   0% {opacity: 1;}
-   80% {opacity: 1;}
-   100% {opacity: 0;}
+	min-height: 2em;
+	max-height: calc(100vh - 200px);
+	height: 10em;
+	overflow: scroll;
+	resize: vertical;
 }
 
 widget-window {

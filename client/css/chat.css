@@ -20,7 +20,7 @@
   color: silver;
 }
 
-.server_message, .server_stats, .server_motd {
+.server_message, .server_stats, .server_motd, .server_map_message, .sign_message, .map_info_message {
   color: pink;
 }
 
@@ -28,7 +28,7 @@
   color: HotPink;
 }
 
-.error_message {
+.error_message, .connection_error_message {
   color: red;
 }
 

@@ -139,6 +139,11 @@ let warnInvalidBBCode = true;
 let focusMapAfterChat = false;
 let safeForCommandLists = [];
 
+let filterChatType = null;
+const filterClassListAny = new Set(["error_message", "connection_error_message", "broadcast_message", "server_message", "server_stats", "server_motd"]);
+const filterClassListMap = new Set(["user_message", "spoof_message", "ooc_message", "server_map_message", "status_change", "sign_message", "map_info_message"]);
+const filterClassListPrivate = new Set(["private_message"]);
+
 let FileStorageInfo = null;
 let sampleAvatarList = {};
 
@@ -829,6 +834,52 @@ function copyTraitPicFromGadget() {
 	let picString = pic.join(" ");
 	document.getElementById("edittilegadget_preset_pic_cycle_first_pic").value = picString;
 	document.getElementById("edittilegadget_preset_projectile_shooter_pic").value = picString;
+}
+
+function applyChatLogFilter(classes) {
+	let chatArea = document.getElementById("chatArea");
+	for (let i = 0; i < chatArea.children.length; i++) {
+		let show = false;
+		for (let c of classes) {
+			if (chatArea.children[i].classList.contains(c)) {
+				show = true;
+				break;
+			}
+		}
+		chatArea.children[i].style.display = show ? "block" : "none";
+	}
+}
+
+function filterChat(type) {
+	if (filterChatType === type) {
+		type = null;
+	}
+	filterChatType = type;
+	let chatArea = document.getElementById("chatArea");
+
+	switch(type) {
+		case null:
+			for (let i = 0; i < chatArea.children.length; i++) {
+				chatArea.children[i].style.display = "block";
+			}
+			document.getElementById("filterChatButtonAll").style.textDecoration = "none";
+			document.getElementById("filterChatButtonMap").style.textDecoration = "none";
+			document.getElementById("filterChatButtonPrivate").style.textDecoration = "none";
+			break;
+		case "map":
+			applyChatLogFilter(filterClassListMap);
+			document.getElementById("filterChatButtonMap").style.textDecoration = "none";
+			break;
+		case "private":
+			applyChatLogFilter(filterClassListPrivate);
+			document.getElementById("filterChatButtonPrivate").style.textDecoration = "none";
+			break;
+	}
+	document.getElementById("filterChatButtonAll").style.fontWeight = type === null ? "bold" : "normal";
+	document.getElementById("filterChatButtonMap").style.fontWeight = type === "map" ? "bold" : "normal";
+	document.getElementById("filterChatButtonPrivate").style.fontWeight = type === "private" ? "bold" : "normal";
+
+	chatArea.scrollTop = chatArea.scrollHeight;
 }
 
 ///////////////////////////////////////////////////////////
@@ -3385,18 +3436,43 @@ function logMessage(Message, Class, Params) {
 	}
 
 	let newMessage = document.createElement("div");
-	if (Class !== "server_message" && Class !== "server_motd" && Class !== "server_stats" && Class.startsWith("server_")) // Color it server color even if the specific class is unknown
+	if (Class !== "server_message" && Class !== "server_motd" && Class !== "server_stats" && Class !== "server_map_message" && Class.startsWith("server_")) // Color it server color even if the specific class is unknown
 		Class = "server_message";
 	newMessage.className = Class + " log_line" + (distantChat ? " distant_message" : "");
 	if (Params.username) {
 		if (Params.rc_username) {
 			newMessage.title = `Username: ${Params.username} (controlled by ${Params.rc_username})`;
-			Message = "&#x1F4E1;" + Message;
+			Message = "&#x1F4E1;" + Message; // Satellite dish
 		} else {
 			newMessage.title = `Username: ${Params.username}`;
 		}
 	}
 	newMessage.innerHTML = (timestampText.length ? (`<span class="timestamp">${timestampText}</span> `) : "") + Message.replaceAll("\n", "<br>");
+
+	// Apply chat tab filter
+	switch (filterChatType) {
+		case "map":
+			if (!filterClassListAny.has(Class) && !filterClassListMap.has(Class)) {
+				newMessage.style.display = "none";
+
+				if (filterClassListPrivate.has(Class))
+					document.getElementById("filterChatButtonPrivate").style.textDecoration = "underline";
+				else
+					document.getElementById("filterChatButtonAll").style.textDecoration = "underline";
+			}
+			break;
+		case "private":
+			if (!filterClassListAny.has(Class) && !filterClassListPrivate.has(Class)) {
+				newMessage.style.display = "none";
+
+				if (filterClassListMap.has(Class))
+					document.getElementById("filterChatButtonMap").style.textDecoration = "underline";
+				else
+					document.getElementById("filterChatButtonAll").style.textDecoration = "underline";
+			}
+			break;
+	}
+
 	chatArea.append(newMessage);
 
 	if (OnlineMuWebview) {
@@ -4795,6 +4871,12 @@ function initWorld() {
 			// Open the login window by default
 			loginmodal.style.display = "block";
 		}
+
+		const chatArea = document.getElementById("chatArea");
+		const observer = new ResizeObserver(function(mutations) {
+			chatArea.scrollTop = chatArea.scrollHeight;
+		});
+		observer.observe(chatArea);
 	}
 }
 

@@ -234,7 +234,7 @@ def fn_nick(map, client, context, arg):
 		return
 
 	if is_entity(client):
-		map.broadcast("MSG", {'text': "\""+noparse(client.name)+"\" is now known as \""+noparse(arg)+"\""}, ignore_user=client)
+		map.broadcast("MSG", {'text': "\""+noparse(client.name)+"\" is now known as \""+noparse(arg)+"\"", 'class': 'server_map_message'}, ignore_user=client)
 		client.name = arg
 		session = client.connection_attr('build_session')
 		if session:
@@ -967,7 +967,7 @@ def fn_roll(map, client, context, arg):
 			return
 		for i in range(dice):
 			sum += random.randint(1, sides)
-		map.broadcast("MSG", {'text': client.name+" rolled %dd%d and got %d"%(dice, sides, sum), 'username': client.username_or_id(), 'id': client.protocol_id()}, ignore_user=client)
+		map.broadcast("MSG", {'text': client.name+" rolled %dd%d and got %d"%(dice, sides, sum), 'username': client.username_or_id(), 'id': client.protocol_id(), 'class': 'server_map_message'}, ignore_user=client)
 
 @cmd_command(category="Map")
 def fn_mapid(map, client, context, arg):
@@ -1228,7 +1228,7 @@ def permission_change(map, client, context, arg, command2):
 		elif command2 == "revoke":
 			map.allow &= ~permission_value
 			map.deny &= ~permission_value
-		map.broadcast("MSG", {'text': "%s sets the default \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[0], command2)})
+		map.broadcast("MSG", {'text': "%s sets the default \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[0], command2), 'class': 'server_map_message'})
 		if client not in map.contents:
 			respond(context, "Changed a permission for %s:\nThe default \"%s\" permission is now [b]%s[/b]" % (map.name_and_username(), param[0], command2))
 		map.save_on_clean_up = True
@@ -1242,7 +1242,7 @@ def permission_change(map, client, context, arg, command2):
 		ename = find_entity_name(as_int)
 		if ename != None:
 			map.change_permission_for_entity(as_int, permission_value, True if command2=="grant" else None)
-			map.broadcast("MSG", {'text': "%s sets entity \"%s\" (%d) \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), ename, as_int, param[0], command2)})
+			map.broadcast("MSG", {'text': "%s sets entity \"%s\" (%d) \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), ename, as_int, param[0], command2), 'class': 'server_map_message'})
 			if client not in map.contents:
 				respond(context, "Changed a permission for %s:\nThe entity \"%s\" (%d) \"%s\" permission is now [b]%s[/b]" % (map.name_and_username(), ename, as_int, param[0], command2))
 			return
@@ -1255,7 +1255,7 @@ def permission_change(map, client, context, arg, command2):
 			groupname = find_entity_name(int(groupid))
 			if groupname != None:
 				map.change_permission_for_entity(int(groupid), permission_value, True if command2=="grant" else None)
-				map.broadcast("MSG", {'text': "%s sets group \"%s\" (%s) \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), groupname, groupid, param[0], command2)})
+				map.broadcast("MSG", {'text': "%s sets group \"%s\" (%s) \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), groupname, groupid, param[0], command2), 'class': 'server_map_message'})
 				if client not in map.contents:
 					respond(context, "Changed a permission for %s:\nThe group \"%s\" (%s) \"%s\" permission is now [b]%s[/b]" % (map.name_and_username(), groupname, groupid, param[0], command2))
 				return
@@ -1268,7 +1268,7 @@ def permission_change(map, client, context, arg, command2):
 			map.guest_deny |= permission_value
 		elif command2 == "revoke":
 			map.guest_deny &= ~permission_value
-		map.broadcast("MSG", {'text': "%s sets the guest \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[0], command2)})
+		map.broadcast("MSG", {'text': "%s sets the guest \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[0], command2), 'class': 'server_map_message'})
 		if client not in map.contents:
 			respond(context, "Changed a permission for %s:\nThe guest \"%s\" permission is now [b]%s[/b]" % (map.name_and_username(), param[0], command2))
 		return
@@ -1286,7 +1286,7 @@ def permission_change(map, client, context, arg, command2):
 	if command2 == "deny":
 		value = False
 	map.change_permission_for_entity(uid, permission_value, value)
-	map.broadcast("MSG", {'text': "%s sets %s's \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[1], param[0], command2)})
+	map.broadcast("MSG", {'text': "%s sets %s's \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[1], param[0], command2), 'class': 'server_map_message'})
 	if client not in map.contents:
 		respond(context, "Changed a permission for %s: %s's \"%s\" permission is now [b]%s[/b]" % (map.name_and_username(), param[1], param[0], command2))
 
@@ -1482,7 +1482,7 @@ def fn_topic(map, client, context, arg):
 		elif client.is_client() and client.has_permission(map, permission['set_topic'], True):
 			map.topic = arg[:250]
 			map.topic_username = client.username_or_id()
-			map.broadcast("MSG", {'text': 'Map\'s current topic is now: "%s" (set by %s)' % (map.topic, client.name_and_username())})
+			map.broadcast("MSG", {'text': 'Map\'s current topic is now: "%s" (set by %s)' % (map.topic, client.name_and_username()), 'class': 'server_map_message'})
 		else:
 			respond(context, 'Don\t have permission to set a topic for this map', error=True)
 	else:
@@ -1496,7 +1496,7 @@ def fn_cleartopic(map, client, context, arg):
 	if client.is_client() and client.has_permission(map, permission['set_topic'], True):
 		map.topic = None
 		map.topic_username = None
-		map.broadcast("MSG", {'text': 'Map\'s current topic was cleared by %s' % (map.topic, client.name_and_username())})
+		map.broadcast("MSG", {'text': 'Map\'s current topic was cleared by %s' % (map.topic, client.name_and_username()), 'class': 'server_map_message'})
 	else:
 		respond(context, 'Don\t have permission to set a topic for this map', error=True)
 
@@ -2178,7 +2178,7 @@ def fn_register(map, client, context, arg):
 			if valid_id_format(filtered):
 				respond(context, 'Can\'t register a username that\'s just a number', error=True)
 			elif connection.register(filtered, params[1]):
-				map.broadcast("MSG", {'text': client.name+" has now registered"})
+				map.broadcast("MSG", {'text': client.name+" has now registered", 'class': 'server_map_message'})
 				map.broadcast("WHO", {'add': client.who()}) # update client view, probably just for the username
 				write_to_connect_log("New account: %s (%s) @ %s" % (client.name, client.username, connection.ip))
 
@@ -2348,7 +2348,7 @@ def morph_shared(map, client, context, arg, quiet):
 
 		client.broadcast_who()
 		if client.name != old_name and not quiet:
-			map.broadcast("MSG", {'text': "\""+old_name+"\" switches to \""+client.name+"\""})
+			map.broadcast("MSG", {'text': "\""+old_name+"\" switches to \""+client.name+"\"", 'class': 'server_map_message'})
 	else:
 		respond(context, "You don't have a morph named \"%s\"" % arg, error=True)
 
@@ -2567,7 +2567,7 @@ def fn_entitywho(map, client, context, arg):
 def fn_savemap(map, client, context, arg):
 	if not map.temporary:
 		map.save_and_commit()
-		map.broadcast("MSG", {'text': client.name+" saved the map"})
+		map.broadcast("MSG", {'text': client.name+" saved the map", 'class': 'server_map_message'})
 	else:
 		respond(context, 'This map has map saving turned off')
 

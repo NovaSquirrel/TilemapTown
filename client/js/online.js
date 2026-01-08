@@ -362,7 +362,7 @@ function receiveServerMessage(cmd, arg) {
             logText += `<br>Current topic: "${convertBBCode(MyMap.Info['topic'])}" (set by ${escape_tags(MyMap.Info['topic_username'])})`;
             plainText += ` | Current topic: "${MyMap.Info['topic']}" (set by ${MyMap.Info['topic_username']})`;
           }
-          logMessage(logText, 'server_message', {'plainText': plainText});
+          logMessage(logText, 'map_info_message', {'plainText': plainText});
         }
 
         // Start playing music if enabled
@@ -522,7 +522,7 @@ function receiveServerMessage(cmd, arg) {
       } else if(arg.add) {
         if(!PlayerWho[arg.add.id] && (arg.add.in_user_list || arg.add.chat_listener)) { // if player isn't already in the list
           let isForwarding = arg.add.chat_listener ? " &#x1F916;" : "";
-          logMessage("Joining: "+escape_tags(arg.add.name) + isForwarding, 'server_message', {'plainText': `Joining: ${arg.add.name}${arg.add.chat_listener ? "(bot)" : ""}`});
+          logMessage("Joining: "+escape_tags(arg.add.name) + isForwarding, 'map_info_message', {'plainText': `Joining: ${arg.add.name}${arg.add.chat_listener ? "(bot)" : ""}`});
         }
         PlayerWho[arg.add.id] = arg.add;
         initPlayerIfNeeded(arg.add.id);
@@ -534,7 +534,7 @@ function receiveServerMessage(cmd, arg) {
       } else if(arg.remove) {
         if(PlayerWho[arg.remove].in_user_list) {
           let isForwarding = PlayerWho[arg.remove].chat_listener ? " &#x1F916;" : "";
-          logMessage("Leaving: "+escape_tags(PlayerWho[arg.remove].name), 'server_message', {'plainText': `Leaving: ${PlayerWho[arg.remove].name}${PlayerWho[arg.remove].chat_listener ? "(bot)" : ""}`});
+          logMessage("Leaving: "+escape_tags(PlayerWho[arg.remove].name), 'map_info_message', {'plainText': `Leaving: ${PlayerWho[arg.remove].name}${PlayerWho[arg.remove].chat_listener ? "(bot)" : ""}`});
         }
         // unload image if needed
         if (arg.remove in PlayerImages)
@@ -1269,7 +1269,7 @@ function ConnectToServer() {
 			document.getElementById('onlineStatus').innerHTML = display.replaceAll("<br>", " | ");
 			document.getElementById('onlineStatus').style.backgroundColor = "red";
 		} else if(display) {
-			logMessage(display, 'error_message');
+			logMessage(display, 'connection_error_message');
 		}
 
 		OnlineIsConnected = false;

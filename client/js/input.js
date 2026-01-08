@@ -506,7 +506,7 @@ function keyUpHandler(e) {
 let lastSignMessage = undefined;
 function bump_into_atom(atom) {
 	if (atom.type == AtomTypes.SIGN && atom.message && (!alreadyShowedSign || atom.message != lastSignMessage)) {
-		logMessage(((atom.name != "sign" && atom.name != "") ? escape_tags(atom.name) + " says: " : "The sign says: ") + convertBBCodeChat(atom.message), "server_message",
+		logMessage(((atom.name != "sign" && atom.name != "") ? escape_tags(atom.name) + " says: " : "The sign says: ") + convertBBCodeChat(atom.message), "sign_message",
 		  {'plainText': (atom.name != "sign" && atom.name != "") ? atom.name + " says: " + atom.message : "The sign says: " + atom.message});
 		lastSignMessage = atom.message;
 		alreadyShowedSign = true;
@@ -619,6 +619,9 @@ function keyDownHandler(e) {
 			trimmedChatText.toLowerCase().slice(0, 5) != "/ooc " &&
 			trimmedChatText.toLowerCase().slice(0, 7) != "/spoof ") {
 				SendCmd("CMD", { text: trimmedChatText.slice(1) }); // remove the /
+			} else if (filterChatType === "private") {
+				e.preventDefault();
+				return;
 			} else if (trimmedChatText.length > 0) {
 				SendCmd("MSG", { text: (startsWithNewline?"\n":"") + trimmedChatText });
 			} else {
