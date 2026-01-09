@@ -3416,9 +3416,9 @@ function isDistantChat(Params) {
 
 function logMessage(Message, Class, Params) {
 	Params = Params ?? {};
-	let chatArea = document.getElementById("chatArea");
-	let bottom = chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight<3;
-	let distantChat = (Class !== "private_message") && isDistantChat(Params);
+	const chatArea = document.getElementById("chatArea");
+	const bottom = chatArea.scrollHeight - chatArea.scrollTop - chatArea.clientHeight<3;
+	const distantChat = (Class !== "private_message") && isDistantChat(Params);
 
 	let timestampText = "";
 	if (chatTimestamps) {
@@ -3435,7 +3435,8 @@ function logMessage(Message, Class, Params) {
 		}
 	}
 
-	let newMessage = document.createElement("div");
+	const newMessage = document.createElement("div");
+	const originalClass = Class; // Make a copy because Class may get overwritten below
 	if (Class !== "server_message" && Class !== "server_motd" && Class !== "server_stats" && Class !== "server_map_message" && Class.startsWith("server_")) // Color it server color even if the specific class is unknown
 		Class = "server_message";
 	newMessage.className = Class + " log_line" + (distantChat ? " distant_message" : "");
@@ -3452,7 +3453,7 @@ function logMessage(Message, Class, Params) {
 	// Apply chat tab filter
 	switch (filterChatType) {
 		case "map":
-			if (!filterClassListAny.has(Class) && !filterClassListMap.has(Class)) {
+			if (originalClass === "server_userconnect" || (!filterClassListAny.has(Class) && !filterClassListMap.has(Class))) {
 				newMessage.style.display = "none";
 
 				if (filterClassListPrivate.has(Class))
@@ -3462,7 +3463,7 @@ function logMessage(Message, Class, Params) {
 			}
 			break;
 		case "private":
-			if (!filterClassListAny.has(Class) && !filterClassListPrivate.has(Class)) {
+			if (originalClass === "server_userconnect" || (!filterClassListAny.has(Class) && !filterClassListPrivate.has(Class))) {
 				newMessage.style.display = "none";
 
 				if (filterClassListMap.has(Class))

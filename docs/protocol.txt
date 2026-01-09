@@ -455,7 +455,16 @@ Server-->Client "MSG" and "CMD" messages can contain the following fields:
 	"name": string; Name of the entity that sent this message. May not be provided for messages sent by the server!
 	"username": string; The username for the account this entity is logged into.
 	"ID": ID; Which entity sent this message.
-	"class": string; What kind of visual style to apply to the message. You may see (not an exhaustive list): "server_message", "server_motd", "server stats", "event_notice", "broadcast_message". In the web client, this is a CSS class.
+	"class": string; What kind of visual style to apply to the message. The server currently uses these:
+		"broadcast_message": Admin has broadcast a message to all users.
+		"event_notice": Notice about an event that's currently happening; sent upon logging in.
+		"secret_message": On the web client, message will not be put into any log files that are exported. Used for moderation commands.
+		"server_map_message": Generic message from the server regarding the map the user is on.
+		"server_message": Generic message from the server that may not necessarily relate to the user's current map.
+		"server_motd": Message describing the server, sent upon logging in.
+		"server_stats": Number of users connnected, or any other stats the server wants to show off; sent upon logging in.
+		"server_userconnect": Someone has connected or disconnected.
+		In the web client, this is a CSS class. You can act like it's "server_message" if not provided. The web client only tries to apply the class if "name" is not provided; when "name" is provided, the web client treats the message as having been sent by a user, and makes decisions about how to display the message based on its contents.
 	"buttons": list, ["name 1", "command 1", "name 2", "command 2"]; Offer one or more buttons to the user that will run commands when clicked.
 	"echo": arbitrary value; Sent in response to Client->Server "CMD" messages that specified an "echo" field.
 	"data": object; Arbitrary machine-readable data associated with this message; should probably write a formal specification for this.

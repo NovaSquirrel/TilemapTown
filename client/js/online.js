@@ -914,7 +914,7 @@ function receiveServerMessage(cmd, arg) {
           logMessage("! "+convertBBCodeChat(arg.text)+" "+buttons, arg["class"] ?? 'server_message',
             {'isChat': false, 'username': arg["username"], 'rc_username': arg["rc_username"] ?? arg["rc_id"], "id": arg["id"]});
         } else {
-          if(arg["class"]) {
+          if(arg["class"] && arg["class"] !== "server_message") {
             if (arg["class"] == "server_motd")
               if (alreadySeenMOTD === arg["text"])
                 break;
