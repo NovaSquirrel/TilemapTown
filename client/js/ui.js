@@ -1539,9 +1539,13 @@ function openItemContextMenu(id, x, y) {
 			document.getElementById("copyItemToHotbarLi").style.display = "block";
 			showCopyToTilesetLiIfNeeded("copyItemToTilesetLi");
 		}
+		if (item.usable || item.type === 'gadget') {
+			document.getElementById("copyItemToHotbarLi").style.display = "block";
+		}
 	} else {
 		drop.innerText = "Take";
 	}
+
 	let menu = document.querySelector('#item-contextmenu');
 	menu.style.left = (x-CONTEXT_MENU_OPEN_OFFSET) + "px";
 	menu.style.top = (y-CONTEXT_MENU_OPEN_OFFSET) + "px";
@@ -3720,12 +3724,19 @@ function copyItemToTileset(id) {
 		return;
 	addTileToActiveTilesetItem(item.data);
 }
+const usableItemSymbol = Symbol("usable item flag");
 function copyItemToHotbar(id) {
 	if(!(id in DBInventory))
 		return;
 	let item = DBInventory[id];
-	if(item.type !== 'map_tile')
+	if(item.type !== 'map_tile') {
+		if(item.usable || item.type === 'gadget') {
+			let fakeTile = {name: item.name, pic: item.pic, use_item_id: item.id};
+			fakeTile[usableItemSymbol] = true;
+			addTileToHotbar(fakeTile);
+		}
 		return;
+	}
 	addTileToHotbar(item.data);
 }
 function addTileToHotbar(tileData) {

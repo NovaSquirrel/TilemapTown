@@ -670,8 +670,13 @@ function keyDownHandler(e) {
 
 	if (e.code == "Space") { // space or clear
 		let data = getDataForDraw();
-			if(data !== null)
+		if(data !== null) {
+			if (data[usableItemSymbol]) {
+				useItem(data.use_item_id);
+			} else {
 				useItem({ type: 'map_tile', data: data});
+			}
+		}
 	} if (e.code == "Delete") { // delete
 		selectionDelete();
 	} else if (e.code == "Escape") { // escape
@@ -1120,6 +1125,7 @@ function useItemAtXY(Placed, x, y) {
 			markTilesAsDirty(MyMap, x-1, y-1, 3, 3, BACKDROP_DIRTY_RENDER);
 			drawMap();
 			break;
+		case "generic":
 		case "gadget":
 			SendCmd("USE", { id: Placed.id });
 			break;
@@ -1129,8 +1135,8 @@ function useItemAtXY(Placed, x, y) {
 			else if (Placed.data.type === "map_tile_list")
 				viewMapTileList(Placed);
 			break;
-		}
-		return old;
+	}
+	return old;
 }
 
 function useItem(Placed) {
@@ -1200,7 +1206,7 @@ function handleDragging(pos) {
 			let coords = drawToolX + "," + drawToolY;
 			if(!(coords in drawToolCurrentStroke)) {
 				let data = getDataForDraw();
-				if(data === null)
+				if(data === null || data[usableItemSymbol])
 					return;
 
 				let old = useItemAtXY({ type: 'map_tile', data: data }, pos.x, pos.y);
@@ -1433,7 +1439,7 @@ function initMouse() {
 		} else if(buildTool == BUILD_TOOL_DRAW) {
 			let data = getDataForDraw();
 			let atom = AtomFromName(data);
-			if(data === null)
+			if(data === null || data[usableItemSymbol])
 				return;
 			drawToolCurrentStroke = {};
 			drawToolCurrentStrokeIsObj = "obj" in atom;
@@ -1650,7 +1656,15 @@ function initMouse() {
 		let oneWidth = selector.width / 10;
 		let index = Math.floor(pos.x / oneWidth);
 		rightClickedHotbarIndex = index;
-		let menu = document.querySelector(hotbarData[index] !== null ? '#hotbar-contextmenu' : '#hotbar-no-item-contextmenu');
+		let menu;
+		if (hotbarData[index] !== null) {
+			menu = document.querySelector('#hotbar-contextmenu');
+			const isActuallyItem = usableItemSymbol in hotbarData[index];
+			document.getElementById("copyHotbarSlotToInventoryLi").style.display = isActuallyItem ? "none" : "block";
+			document.getElementById("editHotbarSlotLi").style.display = isActuallyItem ? "none" : "block";
+		} else {
+			menu = document.querySelector('#hotbar-no-item-contextmenu');
+		}
 		menu.style.left = (evt.clientX - CONTEXT_MENU_OPEN_OFFSET) + "px";
 		menu.style.display = "block";
 		menu.style.top = (evt.clientY - menu.offsetHeight + CONTEXT_MENU_OPEN_OFFSET) + "px";
