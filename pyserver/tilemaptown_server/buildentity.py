@@ -811,9 +811,13 @@ class Entity(PermissionsMixin, object):
 			out['mini_tilemap'] = self.mini_tilemap
 		if hasattr(self, "mini_tilemap_data") and self.mini_tilemap_data != None:
 			out['mini_tilemap_data'] = self.mini_tilemap_data
-		if (hasattr(self, "clickable") and self.clickable) or 'CLICK' in self.forward_message_types:
-			out['clickable'] = self.clickable if hasattr(self, "clickable") else True
-		if (hasattr(self, "usable") and self.usable):
+		if 'CLICK' in self.forward_message_types:
+			out['clickable'] = True
+		elif 'DRAG' in self.forward_message_types:
+			out['clickable'] = "drag"
+		elif 'MAP_DRAG' in self.forward_message_types:
+			out['clickable'] = "map_drag"
+		if 'USE' in self.forward_message_types:
 			out['usable'] = True
 		if (hasattr(self, "verbs") and self.verbs):
 			out['verbs'] = self.verbs
@@ -1107,19 +1111,15 @@ def save_generic_data(self, data):
 		data['status_type'] = self.status_type
 	if self.status_message != None:
 		data['status_message'] = self.status_message
-	if hasattr(self, 'usable') and self.usable:
-		data['usable'] = True
 	if hasattr(self, 'verbs') and self.verbs:
 		data['verbs'] = self.verbs
 
 def load_generic_data(self, data):
-	if 'forward_message_types' in data:
-		self.forward_message_types = set()
+	self.forward_message_types = set(data.get('forward_message_types', []))
 	self.forward_messages_to = data.get('forward_messages_to', None)
 
 	self.status_type = data.get('status_type', None)
 	self.status_message = data.get('status_message', None)
-	self.usable = data.get('usable', None)
 	self.verbs = data.get('verbs', None)
 
 # If the entity is truly generic, then use the data field (when it would've otherwise gone unused) in a useful way
@@ -1154,8 +1154,6 @@ class GenericEntity(Entity):
 			b['forward_messages_to'] = self.forward_messages_to
 		if self.forward_message_types:
 			b['forward_messages_types'] = list(self.forward_message_types)
-		if hasattr(self, 'usable') and self.usable:
-			b['usable'] = True
 		if hasattr(self, 'verbs') and self.verbs:
 			b['verbs'] = self.verbs
 		return b

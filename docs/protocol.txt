@@ -640,14 +640,13 @@ Item properties that will not be sent in "info" or "list" but can be changed wit
 	"home": ID; Entity that is this entity's "home".
 	"home_position": [x, y]; Position within this entity's "home".
 	"verbs": boolean or null; Causes this entity to have the "verbs" property in "WHO" messages. Will be persistent when set on "generic" entities. Same restrictions as when setting the property via "WHO" messages.
-	"usable": boolean or null; Causes this entity to have the "usable" property in "WHO" messages. Will be persistent when set on "generic" entities.
 
 Generic entities can have the following extra fields in "info" and "list", because these properties actually get saved to the database, unlike for other entity types.
 	"status": string; The entity's "status" property in "WHO" messages.
 	"status_message": string; The entity's "status_message" property in "WHO" messages.
 	"forward_messages_to": ID; Entity that messages will be forwarded to.
 	"forward_messages_types": list of strings; Message types that will be forwarded from this entity to another.
-	"verbs" and "usable" as described above.
+	"verbs" as described above.
 
 
 === Optional features ===
@@ -917,6 +916,7 @@ Enable forwarding for specific message types, for the specific entities
 
 Requesting that "MSG" be forwarded will not forward messages that have a speaker name on them, with the assumption that they're chat messages.
 If you want to forward chat messages, the special type "CHAT" exclusively forwards MSG messages that have speaker names.
+"CLICK" will make the entity clickable, "DRAG" will make the entity clickable and draggable (pixel units), "MAP_DRAG" will make the entity clickable and draggable (map tile units).
 
 -----------------------------
 

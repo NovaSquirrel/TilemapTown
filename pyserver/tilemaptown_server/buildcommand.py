@@ -3426,11 +3426,18 @@ def fn_message_forwarding(map, client, context, arg):
 				if entity.forward_message_types:
 					entity.forward_messages_to = client.protocol_id()
 					if entity.map:
-						entity.map.broadcast("WHO", {"update": {"id": entity.protocol_id(), "is_forwarding": True, "clickable": "CLICK" in entity.forward_message_types, "chat_listener": "CHAT" in entity.forward_message_types or (hasattr(entity, 'listening_to_chat_warning') and entity.listening_to_chat_warning)}})
+						u = {"id": entity.protocol_id(), "is_forwarding": True, "usable": "USE" in entity.forward_message_types, "chat_listener": "CHAT" in entity.forward_message_types or (hasattr(entity, 'listening_to_chat_warning') and entity.listening_to_chat_warning) }
+						if "CLICK" in entity.forward_message_types:
+							u["clickable"] = True
+						elif "DRAG" in entity.forward_message_types:
+							u["clickable"] = "drag"
+						elif "MAP_DRAG" in entity.forward_message_types:
+							u["clickable"] = "map_drag"
+						entity.map.broadcast("WHO", {"update": u})
 				else:
 					entity.forward_messages_to = None
 					if entity.map:
-						entity.map.broadcast("WHO", {"update": {"id": entity.protocol_id(), "is_forwarding": False, "clickable": False, "chat_listener": (hasattr(entity, 'listening_to_chat_warning') and entity.listening_to_chat_warning)}})
+						entity.map.broadcast("WHO", {"update": {"id": entity.protocol_id(), "is_forwarding": False, "clickable": False, "usable": False, "chat_listener": (hasattr(entity, 'listening_to_chat_warning') and entity.listening_to_chat_warning)}})
 				if not entity.temporary:
 					entity.save()
 			data = {'set': entities_set, 'not_found': entities_not_found, 'denied': entities_not_allowed}
