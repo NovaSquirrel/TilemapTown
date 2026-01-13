@@ -195,7 +195,7 @@ body {
 	min-height: 2em;
 	max-height: calc(100vh - 200px);
 	height: 10em;
-	overflow: scroll;
+	overflow-y: scroll;
 	resize: vertical;
 }
 
