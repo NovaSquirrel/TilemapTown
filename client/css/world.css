@@ -191,7 +191,7 @@ body {
 }
 
 #chat-container:not(.pinned) .chatarea {
-    background-color: #3338;
+	background-color: #111c;
 	min-height: 2em;
 	max-height: calc(100vh - 200px);
 	height: 10em;
