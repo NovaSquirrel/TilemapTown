@@ -1632,6 +1632,32 @@ def ext_user_particle(connection, map, client, context, arg, name):
 	arg['username'] = client.username_or_id()
 	map.broadcast("EXT", {name: arg})
 
+@ext_protocol_command("patch_mini_tilemap")
+def ext_patch_mini_tilemap(connection, map, client, context, arg, name):
+	if not hasattr(client, 'mini_tilemap') or not hasattr(client, 'mini_tilemap_data'):
+		return
+	data = (who_mini_tilemap_data(arg) or {}).get("data") # Run validity checker on the data
+	if not data:
+		return
+
+	# Run the patch on the server too, so it's available to users who arrive later
+	# TODO: Maybe in the future, avoid messing with decompressing and recompressing, and wait until someone actually shows up to compress it again?
+	map_width, map_height = client.mini_tilemap["map_size"]
+	map_data = expand_mini_tilemap_data(client.mini_tilemap_data["data"])
+	x1, y1, x2, y2 = arg["pos"]
+	patch_data = expand_mini_tilemap_data(arg["data"])
+	if x1 < 0 or y1 < 0 or x2 >= map_width or y2 >= map_height:
+		return
+	patch_index = 0
+	for y in range(y1, y2+1):
+		for x in range(x1, x2+1):
+			map_data[y*map_width+x] = patch_data[patch_index]
+			patch_index += 1
+	client.mini_tilemap_data["data"] = compress_mini_tilemap_data(map_data)
+
+	arg['id'] = client.protocol_id()
+	map.broadcast("EXT", {name: arg})
+
 @protocol_command()
 def fn_EXT(connection, map, client, arg, context):
 	actor = client

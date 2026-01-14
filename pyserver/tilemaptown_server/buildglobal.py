@@ -781,6 +781,27 @@ def in_blocked_username_list(client, banlist, display_action=None, check_action=
 		return True
 	return False
 
+def compress_mini_tilemap_data(data):
+	if not data:
+		return []
+	out = []
+	for tile in data:
+		if len(out) and (tile == (out[-1] & 4095)) and (out[-1] < 0b1111111000000000000):
+			out[-1] += 4096 # 1 << 12
+		else:
+			out.append(tile)
+	return out
+
+def expand_mini_tilemap_data(data, limit=576): #24*24
+	out = []
+	for d in data:
+		t = d & 4095
+		r = ((d >> 12) & 127) + 1
+		if len(out) + r > limit:
+			return out
+		out.extend([t] * r)
+	return out
+
 from .buildentity import Entity, EntityWithPlainData, GenericEntity
 from .buildgadget import Gadget
 from .buildmap import Map

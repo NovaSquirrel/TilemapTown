@@ -32,26 +32,6 @@ take_controls_options = {
 }
 directions = ((1,0), (1,1), (0,1), (-1,1), (-1,0), (-1,-1), (0,-1), (1,-1))
 
-def compress_mini_tilemap_data(data):
-	if not data:
-		return []
-	out = []
-	for tile in data:
-		if len(out) and (tile == (out[-1] & 4095)) and (out[-1] < 0b1111111000000000000):
-			out[-1] += 4096 # 1 << 12
-		else:
-			out.append(tile)
-	return out
-def expand_mini_tilemap_data(data, limit=128):
-	out = []
-	for d in data:
-		t = d & 4095
-		r = ((d >> 12) & 127) + 1
-		if len(out) + r > limit:
-			return out
-		out.extend([t] * r)
-	return out
-
 def set_and_update_who(gadget, entity_field, who_field, value):
 	if not gadget:
 		return
@@ -769,7 +749,7 @@ class GadgetDoodleBoard(GadgetTrait):
 		# Load data and set up map
 		map_data = self.get_config("data", [])[:(self.map_width*self.map_height)]
 		if not map_data:
-			map_data = [0] * (self.map_width*self.map_height)
+			map_data = compress_mini_tilemap_data([0] * (self.map_width*self.map_height))
 		self.map_data = expand_mini_tilemap_data(map_data, limit=300)
 
 		mini_tilemap = GlobalData['who_mini_tilemap']({

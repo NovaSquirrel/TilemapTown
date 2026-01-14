@@ -861,6 +861,12 @@ Fields:
 	"action": string; should be "play" or not specified. Client MUST ignore the whole user_particle message if "action" is present but isn't "play".
 	May contain "rc_username" and "rc_id" to indicate who is remote controlling the entity to create the particle.
 
+--> EXT {"patch_mini_tilemap": {"pos": [x1,y1,x2,y2], "data": [replacement data]}}
+<-- EXT {"patch_mini_tilemap": {"pos": [x1,y1,x2,y2], "data": [replacement data], "id": ID}}
+Request or receive a partial mini tilemap update.
+"pos" specifies a rectangle to modify on a mini tilemap that was previously received, using mini tilemap tile units.
+"data" is in the same format as mini tilemap updates done via "WHO" messages, so there may be RLE compression.
+
 
 === Extension: bulk_build ===
 This extension allows a client to request multiple map changes in one message, including operations like copies.

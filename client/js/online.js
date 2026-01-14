@@ -237,6 +237,16 @@ function SendStatusMessageFromBeforeDisconnect() {
 	}
 }
 
+function decompressMiniTilemapData(data) {
+	const out = [];
+	for (const d of data) {
+		const t = d & 4095;
+		const r = ((d >> 12) & 127) + 1;
+		out.push(...new Array(r).fill(t));
+	}
+	return out;
+}
+
 function customReceiveMessageFilter(cmd, arg) {
 	// Can override this to add filter logic at runtime
 	return true;
@@ -983,7 +993,26 @@ function receiveServerMessage(cmd, arg) {
 
     case "EXT":
       {
-        if(arg.take_controls) {
+        if(arg.patch_mini_tilemap) {
+          const id = arg.patch_mini_tilemap.id
+          if(!("remote_map" in arg) && id in PlayerWho && PlayerWho[id].mini_tilemap && PlayerWho[id].mini_tilemap_data) {
+            const [mapWidth, mapHeight] = PlayerWho[id].mini_tilemap.map_size;
+            const mapData = decompressMiniTilemapData(PlayerWho[id].mini_tilemap_data.data);
+            const patchData = decompressMiniTilemapData(arg.patch_mini_tilemap.data);
+            const [patchPosX1, patchPosY1, patchPosX2, patchPosY2] = arg.patch_mini_tilemap.pos;
+            if(patchPosX1 >= 0 && patchPosY1 >= 0 && patchPosX2 < mapWidth && patchPosY2 < mapHeight && patchPosX2 >= patchPosX1 && patchPosY2 >= patchPosY1) {
+              let patchIndex = 0;
+              for(let y = patchPosY1; y<=patchPosY2 && patchIndex < patchData.length; y++) {
+                for(let x = patchPosX1; x<=patchPosX2 && patchIndex < patchData.length; x++) {
+                  mapData[y*mapWidth+x] = patchData[patchIndex++];                     
+                }
+              }
+              PlayerWho[id].mini_tilemap_data.data = mapData;
+              markAreaAroundEntityAsDirty(id);
+              NeedMapRedraw = true;
+            }
+          }
+        } else if(arg.take_controls) {
           let take_controls = arg.take_controls;
           let supported_controls = take_controls.keys.filter((key) => SupportedTakeControlsKeys.includes(key));
           takeControlsPassOn = take_controls.pass_on ?? false;
