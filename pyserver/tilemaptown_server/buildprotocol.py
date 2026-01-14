@@ -77,12 +77,12 @@ def remove_invalid_dict_fields(data, whitelist):
 	return out
 def is_list_with_two_ints(data):
 	return isinstance(data, list) and len(data) == 2 and isinstance(data[0], int) and isinstance(data[1], int)
-def who_mini_tilemap(data, max_pixel_width=64, max_pixel_height=64):
+def who_mini_tilemap(data, max_pixel_width=64, max_pixel_height=64, max_map_width=24, max_map_height=24):
 	if isinstance(data, dict):
 		filtered = remove_invalid_dict_fields(data, {
 			"visible":          bool,
 			"clickable":        lambda x: isinstance(x, bool) or x == "drag" or x == "map_drag",
-			"map_size":         lambda x: is_list_with_two_ints(x) and x[0] >= 1   and x[0] <= 24 and x[1] >= 1 and x[1] <= 24,
+			"map_size":         lambda x: is_list_with_two_ints(x) and x[0] >= 1   and x[0] <= max_map_width and x[1] >= 1 and x[1] <= max_map_height,
 			"tile_size":        lambda x: is_list_with_two_ints(x) and x[0] >= 1   and x[0] <= 64 and x[1] >= 1 and x[1] <= 64,
 			"offset":           lambda x: is_list_with_two_ints(x) and x[0] >= -32 and x[0] <= 32 and x[1] >= -32 and x[1] <= 32,
 			"tileset_url":      image_url_is_okay,

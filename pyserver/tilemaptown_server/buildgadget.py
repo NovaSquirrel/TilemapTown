@@ -754,8 +754,9 @@ class GadgetDoodleBoard(GadgetTrait):
 		if not self.gadget:
 			return None
 		self.sent_help_yet = False
-		self.map_width = self.MAP_WIDTH
-		self.map_height = self.MAP_HEIGHT
+		map_size = self.get_config("map_size", [self.MAP_WIDTH, self.MAP_HEIGHT])
+		self.map_width = max(1, min(12, map_size[0]))
+		self.map_height = max(1, min(24, map_size[1]))
 		self.undo_stack = deque(maxlen=8)
 
 		# Get tileset URL
@@ -766,10 +767,10 @@ class GadgetDoodleBoard(GadgetTrait):
 			tileset_url = Config["Server"]["ResourceIMGBase"] + "mini_tilemap/" + tileset_url
 
 		# Load data and set up map
-		map_data = self.get_config("data", [])[:128]
+		map_data = self.get_config("data", [])[:(self.map_width*self.map_height)]
 		if not map_data:
-			map_data = [127 << 12]
-		self.map_data = expand_mini_tilemap_data(map_data)
+			map_data = [0] * (self.map_width*self.map_height)
+		self.map_data = expand_mini_tilemap_data(map_data, limit=300)
 
 		mini_tilemap = GlobalData['who_mini_tilemap']({
 			"clickable": "drag",
@@ -777,7 +778,7 @@ class GadgetDoodleBoard(GadgetTrait):
 			"tile_size": [4, 2],
 			"transparent_tile": -1,
 			"tileset_url": tileset_url,
-		}, max_pixel_width=128)
+		})
 		mini_tilemap_data = GlobalData['who_mini_tilemap_data']({
 			"data": map_data
 		})
@@ -824,7 +825,7 @@ class GadgetDoodleBoard(GadgetTrait):
 		text = text.strip().lower()
 
 		if text == "get as text":
-			self.tell(user, "Doodle board pixel data: " + ", ".join([str(_) for _ in self.gadget.mini_tilemap_data['data']]))
+			self.tell(user, "Doodle board pixel data: [small]" + ", ".join([str(_) for _ in self.gadget.mini_tilemap_data['data']])+"[/small]")
 		if not user.has_permission(self.gadget):
 			if text == "menu":
 				self.tell(user, "Only the board's owner can draw on it, but you may [bot-message-button]Get as text[/bot-message-button]")

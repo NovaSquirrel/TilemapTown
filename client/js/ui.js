@@ -1998,6 +1998,7 @@ function editItemShared(item) {
 				document.getElementById('edittilegadget_preset_mini_tilemap_offset_y').value = 0;
 				document.getElementById('edittilegadget_preset_mini_tilemap_type').value = "text";
 				document.getElementById('edittilegadget_preset_mini_tilemap_data').value = "";
+				//document.getElementById('edittilegadget_preset_mini_tilemap_click_edit').checked = false;
 				document.getElementById('edittilegadget_preset_user_particle_owner_only').checked = false;
 				document.getElementById('edittilegadget_preset_user_particle_particle').value = "";
 				document.getElementById('edittilegadget_preset_pic_cycle_first_pic').value = "";
@@ -2015,6 +2016,8 @@ function editItemShared(item) {
 				document.getElementById('edittilegadget_preset_projectile_shooter_break_max_distance').checked = false;
 				document.getElementById('edittilegadget_preset_doodle_board_tileset_url').value = "";
 				document.getElementById('edittilegadget_preset_doodle_board_data').value = "";
+				document.getElementById('edittilegadget_preset_doodle_board_map_width').value = "";
+				document.getElementById('edittilegadget_preset_doodle_board_map_height').value = "";
 
 				if (Array.isArray(traits)) {
 					document.getElementById('edittilegadget_raw_textarea').value = JSON.stringify(item.data);
@@ -2120,6 +2123,9 @@ function editItemShared(item) {
 							} else if(trait[0] === "doodle_board") {
 								document.getElementById('edittilegadget_preset_doodle_board_tileset_url').value = trait[1].tileset_url ?? "";
 								document.getElementById('edittilegadget_preset_doodle_board_data').value = trait[1].data ?? "";
+								let map_size = trait[1].map_size ?? ["",""];
+								document.getElementById('edittilegadget_preset_doodle_board_map_width').value = map_size[0];
+								document.getElementById('edittilegadget_preset_doodle_board_map_height').value = map_size[1];
 
 								document.getElementById('edittilegadget_preset_choice').value = trait[0];
 								document.getElementById('gadgetTypeRaw').checked = false;
@@ -2581,6 +2587,13 @@ function editItemApply() {
 						case "doodle_board":
 							t.tileset_url = document.getElementById('edittilegadget_preset_doodle_board_tileset_url').value;
 							t.data = document.getElementById('edittilegadget_preset_doodle_board_data').value.split(",").map((v) => parseInt(v.trim())).filter((v) => !Number.isNaN(v));
+							t.map_size = [parseInt(document.getElementById('edittilegadget_preset_doodle_board_map_width').value), parseInt(document.getElementById('edittilegadget_preset_doodle_board_map_height').value)];
+							if (Number.isNaN(t.map_size[0]))
+								t.map_size[0] = 0;
+							if (Number.isNaN(t.map_size[1]))
+								t.map_size[1] = 0;
+							if (t.map_size[0] <= 0 && t.map_size[1] <= 0)
+								delete t.map_size;
 							break;
 						case "pic_cycle":
 							t.first_pic = document.getElementById('edittilegadget_preset_pic_cycle_first_pic').value.split(" ");
