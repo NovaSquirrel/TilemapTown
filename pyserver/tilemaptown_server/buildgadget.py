@@ -735,8 +735,8 @@ class GadgetDoodleBoard(GadgetTrait):
 			return None
 		self.sent_help_yet = False
 		map_size = self.get_config("map_size", [self.MAP_WIDTH, self.MAP_HEIGHT])
-		self.map_width = max(1, min(12, map_size[0]))
-		self.map_height = max(1, min(24, map_size[1]))
+		self.map_width = max(1, min(16, map_size[0]))
+		self.map_height = max(1, min(32, map_size[1]))
 		self.undo_stack = deque(maxlen=8)
 
 		# Get tileset URL
@@ -750,7 +750,7 @@ class GadgetDoodleBoard(GadgetTrait):
 		map_data = self.get_config("data", [])[:(self.map_width*self.map_height)]
 		if not map_data:
 			map_data = compress_mini_tilemap_data([0] * (self.map_width*self.map_height))
-		self.map_data = expand_mini_tilemap_data(map_data, limit=300)
+		self.map_data = expand_mini_tilemap_data(map_data, limit=16*32)
 
 		mini_tilemap = GlobalData['who_mini_tilemap']({
 			"clickable": "drag",
@@ -758,7 +758,7 @@ class GadgetDoodleBoard(GadgetTrait):
 			"tile_size": [4, 2],
 			"transparent_tile": -1,
 			"tileset_url": tileset_url,
-		})
+		}, max_map_width=16, max_map_height=32)
 		mini_tilemap_data = GlobalData['who_mini_tilemap_data']({
 			"data": map_data
 		})
@@ -779,6 +779,15 @@ class GadgetDoodleBoard(GadgetTrait):
 		self.set_config('data', self.gadget.mini_tilemap_data['data'])
 		if self.gadget.map:
 			self.gadget.map.broadcast("WHO", {'update': {'id': self.gadget.protocol_id(), 'mini_tilemap_data': self.gadget.mini_tilemap_data}})
+
+	def broadcast_partial_mini_tilemap(self, x1, y1, x2, y2):
+		self.set_config('data', self.gadget.mini_tilemap_data['data'])
+		partial = []
+		for y in range(y1, y2+1):
+			for x in range(x1, x2+1):
+				partial.append(self.map_data[y*self.map_width+x])
+		if self.gadget.map:
+			self.gadget.map.broadcast("WHO", {'patch_mini_tilemap': {'id': self.gadget.protocol_id(), 'pos': [x1, y1, x2, y2], 'data': compress_mini_tilemap_data(partial)}})
 
 	def on_shutdown(self):
 		if not self.gadget:
@@ -875,6 +884,15 @@ class GadgetDoodleBoard(GadgetTrait):
 		return False
 
 	def change_pixel(self, pixel_x, pixel_y, color_bits, toggle_if):
+		def update_min_max():
+			if self.min_stroke_x == None or x < self.min_stroke_x:
+				self.min_stroke_x = x
+			if self.min_stroke_y == None or y < self.min_stroke_y:
+				self.min_stroke_y = y
+			if self.max_stroke_x == None or x > self.max_stroke_x:
+				self.max_stroke_x = x
+			if self.max_stroke_y == None or y > self.max_stroke_y:
+				self.max_stroke_y = y
 		if pixel_x < 0 or pixel_y < 0:
 			return False
 		x = pixel_x // 4
@@ -884,9 +902,11 @@ class GadgetDoodleBoard(GadgetTrait):
 			index = y*self.map_width+x
 			if toggle_if != "recolor" and ((not toggle_if and 0 == (self.map_data[index] & pixel_mask)) or (toggle_if and (self.map_data[index] & pixel_mask))):
 				self.map_data[index] = ((self.map_data[index] ^ pixel_mask) & BITMAP_PIXEL_MASK) | color_bits
+				update_min_max()
 				return True
 			elif (self.map_data[index] & BITMAP_COLOR_MASK) != color_bits:
 				self.map_data[index] = (self.map_data[index] & BITMAP_PIXEL_MASK) | color_bits
+				update_min_max()
 				return True
 		return False
 
@@ -959,16 +979,24 @@ class GadgetDoodleBoard(GadgetTrait):
 			self.current_toggle_if = True
 		else:
 			self.current_toggle_if = self.get_pixel(arg['x'], arg['y'])
+		self.min_stroke_x = None
+		self.min_stroke_y = None
+		self.max_stroke_x = None
+		self.max_stroke_y = None
 		if self.put_with_tool(arg['x'], arg['y'], self.get_color_bits(self.tool_color), self.current_toggle_if):
 			self.gadget.mini_tilemap_data['data'] = compress_mini_tilemap_data(self.map_data)
-			self.broadcast_mini_tilemap()
+			self.broadcast_partial_mini_tilemap(self.min_stroke_x, self.min_stroke_y, self.max_stroke_x, self.max_stroke_y)
 
 	def on_entity_drag(self, user, arg):
 		if not self.gadget or not self.gadget.map or not user.has_permission(self.gadget):
 			return None
+		self.min_stroke_x = None
+		self.min_stroke_y = None
+		self.max_stroke_x = None
+		self.max_stroke_y = None
 		if self.draw_line(arg['from_x'], arg['from_y'], arg['x'], arg['y'], self.get_color_bits(self.tool_color), self.current_toggle_if) if ('from_x' in arg) else self.put_with_tool(arg['x'], arg['y'], self.get_color_bits(self.tool_color), self.current_toggle_if):
 			self.gadget.mini_tilemap_data['data'] = compress_mini_tilemap_data(self.map_data)
-			self.broadcast_mini_tilemap()
+			self.broadcast_partial_mini_tilemap(self.min_stroke_x, self.min_stroke_y, self.max_stroke_x, self.max_stroke_y)
 
 class GadgetPicCycle(GadgetTrait):
 	usable = True
