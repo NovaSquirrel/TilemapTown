@@ -687,7 +687,7 @@ Clients and servers can advertise having extra features on top of the basic ones
 }
 
 
-=== Mini-tilemaps ===
+=== Mini Tilemaps ===
 Entities can display a little tilemap overlaid on top of their graphic. You can use "WHO" messages to update an entity's "mini_tilemap" and "mini_tilemap_data" properties, which will be broadcast to the other entities on the map.
 
 "mini_tilemap": {              _Default___Purpose_
@@ -713,6 +713,14 @@ The tilemap's data is a list of integers, with run-length encoding. Formatted li
   +++++++------------- Length of this run of tiles. (minus 1)
 This means the maximum tileset size is 64x64 tiles, for 4096 tile types.
 Tiles are specified top to bottom, going through each line from left to right. If a tile matches "transparent_tile" then it's not drawn, and the tile isn't considered clickable.
+
+In addition to "WHO" update messages, there's a special "WHO" command specifically for updating a portion of a mini tilemap. A client that supports mini tilemaps SHOULD support it. The server will assume that clients understand "patch_mini_tilemap" messages.
+
+--> WHO {"patch_mini_tilemap": {"pos": [x1,y1,x2,y2], "data": [replacement data]}}
+<-- WHO {"patch_mini_tilemap": {"pos": [x1,y1,x2,y2], "data": [replacement data], "id": ID}}
+Request or receive a partial mini tilemap update.
+"pos" specifies a rectangle to modify on a mini tilemap that was previously received, using mini tilemap tile units.
+"data" is in the same format as mini tilemap updates done via "update" messages, so there may be RLE compression.
 
 
 === EXT messages ===
@@ -860,12 +868,6 @@ Fields:
 	"hide_me": boolean; if true, this client's entity is hidden until the particle expires and is removed.
 	"action": string; should be "play" or not specified. Client MUST ignore the whole user_particle message if "action" is present but isn't "play".
 	May contain "rc_username" and "rc_id" to indicate who is remote controlling the entity to create the particle.
-
---> EXT {"patch_mini_tilemap": {"pos": [x1,y1,x2,y2], "data": [replacement data]}}
-<-- EXT {"patch_mini_tilemap": {"pos": [x1,y1,x2,y2], "data": [replacement data], "id": ID}}
-Request or receive a partial mini tilemap update.
-"pos" specifies a rectangle to modify on a mini tilemap that was previously received, using mini tilemap tile units.
-"data" is in the same format as mini tilemap updates done via "WHO" messages, so there may be RLE compression.
 
 
 === Extension: bulk_build ===
