@@ -23,8 +23,10 @@ from .buildscripting import send_scripting_message, encode_scripting_message_val
 
 SCRIPT_DEBUG_PRINTS = False
 
-BITMAP_COLOR_MASK = 0b110000110000
-BITMAP_PIXEL_MASK = 0b001111001111
+BITMAP_COLOR_MASK  = 0b110000110000
+BITMAP_PIXEL_MASK  = 0b001111001111
+BITMAP_X_TILE_MASK = 0b000000111111
+BITMAP_Y_TILE_MASK = 0b111111000000
 
 move_keys = set(("move-n", "move-ne", "move-e", "move-se", "move-s", "move-sw", "move-w", "move-nw", "turn-n", "turn-ne", "turn-e", "turn-se", "turn-s", "turn-sw", "turn-w", "turn-nw", "use-item"))
 take_controls_options = {
@@ -737,12 +739,19 @@ class GadgetDoodleBoard(GadgetTrait):
 		map_size = self.get_config("map_size", [self.MAP_WIDTH, self.MAP_HEIGHT])
 		self.map_width = max(1, min(16, map_size[0]))
 		self.map_height = max(1, min(32, map_size[1]))
+		self.map_mode = self.get_config("map_mode", "4x2")
+		self.tile_width = 4
+		self.tile_height = 2
+		if self.map_mode == "2x1":
+			self.tile_width = 2
+			self.tile_height = 1
+
 		self.undo_stack = deque(maxlen=8)
 
 		# Get tileset URL
 		tileset_url = self.get_config("tileset_url", None)
 		if not tileset_url:
-			tileset_url = "bitmap.png"
+			tileset_url = "bitmap_db32.png" if self.map_mode == "2x1" else "bitmap.png"
 		if not tileset_url.startswith("https://") and not tileset_url.startswith("http://"):
 			tileset_url = Config["Server"]["ResourceIMGBase"] + "mini_tilemap/" + tileset_url
 
@@ -755,7 +764,7 @@ class GadgetDoodleBoard(GadgetTrait):
 		mini_tilemap = GlobalData['who_mini_tilemap']({
 			"clickable": "drag",
 			"map_size": [self.map_width, self.map_height],
-			"tile_size": [4, 2],
+			"tile_size": [self.tile_width, self.tile_height],
 			"transparent_tile": -1,
 			"tileset_url": tileset_url,
 		}, max_map_width=16, max_map_height=32)
@@ -771,7 +780,7 @@ class GadgetDoodleBoard(GadgetTrait):
 			self.gadget.map.broadcast("WHO", {'update': {'id': self.gadget.protocol_id(), 'mini_tilemap': self.gadget.mini_tilemap, 'mini_tilemap_data': self.gadget.mini_tilemap_data}})
 
 		# Tool states
-		self.tool_color = 0
+		self.tool_color = 1 if self.map_mode == "2x1" else 0
 		self.tool_type  = "1px"
 		self.tool_mode  = "toggle"
 
@@ -820,7 +829,10 @@ class GadgetDoodleBoard(GadgetTrait):
 				self.tell(user, "Only the board's owner can draw on it, but you may [bot-message-button]Get as text[/bot-message-button]")
 			return
 		if text == "menu":
-			self.tell(user, '[table][tr][td]Commands[/td][td][bot-message-button]Colors[/bot-message-button] [bot-message-button]Get as text[/bot-message-button] [bot-message-button]Menu[/bot-message-button] [bot-message-button]Undo[/bot-message-button][/td][/tr][tr][td]Tools[/td][td][bot-message-button]1px[/bot-message-button] [bot-message-button]2px[/bot-message-button] [bot-message-button]3px[/bot-message-button] [bot-message-button]+[/bot-message-button] [bot-message-button]Recolor[/bot-message-button][/td][/tr][tr][td]Draw mode[/td][td][bot-message-button]Toggle[/bot-message-button] [bot-message-button]Draw on[/bot-message-button] [bot-message-button]Draw off[/bot-message-button] [/td][/tr][tr][td]Whole canvas[/td][td][bot-message-button]Fill off[/bot-message-button] [bot-message-button]Fill on[/bot-message-button] [bot-message-button]Recolor all[/bot-message-button] [bot-message-button]Invert[/bot-message-button][/td][/tr][/table]')
+			if self.map_mode == "2x1":
+				self.tell(user, '[table][tr][td]Commands[/td][td][bot-message-button]Colors[/bot-message-button] [bot-message-button]Get as text[/bot-message-button] [bot-message-button]Menu[/bot-message-button] [bot-message-button]Undo[/bot-message-button][/td][/tr][tr][td]Tools[/td][td][bot-message-button]1px[/bot-message-button] [bot-message-button]2px[/bot-message-button] [bot-message-button]3px[/bot-message-button] [bot-message-button]+[/bot-message-button] [bot-message-button]Flood fill[/bot-message-button][/td][/tr][tr][td]Whole canvas[/td][td][bot-message-button]Fill all[/bot-message-button][/td][/tr][/table]')
+			else:
+				self.tell(user, '[table][tr][td]Commands[/td][td][bot-message-button]Colors[/bot-message-button] [bot-message-button]Get as text[/bot-message-button] [bot-message-button]Menu[/bot-message-button] [bot-message-button]Undo[/bot-message-button][/td][/tr][tr][td]Tools[/td][td][bot-message-button]1px[/bot-message-button] [bot-message-button]2px[/bot-message-button] [bot-message-button]3px[/bot-message-button] [bot-message-button]+[/bot-message-button] [bot-message-button]Recolor[/bot-message-button][/td][/tr][tr][td]Draw mode[/td][td][bot-message-button]Toggle[/bot-message-button] [bot-message-button]Draw light[/bot-message-button] [bot-message-button]Draw dark[/bot-message-button] [/td][/tr][tr][td]Whole canvas[/td][td][bot-message-button]Fill off[/bot-message-button] [bot-message-button]Fill on[/bot-message-button] [bot-message-button]Recolor all[/bot-message-button] [bot-message-button]Invert[/bot-message-button][/td][/tr][/table]')
 		elif text == "fill off":
 			self.make_undo_step()
 			self.map_data = [self.get_color_bits(self.tool_color)] * (self.map_width * self.map_height)
@@ -842,20 +854,39 @@ class GadgetDoodleBoard(GadgetTrait):
 			self.map_data = [(_ ^ BITMAP_PIXEL_MASK) for _ in self.map_data]
 			self.gadget.mini_tilemap_data['data'] = compress_mini_tilemap_data(self.map_data)
 			self.broadcast_mini_tilemap()
+		elif text == "fill all": # 2x1 mode
+			self.make_undo_step()
+			self.map_data = [self.tool_color | (self.tool_color << 6)] * (self.map_width * self.map_height)
+			self.gadget.mini_tilemap_data['data'] = compress_mini_tilemap_data(self.map_data)
+			self.broadcast_mini_tilemap()
 		elif text == "colors":
-			self.tell(user,
-				'[table]' +
-					'[tr][td][color=#000000]█[/color][color=#ffffff]█[/color][bot-message-button]color 0[/bot-message-button][/td][td][color=#0a2e44]█[/color][color=#fcffcc]█[/color][bot-message-button]color 1[/bot-message-button][/td][td][color=#5d4242]█[/color][color=#5dafa7]█[/color][bot-message-button]color 2[/bot-message-button][/td][td][color=#292b30]█[/color][color=#cfab4a]█[/color][bot-message-button]color 3[/bot-message-button][/td][/tr]'+
-					'[tr][td][color=#920244]█[/color][color=#fec28c]█[/color][bot-message-button]color 4[/bot-message-button][/td][td][color=#c62b69]█[/color][color=#edf4ff]█[/color][bot-message-button]color 5[/bot-message-button][/td][td][color=#004c3d]█[/color][color=#ffeaf9]█[/color][bot-message-button]color 6[/bot-message-button][/td][td][color=#413652]█[/color][color=#6493ff]█[/color][bot-message-button]color 7[/bot-message-button][/td][/tr]'+
-					'[tr][td][color=#000000]█[/color][color=#83b07e]█[/color][bot-message-button]color 8[/bot-message-button][/td][td][color=#212c28]█[/color][color=#72a488]█[/color][bot-message-button]color 9[/bot-message-button][/td][td][color=#210009]█[/color][color=#00ffae]█[/color][bot-message-button]color 10[/bot-message-button][/td][td][color=#702963]█[/color][color=#ffbf00]█[/color][bot-message-button]color 11[/bot-message-button][/td][/tr]'+
-					'[tr][td][color=#5b88e2]█[/color][color=#f5f4e9]█[/color][bot-message-button]color 12[/bot-message-button][/td][td][color=#10368f]█[/color][color=#ff8e42]█[/color][bot-message-button]color 13[/bot-message-button][/td][td][color=#1e1c32]█[/color][color=#c6baac]█[/color][bot-message-button]color 14[/bot-message-button][/td][td][color=#4b475c]█[/color][color=#f5f4e9]█[/color][bot-message-button]color 15[/bot-message-button][/td][/tr]'+
-				'[/table]'
-			)
+			if self.map_mode == "2x1":
+				self.tell(user,
+					'[table]' +
+						'[tr][td][color=#000000]██[/color][bot-message-button]color 0[/bot-message-button][/td][td][color=#222034]██[/color][bot-message-button]color 1[/bot-message-button][/td][td][color=#45283c]██[/color][bot-message-button]color 2[/bot-message-button][/td][td][color=#663931]██[/color][bot-message-button]color 3[/bot-message-button][/td][/tr]'+
+						'[tr][td][color=#8f563b]██[/color][bot-message-button]color 4[/bot-message-button][/td][td][color=#df7126]██[/color][bot-message-button]color 5[/bot-message-button][/td][td][color=#d9a066]██[/color][bot-message-button]color 6[/bot-message-button][/td][td][color=#eec39a]██[/color][bot-message-button]color 7[/bot-message-button][/td][/tr]'+
+						'[tr][td][color=#fbf236]██[/color][bot-message-button]color 8[/bot-message-button][/td][td][color=#99e550]██[/color][bot-message-button]color 9[/bot-message-button][/td][td][color=#6abe30]██[/color][bot-message-button]color 10[/bot-message-button][/td][td][color=#37946e]██[/color][bot-message-button]color 11[/bot-message-button][/td][/tr]'+
+						'[tr][td][color=#4b692f]██[/color][bot-message-button]color 12[/bot-message-button][/td][td][color=#524b24]██[/color][bot-message-button]color 13[/bot-message-button][/td][td][color=#323c39]██[/color][bot-message-button]color 14[/bot-message-button][/td][td][color=#3f3f74]██[/color][bot-message-button]color 15[/bot-message-button][/td][/tr]'+
+						'[tr][td][color=#306082]██[/color][bot-message-button]color 16[/bot-message-button][/td][td][color=#5b6ee1]██[/color][bot-message-button]color 17[/bot-message-button][/td][td][color=#639bff]██[/color][bot-message-button]color 18[/bot-message-button][/td][td][color=#5fcde4]██[/color][bot-message-button]color 19[/bot-message-button][/td][/tr]'+
+						'[tr][td][color=#cbdbfc]██[/color][bot-message-button]color 20[/bot-message-button][/td][td][color=#ffffff]██[/color][bot-message-button]color 21[/bot-message-button][/td][td][color=#9badb7]██[/color][bot-message-button]color 22[/bot-message-button][/td][td][color=#847e87]██[/color][bot-message-button]color 23[/bot-message-button][/td][/tr]'+
+						'[tr][td][color=#696a6a]██[/color][bot-message-button]color 24[/bot-message-button][/td][td][color=#595652]██[/color][bot-message-button]color 25[/bot-message-button][/td][td][color=#76428a]██[/color][bot-message-button]color 26[/bot-message-button][/td][td][color=#ac3232]██[/color][bot-message-button]color 27[/bot-message-button][/td][/tr]'+
+						'[tr][td][color=#d95763]██[/color][bot-message-button]color 28[/bot-message-button][/td][td][color=#d77bba]██[/color][bot-message-button]color 29[/bot-message-button][/td][td][color=#8f974a]██[/color][bot-message-button]color 30[/bot-message-button][/td][td][color=#8a6f30]██[/color][bot-message-button]color 31[/bot-message-button][/td][/tr]'+
+					'[/table]'
+				)
+			else:
+				self.tell(user,
+					'[table]' +
+						'[tr][td][color=#000000]█[/color][color=#ffffff]█[/color][bot-message-button]color 0[/bot-message-button][/td][td][color=#0a2e44]█[/color][color=#fcffcc]█[/color][bot-message-button]color 1[/bot-message-button][/td][td][color=#5d4242]█[/color][color=#5dafa7]█[/color][bot-message-button]color 2[/bot-message-button][/td][td][color=#292b30]█[/color][color=#cfab4a]█[/color][bot-message-button]color 3[/bot-message-button][/td][/tr]'+
+						'[tr][td][color=#920244]█[/color][color=#fec28c]█[/color][bot-message-button]color 4[/bot-message-button][/td][td][color=#c62b69]█[/color][color=#edf4ff]█[/color][bot-message-button]color 5[/bot-message-button][/td][td][color=#004c3d]█[/color][color=#ffeaf9]█[/color][bot-message-button]color 6[/bot-message-button][/td][td][color=#413652]█[/color][color=#6493ff]█[/color][bot-message-button]color 7[/bot-message-button][/td][/tr]'+
+						'[tr][td][color=#000000]█[/color][color=#83b07e]█[/color][bot-message-button]color 8[/bot-message-button][/td][td][color=#212c28]█[/color][color=#72a488]█[/color][bot-message-button]color 9[/bot-message-button][/td][td][color=#210009]█[/color][color=#00ffae]█[/color][bot-message-button]color 10[/bot-message-button][/td][td][color=#702963]█[/color][color=#ffbf00]█[/color][bot-message-button]color 11[/bot-message-button][/td][/tr]'+
+						'[tr][td][color=#5b88e2]█[/color][color=#f5f4e9]█[/color][bot-message-button]color 12[/bot-message-button][/td][td][color=#10368f]█[/color][color=#ff8e42]█[/color][bot-message-button]color 13[/bot-message-button][/td][td][color=#1e1c32]█[/color][color=#c6baac]█[/color][bot-message-button]color 14[/bot-message-button][/td][td][color=#4b475c]█[/color][color=#f5f4e9]█[/color][bot-message-button]color 15[/bot-message-button][/td][/tr]'+
+					'[/table]'
+				)
 		elif text.startswith("color "):
 			self.tool_color = int(text[6:])
-		elif text in ("1px", "2px", "3px", "+", "recolor"):
+		elif text in ("1px", "2px", "3px", "+", "recolor", "flood fill"):
 			self.tool_type = text
-		elif text in ("draw on", "draw off", "toggle"):
+		elif text in ("draw light", "draw dark", "toggle"):
 			self.tool_mode = text
 		elif text == "undo":
 			if len(self.undo_stack):
@@ -870,16 +901,20 @@ class GadgetDoodleBoard(GadgetTrait):
 	# Pixel changing
 	###################################
 	def get_color_bits(self, color):
+		if self.map_mode == "2x1":
+			return color
 		return ((color & 0x3) << 4) | ((color & 0xC) << 8)
 
 	def get_pixel(self, pixel_x, pixel_y):
 		if pixel_x < 0 or pixel_y < 0:
 			return False
-		x = pixel_x // 4
-		y = pixel_y // 2
+		x = pixel_x // self.tile_width
+		y = pixel_y // self.tile_height
 		if x >= 0 and y >= 0 and x < self.map_width and y < self.map_height:
-			pixel_mask = 1 << ( (pixel_x&3) + ((pixel_y&1)*6) )
 			index = y*self.map_width+x
+			if self.map_mode == "2x1":
+				return ((self.map_data[index] & BITMAP_Y_TILE_MASK) >> 6) if (pixel_x&1) else (self.map_data[index] & BITMAP_X_TILE_MASK)
+			pixel_mask = 1 << ( (pixel_x&3) + ((pixel_y&1)*6) )
 			return bool(self.map_data[index] & pixel_mask)
 		return False
 
@@ -895,19 +930,31 @@ class GadgetDoodleBoard(GadgetTrait):
 				self.max_stroke_y = y
 		if pixel_x < 0 or pixel_y < 0:
 			return False
-		x = pixel_x // 4
-		y = pixel_y // 2
+		x = pixel_x // self.tile_width
+		y = pixel_y // self.tile_height
 		if x >= 0 and y >= 0 and x < self.map_width and y < self.map_height:
-			pixel_mask = 1 << ( (pixel_x&3) + ((pixel_y&1)*6) )
-			index = y*self.map_width+x
-			if toggle_if != "recolor" and ((not toggle_if and 0 == (self.map_data[index] & pixel_mask)) or (toggle_if and (self.map_data[index] & pixel_mask))):
-				self.map_data[index] = ((self.map_data[index] ^ pixel_mask) & BITMAP_PIXEL_MASK) | color_bits
-				update_min_max()
-				return True
-			elif (self.map_data[index] & BITMAP_COLOR_MASK) != color_bits:
-				self.map_data[index] = (self.map_data[index] & BITMAP_PIXEL_MASK) | color_bits
-				update_min_max()
-				return True
+			if self.map_mode == "2x1":
+				index = y*self.map_width+x
+				if pixel_x & 1: # Right
+					new_value = (self.map_data[index] & BITMAP_X_TILE_MASK) | (color_bits << 6)
+				else: # Left
+					new_value = (self.map_data[index] & BITMAP_Y_TILE_MASK) | (color_bits)
+				if new_value != self.map_data[index]:
+					self.map_data[index] = new_value
+					update_min_max()
+					return True
+				return False
+			else:
+				pixel_mask = 1 << ( (pixel_x&3) + ((pixel_y&1)*6) )
+				index = y*self.map_width+x
+				if toggle_if != "recolor" and ((not toggle_if and 0 == (self.map_data[index] & pixel_mask)) or (toggle_if and (self.map_data[index] & pixel_mask))):
+					self.map_data[index] = ((self.map_data[index] ^ pixel_mask) & BITMAP_PIXEL_MASK) | color_bits
+					update_min_max()
+					return True
+				elif (self.map_data[index] & BITMAP_COLOR_MASK) != color_bits:
+					self.map_data[index] = (self.map_data[index] & BITMAP_PIXEL_MASK) | color_bits
+					update_min_max()
+					return True
 		return False
 
 	def put_with_tool(self, x, y, color_bits, toggle_if):
@@ -973,9 +1020,44 @@ class GadgetDoodleBoard(GadgetTrait):
 			self.handle_command(user, "menu")
 		self.make_undo_step()
 
-		if self.tool_mode == "draw on": 
+		if self.map_mode == "2x1":
+			self.current_toggle_if = None
+			if self.tool_type == "flood fill":
+				replace_color = self.get_pixel(arg['x'], arg['y'])
+				if replace_color == self.tool_color:
+					return None
+				queue = deque()
+				already = set((arg['x'], arg['y']))
+				queue.append((arg['x'], arg['y']))
+				while queue:
+					x,y = queue.popleft()
+					if self.get_pixel(x,y) == replace_color:
+						index = y*self.map_width+(x>>1)
+						print(x,y,index)
+						if x & 1: # Right
+							self.map_data[index] = (self.map_data[index] & BITMAP_X_TILE_MASK) | (self.tool_color << 6)
+						else: # Left
+							self.map_data[index] = (self.map_data[index] & BITMAP_Y_TILE_MASK) | (self.tool_color)
+						if x > 0 and ((x-1,y) not in already):
+							already.add((x-1,y))
+							queue.append((x-1,y))
+						if y > 0 and ((x,y-1) not in already):
+							already.add((x,y-1))
+							queue.append((x,y-1))
+						if (x+1) < (self.tile_width * self.map_width) and ((x+1,y) not in already):
+							already.add((x+1,y))
+							queue.append((x+1,y))
+						if (y+1) < (self.tile_height * self.map_height) and ((x,y+1) not in already):
+							already.add((x,y+1))
+							queue.append((x,y+1))
+
+				# Send modified map
+				self.gadget.mini_tilemap_data['data'] = compress_mini_tilemap_data(self.map_data)
+				self.broadcast_mini_tilemap()
+				return None
+		elif self.tool_mode == "draw light": 
 			self.current_toggle_if = False
-		elif self.tool_mode == "draw off":
+		elif self.tool_mode == "draw dark":
 			self.current_toggle_if = True
 		else:
 			self.current_toggle_if = self.get_pixel(arg['x'], arg['y'])
@@ -989,6 +1071,8 @@ class GadgetDoodleBoard(GadgetTrait):
 
 	def on_entity_drag(self, user, arg):
 		if not self.gadget or not self.gadget.map or not user.has_permission(self.gadget):
+			return None
+		if self.tool_type == "flood fill":
 			return None
 		self.min_stroke_x = None
 		self.min_stroke_y = None

@@ -2018,6 +2018,7 @@ function editItemShared(item) {
 				document.getElementById('edittilegadget_preset_doodle_board_data').value = "";
 				document.getElementById('edittilegadget_preset_doodle_board_map_width').value = "";
 				document.getElementById('edittilegadget_preset_doodle_board_map_height').value = "";
+				document.getElementById('edittilegadget_preset_doodle_board_2x1').checked = false;
 
 				if (Array.isArray(traits)) {
 					document.getElementById('edittilegadget_raw_textarea').value = JSON.stringify(item.data);
@@ -2126,6 +2127,7 @@ function editItemShared(item) {
 								let map_size = trait[1].map_size ?? ["",""];
 								document.getElementById('edittilegadget_preset_doodle_board_map_width').value = map_size[0];
 								document.getElementById('edittilegadget_preset_doodle_board_map_height').value = map_size[1];
+								document.getElementById('edittilegadget_preset_doodle_board_2x1').checked = trait[1].map_mode === "2x1";
 
 								document.getElementById('edittilegadget_preset_choice').value = trait[0];
 								document.getElementById('gadgetTypeRaw').checked = false;
@@ -2594,6 +2596,8 @@ function editItemApply() {
 								t.map_size[1] = 0;
 							if (t.map_size[0] <= 0 && t.map_size[1] <= 0)
 								delete t.map_size;
+							if(document.getElementById('edittilegadget_preset_doodle_board_2x1').checked)
+								t.map_mode = "2x1";
 							break;
 						case "pic_cycle":
 							t.first_pic = document.getElementById('edittilegadget_preset_pic_cycle_first_pic').value.split(" ");
