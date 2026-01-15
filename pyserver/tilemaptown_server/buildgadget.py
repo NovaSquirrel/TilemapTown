@@ -1033,7 +1033,6 @@ class GadgetDoodleBoard(GadgetTrait):
 					x,y = queue.popleft()
 					if self.get_pixel(x,y) == replace_color:
 						index = y*self.map_width+(x>>1)
-						print(x,y,index)
 						if x & 1: # Right
 							self.map_data[index] = (self.map_data[index] & BITMAP_X_TILE_MASK) | (self.tool_color << 6)
 						else: # Left
