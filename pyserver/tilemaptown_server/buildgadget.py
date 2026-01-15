@@ -783,6 +783,7 @@ class GadgetDoodleBoard(GadgetTrait):
 		self.tool_color = 1 if self.map_mode == "2x1" else 0
 		self.tool_type  = "1px"
 		self.tool_mode  = "toggle"
+		self.color_pick_tool = "1px" # Tool to go back to after color picking
 
 	def broadcast_mini_tilemap(self):
 		self.set_config('data', self.gadget.mini_tilemap_data['data'])
@@ -830,7 +831,7 @@ class GadgetDoodleBoard(GadgetTrait):
 			return
 		if text == "menu":
 			if self.map_mode == "2x1":
-				self.tell(user, '[table][tr][td]Commands[/td][td][bot-message-button]Colors[/bot-message-button] [bot-message-button]Get as text[/bot-message-button] [bot-message-button]Menu[/bot-message-button] [bot-message-button]Undo[/bot-message-button][/td][/tr][tr][td]Tools[/td][td][bot-message-button]1px[/bot-message-button] [bot-message-button]2px[/bot-message-button] [bot-message-button]3px[/bot-message-button] [bot-message-button]+[/bot-message-button] [bot-message-button]Flood fill[/bot-message-button][/td][/tr][tr][td]Whole canvas[/td][td][bot-message-button]Fill all[/bot-message-button][/td][/tr][/table]')
+				self.tell(user, '[table][tr][td]Commands[/td][td][bot-message-button]Colors[/bot-message-button] [bot-message-button]Get as text[/bot-message-button] [bot-message-button]Menu[/bot-message-button] [bot-message-button]Undo[/bot-message-button][/td][/tr][tr][td]Tools[/td][td][bot-message-button]1px[/bot-message-button] [bot-message-button]2px[/bot-message-button] [bot-message-button]3px[/bot-message-button] [bot-message-button]+[/bot-message-button] [bot-message-button]🪣[/bot-message-button] [bot-message-button]Pick[/bot-message-button][/td][/tr][tr][td]Whole canvas[/td][td][bot-message-button]Fill all[/bot-message-button][/td][/tr][/table]')
 			else:
 				self.tell(user, '[table][tr][td]Commands[/td][td][bot-message-button]Colors[/bot-message-button] [bot-message-button]Get as text[/bot-message-button] [bot-message-button]Menu[/bot-message-button] [bot-message-button]Undo[/bot-message-button][/td][/tr][tr][td]Tools[/td][td][bot-message-button]1px[/bot-message-button] [bot-message-button]2px[/bot-message-button] [bot-message-button]3px[/bot-message-button] [bot-message-button]+[/bot-message-button] [bot-message-button]Recolor[/bot-message-button][/td][/tr][tr][td]Draw mode[/td][td][bot-message-button]Toggle[/bot-message-button] [bot-message-button]Draw light[/bot-message-button] [bot-message-button]Draw dark[/bot-message-button] [/td][/tr][tr][td]Whole canvas[/td][td][bot-message-button]Fill off[/bot-message-button] [bot-message-button]Fill on[/bot-message-button] [bot-message-button]Recolor all[/bot-message-button] [bot-message-button]Invert[/bot-message-button][/td][/tr][/table]')
 		elif text == "fill off":
@@ -884,7 +885,9 @@ class GadgetDoodleBoard(GadgetTrait):
 				)
 		elif text.startswith("color "):
 			self.tool_color = int(text[6:])
-		elif text in ("1px", "2px", "3px", "+", "recolor", "flood fill"):
+		elif text in ("1px", "2px", "3px", "+", "recolor", "🪣", "pick"):
+			if self.tool_type != "pick":
+				self.color_pick_tool = self.tool_type
 			self.tool_type = text
 		elif text in ("draw light", "draw dark", "toggle"):
 			self.tool_mode = text
@@ -1022,7 +1025,7 @@ class GadgetDoodleBoard(GadgetTrait):
 
 		if self.map_mode == "2x1":
 			self.current_toggle_if = None
-			if self.tool_type == "flood fill":
+			if self.tool_type == "🪣":
 				replace_color = self.get_pixel(arg['x'], arg['y'])
 				if replace_color == self.tool_color:
 					return None
@@ -1054,6 +1057,10 @@ class GadgetDoodleBoard(GadgetTrait):
 				self.gadget.mini_tilemap_data['data'] = compress_mini_tilemap_data(self.map_data)
 				self.broadcast_mini_tilemap()
 				return None
+			elif self.tool_type == "pick":
+				self.tool_color = self.get_pixel(arg['x'], arg['y'])
+				self.tool_type = self.color_pick_tool
+				return None
 		elif self.tool_mode == "draw light": 
 			self.current_toggle_if = False
 		elif self.tool_mode == "draw dark":
@@ -1071,7 +1078,7 @@ class GadgetDoodleBoard(GadgetTrait):
 	def on_entity_drag(self, user, arg):
 		if not self.gadget or not self.gadget.map or not user.has_permission(self.gadget):
 			return None
-		if self.tool_type == "flood fill":
+		if self.tool_type == "🪣" or self.tool_type == "pick":
 			return None
 		self.min_stroke_x = None
 		self.min_stroke_y = None
