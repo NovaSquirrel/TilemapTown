@@ -745,6 +745,8 @@ class GadgetDoodleBoard(GadgetTrait):
 		if self.map_mode == "2x1":
 			self.tile_width = 2
 			self.tile_height = 1
+		offset = self.get_config("offset", [0,0])
+		self.ignore_clicks = self.get_config("ignore_clicks", False)
 
 		self.undo_stack = deque(maxlen=8)
 
@@ -762,10 +764,11 @@ class GadgetDoodleBoard(GadgetTrait):
 		self.map_data = expand_mini_tilemap_data(map_data, limit=16*32)
 
 		mini_tilemap = GlobalData['who_mini_tilemap']({
-			"clickable": "drag",
+			"clickable": False if self.ignore_clicks else "drag",
 			"map_size": [self.map_width, self.map_height],
 			"tile_size": [self.tile_width, self.tile_height],
 			"transparent_tile": -1,
+			"offset": offset,
 			"tileset_url": tileset_url,
 		}, max_map_width=16, max_map_height=32)
 		mini_tilemap_data = GlobalData['who_mini_tilemap_data']({
@@ -1013,7 +1016,7 @@ class GadgetDoodleBoard(GadgetTrait):
 		return changed_any
 
 	def on_entity_click(self, user, arg):
-		if not self.gadget or not self.gadget.map:
+		if not self.gadget or not self.gadget.map or self.ignore_clicks:
 			return None
 		if not user.has_permission(self.gadget):
 			self.handle_command(user, "menu")
@@ -1076,7 +1079,7 @@ class GadgetDoodleBoard(GadgetTrait):
 			self.broadcast_partial_mini_tilemap(self.min_stroke_x, self.min_stroke_y, self.max_stroke_x, self.max_stroke_y)
 
 	def on_entity_drag(self, user, arg):
-		if not self.gadget or not self.gadget.map or not user.has_permission(self.gadget):
+		if not self.gadget or not self.gadget.map or not user.has_permission(self.gadget) or self.ignore_clicks:
 			return None
 		if self.tool_type == "🪣" or self.tool_type == "pick":
 			return None
