@@ -644,7 +644,7 @@ async function viewFiles() {
 			ul.removeChild(ul.firstChild);
 		}
 
-		let response = await fetch(API_URL + "/v1/my_files" , {
+		let response = await fetch(API_URL + "v1/my_files" , {
 			headers: {'Authorization': 'Bearer ' + API_Key},
 			method: "GET"});
 		if(response.status == 200) {
@@ -2827,7 +2827,7 @@ async function createNewFile(set_my_pic, create_entity) {
 	formData.append("create_entity", create_entity);
 	formData.append('file', document.getElementById("newfilefile").files[0]);
 
-	let response = await fetch(API_URL + "/v1/my_files/file" , {
+	let response = await fetch(API_URL + "v1/my_files/file" , {
 		headers: {'Authorization': 'Bearer ' + API_Key},
 		body: formData,
 		method: "POST"});
@@ -2857,7 +2857,7 @@ async function createNewFolder() {
 	formData.append("name", document.getElementById("newfoldername").value);
 	formData.append("desc", document.getElementById("newfolderdesc").value);
 
-	let response = await fetch(API_URL + "/v1/my_files/folder" , {
+	let response = await fetch(API_URL + "v1/my_files/folder" , {
 		headers: {'Authorization': 'Bearer ' + API_Key},
 		body: formData,
 		method: "POST"});
@@ -2954,7 +2954,7 @@ async function fileUploadContextMenuDelete () {
 	if (
 		confirm(`Really delete file "${file.name}" with ID ${contextMenuFile}?`)
 	) {
-		let response = await fetch(API_URL + "/v1/my_files/file/"+contextMenuFile, {
+		let response = await fetch(API_URL + "v1/my_files/file/"+contextMenuFile, {
 			headers: {'Authorization': 'Bearer ' + API_Key},
 			method: "DELETE"});
 		if(response.status == 204) {
@@ -2971,7 +2971,7 @@ async function fileFolderContextMenuDelete() {
 	if (
 		confirm(`Really delete folder "${folder.name}" with ID ${contextMenuFolder}?`)
 	) {
-		let response = await fetch(API_URL + "/v1/my_files/folder/"+contextMenuFolder, {
+		let response = await fetch(API_URL + "v1/my_files/folder/"+contextMenuFolder, {
 			headers: {'Authorization': 'Bearer ' + API_Key},
 			method: "DELETE"});
 		if(response.status == 204) {
@@ -3036,7 +3036,7 @@ async function moveFileOrFolderTo(move_id, destination_id, isfolder) {
 	if (isfolder) {
 		const formData = new FormData();
 		formData.append("folder", destination_id);
-		let response = await fetch(API_URL + "/v1/my_files/folder/"+(move_id) , {
+		let response = await fetch(API_URL + "v1/my_files/folder/"+(move_id) , {
 			headers: {'Authorization': 'Bearer ' + API_Key},
 			body: formData, method: "PUT"});
 		if(response.status == 200) {
@@ -3051,7 +3051,7 @@ async function moveFileOrFolderTo(move_id, destination_id, isfolder) {
 		const formData = new FormData();
 		formData.append("folder", destination_id);
 
-		let response = await fetch(API_URL + "/v1/my_files/file/"+(move_id) , {
+		let response = await fetch(API_URL + "v1/my_files/file/"+(move_id) , {
 			headers: {'Authorization': 'Bearer ' + API_Key},
 			body: formData, method: "PUT"});
 		if(response.status == 200) {
@@ -3095,7 +3095,7 @@ async function doEditFile(reupload, set_my_pic, keep_url) {
 		formData.append('file', document.getElementById("editfilefile").files[0]);
 	}
 
-	let response = await fetch(API_URL + "/v1/my_files/file/"+(editedFileID) , {
+	let response = await fetch(API_URL + "v1/my_files/file/"+(editedFileID) , {
 		headers: {'Authorization': 'Bearer ' + API_Key},
 		body: formData, method: "PUT"});
 	if(response.status == 200) {
@@ -3125,7 +3125,7 @@ async function doEditFolder() {
 	formData.append("name", document.getElementById("editfoldername").value);
 	formData.append("desc", document.getElementById("editfolderdesc").value);
 
-	let response = await fetch(API_URL + "/v1/my_files/folder/"+(editedFolderID) , {
+	let response = await fetch(API_URL + "v1/my_files/folder/"+(editedFolderID) , {
 		headers: {'Authorization': 'Bearer ' + API_Key},
 		body: formData, method: "PUT"});
 	if(response.status == 200) {

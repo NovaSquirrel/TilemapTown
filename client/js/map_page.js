@@ -32,7 +32,7 @@ async function SendCmd(type, params) {
 	if (type === "IMG") {
 		if (!Array.isArray(params.id))
 			params.id = [params.id];
-		let response = await fetch(`${apiURL}/v1/img/${params.id.join()},`);
+		let response = await fetch(`${apiURL}v1/img/${params.id.join()},`);
 		if (!response.ok) {
 			console.error(`Couldn't reach Tilemap Town API for image: ${response.status}`);
 		} else {
@@ -51,7 +51,7 @@ async function SendCmd(type, params) {
 	} else if (type === "TSD") {
 		if (!Array.isArray(params.id))
 			params.id = [params.id];
-		let response = await fetch(`${apiURL}/v1/tsd/${params.id.join()},`);
+		let response = await fetch(`${apiURL}v1/tsd/${params.id.join()},`);
 		if (!response.ok) {
 			console.error(`Couldn't reach Tilemap Town API for tileset: ${response.status}`);
 		} else {
@@ -233,7 +233,7 @@ async function loadMapInfo() {
 	}
 
 	// Get and parse the actual map
-	let mapResponse = await fetch(`${apiURL}/v1/map/${mapID}?data=1`);
+	let mapResponse = await fetch(`${apiURL}v1/map/${mapID}?data=1`);
 	if (!mapResponse.ok) {
 		console.error(`Couldn't reach Tilemap Town API for map data (${mapID}): ${response.status}`);
 	} else {

@@ -103,7 +103,7 @@ Format for these resource files is defined later in this document.
 Server.ResourceIMGBase
 Default: ""
 Prefix to add to images specified in resource files, if they do not start with http:// or https://
-The official server uses "https://novasquirrel.com/town/img/" for this, for example.
+The official server uses "https://novasquirrel.com/town/img/" for this, for example. Expected to end in a slash.
 
 Security.ProxyOnly
 Default: false
@@ -196,7 +196,7 @@ Port to host the web API on.
 
 API.URL
 Default: ""
-URL to give clients for accessing the API.
+URL to give clients for accessing the API. Expected to end in a slash.
 
 API.AdminPassword
 Default: ""
@@ -257,7 +257,7 @@ Whether or not users should be able to upload files at all.
 
 FileUpload.URLPrefix
 Default: ""
-Prefix added to names to be able to retrieve an uploaded file through a web server.
+Prefix added to names to be able to retrieve an uploaded file through a web server. Expected to end in a slash.
 
 FileUpload.StoragePath
 Default: ""
@@ -334,11 +334,11 @@ If provided, this is the filename of the HTML template that will be used for map
 
 MapPage.AssetsBaseURL
 Default: ""
-If provided, this is the base URL for any files that the map page template may need to reference (like JavaScript files or CSS).
+If provided, this is the base URL for any files that the map page template may need to reference (like JavaScript files or CSS). Expected to end in a slash.
 
 MapPage.PageBaseURL
 Default: ""
-Public base URL of the page, to have the map ID appended to it
+Public base URL of the page, to have the map ID appended to it. Expected to end in a slash.
 
 .--------------------------------------------------------------------------------------------------
 | Resource files:

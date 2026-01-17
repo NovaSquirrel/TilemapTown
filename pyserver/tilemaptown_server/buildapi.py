@@ -999,7 +999,7 @@ async def get_map_page(request):
 		AssetsBaseURL=Config["MapPage"]["AssetsBaseURL"],
 		WebClientURL=WebClientURL,
 		WebClientTouchURL=WebClientTouchURL,
-		ThisPageURL="%s/%s"%(Config["MapPage"]["PageBaseURL"], MapID)
+		ThisPageURL="%s%s"%(Config["MapPage"]["PageBaseURL"], MapID)
 	)
 	return web.Response(text=response, content_type="text/html", charset="utf-8")
 
