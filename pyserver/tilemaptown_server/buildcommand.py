@@ -2939,7 +2939,7 @@ def fn_rrb(map, client, context, arg):
 		respond(context, "i = map info, I = more info, r = rollback map, R = rollback all", class_type="secret_message")
 		return
 	elif arg == "a":
-		respond(context, "[url]%s/v1/moderation/rrb?pass=%s[/url]" % (Config["API"]["URL"], Config["API"]["AdminPassword"]), class_type="secret_message")
+		respond(context, "[url]%sv1/moderation/rrb?pass=%s[/url]" % (Config["API"]["URL"], Config["API"]["AdminPassword"]), class_type="secret_message")
 		return
 
 	args = arg.split()

@@ -1192,7 +1192,7 @@ class GadgetProjectileShooter(GadgetTrait):
 			for entity in projectile.map.contents:
 				if entity is projectile or not entity.is_client():
 					continue
-				if entity.x == try_x and entity.y == try_y:
+				if entity.x == projectile.x and entity.y == projectile.y:
 					break_now = True
 					break
 
