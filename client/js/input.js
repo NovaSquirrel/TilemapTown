@@ -1659,7 +1659,7 @@ function initMouse() {
 		let menu;
 		if (hotbarData[index] !== null) {
 			menu = document.querySelector('#hotbar-contextmenu');
-			const isActuallyItem = usableItemSymbol in hotbarData[index];
+			const isActuallyItem = (typeof hotbarData[index] === "object") && (usableItemSymbol in hotbarData[index]);
 			document.getElementById("copyHotbarSlotToInventoryLi").style.display = isActuallyItem ? "none" : "block";
 			document.getElementById("editHotbarSlotLi").style.display = isActuallyItem ? "none" : "block";
 		} else {
