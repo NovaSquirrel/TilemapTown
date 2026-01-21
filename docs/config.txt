@@ -105,6 +105,11 @@ Default: ""
 Prefix to add to images specified in resource files, if they do not start with http:// or https://
 The official server uses "https://novasquirrel.com/town/img/" for this, for example. Expected to end in a slash.
 
+Server.DoodleBoardPaletteFile
+Default: "doodle_board_palettes.txt"
+File is a list of palettes that the server provides for doodle boards, to allow showing previews when the "colors" command is used.
+See the file for format information.
+
 Security.ProxyOnly
 Default: false
 If true, server will reject connections made from IP addresses that do not match the server's own IP

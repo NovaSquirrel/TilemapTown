@@ -836,7 +836,7 @@ class GadgetDoodleBoard(GadgetTrait):
 			if self.map_mode == "2x1":
 				self.tell(user, '[table][tr][td]Commands[/td][td][bot-message-button]Colors[/bot-message-button] [bot-message-button]Get as text[/bot-message-button] [bot-message-button]Menu[/bot-message-button] [bot-message-button]Undo[/bot-message-button][/td][/tr][tr][td]Tools[/td][td][bot-message-button]1px[/bot-message-button] [bot-message-button]2px[/bot-message-button] [bot-message-button]3px[/bot-message-button] [bot-message-button]+[/bot-message-button] [bot-message-button]🪣[/bot-message-button] [bot-message-button]Pick[/bot-message-button][/td][/tr][tr][td]Whole canvas[/td][td][bot-message-button]Fill all[/bot-message-button][/td][/tr][/table]')
 			else:
-				self.tell(user, '[table][tr][td]Commands[/td][td][bot-message-button]Colors[/bot-message-button] [bot-message-button]Get as text[/bot-message-button] [bot-message-button]Menu[/bot-message-button] [bot-message-button]Undo[/bot-message-button][/td][/tr][tr][td]Tools[/td][td][bot-message-button]1px[/bot-message-button] [bot-message-button]2px[/bot-message-button] [bot-message-button]3px[/bot-message-button] [bot-message-button]+[/bot-message-button] [bot-message-button]Recolor[/bot-message-button] [bot-message-button]Invert[/bot-message-button][/td][/tr][tr][td]Draw mode[/td][td][bot-message-button]Toggle[/bot-message-button] [bot-message-button]Draw light[/bot-message-button] [bot-message-button]Draw dark[/bot-message-button] [/td][/tr][tr][td]Whole canvas[/td][td][bot-message-button]Fill off[/bot-message-button] [bot-message-button]Fill on[/bot-message-button] [bot-message-button]Recolor all[/bot-message-button] [bot-message-button]Invert all[/bot-message-button][/td][/tr][/table]')
+				self.tell(user, '[table][tr][td]Commands[/td][td][bot-message-button]Colors[/bot-message-button] [bot-message-button]Get as text[/bot-message-button] [bot-message-button]Menu[/bot-message-button] [bot-message-button]Undo[/bot-message-button][/td][/tr][tr][td]Tools[/td][td][bot-message-button]1px[/bot-message-button] [bot-message-button]2px[/bot-message-button] [bot-message-button]3px[/bot-message-button] [bot-message-button]+[/bot-message-button] [bot-message-button]Recolor[/bot-message-button] [bot-message-button]Invert[/bot-message-button][/td][/tr][tr][td]Draw mode[/td][td][bot-message-button]Toggle[/bot-message-button] %s [/td][/tr][tr][td]Whole canvas[/td][td][bot-message-button]Fill off[/bot-message-button] [bot-message-button]Fill on[/bot-message-button] [bot-message-button]Recolor all[/bot-message-button] [bot-message-button]Invert all[/bot-message-button][/td][/tr][/table]' % ('[bot-message-button]Draw 1st[/bot-message-button] [bot-message-button]Draw 2nd[/bot-message-button]' if (self.get_config("tileset_url", None) in Config["Server"]["DoodleBoardPalettesWith12"]) else '[bot-message-button]Draw light[/bot-message-button] [bot-message-button]Draw dark[/bot-message-button]'))
 		elif text == "fill off":
 			self.make_undo_step()
 			self.map_data = [self.get_color_bits(self.tool_color)] * (self.map_width * self.map_height)
@@ -864,35 +864,34 @@ class GadgetDoodleBoard(GadgetTrait):
 			self.gadget.mini_tilemap_data['data'] = compress_mini_tilemap_data(self.map_data)
 			self.broadcast_mini_tilemap()
 		elif text == "colors":
-			if self.map_mode == "2x1":
-				self.tell(user,
-					'[table]' +
-						'[tr][td][color=#000000]██[/color][bot-message-button]color 0[/bot-message-button][/td][td][color=#222034]██[/color][bot-message-button]color 1[/bot-message-button][/td][td][color=#45283c]██[/color][bot-message-button]color 2[/bot-message-button][/td][td][color=#663931]██[/color][bot-message-button]color 3[/bot-message-button][/td][/tr]'+
-						'[tr][td][color=#8f563b]██[/color][bot-message-button]color 4[/bot-message-button][/td][td][color=#df7126]██[/color][bot-message-button]color 5[/bot-message-button][/td][td][color=#d9a066]██[/color][bot-message-button]color 6[/bot-message-button][/td][td][color=#eec39a]██[/color][bot-message-button]color 7[/bot-message-button][/td][/tr]'+
-						'[tr][td][color=#fbf236]██[/color][bot-message-button]color 8[/bot-message-button][/td][td][color=#99e550]██[/color][bot-message-button]color 9[/bot-message-button][/td][td][color=#6abe30]██[/color][bot-message-button]color 10[/bot-message-button][/td][td][color=#37946e]██[/color][bot-message-button]color 11[/bot-message-button][/td][/tr]'+
-						'[tr][td][color=#4b692f]██[/color][bot-message-button]color 12[/bot-message-button][/td][td][color=#524b24]██[/color][bot-message-button]color 13[/bot-message-button][/td][td][color=#323c39]██[/color][bot-message-button]color 14[/bot-message-button][/td][td][color=#3f3f74]██[/color][bot-message-button]color 15[/bot-message-button][/td][/tr]'+
-						'[tr][td][color=#306082]██[/color][bot-message-button]color 16[/bot-message-button][/td][td][color=#5b6ee1]██[/color][bot-message-button]color 17[/bot-message-button][/td][td][color=#639bff]██[/color][bot-message-button]color 18[/bot-message-button][/td][td][color=#5fcde4]██[/color][bot-message-button]color 19[/bot-message-button][/td][/tr]'+
-						'[tr][td][color=#cbdbfc]██[/color][bot-message-button]color 20[/bot-message-button][/td][td][color=#ffffff]██[/color][bot-message-button]color 21[/bot-message-button][/td][td][color=#9badb7]██[/color][bot-message-button]color 22[/bot-message-button][/td][td][color=#847e87]██[/color][bot-message-button]color 23[/bot-message-button][/td][/tr]'+
-						'[tr][td][color=#696a6a]██[/color][bot-message-button]color 24[/bot-message-button][/td][td][color=#595652]██[/color][bot-message-button]color 25[/bot-message-button][/td][td][color=#76428a]██[/color][bot-message-button]color 26[/bot-message-button][/td][td][color=#ac3232]██[/color][bot-message-button]color 27[/bot-message-button][/td][/tr]'+
-						'[tr][td][color=#d95763]██[/color][bot-message-button]color 28[/bot-message-button][/td][td][color=#d77bba]██[/color][bot-message-button]color 29[/bot-message-button][/td][td][color=#8f974a]██[/color][bot-message-button]color 30[/bot-message-button][/td][td][color=#8a6f30]██[/color][bot-message-button]color 31[/bot-message-button][/td][/tr]'+
-					'[/table]'
-				)
-			else:
-				self.tell(user,
-					'[table]' +
-						'[tr][td][color=#000000]█[/color][color=#ffffff]█[/color][bot-message-button]color 0[/bot-message-button][/td][td][color=#0a2e44]█[/color][color=#fcffcc]█[/color][bot-message-button]color 1[/bot-message-button][/td][td][color=#5d4242]█[/color][color=#5dafa7]█[/color][bot-message-button]color 2[/bot-message-button][/td][td][color=#292b30]█[/color][color=#cfab4a]█[/color][bot-message-button]color 3[/bot-message-button][/td][/tr]'+
-						'[tr][td][color=#920244]█[/color][color=#fec28c]█[/color][bot-message-button]color 4[/bot-message-button][/td][td][color=#c62b69]█[/color][color=#edf4ff]█[/color][bot-message-button]color 5[/bot-message-button][/td][td][color=#004c3d]█[/color][color=#ffeaf9]█[/color][bot-message-button]color 6[/bot-message-button][/td][td][color=#413652]█[/color][color=#6493ff]█[/color][bot-message-button]color 7[/bot-message-button][/td][/tr]'+
-						'[tr][td][color=#000000]█[/color][color=#83b07e]█[/color][bot-message-button]color 8[/bot-message-button][/td][td][color=#212c28]█[/color][color=#72a488]█[/color][bot-message-button]color 9[/bot-message-button][/td][td][color=#210009]█[/color][color=#00ffae]█[/color][bot-message-button]color 10[/bot-message-button][/td][td][color=#702963]█[/color][color=#ffbf00]█[/color][bot-message-button]color 11[/bot-message-button][/td][/tr]'+
-						'[tr][td][color=#5b88e2]█[/color][color=#f5f4e9]█[/color][bot-message-button]color 12[/bot-message-button][/td][td][color=#10368f]█[/color][color=#ff8e42]█[/color][bot-message-button]color 13[/bot-message-button][/td][td][color=#1e1c32]█[/color][color=#c6baac]█[/color][bot-message-button]color 14[/bot-message-button][/td][td][color=#4b475c]█[/color][color=#f5f4e9]█[/color][bot-message-button]color 15[/bot-message-button][/td][/tr]'+
-					'[/table]'
-				)
+			palette_name = self.get_config("tileset_url", None)
+			if palette_name not in Config["Server"]["DoodleBoardPalettes"]:
+				palette_name = "bitmap_db32.png" if self.map_mode == "2x1" else "bitmap.png"
+
+			color_id = 0
+			out = "[table]"
+			for color in Config["Server"]["DoodleBoardPalettes"][palette_name]:
+				if color_id % 4 == 0:
+					out += "[tr]"
+				if len(color) == 1:
+					out += "[td][color=%s]██[/color][bot-message-button]color %d[/bot-message-button][/td]" % (color[0], color_id)
+				elif len(color) == 2:
+					out += "[td][color=%s]█[/color][color=%s]█[/color][bot-message-button]color %d[/bot-message-button][/td]" % (color[0], color[1], color_id)
+				if color_id % 4 == 3:
+					out += "[/tr]"
+				color_id += 1
+			if (color_id-1) % 4 != 3:
+				out += "[/tr]"
+			out += "[/table]"
+
+			self.tell(user, out)
 		elif text.startswith("color "):
 			self.tool_color = int(text[6:])
 		elif text in ("1px", "2px", "3px", "+", "recolor", "🪣", "pick", "invert"):
 			if self.tool_type != "pick":
 				self.color_pick_tool = self.tool_type
 			self.tool_type = text
-		elif text in ("draw light", "draw dark", "toggle"):
+		elif text in ("draw light", "draw dark", "draw 1st", "draw 2nd", "toggle"):
 			self.tool_mode = text
 		elif text == "undo":
 			if len(self.undo_stack):
@@ -1074,9 +1073,9 @@ class GadgetDoodleBoard(GadgetTrait):
 			self.last_invert_x = x
 			self.last_invert_y = y
 			return None
-		elif self.tool_mode == "draw light": 
+		elif self.tool_mode == "draw light" or self.tool_mode == "draw 2nd": 
 			self.current_toggle_if = False
-		elif self.tool_mode == "draw dark":
+		elif self.tool_mode == "draw dark" or self.tool_mode == "draw 1st":
 			self.current_toggle_if = True
 		else:
 			self.current_toggle_if = self.get_pixel(arg['x'], arg['y'])

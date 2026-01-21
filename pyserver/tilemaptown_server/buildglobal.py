@@ -80,6 +80,7 @@ def loadConfigJson(clearLogs=True):
 	setConfigDefault("Server",   "TempMapCopiesPerUser", 10)
 	setConfigDefault("Server",   "WebClientURL",     "")
 	setConfigDefault("Server",   "WebClientTouchURL","")
+	setConfigDefault("Server",   "DoodleBoardPaletteFile", "doodle_board_palettes.txt")
 
 	setConfigDefault("Security", "ProxyOnly",        False)
 	setConfigDefault("Security", "AllowedOrigins",   None)
@@ -209,6 +210,22 @@ def loadConfigJson(clearLogs=True):
 	if Config["MapPage"]["TemplateFile"] and os.path.isfile(Config["MapPage"]["TemplateFile"]):
 		with open(Config["MapPage"]["TemplateFile"], encoding="utf-8") as f:
 			Config["MapPage"]["Template"] = Template(f.read())
+	if Config["Server"]["DoodleBoardPaletteFile"] and os.path.isfile(Config["Server"]["DoodleBoardPaletteFile"]):
+		Config["Server"]["DoodleBoardPalettes"] = {}
+		Config["Server"]["DoodleBoardPalettesWith12"] = set()
+		with open(Config["Server"]["DoodleBoardPaletteFile"], encoding="utf-8") as f:
+			palette = ""
+			for line in f.readlines():
+				line = line.strip()
+				if line.startswith("!"):
+					continue
+				elif line.startswith("#"):
+					Config["Server"]["DoodleBoardPalettes"][palette].append(line.split(","))
+				elif line == "color12":
+					Config["Server"]["DoodleBoardPalettesWith12"].add(palette)
+				elif line.endswith(":"):
+					palette = line[:-1]
+					Config["Server"]["DoodleBoardPalettes"][palette] = []
 
 	if clearLogs:
 		TempLogs[0] = deque(maxlen=Config["TempLogs"]["ConnectSize"])
