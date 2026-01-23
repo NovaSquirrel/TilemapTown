@@ -882,6 +882,18 @@ function filterChat(type) {
 	chatArea.scrollTop = chatArea.scrollHeight;
 }
 
+function updateDoodleBoardPixelSize() {
+	let w = document.getElementById('edittilegadget_preset_doodle_board_map_width').value;
+	w = (!w) ? 8 : parseInt(w);
+	let h = document.getElementById('edittilegadget_preset_doodle_board_map_height').value;
+	h = (!h) ? 8 : parseInt(h);
+	if (Number.isNaN(w) || Number.isNaN(h)) {
+		document.getElementById('edittilegadget_preset_doodle_board_pixel_size').textContent = "Invalid";
+	}
+	let small = document.getElementById('edittilegadget_preset_doodle_board_2x1').checked;
+	document.getElementById('edittilegadget_preset_doodle_board_pixel_size').textContent = `${w*(small?2:4)} px ${String.fromCharCode(0xD7)} ${h*(small?1:2)} px`;
+}
+
 ///////////////////////////////////////////////////////////
 // Local maps
 ///////////////////////////////////////////////////////////
@@ -2019,6 +2031,7 @@ function editItemShared(item) {
 				document.getElementById('edittilegadget_preset_doodle_board_map_width').value = "";
 				document.getElementById('edittilegadget_preset_doodle_board_map_height').value = "";
 				document.getElementById('edittilegadget_preset_doodle_board_2x1').checked = false;
+				updateDoodleBoardPixelSize();
 
 				if (Array.isArray(traits)) {
 					document.getElementById('edittilegadget_raw_textarea').value = JSON.stringify(item.data);
@@ -2128,6 +2141,7 @@ function editItemShared(item) {
 								document.getElementById('edittilegadget_preset_doodle_board_map_width').value = map_size[0];
 								document.getElementById('edittilegadget_preset_doodle_board_map_height').value = map_size[1];
 								document.getElementById('edittilegadget_preset_doodle_board_2x1').checked = trait[1].map_mode === "2x1";
+								updateDoodleBoardPixelSize();
 
 								document.getElementById('edittilegadget_preset_choice').value = trait[0];
 								document.getElementById('gadgetTypeRaw').checked = false;
