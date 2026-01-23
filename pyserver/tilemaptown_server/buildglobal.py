@@ -598,17 +598,17 @@ def valid_id_format(id):
 
 def dumps_if_not_none(dump_me):
 	if dump_me != None:
-		return json.dumps(dump_me)
+		return json.dumps(dump_me, separators=(',', ':'))
 	return None
 
 def dumps_if_not_empty(dump_me):
 	if dump_me != None and len(dump_me):
-		return json.dumps(dump_me)
+		return json.dumps(dump_me, separators=(',', ':'))
 	return None
 
 def dumps_if_condition(dump_me, condition):
 	if condition:
-		return json.dumps(dump_me)
+		return json.dumps(dump_me, separators=(',', ':'))
 	return None
 
 def loads_if_not_none(load_me):
@@ -661,7 +661,7 @@ def int_if_numeric(text):
 
 def make_protocol_message_string(command, params):
 	if params != None:
-		return command + " " + json.dumps(params)
+		return command + " " + json.dumps(params, separators=(',', ':'))
 	return command
 
 def write_to_build_log(map, client, command, args, old_data = None):
