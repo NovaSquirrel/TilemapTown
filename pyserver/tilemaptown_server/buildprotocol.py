@@ -461,7 +461,7 @@ def fn_BAG(connection, map, client, arg, context):
 				return
 
 		if clone_me.creator_temp_id != client.id and (clone_me.owner_id != client.db_id or client.db_id == None) and \
-		not client.has_permission(clone_me, permission['copy'], False):
+		not client.has_permission(clone_me, permission['copy'], clone_type == entity_type['gadget']):
 			connection.protocol_error(context, text='You don\'t have permission to clone %s' % arg['clone']['id'], code='missing_permission', detail='copy', subject_id=arg['clone']['id'])
 			return
 
