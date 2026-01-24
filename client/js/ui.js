@@ -886,7 +886,7 @@ function updateDoodleBoardPixelSize() {
 	let w = document.getElementById('edittilegadget_preset_doodle_board_map_width').value;
 	w = (!w) ? 8 : parseInt(w);
 	let h = document.getElementById('edittilegadget_preset_doodle_board_map_height').value;
-	h = (!h) ? 8 : parseInt(h);
+	h = (!h) ? 16 : parseInt(h);
 	if (Number.isNaN(w) || Number.isNaN(h)) {
 		document.getElementById('edittilegadget_preset_doodle_board_pixel_size').textContent = "Invalid";
 	}
