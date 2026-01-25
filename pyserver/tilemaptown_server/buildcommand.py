@@ -1806,11 +1806,11 @@ def fn_listeners(map, client, context, arg):
 
 	parts = []
 	if out:
-		parts.append('•️Remote listeners here: ' + (", ".join(sorted(out, key=str.casefold))))
+		parts.append('[b]Remote listeners here:[/b] ' + (", ".join(sorted(out, key=str.casefold))))
 	if out_forward:
-		parts.append('•️Forwarders here: ' + (", ".join(sorted(out_forward, key=str.casefold))))
+		parts.append('️[b]Forwarders here:[/b] ' + (", ".join(sorted(out_forward, key=str.casefold))))
 	if out_listening_to_chat:
-		parts.append('•️Chat listeners: ' + (", ".join(sorted(out_listening_to_chat, key=str.casefold))))
+		parts.append('[b]Chat listeners:[/b] ' + (", ".join(sorted(out_listening_to_chat, key=str.casefold))))
 	if not parts:
 		parts = ['Nothing is listening to this map']
 	respond(context, '\n'.join(parts))
