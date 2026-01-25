@@ -428,7 +428,7 @@ def find_connection_by_username(username):
 		e = get_entity_by_id(username, load_from_db=False)
 		if e != None and hasattr(e, "connection"):
 			return e.connection()
-		return None
+		username = find_username_by_db_id(int_if_numeric(username)) or ""
 	return ConnectionsByUsername.get(username.lower(), None)
 
 def find_username_by_db_id(dbid):
