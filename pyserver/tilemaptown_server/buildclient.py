@@ -510,19 +510,32 @@ class Connection(object):
 			self.username = username
 			self.db_id = find_db_id_by_username(username)
 
-			# Don't allow multiple connections to be tied to the same account at once
-			if isinstance(client, Client): # Only load if it's actually a Client
-				had_old_entity = self.db_id in AllEntitiesByDB
-				if had_old_entity:
-					old_entity = AllEntitiesByDB[self.db_id]
-					old_connection = old_entity.connection()
+			# Clean up old connections to this account
+			had_old_entity = self.db_id in AllEntitiesByDB
+			if had_old_entity:
+				old_entity = AllEntitiesByDB[self.db_id]
+				old_connection = old_entity.connection()
+				old_entity.save_on_clean_up = True
+				old_entity.clean_up()
+				if old_connection:
+					old_connection.entity = None
+					old_connection.disconnect(reason="LoggedInElsewhere")
+				del old_entity
+				del old_connection
+
+			old_connection = ConnectionsByUsername.get(username, None)
+			if old_connection:
+				old_entity = old_connection.entity
+				if isinstance(old_entity, Entity):
 					old_entity.save_on_clean_up = True
 					old_entity.clean_up()
-					if old_connection:
-						old_connection.entity = None
-						old_connection.disconnect(reason="LoggedInElsewhere")
-					del old_entity
-					del old_connection
+				old_connection.entity = None
+				old_connection.disconnect(reason="LoggedInElsewhere")
+				del old_entity
+				del old_connection
+
+			# Finish loading the client
+			if isinstance(client, Client): # Only load if it's actually a Client
 				client.load(username, override_map=override_map)
 				client.temporary = False
 
@@ -539,17 +552,6 @@ class Connection(object):
 				write_to_connect_log("login: \"%s\" from %s" % (username, self.ip))
 			else:
 				client.name = get_entity_name_by_db_id(self.db_id)
-
-				old_connection = ConnectionsByUsername.get(username, None)
-				if old_connection:
-					old_entity = old_connection.entity
-					if isinstance(old_entity, Entity):
-						old_entity.save_on_clean_up = True
-						old_entity.clean_up()
-					old_connection.entity = None
-					old_connection.disconnect(reason="LoggedInElsewhere")
-					del old_entity
-					del old_connection
 
 				self.load_settings(username)
 				write_to_connect_log("login: \"%s\" from %s (messaging)" % (username, self.ip))
