@@ -210,7 +210,7 @@ def find_local_entity_by_name(map, name):
 	return None
 
 def attach_result_to_context(context, result):
-	ack_req = context['ack_req']
+	ack_req = context.get('ack_req')
 	if not ack_req:
 		return
 	client = context['client']
