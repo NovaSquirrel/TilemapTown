@@ -465,8 +465,8 @@ class Entity(PermissionsMixin, object):
 
 		# Warn about chat listeners, if present
 		if item.is_client():
-			if self.db_id in MapListens[maplisten_type['chat']]:
-				item.send("MSG", {'text': 'A bot has access to messages sent here ([command]listeners[/command])'})
+			if (self.db_id in MapListens[maplisten_type['chat']]) or any(("CHAT" in e.forward_message_types) or (hasattr(e, 'listening_to_chat_warning') and e.listening_to_chat_warning) for e in self.contents):
+				item.send("MSG", {'text': 'A bot has access to messages sent here ([command]listeners[/command])', 'class': 'server_map_message'})
 			self.send_map_info(item)
 
 		# Notify parents

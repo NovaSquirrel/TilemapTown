@@ -1793,22 +1793,27 @@ def fn_listeners(map, client, context, arg):
 	out = []
 	for i in maplisten_type.keys():
 		c = maplisten_type[i]
-		if map.db_id in BotWatch[c]:
-			for u in BotWatch[c][map.db_id]:
+		if map.db_id in MapListens[c]:
+			for u in MapListens[c][map.db_id]:
 				out.append('%s (%s)' % (u.username, i))
 	out_forward = []
+	out_listening_to_chat = []
 	for e in map.contents:
 		if e.forward_messages_to:
-			out_forward.append('%s (%s) → [%s]' % (e.name_and_username(), ', '.join(list(e.forward_message_types)), ', '.join([p.name_and_username() for p in e.forward_messages_to])))
+			out_forward.append('%s (%s) → %s' % (e.name_and_username(), ', '.join(list(e.forward_message_types)), find_username_by_db_id(e.forward_messages_to) or e.forward_messages_to))
+		if hasattr(e, 'listening_to_chat_warning') and e.listening_to_chat_warning:
+			out_listening_to_chat.append(e.name_and_username())
 
 	parts = []
 	if out:
-		parts.append('Remote listeners here: ' + (", ".join(sorted(out, key=str.casefold))))
+		parts.append('•️Remote listeners here: ' + (", ".join(sorted(out, key=str.casefold))))
 	if out_forward:
-		parts.append('Forwarders here: ' + (", ".join(sorted(out_forward, key=str.casefold))))
+		parts.append('•️Forwarders here: ' + (", ".join(sorted(out_forward, key=str.casefold))))
+	if out_listening_to_chat:
+		parts.append('•️Chat listeners: ' + (", ".join(sorted(out_listening_to_chat, key=str.casefold))))
 	if not parts:
 		parts = ['Nothing is listening to this map']
-	respond(context, ' | '.join(parts))
+	respond(context, '\n'.join(parts))
 
 @cmd_command(no_entity_needed=True)
 def fn_kicklisten(map, client, context, arg):
