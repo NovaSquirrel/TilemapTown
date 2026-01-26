@@ -3070,6 +3070,10 @@ def fn_entity(map, client, context, arg):
 		e = get_entity_by_id(provided_id)
 
 	if e == None:
+		username = find_username_by_db_id(int_if_numeric(provided_id))
+		if username:
+			respond(context, 'ID "%s" is a user: \"%s\"' % (provided_id, username))
+			return
 		respond(context, '"%s" not a valid ID' % provided_id, error=True)
 		return
 	subcommand = subcommand.lower()
