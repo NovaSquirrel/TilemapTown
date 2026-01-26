@@ -76,7 +76,19 @@ do_not_return_response = []
 # -----------------------------------------------------------------------------
 
 def find_owner(entity):
-	return AllEntitiesByDB.get(entity.owner_id)
+	if entity.owner_id == None:
+		return None
+	owner = AllEntitiesByDB.get(entity.owner_id)
+	if owner != None:
+		return owner
+	# Try finding the user's fake client, if possible
+	username = find_username_by_db_id(entity.owner_id)
+	if not username:
+		return None
+	connection = ConnectionsByUsername.get(username, None)
+	if connection:
+		return connection.entity
+	return None
 
 def same_owner_gadget(actor, target):
 	return actor is target or (target.entity_type == entity_type['gadget'] and (actor.owner_id == target.owner_id or (actor.db_id == target.owner_id and actor.db_id != None)))
@@ -761,17 +773,12 @@ async def run_scripting_service():
 			elif message_type == VM_MessageType.SCRIPT_ERROR:
 				e = find_entity(entity_id)
 				if e:
-					owner_id = e.owner_id
-				else:
-					owner_id = find_owner_by_db_id(entity_id)
-				if owner_id == None:
-					continue
-				owner = AllEntitiesByDB.get(owner_id)
-				if owner != None:
-					if status == 1:
-						owner.send("ERR", {'text': 'Script failed to load: %s' % (data.decode())})
-					else:
-						owner.send("ERR", {'text': 'Script error: %s' % (data.decode())})
+					owner = find_owner(e)
+					if owner:
+						if status == 1:
+							owner.send("ERR", {'text': 'Script failed to load: %s' % (data.decode())})
+						else:
+							owner.send("ERR", {'text': 'Script error: %s' % (data.decode())})
 			elif message_type == VM_MessageType.STATUS_QUERY:
 				e = find_entity(other_id)
 				if not e:
@@ -780,14 +787,9 @@ async def run_scripting_service():
 			elif message_type == VM_MessageType.SCRIPT_PRINT:
 				e = find_entity(entity_id)
 				if e:
-					owner_id = e.owner_id
-				else:
-					owner_id = find_owner_by_db_id(entity_id)
-				if owner_id == None:
-					continue
-				owner = AllEntitiesByDB.get(owner_id)
-				if owner != None:
-					owner.send("MSG", {'text': 'Script %s print: %s' % (entity_id_int_to_string(entity_id), data.decode())})
+					owner = find_owner(e)
+					if owner:
+						owner.send("MSG", {'text': 'Script %s print: %s' % (entity_id_int_to_string(entity_id), data.decode())})
 		except Exception as e:
 			print("Exception thrown from scripting:", sys.exc_info()[0])
 			print(sys.exc_info()[1])
