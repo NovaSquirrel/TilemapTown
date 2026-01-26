@@ -743,6 +743,9 @@ async def run_scripting_service():
 					print("Unimplemented API call: "+values[0])
 			elif message_type == VM_MessageType.SET_CALLBACK:
 				e = find_entity(entity_id)
+				if not e:
+					print("Tried to SET_CALLBACK on entity \"%s\" but can't find it" % entity_id)
+					continue
 				if e.entity_type == entity_type['gadget'] and other_id >= 0 and other_id < ScriptingCallbackType.COUNT:
 					if other_id == ScriptingCallbackType.MAP_CHAT:
 						e.listening_to_chat = bool(status)
