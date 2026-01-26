@@ -336,7 +336,7 @@ def fn_e_xy(e, arg): #E
 def fn_e_mapid(e, arg): #E
 	e2 = find_entity(arg[0])
 	if e2:
-		if e2.is_client() and e2.map_id != e.map_id and \
+		if e2.is_client() and (e.owner_id != e2.db_id or e.owner_id == None) and e2.map_id != e.map_id and \
 			((e2.connection_attr('user_flags') & userflag['hide_location'] != 0) or (e2.map and e2.map.is_map() and (e2.map.map_flags & mapflag['public'] == 0))):
 			return None
 		return e2.map_id
