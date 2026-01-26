@@ -613,6 +613,9 @@ function receiveServerMessage(cmd, arg) {
             }
           }
         }
+        if ("chat_listener" in arg.update && !PlayerWho[arg.update.id]?.chat_listener) {
+          logMessage(`${escape_tags(PlayerWho[arg.update.id].name)} (${arg.update.id}) is now listening to chat`, 'status_change', {'isSilent': true});
+        }
         markAreaAroundEntityAsDirty(arg.update.id);
         PlayerWho[arg.update.id] = Object.assign(
           PlayerWho[arg.update.id],
