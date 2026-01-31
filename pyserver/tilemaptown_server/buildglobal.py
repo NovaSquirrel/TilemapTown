@@ -440,6 +440,8 @@ def find_username_by_db_id(dbid):
 	return result[0]
 
 def find_db_id_by_username(username):
+	if valid_id_format(username):
+		return int_if_numeric(username)
 	c = Database.cursor()
 	username = str(username).lower()
 	c.execute('SELECT entity_id FROM User WHERE username=?', (username,))
