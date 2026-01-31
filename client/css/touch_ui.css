@@ -16,3 +16,9 @@ html, body {
 #chat-container.pinned {
 	z-index: 1;
 }
+
+@media (orientation: landscape) {
+	#chat-container {
+		width: 30%;
+	}
+}
