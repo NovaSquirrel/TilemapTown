@@ -64,6 +64,7 @@ const OK_DRAW_DISTANCE = 5;
 
 let autoOffsetSide = 0; // Subtract this from X offset if facing right, and add it to X offset if facing right.
 let autoOffsetDiagonal = 0; // Amount to shift for diagonals specifically
+let autoOffsetKeepOffset = false; // Keep previous relative offset when flipping
 let bigPicEnabled = false;
 let bigPicDirectionCount = 0;
 let bigPicCurrentDirection = 0;
@@ -163,8 +164,9 @@ function runLocalCommand(t) {
 		autoOffsetDiagonal = 0;
 		SendCmd("MOV", {offset: [0, 0]});
 		return true;
-	} else if(tl.startsWith("/tailshift ")) {
-		let s = tl.slice(11).split(" ");
+	} else if(tl.startsWith("/tailshift ") || tl.startsWith("/tailshifto ")) {
+		let s = tl.slice(tl.startsWith("/tailshift ") ? 11 : 12).split(" ");
+		autoOffsetKeepOffset = tl.startsWith("/tailshifto ");
 		autoOffsetSide = parseInt(s[0]);
 		if (Number.isNaN(autoOffsetSide))
 			autoOffsetSide = 0;
@@ -545,6 +547,8 @@ function applyTailShift(OldPlayerDir, PlayerDir) {
 						undoShift = -autoOffsetDiagonal;
 						break;
 				}
+				if (!autoOffsetKeepOffset)
+					undoShift = -offset[0];
 				let newShift = 0;
 				switch(PlayerDir) {
 					case Directions.EAST:
