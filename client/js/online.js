@@ -20,8 +20,7 @@ let OnlineMode = false;
 let OnlineServer = null;
 let OnlineMap = undefined;
 let OnlineSocket = null;
-let OnlineSSL = true;
-let OnlinePort = 443;
+let OnlinePort = "";
 let OnlineUsername = "";
 let OnlinePassword = "";
 let OnlineIsConnected = false;
@@ -65,14 +64,13 @@ function readURLParams() {
     }
     switch(pair[0]) {
       case "server":
-        OnlineServer = value;
+        OnlineServer = "wss://"+value;
         break;
       case "map":
         OnlineMap = value;
         break;
       case "unencrypted":
-        OnlineSSL = false;
-        OnlineServer = value;
+        OnlineServer = "ws://"+value;
         OnlinePort = 12550;
         break;
       case "port":
@@ -1141,7 +1139,7 @@ function ConnectToServer() {
 	OnlineMode = true;
 	OnlineIsConnected = false;
 
-	OnlineSocket = new WebSocket((OnlineSSL?"wss://":"ws://")+OnlineServer+":"+OnlinePort);
+	OnlineSocket = new WebSocket(OnlineServer+(OnlinePort?":":"")+OnlinePort);
 	if (messaging_mode) {
 		document.getElementById('onlineStatus').textContent = "Attempting to connect"
 		document.getElementById('onlineStatus').style.backgroundColor = "gray";
