@@ -9,10 +9,10 @@ You can name it config.json and put it in the same directory as runserver.py
     "Name": "Tilemap Town",
     "Admins": ["nova"],
     "MaxUsers": 100,
-    "MaxMaps": 100,
+    "MaxDBMaps": 100,
     "MOTD": "Welcome to my [b]Tilemap Town[/b] server",
-    "ResourceFiles": ["server_resources.json", "server_resources2.json"],
-    "ResourceIMGBase": "https://novasquirrel.com/town/img/"
+    "ResourceFiles": ["server_resources.json", "server_resources2.json", "server_resources3.json"],
+    "ResourceIMGBase": "https://tilemap.town/img/"
   },
   "Database": {
     "File": "tilemaptown.db"
@@ -103,7 +103,7 @@ Format for these resource files is defined later in this document.
 Server.ResourceIMGBase
 Default: ""
 Prefix to add to images specified in resource files, if they do not start with http:// or https://
-The official server uses "https://novasquirrel.com/town/img/" for this, for example. Expected to end in a slash.
+The official server uses "https://tilemap.town/img/" for this, for example. Expected to end in a slash.
 
 Server.DoodleBoardPaletteFile
 Default: "doodle_board_palettes.txt"
@@ -118,7 +118,7 @@ Security.AllowedOrigins
 Default: null
 If not null, it's a list of strings, and a connection will be rejected if the client does not send in an HTTP "Origin" header equaling one of these strings. You can include null (the JSON value null, not a string of the word null) in the list to mark that the lack of an "origin" header is OK. Confusingly, the *text* null may be sent when using a client through a HTML file on your computer.
 If this config value is null, this feature is disabled and all origins are allowed.
-When you put a script on a webpage and it connects to Tilemap Town, the HTTP "Origin" header will be a value like "http://localhost:8000" or "https://novasquirrel.com", indicating the domain that page is on.
+When you put a script on a webpage and it connects to Tilemap Town, the HTTP "Origin" header will be a value like "http://localhost:8000" or "https://tilemap.town", indicating the domain that page is on.
 
 Security.AllowedOrigins2
 Default: null
@@ -166,6 +166,10 @@ Maximum number of registrations that each IP is allowed to do; reset every time 
 Security.MaxConnectionsPerIP
 Default: 10
 Maximum number of connections that each IP can simultaneously have
+
+Security.PythonEvalCommands
+Default: false
+Controls access to the /pyeval and /pyexec commands. If false, admins cannot use them. If true, they can.
 
 RateLimit.MSG
 Default: true

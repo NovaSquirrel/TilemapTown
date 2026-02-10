@@ -93,6 +93,7 @@ def loadConfigJson(clearLogs=True):
 	setConfigDefault("Security", "NoRegistration",   False)
 	setConfigDefault("Security", "MaxRegistrationsPerIP", 3)
 	setConfigDefault("Security", "MaxConnectionsPerIP", 10)
+	setConfigDefault("Security", "PythonEvalCommands", False)
 
 	setConfigDefault("RateLimit", "MSG",             True)
 	setConfigDefault("RateLimit", "MSG1",            10)

@@ -2869,12 +2869,18 @@ def fn_debugref2(map, client, context, arg):
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True)
 def fn_pyeval(map, client, context, arg):
+	if not Config["Security"]["PythonEvalCommands"]:
+		respond(context, 'That command is disabled', error=True)
+		return
 	if len(arg) == 0:
 		return
 	respond(context, str(eval(arg.replace("✨", "\n"))))
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True)
 def fn_pyexec(map, client, context, arg):
+	if not Config["Security"]["PythonEvalCommands"]:
+		respond(context, 'That command is disabled', error=True)
+		return
 	if len(arg) == 0:
 		return
 	respond(context, str(exec(compile(arg.replace("✨", "\n"), "test", "exec"))))
