@@ -107,6 +107,7 @@ let tenthOfSecondTimer = 0; // Goes up every 0.1 seconds
 let timeOfLastInput = Date.now();
 let statusBeforeIdle = null;
 let statusMessageBeforeIdle = null;
+const originalTitle = document.title;
 
 let DisplayInventory = { null: [] }; // Indexed by folder
 let DBInventory = {}; // Indexed by ID
@@ -3526,9 +3527,12 @@ function logMessage(Message, Class, Params) {
 					audio.play();
 					alreadyPlayedSound = true;
 				}
-				if (enableDesktopNotifications && document.visibilityState !== "visible") {
-					const notification = new Notification(Params.username?`Tilemap Town: ${Params.username}`:"Tilemap Town", {body: Params.plainText, icon: desktopNotificationIcon, badge: desktopNotificationIcon});
-					activeNotifications.push(notification);
+				if (document.visibilityState !== "visible") {
+					document.title = "* "+originalTitle;
+					if (enableDesktopNotifications) {
+						const notification = new Notification(Params.username?`Tilemap Town: ${Params.username}`:"Tilemap Town", {body: Params.plainText, icon: desktopNotificationIcon, badge: desktopNotificationIcon});
+						activeNotifications.push(notification);
+					}
 				}
 			}
 		} else if (!Params.isChat && AudioMiscNotifications) {
@@ -3538,9 +3542,12 @@ function logMessage(Message, Class, Params) {
 					audio.play();
 					alreadyPlayedSound = true;
 				}
-				if (enableDesktopNotifications && document.visibilityState !== "visible") {
-					const notification = new Notification(Params.username?`Tilemap Town: ${Params.username}`:"Tilemap Town", {body: Params.plainText, icon: desktopNotificationIcon, badge: desktopNotificationIcon, silent: true});
-					activeNotifications.push(notification);
+				if (document.visibilityState !== "visible") {
+					document.title = "* "+originalTitle;
+					if (enableDesktopNotifications) {
+						const notification = new Notification(Params.username?`Tilemap Town: ${Params.username}`:"Tilemap Town", {body: Params.plainText, icon: desktopNotificationIcon, badge: desktopNotificationIcon, silent: true});
+						activeNotifications.push(notification);
+					}
 				}
 			}
 		}
@@ -4935,5 +4942,6 @@ document.addEventListener("visibilitychange", (event) => {
 			notification.close();
 		}
 		activeNotifications = [];
+		document.title = originalTitle;
 	}
 });
