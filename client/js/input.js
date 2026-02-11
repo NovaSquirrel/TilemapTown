@@ -159,13 +159,13 @@ function runLocalCommand(t) {
 		editItemWaitingForDataID = editItemID;
 		SendCmd("BAG", {info: { id: editItemID }});
 		return true;
-	} else if(tl === "/tailshift") {
+	} else if(tl === "/tailshift" || tl === "/tailshifto" || tl === "/tsh") {
 		autoOffsetSide = 0;
 		autoOffsetDiagonal = 0;
 		SendCmd("MOV", {offset: [0, 0]});
 		return true;
-	} else if(tl.startsWith("/tailshift ") || tl.startsWith("/tailshifto ")) {
-		let s = tl.slice(tl.startsWith("/tailshift ") ? 11 : 12).split(" ");
+	} else if(tl.startsWith("/tailshift ") || tl.startsWith("/tailshifto ") || tl.startsWith("/tsh ")) {
+		let s = tl.slice(tl.startsWith("/tsh ") ? 5 : tl.startsWith("/tailshift ") ? 11 : 12).split(" ");
 		autoOffsetKeepOffset = tl.startsWith("/tailshifto ");
 		autoOffsetSide = parseInt(s[0]);
 		if (Number.isNaN(autoOffsetSide))
