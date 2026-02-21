@@ -2032,6 +2032,7 @@ function editItemShared(item) {
 				document.getElementById('edittilegadget_preset_doodle_board_map_width').value = "";
 				document.getElementById('edittilegadget_preset_doodle_board_map_height').value = "";
 				document.getElementById('edittilegadget_preset_doodle_board_2x1').checked = false;
+				document.getElementById('edittilegadget_preset_doodle_board_ignore_clicks').checked = false;
 				updateDoodleBoardPixelSize();
 
 				if (Array.isArray(traits)) {
@@ -2142,6 +2143,7 @@ function editItemShared(item) {
 								document.getElementById('edittilegadget_preset_doodle_board_map_width').value = map_size[0];
 								document.getElementById('edittilegadget_preset_doodle_board_map_height').value = map_size[1];
 								document.getElementById('edittilegadget_preset_doodle_board_2x1').checked = trait[1].map_mode === "2x1";
+								document.getElementById('edittilegadget_preset_doodle_board_ignore_clicks').checked = trait[1].ignore_clicks ?? false;
 								updateDoodleBoardPixelSize();
 
 								document.getElementById('edittilegadget_preset_choice').value = trait[0];
@@ -2613,6 +2615,8 @@ function editItemApply() {
 								delete t.map_size;
 							if(document.getElementById('edittilegadget_preset_doodle_board_2x1').checked)
 								t.map_mode = "2x1";
+							if(document.getElementById('edittilegadget_preset_doodle_board_ignore_clicks').checked)
+								t.ignore_clicks = true;
 							break;
 						case "pic_cycle":
 							t.first_pic = document.getElementById('edittilegadget_preset_pic_cycle_first_pic').value.split(" ");
