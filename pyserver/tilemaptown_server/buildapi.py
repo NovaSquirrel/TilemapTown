@@ -351,6 +351,13 @@ def update_image_url_everywhere(connection, old_url, new_url):
 				if morph_pic and morph_pic[0] == old_url:
 					morph_pic[0] = new_url
 
+		if entity.is_map():
+			if entity.map_wallpaper and entity.map_wallpaper.get('url') == old_url:
+				entity.map_wallpaper['url'] = new_url
+				entity.map_data_modified = True
+				entity.save_on_clean_up = True
+				entity.resend_map_info_to_users(mai_only=True)
+
 	# Try to get entities that aren't loaded too
 	old_url_json = json.dumps([old_url, 0, 0])
 	new_url_json = json.dumps([new_url, 0, 0])
