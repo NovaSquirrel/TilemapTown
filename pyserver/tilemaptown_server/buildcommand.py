@@ -2341,8 +2341,8 @@ def morph_shared(map, client, context, arg, quiet):
 		client.name = morph.get('name', client.name)
 		client.pic = morph.get('pic', client.pic)
 		client.desc = morph.get('desc', None)
-		client.saved_pics = morph.get('saved_pics', None)
-		client.tags = morph.get('tags', {})
+		client.saved_pics = copy.deepcopy(morph.get('saved_pics', None))
+		client.tags = copy.deepcopy(morph.get('tags', {}))
 
 		connection = client.connection()
 		if connection:
@@ -2380,8 +2380,8 @@ def fn_morphlist(map, client, context, arg):
 			'name': client.name,
 			'pic': client.pic,
 			'desc': client.desc,
-			'saved_pics': client.saved_pics,
-			'tags': client.tags,
+			'saved_pics': copy.deepcopy(client.saved_pics),
+			'tags': copy.deepcopy(client.tags),
 			'secret_pic': bool((client.connection_attr('user_flags') or 0) & userflag['secret_pic']),
 		}
 		respond(context, "Saved morph \"%s\"" % (subarg))
