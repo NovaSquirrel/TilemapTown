@@ -542,7 +542,7 @@ function fileCardList(ul, folders_only, click_handler, contextmenu_handler) {
 					item.pic = [metadata.url, 0, 0];
 					item.is_uploaded_image = true;
 				} else
-					item.pic = [0, 19, 30];
+					item.pic = [INTERNAL_TILESET_ID, 2, 2];
 				item.id = id;
 				if(metadata.size) {
 					item.status = (metadata.size / 1024).toFixed(2) + " KiB";
