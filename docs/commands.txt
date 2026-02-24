@@ -64,6 +64,10 @@ Put the most recent text you tried to send back into the chat bar, so that you c
 Make the chat for anyone who doesn't meet the criteria you set here appear small and gray. "Names" uses usernames, and "Distance" is in units of tiles.
 "DistanceNames" will deemphasize messages outside the distance unless they have one of the provided usernames.
 
+/offlinequeue username
+/offlinequeue username clear
+Manage queued messages for offline users.
+
 ---Utility---
 /getturf
 Makes a map tile object that would recreate the turf you're standing on, and puts it into your inventory.

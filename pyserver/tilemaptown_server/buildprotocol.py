@@ -1635,6 +1635,16 @@ def ext_delete_user_profile(connection, map, client, context, arg, name):
 	c.execute('DELETE FROM User_Profile WHERE user_id=?', (connection.db_id,))
 	connection.send("EXT", {name: True})
 
+@ext_protocol_command("get_morph_list")
+def ext_get_morph_list(connection, map, client, context, arg, name):
+	data = {"list": {_:{"name":client.morphs[_].get("name"), "pic":client.morphs[_].get("pic")} for _ in client.morphs.keys()}}
+	connection.send("EXT", {name: data})
+
+@ext_protocol_command("get_saved_pic_list")
+def ext_get_saved_pic_list(connection, map, client, context, arg, name):
+	data = {"list": {_:{"pic":[client.saved_pics[_],0,0]} for _ in client.saved_pics.keys()}}
+	connection.send("EXT", {name: data})
+
 @ext_protocol_command("user_particle")
 def ext_user_particle(connection, map, client, context, arg, name):
 	if map == None:

@@ -895,6 +895,79 @@ function updateDoodleBoardPixelSize() {
 	document.getElementById('edittilegadget_preset_doodle_board_pixel_size').textContent = `${w*(small?2:4)} px ${String.fromCharCode(0xD7)} ${h*(small?1:2)} px`;
 }
 
+function openMorphListWindow(arg) {
+	let ul = document.getElementById("morphlistul");
+	while (ul.firstChild) {
+		ul.removeChild(ul.firstChild);
+	}
+
+	let sortedKeys = Object.keys(arg.list);
+	sortedKeys.sort(function (a, b) {
+		return arg.list[a].name.localeCompare(arg.list[b].name);
+	});
+	for(let key of sortedKeys) {
+		let item = {
+			name: arg.list[key].name,
+			id: key,
+			pic: arg.list[key].pic,
+            is_uploaded_image: true, // Force 32x32
+		};
+		let li = itemCard(item);
+		li.addEventListener('click', function (e) {
+			sendChatCommand('morph '+key);
+		});
+		li.addEventListener('contextmenu', function (e) {
+			openMorphContextMenu(key, e.clientX, e.clientY);
+			e.preventDefault();
+		});
+		ul.appendChild(li);
+	}
+	let avatars = document.getElementById("morphlist");
+	avatars.style.display = 'block';
+}
+
+let contextMenuMorph = null;
+function openMorphContextMenu(id, x, y) {
+	let menu = document.querySelector('#morphlist-contextmenu');
+	menu.style.left = (x-CONTEXT_MENU_OPEN_OFFSET) + "px";
+	menu.style.top = (y-CONTEXT_MENU_OPEN_OFFSET) + "px";
+	menu.style.display = "block";
+	contextMenuMorph = id;
+}
+
+function contextMenuMorphSwitch() {
+	sendChatCommand('morph '+contextMenuMorph);
+}
+function contextMenuMorphSwitchQuiet() {
+	sendChatCommand('qmorph '+contextMenuMorph);
+}
+function refreshMorphListSoon() {
+	setTimeout(() => {
+		if (document.querySelector('#morphlist').style.display === "block") {
+			SendCmd('EXT', { 'get_morph_list': {} });
+		}
+	}, 200);
+}
+function contextMenuMorphSave() {
+	if (confirm(`Really overwrite morph "${contextMenuMorph}?"`)) {
+		sendChatCommand('morphs set '+contextMenuMorph);
+		refreshMorphListSoon();
+	}
+}
+function contextMenuMorphDelete() {
+	if (confirm(`Really delete morph "${contextMenuMorph}?"`)) {
+		sendChatCommand('morphs delete '+contextMenuMorph);
+		refreshMorphListSoon();
+	}
+}
+function saveNewMorphButton() {
+	let name = prompt('What do you want to name the morph?\n(This feature lets you quickly switch to a saved name and appearance)') ?? '';
+	if (name.trim()) {
+		sendChatCommand('morphlist set '+name.trim());
+		refreshMorphListSoon();
+	}
+}
+
 ///////////////////////////////////////////////////////////
 // Local maps
 ///////////////////////////////////////////////////////////
