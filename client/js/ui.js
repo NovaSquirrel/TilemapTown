@@ -2259,7 +2259,7 @@ function editItemShared(item) {
 				changeGadgetPreset();
 			}
 
-			if (item.type === "map_tile" || item.type == "map_tile_hotbar" || item.type === "map_tile_mapobj_edit" || item.type === "map_tile_turf_edit" || item.type === "tileset_new" || item.type === "tileset_edit") {
+			if (item.type === "map_tile" || editTypeIsDirectEdit(item.type)) {
 				document.getElementById('edittileautotileoptions').style.display = "block";
 				document.getElementById('edittileanimationoptions').style.display = "block";
 				itemobj = AtomFromName(item.data);
@@ -2320,7 +2320,7 @@ function editItemShared(item) {
 			}
 			// Probably also allow just typing in something?
 
-			document.getElementById('edittilemaptile').style.display = (item.type == "map_tile" || item.type == "map_tile_hotbar" || item.type == "map_tile_mapobj_edit" || item.type == "map_tile_turf_edit") ? "block" : "none";
+			document.getElementById('edittilemaptile').style.display = (item.type == "map_tile" || editTypeIsDirectEdit(item.type)) ? "block" : "none";
 			document.getElementById('edittileobject').style.display = "block";
 			document.getElementById('itemproperties_notmaptile').style.display = "none";
 			document.getElementById('edittilesheet').value = "keep";
