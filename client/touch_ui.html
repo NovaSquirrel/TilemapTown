@@ -625,7 +625,8 @@
 <widget-window id="tileset" style="display: none;">
   <span id="tileset-title" slot="title">Tileset</span>
   <div slot="contents">
-	<input placeholder="Search" id="tileset_search"><button onclick="editItemShared({'type':'tileset_new','name':'','desc':'','data':AtomFromName('grass')});">Add tile</button>
+	<input placeholder="Search" id="tileset_search"><button onclick="editItemShared({'type':'tileset_new','name':'','desc':'','data':AtomFromName('grass')});">Add tile</button><br>
+	<label id="tilesetSortByIDLabel">Sort by ID: <input type="checkbox" id="tilesetSortByID" onchange="refreshTilesetList();"></label>
     <ul id="tileset_ul" class="itemsul unselectable">
     </ul>
   </div>

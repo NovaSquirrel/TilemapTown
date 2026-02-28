@@ -1724,8 +1724,8 @@ function viewTileset(Item) {
 	activeTilesetItem = Item;
 	activeTilesetItemIsTileset = true;
 	let tileset = document.getElementById('tileset');
+	document.getElementById('tilesetSortByIDLabel').style.display = "inline";
 	if (toggleDisplay(tileset)) {
-
 		let tileset_title = document.getElementById('tileset-title');
 		tileset_title.innerText = "Tileset definition: " + Item.name;
 		refreshTilesetList();
@@ -1736,8 +1736,8 @@ function viewMapTileList(Item) {
 	activeTilesetItem = Item;
 	activeTilesetItemIsTileset = false;
 	let tileset = document.getElementById('tileset');
+	document.getElementById('tilesetSortByIDLabel').style.display = "none";
 	if (toggleDisplay(tileset)) {
-
 		let tileset_title = document.getElementById('tileset-title');
 		tileset_title.innerText = "Map tile list: " + Item.name;
 		refreshTilesetList();
@@ -1838,11 +1838,17 @@ function refreshTilesetList() {
 
 		// Sort by name
 		let sortedKeys = Object.keys(data);
-		sortedKeys.sort(function (a, b) {
-			let atomA = AtomFromName(data[a]);
-			let atomB = AtomFromName(data[b]);
-			return atomA.name.localeCompare(atomB.name);
-		});
+		if (document.getElementById('tilesetSortByID').checked) {
+			sortedKeys.sort(function (a, b) {
+				return a.localeCompare(b);
+			});
+		} else {
+			sortedKeys.sort(function (a, b) {
+				let atomA = AtomFromName(data[a]);
+				let atomB = AtomFromName(data[b]);
+				return atomA.name.localeCompare(atomB.name);
+			});
+		}
 
 		for (let key of sortedKeys) {
 			let tile = data[key];
