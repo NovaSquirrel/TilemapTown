@@ -1984,7 +1984,7 @@ function deleteTilesetItem() {
 	let item = getActiveTilesetItem();
 	if (!item) return;
 
-	if(!confirm(`Really delete ${item.name}?`)) return;
+	if(!confirm(`Really delete ${tilesetContextMenuItem}?`)) return;
 
 	if (item.type === "client_data") {
 		let item_data = item?.data?.data ?? [];
