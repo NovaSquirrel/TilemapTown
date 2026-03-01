@@ -787,6 +787,8 @@ function receiveServerMessage(cmd, arg) {
       else
         InstallTileset(arg.id, arg.data);
       delete TilesetsRequested[arg.id];
+      backdropRerenderAll = true;
+      NeedMapRedraw = true;
       break;
 
     case "EML":
