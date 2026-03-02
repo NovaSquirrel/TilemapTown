@@ -2755,7 +2755,7 @@ def fn_ownedgroups(map, client, context, arg):
 	formatted = []
 	for row in c.execute('SELECT g.id, g.name FROM Entity g WHERE g.owner_id=? AND type=?', (client.db_id, entity_type['group'])):
 		formatted.append("[li][b]%s[/b] (%d)[/li]" % (noparse(row[1]), row[0]))
-	groups = "Groups you are own: [ul]" + ("".join(sorted(formatted, key=str.casefold))) + "[/ul]"
+	groups = "Groups you are the owner of: [ul]" + ("".join(sorted(formatted, key=str.casefold))) + "[/ul]"
 	respond(context, groups)
 
 @cmd_command(category="Group", privilege_level="registered", no_entity_needed=True)
