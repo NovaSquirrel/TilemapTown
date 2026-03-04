@@ -403,11 +403,7 @@ function viewBuild() {
 	toggleDisplay(document.getElementById('build'));
 }
 
-function viewCustomize() {
-	let options = document.getElementById("character");
-	let Hidden = (options.style.display == 'none');
-	document.getElementById("navcustomize").setAttribute("class", Hidden ? "navactive" : "");
-
+function refreshCustomizeWindow() {
 	document.getElementById("quickstatus").value = PlayerWho[PlayerYou].status ?? "";
 	document.getElementById("quickstatus").value = PlayerWho[PlayerYou].status_message ?? "";
 	document.getElementById("newnick").value = PlayerWho[PlayerYou].name ?? "";
@@ -417,7 +413,13 @@ function viewCustomize() {
 	} else {
 		document.getElementById("newcustompic").value = "";
 	}
+}
 
+function viewCustomize() {
+	let options = document.getElementById("character");
+	let Hidden = (options.style.display == 'none');
+	document.getElementById("navcustomize").setAttribute("class", Hidden ? "navactive" : "");
+	refreshCustomizeWindow();
 	options.style.display = Hidden ? 'block' : 'none';
 }
 

@@ -539,6 +539,9 @@ function receiveServerMessage(cmd, arg) {
 
         NeedMapRedraw = true;
         backdropDrawAll = true;
+        if (arg.add.id === PlayerYou) {
+          refreshCustomizeWindow();
+        }
       } else if(arg.remove) {
         if(PlayerWho[arg.remove].in_user_list) {
           let isForwarding = PlayerWho[arg.remove].chat_listener ? " &#x1F916;" : "";
