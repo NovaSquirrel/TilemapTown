@@ -579,6 +579,8 @@ def user_file_url_is_ok(url):
 		return True
 	if Config["FileUpload"]["Enabled"] and len(Config["FileUpload"]["URLPrefix"]) and url.startswith(Config["FileUpload"]["URLPrefix"]):
 		return True
+	if Config["Server"].get("ResourceIMGBase") and url.startswith(Config["Server"]["ResourceIMGBase"]):
+		return True
 	for w in Config["Images"]["URLWhitelist"]:
 		if url.startswith(w):
 			return True
