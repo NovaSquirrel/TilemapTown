@@ -1533,7 +1533,7 @@ def fn_mapowner(map, client, context, arg):
 	newowner = find_db_id_by_username(arg)
 	if newowner:
 		map.owner_id = newowner
-		respond(context, 'Map owner set to \"%s\"' % map.owner)
+		respond(context, 'Map owner set to \"%s\"' % find_username_by_db_id(map.owner_id))
 	else:
 		respond(context, 'Nonexistent account', error=True)
 		return
