@@ -713,50 +713,82 @@ function keyDownHandler(e) {
 		if (n < 0)
 			n = 9;
 		setHotbarIndex(n);
-	} else if (!CtrlPressed && (e.key == "ArrowUp" || e.code == "KeyW" || e.code == "Numpad8")) { // up/w
-		PlayerY--;
-		PlayerDir = Directions.NORTH;
-		e.preventDefault();
-	} else if (!CtrlPressed && (e.key == "ArrowDown" || e.code == "KeyS" || e.code == "Numpad2")) { // down/s
-		PlayerY++;
-		PlayerDir = Directions.SOUTH;
-		e.preventDefault();
-	} else if (!CtrlPressed && (e.key == "ArrowLeft" || e.code == "KeyA" || e.code == "Numpad4")) { // left/a
-		PlayerX--;
-		PlayerDir = Directions.WEST;
-		e.preventDefault();
-	} else if (!CtrlPressed && (e.key == "ArrowRight" || e.code == "KeyD" || e.code == "Numpad6")) { // right/d
-		PlayerX++;
-		PlayerDir = Directions.EAST;
-		e.preventDefault();
-	} else if (e.key == "End" || e.code == "Numpad1") { // end
-		PlayerX--;
-		PlayerY++;
-		PlayerDir = Directions.SOUTHWEST;
-		e.preventDefault();
-	} else if (e.key == "PageDown" || e.code == "Numpad3") { // pg down
-		PlayerX++;
-		PlayerY++;
-		PlayerDir = Directions.SOUTHEAST;
-		e.preventDefault();
-	} else if (e.key == "Home" || e.code == "Numpad7") { // home
-		PlayerX--;
-		PlayerY--;
-		PlayerDir = Directions.NORTHWEST;
-		e.preventDefault();
-	} else if (e.key == "PageUp" || e.code == "Numpad9") { // pg up
-		PlayerX++;
-		PlayerY--;
-		PlayerDir = Directions.NORTHEAST;
-		e.preventDefault();
-	} else if (CtrlPressed && e.code == "ArrowUp") {
-		sendChatCommand("roffset 0 -1");
-	} else if (CtrlPressed && e.code == "ArrowDown") {
-		sendChatCommand("roffset 0 1");
-	} else if (CtrlPressed && e.code == "ArrowLeft") {
-		sendChatCommand("roffset -1 0");
-	} else if (CtrlPressed && e.code == "ArrowRight") {
-		sendChatCommand("roffset 1 0");
+	} else if (e.key == "ArrowUp" || e.code == "KeyW" || e.code == "Numpad8") { // up/w
+		if (!CtrlPressed) {
+			PlayerY--;
+			PlayerDir = Directions.NORTH;
+			e.preventDefault();
+		} else if (e.code !== "KeyW"){
+			sendChatCommand("roffset 0 -1");
+			e.preventDefault();
+		}
+	} else if (e.key == "ArrowDown" || e.code == "KeyS" || e.code == "Numpad2") { // down/s
+		if (!CtrlPressed) {
+			PlayerY++;
+			PlayerDir = Directions.SOUTH;
+			e.preventDefault();
+		} else if (e.code !== "KeyS"){
+			sendChatCommand("roffset 0 1");
+			e.preventDefault();
+		}
+	} else if (e.key == "ArrowLeft" || e.code == "KeyA" || e.code == "Numpad4") { // left/a
+		if (!CtrlPressed) {
+			PlayerX--;
+			PlayerDir = Directions.WEST;
+			e.preventDefault();
+		} else if (e.code !== "KeyA"){
+			sendChatCommand("roffset -1 0");
+			e.preventDefault();
+		}
+	} else if (e.key == "ArrowRight" || e.code == "KeyD" || e.code == "Numpad6") { // right/d
+		if (!CtrlPressed) {
+			PlayerX++;
+			PlayerDir = Directions.EAST;
+			e.preventDefault();
+		} else if (e.code !== "KeyD"){
+			sendChatCommand("roffset 1 0");
+			e.preventDefault();
+		}
+	} else if (e.key === "End" || e.code === "Numpad1") { // end
+		if (!CtrlPressed) {
+			PlayerX--;
+			PlayerY++;
+			PlayerDir = Directions.SOUTHWEST;
+			e.preventDefault();
+		} else if (e.code === "Numpad1") {
+			sendChatCommand("roffset -1 1");
+			e.preventDefault();
+		}
+	} else if (e.key === "PageDown" || e.code === "Numpad3") { // pg down
+		if (!CtrlPressed) {
+			PlayerX++;
+			PlayerY++;
+			PlayerDir = Directions.SOUTHEAST;
+			e.preventDefault();
+		} else if (e.code === "Numpad3") {
+			sendChatCommand("roffset 1 1");
+			e.preventDefault();
+		}
+	} else if (e.key === "Home" || e.code === "Numpad7") { // home
+		if (!CtrlPressed) {
+			PlayerX--;
+			PlayerY--;
+			PlayerDir = Directions.NORTHWEST;
+			e.preventDefault();
+		} else if (e.code === "Numpad7") {
+			sendChatCommand("roffset -1 -1");
+			e.preventDefault();
+		}
+	} else if (e.key === "PageUp" || e.code === "Numpad9") { // pg up
+		if (!CtrlPressed) {
+			PlayerX++;
+			PlayerY--;
+			PlayerDir = Directions.NORTHEAST;
+			e.preventDefault();
+		} else if (e.code === "Numpad9") {
+			sendChatCommand("roffset 1 -1");
+			e.preventDefault();
+		}
 	} else if (e.code == "Enter") { // enter (carriage return)
 		chatInput.focus();
 		e.preventDefault();
