@@ -469,6 +469,22 @@ function keyEventToTilemapTownKey(e) {
 	}
 	switch(e.code) {
 		case "Space":  return "use-item";
+		case "Numpad9":
+			return e.shiftKey ? "turn-ne" : "move-ne";
+		case "Numpad3":
+			return e.shiftKey ? "turn-se" : "move-se";
+		case "Numpad7":
+			return e.shiftKey ? "turn-nw" : "move-nw";
+		case "Numpad1":
+			return e.shiftKey ? "turn-sw" : "move-sw";
+		case "Numpad4":
+			return e.shiftKey ? "turn-w" : "move-w";
+		case "Numpad2":
+			return e.shiftKey ? "turn-s" : "move-s";
+		case "Numpad8":
+		  return e.shiftKey ? "turn-n" : "move-n";
+		case "Numpad6":
+		  return e.shiftKey ? "turn-e" : "move-e";
 		case "Escape": return "cancel";
 		case "Digit1": return "hotbar-1";
 		case "Digit2": return "hotbar-2";
@@ -697,38 +713,38 @@ function keyDownHandler(e) {
 		if (n < 0)
 			n = 9;
 		setHotbarIndex(n);
-	} else if (!CtrlPressed && (e.key == "ArrowUp" || e.code == "KeyW")) { // up/w
+	} else if (!CtrlPressed && (e.key == "ArrowUp" || e.code == "KeyW" || e.code == "Numpad8")) { // up/w
 		PlayerY--;
 		PlayerDir = Directions.NORTH;
 		e.preventDefault();
-	} else if (!CtrlPressed && (e.key == "ArrowDown" || e.code == "KeyS")) { // down/s
+	} else if (!CtrlPressed && (e.key == "ArrowDown" || e.code == "KeyS" || e.code == "Numpad2")) { // down/s
 		PlayerY++;
 		PlayerDir = Directions.SOUTH;
 		e.preventDefault();
-	} else if (!CtrlPressed && (e.key == "ArrowLeft" || e.code == "KeyA")) { // left/a
+	} else if (!CtrlPressed && (e.key == "ArrowLeft" || e.code == "KeyA" || e.code == "Numpad4")) { // left/a
 		PlayerX--;
 		PlayerDir = Directions.WEST;
 		e.preventDefault();
-	} else if (!CtrlPressed && (e.key == "ArrowRight" || e.code == "KeyD")) { // right/d
+	} else if (!CtrlPressed && (e.key == "ArrowRight" || e.code == "KeyD" || e.code == "Numpad6")) { // right/d
 		PlayerX++;
 		PlayerDir = Directions.EAST;
 		e.preventDefault();
-	} else if (e.key == "End") { // end
+	} else if (e.key == "End" || e.code == "Numpad1") { // end
 		PlayerX--;
 		PlayerY++;
 		PlayerDir = Directions.SOUTHWEST;
 		e.preventDefault();
-	} else if (e.key == "PageDown") { // pg down
+	} else if (e.key == "PageDown" || e.code == "Numpad3") { // pg down
 		PlayerX++;
 		PlayerY++;
 		PlayerDir = Directions.SOUTHEAST;
 		e.preventDefault();
-	} else if (e.key == "Home") { // home
+	} else if (e.key == "Home" || e.code == "Numpad7") { // home
 		PlayerX--;
 		PlayerY--;
 		PlayerDir = Directions.NORTHWEST;
 		e.preventDefault();
-	} else if (e.key == "PageUp") { // pg up
+	} else if (e.key == "PageUp" || e.code == "Numpad9") { // pg up
 		PlayerX++;
 		PlayerY--;
 		PlayerDir = Directions.NORTHEAST;
