@@ -141,7 +141,7 @@ async def map_info(request):
 					if "edge_links" in from_db:
 						map.edge_id_links = from_db["edge_links"]
 					if "wallpaper" in from_db:
-						map.wallpaper = from_db["wallpaper"]
+						map.map_wallpaper = from_db["wallpaper"]
 
 					data["info"] = map.map_info()
 					data["data"] = {'pos': from_db['pos'], 'default': from_db['default'], 'turf': from_db['turf'], 'obj': from_db['obj']}

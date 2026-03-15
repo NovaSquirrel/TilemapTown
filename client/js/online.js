@@ -188,37 +188,6 @@ function asIntIfPossible(i) {
   return i;
 }
 
-function updateWallpaperData(map) {
-	// Calculate wallpaper positioning information to have it ready for when the map is drawn
-	let WallpaperData = {};
-	let hasWallpaper = false;
-	let defaultTurf = AtomFromName(map.Info?.["default"] ?? "grass");
-	let wallpaperStartX, wallpaperStartY, wallpaperEndX, wallpaperEndY, wallpaperTileX, wallpaperTileY, wallpaperDrawX = 0, wallpaperDrawY = 0, wallpaperHasRepeat;
-	if(map.WallpaperImage && map.WallpaperImage.complete) {
-		let wallpaper = map.Info["wallpaper"];
-		if(wallpaper.center) {
-			wallpaperDrawX = map.Width*8 - map.WallpaperImage.naturalWidth/2;
-			wallpaperDrawY = map.Height*8 - map.WallpaperImage.naturalHeight/2;
-		}
-		if(wallpaper.offset) {
-			wallpaperDrawX += wallpaper.offset[0];
-			wallpaperDrawY += wallpaper.offset[1];
-		}
-
-		// Calculate region where the client should attempt to draw the wallpaper
-		wallpaperTileX  = Math.floor(wallpaperDrawX / 16);
-		wallpaperTileY  = Math.floor(wallpaperDrawY / 16);
-		wallpaperStartX = (wallpaper.repeat || wallpaper.repeat_x) ? 0 : wallpaperTileX;
-		wallpaperStartY = (wallpaper.repeat || wallpaper.repeat_y) ? 0 : wallpaperTileY;
-		wallpaperEndX   = (wallpaper.repeat || wallpaper.repeat_x) ? (map.Width-1)  : (Math.ceil(wallpaperDrawX + map.WallpaperImage.naturalWidth - 1) / 16);
-		wallpaperEndY   = (wallpaper.repeat || wallpaper.repeat_y) ? (map.Height-1) : (Math.ceil(wallpaperDrawY + map.WallpaperImage.naturalHeight - 1) / 16);
-		wallpaperHasRepeat = wallpaper.repeat || wallpaper.repeat_x || wallpaper.repeat_y;
-
-		hasWallpaper    = true;
-	}
-	map.WallpaperData = {hasWallpaper, defaultTurf, wallpaperStartX, wallpaperStartY, wallpaperEndX, wallpaperEndY, wallpaperTileX, wallpaperTileY, wallpaperDrawX, wallpaperDrawY, wallpaperHasRepeat};
-}
-
 function SendStatusMessageFromBeforeDisconnect() {
 	if(StatusOnDisconnect) {
 		const length = MessagesToRetry.length;

@@ -1,7 +1,7 @@
 /*
  * Tilemap Town
  *
- * Copyright (C) 2017-2025 NovaSquirrel
+ * Copyright (C) 2017-2026 NovaSquirrel
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -145,7 +145,7 @@ function init() {
 }
 
 async function loadServerResources() {
-	let response = await fetch(apiURL+"/v1/server_resources");
+	let response = await fetch(apiURL+"v1/server_resources");
 	if (!response.ok) {
 		console.error(`Couldn't reach Tilemap Town API for server resources: ${response.status}`);
 	} else {
@@ -247,8 +247,7 @@ async function loadMapInfo() {
 		edgeLinks = map.Info?.edge_links;
 		updateEdgeLinkButtons();
 		updateMapFields();
-
-		//updateWallpaperOnMap(map);
+		updateWallpaperOnMap(map);
 
 		const Fill = mapData.default;
 		const x1 = mapData.pos[0];
@@ -298,6 +297,11 @@ function waitForImagesToLoad(timestamp) {
 				try {
 					drawTurf(ctx, x*16, y*16, turfAtom, map, x, y);
 				} catch (error) {}
+
+				try {
+					drawWallpaperTile(ctx, x*16, y*16, turfAtom, map, x, y);
+				} catch (error) {}
+
 				let Objs = map.Objs[x][y];
 				if (Objs.length) {
 					for (let o of Objs) {

@@ -1,7 +1,7 @@
 /*
  * Tilemap Town
  *
- * Copyright (C) 2017-2025 NovaSquirrel
+ * Copyright (C) 2017-2026 NovaSquirrel
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -624,6 +624,27 @@ function drawObj(ctx, drawAtX, drawAtY, obj, map, mapCoordX, mapCoordY) {
 	drawAtomWithAutotile(ctx, drawAtX, drawAtY, obj, map, mapCoordX, mapCoordY, getObjAutotileIndex4, isObjAutotileMatch);
 }
 
+function drawWallpaperTile(ctx, drawAtX, drawAtY, turfAtom, map, mapCoordX, mapCoordY) {
+	if(map.WallpaperData) {
+		let wallpaper = map.WallpaperData;
+		if(wallpaper.hasWallpaper &&
+		(map.Info["wallpaper"]["over_turf"] || (turfAtom.name == wallpaper.defaultTurf.name && turfAtom.pic[0] == wallpaper.defaultTurf.pic[0] && turfAtom.pic[1] == wallpaper.defaultTurf.pic[1] && turfAtom.pic[2] == wallpaper.defaultTurf.pic[2]))
+		&& (mapCoordX >= wallpaper.wallpaperStartX && mapCoordX <= wallpaper.wallpaperEndX && mapCoordY >= wallpaper.wallpaperStartY && mapCoordY <= wallpaper.wallpaperEndY)) {
+			if(wallpaper.wallpaperHasRepeat) {
+				ctx.drawImage(map.WallpaperImage,
+					wrapWithin(mapCoordX - wallpaper.wallpaperTileX, map.WallpaperImage.naturalWidth>>4)*16,
+					wrapWithin(mapCoordY - wallpaper.wallpaperTileY, map.WallpaperImage.naturalHeight>>4)*16,
+					16, 16, drawAtX, drawAtY, 16, 16);
+			} else {
+				ctx.drawImage(map.WallpaperImage,
+					(mapCoordX - wallpaper.wallpaperTileX)*16 - (wallpaper.wallpaperDrawX&15),
+					(mapCoordY - wallpaper.wallpaperTileY)*16 - (wallpaper.wallpaperDrawY&15),
+					16, 16, drawAtX, drawAtY, 16, 16);
+			}
+		}
+	}
+}
+
 function wrapWithin(value, max) {
 	return ((value % max) + max) % max;
 }
@@ -799,24 +820,7 @@ function drawMap() {
 						}
 
 						// Draw wallpaper if available
-						if(map.WallpaperData) {
-							let wallpaper = map.WallpaperData;
-							if(wallpaper.hasWallpaper &&
-							(map.Info["wallpaper"]["over_turf"] || (turfAtom.name == wallpaper.defaultTurf.name && turfAtom.pic[0] == wallpaper.defaultTurf.pic[0] && turfAtom.pic[1] == wallpaper.defaultTurf.pic[1] && turfAtom.pic[2] == wallpaper.defaultTurf.pic[2]))
-							&& (mapCoordX >= wallpaper.wallpaperStartX && mapCoordX <= wallpaper.wallpaperEndX && mapCoordY >= wallpaper.wallpaperStartY && mapCoordY <= wallpaper.wallpaperEndY)) {
-								if(wallpaper.wallpaperHasRepeat) {
-									backdropCtx.drawImage(map.WallpaperImage,
-										wrapWithin(mapCoordX - wallpaper.wallpaperTileX, map.WallpaperImage.naturalWidth>>4)*16,
-										wrapWithin(mapCoordY - wallpaper.wallpaperTileY, map.WallpaperImage.naturalHeight>>4)*16,
-										16, 16, drawOnBackdropPixelX, drawOnBackdropPixelY, 16, 16);
-								} else {
-									backdropCtx.drawImage(map.WallpaperImage,
-										(mapCoordX - wallpaper.wallpaperTileX)*16 - (wallpaper.wallpaperDrawX&15),
-										(mapCoordY - wallpaper.wallpaperTileY)*16 - (wallpaper.wallpaperDrawY&15),
-										16, 16, drawOnBackdropPixelX, drawOnBackdropPixelY, 16, 16);
-								}
-							}
-						}
+						drawWallpaperTile(backdropCtx, drawOnBackdropPixelX, drawOnBackdropPixelY, turfAtom, map, mapCoordX, mapCoordY);
 
 						// Draw anything above the turf (the tile objects)
 						let Objs = map.Objs[mapCoordX][mapCoordY];
