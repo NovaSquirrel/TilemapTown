@@ -110,6 +110,10 @@ Default: "doodle_board_palettes.txt"
 File is a list of palettes that the server provides for doodle boards, to allow showing previews when the "colors" command is used.
 See the file for format information.
 
+Server.RequestExpirationTime
+Default: 1200
+Number of seconds that it takes for a sent request (teleports, carrying, etc.) takes to expire.
+
 Security.ProxyOnly
 Default: false
 If true, server will reject connections made from IP addresses that do not match the server's own IP

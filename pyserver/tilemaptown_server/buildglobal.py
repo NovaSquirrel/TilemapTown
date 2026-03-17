@@ -81,6 +81,7 @@ def loadConfigJson(clearLogs=True):
 	setConfigDefault("Server",   "WebClientURL",     "")
 	setConfigDefault("Server",   "WebClientTouchURL","")
 	setConfigDefault("Server",   "DoodleBoardPaletteFile", "doodle_board_palettes.txt")
+	setConfigDefault("Server",   "RequestExpirationTime", 1200)
 
 	setConfigDefault("Security", "ProxyOnly",        False)
 	setConfigDefault("Security", "AllowedOrigins",   None)

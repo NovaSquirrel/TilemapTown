@@ -482,12 +482,12 @@ def send_request_to_user(client, context, arg, request_type, request_data, accep
 		if u.requests[request_key][2] == request_data:
 			# Renew it
 			respond(context, 'You\'ve already sent them a request', error=True)
-			u.requests[request_key][0] = 600
+			u.requests[request_key][0] = Config["Server"]["RequestExpirationTime"]
 			return
 	if not is_client_and_entity(u) or not in_blocked_username_list(client, u.connection_attr('ignore_list'), display_action='send requests to %s' % u.name, check_action="request", friends_list=u.connection_attr('watch_list'), recipient=u):
 		respond(context, you_message % arg)
 
-		u.requests[request_key] = [600 if u.is_client() else 60, next_request_id, request_data]
+		u.requests[request_key] = [Config["Server"]["RequestExpirationTime"] if u.is_client() else 60, next_request_id, request_data]
 		AllEntitiesWithRequests.add(u)
 
 		if u.entity_type == entity_type['gadget']:
