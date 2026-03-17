@@ -3605,10 +3605,12 @@ function logMessage(Message, Class, Params) {
 		chatArea.scrollTop = chatArea.scrollHeight;
 
 	if (!alreadyPlayedSound && !distantChat) {
-		if ((Params.isChat || Params.isPrivateChat) && AudioChatNotifications) {
+		if ((Params.isChat || Params.isPrivateChat || Class === "user_request") && AudioChatNotifications) {
 			if (!Params.isSilent) {
 				if (!desktopNotificationNoAudio) {
-					let audio = new Audio(Params.isPrivateChat ? 'img/audio/notifyprivate.wav' : 'img/audio/notifychat.wav');
+					let audio = new Audio(Params.isPrivateChat ? 'img/audio/notifyprivate.wav' : 
+					                      Class === "user_request" ? 'img/audio/notifyrequest.wav' :
+					                       'img/audio/notifychat.wav');
 					audio.play();
 					alreadyPlayedSound = true;
 				}

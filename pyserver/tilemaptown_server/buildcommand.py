@@ -493,7 +493,7 @@ def send_request_to_user(client, context, arg, request_type, request_data, accep
 		if u.entity_type == entity_type['gadget']:
 			u.receive_request(client, request_type, request_data, accept_command, decline_command)
 		else:
-			u.send("MSG", {'text': them_message % client.name_and_username(), 'buttons': ['Accept', '%s %s %s %d' % (accept_command, my_username, request_type, next_request_id), 'Decline', '%s %s %s %d' % (decline_command, my_username, request_type, next_request_id)]})
+			u.send("MSG", {'text': them_message % client.name_and_username(), 'class': 'user_request', 'buttons': ['Accept', '%s %s %s %d' % (accept_command, my_username, request_type, next_request_id), 'Decline', '%s %s %s %d' % (decline_command, my_username, request_type, next_request_id)]})
 		next_request_id += 1
 
 @cmd_command(category="Follow", syntax="username")
