@@ -479,7 +479,7 @@ class Entity(PermissionsMixin, object):
 		item.map = None
 
 		# Tell everyone in the container that the item was removed
-		self.broadcast("WHO", {'remove': item.protocol_id()}, remote_category=maplisten_type['entry'])
+		self.broadcast("WHO", {'remove': {'id': item.protocol_id()}}, remote_category=maplisten_type['entry'])
 		for e in self.contents:
 			if hasattr(e, 'receive_leave'):
 				e.receive_leave(item)

@@ -512,19 +512,22 @@ function receiveServerMessage(cmd, arg) {
           refreshCustomizeWindow();
         }
       } else if(arg.remove) {
-        if(PlayerWho[arg.remove].in_user_list) {
-          let isForwarding = PlayerWho[arg.remove].chat_listener ? " &#x1F916;" : "";
-          logMessage("Leaving: "+escape_tags(PlayerWho[arg.remove].name), 'map_info_message', {'plainText': `Leaving: ${PlayerWho[arg.remove].name}${PlayerWho[arg.remove].chat_listener ? "(bot)" : ""}`});
+        let remove_id = arg.remove;
+        if(typeof arg.remove === "object") // Allow both bare IDs and objects
+          remove_id = arg.remove.id;
+        if(PlayerWho[remove_id].in_user_list) {
+          let isForwarding = PlayerWho[remove_id].chat_listener ? " &#x1F916;" : "";
+          logMessage("Leaving: "+escape_tags(PlayerWho[remove_id].name), 'map_info_message', {'plainText': `Leaving: ${PlayerWho[remove_id].name}${PlayerWho[remove_id].chat_listener ? "(bot)" : ""}`});
         }
         // unload image if needed
-        if (arg.remove in PlayerImages)
-          delete PlayerImages[arg.remove];
-        if (arg.remove in PlayerAnimation)
-          delete PlayerAnimation[arg.remove];
-        if (arg.remove in PlayerMiniTilemapImage)
-          delete PlayerMiniTilemapImage[arg.remove];
+        if (remove_id in PlayerImages)
+          delete PlayerImages[remove_id];
+        if (remove_id in PlayerAnimation)
+          delete PlayerAnimation[remove_id];
+        if (remove_id in PlayerMiniTilemapImage)
+          delete PlayerMiniTilemapImage[remove_id];
         // remove entry in PlayerWho
-        delete PlayerWho[arg.remove];
+        delete PlayerWho[remove_id];
 
         NeedMapRedraw = true;
         backdropDrawAll = true;
