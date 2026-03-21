@@ -207,8 +207,8 @@ class Client(ClientMixin, Entity):
 		super().add_to_contents(item)
 		self.added_to_child_contents(item) # Reuse since it's the same code
 
-	def remove_from_contents(self, item):
-		super().remove_from_contents(item)
+	def remove_from_contents(self, item, new_map_id=None, new_map_name=None):
+		super().remove_from_contents(item, new_map_id, new_map_name)
 		self.removed_from_child_contents(item) # Reuse since it's the same code
 
 	def added_to_child_contents(self, item):

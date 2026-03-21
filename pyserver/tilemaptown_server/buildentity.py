@@ -473,13 +473,16 @@ class Entity(PermissionsMixin, object):
 		for parent in self.all_parents():
 			parent.added_to_child_contents(item)
 
-	def remove_from_contents(self, item):
+	def remove_from_contents(self, item, new_map_id=None, new_map_name=None):
 		self.contents.discard(item)
 		item.map_id = None
 		item.map = None
 
 		# Tell everyone in the container that the item was removed
-		self.broadcast("WHO", {'remove': {'id': item.protocol_id()}}, remote_category=maplisten_type['entry'])
+		if new_map_id != None:
+			self.broadcast("WHO", {'remove': {'id': item.protocol_id(), 'new_map': {'id': new_map_id, 'name': new_map_name}}}, remote_category=maplisten_type['entry'])
+		else:
+			self.broadcast("WHO", {'remove': item.protocol_id()}, remote_category=maplisten_type['entry'])
 		for e in self.contents:
 			if hasattr(e, 'receive_leave'):
 				e.receive_leave(item)
@@ -716,8 +719,13 @@ class Entity(PermissionsMixin, object):
 
 			# Remove first, so the container can tell everyone
 			# (though add_to_contents() should do this too)
+			new_map_id = None
+			new_map_name = None
+			if map_load.is_map() and (map_load.map_flags & mapflag['public']):
+				new_map_id = map_load.protocol_id()
+				new_map_name = map_load.name
 			if self.map:
-				self.map.remove_from_contents(self)
+				self.map.remove_from_contents(self, new_map_id=new_map_id, new_map_name=new_map_name)
 
 			# Add the entity to the map, which will tell the clients there that the entity arrived,
 			# and give the entity the status for the other entities that are already there.

@@ -394,8 +394,9 @@ Server-->Client "WHO" messages can contain these commands:
 	Modifies one or more properties for one entry in the client's list of entities, like Client-->Server "WHO" updates.
 
 <-- WHO {"remove": {"id": ID}}
+<-- WHO {"remove": {"id": ID, "new_map": {"id": map_id, "name": map_name}}}
 <-- WHO {"remove": ID}
-	Removes one entry from the client's list of entities. The style with only the bare ID is older (pre-2026), but a client SHOULD support both, but MUST support the style that is an object.
+	Removes one entry from the client's list of entities. Clients MUST support both the object format and bare ID format, as a server may send either.
 
 <-- WHO {"new_id": {"id": old_id, "new_id", ID}}
 	Change the ID on one entity in the client's list of entities. This usually happens when a temporary entity gets saved to the database (such as when a user registers an account.)

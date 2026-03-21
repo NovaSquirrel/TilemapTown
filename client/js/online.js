@@ -512,22 +512,31 @@ function receiveServerMessage(cmd, arg) {
           refreshCustomizeWindow();
         }
       } else if(arg.remove) {
-        let remove_id = arg.remove;
-        if(typeof arg.remove === "object") // Allow both bare IDs and objects
-          remove_id = arg.remove.id;
-        if(PlayerWho[remove_id].in_user_list) {
-          let isForwarding = PlayerWho[remove_id].chat_listener ? " &#x1F916;" : "";
-          logMessage("Leaving: "+escape_tags(PlayerWho[remove_id].name), 'map_info_message', {'plainText': `Leaving: ${PlayerWho[remove_id].name}${PlayerWho[remove_id].chat_listener ? "(bot)" : ""}`});
+        let removeID = arg.remove;
+        let newMap = undefined;
+        if(typeof arg.remove === "object") { // Allow both bare IDs and objects
+          removeID = arg.remove.id;
+          newMap = arg.remove.new_map;
+        }
+        if(PlayerWho[removeID].in_user_list) {
+          let isForwarding = PlayerWho[removeID].chat_listener ? " &#x1F916;" : "";
+          let newMapMessage = "";
+          let newMapMessagePlain = "";
+          if(newMap) {
+            newMapMessage = ` (went to [b]${newMap.name}[/b] [command]map ${newMap.id}[/command])`;
+            newMapMessagePlain = ` (went to ${newMap.name} (ID ${newMap.id})`;
+          }
+          logMessage("Leaving: "+escape_tags(PlayerWho[removeID].name)+convertBBCode(newMapMessage), 'map_info_message', {'plainText': `Leaving: ${PlayerWho[removeID].name}${PlayerWho[removeID].chat_listener ? "(bot)" : ""}${newMapMessagePlain}`});
         }
         // unload image if needed
-        if (remove_id in PlayerImages)
-          delete PlayerImages[remove_id];
-        if (remove_id in PlayerAnimation)
-          delete PlayerAnimation[remove_id];
-        if (remove_id in PlayerMiniTilemapImage)
-          delete PlayerMiniTilemapImage[remove_id];
+        if (removeID in PlayerImages)
+          delete PlayerImages[removeID];
+        if (removeID in PlayerAnimation)
+          delete PlayerAnimation[removeID];
+        if (removeID in PlayerMiniTilemapImage)
+          delete PlayerMiniTilemapImage[removeID];
         // remove entry in PlayerWho
-        delete PlayerWho[remove_id];
+        delete PlayerWho[removeID];
 
         NeedMapRedraw = true;
         backdropDrawAll = true;

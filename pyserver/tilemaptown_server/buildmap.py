@@ -186,8 +186,8 @@ class Map(Entity):
 				self.send_map_info(user, mai_only=mai_only)
 				connection.finish_batch()
 
-	def remove_from_contents(self, item):
-		super().remove_from_contents(item)
+	def remove_from_contents(self, item, new_map_id=None, new_map_name=None):
+		super().remove_from_contents(item, new_map_id, new_map_name)
 		if item.is_client():
 			self.user_count -= 1
 			if self.user_count == 0 and self.map_data_loaded:
