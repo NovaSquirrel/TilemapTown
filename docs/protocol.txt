@@ -78,7 +78,7 @@ List of permissions:
 	map_bot                     user is given bot-related permissions (like the ability to use /listen)
 	move                        user can move this object around within the same container
 	move_new_map                user can move this object to a new map/container
-	bulk_build                  user can use the builk building protocol commands
+	bulk_build                  user can use the bulk building protocol commands
 	object_entry                user can bring non-user entities here
 	persistent_object_entry     user can bring non-user entities here persistently (will kick clients out when unloading if this permission is not given)
 	modify_properties           user can modify the properties of this entity
