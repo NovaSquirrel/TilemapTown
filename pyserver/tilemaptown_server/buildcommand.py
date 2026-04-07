@@ -3263,7 +3263,7 @@ def fn_entity(map, client, context, arg):
 			other_entity = find_client_by_username(subarg)
 			if other_entity != None and other_entity in e.temp_permissions:
 				text += '\nAllow (temporary): %s' % permission_list_from_bitfield(e.temp_permissions[other_entity])
-			response(context, text)
+			respond(context, text)
 	elif subcommand == 'grant':
 		if permission_check(permission['admin']):
 			permission_change(e, client, context, subarg, 'grant')

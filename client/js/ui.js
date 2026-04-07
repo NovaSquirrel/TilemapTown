@@ -450,6 +450,8 @@ function fileCardList(ul, folders_only, click_handler, contextmenu_handler) {
 
 	for(let key in FileStorageInfo.files) {
 		let file_info = FileStorageInfo.files[key];
+		if (!(file_info.folder in FileStorageInfo.folders))
+			file_info.folder = null;
 		if (file_info.folder in DisplayFiles) {
 			DisplayFiles[file_info.folder].push(key);
 		} else {

@@ -889,6 +889,8 @@ async def delete_folder(request):
 	if result == None:
 		raise web.HTTPNotFound(text="Folder not found", headers=CORS_HEADERS)
 	c.execute('DELETE FROM User_File_Folder WHERE folder_id=?', (folder_id,))
+	c.execute('UPDATE User_File_Upload SET location=? WHERE location=?', (None, folder_id,))
+
 	raise web.HTTPNoContent(headers=CORS_HEADERS)
 
 if Config["FileUpload"]["AllowCrossOrigin"]:
