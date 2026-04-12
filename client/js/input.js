@@ -522,7 +522,7 @@ function keyUpHandler(e) {
 }
 
 let lastSignMessage = undefined;
-function bump_into_atom(atom) {
+function displaySignMessage(atom) {
 	if (atom.type == AtomTypes.SIGN && atom.message && (!alreadyShowedSign || atom.message != lastSignMessage)) {
 		logMessage(((atom.name != "sign" && atom.name != "") ? escape_tags(atom.name) + " says: " : "The sign says: ") + convertBBCodeChat(atom.message), "sign_message",
 		  {'plainText': (atom.name != "sign" && atom.name != "") ? atom.name + " says: " + atom.message : "The sign says: " + atom.message});
@@ -877,7 +877,6 @@ function keyDownHandler(e) {
 			// Check for solid objects in the way
 			for (let index in MyMap.Objs[PlayerX][PlayerY]) {
 				let Obj = AtomFromName(MyMap.Objs[PlayerX][PlayerY][index]);
-				bump_into_atom(Obj);
 				if (Obj.density || ((Obj.walls ?? 0) & DenseWallBit)) {
 					if (!Fly && !Bumped) {
 						Bumped = true;
@@ -885,16 +884,14 @@ function keyDownHandler(e) {
 						BumpedY = PlayerY;
 						PlayerX = OldPlayerX;
 						PlayerY = OldPlayerY;
-						// Don't break here, so that if a sign is in the stack of objects it will get read
+						break;
 					}
-					break;
 				}
 			}
 
 			// Then check for turfs
 			if (!Fly && !Bumped) {
 				let Turf = AtomFromName(MyMap.Tiles[PlayerX][PlayerY]);
-				bump_into_atom(Turf);
 				if (Turf.density || ((Turf.walls ?? 0) & DenseWallBit)) {
 					Bumped = true;
 					BumpedX = PlayerX;
@@ -902,6 +899,20 @@ function keyDownHandler(e) {
 					PlayerX = OldPlayerX;
 					PlayerY = OldPlayerY;
 				}
+			}
+
+			// Check for signs anywhere on the tile that was an obstacle
+			if (Bumped || Fly) {
+				if (Fly) {
+					BumpedX = PlayerX;
+					BumpedY = PlayerY;
+				}
+				for (let index in MyMap.Objs[BumpedX][BumpedY]) {
+					let Obj = AtomFromName(MyMap.Objs[BumpedX][BumpedY][index]);
+					displaySignMessage(Obj);
+				}
+				let Turf = AtomFromName(MyMap.Tiles[BumpedX][BumpedY]);
+				displaySignMessage(Turf);
 			}
 		}
 	}
