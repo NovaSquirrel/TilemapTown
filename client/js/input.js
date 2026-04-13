@@ -871,28 +871,19 @@ function keyDownHandler(e) {
 		}
 
 		if(!Bumped) {
+			let BumpCheckX = PlayerX;
+			let BumpCheckY = PlayerY;
+
 			// For the tile you're moving into, the direction that's checked against is rotated 180 degrees
 			let DenseWallBit = 1 << ((PlayerDir + 4) & 7);
 
 			// Check for solid objects in the way
-			for (let index in MyMap.Objs[PlayerX][PlayerY]) {
-				let Obj = AtomFromName(MyMap.Objs[PlayerX][PlayerY][index]);
+			for (let objData of MyMap.Objs[BumpCheckX][BumpCheckY]) {
+				let Obj = AtomFromName(objData);
+				displaySignMessage(Obj);
+				if (Fly || Bumped)
+					continue;
 				if (Obj.density || ((Obj.walls ?? 0) & DenseWallBit)) {
-					if (!Fly && !Bumped) {
-						Bumped = true;
-						BumpedX = PlayerX;
-						BumpedY = PlayerY;
-						PlayerX = OldPlayerX;
-						PlayerY = OldPlayerY;
-						break;
-					}
-				}
-			}
-
-			// Then check for turfs
-			if (!Fly && !Bumped) {
-				let Turf = AtomFromName(MyMap.Tiles[PlayerX][PlayerY]);
-				if (Turf.density || ((Turf.walls ?? 0) & DenseWallBit)) {
 					Bumped = true;
 					BumpedX = PlayerX;
 					BumpedY = PlayerY;
@@ -901,18 +892,17 @@ function keyDownHandler(e) {
 				}
 			}
 
-			// Check for signs anywhere on the tile that was an obstacle
-			if (Bumped || Fly) {
-				if (Fly) {
+			// Then check for turfs
+			let Turf = AtomFromName(MyMap.Tiles[BumpCheckX][BumpCheckY]);
+			displaySignMessage(Turf);
+			if (!Fly && !Bumped) {
+				if (Turf.density || ((Turf.walls ?? 0) & DenseWallBit)) {
+					Bumped = true;
 					BumpedX = PlayerX;
 					BumpedY = PlayerY;
+					PlayerX = OldPlayerX;
+					PlayerY = OldPlayerY;
 				}
-				for (let index in MyMap.Objs[BumpedX][BumpedY]) {
-					let Obj = AtomFromName(MyMap.Objs[BumpedX][BumpedY][index]);
-					displaySignMessage(Obj);
-				}
-				let Turf = AtomFromName(MyMap.Tiles[BumpedX][BumpedY]);
-				displaySignMessage(Turf);
 			}
 		}
 	}
