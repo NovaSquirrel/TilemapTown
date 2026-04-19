@@ -19,7 +19,7 @@ from .buildglobal import *
 from .buildcommand import handle_user_command, tile_is_okay, data_disallowed_for_entity_type, send_private_message, send_message_to_map, entity_types_users_can_change_data_for, apply_rate_limiting, attach_result_to_context, respond, separate_first_word
 from .buildentity import Entity, GenericEntity
 from .buildclient import Client
-from .buildgadget import Gadget
+from .buildgadget import Gadget, GadgetDoodleBoard, GadgetMiniTilemap
 
 handlers = {}
 command_privilege_level = {} # minimum required privilege level required for the command; see user_privilege in buildglobal.py
@@ -1005,6 +1005,17 @@ def fn_WHO(connection, map, client, arg, context):
 			if key != 'id':
 				setattr(actor, key, value)
 		map.broadcast("WHO", {"update": valid_data})
+
+		# If it's a Gadget, and it's a doodle_board or mini_tilemap, save the changes to the entity
+		if 'mini_tilemap_data' in valid_data and 'data' in valid_data['mini_tilemap_data'] and isinstance(actor, Gadget):
+			map_data = valid_data['mini_tilemap_data']['data']
+			for trait in actor.traits:
+				if isinstance(trait, GadgetDoodleBoard):
+					trait.map_data = expand_mini_tilemap_data(map_data, limit=16*32)
+					trait.set_config('data', map_data)
+				elif isinstance(trait, GadgetMiniTilemap) and trait.has_config("raw"):
+					trait.set_config('raw', map_data)
+
 	elif "patch_mini_tilemap" in arg:
 		patch_mini_tilemap = arg["patch_mini_tilemap"]
 
@@ -1027,7 +1038,17 @@ def fn_WHO(connection, map, client, arg, context):
 			for x in range(x1, x2+1):
 				map_data[y*map_width+x] = patch_data[patch_index]
 				patch_index += 1
-		actor.mini_tilemap_data["data"] = compress_mini_tilemap_data(map_data)
+		compressed_map_data = compress_mini_tilemap_data(map_data)
+		actor.mini_tilemap_data["data"] = compressed_map_data
+
+		# If it's a Gadget, and it's a doodle_board or mini_tilemap, save the changes to the entity
+		if isinstance(actor, Gadget):
+			for trait in actor.traits:
+				if isinstance(trait, GadgetDoodleBoard):
+					trait.map_data = map_data
+					trait.set_config('data', compressed_map_data)
+				elif isinstance(trait, GadgetMiniTilemap) and trait.has_config("raw"):
+					trait.set_config('raw', compressed_map_data)
 
 		patch_mini_tilemap['id'] = actor.protocol_id()
 		map.broadcast("WHO", {"patch_mini_tilemap": patch_mini_tilemap})

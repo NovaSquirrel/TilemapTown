@@ -1,5 +1,5 @@
 === Tilemap Town protocol ===
-By NovaSquirrel. Last updated 2026-04-07.
+By NovaSquirrel. Last updated 2026-04-19.
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119 when, and only when, they appear in all capitals, as shown here.
 
@@ -358,6 +358,7 @@ Server-->Client "WHO" messages can contain these commands:
 	In addition to the above list of modifiable properties, these may be seen on entities:
 		R"id": ID to reference this entity with.
 		"type": string; Entity type, like "user" or "generic".
+		"extra_types: List of strings; meant to further clarify entity type. Possible values include "doodle_board", "mini_tilemap", "projectile_shooter", "rc_car".
 		"in_user_list": boolean; True if this entity is a real user, and should therefore go in the user list (because users and other entities on the map go in the same "WHO" list).
 
 		"name": string; Name of the entity.

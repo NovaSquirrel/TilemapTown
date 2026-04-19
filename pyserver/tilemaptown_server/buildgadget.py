@@ -252,6 +252,18 @@ class Gadget(Entity):
 			w['usable'] = any(_.usable for _ in self.traits)
 		if 'verbs' not in w:
 			w['verbs'] = list(dict.fromkeys(sum((_.verbs for _ in self.traits), [])))
+		w['extra_types'] = []
+		for _ in self.traits:
+			if isinstance(_, GadgetDoodleBoard):
+				w['extra_types'].append('doodle_board')
+			elif isinstance(_, GadgetMiniTilemap):
+				w['extra_types'].append('mini_tilemap')
+			elif isinstance(_, GadgetProjectileShooter):
+				w['extra_types'].append('projectile_shooter')
+			elif isinstance(_, GadgetRCCar):
+				w['extra_types'].append('rc_car')
+		if w['extra_types'] == []:
+			del w['extra_types']
 		return w
 
 	def take_controls(self, client, key_set, pass_on=False, key_up=False):
