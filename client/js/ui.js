@@ -2465,6 +2465,7 @@ function editItemShared(item) {
 				document.getElementById('edittilegadget_preset_doodle_board_map_height').value = "";
 				document.getElementById('edittilegadget_preset_doodle_board_2x1').checked = false;
 				document.getElementById('edittilegadget_preset_doodle_board_ignore_clicks').checked = false;
+				document.getElementById('edittilegadget_preset_choice').value = "nothing";
 				updateDoodleBoardPixelSize();
 
 				if (Array.isArray(traits)) {
@@ -2605,6 +2606,10 @@ function editItemShared(item) {
 								document.getElementById('gadgetTypeRaw').checked = false;
 								document.getElementById('gadgetTypePreset').checked = true;
 							}
+						} else if(traits.length == 0) {
+							document.getElementById('gadgetTypeScript').checked = false;
+							document.getElementById('gadgetTypePreset').checked = true;
+							document.getElementById('gadgetTypeRaw').checked = false;
 						}
 					} catch (error) {
 					}
@@ -3102,7 +3107,10 @@ function editItemApply() {
 							break;
 					}
 					let data = [];
-					updates.data = [[document.getElementById('edittilegadget_preset_choice').value, t]];
+					if (document.getElementById('edittilegadget_preset_choice').value === "nothing")
+						updates.data = [];
+					else
+						updates.data = [[document.getElementById('edittilegadget_preset_choice').value, t]];
 				} else if (document.getElementById('gadgetTypeRaw').checked) {
 					if (document.getElementById('edittilegadget_raw_textarea').value == "") {
 						updates.data = [];
