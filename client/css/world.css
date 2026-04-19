@@ -103,6 +103,12 @@ body {
 #itemEditTilePickerWindowImg {
     image-rendering: pixelated;
 }
+#tilesetModeAddMultipleSheetContainer {
+	background: url('../img/scrolling_grid.gif');
+}
+#tilesetModeAddMultipleImg {
+    image-rendering: pixelated;
+}
 
 #chat-container {
     position: absolute;

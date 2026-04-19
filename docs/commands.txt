@@ -385,6 +385,9 @@ Clears everything on the map
 /kick user
 Sends a user home
 
+/kickban user
+Sends a user home and prevent them from coming back
+
 /kickallusers
 Sends all users home that aren't admins of the current map
 

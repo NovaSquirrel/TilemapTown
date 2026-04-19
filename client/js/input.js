@@ -1,7 +1,7 @@
 /*
  * Tilemap Town
  *
- * Copyright (C) 2017-2025 NovaSquirrel
+ * Copyright (C) 2017-2026 NovaSquirrel
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -52,6 +52,13 @@ let takeControlsId = null;
 let takeControlsKeys = new Set();
 
 let hotbarDragging = false;
+
+let tilesetEditAddMultipleDragging = false;
+let tilesetEditAddMultipleHasSelect = false;
+let tilesetEditAddMultipleStartX = -1;
+let tilesetEditAddMultipleStartY = -1;
+let tilesetEditAddMultipleEndX = -1;
+let tilesetEditAddMultipleEndY = -1;
 
 let ctrlZUndoType = null;
 
@@ -1651,13 +1658,6 @@ function initMouse() {
 
 	let selector = document.getElementById("selector");
 
-	edittilesheetselect.addEventListener('mousedown', function (evt) {
-		// update to choose the selected tile
-		document.getElementById('edittilex').value = (evt.clientX - evt.target.getBoundingClientRect().x) >> 4;
-		document.getElementById('edittiley').value = (evt.clientY - evt.target.getBoundingClientRect().y) >> 4;
-		editItemUpdatePic();
-	}, false);
-
 	function hotbarMouseDown(x) {
 		let oneWidth = selector.width / 10;
 		let index = Math.floor(x / oneWidth);
@@ -1739,5 +1739,108 @@ function initMouse() {
 
 	selector.addEventListener('touchend', function (evt) {
 		hotbarDragging = false;
+	}, false);
+
+	// ----------------------------------------------------------------
+
+	let addMultiple = document.getElementById("tilesetModeAddMultipleSheetCanvas");
+
+
+	function addMultipleMouseDown(x, y) {
+		let zoomed = document.getElementById('tilesetModeAddMultipleZoom').checked;
+		tilesetEditAddMultipleHasSelect = true;
+		tilesetEditAddMultipleStartX = x >> (4 + (zoomed?1:0))
+		tilesetEditAddMultipleStartY = y >> (4 + (zoomed?1:0))
+		tilesetEditAddMultipleEndX = tilesetEditAddMultipleStartX;
+		tilesetEditAddMultipleEndY = tilesetEditAddMultipleStartY;
+		tilesetEditAddMultipleDragging = true;
+		tilesetEditRedrawSheet();
+	}
+
+	function addMultipleMouseDrag(x, y) {
+		let zoomed = document.getElementById('tilesetModeAddMultipleZoom').checked;
+		tilesetEditAddMultipleHasSelect = true;
+		tilesetEditAddMultipleEndX = x >> (4 + (zoomed?1:0));
+		tilesetEditAddMultipleEndY = y >> (4 + (zoomed?1:0));
+		tilesetEditRedrawSheet();
+	}
+
+	addMultiple.addEventListener('mousedown', function (evt) {
+		if (evt.button == 2 || hadTouchEventYet)
+			return;
+		let pos = getMousePosRaw(addMultiple, evt);
+		addMultipleMouseDown(pos.x, pos.y);
+	}, false);
+
+	addMultiple.addEventListener('mousemove', function (evt) {
+		if(tilesetEditAddMultipleDragging && !hadTouchEventYet) {
+			let pos = getMousePosRaw(addMultiple, evt);
+			addMultipleMouseDrag(pos.x, pos.y);
+		}
+	}, false);
+
+	addMultiple.addEventListener('mouseup', function (evt) {
+		if (evt.button == 2 || hadTouchEventYet)
+			return;
+		tilesetEditAddMultipleDragging = false;
+		tilesetEditRedrawSheet();
+	}, false);
+
+	addMultiple.addEventListener('touchstart', function (evt) {
+		hadTouchEventYet = true;
+		addMultipleMouseDown(evt.changedTouches[0].pageX - addMultiple.getBoundingClientRect().left, evt.changedTouches[0].pageY - addMultiple.getBoundingClientRect().top);
+	}, false);
+
+	addMultiple.addEventListener('touchmove', function (evt) {
+		hadTouchEventYet = true;
+		if(tilesetEditAddMultipleDragging) {
+			addMultipleMouseDrag(evt.changedTouches[0].pageX - addMultiple.getBoundingClientRect().left, evt.changedTouches[0].pageY - addMultiple.getBoundingClientRect().top);
+		}
+	}, false);
+
+	addMultiple.addEventListener('touchend', function (evt) {
+		tilesetEditAddMultipleDragging = false;
+		tilesetEditRedrawSheet();
+	}, false);
+
+	addMultiple.addEventListener('contextmenu', function (evt) {
+		let pos = getMousePosRaw(addMultiple, evt);
+		let sheet = parseInt(document.getElementById('tilesetModeAddMultipleSheetSelect').value);
+		let zoomed = document.getElementById('tilesetModeAddMultipleZoom').checked;
+		let tryX = pos.x >> (4 + (zoomed?1:0));
+		let tryY = pos.y >> (4 + (zoomed?1:0));
+
+		if (!activeTilesetItem)
+			return;
+		let item = DBInventory[activeTilesetItem.id];
+		if (!item)
+			return;
+		let data;
+		if (activeTilesetItemIsTileset) {
+			data = item?.data ?? {};
+		} else {
+			data = item?.data?.data ?? [];
+		}
+
+		for (let index in data) {
+			let attr = AtomFromName(data[index]);
+			if (attr.pic[0] === sheet && attr.pic[1] == tryX && attr.pic[2] == tryY) {
+				document.getElementById('tilesetModeAddMultipleName').value = attr.name;
+				document.getElementById('tilesetModeAddMultipleDensity').checked = attr.density ?? false;
+				document.getElementById('tilesetModeAddMultipleFloorTile').checked = !(attr.obj ?? false);
+				document.getElementById('tilesetModeAddMultipleOver').checked = attr.over ?? false;
+
+				document.getElementById('tilesetModeAddMultipleAutotileType').value = (attr.autotile_layout ?? 0).toString();
+				document.getElementById('tilesetModeAddMultipleAutotileClass').value = attr.autotile_class ?? "";
+				document.getElementById('tilesetModeAddMultipleAutotileClassEdge').value = attr.autotile_class_edge ?? "";
+
+				document.getElementById('tilesetModeAddMultipleAnimationMode').value = (attr.anim_mode ?? 0).toString();
+				document.getElementById('tilesetModeAddMultipleAnimationFrames').value = attr.anim_frames ?? 1;
+				document.getElementById('tilesetModeAddMultipleAnimationSpeed').value = attr.anim_speed ?? 1;
+				document.getElementById('tilesetModeAddMultipleAnimationOffset').value = attr.anim_offset ?? 0;
+				break;
+			}
+		}
+		evt.preventDefault();
 	}, false);
 }

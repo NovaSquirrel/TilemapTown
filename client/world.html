@@ -257,35 +257,33 @@
     <h1>New item</h1>
 
     <p>
+	<table>
+	<tr><td>
     <label for="newtilename" class="unselectable">Item name</label><br>
     <input type="text" id="newtilename" value="new item"/>
+	</td><td><label class="unselectable"><input type="checkbox" id="createtempobject">Create as temporary entity</label></td></tr>
+	</table>
     </p>
 
 	<p>
-    <input type="button" value="Generic" onclick="newItemCreate('generic');" />
-    <input type="button" value="Text" onclick="newItemCreate('text');" />
-    <input type="button" value="Folder" onclick="newItemCreate('folder');" />
-    <input type="button" value="Gadget" onclick="newItemCreate('gadget');" />
-    <input type="button" value="Command list" onclick="newItemCreate('command_list');" />
+	<table>
+	<tr><th colspan="2">Building tools</td></tr>
+	<tr><td><img src="img/transparent.png" width="16" height="16" style="background: url(img/tileset/webclient.png) -64px -32px;"> <input type="button" value="Map tile" onclick="newItemCreate('map_tile');" /></td><td>Stores properties for one custom map tile.</td></tr>
+	<tr><td><img src="img/transparent.png" width="16" height="16" style="background: url(img/tileset/webclient.png) -64px -32px;"> <input type="button" value="Map tile list" onclick="newItemCreate('map_tile_list');" /></td><td>Stores properties for multiple custom map tiles.</td></tr>
+	<tr><td><img src="img/transparent.png" width="16" height="16" style="background: url(img/tileset/webclient.png) -32px -16px;"> <input type="button" value="Tile sheet" onclick="newItemCreate('image');" /></td><td>Stores an image URL; allows you to use that image in custom tiles. See <a href="https://wiki.novasquirrel.com/index.php?title=Tile_sheet_(Tilemap_Town)" target="_blank">the wiki</a>.</td></tr>
+	<tr><td><img src="img/transparent.png" width="16" height="16" style="background: url(img/tileset/webclient.png) -80px -16px;"> <input type="button" value="Tileset definition" onclick="newItemCreate('tileset');" /></td><td>Like map tile lists, but updating the item updates placed tiles. See <a href="https://wiki.novasquirrel.com/index.php?title=Saving_a_list_of_map_tiles" target="_blank">the wiki</a>.</td></tr>
+	<tr><th colspan="2">Toys and props</td></tr>
+	<tr><td><img src="img/transparent.png" width="16" height="16" style="background: url(img/tileset/webclient.png) 0px -16px;"> <input type="button" value="Generic" onclick="newItemCreate('generic');" /></td><td>No special behavior. Can be dropped on a map as a prop.</td></tr>
+	<tr><td><img src="img/transparent.png" width="16" height="16" style="background: url(img/tileset/webclient.png) -48px -32px;"> <input type="button" value="Doodle board" onclick="newItemCreate('doodle_board');" /></td><td>Art canvas that you can place onto a map and draw on.</td></tr>
+	<tr><td><img src="img/transparent.png" width="16" height="16" style="background: url(img/tileset/webclient.png) -48px -16px;"> <input type="button" value="Gadget" onclick="newItemCreate('gadget');" /></td><td>Items with server-side interaction. Draggable entities, projectile shooters, etc.</td></tr>
+	<tr><th colspan="2">Other items</td></tr>
+	<tr><td><img src="img/transparent.png" width="16" height="16" style="background: url(img/tileset/webclient.png) -16px -16px;"> <input type="button" value="Text" onclick="newItemCreate('text');" /></td><td>Can store notes or other text.</td></tr>
+	<tr><td><img src="img/transparent.png" width="16" height="16" style="background: url(img/tileset/webclient.png) 0px -32px;"> <input type="button" value="Folder" onclick="newItemCreate('folder');" /></td><td>Organization for items.</td></tr>
+	<tr><td><img src="img/transparent.png" width="16" height="16" style="background: url(img/tileset/webclient.png) -64px -16px;"> <input type="button" value="Command list" onclick="newItemCreate('command_list');" /></td><td>Stores useful commands for quick access.</td></tr>
+	</table>
 	</p>
-	<p>
-    <input type="button" value="Map tile" onclick="newItemCreate('map_tile');" />
-    <input type="button" value="Map tile list" onclick="newItemCreate('map_tile_list');" />
-    <input type="button" value="Tile sheet" onclick="newItemCreate('image');" />
-    <input type="button" value="Tileset definition" onclick="newItemCreate('tileset');" />
-	</p>
     </p>
-    <p>
-    <label class="unselectable"><input type="checkbox" id="createtempobject">Create as temporary entity</label>
-    </p>
-    <p>
-	<ul>
-	<li>Map tiles are templates for tiles to place onto maps. Tiles placed are independent from the item and will not change when the item changes.</li>
-	<li>Tiles placed via tileset definitions <em>will</em> change when the item changes, and are lost if the item is deleted.</li>
-	<li>Generic items are more like standard video game items, and you can drop them onto maps to have them act as props!</li>
-	<li>Tile sheet items add additional images you can pick when editing tiles. If you delete the item, tiles referencing it will lose their appearance.</li>
-	</ul>
-    </p>
+
     <p>
     <input type="button" value="Cancel" onclick="newItemCancel();" />
     </p>
@@ -625,10 +623,95 @@
 <widget-window id="tileset" style="display: none;">
   <span id="tileset-title" slot="title">Tileset</span>
   <div slot="contents">
-	<input placeholder="Search" id="tileset_search"><button onclick="editItemShared({'type':'tileset_new','name':'','desc':'','data':AtomFromName('grass')});">Add tile</button><br>
-	<label id="tilesetSortByIDLabel">Sort by ID: <input type="checkbox" id="tilesetSortByID" onchange="refreshTilesetList();"></label>
-    <ul id="tileset_ul" class="itemsul unselectable">
-    </ul>
+	<table style="margin: auto;" id="tilesetModeSelectTable">
+	<tr>
+	<td><label class="unselectable"><input type="radio" id="tilesetModeList" name="tilsetWindowMode" onchange="changeTilesetEditMode();" checked>List</label></td>
+	<td><label class="unselectable"><input type="radio" id="tilesetModeAddMultiple" name="tilsetWindowMode" onchange="changeTilesetEditMode();">Add multiple</label></td>
+	</tr>
+	</table>
+	<div id="tilesetModeListDiv">
+		<input placeholder="Search" id="tileset_search"><button onclick="editItemShared({'type':'tileset_new','name':'','desc':'','data':AtomFromName('grass')});">Add tile</button><br>
+		<label id="tilesetSortByIDLabel">Sort by ID: <input type="checkbox" id="tilesetSortByID" onchange="refreshTilesetList();"></label>
+		<ul id="tileset_ul" class="itemsul unselectable">
+		</ul>
+	</div>
+	<div id="tilesetModeAddMultipleDiv">
+		<table style="width: 600px; text-align: center;">
+		<tr>
+		<td>Tile sheet: <select id="tilesetModeAddMultipleSheetSelect" onchange="tilesetEditRerenderSheet();">
+		  <option value="0">Global</option>
+		  <option value="-1">Critters</option>
+		  <option value="-2">Pulp</option>
+		  <option value="-3">EasyRPG</option>
+		  <option value="custom">Custom</option>
+		</select></td>
+		<td><label class="unselectable"><input type="checkbox" id="tilesetModeAddMultipleZoom" onchange="tilesetEditRerenderSheet();">Zoom</label></td>
+		<td>Drag to select, then <button onclick="tilesetEditAddMultipleAdd();">Add</button> <button onclick="tilesetEditAddMultipleEdit();">Edit</button> <button onclick="tilesetEditAddMultipleDelete();">Delete</button></td>
+		</tr>
+		</table>
+
+		<div style="overflow:scroll; width:600px; height:300px;" id="tilesetModeAddMultipleSheetContainer">
+		<img src="" style="display:none;" id="tilesetModeAddMultipleSheetImage">
+	    <canvas class="unselectable" id="tilesetModeAddMultipleSheetCanvas" width="600" height="256" imageSmoothingEnabled="false"></canvas>
+		</div>
+
+		<table style="width: 600px; text-align: center;">
+		<tr>
+			<td colspan="2"><label for="tilesetModeAddMultipleName" class="unselectable">Name: <input type="text" id="tilesetModeAddMultipleName"/></label>
+			<label class="unselectable" title="Players will bump into the tile instead of moving through it"><input type="checkbox" id="tilesetModeAddMultipleDensity">Wall</label>
+			<label class="unselectable" title="Tile goes on the floor/turf layer, not the object layer"><input type="checkbox" id="tilesetModeAddMultipleFloorTile">Floor tile</label>
+			<label class="unselectable" title="Display this tile above players"><input type="checkbox" id="tilesetModeAddMultipleOver">Show above players</label>
+			<label class="unselectable" title="When adding multiple tiles, add row by row, instead of column by column"><input type="checkbox" id="tilesetModeAddMultipleRowMajor">&#x2192;</label>
+			</td>			
+		</tr>
+		<tr style="vertical-align: top;"><td style="width: 300px;">
+		<details id="tilesetModeAddMultipleSheetAutotileDetails">
+		<summary class="unselectable">Autotiling</summary>
+		<table border="0">
+		<tr><td>Type</td><td><select id="tilesetModeAddMultipleAutotileType">
+			<option value="0">None</option>
+			<option value="1">9 slice</option>
+			<option value="2">4 directions - Middle</option>
+			<option value="3">4 directions - Single</option>
+			<option value="4">RPG - Middle</option>
+			<option value="5">RPG - Single</option>
+			<option value="6">Horizontal - Middle 3</option>
+			<option value="7">Horizontal - Middle 4</option>
+			<option value="8">Horizontal - Single 4</option>
+			<option value="9">Vertical - Middle 3</option>
+			<option value="10">Vertical - Middle 4</option>
+			<option value="11">Vertical - Single 4</option>
+			<option value="12">Quarter 8-way - Middle (8)</option>
+			<option value="13">Quarter 8-way - Single (8)</option>
+			<option value="14">Quarter 8-way - Middle (16)</option>
+			<option value="15">Quarter 8-way - Single (16)</option>
+		</select></td></tr>
+		<tr><td>Class</td><td><input type="text" id="tilesetModeAddMultipleAutotileClass" placeholder="Autotile class" /></td></tr>
+		<tr><td>Class (edge)</td><td><input type="text" id="tilesetModeAddMultipleAutotileClassEdge" placeholder="Autotile class (edge)" /></td></tr>
+		</table>
+		</details>
+		</td>
+
+		<td style="width: 300px;">
+		<details id="tilesetModeAddMultipleAnimationDetails">
+		<summary class="unselectable">Animation</summary>
+		<table border="0">
+		<tr><td>Frames</td><td><input type="number" value="0" size="4" id="tilesetModeAddMultipleAnimationFrames" /></td></tr>
+		<tr><td>Frame duration</td><td><input type="number" value="0"  size="4" id="tilesetModeAddMultipleAnimationSpeed" /> &times; 0.1 sec</td></tr>
+		<tr><td>Start offset</td><td><input type="number" value="0" size="4" id="tilesetModeAddMultipleAnimationOffset" /> &times; 0.1 sec</td></tr>
+		<tr><td>Direction</td><td>
+		<select id="tilesetModeAddMultipleAnimationMode">
+			<option value="0">Forwards</option>
+			<option value="1">Backwards</option>
+			<option value="2">Ping-pong</option>
+			<option value="3">Ping-pong reverse</option>
+			<option value="4">Random frames</option>
+		</select></td></tr>
+		</table>
+		</details>
+		</td></tr>
+		</table>
+	</div>
   </div>
 </widget-window>
 

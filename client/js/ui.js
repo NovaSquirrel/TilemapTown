@@ -1,7 +1,7 @@
 /*
  * Tilemap Town
  *
- * Copyright (C) 2017-2025 NovaSquirrel
+ * Copyright (C) 2017-2026 NovaSquirrel
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -1551,7 +1551,7 @@ function copyTurfToTileset() {
 	} else {
 		return;
 	}
-	addTileToActiveTilesetItem(tile);
+	addTileToActiveTilesetItem(tile, true);
 }
 function copyTurfToHotbar() {
 	let tile;
@@ -1565,7 +1565,7 @@ function copyTurfToHotbar() {
 
 function copyMapObjToTileset() {
 	let stack = getStackForMapObjMenu();
-	addTileToActiveTilesetItem(stack[mapObjContextMenuIndex]);
+	addTileToActiveTilesetItem(stack[mapObjContextMenuIndex], true);
 }
 function copyMapObjToHotbar() {
 	let stack = getStackForMapObjMenu();
@@ -1687,7 +1687,7 @@ function updateInventoryUL() {
 	ul.appendChild(newitem);
 }
 
-function addTileToActiveTilesetItem(tile) {
+function addTileToActiveTilesetItem(tile, finished) {
 	if (!activeTilesetItem)
 		return;
 	let item = DBInventory[activeTilesetItem.id];
@@ -1704,22 +1704,26 @@ function addTileToActiveTilesetItem(tile) {
 			tile = AtomFromName(tile);
 		data[tryIndex] = tile;
 
-		SendCmd("BAG", { update: {id: activeTilesetItem.id, data} });
+		if(finished)
+			SendCmd("BAG", { update: {id: activeTilesetItem.id, data} });
 	} else {
 		let data = item?.data?.data ?? [];
 		item.data.data = data;
 		data.push(tile);
 
-		// Sort by name
-		data.sort(function (a, b) {
-			let atomA = AtomFromName(a);
-			let atomB = AtomFromName(b);
-			return atomA.name.localeCompare(atomB.name);
-		});
+		if(finished) {
+			// Sort by name
+			data.sort(function (a, b) {
+				let atomA = AtomFromName(a);
+				let atomB = AtomFromName(b);
+				return atomA.name.localeCompare(atomB.name);
+			});
 
-		SendCmd("BAG", { update: {id: activeTilesetItem.id, data: {"type": "map_tile_list", "type_version": "0.0.1", "client_name": CLIENT_NAME, data} }});
+			SendCmd("BAG", { update: {id: activeTilesetItem.id, data: {"type": "map_tile_list", "type_version": "0.0.1", "client_name": CLIENT_NAME, data} }});
+		}
 	}
-	refreshTilesetList();
+	if(finished)
+		refreshTilesetList();
 }
 
 let activeTilesetItemIsTileset = false;
@@ -1732,7 +1736,7 @@ function viewTileset(Item) {
 	if (toggleDisplay(tileset)) {
 		let tileset_title = document.getElementById('tileset-title');
 		tileset_title.innerText = "Tileset definition: " + Item.name;
-		refreshTilesetList();
+		initEditMapTileListOrTileset();
 	}
 }
 
@@ -1744,8 +1748,54 @@ function viewMapTileList(Item) {
 	if (toggleDisplay(tileset)) {
 		let tileset_title = document.getElementById('tileset-title');
 		tileset_title.innerText = "Map tile list: " + Item.name;
-		refreshTilesetList();
+		initEditMapTileListOrTileset();
 	}
+}
+
+function initEditMapTileListOrTileset() {
+	// Set up "add multiple" mode
+	document.getElementById('tilesetModeAddMultipleName').value = "";
+	document.getElementById('tilesetModeAddMultipleDensity').checked = false;
+	document.getElementById('tilesetModeAddMultipleFloorTile').checked = true;
+	document.getElementById('tilesetModeAddMultipleOver').checked = false;
+	document.getElementById('tilesetModeAddMultipleAutotileType').value = "0";
+	document.getElementById('tilesetModeAddMultipleAutotileClass').value = "";
+	document.getElementById('tilesetModeAddMultipleAutotileClassEdge').value = "";
+	document.getElementById('tilesetModeAddMultipleAnimationFrames').value = "1";
+	document.getElementById('tilesetModeAddMultipleAnimationSpeed').value = "0";
+	document.getElementById('tilesetModeAddMultipleAnimationOffset').value = "0";
+	document.getElementById('tilesetModeAddMultipleAnimationMode').value = "0";
+
+	// Display all the available images assets in the user's inventory alongside the global ones
+	let sheetselect = document.getElementById("tilesetModeAddMultipleSheetSelect");
+	while (sheetselect.firstChild) {
+		sheetselect.removeChild(sheetselect.firstChild);
+	}
+	for(let i=0; GlobalImageNames[i] !== undefined; i--) {
+		el = document.createElement("option");
+		el.textContent = GlobalImageNames[i];
+		el.value = i;
+		sheetselect.appendChild(el);
+	}
+	// Show all the tile sheets in the inventory, sorted by name
+	let allUserOwnedTileSheets = [];
+	for (let i in DBInventory) {
+		if (DBInventory[i].type == "image") {
+			el = document.createElement("option");
+			el.textContent = DBInventory[i].name;
+			el.value = DBInventory[i].id;
+			allUserOwnedTileSheets.push(el);
+		}
+	}
+	allUserOwnedTileSheets.sort(function (a, b) {
+		return a.textContent.localeCompare(b.textContent);
+	});
+	for (let i of allUserOwnedTileSheets) {
+		sheetselect.appendChild(i);
+	}
+
+	// TODO: pick the right sheet; probably the sheet that's used most often?
+	tilesetEditRerenderSheet();
 }
 
 let commandListItem = null;
@@ -1821,6 +1871,10 @@ function refreshCommandList() {
 		ul.appendChild(li);
 	}
 }
+
+///////////////////////////////////////////////////////////
+// Tileset editing
+///////////////////////////////////////////////////////////
 
 let tilesetContextMenuItem = null;
 function refreshTilesetList() {
@@ -1911,6 +1965,8 @@ function refreshTilesetList() {
 			ul.appendChild(li);
 		}
 	}
+
+	tilesetEditRerenderSheet();
 }
 
 function showCopyToTilesetLiIfNeeded(id) {
@@ -1950,7 +2006,7 @@ function cloneTilesetItem() {
 	if (!data) return;
 	let tile = data[tilesetContextMenuItem];
 	if (!tile) return;
-	addTileToActiveTilesetItem(tile);
+	addTileToActiveTilesetItem(tile, true);
 }
 
 function copyTilesetItemToHotbar() {
@@ -1999,6 +2055,299 @@ function deleteTilesetItem() {
 		delete item_data[tilesetContextMenuItem];
 		SendCmd("BAG", { update: {id: activeTilesetItem.id, data: item_data} });
 	}
+	refreshTilesetList();
+}
+
+function changeTilesetEditMode() {
+	let isList = document.getElementById("tilesetModeList").checked;
+	let isAddMultiple = document.getElementById("tilesetModeAddMultiple").checked;
+	document.getElementById('tilesetModeListDiv').style.display = isList ? "block" : "none";
+	document.getElementById('tilesetModeAddMultipleDiv').style.display = isAddMultiple ? "block" : "none";
+	// Remove focus from the radio buttons, restoring the player's ability to move around
+	document.activeElement.blur();
+}
+
+let tilesetEditBaseCanvas = document.createElement("canvas");
+let tilesetEditRedrawBaseCanvas = true;
+function tilesetEditRerenderSheet() {
+	tilesetEditRedrawBaseCanvas = true;
+	tilesetEditRedrawSheet();
+}
+function tilesetEditRedrawSheet() {
+	let src = "";
+	let image = document.getElementById('tilesetModeAddMultipleSheetImage');
+	let sheet = document.getElementById('tilesetModeAddMultipleSheetSelect').value;
+	let zoomed = document.getElementById('tilesetModeAddMultipleZoom').checked;
+	let zoomScale = zoomed ? 2 : 1;
+	sheet = parseInt(sheet);
+	if (IconSheets[sheet])
+		src = IconSheets[sheet].src;
+	image.src = src;
+
+	// Set up the canvas
+	let canvas = document.getElementById('tilesetModeAddMultipleSheetCanvas');
+	let ctx = canvas.getContext("2d");
+	let baseCtx = tilesetEditBaseCanvas.getContext("2d");
+	ctx.imageSmoothingEnabled = false;
+	baseCtx.imageSmoothingEnabled = false;
+
+	function shadeOnBaseCanvas(tile) {
+		baseCtx.globalAlpha = 0.5;
+		let attr = AtomFromName(tile);
+		if(tile.pic[0] !== sheet)
+			return;
+		baseCtx.fillStyle = ["#5fcde4", "#7cd99a", "#d95763", "#df7126"][(tile.density?2:0) | (tile.obj?1:0)];
+		baseCtx.fillRect(tile.pic[1]*16*zoomScale, tile.pic[2]*16*zoomScale, 16*zoomScale, 16*zoomScale);
+		baseCtx.globalAlpha = 1;
+	}
+	if (tilesetEditRedrawBaseCanvas) {
+		tilesetEditBaseCanvas.width = image.naturalWidth * zoomScale;
+		tilesetEditBaseCanvas.height = image.naturalHeight * zoomScale;
+		canvas.width = tilesetEditBaseCanvas.width;
+		canvas.height = tilesetEditBaseCanvas.height;
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		if (zoomed) {
+			baseCtx.drawImage(document.getElementById('tilesetModeAddMultipleSheetImage'), 0, 0, tilesetEditBaseCanvas.width, tilesetEditBaseCanvas.height);
+		} else {
+			baseCtx.drawImage(document.getElementById('tilesetModeAddMultipleSheetImage'), 0, 0);
+		}
+
+		// Highlight tiles that are present in the list
+		if (!activeTilesetItem)
+			return;
+		let item = DBInventory[activeTilesetItem.id];
+		if (!item)
+			return;
+		if (activeTilesetItemIsTileset) {
+			let data = item?.data ?? {};
+			item.data = data;
+			for (let index in data)
+				shadeOnBaseCanvas(data[index]);
+		} else {
+			let data = item?.data?.data ?? [];
+			item.data.data = data;
+			for (let index in data)
+				shadeOnBaseCanvas(data[index]);
+		}
+	}
+
+	try {
+		ctx.drawImage(tilesetEditBaseCanvas, 0, 0);
+		if (tilesetEditAddMultipleHasSelect) {
+			ctx.beginPath();
+			ctx.lineWidth = "4";
+			ctx.strokeStyle = (tilesetEditAddMultipleDragging) ? "#ff00ff" : "#00ffff";
+			let AX = Math.min(tilesetEditAddMultipleStartX, tilesetEditAddMultipleEndX) * 16 + 4;
+			let AY = Math.min(tilesetEditAddMultipleStartY, tilesetEditAddMultipleEndY) * 16 + 4;
+			let BX = Math.max(tilesetEditAddMultipleStartX, tilesetEditAddMultipleEndX) * 16 + 12;
+			let BY = Math.max(tilesetEditAddMultipleStartY, tilesetEditAddMultipleEndY) * 16 + 12;
+			ctx.rect(AX * zoomScale, AY * zoomScale, (BX - AX) * zoomScale, (BY - AY) * zoomScale);
+			ctx.stroke();
+		}
+	} catch (error) {
+	}
+}
+
+function tilesetEditAddMultipleGetTileProperties() {
+	let name = document.getElementById('tilesetModeAddMultipleName').value;
+	let density = document.getElementById('tilesetModeAddMultipleDensity').checked;
+	let floor = document.getElementById('tilesetModeAddMultipleFloorTile').checked;
+	let over = document.getElementById('tilesetModeAddMultipleOver').checked;
+	let autotile = parseInt(document.getElementById('tilesetModeAddMultipleAutotileType').value);
+	let autotileclass = document.getElementById('tilesetModeAddMultipleAutotileClass').value;
+	let autotileclassedge = document.getElementById('tilesetModeAddMultipleAutotileClassEdge').value;
+	let animationmode = parseInt(document.getElementById('tilesetModeAddMultipleAnimationMode').value);
+	let animationframes = parseInt(document.getElementById('tilesetModeAddMultipleAnimationFrames').value);
+	let animationspeed = parseInt(document.getElementById('tilesetModeAddMultipleAnimationSpeed').value);
+	let animationoffset = parseInt(document.getElementById('tilesetModeAddMultipleAnimationOffset').value);
+	let out = {name};
+	if (!floor)
+		out["obj"] = true;
+	if (density)
+		out["density"] = true;
+	if (over)
+		out["over"] = true;
+	if(autotile)
+		out["autotile_layout"] = autotile;
+	if(autotileclass)
+		out["autotile_class"] = autotileclass;
+	if(autotileclassedge)
+		out["autotile_class_edge"] = autotileclassedge;
+	if(!Number.isNaN(animationframes) && animationframes > 1) {
+		out["anim_frames"] = animationframes;
+		if(edittileanimationmode)
+			out["anim_mode"] = edittileanimationmode;
+		if(!Number.isNaN(animationspeed) && animationspeed > 1)
+			out["anim_speed"] = animationspeed;
+		if(!Number.isNaN(animationoffset) && animationoffset != 0)
+			out["anim_offset"] = animationoffset;
+	}
+	return out;
+}
+
+function tilesetEditAddMultipleAdd() {
+	if(!tilesetEditAddMultipleHasSelect)
+		return;
+	let AX = Math.min(tilesetEditAddMultipleStartX, tilesetEditAddMultipleEndX);
+	let AY = Math.min(tilesetEditAddMultipleStartY, tilesetEditAddMultipleEndY);
+	let BX = Math.max(tilesetEditAddMultipleStartX, tilesetEditAddMultipleEndX);
+	let BY = Math.max(tilesetEditAddMultipleStartY, tilesetEditAddMultipleEndY);
+	let tile = tilesetEditAddMultipleGetTileProperties();
+	let sheet = parseInt(document.getElementById('tilesetModeAddMultipleSheetSelect').value);
+	let selectionWidth = BX-AX+1;
+	let hadChanges = false;
+
+	// Find the tileset item and check if any preexisting tiles in it have pics that fall within the area being added
+	let alreadyExisting = new Array((BX-AX+1)*(BY-AY+1));
+	if (!activeTilesetItem)
+		return;
+	let item = DBInventory[activeTilesetItem.id];
+	if (!item)
+		return;
+	let data;
+	if (activeTilesetItemIsTileset) {
+		data = item?.data ?? {};
+		item.data = data;
+	} else {
+		data = item?.data?.data ?? [];
+		item.data.data = data;
+	}
+	for (let index in data) {
+		let attr = AtomFromName(data[index]);
+		if (attr.pic[0] === sheet && attr.pic[1] >= AX && attr.pic[2] >= AY && attr.pic[1] <= BX && attr.pic[2] <= BY) {
+			alreadyExisting[attr.pic[1]-AX + (attr.pic[2]-AY)*selectionWidth] = true;
+		}
+	}
+
+	// Add one tile
+	function addXY(x, y) {
+		if (alreadyExisting[x-AX + (y-AY)*selectionWidth])
+			return;
+		let tile2 = structuredClone(tile);
+		tile2.pic = [sheet, x, y];
+		addTileToActiveTilesetItem(tile2, false);
+		hadChanges = true;
+	}
+
+	// Pick column major or row major ordering
+	if(document.getElementById("tilesetModeAddMultipleRowMajor").checked) {
+		for(let y=AY; y<=BY; y++)
+			for(let x=AX; x<=BX; x++)
+				addXY(x, y);
+	} else {
+		for(let x=AX; x<=BX; x++)
+			for(let y=AY; y<=BY; y++)
+				addXY(x, y);
+	}
+
+	// Send the changes to the server
+	if (!hadChanges)
+		return;
+	if (activeTilesetItemIsTileset) {
+		SendCmd("BAG", { update: {id: activeTilesetItem.id, data} });
+	} else {
+		SendCmd("BAG", { update: {id: activeTilesetItem.id, data: {"type": "map_tile_list", "type_version": "0.0.1", "client_name": CLIENT_NAME, data} }});
+	}
+	refreshTilesetList();
+}
+
+function tilesetEditAddMultipleEdit() {
+	if(!tilesetEditAddMultipleHasSelect)
+		return;
+	let AX = Math.min(tilesetEditAddMultipleStartX, tilesetEditAddMultipleEndX);
+	let AY = Math.min(tilesetEditAddMultipleStartY, tilesetEditAddMultipleEndY);
+	let BX = Math.max(tilesetEditAddMultipleStartX, tilesetEditAddMultipleEndX);
+	let BY = Math.max(tilesetEditAddMultipleStartY, tilesetEditAddMultipleEndY);
+	let sheet = parseInt(document.getElementById('tilesetModeAddMultipleSheetSelect').value);
+	let tile = tilesetEditAddMultipleGetTileProperties();
+
+	// Find item and iterate over its tiles
+	if (!activeTilesetItem)
+		return;
+	let item = DBInventory[activeTilesetItem.id];
+	if (!item)
+		return;
+	let data;
+	if (activeTilesetItemIsTileset) {
+		data = item?.data ?? {};
+		item.data = data;
+	} else {
+		data = item?.data?.data ?? [];
+		item.data.data = data;
+	}
+	for (let index in data) {
+		let attr = AtomFromName(data[index]);
+		if (attr.pic[0] === sheet && attr.pic[1] >= AX && attr.pic[2] >= AY && attr.pic[1] <= BX && attr.pic[2] <= BY) {
+			let tile2 = structuredClone(tile);
+			tile2.pic = [attr.pic[0], attr.pic[1], attr.pic[2]];
+			data[index] = tile2;
+		}
+	}
+	if (activeTilesetItemIsTileset)
+		SendCmd("BAG", { update: {id: activeTilesetItem.id, data} });
+	else
+		SendCmd("BAG", { update: {id: activeTilesetItem.id, data: {"type": "map_tile_list", "type_version": "0.0.1", "client_name": CLIENT_NAME, data} }});
+
+	refreshTilesetList();
+}
+
+function tilesetEditAddMultipleDelete() {
+	if(!tilesetEditAddMultipleHasSelect)
+		return;
+	let AX = Math.min(tilesetEditAddMultipleStartX, tilesetEditAddMultipleEndX);
+	let AY = Math.min(tilesetEditAddMultipleStartY, tilesetEditAddMultipleEndY);
+	let BX = Math.max(tilesetEditAddMultipleStartX, tilesetEditAddMultipleEndX);
+	let BY = Math.max(tilesetEditAddMultipleStartY, tilesetEditAddMultipleEndY);
+	let sheet = parseInt(document.getElementById('tilesetModeAddMultipleSheetSelect').value);
+	let alreadyConfirmed = false;
+	let anyChanged = false;
+
+	// Find item and iterate over its tiles
+	if (!activeTilesetItem)
+		return;
+	let item = DBInventory[activeTilesetItem.id];
+	if (!item)
+		return;
+	if (activeTilesetItemIsTileset) {
+		let data = item?.data ?? {};
+		item.data = data;
+		let newData = {};
+		for (let index in data) {
+			let attr = AtomFromName(data[index]);
+			if (attr.pic[0] !== sheet || attr.pic[1] < AX || attr.pic[2] < AY || attr.pic[1] > BX || attr.pic[2] > BY) {
+				newData[index] = data[index];
+			} else {
+				anyChanged = true;
+				if(!alreadyConfirmed && !confirm("Really delete tiles from this item?"))
+					return;
+				alreadyConfirmed = true;
+			}
+		}
+		if (!anyChanged)
+			return;
+		item.data = newData;
+		SendCmd("BAG", { update: {id: activeTilesetItem.id, data: newData} });
+	} else {
+		let data = item?.data?.data ?? [];
+		item.data.data = data;
+		let newData = [];
+		for (let index in data) {
+			let attr = AtomFromName(data[index]);
+			if (attr.pic[0] !== sheet || attr.pic[1] < AX || attr.pic[2] < AY || attr.pic[1] > BX || attr.pic[2] > BY) {
+				newData.push(data[index]);
+			} else {
+				anyChanged = true;
+				if(!alreadyConfirmed && !confirm("Really delete tiles from this item?"))
+					return;
+				alreadyConfirmed = true;
+			}
+		}
+		if (!anyChanged)
+			return;
+		item.data.data = newData;
+		SendCmd("BAG", { update: {id: activeTilesetItem.id, data: {"type": "map_tile_list", "type_version": "0.0.1", "client_name": CLIENT_NAME, data: newData} }});
+	}
+
 	refreshTilesetList();
 }
 
@@ -2530,14 +2879,15 @@ function editItemApply() {
 					data["autotile_class"] = edittileautotileclass;
 				if(edittileautotileclassedge)
 					data["autotile_class_edge"] = edittileautotileclassedge;
-				if(edittileanimationmode)
-					data["anim_mode"] = edittileanimationmode;
-				if(edittileanimationframes != NaN && edittileanimationframes > 1)
+				if(!Number.isNaN(edittileanimationframes) && edittileanimationframes > 1) {
 					data["anim_frames"] = edittileanimationframes;
-				if(edittileanimationspeed != NaN && edittileanimationspeed > 1)
-					data["anim_speed"] = edittileanimationspeed;
-				if(edittileanimationoffset != NaN && edittileanimationoffset != 0)
-					data["anim_offset"] = edittileanimationoffset;
+					if(edittileanimationmode)
+						data["anim_mode"] = edittileanimationmode;
+					if(!Number.isNaN(edittileanimationspeed) && edittileanimationspeed > 1)
+						data["anim_speed"] = edittileanimationspeed;
+					if(!Number.isNaN(edittileanimationoffset) && edittileanimationoffset != 0)
+						data["anim_offset"] = edittileanimationoffset;
+				}
 				if(updates["desc"])
 					data["message"] = updates["desc"];
 				updates.data = JSON.stringify(data);
@@ -2587,7 +2937,7 @@ function editItemApply() {
 					}
 					refreshTilesetList();
 				} else if(editItemType === "tileset_new") {
-					addTileToActiveTilesetItem(data);
+					addTileToActiveTilesetItem(data, true);
 				}
 			}
 
@@ -2878,6 +3228,9 @@ function newItemCreate(type) {
 	} else if (type === "map_tile_list") {
 		params.create.type = "client_data";
 		params.create.data = {"type": "map_tile_list", "type_version": "0.0.1", "client_name": CLIENT_NAME, "data": []};
+	} else if (type === "doodle_board") {
+		params.create.type = "gadget";
+		params.create.data = [["doodle_board",{"tileset_url":"","data":[],"map_size":[16,32],"map_mode":"2x1"}]];
 	}
 	SendCmd("BAG", params);
 	newItemCancel();
@@ -3836,7 +4189,7 @@ function drawHotbar() {
 }
 
 function copyBuildToTileset() {
-	addTileToActiveTilesetItem(rightClickedBuildTile);
+	addTileToActiveTilesetItem(rightClickedBuildTile, true);
 }
 
 function copyBuildToHotbar() {
@@ -3849,7 +4202,7 @@ function copyItemToTileset(id) {
 	let item = DBInventory[id];
 	if(item.type !== 'map_tile')
 		return;
-	addTileToActiveTilesetItem(item.data);
+	addTileToActiveTilesetItem(item.data, true);
 }
 const usableItemSymbol = Symbol("usable item flag");
 function copyItemToHotbar(id) {
@@ -3914,7 +4267,7 @@ function copyHotbarSlotToTileset() {
 		return;
 	if (hotbarData[rightClickedHotbarIndex] === null)
 		return;
-	addTileToActiveTilesetItem(hotbarData[rightClickedHotbarIndex]);
+	addTileToActiveTilesetItem(hotbarData[rightClickedHotbarIndex], true);
 }
 
 function copyHotbarSlotToInventory() {
@@ -4885,6 +5238,7 @@ function initWorld() {
 	applyOptions();
 	changeBuildTool();
 	changedBuildToolCategory();
+	changeTilesetEditMode();
 
 	initBuild();
 
