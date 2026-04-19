@@ -2611,6 +2611,11 @@ function editItemShared(item) {
 				} else {
 					console.log("Not array?");
 					console.log(traits);
+
+					// Default to Preset instead of Raw for a newly created gadget
+					document.getElementById('gadgetTypeScript').checked = false;
+					document.getElementById('gadgetTypePreset').checked = true;
+					document.getElementById('gadgetTypeRaw').checked = false;
 				}
 
 				document.getElementById('edittilegadget').style.display = "block";

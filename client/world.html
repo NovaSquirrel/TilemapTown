@@ -274,7 +274,7 @@
 	<tr><td><img src="img/transparent.png" width="16" height="16" style="background: url(img/tileset/webclient.png) -80px -16px;"> <input type="button" value="Tileset definition" onclick="newItemCreate('tileset');" /></td><td>Like map tile lists, but updating the item updates placed tiles. See <a href="https://wiki.novasquirrel.com/index.php?title=Saving_a_list_of_map_tiles" target="_blank">the wiki</a>.</td></tr>
 	<tr><th colspan="2">Toys and props</td></tr>
 	<tr><td><img src="img/transparent.png" width="16" height="16" style="background: url(img/tileset/webclient.png) 0px -16px;"> <input type="button" value="Generic" onclick="newItemCreate('generic');" /></td><td>No special behavior. Can be dropped on a map as a prop.</td></tr>
-	<tr><td><img src="img/transparent.png" width="16" height="16" style="background: url(img/tileset/webclient.png) -48px -32px;"> <input type="button" value="Doodle board" onclick="newItemCreate('doodle_board');" /></td><td>Art canvas that you can place onto a map and draw on.</td></tr>
+	<tr><td><img src="img/transparent.png" width="16" height="16" style="background: url(img/tileset/webclient.png) -48px -32px;"> <input type="button" value="Doodle board" onclick="newItemCreate('doodle_board');" /></td><td>Art canvas that you can drop onto a map and draw on.</td></tr>
 	<tr><td><img src="img/transparent.png" width="16" height="16" style="background: url(img/tileset/webclient.png) -48px -16px;"> <input type="button" value="Gadget" onclick="newItemCreate('gadget');" /></td><td>Items with server-side interaction. Draggable entities, projectile shooters, etc.</td></tr>
 	<tr><th colspan="2">Other items</td></tr>
 	<tr><td><img src="img/transparent.png" width="16" height="16" style="background: url(img/tileset/webclient.png) -16px -16px;"> <input type="button" value="Text" onclick="newItemCreate('text');" /></td><td>Can store notes or other text.</td></tr>
@@ -827,7 +827,7 @@
 			Text item to get source from: <input type="text" id="edittilegadget_script_item" placeholder="Item entity ID">
 		</div>
 		<div id="edittilegadget_preset">
-			Preset: <select id="edittilegadget_preset_choice" onchange="changeGadgetPreset()">
+			Behavior: <select id="edittilegadget_preset_choice" onchange="changeGadgetPreset()">
 			  <option value="accept_requests">Accept requests</option>
 			  <option value="bot_message_button">Bot message button</option>
 			  <option value="pic_cycle">Cycle through frames</option>
@@ -841,7 +841,7 @@
 			  <option value="rc_car">Remote control car</option>
 			  <option value="random_say">Say random message</option>
 			  <option value="user_particle">User particle</option>
-			</select>
+			</select> - <a href="https://wiki.novasquirrel.com/index.php?title=Gadget_types" target="_blank">Wiki article</a> for help.
 			<div id="edittilegadget_preset_rc_car">
 				<label class="unselectable" for="edittilegadget_preset_rc_car_owner_only"><input type="checkbox" id="edittilegadget_preset_rc_car_owner_only">Only the owner can use this</label><br>
 				<label class="unselectable" for="edittilegadget_preset_rc_car_fly"><input type="checkbox" id="edittilegadget_preset_rc_car_fly">Car can move through walls</label><br>
