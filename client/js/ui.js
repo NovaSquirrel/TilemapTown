@@ -1795,7 +1795,7 @@ function initEditMapTileListOrTileset() {
 	}
 
 	// TODO: pick the right sheet; probably the sheet that's used most often?
-	tilesetEditRerenderSheet();
+	refreshTilesetList();
 }
 
 let commandListItem = null;
