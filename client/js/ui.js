@@ -3331,7 +3331,7 @@ function startPainting(itemID) {
 	paintTileWidth = board.mini_tilemap.tile_size[0];
 	paintTileHeight = board.mini_tilemap.tile_size[1];
 	paintMapWidth = board.mini_tilemap.map_size[0];
-	paintMapHeight = board.mini_tilemap.map_size[1];
+	paintMapHeight = Math.floor(paintMapData.length / paintMapWidth);
 	paintPixelWidth = paintMapWidth * paintTileWidth;
 	paintPixelHeight = paintMapHeight * paintTileHeight;
 	paintUndoSteps = [];
