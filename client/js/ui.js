@@ -3320,6 +3320,14 @@ function startPainting(itemID) {
 	paintMode2x1 = (board.mini_tilemap.tile_size[0] === 2) && (board.mini_tilemap.tile_size[1] === 1);
 	if (!paintMode2x1 && (board.mini_tilemap.tile_size[0] !== 4 || board.mini_tilemap.tile_size[1] !== 2)) // Make sure it's a supported tile size
 		return;
+	document.getElementById('paintToolFillTd').style.display = paintMode2x1 ? "" : "none";
+	document.getElementById('paintToolPickTd').style.display = paintMode2x1 ? "" : "none";
+	document.getElementById('paintToolRecolorTd').style.display = !paintMode2x1 ? "" : "none";
+	document.getElementById('paintToolInvertTd').style.display = !paintMode2x1 ? "" : "none";
+	document.getElementById('paint4x2CanvasButtons').style.display = !paintMode2x1 ? "" : "none";
+	document.getElementById('paint4x2Modes').style.display = !paintMode2x1 ? "" : "none";
+	document.getElementById('doodleBoardPaintCurrentColor').width = paintMode2x1 ? 1 : 2;
+	document.getElementById('doodleBoardPaintColors').width = paintMode2x1 ? 4 : 8;
 	paintTileWidth = board.mini_tilemap.tile_size[0];
 	paintTileHeight = board.mini_tilemap.tile_size[1];
 	paintMapWidth = board.mini_tilemap.map_size[0];
@@ -3338,15 +3346,25 @@ function startPainting(itemID) {
 	paintPreviewCanvas.height = paintPixelHeight;
 
 	// Set up color selection
-	paintColorCount = paintTilesetImage.naturalHeight;
 	let paintColors = document.getElementById('doodleBoardPaintColors');
-	let paintColorsHeight = Math.ceil(paintTilesetImage.naturalHeight / 4);
-	paintColors.height = paintColorsHeight;
-	paintColors.style.width = (4*32) + 'px';
-	paintColors.style.height = (paintColorsHeight*24) + 'px';
 	let paintColorsCtx = paintColors.getContext('2d');
-	for(let colorId = 0; colorId < paintColorCount; colorId++) {
-		paintColorsCtx.drawImage(paintTilesetImage, 1, colorId, 1, 1, colorId % 4, Math.floor(colorId / 4), 1, 1);
+	if(paintMode2x1) {
+		paintColorCount = paintTilesetImage.naturalHeight;
+		let paintColorsHeight = Math.ceil(paintTilesetImage.naturalHeight / 4);
+		paintColors.height = paintColorsHeight;
+		paintColors.style.width = (4*32) + 'px';
+		paintColors.style.height = (paintColorsHeight*24) + 'px';
+		for(let colorId = 0; colorId < paintColorCount; colorId++) {
+			paintColorsCtx.drawImage(paintTilesetImage, 1, colorId, 1, 1, colorId % 4, Math.floor(colorId / 4), 1, 1);
+		}
+	} else {
+		paintColorCount = 16;
+		paintColors.height = 4;
+		paintColors.style.width = (4*32) + 'px';
+		paintColors.style.height = (4*24) + 'px';
+		for(let colorId = 0; colorId < 16; colorId++) {
+			paintColorsCtx.drawImage(paintTilesetImage, (colorId&3)*64+8, ((colorId>>2)&3)*32, 2, 1, (colorId&3)*2, colorId>>2, 2, 1);
+		}
 	}
 
 	paintChangeZoom();
@@ -3401,6 +3419,8 @@ function paintTool(tool) {
 		paintToolPlus: '+',
 		paintToolFill: 'fill',
 		paintToolPick: 'pick',
+		paintToolRecolor: 'recolor',
+		paintToolInvert: 'invert'
 	};
 	for(let i in toolTypeToId)
 		document.getElementById(i).style.fontWeight = (tool === toolTypeToId[i]) ? "bold" : "normal";
@@ -3414,13 +3434,25 @@ function paintColor(color) {
 	let canvas = document.getElementById('doodleBoardPaintCurrentColor');
 	let ctx = canvas.getContext('2d');
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	ctx.drawImage(paintTilesetImage, 1, currentPaintColor, 1, 1, 0, 0, 1, 1);
+	if(paintMode2x1) {
+		ctx.drawImage(paintTilesetImage, 1, currentPaintColor, 1, 1, 0, 0, 1, 1);
+	} else {
+		ctx.drawImage(paintTilesetImage, (currentPaintColor&3)*64+8, ((currentPaintColor>>2)&3)*32, 2, 1, 0, 0, 2, 1);
+	}
 }
 
 function paintFillAll() {
 	paintMakeUndoStep();
-	for (let i=0; i<paintMapData.length; i++) {
-		paintMapData[i] = currentPaintColor | (currentPaintColor<<6);
+	if (paintMode2x1) {
+		for (let i=0; i<paintMapData.length; i++) {
+			paintMapData[i] = currentPaintColor | (currentPaintColor<<6);
+		}
+	} else {
+		let color_bits = paintColorBits(currentPaintColor);
+		let fillValue = color_bits | ((document.getElementById('paint4x2Mode2nd').checked) ? BITMAP_PIXEL_MASK : 0);
+		for (let i=0; i<paintMapData.length; i++) {
+			paintMapData[i] = fillValue;
+		}
 	}
 	paintFullUpdate();
 }
@@ -3454,6 +3486,23 @@ function paintChangeZoom() {
 	paintZoomLevel = Math.min(15, zoom);
 	paintCanvas.style.width = (paintPixelWidth * paintZoomLevel)+"px";
 	paintCanvas.style.height = (paintPixelHeight * paintZoomLevel)+"px";
+}
+
+function paintInvertAll() {
+	paintMakeUndoStep();
+	for (let i=0; i<paintMapData.length; i++) {
+		paintMapData[i] ^= BITMAP_PIXEL_MASK;
+	}
+	paintFullUpdate();
+}
+
+function paintRecolorAll() {
+	paintMakeUndoStep();
+	let color_bits = paintColorBits(currentPaintColor);
+	for (let i=0; i<paintMapData.length; i++) {
+		paintMapData[i] = (paintMapData[i] & BITMAP_PIXEL_MASK) | color_bits;
+	}
+	paintFullUpdate();
 }
 
 /////////////////////////////
@@ -3515,10 +3564,10 @@ function paintCanvasClick(pixel_x, pixel_y) {
 		paintPartialUpdate(x, y, x, y);
 		paintLastInvertX = x
 		paintLastInvertY = y
-		return None
-	} else if (currentPaintTool === "draw light" || currentPaintTool == "draw 2nd") {
+		return;
+	} else if (document.getElementById('paint4x2Mode2nd').checked) {
 		paintToggleIf = false;
-	} else if (currentPaintTool === "draw dark" || currentPaintTool == "draw 1st") {
+	} else if (document.getElementById('paint4x2Mode1st').checked) {
 		paintToggleIf = true;
 	} else {
 		paintToggleIf = paintGetPixel(pixel_x, pixel_y);
@@ -3535,8 +3584,10 @@ function paintCanvasClick(pixel_x, pixel_y) {
 
 function paintCanvasDrag(x1, y1, x2, y2) {
 	if (currentPaintTool === "invert") {
-		let x = Math.floor(arg['x'] / paintTileWidth);
-		let y = Math.floor(arg['y'] / paintTileHeight);
+		let x = Math.floor(x2 / paintTileWidth);
+		let y = Math.floor(y2 / paintTileHeight);
+		if (x >= paintMapWidth || y >= paintMapHeight)
+			return
 		if (x === paintLastInvertX && y === paintLastInvertY)
 			return
 		let index = y*paintMapWidth+x;
@@ -3558,7 +3609,17 @@ function paintCanvasDrag(x1, y1, x2, y2) {
 }
 
 function paintPickColor(x, y) {
-	paintColor(paintGetPixel(x, y));
+	if(paintMode2x1) {
+		paintColor(paintGetPixel(x, y));
+	} else {
+		x = Math.floor(x / paintTileWidth); 
+		y = Math.floor(y / paintTileHeight);
+		if (x >= paintMapWidth || y >= paintMapHeight)
+			return;
+		let c = paintMapData[y*paintMapWidth+x];
+		c = ((c >> 4) & 0b0011) | ((c >> 8) & 0b1100);
+		paintColor(c);
+	}
 }
 
 /////////////////////////////
@@ -3619,7 +3680,7 @@ function paintChangePixel(pixel_x, pixel_y, color_bits, toggle_if) {
 			if (toggle_if !== "recolor" && ((!toggle_if && 0 === (paintMapData[index] & pixel_mask)) || (toggle_if && (paintMapData[index] & pixel_mask)))) {
 				paintMapData[index] = ((paintMapData[index] ^ pixel_mask) & BITMAP_PIXEL_MASK) | color_bits;
 				updateMinMax();
-				return True
+				return true
 			} else if ((paintMapData[index] & BITMAP_COLOR_MASK) != color_bits) {
 				paintMapData[index] = (paintMapData[index] & BITMAP_PIXEL_MASK) | color_bits;
 				updateMinMax();

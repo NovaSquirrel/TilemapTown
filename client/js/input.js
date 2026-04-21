@@ -1926,7 +1926,10 @@ function initMouse() {
 
 	function paintColorsMouseDown(x, y) {
 		x = Math.floor(x / (parseInt(paintColors.style.width) / 4));
-		y = Math.floor(y / (parseInt(paintColors.style.height) / Math.ceil(paintTilesetImage.naturalHeight / 4)));
+		if(paintMode2x1)
+			y = Math.floor(y / (parseInt(paintColors.style.height) / Math.ceil(paintTilesetImage.naturalHeight / 4)));
+		else
+			y = Math.floor(y / (parseInt(paintColors.style.height) / 4));
 		paintColor(Math.min(paintColorCount-1, y*4+x));
 	}
 
