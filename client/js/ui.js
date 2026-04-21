@@ -3486,6 +3486,43 @@ function paintChangeZoom() {
 	paintZoomLevel = Math.min(15, zoom);
 	paintCanvas.style.width = (paintPixelWidth * paintZoomLevel)+"px";
 	paintCanvas.style.height = (paintPixelHeight * paintZoomLevel)+"px";
+
+	paintChangeGrid();
+}
+
+function paintChangeGrid() {
+	let grid = document.getElementById('doodleBoardPaintGridCanvas'); 
+	let gridXText = document.getElementById('paintGridX').value.split(",");
+	let gridYText = document.getElementById('paintGridY').value.split(",");
+	let gridX = parseInt(gridXText[0]);
+	let gridY = parseInt(gridYText[0]);
+	let offsetX = parseInt(gridXText[1]);
+	let offsetY = parseInt(gridYText[1]);
+	if (Number.isNaN(gridX))   gridX = 0;
+	if (Number.isNaN(gridY))   gridY = 0;
+	if (Number.isNaN(offsetX)) offsetX = 0;
+	if (Number.isNaN(offsetY)) offsetY = 0;
+	let gridPixelWidth = paintPixelWidth * paintZoomLevel;
+	let gridPixelHeight = paintPixelHeight * paintZoomLevel;
+	grid.width  = gridPixelWidth;
+	grid.height = gridPixelHeight;
+	let ctx = grid.getContext("2d");
+	ctx.clearRect(0, 0, grid.width, grid.height);
+	ctx.strokeStyle = "silver";
+	if (gridX === 0 || gridY === 0)
+		return;
+	for(let column = offsetX; column<paintPixelWidth; column+=gridX) {
+		ctx.beginPath();
+		ctx.moveTo(column * paintZoomLevel,  0);
+		ctx.lineTo(column * paintZoomLevel, gridPixelHeight);
+		ctx.stroke();
+	}
+	for(let row = offsetY; row<paintPixelHeight; row+=gridY) {
+		ctx.beginPath();
+		ctx.moveTo(0,              row * paintZoomLevel);
+		ctx.lineTo(gridPixelWidth, row * paintZoomLevel);
+		ctx.stroke();
+	}
 }
 
 function paintInvertAll() {

@@ -112,12 +112,22 @@ body {
 #doodleBoardPaintCanvas {
 	background: url('../img/scrolling_grid.gif');
 	image-rendering: pixelated;
-	border: 1px solid black;
 }
 #doodleBoardPaintPreview {
 	background: url('../img/scrolling_grid.gif');
 	image-rendering: pixelated;
 	border: 1px solid black;
+}
+#doobleBoardPaintCanvasContainer {
+	border: 1px solid black;
+    display: grid;
+}
+#doobleBoardPaintCanvasContainer > * {
+    grid-area: 1/1;
+    margin: 0;
+}
+#doodleBoardPaintGridCanvas {
+	pointer-events: none;
 }
 
 #chat-container {
