@@ -1211,13 +1211,13 @@
 	<div slot="contents">
 		<table><tr>
 		<td>
-			<strong>Colors</strong> <canvas id="doodleBoardPaintCurrentColor" width="1" height="1"></canvas><br><canvas id="doodleBoardPaintColors" width="4" height="4"></canvas>
+			<strong>Colors</strong> <canvas id="doodleBoardPaintCurrentColor" width="1" height="1"></canvas><br><canvas id="doodleBoardPaintColors" width="4" height="4"></canvas><span id="paint4x2Modes"><br><label class="unselectable"><input type="radio" id="paint4x2ModeToggle" name="paint4x2Mode">Toggle</label><label class="unselectable"><br><input type="radio" id="paint4x2Mode1st" name="paint4x2Mode" checked>1st</label><label class="unselectable"><input type="radio" id="paint4x2Mode2nd" name="paint4x2Mode">2nd</label></span>
 		</td>
 		<td><canvas id="doodleBoardPaintCanvas" width="32" height="32"></canvas></td>
 		<td>
 			<table border="1">
-			<tr><th>Tools</th><td><table><tr><td><button id="paintTool1px" onclick="paintTool(1);">1 px</button></td><td><button id="paintTool2px" onclick="paintTool(2);">2 px</button></td><td><button id="paintTool3px" onclick="paintTool(3);">3 px</button></td><tr><tr><td><button id="paintToolPlus" onclick="paintTool('+');">&nbsp;+&nbsp;</button></td><td><button id="paintToolFill" onclick="paintTool('fill')">Fill</button></td><td><button id="paintToolPick" onclick="paintTool('pick');">Pick</button></td></tr></table></td></tr>
-			<tr><th>Canvas</th><td><table><tr><td><button onclick="paintFillAll();">Fill all</button></td><td><button onclick="paintSavePNG();">Save PNG</button></td></tr><tr><td><button onclick="paintUndo();">Undo</button></td><td></td></tr></table></tr>
+			<tr><th>Tools</th><td><table><tr><td><button id="paintTool1px" onclick="paintTool(1);">1 px</button></td><td><button id="paintTool2px" onclick="paintTool(2);">2 px</button></td><td><button id="paintTool3px" onclick="paintTool(3);">3 px</button></td><tr><tr><td><button id="paintToolPlus" onclick="paintTool('+');">&nbsp;+&nbsp;</button></td><td id="paintToolFillTd"><button id="paintToolFill" onclick="paintTool('fill')">Fill</button></td><td id="paintToolPickTd"><button id="paintToolPick" onclick="paintTool('pick');">Pick</button></td><td id="paintToolRecolorTd"><button id="paintToolRecolor" onclick="paintTool('recolor');">Recolor</button></td><td id="paintToolInvertTd"><button id="paintToolInvert" onclick="paintTool('invert');">Invert</button></td></tr></table></td></tr>
+			<tr><th>Canvas</th><td><table><tr><td><button onclick="paintFillAll();">Fill all</button></td><td><button onclick="paintSavePNG();">Save PNG</button></td></tr><tr id="paint4x2CanvasButtons"><td><button onclick="paintInvertAll();">Invert all</button></td><td><button onclick="paintRecolorAll();">Recolor all</button></td></tr><tr><td><button onclick="paintUndo();">Undo</button></td><td></td></tr></table></tr>
 			<tr><th>1&times;</th><td><canvas id="doodleBoardPaintPreview" width="32" height="32"></canvas></td></tr>
 			<tr><td colspan="2"><label class="unselectable">Zoom <input id="paintZoom" oninput="paintChangeZoom();" value="8" type="number" min="1" max="12"></label></td><tr>
 			</table>
@@ -1225,6 +1225,7 @@
 		</tr></table>
 	</div>
 </widget-window>
+
 
 <!-- context menus -->
 <widget-contextmenu id="item-contextmenu" style="display: none;">
