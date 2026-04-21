@@ -72,7 +72,7 @@ async def town_info(request):
 			continue
 		if (connection.user_flags & userflag['hide_api'] != 0):
 			continue
-		user_data = {'name': u.name, 'username': u.username, 'id': u.protocol_id(), 'time_online': now - connection.connected_time}
+		user_data = {'name': u.name, 'username': u.username, 'id': u.protocol_id(), 'status': u.status_type, 'time_online': now - connection.connected_time}
 		if connection.user_flags & userflag['bot']:
 			user_data['bot'] = True
 		users[u.protocol_id()] = user_data
