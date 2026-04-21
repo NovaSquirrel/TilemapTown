@@ -807,11 +807,11 @@ class GadgetDoodleBoard(GadgetTrait):
 
 	def broadcast_partial_mini_tilemap(self, x1, y1, x2, y2):
 		self.set_config('data', self.gadget.mini_tilemap_data['data'])
-		partial = []
-		for y in range(y1, y2+1):
-			for x in range(x1, x2+1):
-				partial.append(self.map_data[y*self.map_width+x])
 		if self.gadget.map:
+			partial = []
+			for y in range(y1, y2+1):
+				for x in range(x1, x2+1):
+					partial.append(self.map_data[y*self.map_width+x])
 			self.gadget.map.broadcast("WHO", {'patch_mini_tilemap': {'id': self.gadget.protocol_id(), 'pos': [x1, y1, x2, y2], 'data': compress_mini_tilemap_data(partial)}})
 
 	def on_shutdown(self):

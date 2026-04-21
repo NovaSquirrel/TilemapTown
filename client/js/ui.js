@@ -1610,6 +1610,7 @@ function openItemContextMenu(id, x, y) {
 	document.getElementById("copyItemToHotbarLi").style.display = "none";
 	document.getElementById("copyItemToTilesetLi").style.display = "none";
 	document.getElementById("itemVerbsLi").style.display = "none";
+	document.getElementById("itemPaintLi").style.display = (item?.extra_types ?? []).includes("doodle_board") ? "block" : "none";
 	if (item?.verbs?.length) {
 		let ul = document.getElementById("itemverbs_ul");
 		while (ul.firstChild) {
@@ -3243,7 +3244,7 @@ function newItemCreate(type) {
 		params.create.data = {"type": "map_tile_list", "type_version": "0.0.1", "client_name": CLIENT_NAME, "data": []};
 	} else if (type === "doodle_board") {
 		params.create.type = "gadget";
-		params.create.data = [["doodle_board",{"tileset_url":"","data":[],"map_size":[16,32],"map_mode":"2x1"}]];
+		params.create.data = [["doodle_board",{"tileset_url":"","data":[],"map_size":[16,32],"map_mode":"2x1","ignore_clicks":true}]];
 	}
 	SendCmd("BAG", params);
 	newItemCancel();
@@ -3281,6 +3282,417 @@ function changeGadgetPreset() {
 function changeItemImageType() {
 	document.getElementById("tileImageSheetOptions").style.display = document.getElementById("itemImageIsSheet").checked ? "inline" : "none";
 	document.getElementById("tileImageURLOptions").style.display = document.getElementById("itemImageIsURL").checked ? "inline" : "none";
+}
+
+///////////////////////////////////////////////////////////
+// Doodle board painting
+///////////////////////////////////////////////////////////
+const BITMAP_COLOR_MASK  = 0b110000110000;
+const BITMAP_PIXEL_MASK  = 0b001111001111;
+const BITMAP_X_TILE_MASK = 0b000000111111;
+const BITMAP_Y_TILE_MASK = 0b111111000000;
+
+let paintItemID = null;
+let currentPaintTool, paintToggleIf, paintToolBeforePick;
+let currentPaintColor;
+let paintMapData;
+let paintTilesetUrl;
+let paintTilesetImage;
+let paintMode2x1;
+let paintTileWidth, paintTileHeight, paintMapWidth, paintMapHeight, paintPixelWidth, paintPixelHeight;
+let paintUndoSteps;
+let paintCanvas, paintPreviewCanvas;
+let paintZoomLevel;
+let paintColorCount;
+let paintMinStrokeX, paintMaxStrokeX, paintMinStrokeY, paintMaxStrokeY;
+let paintLastInvertX, paintLastInvertY;
+
+function startPainting(itemID) {
+	if(!(itemID in PlayerWho))
+		return;
+	let board = PlayerWho[itemID];
+
+	paintItemID = itemID;
+	paintTool(1);
+	paintMapData = decompressMiniTilemapData(board.mini_tilemap_data.data);
+	paintTilesetUrl = board.mini_tilemap.tileset_url;
+	paintTilesetImage = PlayerMiniTilemapImages[itemID];
+	paintMode2x1 = (board.mini_tilemap.tile_size[0] === 2) && (board.mini_tilemap.tile_size[1] === 1);
+	if (!paintMode2x1 && (board.mini_tilemap.tile_size[0] !== 4 || board.mini_tilemap.tile_size[1] !== 2)) // Make sure it's a supported tile size
+		return;
+	paintTileWidth = board.mini_tilemap.tile_size[0];
+	paintTileHeight = board.mini_tilemap.tile_size[1];
+	paintMapWidth = board.mini_tilemap.map_size[0];
+	paintMapHeight = board.mini_tilemap.map_size[1];
+	paintPixelWidth = paintMapWidth * paintTileWidth;
+	paintPixelHeight = paintMapHeight * paintTileHeight;
+	paintUndoSteps = [];
+	currentPaintColor = null;
+	paintColor(1);
+
+	paintCanvas = document.getElementById('doodleBoardPaintCanvas');
+	paintPreviewCanvas = document.getElementById('doodleBoardPaintPreview');
+	paintCanvas.width = paintPixelWidth;
+	paintCanvas.height = paintPixelHeight;
+	paintPreviewCanvas.width = paintPixelWidth;
+	paintPreviewCanvas.height = paintPixelHeight;
+
+	// Set up color selection
+	paintColorCount = paintTilesetImage.naturalHeight;
+	let paintColors = document.getElementById('doodleBoardPaintColors');
+	let paintColorsHeight = Math.ceil(paintTilesetImage.naturalHeight / 4);
+	paintColors.height = paintColorsHeight;
+	paintColors.style.width = (4*32) + 'px';
+	paintColors.style.height = (paintColorsHeight*24) + 'px';
+	let paintColorsCtx = paintColors.getContext('2d');
+	for(let colorId = 0; colorId < paintColorCount; colorId++) {
+		paintColorsCtx.drawImage(paintTilesetImage, 1, colorId, 1, 1, colorId % 4, Math.floor(colorId / 4), 1, 1);
+	}
+
+	paintChangeZoom();
+	paintRenderAll();
+
+	document.getElementById('doodleBoardPaintWindow').style.display = "block";
+}
+
+/////////////////////////////
+// Paint updates
+function paintFullUpdate() {
+	SendCmd("WHO", {"update": {"mini_tilemap_data": {"data": compressMiniTilemapData(paintMapData) }}, "rc": paintItemID})
+	paintRenderAll();
+}
+
+function paintPartialUpdate(x1, y1, x2, y2) {
+	let partial = [];
+	for (let y=y1; y<=y2; y++)
+		for (let x=x1; x<=x2; x++)
+			partial.push(paintMapData[y*paintMapWidth+x]);
+	SendCmd("WHO", {"patch_mini_tilemap": {"pos": [x1,y1,x2,y2], "data":partial}, "rc": paintItemID})
+	paintRenderAll();
+}
+
+function paintRenderAll() {
+	let ctx = paintCanvas.getContext("2d");
+	ctx.clearRect(0, 0, paintCanvas.width, paintCanvas.height);
+	for(let y=0; y<paintMapHeight; y++) {
+		for(let x=0; x<paintMapWidth; x++) {
+			let data_value = paintMapData[y*paintMapWidth+x];
+			ctx.drawImage(paintTilesetImage,
+				(data_value & 63) * paintTileWidth, ((data_value >> 6) & 63) * paintTileHeight,
+			paintTileWidth, paintTileHeight,
+			x * paintTileWidth,
+			y * paintTileHeight,
+			paintTileWidth, paintTileHeight);
+		}
+	}
+	let previewCtx = paintPreviewCanvas.getContext("2d");
+	previewCtx.clearRect(0, 0, paintPreviewCanvas.width, paintPreviewCanvas.height);
+	previewCtx.drawImage(paintCanvas, 0, 0)
+}
+
+/////////////////////////////
+// Paint buttons
+function paintTool(tool) {
+	if (tool === 'pick' && currentPaintTool !== 'pick')
+		paintToolBeforePick = currentPaintTool;
+	currentPaintTool = tool;
+	const toolTypeToId = {
+		paintTool1px: 1, paintTool2px: 2, paintTool3px: 3,
+		paintToolPlus: '+',
+		paintToolFill: 'fill',
+		paintToolPick: 'pick',
+	};
+	for(let i in toolTypeToId)
+		document.getElementById(i).style.fontWeight = (tool === toolTypeToId[i]) ? "bold" : "normal";
+}
+
+function paintColor(color) {
+	if(currentPaintColor === color)
+		return;
+	currentPaintColor = color;
+
+	let canvas = document.getElementById('doodleBoardPaintCurrentColor');
+	let ctx = canvas.getContext('2d');
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	ctx.drawImage(paintTilesetImage, 1, currentPaintColor, 1, 1, 0, 0, 1, 1);
+}
+
+function paintFillAll() {
+	paintMakeUndoStep();
+	for (let i=0; i<paintMapData.length; i++) {
+		paintMapData[i] = currentPaintColor | (currentPaintColor<<6);
+	}
+	paintFullUpdate();
+}
+
+function paintSavePNG() {
+	let data = paintPreviewCanvas.toDataURL();
+    const link = document.createElement('a');
+    link.href = data;
+    link.download = "canvas";
+    link.click();
+    link.remove();
+}
+
+function paintMakeUndoStep() {
+	paintUndoSteps.push(structuredClone(paintMapData));
+	if(paintUndoSteps.length > 10)
+		paintUndoSteps.shift(1);
+}
+
+function paintUndo() {
+	if(paintUndoSteps.length) {
+		paintMapData = paintUndoSteps.pop();
+		paintFullUpdate();
+	}
+}
+
+function paintChangeZoom() {
+	let zoom = parseInt(document.getElementById('paintZoom').value)
+	if (Number.isNaN(zoom))
+		return;
+	paintZoomLevel = Math.min(15, zoom);
+	paintCanvas.style.width = (paintPixelWidth * paintZoomLevel)+"px";
+	paintCanvas.style.height = (paintPixelHeight * paintZoomLevel)+"px";
+}
+
+/////////////////////////////
+// Canvas clicks
+function paintCanvasClick(pixel_x, pixel_y) {
+	paintMakeUndoStep();
+
+	if (paintMode2x1) {
+		paintToggleIf = null;
+		if (currentPaintTool === "fill") {
+			let replace_color = paintGetPixel(pixel_x, pixel_y);
+			if (replace_color === currentPaintColor)
+				return;
+
+			let queue = [[pixel_x, pixel_y]];
+			let already = new Array(paintPixelWidth * paintPixelHeight);
+			already[pixel_x+pixel_y*paintPixelWidth] = true;
+
+			while (queue.length) {
+				let [x,y] = queue.shift();
+				if (paintGetPixel(x, y) === replace_color) {
+					let index = y*paintMapWidth+(x>>1);
+					if (x & 1) // Right
+						paintMapData[index] = (paintMapData[index] & BITMAP_X_TILE_MASK) | (currentPaintColor << 6);
+					else // Left
+						paintMapData[index] = (paintMapData[index] & BITMAP_Y_TILE_MASK) | (currentPaintColor);
+
+					if (x > 0 && !already[(x-1)+y*paintPixelWidth]) {
+						already[(x-1)+y*paintPixelWidth] = true;
+						queue.push([x-1,y]);
+					}
+					if (y > 0 && !already[x+(y-1)*paintPixelWidth]) {
+						already[x+(y-1)*paintPixelWidth] = true;
+						queue.push([x,y-1]);
+					}
+					if ((x+1) < paintPixelWidth && !already[(x+1)+y*paintPixelWidth]) {
+						already[(x+1)+y*paintPixelWidth] = true;
+						queue.push([x+1,y]);
+					}
+					if ((y+1) < paintPixelHeight && !already[x+(y+1)*paintPixelWidth]) {
+						already[x+(y+1)*paintPixelWidth] = true;
+						queue.push([x,y+1]);
+					}
+				}
+			}
+
+			paintFullUpdate();
+			return;
+		} else if (currentPaintTool === "pick") {
+			paintPickColor(pixel_x, pixel_y);
+			paintTool(paintToolBeforePick);
+			return;
+		}
+	} else if (currentPaintTool == "invert") {
+		let x = Math.floor(pixel_x / paintTileWidth);
+		let y = Math.floor(pixel_y / paintTileHeight);
+		let index = y*paintMapWidth+x;
+		paintMapData[index] ^= BITMAP_PIXEL_MASK;
+		paintPartialUpdate(x, y, x, y);
+		paintLastInvertX = x
+		paintLastInvertY = y
+		return None
+	} else if (currentPaintTool === "draw light" || currentPaintTool == "draw 2nd") {
+		paintToggleIf = false;
+	} else if (currentPaintTool === "draw dark" || currentPaintTool == "draw 1st") {
+		paintToggleIf = true;
+	} else {
+		paintToggleIf = paintGetPixel(pixel_x, pixel_y);
+	}
+
+	paintMinStrokeX = null;
+	paintMaxStrokeX = null;
+	paintMinStrokeY = null;
+	paintMaxStrokeY = null;
+	if (paintPutWithTool(pixel_x, pixel_y, paintColorBits(currentPaintColor), paintToggleIf)) {
+		paintPartialUpdate(paintMinStrokeX, paintMinStrokeY, paintMaxStrokeX, paintMaxStrokeY);
+	}
+}
+
+function paintCanvasDrag(x1, y1, x2, y2) {
+	if (currentPaintTool === "invert") {
+		let x = Math.floor(arg['x'] / paintTileWidth);
+		let y = Math.floor(arg['y'] / paintTileHeight);
+		if (x === paintLastInvertX && y === paintLastInvertY)
+			return
+		let index = y*paintMapWidth+x;
+		paintMapData[index] ^= BITMAP_PIXEL_MASK;
+		paintPartialUpdate(x, y, x, y);
+		paintLastInvertX = x;
+		paintLastInvertY = y;
+		return;
+	}
+	if (["fill", "pick", "invert"].includes(currentPaintTool))
+		return;
+	paintMinStrokeX = null;
+	paintMaxStrokeX = null;
+	paintMinStrokeY = null;
+	paintMaxStrokeY = null;
+	if (paintDrawLine(x1, y1, x2, y2, paintColorBits(currentPaintColor), paintToggleIf)) {
+		paintPartialUpdate(paintMinStrokeX, paintMinStrokeY, paintMaxStrokeX, paintMaxStrokeY);
+	}
+}
+
+function paintPickColor(x, y) {
+	paintColor(paintGetPixel(x, y));
+}
+
+/////////////////////////////
+// Canvas operations
+function paintColorBits(color) {
+	if (paintMode2x1)
+		return color;
+	return ((color & 0x3) << 4) | ((color & 0xC) << 8);
+}
+
+function paintGetPixel(pixel_x, pixel_y) {
+	if (pixel_x < 0 || pixel_y < 0)
+		return paintMode2x1 ? 0 : false;
+	let x = Math.floor(pixel_x / paintTileWidth); 
+	let y = Math.floor(pixel_y / paintTileHeight);
+
+	if (x >= 0 && y >= 0 && x < paintMapWidth && y < paintMapHeight) {
+		let index = y*paintMapWidth+x;
+		if (paintMode2x1)
+			return (pixel_x&1) ? ((paintMapData[index] & BITMAP_Y_TILE_MASK) >> 6) : (paintMapData[index] & BITMAP_X_TILE_MASK);
+		let pixel_mask = 1 << ( (pixel_x&3) + ((pixel_y&1)*6) );
+		return Boolean(paintMapData[index] & pixel_mask);
+	}
+	return false;
+}
+
+function paintChangePixel(pixel_x, pixel_y, color_bits, toggle_if) {
+	function updateMinMax() {
+		if (paintMinStrokeX === null || x<paintMinStrokeX)
+			paintMinStrokeX = x;
+		if (paintMinStrokeY === null || y<paintMinStrokeY)
+			paintMinStrokeY = y;
+		if (paintMaxStrokeX === null || x>paintMaxStrokeX)
+			paintMaxStrokeX = x;
+		if (paintMaxStrokeY === null || y>paintMaxStrokeY)
+			paintMaxStrokeY = y;
+	}
+	if (pixel_x < 0 || pixel_y < 0)
+		return false;
+	let x = Math.floor(pixel_x / paintTileWidth);
+	let y = Math.floor(pixel_y / paintTileHeight);
+	let index = y*paintMapWidth+x;
+	if (x >= 0 && y >= 0 && x < paintMapWidth && y < paintMapHeight) {
+		if (paintMode2x1) {
+			let new_value;
+			if (pixel_x & 1) // Right
+				new_value = (paintMapData[index] & BITMAP_X_TILE_MASK) | (color_bits << 6);
+			else // Left
+				new_value = (paintMapData[index] & BITMAP_Y_TILE_MASK) | (color_bits);
+			if (new_value != paintMapData[index]) {
+				paintMapData[index] = new_value;
+				updateMinMax();
+				return true;
+			}
+			return false;
+		} else {
+			let pixel_mask = 1 << ( (pixel_x&3) + ((pixel_y&1)*6) );
+			if (toggle_if !== "recolor" && ((!toggle_if && 0 === (paintMapData[index] & pixel_mask)) || (toggle_if && (paintMapData[index] & pixel_mask)))) {
+				paintMapData[index] = ((paintMapData[index] ^ pixel_mask) & BITMAP_PIXEL_MASK) | color_bits;
+				updateMinMax();
+				return True
+			} else if ((paintMapData[index] & BITMAP_COLOR_MASK) != color_bits) {
+				paintMapData[index] = (paintMapData[index] & BITMAP_PIXEL_MASK) | color_bits;
+				updateMinMax();
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+function paintPutWithTool(x, y, color_bits, toggle_if) {
+	let changed_any = false;
+	switch(currentPaintTool) {
+		case 1:
+			changed_any = paintChangePixel(x, y, color_bits, toggle_if) || changed_any;
+			break;
+		case 2:
+			changed_any = paintChangePixel(x,    y, color_bits, toggle_if) || changed_any;
+			changed_any = paintChangePixel(x+1,  y, color_bits, toggle_if) || changed_any;
+			changed_any = paintChangePixel(x,  y+1, color_bits, toggle_if) || changed_any;
+			changed_any = paintChangePixel(x+1,y+1, color_bits, toggle_if) || changed_any;
+			break;
+		case 3:
+			for (let cx=0; cx<3; cx++)
+				for (let cy=0; cy<3; cy++)
+					changed_any = paintChangePixel(x-1+cx, y-1+cy, color_bits, toggle_if) || changed_any;
+			break;
+		case "+":
+			changed_any = paintChangePixel(x,   y, color_bits, toggle_if) || changed_any;
+			changed_any = paintChangePixel(x-1, y, color_bits, toggle_if) || changed_any;
+			changed_any = paintChangePixel(x+1, y, color_bits, toggle_if) || changed_any;
+			changed_any = paintChangePixel(x, y-1, color_bits, toggle_if) || changed_any;
+			changed_any = paintChangePixel(x, y+1, color_bits, toggle_if) || changed_any;
+			break;
+		case "recolor":
+			changed_any = paintChangePixel(x, y, color_bits, "recolor") || changed_any;
+			break;
+	}
+	return changed_any; 
+}
+
+function paintDrawLine(x1, y1, x2, y2, color, toggle_if) {
+	if (x1 < -32 || x1 > 32*2 || y1 < -32 || y1 > 32*2 || x2 < -32 || x2 > 32*2 || y2 < -32 || y2 > 32*2)
+		return;
+	// Brensenham's line algorithm
+	let dx = Math.abs(x2 - x1);
+	let sx = (x1 < x2) ? 1 : -1;
+	let dy = -Math.abs(y2 - y1);
+	let sy = (y1 < y2) ? 1 : -1;
+	let error = dx + dy;
+	let x = x1;
+	let y = y1;
+	let changed_any = false;
+
+	while (true) {
+		changed_any = paintPutWithTool(x, y, color, toggle_if) || changed_any;
+		if (x == x2 && y == y2)
+			break
+		let e2 = 2 * error;
+		if (e2 >= dy) {
+			if (x == x2)
+				break
+			error += dy;
+			x += sx;
+		}
+		if (e2 <= dx) {
+			if (y == y2)
+				break
+			error += dx;
+			y += sy;
+		}
+	}
+	return changed_any;
 }
 
 ///////////////////////////////////////////////////////////

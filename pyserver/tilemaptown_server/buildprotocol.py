@@ -61,7 +61,7 @@ def find_remote_control_entity(connection, client, rc, context):
 		else:
 			return actor
 	else:
-		connection.protocol_error(context, text='Entity %s not loaded' % rc, code='missing_permission', detail='remote_command', subject_id=rc)
+		connection.protocol_error(context, text='Don\'t have permission for entity %s' % rc, code='missing_permission', detail='remote_command', subject_id=rc)
 	return None
 
 def remove_invalid_dict_fields(data, whitelist):

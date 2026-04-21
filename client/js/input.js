@@ -1186,8 +1186,13 @@ function useItemAtXY(Placed, x, y) {
 			drawMap();
 			break;
 		case "generic":
-		case "gadget":
 			SendCmd("USE", { id: Placed.id });
+			break;
+		case "gadget":
+			if (Placed.id in PlayerWho && (PlayerWho[Placed.id]?.extra_types ?? []).includes("doodle_board"))
+				startPainting(Placed.id);
+			else
+				SendCmd("USE", { id: Placed.id });
 			break;
 		case "client_data":
 			if (Placed.data.type === "command_list")
@@ -1589,7 +1594,7 @@ function initMouse() {
 		handleMouseDown(pos, pixelPos);
 	}, false);
 
-	mapCanvas.addEventListener('mouseup', function (evt) {
+	window.addEventListener('mouseup', function (evt) {
 		if (evt.button != 0 || hadTouchEventYet)
 			return;
 		let pos = getTilePos(evt);
@@ -1649,7 +1654,7 @@ function initMouse() {
 		handleMouseMove(pos, pixelPos);
 	}, false);
 
-	mapCanvas.addEventListener('touchend', function (evt) {
+	window.addEventListener('touchend', function (evt) {
 		let [pos, pixelPos] = getTouchPositions(evt);
 		handleMouseUp(pos, pixelPos);
 	}, false);
@@ -1737,14 +1742,13 @@ function initMouse() {
 		}
 	}, false);
 
-	selector.addEventListener('touchend', function (evt) {
+	window.addEventListener('touchend', function (evt) {
 		hotbarDragging = false;
 	}, false);
 
 	// ----------------------------------------------------------------
 
 	let addMultiple = document.getElementById("tilesetModeAddMultipleSheetCanvas");
-
 
 	function addMultipleMouseDown(x, y) {
 		let zoomed = document.getElementById('tilesetModeAddMultipleZoom').checked;
@@ -1779,11 +1783,13 @@ function initMouse() {
 		}
 	}, false);
 
-	addMultiple.addEventListener('mouseup', function (evt) {
-		if (evt.button == 2 || hadTouchEventYet)
-			return;
-		tilesetEditAddMultipleDragging = false;
-		tilesetEditRedrawSheet();
+	window.addEventListener('mouseup', function (evt) {
+		if(tilesetEditAddMultipleDragging) {
+			if (evt.button == 2 || hadTouchEventYet)
+				return;
+			tilesetEditAddMultipleDragging = false;
+			tilesetEditRedrawSheet();
+		}
 	}, false);
 
 	addMultiple.addEventListener('touchstart', function (evt) {
@@ -1798,9 +1804,11 @@ function initMouse() {
 		}
 	}, false);
 
-	addMultiple.addEventListener('touchend', function (evt) {
-		tilesetEditAddMultipleDragging = false;
-		tilesetEditRedrawSheet();
+	window.addEventListener('touchend', function (evt) {
+		if(tilesetEditAddMultipleDragging) {
+			tilesetEditAddMultipleDragging = false;
+			tilesetEditRedrawSheet();
+		}
 	}, false);
 
 	addMultiple.addEventListener('contextmenu', function (evt) {
@@ -1843,4 +1851,120 @@ function initMouse() {
 		}
 		evt.preventDefault();
 	}, false);
+
+	// ----------------------------------------------------------------
+
+	let paint = document.getElementById("doodleBoardPaintCanvas");
+	let paintDragging = false;
+	let paintX, paintY;
+
+	function paintRawToPixel(x) {
+		return Math.floor(x / paintZoomLevel);
+	}
+
+	function paintMouseDown(x, y) {
+		x = paintRawToPixel(x);
+		y = paintRawToPixel(y);
+		paintCanvasClick(x, y);
+		paintX = x;
+		paintY = y;
+		paintDragging = true;
+	}
+	function paintMouseDrag(x, y) {
+		x = paintRawToPixel(x);
+		y = paintRawToPixel(y);
+		paintCanvasDrag(paintX, paintY, x, y);
+		paintX = x;
+		paintY = y;
+	}
+
+	paint.addEventListener('mousedown', function (evt) {
+		if (evt.button !== 0 || hadTouchEventYet)
+			return;
+		let pos = getMousePosRaw(paint, evt);
+		paintMouseDown(pos.x, pos.y);
+	}, false);
+
+	paint.addEventListener('mousemove', function (evt) {
+		if(paintDragging && !hadTouchEventYet) {
+			let pos = getMousePosRaw(paint, evt);
+			paintMouseDrag(pos.x, pos.y);
+		}
+	}, false);
+
+	window.addEventListener('mouseup', function (evt) {
+		if (evt.button !== 0 || hadTouchEventYet)
+			return;
+		paintDragging = false;
+	}, false);
+
+	paint.addEventListener('touchstart', function (evt) {
+		hadTouchEventYet = true;
+		paintMouseDown(evt.changedTouches[0].pageX - paint.getBoundingClientRect().left, evt.changedTouches[0].pageY - paint.getBoundingClientRect().top);
+	}, false);
+
+	paint.addEventListener('touchmove', function (evt) {
+		hadTouchEventYet = true;
+		if(paintDragging)
+			paintMouseDrag(evt.changedTouches[0].pageX - paint.getBoundingClientRect().left, evt.changedTouches[0].pageY - paint.getBoundingClientRect().top);
+	}, false);
+
+	window.addEventListener('touchend', function (evt) {
+		paintDragging = false;
+	}, false);
+
+	paint.addEventListener('contextmenu', function (evt) {
+		let pos = getMousePosRaw(paint, evt);
+		paintPickColor(paintRawToPixel(pos.x), paintRawToPixel(pos.y));
+		evt.preventDefault();
+	}, false);
+
+	// ----------------------------------------------------------------
+
+	let paintColors = document.getElementById("doodleBoardPaintColors");
+	let paintColorsDragging = false;
+
+	function paintColorsMouseDown(x, y) {
+		x = Math.floor(x / (parseInt(paintColors.style.width) / 4));
+		y = Math.floor(y / (parseInt(paintColors.style.height) / Math.ceil(paintTilesetImage.naturalHeight / 4)));
+		paintColor(Math.min(paintColorCount-1, y*4+x));
+	}
+
+	paintColors.addEventListener('mousedown', function (evt) {
+		if (evt.button === 2 || hadTouchEventYet)
+			return;
+		let pos = getMousePosRaw(paintColors, evt);
+		paintColorsMouseDown(pos.x, pos.y);
+		paintColorsDragging = true;
+	}, false);
+
+	paintColors.addEventListener('mousemove', function (evt) {
+		if(paintColorsDragging && !hadTouchEventYet) {
+			let pos = getMousePosRaw(paintColors, evt);
+			paintColorsMouseDown(pos.x, pos.y);
+		}
+	}, false);
+
+	window.addEventListener('mouseup', function (evt) {
+		if (evt.button === 2 || hadTouchEventYet)
+			return;
+		paintColorsDragging = false;
+	}, false);
+
+	paintColors.addEventListener('touchstart', function (evt) {
+		hadTouchEventYet = true;
+		paintColorsMouseDown(evt.changedTouches[0].pageX - paintColors.getBoundingClientRect().left, evt.changedTouches[0].pageY - paintColors.getBoundingClientRect().top);
+		paintColorsDragging = true;
+	}, false);
+
+	paintColors.addEventListener('touchmove', function (evt) {
+		hadTouchEventYet = true;
+		if(paintColorsDragging)
+			paintColorsMouseDown(evt.changedTouches[0].pageX - paintColors.getBoundingClientRect().left, evt.changedTouches[0].pageY - paintColors.getBoundingClientRect().top);
+	}, false);
+
+	paintColors.addEventListener('touchend', function (evt) {
+		paintColorsDragging = false;
+	}, false);
+
 }

@@ -797,7 +797,7 @@
   <span slot="title">Edit Item</span>
   <div slot="contents">
     <div id="edittileimage">
-    Image URL: <input type="text" id="edittileurl" /><br>
+    Image URL: <input type="url" id="edittileurl" /><br>
     <p>This should be an image uploaded to this server, or on<br><a href="https://filegarden.com/" target="_blank">File Garden</a>, <a href="https://imgbb.com/" target="_blank">ImgBB</a> or <a href="https://postimages.org/" target="_blank">Postimages</a>.<br>More image hosts can be added on request.</p>
 	<p>You can select this item in the tile editing window<br>to use it for tile graphics.</p>
     </div>
@@ -875,7 +875,7 @@
 			</div>
 			<div id="edittilegadget_preset_mini_tilemap">
 				<table border="0">
-				<tr><td>Tileset URL</td><td><input type="text" id="edittilegadget_preset_mini_tilemap_tileset_url" /></td></tr>
+				<tr><td>Tileset URL</td><td><input type="url" id="edittilegadget_preset_mini_tilemap_tileset_url" /></td></tr>
 				<tr><td>Tile size</td><td><input type="number" min="1" max="64" id="edittilegadget_preset_mini_tilemap_tile_width" /> &times; <input type="number" min="1" max="64" id="edittilegadget_preset_mini_tilemap_tile_height" /></td></tr>
 				<tr><td>Map size</td><td><input type="number" min="1" max="64" id="edittilegadget_preset_mini_tilemap_map_width" /> &times; <input type="number" min="1" max="64" id="edittilegadget_preset_mini_tilemap_map_height" /> (if type is "raw map")</td></tr>
 				<tr><td>Offset</td><td><input type="number" size="5" id="edittilegadget_preset_mini_tilemap_offset_x" /> , <input type="number" size="5" id="edittilegadget_preset_mini_tilemap_offset_y" /></td></tr>
@@ -893,7 +893,7 @@
 			</div>
 			<div id="edittilegadget_preset_doodle_board">
 				<table border="0">
-				<tr><td>Tileset URL</td><td><input type="text" id="edittilegadget_preset_doodle_board_tileset_url" /> <label><input type="checkbox" id="edittilegadget_preset_doodle_board_2x1" onchange="updateDoodleBoardPixelSize();" />More colors!</label></td></tr>
+				<tr><td>Tileset URL</td><td><input type="url" id="edittilegadget_preset_doodle_board_tileset_url" /> <label><input type="checkbox" id="edittilegadget_preset_doodle_board_2x1" onchange="updateDoodleBoardPixelSize();" />More colors!</label></td></tr>
 				<tr><td>Map size</td><td><input type="number" min="1" max="16" id="edittilegadget_preset_doodle_board_map_width" placeholder="8" onchange="updateDoodleBoardPixelSize();" oninput="updateDoodleBoardPixelSize();" /> &times; <input type="number" min="1" max="32" id="edittilegadget_preset_doodle_board_map_height" placeholder="16" onchange="updateDoodleBoardPixelSize();"  oninput="updateDoodleBoardPixelSize();" /> | <span id="edittilegadget_preset_doodle_board_pixel_size"></span></td></tr>
 				<tr><td>Image data</td><td><textarea id="edittilegadget_preset_doodle_board_data"></textarea></td></tr>
 				<tr><td><label class="unselectable" for="edittilegadget_preset_doodle_board_ignore_clicks">Ignore clicks</label></td><td><input type="checkbox" id="edittilegadget_preset_doodle_board_ignore_clicks" /></td></tr>
@@ -969,7 +969,7 @@
     </div>
     </p>
 	</div>
-	<div id="tileImageURLOptions">URL: <input id="edittileimageurl" type="text" placeholder="Image URL"></div>
+	<div id="tileImageURLOptions">URL: <input id="edittileimageurl" type="url" placeholder="Image URL"></div>
 	</p>
 
 	<p><details id="edittileautotileoptions">
@@ -1149,7 +1149,7 @@
 			<table border="1">
 				<tr><th>Name</th><td><input id="editUserProfileName"></td></tr>
 				<tr><th>Pronouns</th><td><input id="editUserProfilePronouns"></td></tr>
-				<tr><th>Picture URL</th><td><input id="editUserProfilePictureUrl"></td></tr>
+				<tr><th>Picture URL</th><td><input type="url" id="editUserProfilePictureUrl"></td></tr>
 				<tr><th>Birthday<br>(YYYY-MM-DD format)</th><td><input id="editUserProfileBirthday"></td></tr>
 				<tr><th>Email</th><td><input id="editUserProfileEmail"></td></tr>
 				<tr><th>Website</th><td><input id="editUserProfileWebsite"></td></tr>
@@ -1206,6 +1206,26 @@
 	</div>
 </widget-window>
 
+<widget-window id="doodleBoardPaintWindow" style="display: none;">
+	<span slot="title">Paint!</span>
+	<div slot="contents">
+		<table><tr>
+		<td>
+			<strong>Colors</strong> <canvas id="doodleBoardPaintCurrentColor" width="1" height="1"></canvas><br><canvas id="doodleBoardPaintColors" width="4" height="4"></canvas>
+		</td>
+		<td><canvas id="doodleBoardPaintCanvas" width="32" height="32"></canvas></td>
+		<td>
+			<table border="1">
+			<tr><th>Tools</th><td><table><tr><td><button id="paintTool1px" onclick="paintTool(1);">1 px</button></td><td><button id="paintTool2px" onclick="paintTool(2);">2 px</button></td><td><button id="paintTool3px" onclick="paintTool(3);">3 px</button></td><tr><tr><td><button id="paintToolPlus" onclick="paintTool('+');">&nbsp;+&nbsp;</button></td><td><button id="paintToolFill" onclick="paintTool('fill')">Fill</button></td><td><button id="paintToolPick" onclick="paintTool('pick');">Pick</button></td></tr></table></td></tr>
+			<tr><th>Canvas</th><td><table><tr><td><button onclick="paintFillAll();">Fill all</button></td><td><button onclick="paintSavePNG();">Save PNG</button></td></tr><tr><td><button onclick="paintUndo();">Undo</button></td><td></td></tr></table></tr>
+			<tr><th>1&times;</th><td><canvas id="doodleBoardPaintPreview" width="32" height="32"></canvas></td></tr>
+			<tr><td colspan="2"><label class="unselectable">Zoom <input id="paintZoom" oninput="paintChangeZoom();" value="8" type="number" min="1" max="12"></label></td><tr>
+			</table>
+		</td>
+		</tr></table>
+	</div>
+</widget-window>
+
 <!-- context menus -->
 <widget-contextmenu id="item-contextmenu" style="display: none;">
   <ul slot="menu" id="item-contextmenu-menu">
@@ -1217,6 +1237,7 @@
     <li onclick="cloneItem(contextMenuItem, true)">Clone (Temporary)</li>
     <li id="copyItemToTilesetLi" onclick="copyItemToTileset(contextMenuItem)">Copy to tileset/</li>
     <li id="copyItemToHotbarLi" onclick="copyItemToHotbar(contextMenuItem)">Copy to hotbar</li>
+    <li id="itemPaintLi" onclick="startPainting(contextMenuItem)">Paint &#x1F3A8;</li>
     <li id="itemVerbsLi" onclick="viewItemVerbs(event)">Send command</li>
     <li onclick="sendPrivateMessageToItem(contextMenuItem)">Private message</li>
     <li onclick="deleteItem(contextMenuItem)">Delete</li>

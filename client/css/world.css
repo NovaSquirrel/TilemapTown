@@ -101,13 +101,23 @@ body {
 	background: url('../img/scrolling_grid.gif');
 }
 #itemEditTilePickerWindowImg {
-    image-rendering: pixelated;
+	image-rendering: pixelated;
 }
 #tilesetModeAddMultipleSheetContainer {
 	background: url('../img/scrolling_grid.gif');
 }
 #tilesetModeAddMultipleImg {
     image-rendering: pixelated;
+}
+#doodleBoardPaintCanvas {
+	background: url('../img/scrolling_grid.gif');
+	image-rendering: pixelated;
+	border: 1px solid black;
+}
+#doodleBoardPaintPreview {
+	background: url('../img/scrolling_grid.gif');
+	image-rendering: pixelated;
+	border: 1px solid black;
 }
 
 #chat-container {
@@ -333,6 +343,28 @@ widget-contextmenu li:hover {
 	overflow: auto;
 }
 
+summary {
+	font-weight: bold;
+}
+
+.options-section {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+#doodleBoardPaintColors {
+	border: 1px solid black;
+	image-rendering: pixelated;
+	background: url('../img/scrolling_grid.gif');
+}
+#doodleBoardPaintCurrentColor {
+	border: 1px solid black;
+	width: 48px;
+	height: 24px;
+	image-rendering: pixelated;
+	background: url('../img/scrolling_grid.gif');
+}
+
 /* Touch UI buttons */
 #touch-button-container {
 	position: absolute;
@@ -362,13 +394,4 @@ widget-contextmenu li:hover {
 
 #touch-button-container td:hover {
     background-color: lightpink;
-}
-
-summary {
-	font-weight: bold;
-}
-
-.options-section {
-	margin-top: 0.5em;
-	margin-bottom: 0.5em;
 }

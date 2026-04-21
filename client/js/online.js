@@ -204,6 +204,17 @@ function SendStatusMessageFromBeforeDisconnect() {
 	}
 }
 
+function compressMiniTilemapData(data) {
+	const out = [];
+	for (let tile of data) {
+		if (out.length && (tile === (out[out.length-1] & 4095)) && (out[out.length-1] < 0b1111111000000000000))
+			out[out.length-1] += 4096;
+		else
+			out.push(tile);
+	}
+	return out;
+}
+
 function decompressMiniTilemapData(data) {
 	const out = [];
 	for (const d of data) {
