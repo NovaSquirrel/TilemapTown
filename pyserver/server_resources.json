@@ -59,7 +59,7 @@
 		]
 	},
 	"doodle_board_tilesets": {
-		"2x1": {"DawnBringer 32": "mini_tilemap/bitmap_db32.png", "Endesga 32":"mini_tilemap/bitmap_endesga32.png", "Lospec Snackbar": "mini_tilemap/bitmap_lospec-snackbar.png", "ToyBox32": "mini_tilemap/bitmap_toybox32.png", "Sweetie 16": "mini_tilemap/bitmap_sweetie16.png", "Colorboy": "mini_tilemap/bitmap_colorboy.png", "Mario": "mini_tilemap/bitmap_mario.png", "PICO-8": "mini_tilemap/bitmap_pico8.png"},
+		"2x1": {"DawnBringer 32": "mini_tilemap/bitmap_db32.png", "Endesga 32":"mini_tilemap/bitmap_endesga32.png", "Lospec Snackbar": "mini_tilemap/bitmap_lospec-snackbar.png", "ToyBox32": "mini_tilemap/bitmap_toybox32.png", "Sweetie 16": "mini_tilemap/bitmap_sweetie16.png", "Colorboy": "mini_tilemap/bitmap_colorboy.png", "Mario": "mini_tilemap/bitmap_mario.png", "PICO-8": "mini_tilemap/bitmap_pico8.png", "Vixien Base-32": "mini_tilemap/bitmap_vixien-base-32.png"},
 		"4x2": {"Default": "mini_tilemap/bitmap.png", "Basic Bit": "mini_tilemap/bitmap_basicbit.png"}
 	},
 	"tilesets": {
