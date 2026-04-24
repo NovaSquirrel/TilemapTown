@@ -39,6 +39,7 @@ let MessageAckReqPrefix = Math.random() + "_";
 let MessageAckReqNumber = 0; // Incremented every time a key is required, and added to the prefix to get the key that's sent out
 let JoinedMapYet = false;
 let DefaultPics = {};
+let ServerDoodleBoardTilesets = {};
 const SupportedTakeControlsKeys = ["turn-ne", "move-ne", "turn-se", "move-se", "turn-nw", "move-nw", "turn-sw", "move-sw", "turn-w", "move-w", "turn-s", "move-s", "turn-n", "move-n", "turn-e", "move-e", "use-item", "cancel", "hotbar-1", "hotbar-2", "hotbar-3", "hotbar-4", "hotbar-5", "hotbar-6", "hotbar-7", "hotbar-8", "hotbar-9", "hotbar-10"];
 const CLIENT_NAME = "Tilemap Town Web Client";
 
@@ -768,6 +769,9 @@ function receiveServerMessage(cmd, arg) {
       }
       if('default_pics' in arg) {
         DefaultPics = arg['default_pics'];
+      }
+      if('doodle_board_tilesets' in arg) {
+        ServerDoodleBoardTilesets = arg['doodle_board_tilesets'];
       }
       changedBuildToolCategory();
       break;

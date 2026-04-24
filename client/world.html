@@ -1212,6 +1212,7 @@
 		<table><tr>
 		<td>
 			<strong>Colors</strong> <canvas id="doodleBoardPaintCurrentColor" width="1" height="1"></canvas><br><canvas id="doodleBoardPaintColors" width="4" height="4"></canvas><span id="paint4x2Modes"><br><label class="unselectable"><input type="radio" id="paint4x2ModeToggle" name="paint4x2Mode">Toggle</label><label class="unselectable"><br><input type="radio" id="paint4x2Mode1st" name="paint4x2Mode" checked>1st</label><label class="unselectable"><input type="radio" id="paint4x2Mode2nd" name="paint4x2Mode">2nd</label></span>
+			<span id="paintPaletteOptions"><br><select id="paintPaletteSelect" onchange="paintChangedPalette(true);"></select><br><input type="url" size="14" id="paintCustomPaletteUrl"></span>
 		</td>
 		<td><div id="doobleBoardPaintCanvasContainer"><canvas id="doodleBoardPaintCanvas" width="32" height="32"></canvas><canvas id="doodleBoardPaintGridCanvas"></canvas></div></td>
 		<td>

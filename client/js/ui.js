@@ -3345,27 +3345,31 @@ function startPainting(itemID) {
 	paintPreviewCanvas.width = paintPixelWidth;
 	paintPreviewCanvas.height = paintPixelHeight;
 
-	// Set up color selection
-	let paintColors = document.getElementById('doodleBoardPaintColors');
-	let paintColorsCtx = paintColors.getContext('2d');
-	if(paintMode2x1) {
-		paintColorCount = paintTilesetImage.naturalHeight;
-		let paintColorsHeight = Math.ceil(paintTilesetImage.naturalHeight / 4);
-		paintColors.height = paintColorsHeight;
-		paintColors.style.width = (4*32) + 'px';
-		paintColors.style.height = (paintColorsHeight*24) + 'px';
-		for(let colorId = 0; colorId < paintColorCount; colorId++) {
-			paintColorsCtx.drawImage(paintTilesetImage, 1, colorId, 1, 1, colorId % 4, Math.floor(colorId / 4), 1, 1);
+	let tilesetList = ServerDoodleBoardTilesets[paintMode2x1 ? "2x1" : "4x2"];
+	if (tilesetList) {
+		let paletteSelect = document.getElementById("paintPaletteSelect");
+		while (paletteSelect.firstChild) {
+			paletteSelect.removeChild(paletteSelect.lastChild);
 		}
+		let el;
+		for(let name in tilesetList) {
+			el = document.createElement("option");
+			el.textContent = name;
+			el.value = tilesetList[name];
+			paletteSelect.appendChild(el);
+		}
+		el = document.createElement("option");
+		el.textContent = "Custom URL";
+		el.value = "custom";
+		paletteSelect.appendChild(el);
+
+		paletteSelect.value = Object.values(tilesetList).includes(paintTilesetUrl) ? paintTilesetUrl : "custom";
+		document.getElementById("paintCustomPaletteUrl").value = paintTilesetUrl;
+		document.getElementById('paintPaletteOptions').style.display = "";
 	} else {
-		paintColorCount = 16;
-		paintColors.height = 4;
-		paintColors.style.width = (4*32) + 'px';
-		paintColors.style.height = (4*24) + 'px';
-		for(let colorId = 0; colorId < 16; colorId++) {
-			paintColorsCtx.drawImage(paintTilesetImage, (colorId&3)*64+8, ((colorId>>2)&3)*32, 2, 1, (colorId&3)*2, colorId>>2, 2, 1);
-		}
+		document.getElementById('paintPaletteOptions').style.display = "none";
 	}
+	paintChangedPalette(false);
 
 	paintChangeZoom();
 	paintRenderAll();
@@ -3522,6 +3526,59 @@ function paintChangeGrid() {
 		ctx.moveTo(0,              row * paintZoomLevel);
 		ctx.lineTo(gridPixelWidth, row * paintZoomLevel);
 		ctx.stroke();
+	}
+}
+
+function paintRerenderPalette() {
+	// Set up color selection
+	let paintColors = document.getElementById('doodleBoardPaintColors');
+	let paintColorsCtx = paintColors.getContext('2d');
+	if(paintMode2x1) {
+		paintColorCount = paintTilesetImage.naturalHeight;
+		let paintColorsHeight = Math.ceil(paintTilesetImage.naturalHeight / 4);
+		paintColors.height = paintColorsHeight;
+		paintColors.style.width = (4*32) + 'px';
+		paintColors.style.height = (paintColorsHeight*24) + 'px';
+		for(let colorId = 0; colorId < paintColorCount; colorId++) {
+			paintColorsCtx.drawImage(paintTilesetImage, 1, colorId, 1, 1, colorId % 4, Math.floor(colorId / 4), 1, 1);
+		}
+	} else {
+		paintColorCount = 16;
+		paintColors.height = 4;
+		paintColors.style.width = (4*32) + 'px';
+		paintColors.style.height = (4*24) + 'px';
+		for(let colorId = 0; colorId < 16; colorId++) {
+			paintColorsCtx.drawImage(paintTilesetImage, (colorId&3)*64+8, ((colorId>>2)&3)*32, 2, 1, (colorId&3)*2, colorId>>2, 2, 1);
+		}
+	}
+}
+
+function paintChangedPalette(request) {
+	let value = document.getElementById('paintPaletteSelect').value;
+	document.getElementById('paintCustomPaletteUrl').style.display = value === "custom" ? "block" : "none";
+	if(request) {
+		let url = (value === "custom") ? document.getElementById("paintCustomPaletteUrl").value.trim() : value;
+		let miniTilemap = PlayerWho[paintItemID]?.mini_tilemap;
+		if (!miniTilemap) return; 
+		miniTilemap = structuredClone(miniTilemap);
+		if(miniTilemap.tileset_url === url)
+			return;
+		miniTilemap.tileset_url = url;
+		paintTilesetUrl = url;
+
+		paintTilesetImage = new Image();
+		paintTilesetImage.onload = function() {
+			paintRenderAll();
+			paintRerenderPalette();
+
+			let color = currentPaintColor;
+			currentPaintColor = null;
+			paintColor(color)
+		}
+		paintTilesetImage.src = url;
+		SendCmd("WHO", {"update": {"mini_tilemap": miniTilemap }, "rc": paintItemID});
+	} else {
+		paintRerenderPalette();
 	}
 }
 
@@ -5739,6 +5796,10 @@ function initWorld() {
 	document.getElementById("tileset_search").addEventListener("keydown", function(event) {
 		if (event.key === "Enter")
 			refreshTilesetList();
+	});
+	document.getElementById("paintCustomPaletteUrl").addEventListener("keydown", function(event) {
+		if (event.key === "Enter")
+			paintChangedPalette(true);
 	});
 
 	for (let i of ["loginuser", "loginpass", "loginserver", "loginnick", "loginMapID"])

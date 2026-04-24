@@ -77,7 +77,7 @@ def remove_invalid_dict_fields(data, whitelist):
 	return out
 def is_list_with_two_ints(data):
 	return isinstance(data, list) and len(data) == 2 and isinstance(data[0], int) and isinstance(data[1], int)
-def who_mini_tilemap(data, max_pixel_width=64, max_pixel_height=64, max_map_width=24, max_map_height=24):
+def who_mini_tilemap(data, max_pixel_width=64, max_pixel_height=64, max_map_width=24, max_map_height=32):
 	if isinstance(data, dict):
 		filtered = remove_invalid_dict_fields(data, {
 			"visible":          bool,
@@ -1007,7 +1007,13 @@ def fn_WHO(connection, map, client, arg, context):
 		map.broadcast("WHO", {"update": valid_data})
 
 		# If it's a Gadget, and it's a doodle_board or mini_tilemap, save the changes to the entity
-		if 'mini_tilemap_data' in valid_data and 'data' in valid_data['mini_tilemap_data'] and isinstance(actor, Gadget):
+		if 'mini_tilemap' in valid_data and isinstance(valid_data['mini_tilemap'], dict) and 'tileset_url' in valid_data['mini_tilemap'] and isinstance(actor, Gadget):
+			# TODO: Allow changing size too?
+			tileset_url = valid_data['mini_tilemap']['tileset_url']
+			for trait in actor.traits:
+				if isinstance(trait, GadgetDoodleBoard) or isinstance(trait, GadgetMiniTilemap):
+					trait.set_config('tileset_url', tileset_url)
+		if 'mini_tilemap_data' in valid_data and isinstance(valid_data['mini_tilemap_data'], dict) and 'data' in valid_data['mini_tilemap_data'] and isinstance(actor, Gadget):
 			map_data = valid_data['mini_tilemap_data']['data']
 			for trait in actor.traits:
 				if isinstance(trait, GadgetDoodleBoard):

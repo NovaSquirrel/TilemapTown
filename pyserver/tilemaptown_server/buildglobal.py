@@ -209,6 +209,13 @@ def loadConfigJson(clearLogs=True):
 				url = ServerResources["sample_avatars"][i]
 				if not url.startswith("http://") and not url.startswith("https://"):
 					ServerResources["sample_avatars"][i] = base + url
+		if "ResourceIMGBase" in Config["Server"] and "doodle_board_tilesets" in ServerResources:
+			base = Config["Server"]["ResourceIMGBase"]
+			for i in ServerResources["doodle_board_tilesets"]:
+				for j in ServerResources["doodle_board_tilesets"][i]:
+						url = ServerResources["doodle_board_tilesets"][i][j]
+						if not url.startswith("http://") and not url.startswith("https://"):
+							ServerResources["doodle_board_tilesets"][i][j] = base + url
 	if Config["MapPage"]["TemplateFile"] and os.path.isfile(Config["MapPage"]["TemplateFile"]):
 		with open(Config["MapPage"]["TemplateFile"], encoding="utf-8") as f:
 			Config["MapPage"]["Template"] = Template(f.read())
