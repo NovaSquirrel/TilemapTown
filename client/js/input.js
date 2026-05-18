@@ -1205,7 +1205,20 @@ function useItemAtXY(Placed, x, y) {
 }
 
 function useItem(Placed) {
-	return useItemAtXY(Placed, PlayerWho[PlayerYou].x, PlayerWho[PlayerYou].y);
+	let old = useItemAtXY(Placed, PlayerWho[PlayerYou].x, PlayerWho[PlayerYou].y);
+	if(old !== undefined) {
+		let coords = PlayerWho[PlayerYou].x + "," + PlayerWho[PlayerYou].y;
+		let stroke = {};
+		stroke[coords] = old;
+		drawToolUndoHistory.push({
+			'data': stroke,
+			'obj': Array.isArray(old),
+		});
+		if(drawToolUndoHistory.length > MAX_UNDO_STEPS)
+			drawToolUndoHistory.shift();
+		ctrlZUndoType = "put";
+	}
+	return old;
 }
 
 function selectionDelete() {
@@ -1580,6 +1593,8 @@ function initMouse() {
 				'data': drawToolCurrentStroke,
 				'obj': drawToolCurrentStrokeIsObj,
 			});
+			if(drawToolUndoHistory.length > MAX_UNDO_STEPS)
+				drawToolUndoHistory.shift();
 			drawToolCurrentStroke = {};
 		}
 	}

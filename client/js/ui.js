@@ -124,6 +124,7 @@ let drawToolX = null, drawToolY = null;
 let drawToolCurrentStroke = {}; // All the tiles currently being drawn on, indexed by x,y
 let drawToolCurrentStrokeIsObj = false;
 let drawToolUndoHistory = [];
+const MAX_UNDO_STEPS = 150;
 
 let buildCategories = {};
 let currentBuildCategoryName = "!global";
