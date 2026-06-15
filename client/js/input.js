@@ -1231,7 +1231,7 @@ function selectionDelete() {
 
 	for (let x = MouseStartX; x <= MouseEndX; x++) {
 		for (let y = MouseStartY; y <= MouseEndY; y++) {
-			if (x < 0 || x > MyMap.Width || y < 0 || y > MyMap.Height)
+			if (x < 0 || x >= MyMap.Width || y < 0 || y >= MyMap.Height)
 				continue;
 			if (DeleteTurfs)
 				MyMap.Tiles[x][y] = MyMap.Info['default'];
