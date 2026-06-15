@@ -776,6 +776,13 @@ def fn_DEL(connection, map, client, arg, context):
 	y1 = arg["pos"][1]
 	x2 = arg["pos"][2]
 	y2 = arg["pos"][3]
+	if (x1 < 0 and x2 < 0) or (x1 >= map.width and x2 >= map.width) or (y1 < 0 and y2 < 0) and (y1 >= map.height and y2 >= map.height):
+		return
+	x1 = max(0, min(map.width-1,  x1))
+	y1 = max(0, min(map.height-1, y1))
+	x2 = max(0, min(map.width-1,  x2))
+	y2 = max(0, min(map.height-1, y2))
+
 	if not check_trusted_only_building(connection, map):
 		client.send("MAP", map.map_section(x1, y1, x2, y2))
 		connection.protocol_error(context, text='Building is currently disabled on this server', code='disabled_feature', detail='build', subject_id=map)
@@ -845,6 +852,8 @@ def fn_PUT(connection, map, client, arg, context):
 	temporary = arg.get('temp', False)
 	x = arg["pos"][0]
 	y = arg["pos"][1]
+	if x < 0 or y < 0 or x >= map.width or y >= map.height:
+		return
 	if not check_trusted_only_building(connection, map):
 		client.send("MAP", map.map_section(x, y, x, y))
 		connection.protocol_error(context, text='Building is currently disabled on this server', code='disabled_feature', detail='build', subject_id=map)
