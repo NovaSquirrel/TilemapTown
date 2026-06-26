@@ -639,6 +639,7 @@ function keyDownHandler(e) {
 				}
 			}
 
+			let chatPrefix = document.getElementById("chatprefix")?.value ?? "";
 			if (runLocalCommand(trimmedChatText));
 				// commands are CMD while regular room messages are MSG. /me is a room message.
 			else if (trimmedChatText.slice(0, 1) == "/" &&
@@ -650,7 +651,7 @@ function keyDownHandler(e) {
 				e.preventDefault();
 				return;
 			} else if (trimmedChatText.length > 0) {
-				SendCmd("MSG", { text: (startsWithNewline?"\n":"") + trimmedChatText });
+				SendCmd("MSG", { text: (trimmedChatText.slice(0, 1) == "/"?"":chatPrefix) + (startsWithNewline?"\n":"") + trimmedChatText });
 			} else {
 				chatInput.blur();
 			}
