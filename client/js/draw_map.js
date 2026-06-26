@@ -627,9 +627,7 @@ function drawObj(ctx, drawAtX, drawAtY, obj, map, mapCoordX, mapCoordY) {
 function drawWallpaperTile(ctx, drawAtX, drawAtY, turfAtom, map, mapCoordX, mapCoordY) {
 	if(map.WallpaperData) {
 		let wallpaper = map.WallpaperData;
-		if(wallpaper.hasWallpaper &&
-		(map.Info["wallpaper"]["over_turf"] || (turfAtom.name == wallpaper.defaultTurf.name && turfAtom.pic[0] == wallpaper.defaultTurf.pic[0] && turfAtom.pic[1] == wallpaper.defaultTurf.pic[1] && turfAtom.pic[2] == wallpaper.defaultTurf.pic[2]))
-		&& (mapCoordX >= wallpaper.wallpaperStartX && mapCoordX <= wallpaper.wallpaperEndX && mapCoordY >= wallpaper.wallpaperStartY && mapCoordY <= wallpaper.wallpaperEndY)) {
+		if(mapCoordX >= wallpaper.wallpaperStartX && mapCoordX <= wallpaper.wallpaperEndX && mapCoordY >= wallpaper.wallpaperStartY && mapCoordY <= wallpaper.wallpaperEndY) {
 			if(wallpaper.wallpaperHasRepeat) {
 				ctx.drawImage(map.WallpaperImage,
 					wrapWithin(mapCoordX - wallpaper.wallpaperTileX, map.WallpaperImage.naturalWidth>>4)*16,
@@ -641,8 +639,10 @@ function drawWallpaperTile(ctx, drawAtX, drawAtY, turfAtom, map, mapCoordX, mapC
 					(mapCoordY - wallpaper.wallpaperTileY)*16 - (wallpaper.wallpaperDrawY&15),
 					16, 16, drawAtX, drawAtY, 16, 16);
 			}
+			return turfAtom.name == wallpaper.defaultTurf.name && turfAtom.pic[0] == wallpaper.defaultTurf.pic[0] && turfAtom.pic[1] == wallpaper.defaultTurf.pic[1] && turfAtom.pic[2] == wallpaper.defaultTurf.pic[2];
 		}
 	}
+	return false;
 }
 
 function wrapWithin(value, max) {
@@ -811,16 +811,23 @@ function drawMap() {
 								continue;
 						}
 
-						// Draw the turf
+						// Draw wallpaper if available
 						let turfAtom = AtomFromName(map.Tiles[mapCoordX][mapCoordY]);
+						let skipTurf = false;
+						if (map.WallpaperData?.hasWallpaper && !map.Info["wallpaper"]["over_turf"]) {
+							skipTurf = drawWallpaperTile(backdropCtx, drawOnBackdropPixelX, drawOnBackdropPixelY, turfAtom, map, mapCoordX, mapCoordY);
+						}
+
+						// Draw the turf
 						if (turfAtom.over) {
 							backdropOverMap[zoneIndex].push([withinZoneX, withinZoneY, turfAtom, map, mapCoordX, mapCoordY]);
-						} else {
+						} else if(!skipTurf) {
 							drawTurf(backdropCtx, drawOnBackdropPixelX, drawOnBackdropPixelY, turfAtom, map, mapCoordX, mapCoordY);
 						}
 
-						// Draw wallpaper if available
-						drawWallpaperTile(backdropCtx, drawOnBackdropPixelX, drawOnBackdropPixelY, turfAtom, map, mapCoordX, mapCoordY);
+						if (map.WallpaperData?.hasWallpaper && map.Info["wallpaper"]["over_turf"]) {
+							drawWallpaperTile(backdropCtx, drawOnBackdropPixelX, drawOnBackdropPixelY, turfAtom, map, mapCoordX, mapCoordY);
+						}
 
 						// Draw anything above the turf (the tile objects)
 						let Objs = map.Objs[mapCoordX][mapCoordY];
