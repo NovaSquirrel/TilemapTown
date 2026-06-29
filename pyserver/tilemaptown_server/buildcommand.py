@@ -2232,7 +2232,7 @@ def fn_userpic(map, client, context, arg):
 				client.pic = [arg[0], 0, 0];
 				success = True
 			else:
-				respond(context, 'URL doesn\t match any allowlisted sites', error=True)
+				respond(context, 'URL doesn\'t match any allowlisted sites', error=True)
 				return
 	elif len(arg) == 2:
 		if arg[0].isdecimal() and arg[1].isdecimal():
