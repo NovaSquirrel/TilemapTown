@@ -1604,7 +1604,7 @@ def fn_mapdefaultfloor(map, client, context, arg):
 		map.default_turf = arg
 		map.save_on_clean_up = True
 		respond(context, 'Map floor changed to %s' % arg)
-	map.resend_map_info_to_users(mai_only=True)
+	map.resend_map_info_to_users(mai_only=False)
 
 @cmd_command(category="Map", privilege_level="map_owner", map_only=True, syntax="url")
 def fn_mapwallpaper(map, client, context, arg):
