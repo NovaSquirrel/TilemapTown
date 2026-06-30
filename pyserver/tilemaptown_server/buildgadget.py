@@ -1432,6 +1432,29 @@ class GadgetScript(GadgetTrait):
 		}])
 		return True
 
+	def on_entity_drag(self, user, arg, end=False):
+		if not self.gadget:
+			return None
+		if not self.gadget.script_callback_enabled[ScriptingCallbackType.SELF_DRAG]:
+			return None
+		self.trigger_script_callback(ScriptingCallbackType.SELF_DRAG, [{
+			"x":          arg.get('x'),
+			"y":          arg.get('y'),
+			"map_x":      arg.get('map_x'),
+			"map_y":      arg.get('map_y'),
+			"from_x":     arg.get('from_x'),
+			"from_y":     arg.get('from_y'),
+			"from_map_x": arg.get('from_map_x'),
+			"from_map_y": arg.get('from_map_y'),
+			"button":   arg.get('button'),
+			"target":   arg.get('target'),
+			"end":      end,
+			"id":       user.protocol_id(),
+			"name":     user.name,
+			"username": user.username_or_id()
+		}])
+		return True
+
 	def on_switch_map(self):
 		if not self.gadget:
 			return None

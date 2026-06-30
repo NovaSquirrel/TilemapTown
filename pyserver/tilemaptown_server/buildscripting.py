@@ -68,7 +68,8 @@ class ScriptingCallbackType(IntEnum):
 	SELF_USE = 15
 	SELF_SWITCH_MAP = 16
 	SELF_REQUEST_RESULT = 17
-	COUNT = 18
+	SELF_DRAG = 18
+	COUNT = 19
 GlobalData['ScriptingCallbackType'] = ScriptingCallbackType
 
 do_not_return_response = []
@@ -345,6 +346,15 @@ def fn_e_xy(e, arg): #E
 		return [None, None]
 
 @script_api()
+def fn_e_xy_pixel(e, arg): #E
+	e2 = find_entity(arg[0])
+	if e2:
+		offset = e2.offset or [0, 0]
+		return [e2.x * 16 + offset[0], e2.y * 16 + offset[1]]
+	else:
+		return [None, None]
+
+@script_api()
 def fn_e_mapid(e, arg): #E
 	e2 = find_entity(arg[0])
 	if e2:
@@ -372,10 +382,28 @@ def fn_e_move(e, arg): #Eiii
 		from_y = e2.y
 		new_x = arg[1]
 		new_y = arg[2]
-		if Config["RateLimit"]["ScriptMove"] and apply_rate_limiting(e2, 'sm', ( (1, 900), (2, 1800) )):
+		if Config["RateLimit"]["ScriptMove"] and apply_rate_limiting(e2, 'sm', ( (1, Config["RateLimit"]["ScriptMoveRate"]), (2, Config["RateLimit"]["ScriptMoveRate"]*2) )):
 			return
 		e2.move_to(new_x, new_y, new_dir=arg[3] if len(arg) >= 4 else None)
 		e2.map.broadcast("MOV", {'id': e2.protocol_id(), 'from': [from_x, from_y], 'to': [new_x, new_y], 'dir': e2.dir}, remote_category=maplisten_type['move'])
+
+@script_api()
+def fn_e_move_pixel(e, arg): #Eiii
+	e2 = find_entity(arg[0])
+	if e2 == None:
+		return
+	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['move']):
+		from_x = e2.x
+		from_y = e2.y
+		new_x_tile   = arg[1] // 16
+		new_y_tile   = arg[2] // 16
+		new_x_offset = arg[1] % 16
+		new_y_offset = arg[2] % 16
+		if Config["RateLimit"]["ScriptMove"] and apply_rate_limiting(e2, 'sm', ( (1, Config["RateLimit"]["ScriptMoveRate"]), (2, Config["RateLimit"]["ScriptMoveRate"]*2) )):
+			return
+		e2.move_to(new_x_tile, new_y_tile, new_dir=arg[3] if len(arg) >= 4 else None)
+		e2.offset = [new_x_offset, new_y_offset]
+		e2.map.broadcast("MOV", {'id': e2.protocol_id(), 'from': [from_x, from_y], 'to': [new_x_tile, new_y_tile], 'dir': e2.dir, 'offset': e2.offset}, remote_category=maplisten_type['move'])
 
 @script_api()
 def fn_e_turn(e, arg): #Ei
@@ -434,7 +462,7 @@ def fn_e_cmd(e, arg): #Es
 	if e2 == None:
 		return
 	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['remote_command']):
-		if Config["RateLimit"]["ScriptCommand"] and apply_rate_limiting(e2, 'sc', ( (1, 70), (2, 140) )):
+		if Config["RateLimit"]["ScriptCommand"] and apply_rate_limiting(e2, 'sc', ( (1, Config["RateLimit"]["ScriptCommandRate"]), (2, Config["RateLimit"]["ScriptCommandRate"]*2) )):
 			return
 		handle_user_command(e2.map, e2, None, arg[1].lstrip("/"), script_entity=e)
 

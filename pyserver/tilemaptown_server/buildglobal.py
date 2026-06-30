@@ -105,9 +105,11 @@ def loadConfigJson(clearLogs=True):
 	setConfigDefault("RateLimit", "MiniTilemap",     True)
 	setConfigDefault("RateLimit", "WhoUpdate",       True)
 	setConfigDefault("RateLimit", "ScriptCommand",   True)
+	setConfigDefault("RateLimit", "ScriptCommandRate", 70)
 	setConfigDefault("RateLimit", "ScriptBotMessageButton", True)
 	setConfigDefault("RateLimit", "ScriptTakeControls", True)
 	setConfigDefault("RateLimit", "ScriptMove",      True)
+	setConfigDefault("RateLimit", "ScriptMoveRate",  900)
 	setConfigDefault("RateLimit", "ScriptCompile",   True)
 
 	setConfigDefault("MaxProtocolSize", "Default", 32768)
