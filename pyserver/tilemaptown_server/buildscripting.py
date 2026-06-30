@@ -395,10 +395,10 @@ def fn_e_move_pixel(e, arg): #Eiii
 	if same_owner_gadget(e, e2) or e.has_permission(e2, perm=permission['move']):
 		from_x = e2.x
 		from_y = e2.y
-		new_x_tile   = arg[1] // 16
-		new_y_tile   = arg[2] // 16
-		new_x_offset = arg[1] % 16
-		new_y_offset = arg[2] % 16
+		new_x_tile = (arg[1] + 8) // 16
+		new_y_tile = (arg[2] + 8) // 16
+		new_x_offset = arg[1] - (new_x_tile * 16)
+		new_y_offset = arg[2] - (new_y_tile * 16)
 		if Config["RateLimit"]["ScriptMove"] and apply_rate_limiting(e2, 'sm', ( (1, Config["RateLimit"]["ScriptMoveRate"]), (2, Config["RateLimit"]["ScriptMoveRate"]*2) )):
 			return
 		e2.move_to(new_x_tile, new_y_tile, new_dir=arg[3] if len(arg) >= 4 else None)
