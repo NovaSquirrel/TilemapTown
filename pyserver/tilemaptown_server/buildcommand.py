@@ -1496,7 +1496,7 @@ def fn_cleartopic(map, client, context, arg):
 	if client.is_client() and client.has_permission(map, permission['set_topic'], True):
 		map.topic = None
 		map.topic_username = None
-		map.broadcast("MSG", {'text': 'Map\'s current topic was cleared by %s' % (map.topic, client.name_and_username()), 'class': 'server_map_message'})
+		map.broadcast("MSG", {'text': 'Map\'s current topic was cleared by %s' % (client.name_and_username()), 'class': 'server_map_message'})
 	else:
 		respond(context, 'Don\t have permission to set a topic for this map', error=True)
 
