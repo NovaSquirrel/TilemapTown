@@ -3038,8 +3038,10 @@ def fn_fixuserfilesizes(map, client, context, arg):
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True)
 def fn_rehash(map, client, context, arg):
-	loadConfigJson(clearLogs=(arg == "c"))
-	respond(context, 'Reloaded the config file')
+	if loadConfigJson(clearLogs=(arg == "c")):
+		respond(context, 'Reloaded the config file')
+	else:
+		respond(context, 'Failed to reload the config file')
 
 @cmd_command(privilege_level="server_admin", no_entity_needed=True)
 def fn_debugkick(map, client, context, arg):

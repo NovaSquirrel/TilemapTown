@@ -50,7 +50,9 @@ def setConfigDefault(group, item, value):
 	if item not in Config[group]:
 		Config[group][item] = value
 
+loadedConfigYet = False
 def loadConfigJson(clearLogs=True):
+	global loadedConfigYet
 	if os.path.isfile(ConfigFile):
 		with open(ConfigFile) as f:
 			try:
@@ -59,8 +61,12 @@ def loadConfigJson(clearLogs=True):
 				Config.update(j)
 			except:
 				print("Bad config file!")
+				if not loadedConfigYet:
+					sys.exit()
+				return False
 	else:
 		print("Config file '%s' doesn't exist, using defaults" % ConfigFile)
+	loadedConfigYet = True
 
 	# Set defaults for config items
 	setConfigDefault("Server",   "Port",             12550)
@@ -129,7 +135,7 @@ def loadConfigJson(clearLogs=True):
 	setConfigDefault("MaxProtocolSize", "DEL", 1024)
 	setConfigDefault("MaxProtocolSize", "PUT", 2048)
 	setConfigDefault("MaxProtocolSize", "BLK", 8192)
-	setConfigDefault("MaxProtocolSize", "WHO", 2048)
+	setConfigDefault("MaxProtocolSize", "WHO", 4096)
 	setConfigDefault("MaxProtocolSize", "PIN", 512)
 	#setConfigDefault("MaxProtocolSize", "VER", 32768)
 	#setConfigDefault("MaxProtocolSize", "IDN", 32768)
@@ -243,6 +249,7 @@ def loadConfigJson(clearLogs=True):
 		TempLogs[1] = deque(maxlen=Config["TempLogs"]["BuildSize"])
 		TempLogs[2] = deque(maxlen=Config["TempLogs"]["UploadSize"])
 		TempLogs[3] = deque(maxlen=Config["TempLogs"]["RollbackSize"])
+	return True
 loadConfigJson()
 GlobalData = {}
 
