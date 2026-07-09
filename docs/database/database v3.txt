@@ -5,7 +5,7 @@ item            - text    - what piece of meta information
 value           - text    - the value
 
 current items:
-version         - version of the database format, "2" currently
+version         - version of the database format, "3" currently
 
 
 ---ENTITY--- (generic entity that can exist on a map, which can contain more information in other tables)
@@ -40,9 +40,6 @@ General:
 		0x0001 don't load this entity when the container loads (unimplemented)
 		0x0002 this entity is public, and can be searched for (unimplemented)
 
-	tags            - text    - metadata tags in JSON format, like species, pronouns, etc.
-	                          - Repurposed to be a miscellaneous data field, though in practice it's just used for tags; contains a JSON object with a "tags" field
-
 	data            - text    - data associated with the object, or NULL if not applicable.
 								takes advantage of SQLite being able to store text in an integer column
 								----
@@ -55,6 +52,7 @@ General:
 							landmark: map ID, x, y
 	compressed_data - blob    - data that has been compressed, where the original "data" field now specifies what compression algorithm is used.
 							Currently the only compression algorithm available is "zlib"
+	have_ext        - integer - entity has an ENTITY_EXT table row
 
 Position:
 	location        - integer - entity ID of whatever contains this entity - may be a map
@@ -91,6 +89,23 @@ Permissions:
 		0x00020000 user is allowed to send chat to this entity, and listen to chat in this entity
 
 
+---ENTITY_EXT---
+	id              * integer - entity ID
+	extra_url       - string  - extra URL, usually the one that's associated with the tile's mini tilemap, if it has one
+
+	forward_messages_to - ID  - user to forward messages to
+	
+	tags            - text    - JSON object that holds tags (metadata tags like species, pronouns, etc.)
+	compressed_tags - blob    - tags that have been compressed, where the original "tags" field now specifies what compression algorithm is used
+
+	misc            - text    - miscellaneous data as a JSON object; possible fields:
+	                          - "offset" - list of [offset X, offset Y]
+	                          - "forward_message_types" - string - types of messages that should be forwarded; JSON array
+	                          - "status" - string - status to show in the user list
+	                          - "status_message" - string - status message to show in the user list
+	compressed_misc - blob    - misc data that has been compressed, where the original "misc" field now specifies what compression algorithm is used
+
+
 ---PERMISSION---
 subject_id      * integer - ENTITY that the permissions apply to
 actor_id        * integer - ENTITY that is allowed, or not allowed, to do these things to the entity specified in "subject_id"
@@ -102,26 +117,20 @@ deny            - integer - bit field for what extra permissions to deny
 entity_id       - integer - ENTITY id corresponding to this map
 flags           - integer - generic flags field
 							  - 1: (public) map shows up in searches
+map_search_flags- integer - flags that a user could search for
 start_x         - integer - player starting X
 start_y         - integer - player starting Y
 width           - integer - map width
 height          - integer - map height
 default_turf    - text    - default map tile
-
-
----MAP_LOG--- (unimplemented, but tables are made for it)
-id              * integer - log item ID
-time            - timestamp - action time
-map_id          - integer - map ID
-user_id         - integer - user ID
-action          - text    - action taken
-info            - text    - additional information?
+misc            - text    - JSON object; place to add additional fields without needing to change the database table yet
 
 
 ---USER--- (a user account)
 entity_id       * integer - ENTITY id corresponding to this user
 last_seen_at    -timestamp- last seen date
 
+name            - text    - separate display name, for situations like messaging mode
 username        - text    - username
 passhash        - text    - password hash (may be "hash" or "salt:hash")
 passalgo        - text    - password algorithm name
@@ -129,6 +138,7 @@ passalgo        - text    - password algorithm name
 watch           - text    - JSON array of users to watch for
 ignore          - text    - JSON array of users to ignore messages from
 client_settings - text    - whatever the client wants to store (like settings)
+misc            - text    - JSON object; place to add additional fields without needing to change the database table yet
 
 flags           - integer - user-specific flags
 	0x00000001 is a bot
@@ -143,7 +153,8 @@ flags           - integer - user-specific flags
 	0x00000200 never convert offline messages sent or received to mail
 	0x80000000 user's account can't be logged into currently
 
----MAIL---
+
+---MAIL---️
 id              * integer - mail id
 owner_id        - integer - ID of the user whose account the mail is sitting in
 sender_id       - integer - ID of the user who sent the mail (sender ID)
@@ -155,6 +166,8 @@ flags           - integer - current mail status
 created_at      -timestamp- time the mail was sent
 subject         - text    - subject line of the mail
 contents        - text    - mail text
+compressed_contents - blob- data that has been compressed, where the original "contents" field now specifies what compression algorithm is used.
+                            Currently the only compression algorithm available is "zlib"
 
 
 ---SERVER_BAN---
@@ -177,6 +190,7 @@ admin_id        - id      - id of the admin doing the banning
 created_at      -timestamp- time the ban was applied
 expires_at      -timestamp- when ban expires
 reason          - text    - ban reason
+private_note    - text    - private ban reason/note
 
 
 ---GROUP_MEMBER---
@@ -206,6 +220,7 @@ location        - integer - user folder this file is stored in, or null
 size            - integer - size in bytes of the uploaded file
 filename        - text    - filename within the filesystem
 flags           - integer - currently not used
+hash            - string  - algorithm:hash, probably with sha256 as the algorithm
 
 
 ---USER_FILE_FOLDER---
@@ -263,7 +278,7 @@ contact         - text    - JSON list; additional contact details; alternating k
 home_location   - integer - entity ID of whatever is this entity's public home location
 home_position   - text    - JSON position within the container. [x,y]
 
-more_data       - text    - JSON object; place to add additional fields without needing to change the database table yet
+misc            - text    - JSON object; place to add additional fields without needing to change the database table yet
 extra_fields    - text    - JSON list; additional custom text fields to display as-is, like Mastodon; alternating key/value
 flags           - integer - bitfield
                             1: hide birthday except age

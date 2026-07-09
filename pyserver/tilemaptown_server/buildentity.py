@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2024 NovaSquirrel
+# Copyright (C) 2017-2026 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -236,6 +236,7 @@ class Entity(PermissionsMixin, object):
 		self.data = None  # Data that gets stored in the database
 		self.contents = set() # Entities stored inside this one
 		self.flags = 0        # Entity flags, like "public"?
+		self.have_ext = False
 
 		# Status
 		self.status_type = None
@@ -874,6 +875,16 @@ class Entity(PermissionsMixin, object):
 			'owner_id': self.owner_id,
 			'temporary': self.temporary
 		}
+		if self.status_type:
+			out['status'] = self.status_type
+		if self.status_message:
+			out['status_message'] = self.status_message
+		if self.forward_messages_to:
+			out['forward_messages_to'] = self.forward_messages_to
+		if self.forward_message_types:
+			out['forward_messages_types'] = list(self.forward_message_types)
+		if hasattr(self, 'verbs') and self.verbs:
+			out['verbs'] = self.verbs
 		if self.is_client():
 			out['username'] = self.connection_attr('username')
 		if self.owner_id:
@@ -962,7 +973,7 @@ class Entity(PermissionsMixin, object):
 	def load(self, load_id, override_map=None, do_not_switch_map=False):
 		""" Load an entity from the database """
 		c = Database.cursor()
-		c.execute('SELECT type, name, desc, pic, location, position, home_location, home_position, tags, owner_id, allow, deny, guest_deny, creator_id FROM Entity WHERE id=?', (load_id,))
+		c.execute('SELECT type, name, desc, pic, location, position, home_location, home_position, have_ext, owner_id, allow, deny, guest_deny, creator_id FROM Entity WHERE id=?', (load_id,))
 		result = c.fetchone()
 		if result == None:
 			return False
@@ -991,10 +1002,22 @@ class Entity(PermissionsMixin, object):
 		self.home_id = result[6]
 		self.home_position = loads_if_not_none(result[7])
 
-		# "tags" column can be reused to store other things
-		tags_column = loads_if_not_none(result[8])
-		if tags_column:
-			self.tags = tags_column.get('tags', {})
+		# "have_ext" column
+		if result[8]:
+			self.have_ext = result[8]
+			c = Database.cursor()
+			c.execute('SELECT forward_messages_to, tags, compressed_tags, misc, compressed_misc FROM Entity_Ext WHERE id=?', (load_id,))
+			ext_result = c.fetchone()
+			if ext_result != None:
+				self.forward_messages_to = ext_result[0]
+				self.tags = loads_if_not_none(decompress_entity_data(ext_result[1], ext_result[2]))
+				misc = loads_if_not_none(decompress_entity_data(ext_result[3], ext_result[4]))
+				if misc:
+					self.forward_message_types = set(misc.get('forward_message_types', []))
+					self.status_type = misc.get('status_type', None)
+					self.status_message = misc.get('status_message', None)
+					self.verbs = misc.get('verbs', None)
+					self.offset = misc.get('offset', None)
 
 		self.owner_id = result[9]
 		self.allow = result[10]
@@ -1049,13 +1072,26 @@ class Entity(PermissionsMixin, object):
 			print("Correcting null owner ID for saved entity %s to %s" % (load_id, self.creator_id))
 			self.owner_id = self.creator_id
 
-		# "tags" column can be reused to store other things
-		tags_column = {}
-		if self.tags:
-			tags_column['tags'] = self.tags
+		if not self.have_ext:
+			if bool(self.forward_message_types or self.forward_messages_to or self.status_type or self.status_message or (hasattr(self, "verbs") and self.verbs) or self.offset):
+				self.have_ext = True
+				c.execute("INSERT INTO Entity_Ext (id) VALUES (?)", (self.db_id,))
+		if self.have_ext:
+			misc = {}
+			if len(self.forward_message_types):
+				misc['forward_message_types'] = list(self.forward_message_types)
+			if self.status_type != None:
+				misc['status_type'] = self.status_type
+			if self.status_message != None:
+				misc['status_message'] = self.status_message
+			if hasattr(self, 'verbs') and self.verbs:
+				misc['verbs'] = self.verbs
+			if self.offset:
+				misc['offset'] = self.offset
+			c.execute("UPDATE Entity_Ext SET forward_messages_to=?, tags=?, misc=? WHERE id=?", (self.forward_messages_to, dumps_if_condition(self.tags, self.tags != {} and self.tags != None), dumps_if_condition(misc, misc != {}), self.db_id))
 
-		values = (self.entity_type, self.name, self.desc, dumps_if_not_none(self.pic), self.map_id, json.dumps([self.x, self.y] + ([self.dir] if self.dir != 2 else [])), self.home_id, dumps_if_not_none(self.home_position), dumps_if_condition(tags_column, tags_column != {}), self.owner_id if self.owner_id != None else self.creator_id, self.allow, self.deny, self.guest_deny, self.db_id)
-		c.execute("UPDATE Entity SET type=?, name=?, desc=?, pic=?, location=?, position=?, home_location=?, home_position=?, tags=?, owner_id=?, allow=?, deny=?, guest_deny=? WHERE id=?", values)
+		values = (self.entity_type, self.name, self.desc, dumps_if_not_none(self.pic), self.map_id, json.dumps([self.x, self.y] + ([self.dir] if self.dir != 2 else [])), self.home_id, dumps_if_not_none(self.home_position), self.owner_id if self.owner_id != None else self.creator_id, self.allow, self.deny, self.guest_deny, self.have_ext, self.db_id)
+		c.execute("UPDATE Entity SET type=?, name=?, desc=?, pic=?, location=?, position=?, home_location=?, home_position=?, owner_id=?, allow=?, deny=?, guest_deny=?, have_ext=? WHERE id=?", values)
 
 		self.save_data()
 
@@ -1112,37 +1148,18 @@ class EntityWithPlainData(Entity):
 		""" Save the entity's data to the database, using plain text """
 		self.save_data_as_text(self.data)
 
-def save_generic_data(self, data):
-	if len(self.forward_message_types):
-		data['forward_message_types'] = list(self.forward_message_types)
-	if self.forward_messages_to != None:
-		data['forward_messages_to'] = self.forward_messages_to
-	if self.status_type != None:
-		data['status_type'] = self.status_type
-	if self.status_message != None:
-		data['status_message'] = self.status_message
-	if hasattr(self, 'verbs') and self.verbs:
-		data['verbs'] = self.verbs
-
-def load_generic_data(self, data):
-	self.forward_message_types = set(data.get('forward_message_types', []))
-	self.forward_messages_to = data.get('forward_messages_to', None)
-
-	self.status_type = data.get('status_type', None)
-	self.status_message = data.get('status_message', None)
-	self.verbs = data.get('verbs', None)
-
 # If the entity is truly generic, then use the data field (when it would've otherwise gone unused) in a useful way
+# (or that's what it did, before the stuff that was stored here was moved to the Entity_Ext table)
 class GenericEntity(Entity):
 	def __init__(self, ignored_entity_type, creator_id=None):
 		super().__init__(entity_type['generic'], creator_id=creator_id)
 
+	"""
 	def load_data(self):
 		try:
 			data = loads_if_not_none(self.load_data_as_text())
 			if data == None:
 				return True
-			load_generic_data(self, data)
 			return True
 		except:
 			return False
@@ -1153,21 +1170,4 @@ class GenericEntity(Entity):
 		if not data:
 			data = None
 		self.save_data_as_text(dumps_if_not_none(data))
-
-	def bag_info(self):
-		b = super().bag_info()
-		if self.status_type:
-			b['status'] = self.status_type
-		if self.status_message:
-			b['status_message'] = self.status_message
-		if self.forward_messages_to:
-			b['forward_messages_to'] = self.forward_messages_to
-		if self.forward_message_types:
-			b['forward_messages_types'] = list(self.forward_message_types)
-		if hasattr(self, 'verbs') and self.verbs:
-			b['verbs'] = self.verbs
-		return b
-
-	def who(self):
-		w = super().who()
-		return w
+	"""

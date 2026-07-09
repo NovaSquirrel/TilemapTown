@@ -139,7 +139,6 @@ foreign key(subject_id) references Entity(id) on delete cascade,
 foreign key(actor_id) references Entity(id) on delete cascade
 )""")
 
-
 c.execute("""create table if not exists Map (
 entity_id integer primary key,
 flags integer,

@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2024 NovaSquirrel
+# Copyright (C) 2017-2026 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -25,16 +25,11 @@ DirY = [ 0,  1,  1,  1,  0, -1, -1, -1]
 def temporarily_load_map_from_db(db_id, user=None):
 	c = Database.cursor()
 
-	c.execute('SELECT type, name, desc, tags, owner_id, allow, deny, guest_deny FROM Entity WHERE id=?', (db_id,))
+	c.execute('SELECT type, name, desc, owner_id, allow, deny, guest_deny FROM Entity WHERE id=?', (db_id,))
 	entity_table_data = c.fetchone()
 	if entity_table_data == None:
 		return None
-	entity_type, entity_name, entity_desc, entity_tags_column, entity_owner_id, entity_allow, entity_deny, entity_guest_deny = entity_table_data
-	entity_tags_column = loads_if_not_none(entity_tags_column)
-	if entity_tags_column:
-		entity_tags = entity_tags_column.get('tags', {})
-	else:
-		entity_tags = {}
+	entity_type, entity_name, entity_desc, entity_owner_id, entity_allow, entity_deny, entity_guest_deny = entity_table_data
 
 	c.execute('SELECT flags, width, height, default_turf FROM Map WHERE entity_id=?', (db_id,))
 	map_table_data = c.fetchone()
@@ -67,7 +62,6 @@ def temporarily_load_map_from_db(db_id, user=None):
 		'build_enabled': (entity_deny & permission['build']) == 0,
 		'full_sandbox': entity_allow & permission['sandbox'] != 0,
 		'edge_links': map_entity_data.get('edge_links'),
-		'tags': entity_tags,
 		'default_allow': permission_list_from_bitfield(entity_allow),
 		'default_deny': permission_list_from_bitfield(entity_deny)
 	}

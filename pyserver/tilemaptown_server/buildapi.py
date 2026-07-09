@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2025 NovaSquirrel
+# Copyright (C) 2017-2026 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import time, os, random, json, html
+import time, os, random, json, html, hashlib
 from aiohttp import web, ClientSession
 from string import Template
 from .buildglobal import *
@@ -384,10 +384,17 @@ def fix_uploaded_file_sizes(user_id):
 				removed += 1
 				continue
 
+			file_hash = None
+			try:
+				with open(file_path, "rb") as f:
+					file_hash = "sha512:"+(hashlib.file_digest(f, "sha512").hexdigest())
+			except:
+				pass
+
 			real_size = os.path.getsize(file_path)
 			if real_size != row[2]:
 				print("Fixing size for %d" % row[0])
-				c.execute('UPDATE User_File_Upload SET size=? WHERE file_id=?', (real_size, file_id))
+				c.execute('UPDATE User_File_Upload SET size=? hash=? WHERE file_id=?', (real_size, file_hash, file_id))
 				fixed += 1
 		except:
 			print("Failed to check size for %d" % row[0])
@@ -493,8 +500,10 @@ async def post_file(request):
 			e.save()
 			connection.entity.add_to_contents(e)
 
+	file_hash = "sha512:"+(hashlib.sha512(file_data).hexdigest())
+
 	# Add a database entry
-	c.execute("INSERT INTO User_File_Upload (user_id, created_at, updated_at, name, desc, location, size, filename) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (db_id, datetime.datetime.now(), datetime.datetime.now(), info.get("name"), info.get("desc"), folder, len(file_data), random_filename))
+	c.execute("INSERT INTO User_File_Upload (user_id, created_at, updated_at, name, desc, location, size, filename, hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (db_id, datetime.datetime.now(), datetime.datetime.now(), info.get("name"), info.get("desc"), folder, len(file_data), random_filename, file_hash))
 	file_id = c.lastrowid
 	write_to_file_log(connection, "Upload %d by %s, (size=%d KiB, [url=%s]file[/url], name=%s, original=%s)" % (file_id, connection.entity.name_and_username(), len(file_data)//1024, url_for_user_file(db_id, random_filename), info.get("name"), info.get("file_original")))
 
@@ -607,8 +616,10 @@ async def put_file(request):
 		if location == 0:
 			location = None
 
+	file_hash = "sha512:"+(hashlib.sha512(file_data).hexdigest())
+
 	c = Database.cursor()
-	c.execute('UPDATE User_File_Upload SET updated_at=?, name=?, desc=?, location=?, filename=?, size=? WHERE file_id=?', (datetime.datetime.now(), name, desc, location, new_filename, new_size, file_id))
+	c.execute('UPDATE User_File_Upload SET updated_at=?, name=?, desc=?, location=?, filename=?, size=?, hash=? WHERE file_id=?', (datetime.datetime.now(), name, desc, location, new_filename, new_size, file_hash, file_id))
 
 	return web.json_response({
 		"file": {
