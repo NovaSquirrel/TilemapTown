@@ -1073,17 +1073,18 @@ class Entity(PermissionsMixin, object):
 			self.owner_id = self.creator_id
 
 		if not self.have_ext:
-			if bool(self.forward_message_types or self.forward_messages_to or self.status_type or self.status_message or (hasattr(self, "verbs") and self.verbs) or self.offset):
+			if bool(self.forward_message_types or self.forward_messages_to or (not self.is_client() and (self.status_type or self.status_message)) or (hasattr(self, "verbs") and self.verbs) or self.offset):
 				self.have_ext = True
 				c.execute("INSERT INTO Entity_Ext (id) VALUES (?)", (self.db_id,))
 		if self.have_ext:
 			misc = {}
 			if len(self.forward_message_types):
 				misc['forward_message_types'] = list(self.forward_message_types)
-			if self.status_type != None:
-				misc['status_type'] = self.status_type
-			if self.status_message != None:
-				misc['status_message'] = self.status_message
+			if not self.is_client():
+				if self.status_type != None:
+					misc['status_type'] = self.status_type
+				if self.status_message != None:
+					misc['status_message'] = self.status_message
 			if hasattr(self, 'verbs') and self.verbs:
 				misc['verbs'] = self.verbs
 			if self.offset:
