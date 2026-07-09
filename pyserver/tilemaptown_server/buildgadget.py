@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2025 NovaSquirrel
+# Copyright (C) 2017-2026 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -17,7 +17,6 @@
 import random, weakref, asyncio
 from collections import deque
 from .buildglobal import *
-from .buildentity import Entity, save_generic_data, load_generic_data
 from .buildcommand import handle_user_command, send_private_message
 from .buildscripting import send_scripting_message, encode_scripting_message_values, VM_MessageType, ScriptingValueType, ScriptingCallbackType
 
@@ -99,7 +98,6 @@ class Gadget(Entity):
 			data = loads_if_not_none(self.load_data_as_text())
 			if data == None:
 				return True
-			load_generic_data(self, data)
 			self.data = data.get('data', {})
 			self.script_data = data.get('script_data', {})
 			self.script_data_size = data.get('script_data_size', 0)
@@ -110,7 +108,6 @@ class Gadget(Entity):
 
 	def save_data(self):
 		data = {}
-		save_generic_data(self, data)
 		data['data'] = self.data
 		if len(self.script_data):
 			data['script_data'] = self.script_data

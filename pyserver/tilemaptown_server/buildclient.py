@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2025 NovaSquirrel
+# Copyright (C) 2017-2026 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -583,10 +583,10 @@ class Connection(object):
 
 			# send the user their mail
 			mail = []
-			for row in c.execute('SELECT id, sender_id, recipients, subject, contents, flags, created_at FROM Mail WHERE owner_id=?', (self.db_id,)):
+			for row in c.execute('SELECT id, sender_id, recipients, subject, contents, compressed_contents, flags, created_at FROM Mail WHERE owner_id=?', (self.db_id,)):
 				item = {'id': row[0], 'from': find_username_by_db_id(row[1]),
 				'to': [find_username_by_db_id(int(x)) for x in row[2].split(',')],
-				'subject': row[3], 'contents': row[4], 'flags': ['read'] if row[5] == 1 else (['sent'] if row[5] == 2 else []), 'timestamp': row[6].isoformat()}
+				'subject': row[3], 'contents': decompress_entity_data(row[4], row[5]), 'flags': ['read'] if row[6] == 1 else (['sent'] if row[6] == 2 else []), 'timestamp': row[7].isoformat()}
 				mail.append(item)
 			if len(mail):
 				self.send("EML", {'list': mail})

@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2025 NovaSquirrel
+# Copyright (C) 2017-2026 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -22,7 +22,7 @@ from .buildprotocol import handle_protocol_command, protocol_command_already_rec
 from .buildapi import start_api
 from .buildscripting import run_scripting_service, shutdown_scripting_service
 if Config["Database"]["Setup"]:
-	from .database_setup_v2 import *
+	from .database_setup_v3 import *
 else:
 	reload_database_meta()
 
@@ -128,7 +128,7 @@ def save_everything():
 			messages_in_queue = ''.join(["[li]%s: %s[/li]" % (_[1].strftime("%Y-%m-%d"), _[0]) for _ in queue])
 			subject = "(Automatic mail) %d offline message%s" % (len(queue), "s" if len(queue) != 1 else "")
 			contents = "The server restarted while you had messages waiting for you, so the following offline messages were converted to mail: [ul]"+messages_in_queue+"[/ul]"
-			c.execute("INSERT INTO Mail (owner_id, sender_id, recipients, subject, contents, created_at, flags) VALUES (?, ?, ?, ?, ?, ?, ?)", (recipient_db_id, sender_db_id, str(recipient_db_id), subject, contents, datetime.datetime.now(), 0))
+			c.execute("INSERT INTO Mail (owner_id, sender_id, recipients, subject, contents, compressed_contents, created_at, flags) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (recipient_db_id, sender_db_id, str(recipient_db_id), subject, "zlib", zlib.compress(contents.encode()), datetime.datetime.now(), 0))
 
 # Websocket connection handler
 async def client_handler(websocket):

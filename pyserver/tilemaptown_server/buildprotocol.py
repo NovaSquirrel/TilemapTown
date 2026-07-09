@@ -1,5 +1,5 @@
 # Tilemap Town
-# Copyright (C) 2017-2025 NovaSquirrel
+# Copyright (C) 2017-2026 NovaSquirrel
 #
 # This program is free software: you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -669,7 +669,7 @@ def fn_EML(connection, map, client, arg, context):
 							failed_count += 1
 							continue
 
-				c.execute("INSERT INTO Mail (owner_id, sender_id, recipients, subject, contents, created_at, flags) VALUES (?, ?, ?, ?, ?, ?, ?)", (id, client.db_id, recipient_string, arg['send']['subject'], arg['send']['contents'], datetime.datetime.now(datetime.timezone.utc), 0))
+				c.execute("INSERT INTO Mail (owner_id, sender_id, recipients, subject, contents, compressed_contents, created_at, flags) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (id, client.db_id, recipient_string, arg['send']['subject'], "zlib", zlib.compress(arg['send']['contents'].encode()), datetime.datetime.now(datetime.timezone.utc), 0))
 
 				# Is that person online? tell them!
 				if recipient_connection:
