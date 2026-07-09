@@ -294,12 +294,24 @@ function waitForImagesToLoad(timestamp) {
 		for (let y=0; y<map.Height; y++) {
 			for (let x=0; x<map.Width; x++) {
 				let turfAtom = AtomFromName(map.Tiles[x][y]);
+				let skipTurf = false;
+
 				try {
-					drawTurf(ctx, x*16, y*16, turfAtom, map, x, y);
+					if (map.WallpaperData?.hasWallpaper && !map.Info["wallpaper"]["over_turf"]) {
+						skipTurf = drawWallpaperTile(ctx, x*16, y*16, turfAtom, map, x, y);
+					}
 				} catch (error) {}
 
 				try {
-					drawWallpaperTile(ctx, x*16, y*16, turfAtom, map, x, y);
+					if (turfAtom.over || !skipTurf) {
+						drawTurf(ctx, x*16, y*16, turfAtom, map, x, y);
+					}
+				} catch (error) {}
+
+				try {
+					if (map.WallpaperData?.hasWallpaper && map.Info["wallpaper"]["over_turf"]) {
+						drawWallpaperTile(ctx, x*16, y*16, turfAtom, map, x, y);
+					}
 				} catch (error) {}
 
 				let Objs = map.Objs[x][y];
