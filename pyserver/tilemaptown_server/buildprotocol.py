@@ -1533,13 +1533,13 @@ def get_entity_name_and_desc(user_id, out):
 
 def get_user_profile_data(user_id):
 	c = Database.cursor()
-	c.execute('SELECT user_id, updated_at, name, text, pronouns, picture_url, birthday, home_location, home_position, interests, looking_for, email, website, contact, extra_fields, flags, more_data FROM User_Profile WHERE user_id=?', (user_id,))
+	c.execute('SELECT user_id, updated_at, name, text, pronouns, picture_url, birthday, home_location, home_position, interests, looking_for, email, website, contact, extra_fields, flags, misc FROM User_Profile WHERE user_id=?', (user_id,))
 	result = c.fetchone()
 	if result == None:
 		return None
 	else:
 		flags = result[15] or 0
-		more_data = result[16]
+		misc = result[16]
 		out = {
 			"id": result[0],
 			"username": find_username_by_db_id(user_id),
