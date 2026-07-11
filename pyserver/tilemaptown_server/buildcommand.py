@@ -2186,7 +2186,7 @@ def fn_register(map, client, context, arg):
 				map.broadcast("MSG", {'text': client.name+" has now registered", 'class': 'server_map_message'})
 				map.broadcast("WHO", {'add': client.who()}) # update client view, probably just for the username
 				write_to_connect_log("New account: %s (%s) @ %s" % (client.name, client.username, connection.ip))
-				respond(context, 'Now you can make your own maps! You can fill out a user profile if you like. There is no self-service password reset feature yet, but adding an email here will help an admin confirm that it\'s you if you need to request a manual password reset.')
+				respond(context, 'Now you can [url=https://wiki.novasquirrel.com/index.php?title=Map_commands_(Tilemap_Town)]make your own maps[/url]! You can fill out a user profile if you like. There is no self-service password reset feature yet, but adding an email here will help an admin confirm that it\'s you if you need to request a manual password reset.')
 				GlobalData['handle_protocol_command'](connection, map, client, "EXT", {"get_user_profile": {"username":filtered}}, None, None)
 
 				if connection.ip not in registration_count_by_ip:
