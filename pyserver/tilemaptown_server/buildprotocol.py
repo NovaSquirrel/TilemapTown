@@ -1747,6 +1747,7 @@ def handle_protocol_command(connection, map, client, command, arg, echo, ack_req
 			return handlers[command](connection, map, client, arg, context)
 	else:
 		connection.protocol_error(context, text='Bad protocol command: %s' % command, code='invalid_command', detail=command)
+GlobalData['handle_protocol_command'] = handle_protocol_command
 
 def protocol_command_already_received(connection, map, client, command, arg, echo, ack_req, ack_result):
 	context = {
