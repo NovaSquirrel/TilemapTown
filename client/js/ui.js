@@ -4099,6 +4099,17 @@ function fileUploadSetMapMusic() {
 
 function fileUploadContextMenuAppearance() {
 	let file = FileStorageInfo.files[contextMenuFile];
+	let desc = file.desc;
+	if (desc.startsWith("{")) {
+		try {
+			parsed = JSON.parse(desc);
+			if (parsed.v === 0) {
+				sendChatCommand('extuserpic '+file.url+' '+JSON.stringify(parsed));
+				return;
+			}
+		} catch (error) {
+		}
+	}
 	sendChatCommand('userpic '+file.url);
 }
 function fileUploadContextMenuTileSheet() {
@@ -4238,6 +4249,9 @@ function fileUploadContextMenuEdit() {
 	document.getElementById('editfilename').value = file.name;
 	document.getElementById('editfiledesc').value = file.desc;
 
+	let pic = PlayerWho[PlayerYou].pic;
+	document.getElementById("copyExtPicToFileDescButton").style.display = (typeof pic[0] === "string" && typeof pic[1] === "object" && pic[2] === 0) ? "" : "none";
+
 	document.getElementById('editFileWindow').style.display = "block";
 }
 
@@ -4251,11 +4265,29 @@ function fileFolderContextMenuEdit() {
 	document.getElementById('editFolderWindow').style.display = "block";
 }
 
+function copyExtPicToFileDesc() {
+	let pic = PlayerWho[PlayerYou].pic;
+	let ext = (typeof pic[0] === "string" && typeof pic[1] === "object" && pic[2] === 0) ? pic[1] : null;
+	delete ext.x_offset;
+	delete ext.y_offset;
+	delete ext.z_offset;
+	document.getElementById("editfiledesc").value = ext ? JSON.stringify(ext) : "";
+}
+
 async function doEditFile(reupload, set_my_pic, keep_url) {
 	const formData = new FormData();
 	formData.append("name", document.getElementById("editfilename").value);
 	formData.append("desc", document.getElementById("editfiledesc").value);
 	formData.append("set_my_pic", set_my_pic);
+	if (document.getElementById("editfiledesc").value.startsWith("{")) {
+		try {
+			parsed = JSON.parse(document.getElementById("editfiledesc").value);
+			if (parsed.v === 0) {
+				formData.append("set_my_pic_ext", JSON.stringify(parsed));
+			}
+		} catch (error) {
+		}
+	}
 	formData.append("keep_url", keep_url);
 	if(reupload) {
 		formData.append('file', document.getElementById("editfilefile").files[0]);

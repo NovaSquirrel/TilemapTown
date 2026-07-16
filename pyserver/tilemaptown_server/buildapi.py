@@ -271,7 +271,7 @@ def storage_limit_for_connection(connection):
 def file_is_probably_png(data):
 	return data.startswith(bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]))
 
-multipart_text_names = {"name", "desc", "folder"}
+multipart_text_names = {"name", "desc", "folder", "set_my_pic_ext"}
 multipart_bool_names = {"keep_url", "set_my_pic", "create_entity"}
 multipart_file_names = {"file"}
 async def get_info_from_multipart(request):
@@ -489,6 +489,14 @@ async def post_file(request):
 	if random_filename.endswith(".png"):
 		if info.get("set_my_pic") and hasattr(connection.entity, 'pic'):
 			connection.entity.pic = [url_for_user_file(db_id, random_filename), 0, 0]
+			if info.get("set_my_pic_ext"):
+				try:
+					ext = process_extended_pic_details(json.loads(info.get("set_my_pic_ext")))
+					if ext:
+						connection.entity.pic[1] = ext
+				except:
+					pass
+
 			connection.entity.save_on_clean_up = True
 			connection.entity.broadcast_who()
 		if info.get("create_entity") and is_client_and_entity(connection.entity):
@@ -560,13 +568,14 @@ async def put_file(request):
 
 	# Get the original information from the database, and see if the file exists in the first place
 	c = Database.cursor()
-	c.execute('SELECT name, desc, location, filename, size FROM User_File_Upload WHERE user_id=? AND file_id=?', (db_id, file_id))
+	c.execute('SELECT name, desc, location, filename, size, hash FROM User_File_Upload WHERE user_id=? AND file_id=?', (db_id, file_id))
 	result = c.fetchone()
 	if result == None:
 		raise web.HTTPNotFound(text="File not found", headers=CORS_HEADERS)
-	name, desc, location, original_filename, original_size = result
+	name, desc, location, original_filename, original_size, original_hash = result
 	new_filename = original_filename
 	new_size = original_size
+	new_hash = original_hash
 	info = await get_info_from_multipart(request)
 
 	if "file" in info:
@@ -603,10 +612,18 @@ async def put_file(request):
 		if new_filename.endswith(".png"):
 			if info.get("set_my_pic") and hasattr(connection.entity, 'pic'):
 				connection.entity.pic = [url_for_user_file(db_id, new_filename), 0, 0]
+				if info.get("set_my_pic_ext"):
+					try:
+						ext = process_extended_pic_details(json.loads(info.get("set_my_pic_ext")))
+						if ext:
+							connection.entity.pic[1] = ext
+					except:
+						pass
+
 				connection.entity.save_on_clean_up = True
 				connection.entity.broadcast_who()
 			update_image_url_everywhere(connection, url_for_user_file(db_id, original_filename), url_for_user_file(db_id, new_filename))
-
+		new_hash = "sha512:"+(hashlib.sha512(file_data).hexdigest())
 	if "name" in info:
 		name = info["name"]
 	if "desc" in info:
@@ -616,10 +633,8 @@ async def put_file(request):
 		if location == 0:
 			location = None
 
-	file_hash = "sha512:"+(hashlib.sha512(file_data).hexdigest())
-
 	c = Database.cursor()
-	c.execute('UPDATE User_File_Upload SET updated_at=?, name=?, desc=?, location=?, filename=?, size=?, hash=? WHERE file_id=?', (datetime.datetime.now(), name, desc, location, new_filename, new_size, file_hash, file_id))
+	c.execute('UPDATE User_File_Upload SET updated_at=?, name=?, desc=?, location=?, filename=?, size=?, hash=? WHERE file_id=?', (datetime.datetime.now(), name, desc, location, new_filename, new_size, new_hash, file_id))
 
 	return web.json_response({
 		"file": {

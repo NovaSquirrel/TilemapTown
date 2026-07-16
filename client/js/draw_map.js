@@ -274,11 +274,11 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 
 					if (tilesetWidth / frameWidth > 1) {
 						let idleFrameCount = Math.floor(tilesetWidth / frameWidth / 2);
-						if((Mob.ext_pic_data?.ia?.length ?? 0) >= 2) {
+						if((Mob.ext_pic_data?.ia?.length ?? 0) >= 2 && Mob.ext_pic_data.ia[1]) {
 							idleFrameCount = Mob.ext_pic_data.ia[1];
 						}
 						let moveFrameCount = Math.floor(tilesetWidth / frameWidth) - idleFrameCount;
-						if((Mob.ext_pic_data?.ma?.length ?? 0) >= 2) {
+						if((Mob.ext_pic_data?.ma?.length ?? 0) >= 2 && Mob.ext_pic_data.ma[1]) {
 							moveFrameCount = Mob.ext_pic_data.ma[1];
 						}
 						let frameCount = isWalking ? moveFrameCount : idleFrameCount;
