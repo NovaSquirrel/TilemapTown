@@ -171,8 +171,8 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 			let draw_layer_b = b.draw_layer ?? 0;
 			if (draw_layer_a != draw_layer_b)
 				return draw_layer_a - draw_layer_b;
-			let z_a = (a.z_index ?? 0) + (a.ext_pic_data?.zof?.[a.dir] ?? 0);
-			let z_b = (b.z_index ?? 0) + (b.ext_pic_data?.zof?.[b.dir] ?? 0);
+			let z_a = (a.z_index ?? 0) + (a.ext_pic_data?.z_offset?.[a.dir] ?? 0);
+			let z_b = (b.z_index ?? 0) + (b.ext_pic_data?.z_offset?.[b.dir] ?? 0);
 			if (a.y == b.y && z_a != z_b)
 				return z_a - z_b;
 			if (a.y == b.y && ((a.particle && !b.particle) || (!a.particle || b.particle)))
@@ -270,7 +270,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 							frameY = Mob.dir;
 							break;
 					}
-					MobOffset = [MobOffset[0] + (Mob.ext_pic_data?.xof ? Mob.ext_pic_data?.xof[directionToUse] : 0), MobOffset[1] + (Mob.ext_pic_data?.yof ? Mob.ext_pic_data?.yof[directionToUse] : 0)];
+					MobOffset = [MobOffset[0] + (Mob.ext_pic_data?.x_offset ? Mob.ext_pic_data?.x_offset[directionToUse] : 0), MobOffset[1] + (Mob.ext_pic_data?.y_offset ? Mob.ext_pic_data?.y_offset[directionToUse] : 0)];
 
 					if (tilesetWidth / frameWidth > 1) {
 						let idleFrameCount = Math.floor(tilesetWidth / frameWidth / 2);

@@ -1359,7 +1359,7 @@ function expandPerDirectionValues(list, fillWith) {
 		case 1:
 			return [list[0], list[0], list[0], list[0], list[0], list[0], list[0], list[0]];
 		case 2:
-			return [list[0], list[0], fillWith, list[1], list[1], list[1], fillWith, fillWith[0]];
+			return [list[0], list[0], fillWith, list[1], list[1], list[1], fillWith, fillWith];
 		case 4:
 			return [list[0], fillWith, list[1], fillWith, list[2], fillWith, list[3], fillWith];
 		case 8:
@@ -1382,9 +1382,9 @@ function processExtUserPics(key) {
 			if (PlayerWho[key].ext_pic_data.u) {
 				pic = [PlayerWho[key].ext_pic_data.u, 0, 0];
 			}
-			PlayerWho[key].ext_pic_data.xof = expandPerDirectionValues(PlayerWho[key].ext_pic_data.xof, 0);
-			PlayerWho[key].ext_pic_data.yof = expandPerDirectionValues(PlayerWho[key].ext_pic_data.yof, 0);
-			PlayerWho[key].ext_pic_data.zof = expandPerDirectionValues(PlayerWho[key].ext_pic_data.zof, 0);
+			PlayerWho[key].ext_pic_data.x_offset = expandPerDirectionValues(PlayerWho[key].ext_pic_data.xof, 0);
+			PlayerWho[key].ext_pic_data.y_offset = expandPerDirectionValues(PlayerWho[key].ext_pic_data.yof, 0);
+			PlayerWho[key].ext_pic_data.z_offset = expandPerDirectionValues(PlayerWho[key].ext_pic_data.zof, 0);
 		}
 	}
 	return pic;

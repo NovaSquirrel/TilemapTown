@@ -1020,7 +1020,7 @@ function resetSettingsPicWindow() {
 	document.getElementById("userpic-setup-y-offsets").value = (ext?.yof ?? []).join();
 	document.getElementById("userpic-setup-z-offsets").value = (ext?.zof ?? []).join();
 
-	document.getElementById("userpic-setup-raw").value = JSON.stringify(ext ?? {"v":0});
+	document.getElementById("userpic-setup-raw").value = JSON.stringify(getJsonSettingsPicWindow());
 }
 
 function getJsonSettingsPicWindow() {
@@ -1067,13 +1067,13 @@ function getJsonSettingsPicWindow() {
 		delete ext.mat;
 
 	ext.xof = document.getElementById('userpic-setup-x-offsets').value.split(",").map((v) => parseInt(v.trim())).filter((v) => !Number.isNaN(v));
-	if (ext.xof.length === 0)
+	if (!Array.isArray(ext.xof) || ext.xof.length === 0)
 		delete ext.xof;
 	ext.yof = document.getElementById('userpic-setup-y-offsets').value.split(",").map((v) => parseInt(v.trim())).filter((v) => !Number.isNaN(v));
-	if (ext.yof.length === 0)
+	if (!Array.isArray(ext.yof) || ext.yof.length === 0)
 		delete ext.yof;
 	ext.zof = document.getElementById('userpic-setup-z-offsets').value.split(",").map((v) => parseInt(v.trim())).filter((v) => !Number.isNaN(v));
-	if (ext.zof.length === 0)
+	if (!Array.isArray(ext.zof) || ext.zof.length === 0)
 		delete ext.zof;
 
 	return ext;
