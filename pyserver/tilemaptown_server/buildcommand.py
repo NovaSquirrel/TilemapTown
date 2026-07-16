@@ -2290,7 +2290,7 @@ def fn_savedpic(map, client, context, arg):
 	if arg == '':
 		show_saved_pic_list(context, client)
 	elif client.saved_pics and arg in client.saved_pics:
-		handlers['userpic'](map, client, context, client.saved_pics[arg])
+		handlers['extuserpic' if "{" in client.saved_pics[arg] else 'userpic'](map, client, context, client.saved_pics[arg])
 	else:
 		respond(context, "You don't have a saved pic named \"%s\"" % arg, error=True)
 
@@ -2306,12 +2306,15 @@ def fn_savedpiclist(map, client, context, arg):
 	subcommand, subarg = separate_first_word(arg)
 	if subcommand in ('set', 'add') and subarg:
 		picname, picvalue = separate_first_word(subarg)
-		if subarg == '':
+		ext_data = ""
+		if picvalue == '':
 			picvalue = str(client.pic[0])
+			if isinstance(client.pic[1], dict):
+				ext_data = " " + json.dumps(client.pic[1])
 		if picvalue.startswith("http"):
 			if image_url_is_okay(picvalue):
-				client.saved_pics[picname] = picvalue
-				respond(context, "Saved pic \"%s\": %s" % (picname, picvalue))
+				client.saved_pics[picname] = picvalue + ext_data
+				respond(context, "Saved pic \"%s\": %s" % (picname, picvalue + ext_data))
 			else:
 				respond(context, 'URL doesn\t match any allowlisted sites', error=True)
 		else:

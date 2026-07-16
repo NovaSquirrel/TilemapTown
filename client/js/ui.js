@@ -1095,7 +1095,10 @@ function applyJsonPicWindow() {
 	if (!basicUrl) {
 		alert("A basic URL is required")
 	} else {
-		sendChatCommand(`extuserpic ${basicUrl} ${document.getElementById("userpic-setup-raw").value}`);
+		if(document.getElementById("userpic-setup-raw").value !== "{\"v\":0}")
+			sendChatCommand(`extuserpic ${basicUrl} ${document.getElementById("userpic-setup-raw").value}`);
+		else
+			sendChatCommand(`userpic ${basicUrl}`);
 	}
 }
 
