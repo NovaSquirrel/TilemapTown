@@ -639,7 +639,7 @@ def offset_is_okay(x):
 def check_anim_settings_override(x):
 	if not isinstance(x, list) or len(x) > 3:
 		return False
-	if len(x) > 1 and x[0] != None and (not isinstance(x[0], int) or x[0] <= 0):
+	if len(x) > 1 and x[0] != None and (not isinstance(x[0], int) or x[0] <= 1):
 		return False
 	if len(x) > 2 and x[1] != None and (not isinstance(x[1], int) or x[1] <= 0 or x[1] > 32):
 		return False

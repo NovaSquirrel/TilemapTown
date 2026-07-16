@@ -253,6 +253,8 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 						animationDivisor = Mob.ext_pic_data.ia[0] ?? 2;
 					else if (isWalking && (Mob.ext_pic_data?.ma?.length ?? 0) >= 1)
 						animationDivisor = Mob.ext_pic_data.ma[0] ?? 2;
+					if(animationDivisor < 1)
+						animationDivisor = 1;
 					let frameCountFromAnimationTick = entityAnimationEnabled ? Math.floor(tenthOfSecondTimer / animationDivisor) : 0;
 					let directionToUse = Mob.dir;
 					switch (directionCount) { // Directions
