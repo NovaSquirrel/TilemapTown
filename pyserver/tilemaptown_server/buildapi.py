@@ -337,10 +337,17 @@ def update_image_url_everywhere(connection, old_url, new_url):
 
 	# Update all of the loaded entities that are using this URL as a pic
 	for temp_id, entity in AllEntitiesByID.items():
-		if entity.pic and entity.pic[0] == old_url:
-			entity.pic[0] = new_url
-			entity.save_on_clean_up = True
-			entity.broadcast_who()
+		if entity.pic:
+			updated_pic = False
+			if entity.pic[0] == old_url:
+				entity.pic[0] = new_url
+				updated_pic = True
+			if isinstance(entity.pic[1], dict) and entity.pic[1].get('u') == old_url:
+				entity.pic[1]['u'] = new_url
+				updated_pic = True
+			if updated_pic:
+				entity.save_on_clean_up = True
+				entity.broadcast_who()
 
 		if is_client_and_entity(entity): # If it's a client, update saved pics and morphs
 			for k, saved_pic in entity.saved_pics.items():
