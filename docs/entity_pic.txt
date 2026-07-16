@@ -31,8 +31,8 @@ Height:
 	4 rows (128px) | Rows follow the order of east, south, west, north.
 	8 rows (256px) | Rows follow the order of east, south east, south, south west, west, north west, north, north east. (Or in other words, clockwise, starting at east.)
 
-A client SHOULD handle an invalid width number (a width not specified in the table above) by only using the first column (no animation, potentially multiple directions).
-Behavior is undefined for invalid height numbers.
+A client SHOULD handle an invalid width number (a width that isn't a multiple of 32 pixels wide) by only using the first column (no animation, potentially multiple directions).
+Behavior is undefined for invalid height numbers. The web client currently supports any amount of columns and will divide the column count by two to get the idle and movement frame count.
 Each animation frame is shown for 0.2 seconds before moving to the next frame, and the animation loops for as long as the entity remains in that state. When an entity moves, the web client displays the moving animation for 0.5 seconds.
 
 --- Extended pic ---
