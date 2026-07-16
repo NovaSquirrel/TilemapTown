@@ -616,7 +616,7 @@ def pic_is_okay(pic):
 	if isinstance(pic[0], str):
 		if not image_url_is_okay(pic[0]) or (not isinstance(pic[1],dict) and pic[1] != 0) or pic[2] != 0:
 			return False
-	elif not isinstance(pic[1], int) or isinstance(pic[2], int):
+	elif not isinstance(pic[1], int) or not isinstance(pic[2], int):
 		return False
 	return True
 
