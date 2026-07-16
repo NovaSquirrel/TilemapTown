@@ -111,11 +111,14 @@ Change display name
 /userdesc text
 Change your description
 
-/userpic bunny, cat, hamster or fire
+/userpic bunny, cat, hamster, fire, invisible, snail, or turtle
 /userpic x y (measured in tiles, from https://tilemap.town/img/tileset/potluck.png)
 /userpic url
 /userpic sheet x y
 Change your icon
+
+/extuserpic url {json properties}
+Changes your icon, and sets extended entity appearance properties (see entity_pic.txt)
 
 /savedpic
 /savedpic name

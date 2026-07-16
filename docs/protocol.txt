@@ -1,5 +1,5 @@
 === Tilemap Town protocol ===
-By NovaSquirrel. Last updated 2026-04-19.
+By NovaSquirrel. Last updated 2026-07-15.
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119 when, and only when, they appear in all capitals, as shown here.
 
@@ -364,12 +364,13 @@ Server-->Client "WHO" messages can contain these commands:
 		"name": string; Name of the entity.
 		"desc": string; Description for the entity.
 		"username": string; The username for the account this entity is logged into.
-		"pic": [sprite sheet ID or URL, x, y]; Entity appearance.
+		"pic": [sprite sheet ID or URL, x, y]; Entity appearance. See entity_pic.txt for more information.
 		"x": integer; X coordinate on the map.
 		"y": integer; Y coordinate on the map.
 		"dir": integer; Direction from 0 to 7.
 		"offset": [x,y]; Offset in pixels away from where this entity would normally be drawn.
 		"z_index": integer; An entity with a higher z-index should get shown over another when two entities are on the same Y coordinate.
+		"draw_layer": integer; An entity with a higher draw_layer should get shown over another regardless of Y coordinate.
 
 		"passengers": List of IDs this entity is carrying (Note: recursion MUST be handled properly if the client intends on following through the chain)
 		"vehicle": integer or string; ID of the entity this entity is being carried by.

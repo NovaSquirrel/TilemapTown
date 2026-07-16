@@ -140,6 +140,7 @@ let focusChatBarOnTabBack = false;
 let warnInvalidBBCode = true;
 let focusMapAfterChat = false;
 let safeForCommandLists = [];
+let showExtPics = "always";
 
 let filterChatType = null;
 const filterClassListAny = new Set(["error_message", "connection_error_message", "broadcast_message", "server_message", "server_stats", "server_motd"]);
@@ -211,6 +212,7 @@ function loadOptions() {
 		document.getElementById("focus-map-after-chat").value = saved_options.focus_map_after_chat ?? false;
 		document.getElementById("music-volume").value = (saved_options.audio_map_music_volume ?? 1) * 100;
 		document.getElementById("safe-for-command-lists").value = (saved_options.safe_for_command_lists ?? []).join();
+		document.getElementById("option-entity-ext-pic").value = saved_options.show_ext_pic ?? "always";
 	}
 }
 
@@ -235,6 +237,7 @@ function applyOptions() {
 	safeForCommandLists = document.getElementById("safe-for-command-lists").value.split(",");
 	for (let i in safeForCommandLists)
 		safeForCommandLists[i] = safeForCommandLists[i].trim().toLowerCase();
+	showExtPics = document.getElementById("option-entity-ext-pic").value;
 
 	let mapMusicPreviouslyEnabled = mapMusicEnabled;
 	updateMapMusicVolume();
@@ -264,10 +267,14 @@ function applyOptions() {
 		"warn_invalid_bbcode": warnInvalidBBCode,
 		"focus_map_after_chat": focusMapAfterChat,
 		"safe_for_command_lists": safeForCommandLists,
+		"show_ext_pics": showExtPics,
 		"version": 1,
 	};
 	localStorage.setItem("options", JSON.stringify(saved_options));
 	backdropRerenderAll = true;
+	for (let key in PlayerWho) {
+		processExtUserPics(key);
+	}
 }
 
 function updateMapMusicVolume() {
@@ -971,6 +978,129 @@ function saveNewMorphButton() {
 		sendChatCommand('morphlist set '+name.trim());
 		refreshMorphListSoon();
 	}
+}
+
+let addedListenerYet = false;
+function openExtendedPicWindow() {
+	resetSettingsPicWindow();
+	if (!addedListenerYet) {
+		for (let box of ["userpic-setup-ext-url", "userpic-setup-frame-width", "userpic-setup-frame-height", "userpic-setup-speech-height", "userpic-setup-direction-count", "userpic-setup-frame-duration-idle", "userpic-setup-frame-count-idle", "userpic-setup-frame-pattern-idle", "userpic-setup-frame-duration-move", "userpic-setup-frame-count-move", "userpic-setup-frame-pattern-move", "userpic-setup-x-offsets", "userpic-setup-y-offsets", "userpic-setup-z-offsets", "userpic-setup-move-anim-time"]) {
+			document.getElementById(box).addEventListener('change', function (e) {
+				document.getElementById("userpic-setup-raw").value = JSON.stringify(getJsonSettingsPicWindow());
+			});
+		}
+		addedListenerYet = true;
+	}
+	document.getElementById("ext-userpic-setup").style.display = "block";
+}
+
+function resetSettingsPicWindow() {
+	let me = PlayerWho[PlayerYou];
+	let pic = me.pic;
+	let ext = (typeof pic[0] === "string" && typeof pic[1] === "object" && pic[2] === 0) ? pic[1] : null;
+
+	document.getElementById("userpic-setup-basic-url").value = (typeof pic[0] === "string") ? pic[0] : "";
+	document.getElementById("userpic-setup-ext-url").value = ext?.u ?? "";
+	document.getElementById("userpic-setup-frame-width").value = ext?.fs?.[0] ?? "";
+	document.getElementById("userpic-setup-frame-height").value = ext?.fs?.[1] ?? "";
+	document.getElementById("userpic-setup-speech-height").value = ext?.sh ?? "";
+	document.getElementById("userpic-setup-direction-count").value = ext?.dc ?? "";
+
+	let ia = ext?.ia ?? [];
+	document.getElementById("userpic-setup-frame-duration-idle").value = (ia.length >= 1) ? ia[0] : "";
+	document.getElementById("userpic-setup-frame-count-idle").value = (ia.length >= 2) ? ia[1] : "";
+	document.getElementById("userpic-setup-frame-pattern-idle").value = (ia.length >= 3) ? ia[2].join() : "";
+	let ma = ext?.ma ?? [];
+	document.getElementById("userpic-setup-frame-duration-move").value = (ma.length >= 1) ? ma[0] : "";
+	document.getElementById("userpic-setup-frame-count-move").value = (ma.length >= 2) ? ma[1] : "";
+	document.getElementById("userpic-setup-frame-pattern-move").value = (ma.length >= 3) ? ma[2].join() : "";
+	document.getElementById("userpic-setup-move-anim-time").value = ext?.mat ?? "";
+
+	document.getElementById("userpic-setup-x-offsets").value = (ext?.xof ?? []).join();
+	document.getElementById("userpic-setup-y-offsets").value = (ext?.yof ?? []).join();
+	document.getElementById("userpic-setup-z-offsets").value = (ext?.zof ?? []).join();
+
+	document.getElementById("userpic-setup-raw").value = JSON.stringify(ext ?? {"v":0});
+}
+
+function getJsonSettingsPicWindow() {
+	let ext = {"v": 0};
+
+	ext.u = document.getElementById("userpic-setup-ext-url").value;
+	if (!ext.u)
+		delete ext.u;
+
+	ext.fs = [parseInt(document.getElementById("userpic-setup-frame-width").value), parseInt(document.getElementById("userpic-setup-frame-height").value)];
+	if (Number.isNaN(ext.fs[0]) && Number.isNaN(ext.fs[1]))
+		delete ext.fs;
+	else if(Number.isNaN(ext.fs[0]))
+		ext.fs[0] = 32;
+	else if(Number.isNaN(ext.fs[1]))
+		ext.fs[1] = 32;
+
+	ext.sh = parseInt(document.getElementById("userpic-setup-speech-height").value);
+	if (Number.isNaN(ext.sh))
+		delete ext.sh;
+	ext.dc = parseInt(document.getElementById("userpic-setup-direction-count").value);
+	if (Number.isNaN(ext.dc))
+		delete ext.dc;
+
+	let ia = [parseInt(document.getElementById("userpic-setup-frame-duration-idle").value), parseInt(document.getElementById("userpic-setup-frame-count-idle").value), document.getElementById('userpic-setup-frame-pattern-idle').value.split(",").map((v) => parseInt(v.trim())).filter((v) => !Number.isNaN(v))];
+	if (Number.isNaN(ia[0])) ia[0] = null;
+	if (Number.isNaN(ia[1])) ia[1] = null;
+	if (!ia[2].length) ia[2] = null;
+	while(ia.length && ia.at(-1) == null)
+		ia.pop();
+	if (ia.length)
+		ext.ia = ia;
+
+	let ma = [parseInt(document.getElementById("userpic-setup-frame-duration-move").value), parseInt(document.getElementById("userpic-setup-frame-count-move").value), document.getElementById('userpic-setup-frame-pattern-move').value.split(",").map((v) => parseInt(v.trim())).filter((v) => !Number.isNaN(v))];
+	if (Number.isNaN(ma[0])) ma[0] = null;
+	if (Number.isNaN(ma[1])) ma[1] = null;
+	if (!ma[2].length) ma[2] = null;
+	while(ma.length && ma.at(-1) == null)
+		ma.pop();
+	if (ma.length)
+		ext.ma = ma;
+	ext.mat = parseInt(document.getElementById("userpic-setup-move-anim-time").value);
+	if (Number.isNaN(ext.mat))
+		delete ext.mat;
+
+	ext.xof = document.getElementById('userpic-setup-x-offsets').value.split(",").map((v) => parseInt(v.trim())).filter((v) => !Number.isNaN(v));
+	if (ext.xof.length === 0)
+		delete ext.xof;
+	ext.yof = document.getElementById('userpic-setup-y-offsets').value.split(",").map((v) => parseInt(v.trim())).filter((v) => !Number.isNaN(v));
+	if (ext.yof.length === 0)
+		delete ext.yof;
+	ext.zof = document.getElementById('userpic-setup-z-offsets').value.split(",").map((v) => parseInt(v.trim())).filter((v) => !Number.isNaN(v));
+	if (ext.zof.length === 0)
+		delete ext.zof;
+
+	return ext;
+}
+
+function applySettingsPicWindow() {
+	let basicUrl = document.getElementById("userpic-setup-basic-url").value;
+	if (!basicUrl) {
+		alert("A basic URL is required")
+	} else {
+		let asJson = getJsonSettingsPicWindow();
+		document.getElementById("userpic-setup-raw").value = JSON.stringify(asJson);
+		applyJsonPicWindow();
+	}
+}
+
+function applyJsonPicWindow() {
+	let basicUrl = document.getElementById("userpic-setup-basic-url").value;
+	if (!basicUrl) {
+		alert("A basic URL is required")
+	} else {
+		sendChatCommand(`extuserpic ${basicUrl} ${document.getElementById("userpic-setup-raw").value}`);
+	}
+}
+
+function changePreviewPicWindow() {
+
 }
 
 ///////////////////////////////////////////////////////////
@@ -4918,7 +5048,7 @@ function updateDirectionForAnim(id) {
 }
 
 function startPlayerWalkAnim(id) {
-	PlayerAnimation[id].walkTimer = 5 + 1; // 5*100ms
+	PlayerAnimation[id].walkTimer = (PlayerWho[id]?.ext_pic_data?.mat ?? 5) + 1; // 5*100ms
 	NeedMapRedraw = true;
 }
 

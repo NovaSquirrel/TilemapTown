@@ -2186,7 +2186,7 @@ def fn_register(map, client, context, arg):
 				map.broadcast("MSG", {'text': client.name+" has now registered", 'class': 'server_map_message'})
 				map.broadcast("WHO", {'add': client.who()}) # update client view, probably just for the username
 				write_to_connect_log("New account: %s (%s) @ %s" % (client.name, client.username, connection.ip))
-				respond(context, 'Now you can [url=https://wiki.novasquirrel.com/index.php?title=Map_commands_(Tilemap_Town)]make your own maps[/url]! You can fill out a user profile if you like. There is no self-service password reset feature yet, but adding an email here will help an admin confirm that it\'s you if you need to request a manual password reset.')
+				respond(context, 'Now you can [url=https://wiki.novasquirrel.com/index.php?title=Map_commands_(Tilemap_Town)]make your own maps[/url]! You can also fill out a user profile if you like. There is no self-service password reset feature yet, but adding an email here will help an admin confirm that it\'s you if you need to request a manual password reset.')
 				GlobalData['handle_protocol_command'](connection, map, client, "EXT", {"get_user_profile": {"username":filtered}}, None, None)
 
 				if connection.ip not in registration_count_by_ip:
@@ -2245,9 +2245,30 @@ def fn_userpic(map, client, context, arg):
 			client.pic = [int(arg[0]), int(arg[1]), int(arg[2])]
 			success = True
 	if success:
-		client.broadcast_who()
+		if client.map:
+			client.map.broadcast('WHO', {'update': {'id': client.protocol_id(), 'pic': client.pic}})
 	else:
 		respond(context, 'Syntax is: /userpic sheet x y', error=True)
+
+@cmd_command(category="Settings", syntax='url {properties}')
+def fn_extuserpic(map, client, context, arg):
+	url, subarg = separate_first_word(arg, lowercaseFirst=False)
+	try:
+		if not image_url_is_okay(url):
+			respond(context, 'URL doesn\'t match any allowlisted sites', error=True)
+			return
+		as_dict = json.loads(subarg)
+		ext_pic_details = process_extended_pic_details(as_dict)
+		if ext_pic_details != None:
+			client.pic = [url, ext_pic_details, 0]
+			client.save_on_clean_up = True
+			if client.map:
+				client.map.broadcast('WHO', {'update': {'id': client.protocol_id(), 'pic': client.pic}})
+			return
+	except:
+		respond(context, 'Bad JSON in /extuserpic', error=True)
+		return
+	respond(context, 'Syntax is /extuserpic url {properties}', error=True)
 
 # Saved pic functions
 def show_saved_pic_list(context, client):
@@ -2453,7 +2474,20 @@ def fn_z(map, client, context, arg):
 	else:
 		respond(context, '/z requires a number from -10 to 10', error=True)
 		return
-	map.broadcast("MOV", {"id": client.protocol_id(), "z_index": client.z_index}, remote_category=maplisten_type['move'])
+	if map:
+		map.broadcast("MOV", {"id": client.protocol_id(), "z_index": client.z_index}, remote_category=maplisten_type['move'])
+
+@cmd_command(category="Settings", syntax='index')
+def fn_draw_layer(map, client, context, arg):
+	if arg == "":
+		client.draw_layer = 0
+	elif string_is_int(arg):
+		client.draw_layer = min(2, max(-2, int(arg)))
+	else:
+		respond(context, '/draw_layer requires a number from -2 to 2', error=True)
+		return
+	if map:
+		map.broadcast("WHO", {"update": {"id": client.protocol_id(), "draw_layer": client.draw_layer}})
 
 @cmd_command(category="Who", no_entity_needed=True)
 def fn_gwho(map, client, context, arg):
@@ -3161,8 +3195,9 @@ def fn_entity(map, client, context, arg):
 		if permission_check( (permission['modify_properties'], permission['modify_appearance']) ):
 			pic = load_json_if_valid(subarg)
 			if pic and pic_is_okay(subarg):
-				e.pic = pic
-				e.broadcast_who()
+				e.pic = process_entity_pic(pic)
+				if e.map:
+					e.map.broadcast('WHO', {'update': {'id': e.protocol_id(), 'pic': e.pic}})
 			else:
 				respond(context, "Invalid picture", error=True)
 		save_entity = True

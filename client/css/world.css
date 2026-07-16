@@ -374,6 +374,14 @@ summary {
 	image-rendering: pixelated;
 	background: url('../img/scrolling_grid.gif');
 }
+#userpic-setup-frame-preview-idle {
+	image-rendering: pixelated;
+	background: url('../img/scrolling_grid.gif');
+}
+#userpic-setup-frame-preview-move {
+	image-rendering: pixelated;
+	background: url('../img/scrolling_grid.gif');
+}
 
 /* Touch UI buttons */
 #touch-button-container {

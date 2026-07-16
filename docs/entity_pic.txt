@@ -1,0 +1,71 @@
+=== Tilemap Town entity pic documentation ===
+By NovaSquirrel. Last updated 2026-07-15.
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119 when, and only when, they appear in all capitals, as shown here.
+
+--- Overview ---
+There are three formats that the "pic" field in an entity's WHO data can be in. It's always an array with 3 values.
+
+--- Pic using a tile sheet ---
+	[Sheet ID, X, Y]
+Sheet ID refers to an image entity's ID if it's positive, or a server-provided sheet if zero or negative.
+X and Y are in 16x16 tile units, and specify a position on the sheet's image. The avatar is always just a single static 16x16 frame.
+
+--- Pic using a URL ---
+	[URL, 0, 0]
+Second and third values are zero, and have always been zero prior to the extended pic feature, so clients ignore them.
+That means that extra information can go in here, and simpler clients that don't understand extended pics should use the URL as usual.
+
+The image URL is a grid of 32x32 animation frames. The number of directions and number of frames of animation for each direction are determined by looking at the image's width and height.
+
+Width:
+	1 column  (32px)  | Only one frame per direction
+	2 columns (64px)  | Left frame is used when idle, and right frame is used when moving
+    4 columns (128px) | Two idle frames on the left, and two movement frames on the right
+    6 columns (192px) | Three idle frames on the left, and three movement frames on the right
+    8 columns (256px) | Four idle frames on the left, and four movement frames on the right
+
+Height:
+	1 row  (32px)  | Image does not change based on the entity's direction
+	2 rows (64px)  | First row is for facing east, second row is for facing west
+	4 rows (128px) | Rows follow the order of east, south, west, north.
+	8 rows (256px) | Rows follow the order of east, south east, south, south west, west, north west, north, north east. (Or in other words, clockwise, starting at east.)
+
+A client SHOULD handle an invalid width number (a width that isn't a multiple of 32 pixels wide) by only using the first column (no animation, potentially multiple directions).
+Behavior is undefined for invalid height numbers. The web client currently supports any amount of columns and will divide the column count by two to get the idle and movement frame count.
+Each animation frame is shown for 0.2 seconds before moving to the next frame, and the animation loops for as long as the entity remains in that state. When an entity moves, the web client displays the moving animation for 0.5 seconds.
+
+--- Extended pic ---
+	[URL, {Extra information}, 0]
+In this format, the second value is a JSON object containing extra information about how to display the entity's graphics.
+Third value is a format version number, and clients SHOULD ignore the extended pic information and fall back to the regular URL if they don't recognize the version number.
+Current expected version number is 0.
+
+Fields for the second value (the extra-information JSON object):
+	Field name (long)  (short) Purpose
+	v                  | v   | Version number, normally 0; clients ignore this object and fall back to the regular URL if they don't understand the version specified
+	url                | u   | URL for the extended pic's sprite sheet; if not provided, uses the same URL as usual
+	frame_size         | fs  | Size of each frame in the image. [Width in pixels, Height in pixels]
+	dir_count          | dc  | Number of directions the sheet has; 1, 2, 4, or 8 (If not specified, assumed to be "image height / frame height")
+	idle_anim          | ia  | [Number of idle frames, Amount of time between idle frames in 0.1 second units, Frame pattern]
+	move_anim          | ma  | [Number of move frames, Amount of time between move frames in 0.1 second units, Frame pattern]
+	move_anim_time     | mat | Amount of time, in 0.1 second units, that the avatar should play the move animation after moving
+	speech_height      | sh  | Amount of distance, in pixels, that there should be between the bottom of the sprite and the bottom of the speech bubble that indicates that the user is typing. Defaults to frame height minus 4 pixels (so 28 with the default 32 pixel frame height)
+	x_offset           | xof | Array of X offsets applied on top of the normal offset, one per direction.
+	y_offset           | yof | Array of Y offsets applied on top of the normal offset, one per direction.
+	z_offset           | zof | Array of Z offsets applied on top of the z-index value, one per direction.
+
+Clients MAY use send objects containing the long versions of the names to the server if desired, and MAY support receiving objects with the long names, but MUST support the short names, as the official server will convert the long names to the short names.
+
+Image is a grid of frames like normal, but frames don't have to be 32x32 and the number of idle and move frames don't have to match.
+Normal directions are at the top of the image.
+Extra poses, if present, are directly underneath, and have "idle" and "move" portions just like the normal directions, using the same animation timing and pattern information (unless overridden).
+The UI could have buttons to trigger the extra poses, with the provided names if available.
+
+"idle_anim" and "move_anim" are arrays that can be 1, 2 or 3 values long
+	First value, if present, is the number of 0.1 second ticks to wait between frames of the animation. If not present, it defaults to 2.
+	Second value, if present, is the number of frames that are present in the image. If not present, it's inferred from the image width.
+	Third value, if present, is an array of frame numbers, allowing you to provide a pattern of frames that isn't just a linear sequence from start to finish. [0, 1, 0, 2] would use the first frame, second frame, first frame, third frame, in order. Length can be whatever you like.
+
+	Values can be "null" to skip values and get to a later index that you do want to provide a value for.
+	If the array is two or one value long, or empty, the missing values are treated as null and the default is used.

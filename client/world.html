@@ -524,7 +524,13 @@
 		<label class="unselectable"><input type="checkbox" id="option-tile-animation" checked>Tile animation</label><br>
 		<label class="unselectable"><input type="checkbox" id="enable-user-particles" checked>Show user particles</label><br>
 		<label class="unselectable"><input type="checkbox" id="lock-zoom-level">Lock zoom level</label><br>
-		<label class="unselectable"><input type="checkbox" id="alwayscenter" checked="true">Always center camera</label><br>
+		<label class="unselectable"><input type="checkbox" id="alwayscenter" checked="true">Always center camera</label>
+		<p><label>Extended entity graphics:<br><select id="option-entity-ext-pic">
+			<option value="always">Enabled</option>
+			<option value="if48px">Show if &le;48px</option>
+			<option value="if32px">Show if &le;32px</option>
+			<option value="never">Disabled</option>
+		</select></label></p>
 	</details>
 	<details class="options-section">
 		<summary class="unselectable">Chat options</summary>
@@ -599,8 +605,9 @@
     <strong>Custom avatar:</strong><br>
     Paste a link to a PNG here to use a custom avatar.<br>
     Registered users can <a href="#" onclick="viewFiles();">upload images</a> to the server.<br>Otherwise you may use <a href="https://filegarden.com/" target="_blank">File Garden</a>, <a href="https://imgbb.com/" target="_blank">ImgBB</a> or <a href="https://postimages.org/" target="_blank">Postimages</a>.<br>More image hosts can be added on request.<br>
-    <input type="text" placeholder="https://example.com/whatever.png" size="40" id="newcustompic">
+    <input type="url" placeholder="https://example.com/whatever.png" size="28" id="newcustompic">
     <input type="button" value="Custom pic" onclick="sendChatCommand('userpic '+document.getElementById('newcustompic').value);">
+    <button onclick="openExtendedPicWindow()">Advanced setup</button>
   </p>
 
 <!--
@@ -608,7 +615,59 @@
         <img id="iconPreview" src="" width="32" height="32" alt="Image preview"><br>
         <input type="button" value="Use"><br>
 -->
-        </div>
+  </div>
+</widget-window>
+
+<widget-window id="ext-userpic-setup" style="display: none;">
+	<span slot="title">Character appearance setup</span>
+	<div slot="contents">
+	<div style="text-align:center;"><button onclick="resetSettingsPicWindow()">Reset</button> <button onclick="applySettingsPicWindow()">Apply appearance</button></div>
+
+	<p>
+	<table border="1">
+	<caption style="caption-side:top;">Basic details</caption>
+	<tr><th>Basic URL</th><td><input type="url" placeholder="https://example.com/whatever.png" size="28" id="userpic-setup-basic-url"></td></tr>
+	<tr><th>Extended URL</th><td><input type="url" placeholder="https://example.com/whatever.png" size="28" id="userpic-setup-ext-url"></td></tr>
+	<tr><th>Frame size</th><td><input type="number" min="1" max="64" id="userpic-setup-frame-width" /> px &times; <input type="number" min="1" max="64" id="userpic-setup-frame-height" /> px</td></tr>
+	<tr><th>Typing symbol height</th><td><input type="number" min="0" max="64" id="userpic-setup-speech-height" /> px</td></tr>
+	<tr><th>Direction count</th><td>
+		<select id="userpic-setup-direction-count"><option value=""></option><option value="1">1</option><option value="2">2 (East, West)</option><option value="4">4 (Cardinal directions)</option><option value="8">8 (Cardinal + diagonal)</option></select>
+	</td></tr>
+	</table>
+	<details>
+	<summary class="unselectable">Explanation</summary>
+	<span class="column-of-text-in-window">Basic URL is used by clients that don't support or have disabled fancier avatars, or when someone sets a max frame size. Basic avatars always use 32x32 frames and have more limited animation controls.</span>
+	</details>
+	</p>
+
+	<p>
+	<table border="1">
+	<caption style="caption-side:top;">Animation details</caption>
+	<tr><th></th><th>Idle</th><th>Move</th></tr>
+	<!--<tr><th>Preview</th><td><canvas class="unselectable" id="userpic-setup-frame-preview-idle" width="64" height="64" style="border: solid 1px black;" imageSmoothingEnabled="false"></canvas></td><td><canvas class="unselectable" id="userpic-setup-frame-preview-move" width="64" height="64" style="border: solid 1px black;" imageSmoothingEnabled="false"></canvas></td></tr>
+	<tr><th colspan="3"><select id="userpic-setup-preview-direction" onchange="changePreviewPicWindow()"><option value="0">&#x2192; East</option><option value="1">&#x2198; South east</option><option value="2">&#x2193; South</option><option value="3">&#x2199; South west</option><option value="4">&#x2190; West</option><option value="5">&#x2196; North west</option><option value="6">&#x2191; North</option><option value="7">&#x2197; North east</option></select> <label>&#x1F4AC;<input type="checkbox" id="userpic-setup-preview-speech" onchange="changePreviewPicWindow()" checked /></label> <label>Extended: <input type="checkbox" id="userpic-setup-preview-extended" onchange="changePreviewPicWindow()" checked /></label></th></tr>-->
+	<tr><th>Frame count</th><td><input type="number" min="1" max="32" id="userpic-setup-frame-count-idle" /></td><td><input type="number" min="1" max="32" id="userpic-setup-frame-count-move" /></td></tr>
+	<tr><th>Frame duration</th><td><input type="number" min="1" max="32" id="userpic-setup-frame-duration-idle" /> &times; 0.1 sec</td><td><input type="number" min="1" max="32" id="userpic-setup-frame-duration-move" /> &times; 0.1 sec</td></tr>
+	<tr><th>Frame pattern</th><td><textarea rows="3" cols="15" id="userpic-setup-frame-pattern-idle"></textarea></td><td><textarea rows="3" cols="15" id="userpic-setup-frame-pattern-move"></textarea></td></tr>
+	</table>
+	<span class="column-of-text-in-window">Pattern is a comma-separated list of frame numbers (starting from 0).</span>
+	</p>
+
+	<details>
+	<summary class="unselectable">More options</summary>
+	<table border="1">
+	<tr><th>Move anim<br>duration</th><td><input id="userpic-setup-move-anim-time" /></th></tr>
+	<tr><th>X offset<br>per direction</th><td><input id="userpic-setup-x-offsets" /></th></tr>
+	<tr><th>Y offset<br>per direction</th><td><input id="userpic-setup-y-offsets" /></th></tr>
+	<tr><th>Z offset<br>per direction</th><td><input id="userpic-setup-z-offsets" /></th></tr>
+	</table>
+	</details>
+
+	<p>
+	Extended appearance info in JSON format:<br><textarea cols="40" id="userpic-setup-raw"></textarea> <button onclick="applyJsonPicWindow()">Apply</button>
+	</p>
+
+	</div>
 </widget-window>
 
 <widget-window id="filelist" style="display: none;">
