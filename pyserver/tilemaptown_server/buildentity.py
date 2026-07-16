@@ -837,6 +837,8 @@ class Entity(PermissionsMixin, object):
 			out['offset'] = self.offset
 		if hasattr(self, "z_index") and self.z_index:
 			out['z_index'] = self.z_index
+		if hasattr(self, "draw_layer") and self.draw_layer:
+			out['draw_layer'] = self.draw_layer
 		if self.forward_messages_to:
 			out['is_forwarding'] = True
 			if 'CHAT' in self.forward_message_types:
@@ -1018,6 +1020,7 @@ class Entity(PermissionsMixin, object):
 					self.status_message = misc.get('status_message', None)
 					self.verbs = misc.get('verbs', None)
 					self.offset = misc.get('offset', None)
+					self.draw_layer = misc.get('draw_layer')
 
 		self.owner_id = result[9]
 		self.allow = result[10]
@@ -1087,6 +1090,8 @@ class Entity(PermissionsMixin, object):
 					misc['status_message'] = self.status_message
 			if hasattr(self, 'verbs') and self.verbs:
 				misc['verbs'] = self.verbs
+			if hasattr(self, "draw_layer") and self.draw_layer:
+				misc['draw_layer'] = self.draw_layer
 			if self.offset:
 				misc['offset'] = self.offset
 			c.execute("UPDATE Entity_Ext SET forward_messages_to=?, tags=?, misc=? WHERE id=?", (self.forward_messages_to, dumps_if_condition(self.tags, self.tags != {} and self.tags != None), dumps_if_condition(misc, misc != {}), self.db_id))

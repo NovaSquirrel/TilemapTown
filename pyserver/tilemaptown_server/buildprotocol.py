@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import json, datetime, time, types, weakref, secrets
+import json, datetime, time, weakref, secrets
 from .buildglobal import *
 from .buildcommand import handle_user_command, tile_is_okay, data_disallowed_for_entity_type, send_private_message, send_message_to_map, entity_types_users_can_change_data_for, apply_rate_limiting, attach_result_to_context, respond, separate_first_word
 from .buildentity import Entity, GenericEntity
@@ -64,19 +64,6 @@ def find_remote_control_entity(connection, client, rc, context):
 		connection.protocol_error(context, text='Don\'t have permission for entity %s' % rc, code='missing_permission', detail='remote_command', subject_id=rc)
 	return None
 
-def remove_invalid_dict_fields(data, whitelist):
-	out = {}
-	for k,v in data.items():
-		if k in whitelist:
-			whitelist_entry = whitelist[k]
-			if isinstance(whitelist_entry, types.FunctionType):
-				if whitelist_entry(v):
-					out[k] = data[k]
-			elif isinstance(v, whitelist_entry):
-				out[k] = data[k]
-	return out
-def is_list_with_two_ints(data):
-	return isinstance(data, list) and len(data) == 2 and isinstance(data[0], int) and isinstance(data[1], int)
 def who_mini_tilemap(data, max_pixel_width=64, max_pixel_height=64, max_map_width=24, max_map_height=32):
 	if isinstance(data, dict):
 		filtered = remove_invalid_dict_fields(data, {
@@ -84,7 +71,7 @@ def who_mini_tilemap(data, max_pixel_width=64, max_pixel_height=64, max_map_widt
 			"clickable":        lambda x: isinstance(x, bool) or x == "drag" or x == "map_drag",
 			"map_size":         lambda x: is_list_with_two_ints(x) and x[0] >= 1   and x[0] <= max_map_width and x[1] >= 1 and x[1] <= max_map_height,
 			"tile_size":        lambda x: is_list_with_two_ints(x) and x[0] >= 1   and x[0] <= 64 and x[1] >= 1 and x[1] <= 64,
-			"offset":           lambda x: is_list_with_two_ints(x) and x[0] >= -32 and x[0] <= 32 and x[1] >= -32 and x[1] <= 32,
+			"offset":           offset_is_okay,
 			"tileset_url":      image_url_is_okay,
 			"transparent_tile": int,
 		})
@@ -252,7 +239,7 @@ def set_entity_params_from_dict(e, d, connection, client, context):
 		e.desc = d['desc']
 	if 'pic' in d:
 		if pic_is_okay(d['pic']):
-			e.pic = d['pic']
+			e.pic = process_entity_pic(d['pic'])
 		else:
 			connection.protocol_error(context, text='Invalid picture: %s' % d['pic'], code='bad_value', detail='pic', subject_id=e)
 			del d['pic']
@@ -275,7 +262,8 @@ def set_entity_params_from_dict(e, d, connection, client, context):
 			connection.cleanup_entities_on_logout.discard(e)
 	if 'verbs' in d and ((d['verbs'] == None) or (isinstance(d['verbs'], list) and len(d['verbs']) < 10 and all(isinstance(_, str) and len(_) < 40 for _ in d['verbs']))):
 		e.verbs = d['verbs']
-
+	if 'draw_layer' in d:
+		e.draw_layer = min(2, max(-2, d['draw_layer']))
 
 # -------------------------------------
 

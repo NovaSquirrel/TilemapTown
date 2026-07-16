@@ -1,7 +1,7 @@
 /*
  * Tilemap Town
  *
- * Copyright (C) 2017-2025 NovaSquirrel
+ * Copyright (C) 2017-2026 NovaSquirrel
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -646,9 +646,9 @@ function receiveServerMessage(cmd, arg) {
       }
 
       // has anyone's avatars updated?
-      for (var key in PlayerWho) {
-        var pic = PlayerWho[key].pic;
-        var is_custom = pic != null && typeof pic[0] == "string" && pic[0] !== INTERNAL_TILESET_ID;
+      for (let key in PlayerWho) {
+        let pic = processExtUserPics(key);
+        let is_custom = pic != null && typeof pic[0] === "string" && pic[0] !== INTERNAL_TILESET_ID;
 
         // if no longer using a custom pic, delete the one that was used
         if (key in PlayerImages && !is_custom) {
@@ -656,7 +656,7 @@ function receiveServerMessage(cmd, arg) {
         }
         if ((!(key in PlayerImages) && is_custom) ||
             (key in PlayerImages && PlayerImages[key].src != pic[0] && is_custom)) {
-          var img = new Image();
+          let img = new Image();
           img.onload = function(){
             NeedMapRedraw = true;
             backdropDrawAll = true;
@@ -671,7 +671,7 @@ function receiveServerMessage(cmd, arg) {
           let url = PlayerWho[key].mini_tilemap.tileset_url;
           if (!(key in PlayerMiniTilemapImages) ||
               (key in PlayerMiniTilemapImages && PlayerMiniTilemapImages[key].src != url)) {
-            var img = new Image();
+            let img = new Image();
             img.onload = function(){
               NeedMapRedraw = true;
             };
@@ -1350,4 +1350,42 @@ function OklabToRGB(lab) {
 		g: -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
 		b: -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s,
     };
+}
+
+function expandPerDirectionValues(list, fillWith) {
+	if (!Array.isArray(list))
+		return null;
+	switch(list.length) {
+		case 1:
+			return [list[0], list[0], list[0], list[0], list[0], list[0], list[0], list[0]];
+		case 2:
+			return [list[0], list[0], fillWith, list[1], list[1], list[1], fillWith, fillWith[0]];
+		case 4:
+			return [list[0], fillWith, list[1], fillWith, list[2], fillWith, list[3], fillWith];
+		case 8:
+			return list;
+		default:
+			return null;
+	}
+}
+
+function processExtUserPics(key) {
+	let pic = PlayerWho[key].pic;
+	PlayerWho[key].ext_pic_data = (typeof pic[0] === "string" && typeof pic[1] === "object" && pic[2] === 0) ? pic[1] : null;
+	if (PlayerWho[key].ext_pic_data) {
+		if (PlayerWho[key].ext_pic_data.v !== 0
+			|| showExtPics === "never"
+			|| (showExtPics === "if32px" && ((PlayerWho[key].ext_pic_data?.frame_size?.[0] ?? 32 > 32) || (PlayerWho[key].ext_pic_data?.frame_size?.[1] ?? 32 > 32)))
+			|| (showExtPics === "if48px" && ((PlayerWho[key].ext_pic_data?.frame_size?.[0] ?? 32 > 48) || (PlayerWho[key].ext_pic_data?.frame_size?.[1] ?? 32 > 48)))) {
+				PlayerWho[key].ext_pic_data = null;
+		} else {
+			if (PlayerWho[key].ext_pic_data.u) {
+				pic = [PlayerWho[key].ext_pic_data.u, 0, 0];
+			}
+			PlayerWho[key].ext_pic_data.xof = expandPerDirectionValues(PlayerWho[key].ext_pic_data.xof, 0);
+			PlayerWho[key].ext_pic_data.yof = expandPerDirectionValues(PlayerWho[key].ext_pic_data.yof, 0);
+			PlayerWho[key].ext_pic_data.zof = expandPerDirectionValues(PlayerWho[key].ext_pic_data.zof, 0);
+		}
+	}
+	return pic;
 }

@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sqlite3, json, sys, os.path, weakref, datetime, zlib, re
+import sqlite3, json, sys, os.path, weakref, datetime, zlib, re, types
 from collections import deque
 from string import Template
 
@@ -88,6 +88,8 @@ def loadConfigJson(clearLogs=True):
 	setConfigDefault("Server",   "WebClientTouchURL","")
 	setConfigDefault("Server",   "DoodleBoardPaletteFile", "doodle_board_palettes.txt")
 	setConfigDefault("Server",   "RequestExpirationTime", 1200)
+	setConfigDefault("Server",   "MaxEntityWidth", 64)
+	setConfigDefault("Server",   "MaxEntityHeight", 64)
 
 	setConfigDefault("Security", "ProxyOnly",        False)
 	setConfigDefault("Security", "AllowedOrigins",   None)
@@ -612,8 +614,70 @@ def pic_is_okay(pic):
 	if len(pic) != 3:
 		return False
 	if isinstance(pic[0], str):
-		return image_url_is_okay(pic[0])
+		if not image_url_is_okay(pic[0]) or (not isinstance(pic[1],dict) and pic[1] != 0) or pic[2] != 0:
+			return False
+	elif not isinstance(pic[1], int) or isinstance(pic[2], int):
+		return False
 	return True
+
+def remove_invalid_dict_fields(data, whitelist):
+	out = {}
+	for k,v in data.items():
+		if k in whitelist:
+			whitelist_entry = whitelist[k]
+			if isinstance(whitelist_entry, types.FunctionType):
+				if whitelist_entry(v):
+					out[k] = data[k]
+			elif isinstance(v, whitelist_entry):
+				out[k] = data[k]
+	return out
+
+def is_list_with_two_ints(data):
+	return isinstance(data, list) and len(data) == 2 and isinstance(data[0], int) and isinstance(data[1], int)
+def offset_is_okay(x):
+	return is_list_with_two_ints(x) and x[0] >= -32 and x[0] <= 32 and x[1] >= -32 and x[1] <= 32
+def check_anim_settings_override(x):
+	if not isinstance(x, list) or len(x) > 3:
+		return False
+	if len(x) > 1 and x[0] != None and (not isinstance(x[0], int) or x[0] <= 0):
+		return False
+	if len(x) > 2 and x[1] != None and (not isinstance(x[1], int) or x[1] <= 0 or x[1] > 32):
+		return False
+	if len(x) > 3 and x[2] != None and (not isinstance(x[2], list) or len(x[2]) > 64 or any(not isinstance(_, int) for _ in x[2])):
+		return False
+	return True
+
+entity_pic_rename = {
+	"v": "v", "url": "u", "frame_size": "fs", "dir_count":"dc", "idle_anim":"ia", "move_anim":"ma", "move_anim_time":"mat", "speech_height":"sh", "x_offset":"xof", "y_offset":"yof", "z_offset":"zof",
+}
+def process_entity_pic(pic):
+	if isinstance(pic[0], int) and isinstance(pic[1], int) and isinstance(pic[2], int):
+		return pic
+	if isinstance(pic[0], str) and pic[1] == 0 and pic[2] == 0:
+		return pic
+	if isinstance(pic[0], str) and isinstance(pic[1], dict) and pic[2] == 0:
+		return [pic[0], process_extended_pic_details(pic[1]), 0]
+	return [0, 0, 91] # "?" symbol
+
+def process_extended_pic_details(details):
+	if not isinstance(details, dict):
+		return None
+	details = remove_invalid_dict_fields({entity_pic_rename.get(k,k):v for k,v in details.items()}, {
+		"v":   lambda x: x == 0,
+		"u":   image_url_is_okay,
+		"fs":  lambda x: is_list_with_two_ints(x) and x[0] >= 1 and x[0] <= Config["Server"]["MaxEntityWidth"] and x[1] >= 1 and x[1] <= Config["Server"]["MaxEntityHeight"],
+		"dc":  lambda x: x in (1, 2, 4, 8),
+		"ia":  check_anim_settings_override,
+		"ma":  check_anim_settings_override,
+		"mat": int,
+		"sh":  lambda x: isinstance(x, int) and x > 0 and x <= Config["Server"]["MaxEntityHeight"],
+		"xof": lambda x: isinstance(x, list) and len(x) <= 8 and all(_ > -32 and _ < 32 for _ in x),
+		"yof": lambda x: isinstance(x, list) and len(x) <= 8 and all(_ > -32 and _ < 32 for _ in x),
+		"zof": lambda x: isinstance(x, list) and len(x) <= 8 and all(_ > -32 and _ < 32 for _ in x),
+	})
+	if not details or details.get("v") != 0:
+		return None
+	return details
 
 def valid_id_format(id):
 	return isinstance(id, int) or id.isdecimal() or ((id.startswith(temporary_id_marker) or id.startswith(global_entity_marker)) and id[1:].isdecimal() or id.startswith('user:'))
@@ -839,6 +903,18 @@ def expand_mini_tilemap_data(data, limit=576): #24*24
 		if len(out) + r > limit:
 			return out
 		out.extend([t] * r)
+	return out
+
+def remove_invalid_dict_fields(data, whitelist):
+	out = {}
+	for k,v in data.items():
+		if k in whitelist:
+			whitelist_entry = whitelist[k]
+			if isinstance(whitelist_entry, types.FunctionType):
+				if whitelist_entry(v):
+					out[k] = data[k]
+			elif isinstance(v, whitelist_entry):
+				out[k] = data[k]
 	return out
 
 from .buildentity import Entity, EntityWithPlainData, GenericEntity

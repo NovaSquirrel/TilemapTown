@@ -136,11 +136,11 @@ function getObjAutotileIndex4(o, map, x, y) {
 function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCameraX, pixelCameraY, tileX, tileY) {
 	// Draw the entities, including the player
 
-	function draw32x32Player(who, frameX, frameY) {
+	let frameWidth, frameHeight;
+	function drawBigPlayer(who, frameX, frameY, offsetX, offsetY) {
 		let Mob = PlayerWho[who];
-		let offset = Mob.offset ?? [0,0];
-		ctx.drawImage(PlayerImages[who], frameX * 32, frameY * 32, 32, 32, (Mob.x * 16 - 8) - pixelCameraX + offset[0], (Mob.y * 16 - 16) - pixelCameraY + offset[1], 32, 32);
-		markAreaAroundPointAsDirty(MyMap, Mob.x + (offset[0]/16), Mob.y + (offset[1]/16), 5);
+		ctx.drawImage(PlayerImages[who], frameX * frameWidth, frameY * frameHeight, frameWidth, frameHeight, (Mob.x * 16 + 8 - Math.round(frameWidth/2)) - pixelCameraX + offsetX, (Mob.y * 16 + 16 - frameHeight) - pixelCameraY + offsetY, frameWidth, frameHeight);
+		markAreaAroundPointAsDirty(MyMap, Mob.x + (offsetX/16), Mob.y + (offsetY/16), 5);
 	}
 
 	let sortedPlayers = [];
@@ -167,8 +167,12 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 
 	sortedPlayers.sort(
 		(a, b) => {
-			let z_a = a.z_index ?? 0;
-			let z_b = b.z_index ?? 0;
+			let draw_layer_a = a.draw_layer ?? 0;
+			let draw_layer_b = b.draw_layer ?? 0;
+			if (draw_layer_a != draw_layer_b)
+				return draw_layer_a - draw_layer_b;
+			let z_a = (a.z_index ?? 0) + (a.ext_pic_data?.zof?.[a.dir] ?? 0);
+			let z_b = (b.z_index ?? 0) + (b.ext_pic_data?.zof?.[b.dir] ?? 0);
 			if (a.y == b.y && z_a != z_b)
 				return z_a - z_b;
 			if (a.y == b.y && ((a.particle && !b.particle) || (!a.particle || b.particle)))
@@ -224,50 +228,68 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 				}
 			}
 
+			frameWidth = 16;
+			frameHeight = 16;
 			let MobOffset = Mob.offset ?? [0,0];
+			
 			let playerIs16x16 = false;
 			if (index in PlayerImages) {
 				let tilesetWidth = PlayerImages[index].naturalWidth;
 				let tilesetHeight = PlayerImages[index].naturalHeight;
-				if (tilesetWidth == 32 && tilesetHeight == 32) {
-					draw32x32Player(index, 0, 0);
-				} else if (tilesetWidth == 16 && tilesetHeight == 16) {
+
+				if (tilesetWidth == 16 && tilesetHeight == 16) {
 					ctx.drawImage(PlayerImages[index], 0, 0, 16, 16, (Mob.x * 16) - pixelCameraX + MobOffset[0], (Mob.y * 16) - pixelCameraY + MobOffset[1], 16, 16);
 					playerIs16x16 = true;
 					markAreaAroundPointAsDirty(MyMap, Mob.x + (MobOffset[0]/16), Mob.y + (MobOffset[1]/16), 5);
 				} else {
-					let frameX = 0, frameY = 0;
-					let frameCountFromAnimationTick = entityAnimationEnabled ? Math.floor(tenthOfSecondTimer/2) : 0;
-					let isWalking = PlayerAnimation[index].walkTimer != 0;
+					frameWidth = Mob.ext_pic_data?.fs?.[0] ?? 32;
+					frameHeight = Mob.ext_pic_data?.fs?.[1] ?? 32;
+					let directionCount = Mob.ext_pic_data?.dc ?? (tilesetHeight / 32);
 
-					switch (tilesetHeight / 32) { // Directions
+					let isWalking = PlayerAnimation[index].walkTimer != 0;
+					let frameX = 0, frameY = 0;
+					let animationDivisor = 2;
+					if (!isWalking && (Mob.ext_pic_data?.ia?.length ?? 0) >= 1)
+						animationDivisor = Mob.ext_pic_data.ia[0] ?? 2;
+					else if (isWalking && (Mob.ext_pic_data?.ma?.length ?? 0) >= 1)
+						animationDivisor = Mob.ext_pic_data.ma[0] ?? 2;
+					let frameCountFromAnimationTick = entityAnimationEnabled ? Math.floor(tenthOfSecondTimer / animationDivisor) : 0;
+					let directionToUse = Mob.dir;
+					switch (directionCount) { // Directions
 						case 2:
 							frameY = Math.floor(PlayerAnimation[index].lastDirectionLR / 4);
+							directionToUse = PlayerAnimation[index].lastDirectionLR;
 							break;
 						case 4:
 							frameY = Math.floor(PlayerAnimation[index].lastDirection4 / 2);
+							directionToUse = PlayerAnimation[index].lastDirection4;
 							break;
 						case 8:
 							frameY = Mob.dir;
 							break;
 					}
+					MobOffset = [MobOffset[0] + (Mob.ext_pic_data?.xof ? Mob.ext_pic_data?.xof[directionToUse] : 0), MobOffset[1] + (Mob.ext_pic_data?.yof ? Mob.ext_pic_data?.yof[directionToUse] : 0)];
 
-					switch (tilesetWidth / 32) { // Frames per direction
-						case 2:
-							frameX = isWalking * 1;
-							break;
-						case 4:
-							frameX = (isWalking * 2) + (frameCountFromAnimationTick & 1);
-							break;
-						case 6:
-							frameX = (isWalking * 3) + (frameCountFromAnimationTick % 3);
-							break;
-						case 8:
-							frameX = (isWalking * 4) + (frameCountFromAnimationTick & 3);
-							break;
+					if (tilesetWidth / frameWidth > 1) {
+						let idleFrameCount = Math.floor(tilesetWidth / frameWidth / 2);
+						if((Mob.ext_pic_data?.ia?.length ?? 0) >= 2) {
+							idleFrameCount = Mob.ext_pic_data.ia[1];
+						}
+						let moveFrameCount = Math.floor(tilesetWidth / frameWidth) - idleFrameCount;
+						if((Mob.ext_pic_data?.ma?.length ?? 0) >= 2) {
+							moveFrameCount = Mob.ext_pic_data.ma[1];
+						}
+						let frameCount = isWalking ? moveFrameCount : idleFrameCount;
+
+						let movementPattern = Mob.ext_pic_data?.[isWalking ? "ma" : "ia"]?.[2];
+						if (movementPattern) {
+							frameX = idleFrameCount * isWalking + movementPattern[frameCountFromAnimationTick % movementPattern.length];
+						} else {
+							frameX = idleFrameCount * isWalking + frameCountFromAnimationTick % frameCount;
+						}
 					}
 
-					draw32x32Player(index, frameX, frameY);
+					drawBigPlayer(index, frameX, frameY, MobOffset[0], MobOffset[1]);
 				}
 
 			} else {
@@ -283,7 +305,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 				playerIs16x16 = true;
 			}
 
-			let heightForPlayerStatus = (playerIs16x16 ? (16+6+5) : (28+6+5));
+			let heightForPlayerStatus = (playerIs16x16 ? (Mob.ext_pic_data?.sh ?? 16) : (Mob.ext_pic_data?.sh ?? (frameHeight+4)))+6+5;
 
 			// Mini tilemap, if it's present
 			try {

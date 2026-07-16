@@ -114,6 +114,14 @@ Server.RequestExpirationTime
 Default: 1200
 Number of seconds that it takes for a sent request (teleports, carrying, etc.) takes to expire.
 
+Server.MaxEntityWidth
+Default: 64
+How width an entity is allowed to be in pixels, when using extended entity pics.
+
+Server.MaxEntityHeight
+Default: 64
+How tall an entity is allowed to be in pixels, when using extended entity pics.
+
 Security.ProxyOnly
 Default: false
 If true, server will reject connections made from IP addresses that do not match the server's own IP
