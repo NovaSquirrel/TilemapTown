@@ -1478,13 +1478,17 @@ function picIcon(pic) {
 	img.style.height = "16px";
 	let src = "img/transparent.png";
 
-	if (IconSheets[pic[0]])
+	let background = "";
+	if (IconSheets[pic[0]]) {
 		src = IconSheets[pic[0]].src;
-	else if (typeof(pic[0]) === 'string')
+		background = "url(" + src + ") -" + (pic[1] * 16) + "px -" + (pic[2] * 16) + "px";
+	} else if (typeof(pic[0]) === 'string') {
 		src = pic[0];
+		background = "url(" + src + ")";
+	}
 
-	let background = "url(" + src + ") -" + (pic[1] * 16) + "px -" + (pic[2] * 16) + "px";
 	img.style.background = background;
+	img.style.backgroundRepeat = "no-repeat";
 
 	img_container.appendChild(img);
 	return img_container;
@@ -1529,12 +1533,15 @@ function itemIcon(key) {
 	else if (item?.pic)
 		pic = item.pic;
 
-	if (IconSheets[pic[0]])
+	let background = "";
+	if (IconSheets[pic[0]]) {
 		src = IconSheets[pic[0]].src;
-	else if(typeof(pic[0]) === 'string')
+		background = "url(" + src + ") -" + (pic[1] * 16) + "px -" + (pic[2] * 16) + "px";
+	} else if (typeof(pic[0]) === 'string') {
 		src = pic[0];
+		background = "url(" + src + ")";
+	}
 
-	let background = "url(" + src + ") -" + (pic[1] * 16) + "px -" + (pic[2] * 16) + "px";
 	img.style.background = background;
 	img.style.backgroundRepeat = "no-repeat";
 
