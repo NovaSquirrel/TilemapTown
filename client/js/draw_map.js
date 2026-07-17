@@ -244,7 +244,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 				} else {
 					frameWidth = Mob.ext_pic_data?.fs?.[0] ?? 32;
 					frameHeight = Mob.ext_pic_data?.fs?.[1] ?? 32;
-					let directionCount = Mob.ext_pic_data?.dc ?? (tilesetHeight / 32);
+					let directionCount = Mob.ext_pic_data?.dc ?? (tilesetHeight / frameHeight);
 
 					let isWalking = PlayerAnimation[index].walkTimer != 0;
 					let frameX = 0, frameY = 0;
