@@ -240,10 +240,10 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 				if (tilesetWidth == 16 && tilesetHeight == 16) {
 					ctx.drawImage(PlayerImages[index], 0, 0, 16, 16, (Mob.x * 16) - pixelCameraX + MobOffset[0], (Mob.y * 16) - pixelCameraY + MobOffset[1], 16, 16);
 					playerIs16x16 = true;
-					markAreaAroundPointAsDirty(MyMap, Mob.x + (MobOffset[0]/16), Mob.y + (MobOffset[1]/16), 5);
+					//markAreaAroundPointAsDirty(MyMap, Mob.x + (MobOffset[0]/16), Mob.y + (MobOffset[1]/16), 5);
 				} else {
-					frameWidth = Mob.ext_pic_data?.fs?.[0] ?? 32;
-					frameHeight = Mob.ext_pic_data?.fs?.[1] ?? 32;
+					frameWidth = Mob.ext_pic_data?.fs?.[0] ?? Math.min(32, tilesetWidth);
+					frameHeight = Mob.ext_pic_data?.fs?.[1] ?? Math.min(32, tilesetHeight);
 					let directionCount = Mob.ext_pic_data?.dc ?? (tilesetHeight / frameHeight);
 
 					let isWalking = PlayerAnimation[index].walkTimer != 0;
@@ -303,14 +303,14 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 					pic = ["#", 7, 2];
 				if (pic[0] in IconSheets) {
 					ctx.drawImage(IconSheets[pic[0]], pic[1] * 16, pic[2] * 16, 16, 16, (Mob.x * 16) - pixelCameraX + MobOffset[0], (Mob.y * 16) - pixelCameraY + MobOffset[1], 16, 16);
-					markAreaAroundPointAsDirty(MyMap, Mob.x + (MobOffset[0]/16), Mob.y + (MobOffset[1]/16), 5);
+					//markAreaAroundPointAsDirty(MyMap, Mob.x + (MobOffset[0]/16), Mob.y + (MobOffset[1]/16), 5);
 				} else {
 					RequestImageIfNeeded(pic[0]);
 				}
 				playerIs16x16 = true;
 			}
 
-			let heightForPlayerStatus = (playerIs16x16 ? (Mob.ext_pic_data?.sh ?? 16) : (Mob.ext_pic_data?.sh ?? (frameHeight+4)))+6+5;
+			let heightForPlayerStatus = (playerIs16x16 ? (Mob.ext_pic_data?.sh ?? 16) : (Mob.ext_pic_data?.sh ?? (frameHeight-4)))+6+5;
 
 			// Mini tilemap, if it's present
 			try {
@@ -349,7 +349,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 							data_count--;
 						}
 					}
-					markAreaAroundPointAsDirty(MyMap, Mob.x + (MobOffset[0]/16 + mini_tilemap_offset[0]/16), Mob.y + (MobOffset[1]/16 + mini_tilemap_offset[1]/16), 5);
+					//markAreaAroundPointAsDirty(MyMap, Mob.x + (MobOffset[0]/16 + mini_tilemap_offset[0]/16), Mob.y + (MobOffset[1]/16 + mini_tilemap_offset[1]/16), 5);
 				}
 			} catch (error) {
 			}
