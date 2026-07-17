@@ -329,37 +329,41 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 							PlayerAnimation[index].miniTilemapCanvas.width  = mini_tilemap_map_w * mini_tilemap_tile_w;
 							PlayerAnimation[index].miniTilemapCanvas.height = mini_tilemap_map_h * mini_tilemap_tile_h;
 						}
-						let miniCanvas = PlayerAnimation[index].miniTilemapCanvas;
-						let miniCtx = miniCanvas.getContext("2d");
-						miniCtx.clearRect(0, 0, miniCanvas.width, miniCanvas.height);
 
-						let data_index = 0;
-						let data_value;
-						let data_count = 0;
+						if(mini_tilemap_tileset.complete && mini_tilemap_tileset.naturalWidth) {
+							let miniCanvas = PlayerAnimation[index].miniTilemapCanvas;
+							let miniCtx = miniCanvas.getContext("2d");
+							miniCtx.clearRect(0, 0, miniCanvas.width, miniCanvas.height);
 
-						for(let mini_y = 0; mini_y < mini_tilemap_map_h; mini_y++) {
-							for(let mini_x = 0; mini_x < mini_tilemap_map_w; mini_x++) {
-								if(!data_count) {
-									if(data_index >= mini_tilemap_data.length)
-										break;
-									data_value = mini_tilemap_data[data_index++];
-									data_count = ((data_value >> 12) & 127) + 1;
+							let data_index = 0;
+							let data_value;
+							let data_count = 0;
+
+							for(let mini_y = 0; mini_y < mini_tilemap_map_h; mini_y++) {
+								for(let mini_x = 0; mini_x < mini_tilemap_map_w; mini_x++) {
+									if(!data_count) {
+										if(data_index >= mini_tilemap_data.length)
+											break;
+										data_value = mini_tilemap_data[data_index++];
+										data_count = ((data_value >> 12) & 127) + 1;
+									}
+									if((data_value & 4095) != mini_tilemap_transparent_tile) {
+										miniCtx.drawImage(mini_tilemap_tileset,
+											(data_value & 63) * mini_tilemap_tile_w, ((data_value >> 6) & 63) * mini_tilemap_tile_h,
+										mini_tilemap_tile_w, mini_tilemap_tile_h,
+										mini_x * mini_tilemap_tile_w,
+										mini_y * mini_tilemap_tile_h,
+										mini_tilemap_tile_w, mini_tilemap_tile_h);
+									}
+									data_count--;
 								}
-								if((data_value & 4095) != mini_tilemap_transparent_tile) {
-									miniCtx.drawImage(mini_tilemap_tileset,
-										(data_value & 63) * mini_tilemap_tile_w, ((data_value >> 6) & 63) * mini_tilemap_tile_h,
-									mini_tilemap_tile_w, mini_tilemap_tile_h,
-									mini_x * mini_tilemap_tile_w,
-									mini_y * mini_tilemap_tile_h,
-									mini_tilemap_tile_w, mini_tilemap_tile_h);
-								}
-								data_count--;
 							}
+							PlayerAnimation[index].miniTilemapDirty = false;
 						}
 					} else {
 						PlayerAnimation[index].miniTilemapCanvas = null;
+						PlayerAnimation[index].miniTilemapDirty = false;
 					}
-					PlayerAnimation[index].miniTilemapDirty = false;
 				}
 				if(PlayerAnimation[index].miniTilemapCanvas && (Mob.mini_tilemap.visible ?? true)) {
 					let mini_tilemap_offset = Mob.mini_tilemap.offset ?? [0,0];
