@@ -5090,7 +5090,7 @@ function updateDirectionForAnim(id) {
 }
 
 function startPlayerWalkAnim(id) {
-	PlayerAnimation[id].walkTimer = (PlayerWho[id]?.ext_pic_data?.mat ?? 5) + 1; // 5*100ms
+	PlayerAnimation[id].walkTimer = (PlayerWho[id]?.ext_pic_data?.mat ?? 5); // 5*100ms
 	NeedMapRedraw = true;
 }
 
