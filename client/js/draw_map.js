@@ -240,7 +240,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 				if (tilesetWidth == 16 && tilesetHeight == 16) {
 					ctx.drawImage(PlayerImages[index], 0, 0, 16, 16, (Mob.x * 16) - pixelCameraX + MobOffset[0], (Mob.y * 16) - pixelCameraY + MobOffset[1], 16, 16);
 					playerIs16x16 = true;
-					//markAreaAroundPointAsDirty(MyMap, Mob.x + (MobOffset[0]/16), Mob.y + (MobOffset[1]/16), 5);
+					markAreaAroundPointAsDirty(MyMap, Mob.x + (MobOffset[0]/16), Mob.y + (MobOffset[1]/16), 5);
 				} else {
 					frameWidth = Mob.ext_pic_data?.fs?.[0] ?? Math.min(32, tilesetWidth);
 					frameHeight = Mob.ext_pic_data?.fs?.[1] ?? Math.min(32, tilesetHeight);
@@ -303,7 +303,7 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 					pic = ["#", 7, 2];
 				if (pic[0] in IconSheets) {
 					ctx.drawImage(IconSheets[pic[0]], pic[1] * 16, pic[2] * 16, 16, 16, (Mob.x * 16) - pixelCameraX + MobOffset[0], (Mob.y * 16) - pixelCameraY + MobOffset[1], 16, 16);
-					//markAreaAroundPointAsDirty(MyMap, Mob.x + (MobOffset[0]/16), Mob.y + (MobOffset[1]/16), 5);
+					markAreaAroundPointAsDirty(MyMap, Mob.x + (MobOffset[0]/16), Mob.y + (MobOffset[1]/16), 5);
 				} else {
 					RequestImageIfNeeded(pic[0]);
 				}
@@ -314,42 +314,62 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 
 			// Mini tilemap, if it's present
 			try {
-				if(Mob.mini_tilemap && Mob.mini_tilemap_data && index in PlayerMiniTilemapImages && (Mob.mini_tilemap.visible ?? true)) {
+				if(PlayerAnimation[index].miniTilemapDirty) {
+					if(Mob.mini_tilemap && Mob.mini_tilemap_data && (Mob.mini_tilemap.visible ?? true)) {
+						let mini_tilemap_map_w = Mob.mini_tilemap.map_size[0];
+						let mini_tilemap_map_h = Mob.mini_tilemap.map_size[1];
+						let mini_tilemap_tile_w = Mob.mini_tilemap.tile_size[0];
+						let mini_tilemap_tile_h = Mob.mini_tilemap.tile_size[1];
+						let mini_tilemap_transparent_tile = Mob.mini_tilemap.transparent_tile ?? 0;
+						let mini_tilemap_data = Mob.mini_tilemap_data.data;
+						let mini_tilemap_tileset = PlayerMiniTilemapImages[index];
+
+						if(!PlayerAnimation[index].miniTilemapCanvas) {
+							PlayerAnimation[index].miniTilemapCanvas = document.createElement("canvas");
+							PlayerAnimation[index].miniTilemapCanvas.width  = mini_tilemap_map_w * mini_tilemap_tile_w;
+							PlayerAnimation[index].miniTilemapCanvas.height = mini_tilemap_map_h * mini_tilemap_tile_h;
+						}
+						let miniCanvas = PlayerAnimation[index].miniTilemapCanvas;
+						let miniCtx = miniCanvas.getContext("2d");
+						miniCtx.clearRect(0, 0, miniCanvas.width, miniCanvas.height);
+
+						let data_index = 0;
+						let data_value;
+						let data_count = 0;
+
+						for(let mini_y = 0; mini_y < mini_tilemap_map_h; mini_y++) {
+							for(let mini_x = 0; mini_x < mini_tilemap_map_w; mini_x++) {
+								if(!data_count) {
+									if(data_index >= mini_tilemap_data.length)
+										break;
+									data_value = mini_tilemap_data[data_index++];
+									data_count = ((data_value >> 12) & 127) + 1;
+								}
+								if((data_value & 4095) != mini_tilemap_transparent_tile) {
+									miniCtx.drawImage(mini_tilemap_tileset,
+										(data_value & 63) * mini_tilemap_tile_w, ((data_value >> 6) & 63) * mini_tilemap_tile_h,
+									mini_tilemap_tile_w, mini_tilemap_tile_h,
+									mini_x * mini_tilemap_tile_w,
+									mini_y * mini_tilemap_tile_h,
+									mini_tilemap_tile_w, mini_tilemap_tile_h);
+								}
+								data_count--;
+							}
+						}
+					} else {
+						PlayerAnimation[index].miniTilemapCanvas = null;
+					}
+					PlayerAnimation[index].miniTilemapDirty = false;
+				}
+				if(PlayerAnimation[index].miniTilemapCanvas && (Mob.mini_tilemap.visible ?? true)) {
+					let mini_tilemap_offset = Mob.mini_tilemap.offset ?? [0,0];
 					let mini_tilemap_map_w = Mob.mini_tilemap.map_size[0];
 					let mini_tilemap_map_h = Mob.mini_tilemap.map_size[1];
 					let mini_tilemap_tile_w = Mob.mini_tilemap.tile_size[0];
 					let mini_tilemap_tile_h = Mob.mini_tilemap.tile_size[1];
-					let mini_tilemap_offset = Mob.mini_tilemap.offset ?? [0,0];
-					let mini_tilemap_transparent_tile = Mob.mini_tilemap.transparent_tile ?? 0;
-					let mini_tilemap_data = Mob.mini_tilemap_data.data;
-					let mini_tilemap_tileset = PlayerMiniTilemapImages[index];
-
-					let data_index = 0;
-					let data_value;
-					let data_count = 0;
 					let start_pixel_x = Math.round((Mob.x * 16) - pixelCameraX + MobOffset[0] + mini_tilemap_offset[0] + 8  - (mini_tilemap_map_w * mini_tilemap_tile_w) / 2);
 					let start_pixel_y = Math.round((Mob.y * 16) - pixelCameraY + MobOffset[1] + mini_tilemap_offset[1] + 16 - (mini_tilemap_map_h * mini_tilemap_tile_h));
-
-					for(let mini_y = 0; mini_y < mini_tilemap_map_h; mini_y++) {
-						for(let mini_x = 0; mini_x < mini_tilemap_map_w; mini_x++) {
-							if(!data_count) {
-								if(data_index >= mini_tilemap_data.length)
-									break;
-								data_value = mini_tilemap_data[data_index++];
-								data_count = ((data_value >> 12) & 127) + 1;
-							}
-							if((data_value & 4095) != mini_tilemap_transparent_tile) {
-								ctx.drawImage(mini_tilemap_tileset,
-									(data_value & 63) * mini_tilemap_tile_w, ((data_value >> 6) & 63) * mini_tilemap_tile_h,
-								mini_tilemap_tile_w, mini_tilemap_tile_h,
-								start_pixel_x + mini_x * mini_tilemap_tile_w,
-								start_pixel_y + mini_y * mini_tilemap_tile_h,
-								mini_tilemap_tile_w, mini_tilemap_tile_h);
-							}
-							data_count--;
-						}
-					}
-					//markAreaAroundPointAsDirty(MyMap, Mob.x + (MobOffset[0]/16 + mini_tilemap_offset[0]/16), Mob.y + (MobOffset[1]/16 + mini_tilemap_offset[1]/16), 5);
+					ctx.drawImage(PlayerAnimation[index].miniTilemapCanvas, start_pixel_x, start_pixel_y);
 				}
 			} catch (error) {
 			}

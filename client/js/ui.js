@@ -44,6 +44,8 @@ let PlayerAnimation = {
     "walkTimer": 0,// Amount of ticks where the player should be animated as walking
     "lastDirectionLR": 0, // Most recent direction the entity used that was left or right
     "lastDirection4": 0, // Most recent direction the entity used that was left, right, up or down
+    "miniTilemapCanvas": null, // Canvas for cacheing this entity's mini tilemap
+    "miniTilemapDirty": false, // Potentially rerender the entity's mini tilemap
   }
 }
 

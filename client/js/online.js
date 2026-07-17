@@ -177,7 +177,9 @@ function initPlayerIfNeeded(id) {
     PlayerAnimation[id] = {
       "walkTimer": 0,
       "lastDirectionLR": 0,
-      "lastDirection4":  0
+      "lastDirection4":  0,
+      "miniTilemapCanvas": null,
+      "miniTilemapDirty": true,
     };
   }
 }
@@ -523,6 +525,7 @@ function receiveServerMessage(cmd, arg) {
         if (arg.add.id === PlayerYou) {
           refreshCustomizeWindow();
         }
+        PlayerAnimation[arg.add.id].miniTilemapDirty = true;
       } else if(arg.remove) {
         let removeID = arg.remove;
         let newMap = undefined;
@@ -610,6 +613,8 @@ function receiveServerMessage(cmd, arg) {
         if ("chat_listener" in arg.update && !PlayerWho[arg.update.id]?.chat_listener) {
           logMessage(`${escape_tags(PlayerWho[arg.update.id].name)} (${arg.update.id}) is now listening to chat`, 'status_change', {'isSilent': true});
         }
+        if(arg.update["mini_tilemap"] || arg.update["mini_tilemap_data"])
+          PlayerAnimation[arg.update.id].miniTilemapDirty = true;
         markAreaAroundEntityAsDirty(arg.update.id);
         PlayerWho[arg.update.id] = Object.assign(
           PlayerWho[arg.update.id],
@@ -635,14 +640,17 @@ function receiveServerMessage(cmd, arg) {
             markAreaAroundEntityAsDirty(id);
             NeedMapRedraw = true;
           }
+          PlayerAnimation[id].miniTilemapDirty = true;
         }
       } else if(arg.new_id) {
         PlayerWho[arg.new_id.new_id] = PlayerWho[arg.new_id.id];
+		PlayerAnimation[arg.new_id.new_id] = PlayerAnimation[arg.new_id.id];
         if(arg.new_id.id == PlayerYou)
           PlayerYou = arg.new_id.new_id;
         // TODO: Search for the old ID and update it anywhere else it might appear, like your inventory?
         // TODO: Seems like there's some sort of issue involving trying to get an item card for this entity with the old name?? Look into this and do it properly later.
         delete PlayerWho[arg.new_id.id];
+        delete PlayerAnimation[arg.new_id.id];
       }
 
       // has anyone's avatars updated?
