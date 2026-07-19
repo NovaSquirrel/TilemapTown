@@ -214,7 +214,7 @@ function loadOptions() {
 		document.getElementById("focus-map-after-chat").value = saved_options.focus_map_after_chat ?? false;
 		document.getElementById("music-volume").value = (saved_options.audio_map_music_volume ?? 1) * 100;
 		document.getElementById("safe-for-command-lists").value = (saved_options.safe_for_command_lists ?? []).join();
-		document.getElementById("option-entity-ext-pic").value = saved_options.show_ext_pic ?? "always";
+		document.getElementById("option-entity-ext-pic").value = saved_options.show_ext_pics ?? "always";
 	}
 }
 

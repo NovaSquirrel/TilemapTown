@@ -324,9 +324,8 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 						let mini_tilemap_data = Mob.mini_tilemap_data.data;
 						let mini_tilemap_tileset = PlayerMiniTilemapImages[index];
 
-						if(!PlayerAnimation[index].miniTilemapCanvas) {
+						if(!PlayerAnimation[index].miniTilemapCanvas)
 							PlayerAnimation[index].miniTilemapCanvas = document.createElement("canvas");
-						}
 						if (PlayerAnimation[index].miniTilemapCanvas.width != mini_tilemap_map_w * mini_tilemap_tile_w)
 							PlayerAnimation[index].miniTilemapCanvas.width = mini_tilemap_map_w * mini_tilemap_tile_w;
 						if (PlayerAnimation[index].miniTilemapCanvas.height != mini_tilemap_map_h * mini_tilemap_tile_h)
