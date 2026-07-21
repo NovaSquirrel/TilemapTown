@@ -122,6 +122,10 @@ Server.MaxEntityHeight
 Default: 64
 How tall an entity is allowed to be in pixels, when using extended entity pics.
 
+Server.AllowedMusicFileExtensions
+Default: [".mod", ".s3m", ".xm", ".it", ".mptm", ".flac", ".mp3", ".ogg", ".opus", ".wav"]
+Which file extensions are allowed with the /mapmusic command.  Must be lowercase. If null, all extensions are allowed.
+
 Security.ProxyOnly
 Default: false
 If true, server will reject connections made from IP addresses that do not match the server's own IP
@@ -233,7 +237,7 @@ Default: true
 Set up the database if needed. If false, skip this check.
 
 Images.URLWhitelist
-Default: ["https://i.imgur.com/", "https://i.postimg.cc/", "https://i.ibb.co/"]
+Default: ["https://file.garden/", "https://i.postimg.cc/", "https://i.ibb.co/"]
 Set a list of URL parts that are considered safe to start user-provided image URLs with.
 
 Logs.ConnectFile

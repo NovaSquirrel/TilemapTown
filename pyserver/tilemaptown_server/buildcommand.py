@@ -1666,17 +1666,17 @@ def fn_mapmusic(map, client, context, arg):
 	elif arg[0].startswith("http"):
 		if user_file_url_is_ok(arg[0]):
 			lower = arg[0].lower()
-			if lower.endswith(".mod") or lower.endswith(".s3m") or lower.endswith(".xm") or lower.endswith(".it") or lower.endswith(".mptm"):
+			if Config["Server"]["AllowedMusicFileExtensions"] == None or any(lower.endswith(ext) for ext in Config["Server"]["AllowedMusicFileExtensions"]):
 				music = {"url": arg[0]}
 				map.map_music = music
 				map.map_data_modified = True # Because music gets saved in with the rest of the data
 				map.save_on_clean_up = True
 				respond(context, 'Music changed to "%s"' % arg[0])
 			else:
-				respond(context, 'Allowed music formats are MOD, S3M, XM, IT, MPTM', error=True)
+				respond(context, 'Allowed music formats are %s' % " ".join(Config["Server"]["AllowedMusicFileExtensions"]), error=True)
 				return
 		else:
-			respond(context, 'URL doesn\t match any allowlisted sites', error=True)
+			respond(context, 'URL doesn\'t match any allowlisted sites', error=True)
 			return
 	else:
 		respond(context, 'Please provide a URL', error=True)

@@ -363,7 +363,7 @@ function receiveServerMessage(cmd, arg) {
             playMusic(music);
           }
         } else if (mapMusicEnabled) {
-          stopMusic();
+          stopMusic(true);
         }
 
         alreadyBumped = false;

@@ -117,7 +117,7 @@ function runLocalCommand(t) {
 		SendCmd("EXT", { "get_user_profile": {"username": t.slice(13)} });
 		return true;
 	} else if (tl == "/stopmusic") {
-		stopMusic();
+		stopMusic(true);
 		return true;
 	} else if (tl == "/releasekeys") {
 		forceReleaseKeys();
