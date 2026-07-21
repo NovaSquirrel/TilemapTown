@@ -70,8 +70,10 @@ let AudioChatNotifications = true;
 let AudioMiscNotifications = false;
 let mapMusicEnabled = false;
 let mapMusicVolume = 1;
-let gainNode = undefined;
+let chiptuneGainNode = undefined;
+let streamedGainNode = undefined;
 let playedMusicYet = false;
+let sharedAudioContext = undefined;
 
 // Desktop notifications
 let enableDesktopNotifications = false;
@@ -245,9 +247,7 @@ function applyOptions() {
 	updateMapMusicVolume();
 	mapMusicEnabled = document.getElementById("audiomapmusic").checked;
 	if(!mapMusicEnabled) {
-		if (chiptunejsPlayerObject !== undefined) {
-			chiptunejsPlayerObject.stop();
-		}
+		stopMusic(false);
 	} else if(mapMusicEnabled && !mapMusicPreviouslyEnabled && currentlyPlayingURL) {
 		playMusic(currentlyPlayingURL);
 	}
@@ -281,8 +281,10 @@ function applyOptions() {
 
 function updateMapMusicVolume() {
 	mapMusicVolume = parseInt(document.getElementById("music-volume").value) / 100;
-	if (gainNode)
-		gainNode.gain.value = mapMusicVolume;
+	if (chiptuneGainNode)
+		chiptuneGainNode.gain.value = mapMusicVolume;
+	if (streamedGainNode)
+		streamedGainNode.gain.value = mapMusicVolume;
 }
 
 function zoomIn() {
@@ -5459,39 +5461,73 @@ function initMusic() {
 	}
 }
 
+let streamedMediaElement = undefined;
+let streamedMediaElementSource = undefined;
+const chiptuneAudioFormats = new Set(["mod", "s3m", "xm", "it", "mptm"]);
 function playMusic(url, force) {
 	currentlyPlayingURL = url;
 	if (!mapMusicEnabled && !force)
 		return;
+	stopMusic(false);
+	if (!url)
+		return;
 
-	function play() {
+	function playChiptune() {
 		initMusic();
 		chiptunejsPlayerObject.load(url, function(buffer){chiptunejsPlayerObject.play(buffer);});
 	}
 
+	let extension = currentlyPlayingURL.toLowerCase().split('.').pop();
+
 	if (!playedMusicYet) {
 		playedMusicYet = true;
-		logMessage('Playing music; you can stop it with <span class="xbbcode-code">/stopmusic</span> or <input type="button" value="Stop music" onclick="stopMusic();"/>', 'server_message',   {'isChat': false});
+		logMessage('Playing music; you can stop it with <span class="xbbcode-code">/stopmusic</span> or <input type="button" value="Stop music" onclick="stopMusic(true);"/>', 'server_message',   {'isChat': false});
 	}
 
-	if(libopenmptLoaded) {
-		play();
-	} else {
-		libopenmptLoaded = true;
-		libopenmpt.onRuntimeInitialized = function () {
-			play();
-		};
+	if (chiptuneAudioFormats.has(extension)) {
+		if(libopenmptLoaded) {
+			playChiptune();
+		} else {
+			libopenmptLoaded = true;
+			libopenmpt.onRuntimeInitialized = function () {
+				playChiptune();
+			};
 
-		let script = document.createElement("script");
-		script.src = "js/libopenmpt/libopenmpt.js";
-		document.head.appendChild(script);
+			let script = document.createElement("script");
+			script.src = "js/libopenmpt/libopenmpt.js";
+			document.head.appendChild(script);
+		}
+	} else { // Assume it's streamed
+		sharedAudioContext = sharedAudioContext || new AudioContext();
+		if (streamedGainNode === undefined) {
+			streamedGainNode = sharedAudioContext.createGain();
+			streamedGainNode.gain.value = mapMusicVolume;
+		}
+		if (streamedMediaElement === undefined) {
+			streamedMediaElement = new Audio();
+			streamedMediaElement.crossOrigin = "anonymous";
+			streamedMediaElement.loop = true;
+			streamedMediaElement.addEventListener("canplay", (event) => {
+				streamedMediaElement.play();
+			});
+		}
+		if(streamedMediaElementSource == undefined) {
+			streamedMediaElementSource = sharedAudioContext.createMediaElementSource(streamedMediaElement);
+			streamedMediaElementSource.connect(streamedGainNode).connect(sharedAudioContext.destination);
+		}
+		streamedMediaElement.src = url;
+		streamedMediaElement.load();
 	}
 }
 
-function stopMusic() {
-	currentlyPlayingURL = null;
+function stopMusic(clearCurrentURL) {
+	if (clearCurrentURL)
+		currentlyPlayingURL = null;
 	if (chiptunejsPlayerObject !== undefined) {
 		chiptunejsPlayerObject.stop();
+	}
+	if (streamedMediaElement !== undefined) {
+		streamedMediaElement.pause();
 	}
 }
 

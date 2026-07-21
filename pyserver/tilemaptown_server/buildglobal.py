@@ -90,6 +90,7 @@ def loadConfigJson(clearLogs=True):
 	setConfigDefault("Server",   "RequestExpirationTime", 1200)
 	setConfigDefault("Server",   "MaxEntityWidth", 64)
 	setConfigDefault("Server",   "MaxEntityHeight", 64)
+	setConfigDefault("Server",   "AllowedMusicFileExtensions", [".mod", ".s3m", ".xm", ".it", ".mptm", ".flac", ".mp3", ".ogg", ".opus", ".wav"])
 
 	setConfigDefault("Security", "ProxyOnly",        False)
 	setConfigDefault("Security", "AllowedOrigins",   None)

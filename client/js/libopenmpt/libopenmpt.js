@@ -2,7 +2,7 @@
 // | Code originally from chiptune2.js
 // | https://github.com/deskjet/chiptune2.js
 // |
-// | Modified by NovaSquirrel to add volume control
+// | Modified by NovaSquirrel to add volume control and share an audio context
 // |
 // | Inserted here to guarantee it gets loaded before libopenmpt
 // '-----------------------------------------------------------------
@@ -28,12 +28,15 @@ ChiptuneJsConfig.prototype.constructor = ChiptuneJsConfig;
 // player
 var ChiptuneJsPlayer = function (config) {
   this.config = config;
-  this.context = config.context || new ChiptuneAudioContext();
+  this.context = sharedAudioContext || config.context || new ChiptuneAudioContext();
+  sharedAudioContext = this.context;
   this.currentPlayingNode = null;
   this.handlers = [];
   this.touchLocked = true;
-  gainNode = this.context.createGain();
-  gainNode.gain.value = mapMusicVolume; // Default to 100% volume
+  if(chiptuneGainNode === undefined) {
+    chiptuneGainNode = this.context.createGain();
+    chiptuneGainNode.gain.value = mapMusicVolume;
+  }
 }
 
 ChiptuneJsPlayer.prototype.constructor = ChiptuneJsPlayer;
@@ -116,7 +119,7 @@ ChiptuneJsPlayer.prototype.unlock = function() {
   var unlockSource = context.createBufferSource();
 
   unlockSource.buffer = buffer;
-  unlockSource.connect(gainNode).connect(context.destination);
+  unlockSource.connect(chiptuneGainNode).connect(context.destination);
   unlockSource.start(0);
 
   this.touchLocked = false;
@@ -170,7 +173,7 @@ ChiptuneJsPlayer.prototype.play = function(buffer) {
   libopenmpt._openmpt_module_set_render_param(processNode.modulePtr, OPENMPT_MODULE_RENDER_INTERPOLATIONFILTER_LENGTH, this.config.interpolationFilter);
 
   this.currentPlayingNode = processNode;
-  processNode.connect(gainNode).connect(this.context.destination);
+  processNode.connect(chiptuneGainNode).connect(this.context.destination);
 }
 
 ChiptuneJsPlayer.prototype.stop = function() {
