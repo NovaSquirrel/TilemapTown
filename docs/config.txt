@@ -324,6 +324,10 @@ FileUpload.AllowCrossOrigin
 Default: False
 Add CORS headers to the file upload API in order to allow accessing it when testing locally.
 
+FileUpload.AllowedFileExtensions
+Default: [".png", ".mod", ".s3m", ".xm", ".it", ".mptm", ".mp3", ".ogg", ".flac", ".wav"]
+Which file extensions can be uploaded. Must be lowercase.
+
 MaxProtocolSize.MSG
 Set a maximum number of characters that an incoming message of a given type is allowed to be.
 You can use any 3-character protocol message type here.

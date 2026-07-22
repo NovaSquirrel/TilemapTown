@@ -184,6 +184,7 @@ def loadConfigJson(clearLogs=True):
 	setConfigDefault("FileUpload", "AllowedFileCount",     100)
 	setConfigDefault("FileUpload", "AllowedFolderCount",   100)
 	setConfigDefault("FileUpload", "AllowCrossOrigin",     False)
+	setConfigDefault("FileUpload", "AllowedFileExtensions", [".png", ".mod", ".s3m", ".xm", ".it", ".mptm", ".mp3", ".ogg", ".flac", ".wav"])
 
 	LoadedAnyServerResources[0] = False
 	ServerResources.clear()

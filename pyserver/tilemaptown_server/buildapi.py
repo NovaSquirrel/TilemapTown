@@ -222,7 +222,6 @@ async def get_img(request):
 
 # ---------------------------------------------------------
 global_file_upload_size = 0
-allowed_file_extensions = {".png", ".mod", ".s3m", ".xm", ".it", ".mptm"}
 
 if Config["FileUpload"]["AllowCrossOrigin"]:
 	CORS_HEADERS = {
@@ -301,9 +300,9 @@ async def get_info_from_multipart(request):
 			out[field.name + "_original"]  = field.filename
 			out[field.name + "_name"]      = base_name
 			out[field.name + "_extension"] = file_extension
-			if file_extension not in allowed_file_extensions:
+			if file_extension not in Config["FileUpload"]["AllowedFileExtensions"]:
 				raise web.HTTPUnsupportedMediaType(text="Uploaded file is not an allowed type", headers=CORS_HEADERS)
-			if file_extension == 'png' and not file_is_probably_png(data):
+			if file_extension == '.png' and not file_is_probably_png(data):
 				raise web.HTTPUnsupportedMediaType(text="Uploaded file is not a valid image", headers=CORS_HEADERS)
 	return out
 
