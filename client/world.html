@@ -608,7 +608,7 @@
     Registered users can <a href="#" onclick="viewFiles();">upload images</a> to the server.<br>Otherwise you may use <a href="https://filegarden.com/" target="_blank">File Garden</a>, <a href="https://imgbb.com/" target="_blank">ImgBB</a> or <a href="https://postimages.org/" target="_blank">Postimages</a>.<br>More image hosts can be added on request.<br>
     <input type="url" placeholder="https://example.com/whatever.png" size="28" id="newcustompic">
     <input type="button" value="Custom pic" onclick="sendChatCommand('userpic '+document.getElementById('newcustompic').value);">
-    <button onclick="openExtendedPicWindow()">Advanced setup</button>
+    <button onclick="openExtendedPicWindow(null)">Advanced setup</button>
   </p>
 
 <!--
@@ -620,9 +620,9 @@
 </widget-window>
 
 <widget-window id="ext-userpic-setup" style="display: none;">
-	<span slot="title">Character appearance setup</span>
+	<span slot="title" id="ext-userpic-setup-title">Character appearance setup</span>
 	<div slot="contents">
-	<div style="text-align:center;"><button onclick="resetSettingsPicWindow()">Reset</button> <button onclick="applySettingsPicWindow()">Apply appearance</button></div>
+	<div style="text-align:center;"><button onclick="resetSettingsPicWindow()">Reset</button> <button onclick="applySettingsPicWindow()" id="ext-userpic-setup-apply">Apply appearance</button><span id="ext-userpic-setup-entity-notice"><br>Edit settings here, and they'll show up<br>in the item edit window.<span></div>
 
 	<p>
 	<table border="1">
@@ -664,7 +664,7 @@
 	</table>
 	</details>
 
-	<p>
+	<p id="ext-userpic-setup-json-section">
 	Extended appearance info in JSON format:<br><textarea cols="40" id="userpic-setup-raw"></textarea> <button onclick="applyJsonPicWindow()">Apply</button>
 	</p>
 
@@ -1017,6 +1017,7 @@
 	<span id="itemImageTypePicker">Type:
 	<label class="unselectable"><input type="radio" id="itemImageIsSheet" name="itemImageType" onchange="changeItemImageType()" checked>Normal</label>
 	<label class="unselectable"><input type="radio" id="itemImageIsURL" name="itemImageType" onchange="changeItemImageType()">URL</label>
+	<label class="unselectable"><input type="radio" id="itemImageIsExtended" name="itemImageType" onchange="changeItemImageType()">Extended</label>
 	</span>
 
 	<p>
@@ -1040,6 +1041,7 @@
     </p>
 	</div>
 	<div id="tileImageURLOptions">URL: <input id="edittileimageurl" type="url" placeholder="Image URL"></div>
+	<div id="tileImageExtendedOptions"><table border="0"><tr><td>Basic URL</td><td><input id="edittileextbasic" type="url" placeholder="Image URL"></td></tr></tr><tr><td>Properties</td><td><textarea cols="20" rows="5" id="edittileextjson"></textarea><button onclick="editItemExtEdit()">Edit</button></td></tr></table></div>
 	</p>
 
 	<p><details id="edittileautotileoptions">

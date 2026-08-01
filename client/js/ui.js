@@ -985,22 +985,36 @@ function saveNewMorphButton() {
 }
 
 let addedListenerYet = false;
-function openExtendedPicWindow() {
-	resetSettingsPicWindow();
+let extendedPicWindowTarget = undefined;
+let extendedPicWindowIsMe = false;
+let extendedPicWindowAlreadyCopied = false;
+function openExtendedPicWindow(target) {
+	extendedPicWindowIsMe = target === null;
+	extendedPicWindowTarget = extendedPicWindowIsMe ? PlayerYou : target;
+	if(extendedPicWindowIsMe || !extendedPicWindowAlreadyCopied) {
+		resetSettingsPicWindow();
+		extendedPicWindowAlreadyCopied = true;
+	}
 	if (!addedListenerYet) {
 		for (let box of ["userpic-setup-ext-url", "userpic-setup-frame-width", "userpic-setup-frame-height", "userpic-setup-speech-height", "userpic-setup-direction-count", "userpic-setup-frame-duration-idle", "userpic-setup-frame-count-idle", "userpic-setup-frame-pattern-idle", "userpic-setup-frame-duration-move", "userpic-setup-frame-count-move", "userpic-setup-frame-pattern-move", "userpic-setup-x-offsets", "userpic-setup-y-offsets", "userpic-setup-z-offsets", "userpic-setup-move-anim-time"]) {
 			document.getElementById(box).addEventListener('change', function (e) {
-				document.getElementById("userpic-setup-raw").value = JSON.stringify(getJsonSettingsPicWindow());
+				let raw = JSON.stringify(getJsonSettingsPicWindow());
+				document.getElementById("userpic-setup-raw").value = raw;
+				document.getElementById("edittileextjson").value = raw;
 			});
 		}
 		addedListenerYet = true;
 	}
+	document.getElementById("ext-userpic-setup-title").textContent = extendedPicWindowIsMe ? "Character appearance setup" : `Entity ${target} appearance setup`;
+	document.getElementById("ext-userpic-setup-apply").style.display = extendedPicWindowIsMe ? "" : "none";
+	document.getElementById("ext-userpic-setup-json-section").style.display = extendedPicWindowIsMe ? "" : "none";
+	document.getElementById("ext-userpic-setup-entity-notice").style.display = !extendedPicWindowIsMe ? "" : "none";
 	document.getElementById("ext-userpic-setup").style.display = "block";
 }
 
 function resetSettingsPicWindow() {
-	let me = PlayerWho[PlayerYou];
-	let pic = me.pic;
+	let pic = PlayerWho[extendedPicWindowTarget]?.pic;
+	if(!pic) return;
 	let ext = (typeof pic[0] === "string" && typeof pic[1] === "object" && pic[2] === 0) ? pic[1] : null;
 
 	document.getElementById("userpic-setup-basic-url").value = (typeof pic[0] === "string") ? pic[0] : "";
@@ -1024,7 +1038,9 @@ function resetSettingsPicWindow() {
 	document.getElementById("userpic-setup-y-offsets").value = (ext?.yof ?? []).join();
 	document.getElementById("userpic-setup-z-offsets").value = (ext?.zof ?? []).join();
 
-	document.getElementById("userpic-setup-raw").value = JSON.stringify(getJsonSettingsPicWindow());
+	let raw = JSON.stringify(getJsonSettingsPicWindow());
+	document.getElementById("userpic-setup-raw").value = raw;
+	document.getElementById("edittileextjson").value = raw;
 }
 
 function getJsonSettingsPicWindow() {
@@ -1108,6 +1124,10 @@ function applyJsonPicWindow() {
 
 function changePreviewPicWindow() {
 
+}
+
+function editItemExtEdit() {
+	openExtendedPicWindow(editItemID);
 }
 
 ///////////////////////////////////////////////////////////
@@ -2808,11 +2828,27 @@ function editItemShared(item) {
 			editItemOriginalSheet = itemobj.pic[0];
 			document.getElementById("tileImageSheetOptions").style.display = document.getElementById("itemImageIsSheet").checked ? "inline" : "none";
 			document.getElementById("tileImageURLOptions").style.display = document.getElementById("itemImageIsURL").checked ? "inline" : "none";
+			document.getElementById("tileImageExtendedOptions").style.display = document.getElementById("itemImageIsExtended").checked ? "inline" : "none";
 			document.getElementById('itemImageTypePicker').style.display = (item.type === "generic" || item.type === "gadget") ? "block" : "none";
 			const isURLPic = (typeof itemobj.pic[0] === "string") && itemobj.pic[0] !== INTERNAL_TILESET_ID;
 			document.getElementById('edittileimageurl').value = isURLPic ? itemobj.pic[0] : "";
 			document.getElementById("itemImageIsSheet").checked = !isURLPic;
 			document.getElementById("itemImageIsURL").checked = isURLPic;
+			if(typeof itemobj.pic[0] === "string" && typeof itemobj.pic[1] === "object" && itemobj.pic[2] === 0) {
+				document.getElementById("itemImageIsSheet").checked = false;
+				document.getElementById("itemImageIsURL").checked = false;
+				document.getElementById("itemImageIsExtended").checked = true;
+				document.getElementById('edittileextbasic').value = itemobj.pic[0];
+				let ext = structuredClone(itemobj.pic[1]);
+				delete ext.x_offset;
+				delete ext.y_offset;
+				delete ext.z_offset;
+				document.getElementById('edittileextjson').value = JSON.stringify(ext);
+				extendedPicWindowAlreadyCopied = false;
+			} else {
+				document.getElementById("itemImageIsExtended").checked = false;
+				document.getElementById('edittileextjson').value = "";
+			}
 			changeItemImageType();
 
 			// Display all the available images assets in the user's inventory
@@ -2960,6 +2996,7 @@ function editTypeIsDirectEdit(type) {
 }
 
 function editItemApply() {
+	if (!extendedPicWindowIsMe) document.getElementById("ext-userpic-setup").style.display = "none";
 	let alternateItemProperties = document.getElementById('itemproperties_notmaptile').style.display === "block";
 	let edittilename = document.getElementById('edittilename' + (alternateItemProperties ? "_notmaptile" : "")).value;
 	let edittiledesc = document.getElementById('edittiledesc' + (alternateItemProperties ? "_notmaptile" : "")).value;
@@ -3012,7 +3049,7 @@ function editItemApply() {
 			let edittilesheet = parseInt(sheet);
 			let edittilex = parseInt(document.getElementById('edittilex').value);
 			let edittiley = parseInt(document.getElementById('edittiley').value);
-			let edittileurl = document.getElementById("itemImageIsURL").checked ? document.getElementById('edittileimageurl').value : "";
+			let edittileurl = document.getElementById("itemImageIsExtended").checked ? document.getElementById('edittileextbasic').value : document.getElementById("itemImageIsURL").checked ? document.getElementById('edittileimageurl').value : "";
 			let edittiletype = document.getElementById('edittiletype').value;
 			let edittiledensity = document.getElementById('edittiledensity').checked;
 			let edittileobject = !document.getElementById('edittileisobject').checked;
@@ -3029,6 +3066,14 @@ function editItemApply() {
 			updates.pic = [edittilesheet, edittilex, edittiley];
 			if ((editItemType === "generic" || editItemType === "gadget") && edittileurl.trim().length) {
 				updates.pic = [edittileurl.trim(), 0, 0];
+				if (document.getElementById("itemImageIsExtended").checked && document.getElementById('edittileextjson').value.trim()) {
+					try {
+						updates.pic[1] = JSON.parse(document.getElementById('edittileextjson').value.trim());
+					} catch (error) {
+						alert(error);
+						return;
+					}
+				}
 			}
 
 			if (editItemType == "map_tile" || editTypeIsDirectEdit(editItemType)) {
@@ -3455,6 +3500,7 @@ function changeGadgetPreset() {
 function changeItemImageType() {
 	document.getElementById("tileImageSheetOptions").style.display = document.getElementById("itemImageIsSheet").checked ? "inline" : "none";
 	document.getElementById("tileImageURLOptions").style.display = document.getElementById("itemImageIsURL").checked ? "inline" : "none";
+	document.getElementById("tileImageExtendedOptions").style.display = document.getElementById("itemImageIsExtended").checked ? "inline" : "none";
 }
 
 ///////////////////////////////////////////////////////////
@@ -4309,7 +4355,7 @@ function fileFolderContextMenuEdit() {
 
 function copyExtPicToFileDesc() {
 	let pic = PlayerWho[PlayerYou].pic;
-	let ext = (typeof pic[0] === "string" && typeof pic[1] === "object" && pic[2] === 0) ? pic[1] : null;
+	let ext = (typeof pic[0] === "string" && typeof pic[1] === "object" && pic[2] === 0) ? structuredClone(pic[1]) : null;
 	delete ext.x_offset;
 	delete ext.y_offset;
 	delete ext.z_offset;
