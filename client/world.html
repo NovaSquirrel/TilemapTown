@@ -891,6 +891,7 @@
 			  <option value="nothing">Choose an option</option>
 			  <option value="accept_requests">Accept requests</option>
 			  <option value="bot_message_button">Bot message button</option>
+			  <option value="dir_cycle">Cycle through directions</option>
 			  <option value="pic_cycle">Cycle through frames</option>
 			  <option value="dice">Dice</option>
 			  <option value="doodle_board">Doodle board</option>
@@ -967,6 +968,15 @@
 				<tr><td><label class="unselectable" for="edittilegadget_preset_pic_cycle_owner_only">Owner only</label></td><td><input type="checkbox" id="edittilegadget_preset_pic_cycle_owner_only" /></td></tr>
 				<tr><td><label class="unselectable" for="edittilegadget_preset_pic_cycle_random">Random frames</label></td><td><input type="checkbox" id="edittilegadget_preset_pic_cycle_random" /></td></tr>
 				<tr><td><label class="unselectable" for="edittilegadget_preset_pic_cycle_destroy_on_end">Destroy on end</label></td><td><input type="checkbox" id="edittilegadget_preset_pic_cycle_destroy_on_end" /></td></tr>
+				</table>
+			</div>
+			<div id="edittilegadget_preset_dir_cycle">
+				<table border="0">
+				<tr><td><label class="unselectable" for="edittilegadget_preset_dir_cycle_pattern">Direction pattern</label></td><td><input type="text" id="edittilegadget_preset_dir_cycle_pattern" placeholder="0,1,2,3,4,5,6,7" size="20" /></td></tr>
+				<tr><td><label class="unselectable" for="edittilegadget_preset_dir_cycle_index">Current index</label></td><td><input type="number" value="0" min="0" id="edittilegadget_preset_dir_cycle_index" placeholder="0" size="3" /></td></tr>
+				<tr><td><label class="unselectable" for="edittilegadget_preset_dir_cycle_owner_only">Owner only</label></td><td><input type="checkbox" id="edittilegadget_preset_dir_cycle_owner_only" /></td></tr>
+				<tr><td><label class="unselectable" for="edittilegadget_preset_dir_cycle_random">Random frames</label></td><td><input type="checkbox" id="edittilegadget_preset_dir_cycle_random" /></td></tr>
+				<tr><td><label class="unselectable" for="edittilegadget_preset_dir_cycle_destroy_on_end">Destroy on end</label></td><td><input type="checkbox" id="edittilegadget_preset_dir_cycle_destroy_on_end" /></td></tr>
 				</table>
 			</div>
 			<div id="edittilegadget_preset_projectile_shooter">

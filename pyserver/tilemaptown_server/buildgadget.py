@@ -1154,6 +1154,38 @@ class GadgetPicCycle(GadgetTrait):
 		set_and_update_who(self.gadget, 'pic', 'pic', [self.pic[0], self.pic[1]+self.current_frame, self.pic[2]])
 		return False
 
+class GadgetDirCycle(GadgetTrait):
+	usable = True
+
+	def on_init(self):
+		self.current_frame  = self.get_config('index', 0)
+		self.pattern        = self.get_config('pattern', [])
+		if not self.gadget:
+			return None
+		if self.current_frame >= 0 and self.current_frame < len(self.pattern):
+			set_and_update_who(self.gadget, 'dir', 'dir', self.pattern[self.current_frame])
+
+	def on_use(self, user):
+		if not self.gadget:
+			return None
+		if self.get_config('owner_only') and not user.has_permission(self.gadget):
+			return True
+		if self.get_config('random', False):
+			self.current_frame = random.randint(0, len(self.pattern)-1)
+		else:
+			self.current_frame += 1
+
+		if self.current_frame < 0 or self.current_frame >= len(self.pattern):
+			if self.get_config('destroy_on_end', False):
+				self.gadget.clean_up()
+				return False
+			else:
+				self.current_frame = 0
+		self.set_config('index', self.current_frame)
+		if self.current_frame >= 0 and self.current_frame < len(self.pattern):
+			set_and_update_who(self.gadget, 'dir', 'dir', self.pattern[self.current_frame])
+		return False
+
 class GadgetProjectileShooter(GadgetTrait):
 	usable = True
 
@@ -1599,6 +1631,7 @@ gadget_trait_class['mini_tilemap'] = GadgetMiniTilemap
 gadget_trait_class['user_particle'] = GadgetUserParticle
 gadget_trait_class['doodle_board'] = GadgetDoodleBoard
 gadget_trait_class['pic_cycle'] = GadgetPicCycle
+gadget_trait_class['dir_cycle'] = GadgetDirCycle
 gadget_trait_class['projectile_shooter'] = GadgetProjectileShooter
 
 gadget_trait_class['auto_script'] = GadgetAutoScript

@@ -2598,6 +2598,11 @@ function editItemShared(item) {
 				document.getElementById('edittilegadget_preset_pic_cycle_owner_only').checked = false
 				document.getElementById('edittilegadget_preset_pic_cycle_random').checked = false
 				document.getElementById('edittilegadget_preset_pic_cycle_destroy_on_end').checked = false
+				document.getElementById('edittilegadget_preset_dir_cycle_pattern').value = "";
+				document.getElementById('edittilegadget_preset_dir_cycle_index').value = 0;
+				document.getElementById('edittilegadget_preset_dir_cycle_owner_only').checked = false
+				document.getElementById('edittilegadget_preset_dir_cycle_random').checked = false
+				document.getElementById('edittilegadget_preset_dir_cycle_destroy_on_end').checked = false
 				document.getElementById('edittilegadget_preset_projectile_shooter_pic').value = "";
 				document.getElementById('edittilegadget_preset_projectile_shooter_max_distance').value = "";
 				document.getElementById('edittilegadget_preset_projectile_shooter_dir').value = "none";
@@ -2735,6 +2740,16 @@ function editItemShared(item) {
 								document.getElementById('edittilegadget_preset_pic_cycle_owner_only').checked = trait[1].owner_only ?? false;
 								document.getElementById('edittilegadget_preset_pic_cycle_random').checked = trait[1].random ?? false;
 								document.getElementById('edittilegadget_preset_pic_cycle_destroy_on_end').checked = trait[1].destroy_on_end ?? false;
+
+								document.getElementById('edittilegadget_preset_choice').value = trait[0];
+								document.getElementById('gadgetTypeRaw').checked = false;
+								document.getElementById('gadgetTypePreset').checked = true;
+							} else if(trait[0] === "dir_cycle") {
+								document.getElementById('edittilegadget_preset_dir_cycle_pattern').value = (trait[1].pattern ?? []).join(",");
+								document.getElementById('edittilegadget_preset_dir_cycle_index').value = trait[1].index ?? 1;
+								document.getElementById('edittilegadget_preset_dir_cycle_owner_only').checked = trait[1].owner_only ?? false;
+								document.getElementById('edittilegadget_preset_dir_cycle_random').checked = trait[1].random ?? false;
+								document.getElementById('edittilegadget_preset_dir_cycle_destroy_on_end').checked = trait[1].destroy_on_end ?? false;
 
 								document.getElementById('edittilegadget_preset_choice').value = trait[0];
 								document.getElementById('gadgetTypeRaw').checked = false;
@@ -3226,6 +3241,18 @@ function editItemApply() {
 							if (document.getElementById('edittilegadget_preset_pic_cycle_destroy_on_end').checked)
 								t.destroy_on_end = true;
 							break;
+						case "dir_cycle":
+							t.pattern = document.getElementById('edittilegadget_preset_dir_cycle_pattern').value.split(",").map((v) => parseInt(v.trim())).filter((v) => !Number.isNaN(v))
+							t.index = parseInt(document.getElementById('edittilegadget_preset_dir_cycle_index').value);
+							if (Number.isNaN(t.index))
+								delete t.index;
+							if (document.getElementById('edittilegadget_preset_dir_cycle_owner_only').checked)
+								t.owner_only = true;
+							if (document.getElementById('edittilegadget_preset_dir_cycle_random').checked)
+								t.random = true;
+							if (document.getElementById('edittilegadget_preset_dir_cycle_destroy_on_end').checked)
+								t.destroy_on_end = true;
+							break;
 						case "projectile_shooter":
 							t.pic = document.getElementById('edittilegadget_preset_projectile_shooter_pic').value.split(" ");
 							if (t.pic.length === 3) {
@@ -3421,6 +3448,7 @@ function changeGadgetPreset() {
 	document.getElementById("edittilegadget_preset_user_particle").style.display = (preset === "user_particle") ? "block" : "none";
 	document.getElementById("edittilegadget_preset_doodle_board").style.display = (preset === "doodle_board") ? "block" : "none";
 	document.getElementById("edittilegadget_preset_pic_cycle").style.display = (preset === "pic_cycle") ? "block" : "none";
+	document.getElementById("edittilegadget_preset_dir_cycle").style.display = (preset === "dir_cycle") ? "block" : "none";
 	document.getElementById("edittilegadget_preset_projectile_shooter").style.display = (preset === "projectile_shooter") ? "block" : "none";
 }
 
