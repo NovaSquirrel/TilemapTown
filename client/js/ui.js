@@ -4831,8 +4831,9 @@ function logMessage(Message, Class, Params) {
 	}
 }
 
+const knownSafeCommands = ["map ", "goback", "roll ", "privateroll ", "playmusic ", "stopmusic", "releasekeys", "usp ", "userparticle ", "z ", "draw_layer", "cameraxy"];
 function offerCommand(t) {
-	if (t.startsWith("map ") || confirm('Run command "' + t + '"?')) {
+	if (knownSafeCommands.some((element) => t.startsWith(element)) || confirm('Run command "' + t + '"?')) {
 		if (runLocalCommand("/"+t));
 		else sendChatCommand(t);
 	}
