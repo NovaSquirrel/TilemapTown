@@ -1014,7 +1014,7 @@ function openExtendedPicWindow(target) {
 
 function resetSettingsPicWindow() {
 	let pic = PlayerWho[extendedPicWindowTarget]?.pic;
-	if(!pic) return;
+	if(!pic) pic = [0,0,0];
 	let ext = (typeof pic[0] === "string" && typeof pic[1] === "object" && pic[2] === 0) ? pic[1] : null;
 
 	document.getElementById("userpic-setup-basic-url").value = (typeof pic[0] === "string") ? pic[0] : "";

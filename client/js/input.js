@@ -1345,6 +1345,24 @@ function initMouse() {
 			let index = AroundLongerRange[i];
 			let Mob = PlayerWho[index];
 			let MobOffset = Mob.offset ?? [0,0];
+			let directionToUse = Mob.dir;
+			if (PlayerImages[index]) {
+				let directionCount = Mob.ext_pic_data?.dc ?? (PlayerImages[index].naturalHeight / Mob.ext_pic_data?.fs?.[1]);
+				switch (directionCount) { // Directions
+					case 2:
+						frameY = Math.floor(PlayerAnimation[index].lastDirectionLR / 4);
+						directionToUse = PlayerAnimation[index].lastDirectionLR;
+						break;
+					case 4:
+						frameY = Math.floor(PlayerAnimation[index].lastDirection4 / 2);
+						directionToUse = PlayerAnimation[index].lastDirection4;
+						break;
+					case 8:
+						frameY = Mob.dir;
+						break;
+				}
+			}
+			MobOffset = [MobOffset[0] + (Mob.ext_pic_data?.x_offset ? Mob.ext_pic_data?.x_offset[directionToUse] : 0), MobOffset[1] + (Mob.ext_pic_data?.y_offset ? Mob.ext_pic_data?.y_offset[directionToUse] : 0)];
 
 			let mini_tilemap = Mob.mini_tilemap;
 
@@ -1396,17 +1414,19 @@ function initMouse() {
 					let tilesetHeight = PlayerImages[index].naturalHeight;
 					playerIs16x16 = tilesetWidth == 16 && tilesetHeight == 16;
 				}
-				let entityPixelX, entityPixelY, entitySize;
+				let entityPixelX, entityPixelY, entityWidth, entityHeight;
 				if(playerIs16x16) {
 					entityPixelX = (Mob.x * 16) - PixelCameraX + MobOffset[0];
 					entityPixelY = (Mob.y * 16) - PixelCameraY + MobOffset[1];
-					entitySize = 16;
+					entityWidth = 16;
+					entityHeight = 16;
 				} else {
-					entityPixelX = (Mob.x * 16 - 8) - PixelCameraX + MobOffset[0];
-					entityPixelY = (Mob.y * 16 - 16) - PixelCameraY + MobOffset[1];
-					entitySize = 32;
+					entityWidth = Mob.ext_pic_data?.fs?.[0] ?? Math.min(PlayerImages[index].naturalWidth, 32);
+					entityHeight = Mob.ext_pic_data?.fs?.[1] ?? Math.min(PlayerImages[index].naturalHeight, 32);
+					entityPixelX = (Mob.x * 16 + 8 - Math.round(entityWidth/2)) - PixelCameraX + MobOffset[0];
+					entityPixelY = (Mob.y * 16 + 16 - entityHeight) - PixelCameraY + MobOffset[1];
 				}
-				if(pixelPos.x < entityPixelX || pixelPos.y < entityPixelY || pixelPos.x >= (entityPixelX + entitySize) || pixelPos.y >= (entityPixelY + entitySize) ) {
+				if(pixelPos.x < entityPixelX || pixelPos.y < entityPixelY || pixelPos.x >= (entityPixelX + entityWidth) || pixelPos.y >= (entityPixelY + entityHeight) ) {
 					continue;
 				}
 				MousedOverEntityClickAvailable = true;
