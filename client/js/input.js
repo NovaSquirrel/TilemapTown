@@ -548,7 +548,8 @@ function applyTailShift(OldPlayerDir, PlayerDir) {
 	// Automatically shift the offset left and right to account for a sprite that isn't centered at the middle of the sprite
 	if (autoOffsetSide !== 0 && OldPlayerDir !== PlayerDir) {
 		if (PlayerImages[PlayerYou]) {
-			const directionCount = PlayerImages[PlayerYou].naturalHeight / 32;
+			const frameHeight = PlayerWho[PlayerYou]?.ext_pic_data?.fs?.[1] ?? Math.min(32, PlayerImages[PlayerYou].naturalHeight);
+			const directionCount = PlayerWho[PlayerYou]?.ext_pic_data?.dc ?? (PlayerImages[PlayerYou].naturalHeight / frameHeight);
 			const lastDirection = (directionCount == 8) ? OldPlayerDir : ((directionCount == 4) ? PlayerAnimation[PlayerYou].lastDirection4 : PlayerAnimation[PlayerYou].lastDirectionLR);
 			const offset = PlayerWho[PlayerYou].offset ?? [0,0];
 			if (
