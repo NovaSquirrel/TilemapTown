@@ -1088,12 +1088,13 @@ class Entity(PermissionsMixin, object):
 					misc['status_type'] = self.status_type
 				if self.status_message != None:
 					misc['status_message'] = self.status_message
+				if self.offset:
+					misc['offset'] = self.offset
 			if hasattr(self, 'verbs') and self.verbs:
 				misc['verbs'] = self.verbs
 			if hasattr(self, "draw_layer") and self.draw_layer:
 				misc['draw_layer'] = self.draw_layer
-			if self.offset:
-				misc['offset'] = self.offset
+
 			c.execute("UPDATE Entity_Ext SET forward_messages_to=?, tags=?, misc=? WHERE id=?", (self.forward_messages_to, dumps_if_condition(self.tags, self.tags != {} and self.tags != None), dumps_if_condition(misc, misc != {}), self.db_id))
 
 		values = (self.entity_type, self.name, self.desc, dumps_if_not_none(self.pic), self.map_id, json.dumps([self.x, self.y] + ([self.dir] if self.dir != 2 else [])), self.home_id, dumps_if_not_none(self.home_position), self.owner_id if self.owner_id != None else self.creator_id, self.allow, self.deny, self.guest_deny, self.have_ext, self.db_id)
