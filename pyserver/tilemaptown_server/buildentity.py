@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio, datetime, json, copy, zlib, random, weakref, copy
+import asyncio, datetime, json, copy, zlib, random, weakref
 from .buildglobal import *
 from collections import deque
 
@@ -86,7 +86,7 @@ class PermissionsMixin(object):
 				if self is other or self.id == other.creator_temp_id:
 					return True
 				# Temporary permissions
-				if self.temp_permissions.get(other, 0) & perm:
+				if self.temp_permissions and (self.temp_permissions.get(other, 0) & perm):
 					return True
 			if self.db_id:
 				# If you're the owner, you automatically have permission
@@ -202,84 +202,85 @@ class PermissionsMixin(object):
 			c.execute("INSERT INTO Permission (subject_id, actor_id, allow, deny) VALUES (?, ?, ?, ?)", (self.db_id, actor_id, allow, deny,))
 
 class Entity(PermissionsMixin, object):
+	# Appearance
+	name = '?'
+	desc = None
+	pic = None
+
+	# Location
+	dir = 2 # South
+	map_ref = None        # Storage for self.map, which is a property
+	map_id = None         # Map the entity is currently on
+	x = 0
+	y = 0
+	offset = None         # Visual offset in pixels
+
+	home_id = None        # Map that is the entity's "home"
+	home_position = None
+
+	temporary = False        # If true, don't save the entity to the database
+	delete_on_logout = False # If true, delete entity when the owner logs out
+
+	# Other info
+	tags = None      # dict; Pronouns and name color
+	data = None      # Data that gets stored in the database
+	contents = None  # set; Entities stored inside this one
+	flags = 0        # Entity flags, like "public"?
+	have_ext = False
+
+	# Status
+	status_type = None
+	status_message = None
+
+	# Temporary information
+	requests = None      # dict; Indexed by tuple: (username, type). Each item is an array with [timer, id, data]; data may be None. Timer decreases each second, then the request is deleted.
+	rate_limiting = None # dict; Indexed by rate limiting type. Each item is a deque containing (minute, hits)
+	# valid types include "tpa", "tpahere", "carry", "followme"; see buildcommand.py for more
+	tp_history = None # deque
+
+	# Message forwarding; for bringing bot entities onto different maps, that can listen to messages
+	forward_message_types = None # set
+	forward_messages_to = None
+
+	# Riding information
+	vehicle = None     # User being ridden
+	passengers = None  # set; Users being carried
+	is_following = False # If true, follow behind instead of being carried
+
+	follow_map_vehicle = None
+	follow_map_passengers = None # set
+
+	creator_temp_id = None # Temporary ID of the creator of the object, for guests. Not saved to the database.
+
+	# Default permissions for when entity is the subject
+	allow = 0
+	deny = 0
+	guest_deny = 0
+
+	# Permissions for when entity is the actor
+	map_allow = 0       # Used to cache the map allows and map denys to avoid excessive SQL queries
+	map_deny = 0
+
+	temp_permissions_given_to = None # weakref.WeakSet()
+	temp_permissions = None # weakref.WeakKeyDictionary(); temp_permissions[subject] = permission bits
+
+	# Save when clean_up() is called
+	save_on_clean_up = False
+	cleaned_up_already = False
+
 	def __init__(self, entity_type, creator_id=None):
 		global entityCounter
 
 		self.entity_type = entity_type
-
-		# Appearance
-		self.name = '?'
-		self.desc = None
-		self.pic = None
-
-		# Location
-		self.dir = 2 # South
-		self.map_ref = None        # Storage for self.map, which is a property
-		self.map_id = None         # Map the entity is currently on
-		self.x = 0
-		self.y = 0
-		self.offset = None         # Visual offset in pixels
-
-		self.home_id = None        # Map that is the entity's "home"
-		self.home_position = None
 
 		# Identification
 		self.id = entityCounter  # Temporary ID for referring to different objects in RAM
 		entityCounter += 1
 		self.db_id = None        # More persistent ID: the database key
 
-		self.temporary = False   # If true, don't save the entity to the database
-		self.delete_on_logout = False # If true, delete entity when the owner logs out
-
-		# Other info
-		self.tags = {}    # Description, species, gender and other things
-		self.data = None  # Data that gets stored in the database
-		self.contents = set() # Entities stored inside this one
-		self.flags = 0        # Entity flags, like "public"?
-		self.have_ext = False
-
-		# Status
-		self.status_type = None
-		self.status_message = None
-
-		# Temporary information
-		self.requests = {} # Indexed by tuple: (username, type). Each item is an array with [timer, id, data]; data may be None. Timer decreases each second, then the request is deleted.
-		self.rate_limiting = {} # Indexed by rate limiting type. Each item is a deque containing (minute, hits)
-		# valid types are "tpa", "tpahere", "carry", "followme"
-		self.tp_history = deque(maxlen=20)
-
-		# Message forwarding; for bringing bot entities onto different maps, that can listen to messages
-		self.forward_message_types = set()
-		self.forward_messages_to = None
-
-		# Riding information
-		self.vehicle = None     # User being ridden
-		self.passengers = set() # Users being carried
-		self.is_following = False # If true, follow behind instead of being carried
-
-		self.follow_map_vehicle = None
-		self.follow_map_passengers = set()
-
 		# Permissions
 		self.creator_id = creator_id
 		self.owner_id = creator_id
-		self.creator_temp_id = None # Temporary ID of the creator of the object, for guests. Not saved to the database.
-
-		# Default permissions for when entity is the subject
-		self.allow = 0
-		self.deny = 0
-		self.guest_deny = 0
-
-		# Permissions for when entity is the actor
-		self.map_allow = 0       # Used to cache the map allows and map denys to avoid excessive SQL queries
-		self.map_deny = 0
-
-		self.temp_permissions_given_to = weakref.WeakSet()
-		self.temp_permissions = weakref.WeakKeyDictionary() # temp_permissions[subject] = permission bits
-
-		# Save when clean_up() is called
-		self.save_on_clean_up = False
-		self.cleaned_up_already = False
 
 		# Make this entity easy to find
 		AllEntitiesByID[self.id] = self
@@ -314,7 +315,7 @@ class Entity(PermissionsMixin, object):
 			self.stop_current_ride()
 
 			# Get rid of any contents that don't have persistent_object_entry permission
-			if self.db_id != get_database_meta('default_map'):
+			if self.db_id != get_database_meta('default_map') and self.contents:
 				temp = set(self.contents)
 				for u in temp:
 					if not u.is_client() \
@@ -332,6 +333,8 @@ class Entity(PermissionsMixin, object):
 				category.pop(protocol_id, None)
 
 	def send(self, commandType, commandParams):
+		if not self.forward_message_types:
+			return
 		# Treat chat as a separate pseudo message type
 		is_chat = commandType == 'MSG' and commandParams != None and ("name" in commandParams)
 		if is_chat and 'CHAT' not in self.forward_message_types:
@@ -346,6 +349,8 @@ class Entity(PermissionsMixin, object):
 					asyncio.ensure_future(connection.ws.send("FWD %s %s" % (self.protocol_id(), make_protocol_message_string(commandType, commandParams))))
 
 	def send_string(self, raw, is_chat=False):
+		if not self.forward_message_types:
+			return
 		# Directly send a string, so you can json.dumps once and reuse it for everyone
 
 		# Treat chat as a separate pseudo message type
@@ -447,6 +452,8 @@ class Entity(PermissionsMixin, object):
 	# Allow other classes to respond to having things added to them
 
 	def add_to_contents(self, item):
+		if self.contents == None:
+			self.contents = set()
 		if item.map and item.map is not self:
 			item.map.remove_from_contents(item)
 		self.contents.add(item)
@@ -466,7 +473,7 @@ class Entity(PermissionsMixin, object):
 
 		# Warn about chat listeners, if present
 		if item.is_client():
-			if (self.db_id in MapListens[maplisten_type['chat']]) or any(("CHAT" in e.forward_message_types) or (hasattr(e, 'listening_to_chat_warning') and e.listening_to_chat_warning) for e in self.contents):
+			if (self.db_id in MapListens[maplisten_type['chat']]) or any((e.forward_message_types and "CHAT" in e.forward_message_types) or (hasattr(e, 'listening_to_chat_warning') and e.listening_to_chat_warning) for e in self.contents):
 				item.send("MSG", {'text': 'A bot has access to messages sent here ([command]listeners[/command])', 'class': 'server_map_message'})
 			self.send_map_info(item)
 
@@ -475,6 +482,8 @@ class Entity(PermissionsMixin, object):
 			parent.added_to_child_contents(item)
 
 	def remove_from_contents(self, item, new_map_id=None, new_map_name=None):
+		if self.contents == None:
+			self.contents = set()
 		self.contents.discard(item)
 		item.map_id = None
 		item.map = None
@@ -534,7 +543,7 @@ class Entity(PermissionsMixin, object):
 				yield child
 				if child.id not in already_found:
 					already_found.add(child.id)
-					if len(child.contents):
+					if child.contents:
 						queue.append(child)
 
 	def send_map_info(self, item):
@@ -578,9 +587,9 @@ class Entity(PermissionsMixin, object):
 		if self.vehicle != None or self.follow_map_vehicle != None:
 			self.dismount()
 		# let's not deal with trees of passengers first
-		if len(self.passengers) or len(self.follow_map_passengers):
+		if self.passengers or self.follow_map_passengers:
 			self.send("MSG", {'text': 'You let out all your passengers'})
-			temp = set(self.passengers).union(self.follow_map_passengers)
+			temp = set(self.passengers or set()).union(self.follow_map_passengers or set())
 			for u in temp:
 				u.dismount()
 		self.finish_batch()
@@ -597,6 +606,8 @@ class Entity(PermissionsMixin, object):
 		other.send("MSG", {'text': 'You carry %s' % self.name_and_username()})
 
 		self.vehicle = other
+		if other.passengers == None:
+			other.passengers = set()
 		other.passengers.add(self)
 
 		if self.map != None:
@@ -615,7 +626,8 @@ class Entity(PermissionsMixin, object):
 			self.send("MSG", {'text': 'You stop following %s to other maps' % other.name_and_username()})
 			other.send("MSG", {'text': '%s stops following you to other maps' % self.name_and_username()})
 
-			other.follow_map_passengers.discard(self)
+			if other.follow_map_passengers:
+				other.follow_map_passengers.discard(self)
 			self.follow_map_vehicle = None
 
 			no_error = True
@@ -625,7 +637,8 @@ class Entity(PermissionsMixin, object):
 			self.send("MSG", {'text': 'You get off %s' % other.name_and_username()})
 			other.send("MSG", {'text': '%s gets off of you' % self.name_and_username()})
 
-			other.passengers.discard(self)
+			if other.passengers:
+				other.passengers.discard(self)
 			self.vehicle = None
 
 			# Notify other people
@@ -690,6 +703,8 @@ class Entity(PermissionsMixin, object):
 		if update_history and self.map_id != None:
 			# Add a new teleport history entry if new map
 			if self.map_id != map_id:
+				if self.tp_history == None:
+					self.tp_history = deque(maxlen=20)
 				self.tp_history.append([self.map_id, self.x, self.y])
 				added_new_history = True
 
@@ -700,7 +715,7 @@ class Entity(PermissionsMixin, object):
 			map_load = get_entity_by_id(map_id)
 			if map_load == None:
 				self.send("ERR", {'text': 'Couldn\'t load map %s' % map_id})
-				if added_new_history:
+				if added_new_history and self.tp_history:
 					self.tp_history.pop()
 				self.finish_batch()
 				return False
@@ -713,7 +728,7 @@ class Entity(PermissionsMixin, object):
 				have_permission = False
 			if not have_permission:
 				self.send("ERR", {'text': 'You don\'t have permission to go to map %s' % (map_id if (isinstance(map_id, int) or isinstance(map_id, str)) else map_id.protocol_id()) })
-				if added_new_history:
+				if added_new_history and self.tp_history:
 					self.tp_history.pop()
 				self.finish_batch()
 				return False
@@ -754,7 +769,7 @@ class Entity(PermissionsMixin, object):
 			already_moved = {self}
 		else:
 			already_moved.add(self)
-		for u in self.passengers.union(self.follow_map_passengers):
+		for u in (self.passengers or set()).union(self.follow_map_passengers or set()):
 			if u not in already_moved:
 				u.switch_map(map_id, new_pos=[self.x, self.y], on_behalf_of=self, already_moved=already_moved)
 
@@ -807,7 +822,7 @@ class Entity(PermissionsMixin, object):
 			'y': self.y,
 			'dir': self.dir,
 			'id': self.protocol_id(),
-			'passengers': [passenger.protocol_id() for passenger in self.passengers],
+			'passengers': [passenger.protocol_id() for passenger in self.passengers or tuple()],
 			'vehicle': self.vehicle.protocol_id() if self.vehicle else None,
 			'is_following': self.is_following,
 			'type': entity_type_name[self.entity_type],
@@ -822,13 +837,13 @@ class Entity(PermissionsMixin, object):
 			out['mini_tilemap_data'] = self.mini_tilemap_data
 		if hasattr(self, 'clickable') and self.clickable:
 			out['clickable'] = self.clickable
-		elif 'CLICK' in self.forward_message_types:
+		elif self.forward_message_types and 'CLICK' in self.forward_message_types:
 			out['clickable'] = True
-		elif 'DRAG' in self.forward_message_types:
+		elif self.forward_message_types and 'DRAG' in self.forward_message_types:
 			out['clickable'] = "drag"
-		elif 'MAP_DRAG' in self.forward_message_types:
+		elif self.forward_message_types and 'MAP_DRAG' in self.forward_message_types:
 			out['clickable'] = "map_drag"
-		if 'USE' in self.forward_message_types:
+		if self.forward_message_types and 'USE' in self.forward_message_types:
 			out['usable'] = True
 		if (hasattr(self, "verbs") and self.verbs):
 			out['verbs'] = self.verbs
@@ -841,7 +856,7 @@ class Entity(PermissionsMixin, object):
 			out['draw_layer'] = self.draw_layer
 		if self.forward_messages_to:
 			out['is_forwarding'] = True
-			if 'CHAT' in self.forward_message_types:
+			if e.forward_message_types and 'CHAT' in self.forward_message_types:
 				out['chat_listener'] = True
 		if hasattr(self, 'listening_to_chat_warning') and self.listening_to_chat_warning:
 			out['chat_listener'] = True
@@ -897,7 +912,7 @@ class Entity(PermissionsMixin, object):
 
 	def who_contents(self):
 		""" WHO message data """
-		return {str(e.protocol_id()):e.who() for e in self.contents}
+		return {str(e.protocol_id()):e.who() for e in self.contents or tuple()}
 
 	def username_or_id(self):
 		return self.protocol_id()

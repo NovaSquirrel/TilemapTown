@@ -195,7 +195,7 @@ def load_json_if_valid(j):
 	return None
 
 def find_local_entity_by_name(map, name):
-	if map == None:
+	if map == None or not map.contents:
 		return None
 	name = name.lower()
 	for e in map.contents:
@@ -277,6 +277,8 @@ def fn_me(map, client, context, arg):
 	send_message_to_map(map, client, "/me "+arg, context)
 
 def apply_rate_limiting(client, limit_type, count_limits):
+	if client.rate_limiting == None:
+		client.rate_limiting = {}
 	current_minute = int(time.monotonic() // 60)
 
 	# Increase the counter for the current minute
@@ -342,9 +344,10 @@ def send_message_to_map(map, actor, text, context, acknowledge_only=False, ignor
 				return
 			else:
 				map.broadcast("MSG", fields, remote_category=maplisten_type['chat'], ignore_user=actor, ignore_action=ignore_action)
-				for e in map.contents:
-					if e.entity_type == entity_type['gadget'] and hasattr(e, 'listening_to_chat') and e.listening_to_chat and e is not actor and e is not context['client']:
-						e.receive_chat(actor, text)
+				if map.contents:
+					for e in map.contents:
+						if e.entity_type == entity_type['gadget'] and hasattr(e, 'listening_to_chat') and e.listening_to_chat and e is not actor and e is not context['client']:
+							e.receive_chat(actor, text)
 
 def queue_offline_private_message(client, recipient_db_id, text):
 	if recipient_db_id not in OfflineMessages:
@@ -386,7 +389,7 @@ def send_private_message(client, context, recipient_username, text, lenient_rate
 					client.send("PRI", {'text': text, 'name': u.name, 'id': u.protocol_id(), 'username': u.username_or_id(), 'receive': False})
 					if not acknowledge_only:
 						u.receive_tell(client, text)
-				elif u.is_client() or "PRI" in u.forward_message_types:
+				elif u.is_client() or (u.forward_message_types and "PRI" in u.forward_message_types):
 					if not u.is_client() or not in_blocked_username_list(client, u.connection_attr('ignore_list'), display_action='message %s' % u.name, check_action="pm", friends_list=u.connection_attr('watch_list'), recipient=u):
 						client.send("PRI", {'text': text, 'name': u.name, 'id': u.protocol_id(), 'username': u.username_or_id(), 'receive': False})
 						recipient_params = {'text': text, 'name': client.name, 'id': client.protocol_id(), 'username': client.username_or_id(), 'receive': True}
@@ -478,7 +481,7 @@ def send_request_to_user(client, context, arg, request_type, request_data, accep
 	my_username = client.protocol_id()
 	request_key = (my_username, request_type)
 
-	if request_key in u.requests:
+	if u.requests and (request_key in u.requests):
 		if u.requests[request_key][2] == request_data:
 			# Renew it
 			respond(context, 'You\'ve already sent them a request', error=True)
@@ -487,6 +490,8 @@ def send_request_to_user(client, context, arg, request_type, request_data, accep
 	if not is_client_and_entity(u) or not in_blocked_username_list(client, u.connection_attr('ignore_list'), display_action='send requests to %s' % u.name, check_action="request", friends_list=u.connection_attr('watch_list'), recipient=u):
 		respond(context, you_message % arg)
 
+		if u.requests == None:
+			u.requests = {}
 		u.requests[request_key] = [Config["Server"]["RequestExpirationTime"] if u.is_client() else 60, next_request_id, request_data]
 		AllEntitiesWithRequests.add(u)
 
@@ -611,6 +616,8 @@ def find_request_from_arg(client, context, arg):
 	args = arg.split(' ')
 	if len(args) == 0:
 		return False
+	if client.requests == None:
+		client.requests = {}
 
 	subject_id = args[0]
 	if not valid_id_format(subject_id):
@@ -734,6 +741,8 @@ def fn_tpaccept(map, client, context, arg):
 		if client != subject:
 			client.stop_current_ride()
 			client.follow_map_vehicle = subject
+			if subject.follow_map_passengers == None:
+				subject.follow_map_passengers = set()
 			subject.follow_map_passengers.add(client)
 			client.send("MSG", {'text': 'You start following %s to other maps ([command]hopoff[/command] to stop)' % subject.name_and_username()})
 			subject.send("MSG", {'text': 'You will bring %s to other maps' % client.name_and_username()})
@@ -741,6 +750,8 @@ def fn_tpaccept(map, client, context, arg):
 		if client != subject:
 			subject.stop_current_ride()
 			subject.follow_map_vehicle = client
+			if client.follow_map_passengers == None:
+				client.follow_map_passengers = set()
 			client.follow_map_passengers.add(subject)
 			subject.send("MSG", {'text': 'You start following %s to other maps ([command]hopoff[/command] to stop)' % client.name_and_username()})
 			client.send("MSG", {'text': 'You will bring %s to other maps' % subject.name_and_username()})
@@ -825,11 +836,12 @@ def fn_tpcancel(map, client, context, arg):
 
 	my_id = client.protocol_id()
 	remove_keys = set()
-	for k in u.requests:
-		if k[0] == my_id:
-			remove_keys.add(k)
-	for k in remove_keys:
-		del u.requests[k]
+	if u.requests:
+		for k in u.requests:
+			if k[0] == my_id:
+				remove_keys.add(k)
+		for k in remove_keys:
+			del u.requests[k]
 
 	if len(remove_keys):
 		respond(context, 'Canceled request to '+arg)
@@ -846,7 +858,7 @@ def fn_dropoff(map, client, context, arg):
 	if arg == '':
 		client.stop_current_ride()
 	else:
-		u = find_client_by_username(arg, inside=client.passengers.union(client.follow_map_passengers))
+		u = find_client_by_username(arg, inside=(client.passengers or set()).union(client.follow_map_passengers or set()))
 		if u:
 			u.dismount()
 		else:
@@ -855,10 +867,10 @@ def fn_dropoff(map, client, context, arg):
 @cmd_command(category="Follow")
 def fn_carrywho(map, client, context, arg):
 	no_error = False
-	if len(client.follow_map_passengers):
+	if client.follow_map_passengers:
 		respond(context, 'You are bringing %s to other maps' % ', '.join(['%s (%s)' % (u.name, u.username_or_id()) for u in client.follow_map_passengers]))
 		no_error = True
-	if len(client.passengers):
+	if client.passengers:
 		respond(context, 'You are carrying %s' % ', '.join(['%s (%s)' % (u.name, u.username_or_id()) for u in client.passengers]))
 	elif no_error == False:
 		respond(context, 'You aren\'t carrying anything')
@@ -1229,7 +1241,7 @@ def permission_change(map, client, context, arg, command2):
 			map.allow &= ~permission_value
 			map.deny &= ~permission_value
 		map.broadcast("MSG", {'text': "%s sets the default \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[0], command2), 'class': 'server_map_message'})
-		if client not in map.contents:
+		if not map.contents or (client not in map.contents):
 			respond(context, "Changed a permission for %s:\nThe default \"%s\" permission is now [b]%s[/b]" % (map.name_and_username(), param[0], command2))
 		map.save_on_clean_up = True
 		if map.is_map():
@@ -1243,7 +1255,7 @@ def permission_change(map, client, context, arg, command2):
 		if ename != None:
 			map.change_permission_for_entity(as_int, permission_value, True if command2=="grant" else None)
 			map.broadcast("MSG", {'text': "%s sets entity \"%s\" (%d) \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), ename, as_int, param[0], command2), 'class': 'server_map_message'})
-			if client not in map.contents:
+			if not map.contents or (client not in map.contents):
 				respond(context, "Changed a permission for %s:\nThe entity \"%s\" (%d) \"%s\" permission is now [b]%s[/b]" % (map.name_and_username(), ename, as_int, param[0], command2))
 			return
 		respond(context, '"%d" Not a valid entity ID' % as_int, error=True)
@@ -1256,7 +1268,7 @@ def permission_change(map, client, context, arg, command2):
 			if groupname != None:
 				map.change_permission_for_entity(int(groupid), permission_value, True if command2=="grant" else None)
 				map.broadcast("MSG", {'text': "%s sets group \"%s\" (%s) \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), groupname, groupid, param[0], command2), 'class': 'server_map_message'})
-				if client not in map.contents:
+				if not map.contents or (client not in map.contents):
 					respond(context, "Changed a permission for %s:\nThe group \"%s\" (%s) \"%s\" permission is now [b]%s[/b]" % (map.name_and_username(), groupname, groupid, param[0], command2))
 				return
 		respond(context, '"%s" Not a valid group number' % groupid, error=True)
@@ -1269,7 +1281,7 @@ def permission_change(map, client, context, arg, command2):
 		elif command2 == "revoke":
 			map.guest_deny &= ~permission_value
 		map.broadcast("MSG", {'text': "%s sets the guest \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[0], command2), 'class': 'server_map_message'})
-		if client not in map.contents:
+		if not map.contents or (client not in map.contents):
 			respond(context, "Changed a permission for %s:\nThe guest \"%s\" permission is now [b]%s[/b]" % (map.name_and_username(), param[0], command2))
 		return
 
@@ -1287,13 +1299,14 @@ def permission_change(map, client, context, arg, command2):
 		value = False
 	map.change_permission_for_entity(uid, permission_value, value)
 	map.broadcast("MSG", {'text': "%s sets %s's \"%s\" permission to [b]%s[/b]" % (client.name_and_username(), param[1], param[0], command2), 'class': 'server_map_message'})
-	if client not in map.contents:
+	if not map.contents or (client not in map.contents):
 		respond(context, "Changed a permission for %s: %s's \"%s\" permission is now [b]%s[/b]" % (map.name_and_username(), param[1], param[0], command2))
 
 	# Refresh permissions of users on the map so changes take effect immediately
 	# (probably only need to do it for the affected user, if they're even present)
-	for u in map.contents:
-		u.update_map_permissions()
+	if map.contents:
+		for u in map.contents:
+			u.update_map_permissions()
 
 @cmd_command(category="Map", privilege_level="map_admin", syntax="permission user/!default", map_only=True)
 def fn_grant(map, client, context, arg):
@@ -1361,14 +1374,15 @@ def fn_permlist(map, client, context, arg):
 
 	# Temporary
 	temp_perm_list = []
-	for v in map.temp_permissions_given_to:
-		perms = "[li][b]Temp: %s (%s)[/b]: " % (noparse(v.name), v.protocol_id())
-		perm_bits = v.temp_permissions.get(map)
-		for k,v in permission.items():
-			if (perm_bits & v) == v: # allow
-				perms += "+"+k+" "
-		perms += "[/li]"
-		temp_perm_list.append(perms)
+	if map.temp_permissions_given_to:
+		for v in map.temp_permissions_given_to:
+			perms = "[li][b]Temp: %s (%s)[/b]: " % (noparse(v.name), v.protocol_id())
+			perm_bits = v.temp_permissions.get(map)
+			for k,v in permission.items():
+				if (perm_bits & v) == v: # allow
+					perms += "+"+k+" "
+			perms += "[/li]"
+			temp_perm_list.append(perms)
 	if len(temp_perm_list):
 		formatted.append("[ul]")
 		formatted.extend(sorted(temp_perm_list, key=str.casefold))
@@ -1403,6 +1417,8 @@ def fn_deletemytempitems(map, client, context, arg):
 	else:
 		respond(context, 'Valid options are: all, here, inventory', error=True)
 		return
+	if where == None:
+		return
 
 	deleted = 0
 	for e in where.copy():
@@ -1414,10 +1430,11 @@ def fn_deletemytempitems(map, client, context, arg):
 			continue
 
 		# Move everything inside to the parent
-		for child in e.contents.copy():
-			e.remove_from_contents(child)
-			if e.map:
-				e.map.add_to_contents(child)
+		if e.contents:
+			for child in e.contents.copy():
+				e.remove_from_contents(child)
+				if e.map:
+					e.map.add_to_contents(child)
 
 		if e.map:
 			e.map.remove_from_contents(e)
@@ -1798,11 +1815,12 @@ def fn_listeners(map, client, context, arg):
 				out.append('%s (%s)' % (u.username, i))
 	out_forward = []
 	out_listening_to_chat = []
-	for e in map.contents:
-		if e.forward_messages_to:
-			out_forward.append('%s (%s) → %s' % (e.name_and_username(), ', '.join(list(e.forward_message_types)), find_username_by_db_id(e.forward_messages_to) or e.forward_messages_to))
-		if hasattr(e, 'listening_to_chat_warning') and e.listening_to_chat_warning:
-			out_listening_to_chat.append(e.name_and_username())
+	if map.contents:
+		for e in map.contents:
+			if e.forward_messages_to:
+				out_forward.append('%s (%s) → %s' % (e.name_and_username(), ', '.join(list(e.forward_message_types or tuple())), find_username_by_db_id(e.forward_messages_to) or e.forward_messages_to))
+			if hasattr(e, 'listening_to_chat_warning') and e.listening_to_chat_warning:
+				out_listening_to_chat.append(e.name_and_username())
 
 	parts = []
 	if out:
@@ -1933,11 +1951,12 @@ def fn_kickallusers(map, client, context, arg):
 	if not map:
 		return
 	returned = 0
-	for e in map.contents.copy():
-		if e.is_client() and not e.has_permission(map, permission['admin'], False):
-			e.send("MSG", {'text': 'Kicked by '+client.name_and_username()})
-			e.send_home()
-			returned += 1
+	if map.contents:
+		for e in map.contents.copy():
+			if e.is_client() and not e.has_permission(map, permission['admin'], False):
+				e.send("MSG", {'text': 'Kicked by '+client.name_and_username()})
+				e.send_home()
+				returned += 1
 	respond(context, "Sent %d users home" % returned)	
 
 @cmd_command(category="Map", privilege_level="map_admin")
@@ -1951,23 +1970,25 @@ def fn_returnall(map, client, context, arg):
 		if owner_id == None:
 			failed_to_find(context, arg)
 			return
-		for e in map.contents.copy():
-			if not e.is_client() and e.owner_id != owner_id:
-				continue
-			e.send_home()
-			returned += 1
+		if map.contents:
+			for e in map.contents.copy():
+				if not e.is_client() and e.owner_id != owner_id:
+					continue
+				e.send_home()
+				returned += 1
 	else: # Return all from everyone meeting specific criteria
-		for e in map.contents.copy():
-			if e.is_client():
-				continue
-			if e.owner_id == client.owner_id:
-				continue
-			if e.vehicle and e.vehicle.is_client():
-				continue
-			if any(x.is_client() for x in client.passengers):
-				continue
-			e.send_home()
-			returned += 1
+		if map.contents:
+			for e in map.contents.copy():
+				if e.is_client():
+					continue
+				if e.owner_id == client.owner_id:
+					continue
+				if e.vehicle and e.vehicle.is_client():
+					continue
+				if any(x.is_client() for x in client.passengers):
+					continue
+				e.send_home()
+				returned += 1
 	respond(context, "Sent %d entities home" % returned)
 
 @cmd_command(category="Server Admin", privilege_level="server_admin", no_entity_needed=True)
@@ -2069,7 +2090,7 @@ def fn_ipbanlist(map, client, context, arg):
 
 @cmd_command(category="Teleport", privilege_level="no_scripts")
 def fn_goback(map, client, context, arg):
-	if len(client.tp_history) > 0:
+	if client.tp_history and len(client.tp_history) > 0:
 		pos = client.tp_history.pop()
 		client.switch_map(pos[0], new_pos=[pos[1], pos[2]], update_history=False)
 	else:
@@ -2531,10 +2552,11 @@ def fn_clientwho(map, client, context, arg):
 def fn_who(map, client, context, arg):
 	names = ''
 	formatted = []
-	for u in map.contents:
-		if not u.is_client():
-			continue
-		formatted.append(u.name_and_username())
+	if map.contents:
+		for u in map.contents:
+			if not u.is_client():
+				continue
+			formatted.append(u.name_and_username())
 	respond(context, 'List of users here: '+(", ".join(sorted(formatted, key=str.casefold))))
 
 @cmd_command(category="Who", syntax="name")
@@ -2585,12 +2607,13 @@ def fn_whereare(map, client, context, arg):
 
 		names += '[li][b]%s[/b] (%d): ' % (noparse(m.name), user_count)
 		users = []
-		for u in m.contents:
-			if u.is_client() and (override or (u.connection_attr('user_flags') & userflag['hide_location'] == 0)):
-				if arg == 'c' or arg == 'C':
-					users.append('%s<%d,%d>' % (u.name_and_username(), u.x, u.y))
-				else:
-					users.append(u.name_and_username())
+		if m.contents:
+			for u in m.contents:
+				if u.is_client() and (override or (u.connection_attr('user_flags') & userflag['hide_location'] == 0)):
+					if arg == 'c' or arg == 'C':
+						users.append('%s<%d,%d>' % (u.name_and_username(), u.x, u.y))
+					else:
+						users.append(u.name_and_username())
 		names += ", ".join(sorted(users, key=str.casefold)) + ' | [command]map %d[/command]' % m.db_id
 		if m.topic:
 			names += ' (📅[i]"%s" by %s[/i])' % (m.topic, m.topic_username)
@@ -2603,8 +2626,9 @@ def fn_whereare(map, client, context, arg):
 @cmd_command(alias=['ewho'], category="Who")
 def fn_entitywho(map, client, context, arg):
 	formatted = []
-	for u in map.contents:
-		formatted.append(u.name_and_username())
+	if map.contents:
+		for u in map.contents:
+			formatted.append(u.name_and_username())
 	respond(context, 'List of entities here: '+(", ".join(sorted(formatted, key=str.casefold))))
 
 @cmd_command(category="Map")
@@ -3152,6 +3176,12 @@ def fn_entity(map, client, context, arg):
 			return False
 		return (actor, perm_values)
 
+	def init_temp_permissions(a):
+		if a.temp_permissions == None:
+			a.temp_permissions = weakref.WeakSet()
+		if a.temp_permissions_given_to == None:
+			a.temp_permissions_given_to = weakref.WeakKeyDictionary()
+
 	save_entity = False
 
 	if subcommand == 'info':
@@ -3167,7 +3197,7 @@ def fn_entity(map, client, context, arg):
 		if e.creator_id:
 			creator_username = find_username_by_db_id(e.creator_id)
 			info += '\n[b]Creator:[/b] %s' % creator_username
-		if len(e.contents) and ((e.is_map() and (e.map_flags & mapflag['public'])) or client.has_permission(e, permission['list_contents'], False)):
+		if e.contents and ((e.is_map() and (e.map_flags & mapflag['public'])) or client.has_permission(e, permission['list_contents'], False)):
 			info += '\n[b]Contents:[/b] %s' % ', '.join(sorted((c.name_and_username() for c in e.contents), key=str.casefold))
 		respond(context, info)
 	elif subcommand == 'locate':
@@ -3303,7 +3333,7 @@ def fn_entity(map, client, context, arg):
 
 			# Add temporary permissions if they're there
 			other_entity = find_client_by_username(subarg)
-			if other_entity != None and other_entity in e.temp_permissions:
+			if e.temp_permissions and other_entity != None and other_entity in e.temp_permissions:
 				text += '\nAllow (temporary): %s' % permission_list_from_bitfield(e.temp_permissions[other_entity])
 			respond(context, text)
 	elif subcommand == 'grant':
@@ -3322,6 +3352,8 @@ def fn_entity(map, client, context, arg):
 			if params == False:
 				return
 			actor, permission_value = params
+			init_temp_permissions(actor)
+			init_temp_permissions(e)
 			actor.temp_permissions[e] = actor.temp_permissions.get(e, 0) | permission_value
 			e.temp_permissions_given_to.add(actor)
 			if permission_value == permission['minigame'] and actor.entity_type == entity_type['gadget'] and e in actor.want_controls_for:
@@ -3332,18 +3364,20 @@ def fn_entity(map, client, context, arg):
 			if params == False:
 				return
 			actor, permission_value = params
+			init_temp_permissions(actor)
+			init_temp_permissions(e)
 			if e in actor.temp_permissions:
 				actor.temp_permissions[e] &= ~permission_value
 				if actor.temp_permissions[e] == 0:
 					del actor.temp_permissions[e]
 					e.temp_permissions_given_to.discard(actor)
 	elif subcommand == 'temprevokeall':
-		if permission_check(permission['admin']):
+		if e.temp_permissions_given_to and permission_check(permission['admin']):
 			for other_entity in e.temp_permissions_given_to:
 				other_entity.temp_permissions.pop(e, None)
 			e.temp_permissions_given_to.clear()
 	elif subcommand == 'temprelease':
-		if permission_check(permission['admin']):
+		if e.temp_permissions_given_to and permission_check(permission['admin']):
 			actor = find_client_by_username(subarg)
 			if actor != None:
 				e.temp_permissions_given_to.discard(e)
@@ -3364,10 +3398,11 @@ def fn_entity(map, client, context, arg):
 			return
 
 		# Move everything inside to the parent
-		for child in e.contents.copy():
-			e.remove_from_contents(child)
-			if e.map:
-				e.map.add_to_contents(child)
+		if e.contents:
+			for child in e.contents.copy():
+				e.remove_from_contents(child)
+				if e.map:
+					e.map.add_to_contents(child)
 
 		# Delete from the database too
 		if e.db_id:

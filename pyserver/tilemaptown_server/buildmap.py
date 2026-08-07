@@ -169,6 +169,8 @@ class Map(Entity):
 			connection.loaded_maps = set([self.protocol_id()])
 
 	def resend_map_info_to_users(self, mai_only=False):
+		if not self.contents:
+			return
 		for user in self.contents:
 			if user.is_client():
 				connection = user.connection()
@@ -350,11 +352,12 @@ class Map(Entity):
 	def count_users_inside(self, recursive=True):
 		def search(inside):
 			n = 0
-			for e in inside.contents:
-				if e.is_client():
-					n += 1
-				if recursive:
-					n += search(e)
+			if inside.contents:
+				for e in inside.contents:
+					if e.is_client():
+						n += 1
+					if recursive:
+						n += search(e)
 			return n
 		return search(self)
 

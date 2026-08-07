@@ -551,10 +551,11 @@ def fn_BAG(connection, map, client, arg, context):
 			return
 
 		# Move everything inside to the parent
-		for child in delete_me.contents.copy():
-			delete_me.remove_from_contents(child)
-			if delete_me.map:
-				delete_me.map.add_to_contents(child)
+		if delete_me.contents:
+			for child in delete_me.contents.copy():
+				delete_me.remove_from_contents(child)
+				if delete_me.map:
+					delete_me.map.add_to_contents(child)
 
 		# Delete from the database too
 		if delete_me.db_id:
@@ -599,7 +600,7 @@ def fn_BAG(connection, map, client, arg, context):
 		if list_contents.get('recursive', False):
 			list_contents['contents'] = [child.bag_info() for child in list_me.all_children()]
 		else:
-			list_contents['contents'] = [child.bag_info() for child in list_me.contents]
+			list_contents['contents'] = [child.bag_info() for child in list_me.contents] if list_me.contents else []
 		client.send("BAG", {'list_contents': list_contents})
 
 @protocol_command()

@@ -38,7 +38,7 @@ async def main_timer():
 		# Let requests expire
 		removeFromAllEntitiesWithRequests = set()
 		for c in AllEntitiesWithRequests:
-			if c.requests == {}:
+			if not c.requests:
 				removeFromAllEntitiesWithRequests.add(c)
 				continue
 			# Remove requests that time out
