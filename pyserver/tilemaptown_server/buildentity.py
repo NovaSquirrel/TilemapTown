@@ -1096,7 +1096,7 @@ class Entity(PermissionsMixin, object):
 				c.execute("INSERT INTO Entity_Ext (id) VALUES (?)", (self.db_id,))
 		if self.have_ext:
 			misc = {}
-			if len(self.forward_message_types):
+			if self.forward_message_types:
 				misc['forward_message_types'] = list(self.forward_message_types)
 			if not self.is_client():
 				if self.status_type != None:
