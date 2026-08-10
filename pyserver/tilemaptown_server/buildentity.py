@@ -233,9 +233,8 @@ class Entity(PermissionsMixin, object):
 	status_message = None
 
 	# Temporary information
-	requests = None      # dict; Indexed by tuple: (username, type). Each item is an array with [timer, id, data]; data may be None. Timer decreases each second, then the request is deleted.
+	requests = None      # dict; Indexed by tuple: (username, type). Each item is an array with [timer, id, data]; data may be None. Timer decreases each second, then the request is deleted. Valid types include "tpa", "tpahere", "carry", "followme"; see buildcommand.py for more
 	rate_limiting = None # dict; Indexed by rate limiting type. Each item is a deque containing (minute, hits)
-	# valid types include "tpa", "tpahere", "carry", "followme"; see buildcommand.py for more
 	tp_history = None # deque
 
 	# Message forwarding; for bringing bot entities onto different maps, that can listen to messages
