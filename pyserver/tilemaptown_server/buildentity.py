@@ -396,19 +396,20 @@ class Entity(PermissionsMixin, object):
 			dir = command_params.get('dir')
 			callback_type = GlobalData['ScriptingCallbackType']
 
-			for gadget in self.contents:
-				if gadget.entity_type != entity_type['gadget'] or not hasattr(gadget, 'map_watch_zones') or not gadget.map_watch_zones:
-					continue
-				for index, zone in enumerate(gadget.map_watch_zones):
-					is_from = in_zone(fx, fy, zone)
-					is_to = in_zone(tx, ty, zone)
+			if self.contents:
+				for gadget in self.contents:
+					if gadget.entity_type != entity_type['gadget'] or not hasattr(gadget, 'map_watch_zones') or not gadget.map_watch_zones:
+						continue
+					for index, zone in enumerate(gadget.map_watch_zones):
+						is_from = in_zone(fx, fy, zone)
+						is_to = in_zone(tx, ty, zone)
 
-					if is_to and is_from:
-						gadget.receive_zone(mov_user, fx, fy, tx, ty, dir, index, callback_type.MAP_ZONE_MOVE)
-					elif is_to and not is_from:
-						gadget.receive_zone(mov_user, fx, fy, tx, ty, dir, index, callback_type.MAP_ZONE_ENTER)
-					elif not is_to and is_from:
-						gadget.receive_zone(mov_user, fx, fy, tx, ty, dir, index, callback_type.MAP_ZONE_LEAVE)
+						if is_to and is_from:
+							gadget.receive_zone(mov_user, fx, fy, tx, ty, dir, index, callback_type.MAP_ZONE_MOVE)
+						elif is_to and not is_from:
+							gadget.receive_zone(mov_user, fx, fy, tx, ty, dir, index, callback_type.MAP_ZONE_ENTER)
+						elif not is_to and is_from:
+							gadget.receive_zone(mov_user, fx, fy, tx, ty, dir, index, callback_type.MAP_ZONE_LEAVE)
 
 		# Add remote map on the params if needed, so that linked maps and listeners can see where the message came from
 		do_linked = send_to_links and self.is_map() and self.edge_id_links
@@ -426,7 +427,7 @@ class Entity(PermissionsMixin, object):
 				if linked_map == None:
 					continue
 				linked_map = get_entity_by_id(linked_map, load_from_db=False)
-				if linked_map == None:
+				if linked_map == None or not linked_map.contents:
 					continue
 				for client in linked_map.contents:
 					if not client.is_client():
@@ -539,12 +540,13 @@ class Entity(PermissionsMixin, object):
 		queue.append(self)
 		while queue:
 			item = queue.popleft()
-			for child in item.contents:
-				yield child
-				if child.id not in already_found:
-					already_found.add(child.id)
-					if child.contents:
-						queue.append(child)
+			if item.contents:
+				for child in item.contents:
+					yield child
+					if child.id not in already_found:
+						already_found.add(child.id)
+						if child.contents:
+							queue.append(child)
 
 	def send_map_info(self, item):
 		if not hasattr(item, 'connection'): # Map info should only get sent to clients, but it doesn't hurt to be sure
