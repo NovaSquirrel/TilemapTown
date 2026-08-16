@@ -416,8 +416,9 @@ function viewBuild() {
 }
 
 function refreshCustomizeWindow() {
-	document.getElementById("quickstatus").value = PlayerWho[PlayerYou].status ?? "";
-	document.getElementById("quickstatus").value = PlayerWho[PlayerYou].status_message ?? "";
+	let myStatus = PlayerWho[PlayerYou].status ?? "";
+	document.getElementById("quickstatus").value = myStatus != "." ? myStatus : "";
+	document.getElementById("quickstatustext").value = PlayerWho[PlayerYou].status_message ?? "";
 	document.getElementById("newnick").value = PlayerWho[PlayerYou].name ?? "";
 	document.getElementById("myNameColor").value = PlayerWho[PlayerYou]?.who_tags?.name_color ?? "#ffffff";
 	if (typeof PlayerWho[PlayerYou].pic[0] === "string") {
