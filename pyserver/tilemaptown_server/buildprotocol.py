@@ -16,7 +16,7 @@
 
 import json, datetime, time, weakref, secrets
 from .buildglobal import *
-from .buildcommand import handle_user_command, tile_is_okay, data_disallowed_for_entity_type, send_private_message, send_message_to_map, entity_types_users_can_change_data_for, apply_rate_limiting, attach_result_to_context, respond, separate_first_word
+from .buildcommand import handle_user_command, tile_is_okay, data_disallowed_for_entity_type, send_private_message, send_message_to_map, entity_types_users_can_change_data_for, apply_rate_limiting, attach_result_to_context, respond, separate_first_word, find_entity_name
 from .buildentity import Entity, GenericEntity
 from .buildclient import Client
 from .buildgadget import Gadget, GadgetDoodleBoard, GadgetMiniTilemap
@@ -1669,6 +1669,75 @@ def ext_get_morph_list(connection, map, client, context, arg, name):
 def ext_get_saved_pic_list(connection, map, client, context, arg, name):
 	data = {"list": {_:{"pic":[client.saved_pics[_],0,0]} for _ in client.saved_pics.keys()}}
 	connection.send("EXT", {name: data})
+
+@ext_protocol_command("search")
+def ext_search(connection, map, client, context, arg, name):
+	search_type = arg['type']
+	results = []
+	is_admin = client.username in Config["Server"]["Admins"]
+	out = {}
+	if "echo" in context:
+		out["echo"] = context["echo"]
+	c = Database.cursor()
+
+	if search_type == "owned_maps":
+		for row in c.execute('SELECT m.id, m.name FROM Entity m WHERE m.owner_id=? AND m.type == ?', (connection.db_id, entity_type['map'])):
+			results.append({"name": row[1], "id": row[0]})
+	elif search_type == "public_maps":
+		for row in c.execute('SELECT e.id, e.name, u.username FROM Entity e, Map m, User u WHERE e.owner_id=u.entity_id AND e.id=m.entity_id AND (m.flags&1)!=0'):
+			entry = {"name": row[1], "id": row[0], "owner_username": row[2]}
+			entity = get_entity_by_id(row[0], load_from_db=False)
+			if entity != None and entity.is_map():
+				entry["user_count"] = entity.count_users_inside()
+			results.append(entry)
+	elif search_type == "public_maps_with_users" or (is_admin and search_type == "all_maps_with_users"):
+		override = search_type == "all_maps_with_users" 
+		for m in AllMaps:
+			if not override and (m.map_flags & mapflag['public'] == 0):
+				continue
+			user_count = m.count_users_inside()
+			if user_count == 0:
+				continue
+			users = []
+			entry = {"name": m.name, "id": m.protocol_id(), "owner_username": find_username_by_db_id(m.owner_id), "user_count": user_count, "users": users}
+			if m.contents:
+				for u in m.contents:
+					if u.is_client() and (override or (u.connection_attr('user_flags') & userflag['hide_location'] == 0)):
+						users.append({"name": u.name, "username": u.username_or_id()})
+			if m.topic:
+				entry["topic"] = m.topic
+				entry["topic_username"] = m.topic_username
+			results.append(entry)
+	elif search_type == "all_maps" and is_admin:
+		for row in c.execute('SELECT e.id, e.name, u.username FROM Entity e, Map m, User u WHERE e.owner_id=u.entity_id AND e.id=m.entity_id'):
+			entry = {"name": row[1], "id": row[0], "owner_username": row[2]}
+			entity = get_entity_by_id(row[0], load_from_db=False)
+			if entity != None and entity.is_map():
+				entry["user_count"] = entity.count_users_inside()
+			results.append(entry)
+	elif search_type == "all_online_users":
+		for u in AllClients:
+			results.append({"name": u.name, "id": u.protocol_id(), "client_name": u.connection_attr('client_name')})
+	elif search_type == "my_groups":
+		for row in c.execute('SELECT g.id, g.name, m.accepted_at FROM Entity g, Group_Member m WHERE g.id=m.group_id AND m.member_id=?', (client.db_id,)):
+			results.append({"name": row[1], "id": row[0], "accepted": bool(row[2])})
+	elif search_type == "owned_groups":
+		for row in c.execute('SELECT g.id, g.name FROM Entity g WHERE g.owner_id=? AND type=?', (client.db_id, entity_type['group'])):
+			results.append({"name": row[1], "id": row[0]})
+	elif search_type == "group_members":
+		group_id = arg['entity_id']
+		group_name = find_entity_name(group_id)
+		if group_name != None:
+			for row in c.execute('SELECT g.id, g.name, m.accepted_at FROM Entity g, Group_Member m WHERE m.group_id=? AND m.member_id=g.id', (group_id,)):
+				results.append({"name": row[1], "id": row[0], "accepted": bool(row[2])})
+		else:
+			out["error"] = "invalid_id"
+	else:
+		out["error"] = "invalid_type"
+
+	out["count"] = len(results)
+	out["data"] = results
+	connection.send("EXT", {name: out})
 
 @ext_protocol_command("user_particle")
 def ext_user_particle(connection, map, client, context, arg, name):

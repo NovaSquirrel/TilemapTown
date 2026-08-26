@@ -1,5 +1,5 @@
 === Tilemap Town protocol ===
-By NovaSquirrel. Last updated 2026-07-15.
+By NovaSquirrel. Last updated 2026-08-26.
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119 when, and only when, they appear in all capitals, as shown here.
 
@@ -882,6 +882,39 @@ Get a list of the morphs you have on this account.
 --> EXT {"get_saved_pic_list": {}}
 <-- EXT {"get_saved_pic_list": {"list": {"NAME": {"pic": [0,0,0]}}}}
 Get a list of the saved pics you have on this character.
+
+--> EXT {"search": {"type": "public_maps"}}
+<-- EXT {"search": {"data": [{result}, {result}, {result}]}}
+Request a list of maps, groups, or other entities.
+Use "ack_req" or "echo" fields to connect the results message to the search command. If either is present, an "echo" field will be in the response with the same value.
+No sorting is done on the results by the server, and there is currently no page support.
+
+Request fields:
+	R"type": string; What kind of information to search for
+		"owned_maps": List of maps that your account owns
+			{name, id}
+		"public_maps": List of maps that have been marked as public
+			{name, id, owner_username, user_count}
+		"public_maps_with_users": List of maps that have at least one user on them, with event information if applicable; like /whereare
+			{name, id, owner_username, user_count, users:[{}], topic, topic_username}
+		"all_maps": List of all maps that exist; must be a server admin
+			{id, name, owner_username, user_count}
+		"all_maps_with_users": List of all maps that have users on them, public or not; must be a server admin
+			{name, id, owner_username, user_count, users:[{}], topic, topic_username}
+		"all_online_users": List of all users that are currently online, like /gwho
+			{name, id, client_name}
+		"my_groups": List of groups that your account is a member of
+			{name, id, accepted}
+		"owned_groups": List of groups that your account owns
+			{name, id}
+		"group_members": List of members in a specific group
+			{name, id, accepted}
+	"entity_id": integer; Group ID number for "group_members"
+
+Response fields:
+	R"data": array; List of results, each formatted as a JSON object
+	"count" integer; Number of results that were found
+	"error" string; May be "invalid_type" or "invalid_id" if there is a problem with the search
 
 
 === Extension: bulk_build ===
