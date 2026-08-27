@@ -40,6 +40,7 @@ let MessageAckReqNumber = 0; // Incremented every time a key is required, and ad
 let JoinedMapYet = false;
 let DefaultPics = {};
 let ServerDoodleBoardTilesets = {};
+let ShowedMapChangeTutorial = false;
 const SupportedTakeControlsKeys = ["turn-ne", "move-ne", "turn-se", "move-se", "turn-nw", "move-nw", "turn-sw", "move-sw", "turn-w", "move-w", "turn-s", "move-s", "turn-n", "move-n", "turn-e", "move-e", "use-item", "cancel", "hotbar-1", "hotbar-2", "hotbar-3", "hotbar-4", "hotbar-5", "hotbar-6", "hotbar-7", "hotbar-8", "hotbar-9", "hotbar-10"];
 const CLIENT_NAME = "Tilemap Town Web Client";
 
@@ -328,6 +329,9 @@ function receiveServerMessage(cmd, arg) {
             }
           }
           MessagesToRetry = newList;
+        } else if(!ShowedMapChangeTutorial && !OnlinePassword) {
+          logMessage('Note: Each map has its own separate chat', 'server_message', {'isSilent': true});
+          ShowedMapChangeTutorial = true;
         }
 
         // Clean up MapsByID
