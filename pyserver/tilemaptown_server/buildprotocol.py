@@ -1056,6 +1056,21 @@ def fn_WHO(connection, map, client, arg, context):
 
 		patch_mini_tilemap['id'] = actor.protocol_id()
 		map.broadcast("WHO", {"patch_mini_tilemap": patch_mini_tilemap})
+
+	elif "get" in arg:
+		ids = arg["get"]["id"]
+		if isinstance(ids, list):
+			ids = set(ids)
+		else:
+			ids = (ids,)
+		client.start_batch()
+		for i in ids:
+			e = get_entity_by_id(i, load_from_db=False)
+			if e == None or not (e.map is client.map):
+				continue
+			client.send("WHO", {'add': e.who()})
+		client.finish_batch()
+
 	else:
 		connection.protocol_error(context, text='Not implemented')
 
@@ -1096,6 +1111,7 @@ server_feature_attribute = {
 	"entity_message_forwarding": "can_forward_messages_to",
 	"user_watch_with_who": "user_watch_with_who",
 	"message_acknowledgement": "can_acknowledge",
+	"get_who_data_as_needed": "get_who_data_as_needed",
 }
 
 @protocol_command(pre_identify=True)

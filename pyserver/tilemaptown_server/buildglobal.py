@@ -26,13 +26,15 @@ LoadedAnyServerResources = [False]
 TempLogs = [None, None, None, None] # Connect, Build, Upload, Rollback info
 
 # Information about the code itself
+initial_feature_version = {"version": "0.0.1", "minimum_version": "0.0.1"}
 available_server_features = {
-	"see_past_map_edge": {"version": "0.0.1", "minimum_version": "0.0.1"},
-	"batch": {"version": "0.0.1", "minimum_version": "0.0.1"},
-	"bulk_build": {"version": "0.0.1", "minimum_version": "0.0.1"},
-	"entity_message_forwarding": {"version": "0.0.1", "minimum_version": "0.0.1"},
-	"user_watch_with_who": {"version": "0.0.1", "minimum_version": "0.0.1"},
-	"message_acknowledgement": {"version": "0.0.1", "minimum_version": "0.0.1"},
+	"see_past_map_edge": initial_feature_version,
+	"batch": initial_feature_version,
+	"bulk_build": initial_feature_version,
+	"entity_message_forwarding": initial_feature_version,
+	"user_watch_with_who": initial_feature_version,
+	"message_acknowledgement": initial_feature_version,
+	"get_who_data_as_needed": initial_feature_version,
 }
 server_software_name = "Tilemap Town server"
 server_software_version = "0.2.0"

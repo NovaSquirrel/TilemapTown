@@ -45,6 +45,9 @@ let currentRandomFramesMap  = new Map();
 let tenthOfSecondTimerAtPreviousDraw = null;
 let canPickNewRandomFrame = true;
 
+let WhoGetRequestList = [];
+let WhoGetRequested = {};
+
 ///////////////////////////////////////////////////////////
 // Autotile related functions
 ///////////////////////////////////////////////////////////
@@ -315,7 +318,12 @@ function drawMapEntities(ctx, offsetX, offsetY, viewWidth, viewHeight, pixelCame
 			// Mini tilemap, if it's present
 			try {
 				if(PlayerAnimation[index].miniTilemapDirty) {
-					if(Mob.mini_tilemap && Mob.mini_tilemap_data && (Mob.mini_tilemap.visible ?? true)) {
+					if(Mob.mini_tilemap === false) {
+						if(!WhoGetRequested[Mob.id]) {
+							WhoGetRequested[Mob.id] = true;
+							WhoGetRequestList.push(Mob.id);
+						}
+					} else if(Mob.mini_tilemap && Mob.mini_tilemap_data && (Mob.mini_tilemap.visible ?? true)) {
 						let mini_tilemap_map_w = Mob.mini_tilemap.map_size[0];
 						let mini_tilemap_map_h = Mob.mini_tilemap.map_size[1];
 						let mini_tilemap_tile_w = Mob.mini_tilemap.tile_size[0];
@@ -992,6 +1000,13 @@ function drawMap() {
 	}
 
 	FlushIconSheetRequestList();
+	if (WhoGetRequestList.length) {
+		if (WhoGetRequestList.length == 1)
+			SendCmd("WHO", {"get": {"id": WhoGetRequestList[0]}});
+		else
+			SendCmd("WHO", {"get": {"id": WhoGetRequestList}});
+		WhoGetRequestList = [];
+	}
 }
 
 function drawText(ctx, x, y, text) {

@@ -413,6 +413,11 @@ If it's not present, treat it like it's "map"; possible values are:
 		Will contain "id", "name" and "username".
 "type" MUST be handled, even if the handling is just discarding the entire message when it's present and isn't "map".
 
+--> WHO {"get": {"ids": ID}}
+--> WHO {"get": {"ids": [ID, ID, ID...]}}
+<-- WHO {"add": {"name": name, "pic": [s, x, y], "x": x, "y": y, "dir", dir, "id": ID}}
+	Manually request to receive information about one or more entities again. IDs must be for entities on the same map as your entity. Intended for use with the "get_who_data_as_needed" feature.
+
 
 === Miscellaneous ===
 --- IDN ---
@@ -1005,6 +1010,11 @@ The server can also request the client to acknowledge a message.
 
 If the client sends multiple messages with the same "ack_req" value, only the first one the server receives will have an effect.
 The server will still send an ACK in response to the messages it's otherwise ignoring, and in the case of PRI, MSG and /tell via CMD, it will send the client the acknowledgement message it would have received.
+
+
+=== Extension: get_who_data_as_needed ===
+When enabled, the "desc", "mini_tilemap" and "mini_tilemap_data" fields are not automatically included in WHO "list" messages; if those values are available, they will be the boolean value "false" (to make it easier to use this feature with code that assumes the mini tilemap is present and usable if the value isn't falsy).
+Instead, these can be retrieved with WHO "get" messages. Intended to save bandwidth by not receiving the mini tilemap data until the entity is actually onscreen.
 
 
 === WebSocket disconnect reasons ===

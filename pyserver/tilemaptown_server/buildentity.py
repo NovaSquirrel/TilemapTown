@@ -463,7 +463,13 @@ class Entity(PermissionsMixin, object):
 
 		# Give the item a list of the other stuff in the container it was put in
 		if item.is_client():
-			item.send("WHO", {'list': self.who_contents(), 'you': item.protocol_id()})
+			who_contents = self.who_contents()
+			if item.connection_attr('get_who_data_as_needed'):
+				for _,i in who_contents.items():
+					for v in ('desc', 'mini_tilemap', 'mini_tilemap_data'):
+						if v in i and i[v]:
+							i[v] = False
+			item.send("WHO", {'list': who_contents, 'you': item.protocol_id()})
 
 		# Tell everyone in the container that the new item was added
 		self.broadcast("WHO", {'add': item.who()}, remote_category=maplisten_type['entry'])

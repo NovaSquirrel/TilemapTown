@@ -419,8 +419,8 @@ function receiveServerMessage(cmd, arg) {
           var y1     = src[1];
           var width = 1, height = 1;
           if(src.length == 4) {
-			  width  = src[2];
-			  height = src[3];
+            width  = src[2];
+            height = src[3];
           }
           var x2 = dst[0];
           var y2 = dst[1];
@@ -493,6 +493,8 @@ function receiveServerMessage(cmd, arg) {
       if(arg.list) {
         PlayerWho = arg.list;
         PlayerImages = {}; // reset images list
+        WhoGetRequestList = [];
+        WhoGetRequested = {};
         let yourPlayerAnimation = PlayerAnimation[PlayerYou];
         PlayerAnimation = {}; // reset animation states
         if (yourPlayerAnimation)
@@ -644,7 +646,7 @@ function receiveServerMessage(cmd, arg) {
         }
       } else if(arg.new_id) {
         PlayerWho[arg.new_id.new_id] = PlayerWho[arg.new_id.id];
-		PlayerAnimation[arg.new_id.new_id] = PlayerAnimation[arg.new_id.id];
+        PlayerAnimation[arg.new_id.new_id] = PlayerAnimation[arg.new_id.id];
         if(arg.new_id.id == PlayerYou)
           PlayerYou = arg.new_id.new_id;
         // TODO: Search for the old ID and update it anywhere else it might appear, like your inventory?
@@ -735,7 +737,10 @@ function receiveServerMessage(cmd, arg) {
       }
       if(arg['info'] && editItemWaitingForDataID === arg['info']['id']) {
         editItemWaitingForDataID = undefined;
-        editItemShared(arg['info']);
+        let item = DBInventory[arg.info.id] || PlayerWho[arg.info.id];
+        if(item && item.desc === false && arg.info.desc)
+          item.desc = arg.info.desc;
+        editItemShared(arg.info);
       }
       NeedInventoryUpdate = true;
       break;
@@ -1173,6 +1178,7 @@ function ConnectToServer() {
 			"batch": {"version": "0.0.1"},
 			"bulk_build": {"version": "0.0.1"},
 			"message_acknowledgement": {"version": "0.0.1"},
+			"get_who_data_as_needed": {"version": "0.0.1"},
 		};
 
 		if(OnlineUsername != "") {

@@ -352,6 +352,7 @@ class Connection(object):
 		self.can_forward_messages_to = False
 		self.user_watch_with_who = False
 		self.can_acknowledge = False
+		self.get_who_data_as_needed = False
 		self.features = set() # list of feature names
 
 	def load_settings(self, username):
