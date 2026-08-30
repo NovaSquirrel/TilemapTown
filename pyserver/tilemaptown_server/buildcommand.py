@@ -2136,8 +2136,10 @@ def fn_map(map, client, context, arg):
 		if map_id == 0:
 			map_id = get_database_meta('default_map')
 
+		old_map = client.map
 		if client.switch_map(map_id, new_pos=new_pos):
-			respond(context, 'Teleported to map %s' % map_id)
+			if not (client.map is old_map):
+				respond(context, 'Teleported to map %s' % map_id)
 		else:
 			respond(context, 'Couldn\'t go to map %s' % map_id, error=True)
 	except:
