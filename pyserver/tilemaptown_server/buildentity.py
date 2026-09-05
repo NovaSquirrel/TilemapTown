@@ -1129,7 +1129,7 @@ class Entity(PermissionsMixin, object):
 		c = Database.cursor()
 		if text == None:
 			c.execute("UPDATE Entity SET data=NULL, compressed_data=NULL WHERE id=?", (self.db_id,))
-		elif len(text) >= 4096:
+		elif len(text) >= 1024:
 			c.execute("UPDATE Entity SET data='zlib', compressed_data=? WHERE id=?", (zlib.compress(text.encode(), level = 5), self.db_id,))
 		else:
 			c.execute("UPDATE Entity SET data=?, compressed_data=NULL WHERE id=?", (text, self.db_id,))
