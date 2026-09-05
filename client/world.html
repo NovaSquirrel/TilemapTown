@@ -658,7 +658,7 @@
 	<summary class="unselectable">More options</summary>
 	<table border="1">
 	<tr><th>Move anim<br>duration</th><td><input id="userpic-setup-move-anim-time" /></th></tr>
-	<tr><th>X offset<br>per direction</th><td><input id="userpic-setup-x-offsets" /></th></tr>
+	<tr><th>X offset<br>per direction</th><td><input id="userpic-setup-x-offsets" placeholder="-4,4" /></th></tr>
 	<tr><th>Y offset<br>per direction</th><td><input id="userpic-setup-y-offsets" /></th></tr>
 	<tr><th>Z offset<br>per direction</th><td><input id="userpic-setup-z-offsets" /></th></tr>
 	</table>
@@ -1290,7 +1290,7 @@
 		<td>
 			<table border="1">
 			<tr><th>Tools</th><td><table><tr><td><button id="paintTool1px" onclick="paintTool(1);">1 px</button></td><td><button id="paintTool2px" onclick="paintTool(2);">2 px</button></td><td><button id="paintTool3px" onclick="paintTool(3);">3 px</button></td><tr><tr><td><button id="paintToolPlus" onclick="paintTool('+');">&nbsp;+&nbsp;</button></td><td id="paintToolFillTd"><button id="paintToolFill" onclick="paintTool('fill')">Fill</button></td><td id="paintToolPickTd"><button id="paintToolPick" onclick="paintTool('pick');">Pick</button></td><td id="paintToolRecolorTd"><button id="paintToolRecolor" onclick="paintTool('recolor');">Recolor</button></td><td id="paintToolInvertTd"><button id="paintToolInvert" onclick="paintTool('invert');">Invert</button></td></tr></table></td></tr>
-			<tr><th>Canvas</th><td><table><tr><td><button onclick="paintFillAll();">Fill all</button></td><td><button onclick="paintSavePNG();">Save PNG</button></td></tr><tr id="paint4x2CanvasButtons"><td><button onclick="paintInvertAll();">Invert all</button></td><td><button onclick="paintRecolorAll();">Recolor all</button></td></tr><tr><td><button onclick="paintUndo();">Undo</button></td><td></td></tr></table></tr>
+			<tr><th>Canvas</th><td><table><tr><td><button onclick="paintFillAll();">Fill all</button></td><td><button onclick="paintSavePNG();">Save PNG</button></td></tr><tr id="paint4x2CanvasButtons"><td><button onclick="paintInvertAll();">Invert all</button></td><td><button onclick="paintRecolorAll();">Recolor all</button></td></tr><tr><td><button onclick="paintUndo();">Undo</button></td><td><button onclick="paintMoreCommands()">Shift</button></td><td></td></tr></table></tr>
 			<tr><th>1&times;</th><td><canvas id="doodleBoardPaintPreview" width="32" height="32"></canvas></td></tr>
 			<tr><td colspan="2"><label class="unselectable">Zoom <input id="paintZoom" oninput="paintChangeZoom();" value="8" type="number" min="1" max="12"></label> Grid:<input id="paintGridX" size="2" value="0" oninput="paintChangeGrid();">&times;<input id="paintGridY" size="2" value="0" oninput="paintChangeGrid();"></td><tr>
 			</table>

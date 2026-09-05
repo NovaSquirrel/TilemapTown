@@ -3703,6 +3703,44 @@ function paintUndo() {
 	}
 }
 
+function paintMoreCommands() {
+	let text = prompt("Enter a shift amount, formatted as\nx y");
+	if (!text) return;
+	args = text.split(" ").filter(v => v);
+	console.log(args);
+	if(args.length === 2) {
+		let shiftX = -parseInt(args[0]);
+		let shiftY = -parseInt(args[1]);
+		if(Number.isNaN(shiftX) || Number.isNaN(shiftY)) {
+			alert(`Shift amounts must be numbers\n(you put: ${args[0]} ${args[1]})`);
+			return;
+		}
+		paintMakeUndoStep();
+		if (paintMode2x1) {
+			let pixels = new Array(paintPixelWidth * paintPixelHeight);
+			for (let i=0; i<paintMapData.length; i++) {
+				pixels[i*2+0] = paintMapData[i] & 63;
+				pixels[i*2+1] = (paintMapData[i] >> 6) & 63;
+			}
+			for (let i=0; i<paintMapData.length; i++) {
+				let x = wrapWithin(i * 2 % paintPixelWidth + shiftX, paintPixelWidth);
+				let y = wrapWithin(Math.floor(i * 2 / paintPixelWidth) + shiftY, paintPixelHeight);
+				paintMapData[i] = pixels[y * paintPixelWidth + x] | (pixels[y * paintPixelWidth + wrapWithin(x+1, paintPixelWidth)]<<6);
+			}
+		} else {
+			let copy = [...paintMapData];
+			for (let i=0; i<paintMapData.length; i++) {
+				let x = wrapWithin(i % paintMapWidth + shiftX, paintMapWidth);
+				let y = wrapWithin(Math.floor(i / paintMapWidth) + shiftY, paintMapHeight);
+				paintMapData[i] = copy[y*paintMapWidth+x];
+			}
+		}
+		paintFullUpdate();
+	} else if (args.length) {
+		alert(`Shift button requires two numbers\n(you put: ${text})`);
+	}
+}
+
 function paintChangeZoom() {
 	let zoom = parseInt(document.getElementById('paintZoom').value)
 	if (Number.isNaN(zoom))
