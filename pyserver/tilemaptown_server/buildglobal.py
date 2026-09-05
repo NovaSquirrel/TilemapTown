@@ -93,6 +93,8 @@ def loadConfigJson(clearLogs=True):
 	setConfigDefault("Server",   "MaxEntityWidth", 64)
 	setConfigDefault("Server",   "MaxEntityHeight", 64)
 	setConfigDefault("Server",   "AllowedMusicFileExtensions", [".mod", ".s3m", ".xm", ".it", ".mptm", ".flac", ".mp3", ".ogg", ".opus", ".wav"])
+	setConfigDefault("Server",   "EntityCompressionThreshold", 600)
+	setConfigDefault("Server",   "EntityCompressionLevel", 5)
 
 	setConfigDefault("Security", "ProxyOnly",        False)
 	setConfigDefault("Security", "AllowedOrigins",   None)

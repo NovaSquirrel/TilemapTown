@@ -126,6 +126,14 @@ Server.AllowedMusicFileExtensions
 Default: [".mod", ".s3m", ".xm", ".it", ".mptm", ".flac", ".mp3", ".ogg", ".opus", ".wav"]
 Which file extensions are allowed with the /mapmusic command.  Must be lowercase. If null, all extensions are allowed.
 
+Server.EntityCompressionThreshold
+Default: 600
+How many bytes of data an entity must have before it's eligible for zlib compression.
+
+Server.EntityCompressionLevel
+Default: 5
+Compression strength; 0 to 9, where higher numbers compress better but are slower. See https://docs.python.org/3/library/zlib.html
+
 Security.ProxyOnly
 Default: false
 If true, server will reject connections made from IP addresses that do not match the server's own IP
