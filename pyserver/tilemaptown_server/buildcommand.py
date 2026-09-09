@@ -788,7 +788,11 @@ def fn_tpaccept(map, client, context, arg):
 
 		client.vehicle = subject
 		subject.vehicle = client
+		if client.passengers == None:
+			client.passengers = set()
 		client.passengers.add(subject)
+		if subject.passengers == None:
+			subject.passengers = set()
 		subject.passengers.add(client)
 
 		if client.map != None:
