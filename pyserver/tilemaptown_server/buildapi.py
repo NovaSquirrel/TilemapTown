@@ -30,6 +30,16 @@ MAIN_API_CORS_HEADERS_CACHED = {
 	"Access-Control-Allow-Methods": "GET"
 }
 
+# Only needed for update_image_url_everywhere
+def separate_first_word(text):
+	space = text.find(" ")
+	command = text
+	arg = ""
+	if space >= 0:
+		command = text[0:space]
+		arg = text[space+1:]
+	return (command, arg)
+
 routes = web.RouteTableDef()
 @routes.get('/v1/town_info')
 async def town_info(request):
@@ -346,16 +356,33 @@ def update_image_url_everywhere(connection, old_url, new_url):
 				updated_pic = True
 			if updated_pic:
 				entity.save_on_clean_up = True
-				entity.broadcast_who()
+				if entity.map:
+					entity.map.broadcast('WHO', {'update': {'id': entity.protocol_id(), 'pic': entity.pic}})
 
 		if is_client_and_entity(entity): # If it's a client, update saved pics and morphs
 			for k, saved_pic in entity.saved_pics.items():
 				if saved_pic == old_url:
 					entity.saved_pics[k] = new_url
+				elif "{" in saved_pic:
+					url, ext = separate_first_word(saved_pic)
+					ext = loads_if_not_none(ext)
+					if not ext or not isinstance(ext, dict):
+						continue
+					updated_pic = False
+					if url == old_url:
+						url = new_url
+						updated_pic = True
+					if ext.get('u') == old_url:
+						ext['u'] = new_url
+						updated_pic = True
+					if updated_pic:
+						entity.saved_pics[k] = url + " " + json.dumps(ext)
 			for k, morph in entity.morphs.items():
 				morph_pic = morph.get('pic')
 				if morph_pic and morph_pic[0] == old_url:
 					morph_pic[0] = new_url
+				if morph_pic and isinstance(morph_pic[1], dict) and morph_pic[1].get('u') == old_url:
+					morph_pic[1]['u'] = new_url
 
 		if entity.is_map():
 			if entity.map_wallpaper and entity.map_wallpaper.get('url') == old_url:
