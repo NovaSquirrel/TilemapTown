@@ -456,7 +456,7 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 	if (!tile) {
 		return;
 	}
-	if (!IconSheets[tile.pic[0]]) {
+	if (!tile.pic || !IconSheets[tile.pic[0]] || !IconSheets[tile.pic[0]]?.complete) {
 		RequestImageIfNeeded(tile.pic[0]);
 		// Draw a "?" fallback so users can notice tiles with invalid pic[0] and delete/fix them
 		ctx.drawImage(IconSheets["#"], 1 * 16, 0 * 16, 16, 16, drawAtX, drawAtY, 16, 16);
@@ -673,7 +673,10 @@ function drawAtomWithAutotile(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCo
 			return; // Don't do the regular draw at the end
 		}
 	}
-	ctx.drawImage(IconSheets[tile.pic[0]], picX * 16, picY * 16, 16, 16, drawAtX, drawAtY, 16, 16);
+	try {
+		ctx.drawImage(IconSheets[tile.pic[0]], picX * 16, picY * 16, 16, 16, drawAtX, drawAtY, 16, 16);
+	} catch (error) {
+	}
 }
 
 function drawTurf(ctx, drawAtX, drawAtY, tile, map, mapCoordX, mapCoordY) {
