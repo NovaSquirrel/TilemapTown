@@ -122,6 +122,10 @@ Server.MaxEntityHeight
 Default: 64
 How tall an entity is allowed to be in pixels, when using extended entity pics.
 
+Server.AllowedImageFileExtensions
+Default: [".png"]
+Which file extensions are allowed with the /userpic command, and other places images are allowed.  Must be lowercase. If null, all extensions are allowed.
+
 Server.AllowedMusicFileExtensions
 Default: [".mod", ".s3m", ".xm", ".it", ".mptm", ".flac", ".mp3", ".ogg", ".opus", ".wav"]
 Which file extensions are allowed with the /mapmusic command.  Must be lowercase. If null, all extensions are allowed.

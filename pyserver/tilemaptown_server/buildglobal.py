@@ -93,6 +93,7 @@ def loadConfigJson(clearLogs=True):
 	setConfigDefault("Server",   "MaxEntityWidth", 64)
 	setConfigDefault("Server",   "MaxEntityHeight", 64)
 	setConfigDefault("Server",   "AllowedMusicFileExtensions", [".mod", ".s3m", ".xm", ".it", ".mptm", ".flac", ".mp3", ".ogg", ".opus", ".wav"])
+	setConfigDefault("Server",   "AllowedImageFileExtensions", [".png"])
 	setConfigDefault("Server",   "EntityCompressionThreshold", 600)
 	setConfigDefault("Server",   "EntityCompressionLevel", 5)
 
@@ -611,8 +612,11 @@ def user_file_url_is_ok(url):
 			return True
 	return False
 
+def image_format_is_okay(url):
+	return (not Config["Server"]["AllowedImageFileExtensions"] or any(url.lower().endswith(_) for _ in Config["Server"]["AllowedImageFileExtensions"]))
+
 def image_url_is_okay(url):
-	return user_file_url_is_ok(url) and url.lower().endswith(".png")
+	return user_file_url_is_ok(url) and image_format_is_okay(url)
 
 def pic_is_okay(pic):
 	if not isinstance(pic, list) and not isinstance(pic, tuple):

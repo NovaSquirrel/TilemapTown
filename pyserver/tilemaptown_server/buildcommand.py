@@ -139,7 +139,7 @@ def data_disallowed_for_entity_type(type, data):
 			if not isinstance(step, list) or len(step) != 2 or not isinstance(step[0], str):
 				return 'Invalid gadget step'
 	elif type == entity_type['image'] and not image_url_is_okay(data):
-		return 'Tile sheet URL doesn\'t match any allowlisted sites'
+		return 'Tile sheet URL doesn\'t match any allowlisted sites, or is not an accepted format'
 	elif type == entity_type['map_tile']:
 		tile_ok, tile_reason = tile_is_okay(data, parse_json=True)
 		if not tile_ok:
@@ -1642,7 +1642,10 @@ def fn_mapwallpaper(map, client, context, arg):
 			respond(context, 'No wallpaper to remove', error=True)
 			return
 	elif arg[0].startswith("http"):
-		if image_url_is_okay(arg[0]):
+		if not image_format_is_okay(arg[0]):
+			respond(context, 'Image must be in one of these formats: ' + ' '.join(Config["Server"]["AllowedImageFileExtensions"]), error=True)
+			return
+		elif image_url_is_okay(arg[0]):
 			wallpaper = {"url": arg[0], "center": True, "offset": [0,0]}
 			for a in arg[1:]:
 				lowered = a.lower()
@@ -1663,7 +1666,7 @@ def fn_mapwallpaper(map, client, context, arg):
 
 			respond(context, 'Wallpaper changed to "%s"' % arg[0])
 		else:
-			respond(context, 'URL doesn\'t match any allowlisted sites, or is not a PNG', error=True)
+			respond(context, 'URL doesn\'t match any allowlisted sites', error=True)
 			return
 	else:
 		respond(context, 'Please provide a URL', error=True)
@@ -2257,7 +2260,10 @@ def fn_userpic(map, client, context, arg):
 			success = True
 		# Allow custom avatars
 		else:
-			if image_url_is_okay(arg[0]):
+			if not image_format_is_okay(arg[0]):
+				respond(context, 'Image must be in one of these formats: ' + ' '.join(Config["Server"]["AllowedImageFileExtensions"]), error=True)
+				return
+			elif image_url_is_okay(arg[0]):
 				client.pic = [arg[0], 0, 0];
 				success = True
 			else:
@@ -2281,6 +2287,9 @@ def fn_userpic(map, client, context, arg):
 def fn_extuserpic(map, client, context, arg):
 	url, subarg = separate_first_word(arg, lowercaseFirst=False)
 	try:
+		if not image_format_is_okay(url):
+			respond(context, 'Image must be in one of these formats: ' + ' '.join(Config["Server"]["AllowedImageFileExtensions"]), error=True)
+			return
 		if not image_url_is_okay(url):
 			respond(context, 'URL doesn\'t match any allowlisted sites', error=True)
 			return
@@ -2339,7 +2348,9 @@ def fn_savedpiclist(map, client, context, arg):
 			if isinstance(client.pic[1], dict):
 				ext_data = " " + json.dumps(client.pic[1])
 		if picvalue.startswith("http"):
-			if image_url_is_okay(picvalue):
+			if not image_format_is_okay(picvalue):
+				respond(context, 'Image must be in one of these formats: ' + ' '.join(Config["Server"]["AllowedImageFileExtensions"]), error=True)
+			elif image_url_is_okay(picvalue):
 				client.saved_pics[picname] = picvalue + ext_data
 				respond(context, "Saved pic \"%s\": %s" % (picname, picvalue + ext_data))
 			else:
