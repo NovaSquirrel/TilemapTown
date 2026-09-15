@@ -1159,6 +1159,10 @@ class Entity(PermissionsMixin, object):
 		other.data = copy.deepcopy(self.data)
 		other.creator_id = self.creator_id
 		other.temporary = self.temporary
+		if hasattr(self, "draw_layer") and self.draw_layer:
+			other.draw_layer = self.draw_layer
+		if hasattr(self, "offset") and self.offset:
+			other.offset = self.offset
 		if other.entity_type == entity_type['gadget']:
 			for trait in other.data:
 				if trait[0] in ("auto_script", "use_script", "map_script"):
