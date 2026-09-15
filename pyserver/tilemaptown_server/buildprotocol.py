@@ -52,8 +52,8 @@ def ext_protocol_command(name):
 
 # -------------------------------------
 
-def find_remote_control_entity(connection, client, rc, context):
-	if client.has_permission(rc, permission['remote_command'], False):
+def find_remote_control_entity(connection, client, rc, context, permission_to_check=permission['remote_command']):
+	if client.has_permission(rc, permission_to_check, False):
 		actor = get_entity_by_id(rc, load_from_db=False)
 		if actor == None:
 			connection.protocol_error(context, text='Entity %s not loaded' % rc, code='not_loaded', subject_id=rc)
@@ -984,7 +984,7 @@ def fn_WHO(connection, map, client, arg, context):
 
 	# Allow targeting another entity
 	if 'rc' in arg:
-		actor = find_remote_control_entity(connection, client, arg['rc'], context)
+		actor = find_remote_control_entity(connection, client, arg['rc'], context, (permission['remote_command'], permission['modify_appearance']))
 		if actor == None:
 			return
 		else:
