@@ -837,7 +837,7 @@ class GadgetDoodleBoard(GadgetTrait):
 
 		if text == "get as text":
 			self.tell(user, "Doodle board pixel data: [small]" + ", ".join([str(_) for _ in self.gadget.mini_tilemap_data['data']])+"[/small]")
-		if not user.has_permission(self.gadget):
+		if not user.has_permission(self.gadget, permission['modify_appearance']):
 			if text == "menu":
 				self.tell(user, "Only the board's owner can draw on it, but you may [bot-message-button]Get as text[/bot-message-button]")
 			return
@@ -1026,7 +1026,7 @@ class GadgetDoodleBoard(GadgetTrait):
 	def on_entity_click(self, user, arg):
 		if not self.gadget or not self.gadget.map or self.ignore_clicks:
 			return None
-		if not user.has_permission(self.gadget):
+		if not user.has_permission(self.gadget, permission['modify_appearance']):
 			self.handle_command(user, "menu")
 			return None
 		if not self.sent_help_yet:
@@ -1097,7 +1097,7 @@ class GadgetDoodleBoard(GadgetTrait):
 			self.broadcast_partial_mini_tilemap(self.min_stroke_x, self.min_stroke_y, self.max_stroke_x, self.max_stroke_y)
 
 	def on_entity_drag(self, user, arg):
-		if not self.gadget or not self.gadget.map or not user.has_permission(self.gadget) or self.ignore_clicks:
+		if not self.gadget or not self.gadget.map or not user.has_permission(self.gadget, permission['modify_appearance']) or self.ignore_clicks:
 			return None
 		if self.tool_type == "invert":
 			x = arg['x'] // self.tile_width
