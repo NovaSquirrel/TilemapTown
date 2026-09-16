@@ -2522,8 +2522,10 @@ def fn_z(map, client, context, arg):
 def fn_draw_layer(map, client, context, arg):
 	if arg == "":
 		client.draw_layer = 0
+		client.save_on_clean_up = True
 	elif string_is_int(arg):
 		client.draw_layer = min(2, max(-2, int(arg)))
+		client.save_on_clean_up = True
 	else:
 		respond(context, '/draw_layer requires a number from -2 to 2', error=True)
 		return
