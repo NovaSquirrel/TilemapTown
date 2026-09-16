@@ -1098,7 +1098,7 @@ class Entity(PermissionsMixin, object):
 			self.owner_id = self.creator_id
 
 		if not self.have_ext:
-			if bool(self.forward_message_types or self.forward_messages_to or (not self.is_client() and (self.status_type or self.status_message)) or (hasattr(self, "verbs") and self.verbs) or self.offset or self.draw_layer):
+			if bool(self.forward_message_types or self.forward_messages_to or (not self.is_client() and (self.status_type or self.status_message)) or (hasattr(self, "verbs") and self.verbs) or self.offset or (hasattr(self, 'draw_layer') and self.draw_layer)):
 				self.have_ext = True
 				c.execute("INSERT INTO Entity_Ext (id) VALUES (?)", (self.db_id,))
 		if self.have_ext:
