@@ -3703,12 +3703,27 @@ function paintUndo() {
 	}
 }
 
+let copiedMapData = null;
 function paintMoreCommands() {
 	let text = prompt("Enter a shift amount, formatted as\nx y");
 	if (!text) return;
 	args = text.split(" ").filter(v => v);
-	console.log(args);
-	if(args.length === 2) {
+	if(args.length === 1) {
+		switch(args[0]) {
+			case "copy":
+				copiedMapData = structuredClone(paintMapData);
+				break;
+			case "paste":
+				if(!paintMapData) {
+					alert("You haven't copied an image yet");
+					return;
+				}
+				paintMakeUndoStep();
+				paintMapData = structuredClone(copiedMapData);
+				paintFullUpdate();
+				break;
+		}
+	} else if(args.length === 2) {
 		let shiftX = -parseInt(args[0]);
 		let shiftY = -parseInt(args[1]);
 		if(Number.isNaN(shiftX) || Number.isNaN(shiftY)) {
