@@ -3709,7 +3709,7 @@ function paintMoreCommands() {
 	if (!text) return;
 	args = text.split(" ").filter(v => v);
 	if(args.length === 1) {
-		switch(args[0]) {
+		switch(args[0].toLowerCase()) {
 			case "copy":
 				copiedMapData = structuredClone(paintMapData);
 				break;
