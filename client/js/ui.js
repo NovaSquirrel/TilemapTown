@@ -3705,7 +3705,7 @@ function paintUndo() {
 
 let copiedMapData = null;
 function paintMoreCommands() {
-	let text = prompt("Enter a shift amount, formatted as\nx y");
+	let text = prompt("Enter a shift amount, formatted as\nx y\nYou can also type 'copy' or 'paste' in here (without quotes)");
 	if (!text) return;
 	args = text.split(" ").filter(v => v);
 	if(args.length === 1) {
