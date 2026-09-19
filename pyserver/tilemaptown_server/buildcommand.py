@@ -2629,10 +2629,13 @@ def fn_whereare(map, client, context, arg):
 		if m.contents:
 			for u in m.contents:
 				if u.is_client() and (override or (u.connection_attr('user_flags') & userflag['hide_location'] == 0)):
+					name = u.name_and_username()
+					if u.status_type in ("idle", "away", "busy", "rp", "lfrp", "chat", "ooc", "dnd", "ic", "iic"):
+						name = "%s [small](%s)[/small]" % (name, u.status_type)
 					if arg == 'c' or arg == 'C':
-						users.append('%s<%d,%d>' % (u.name_and_username(), u.x, u.y))
+						users.append('%s<%d,%d>' % (name, u.x, u.y))
 					else:
-						users.append(u.name_and_username())
+						users.append(name)
 		names += ", ".join(sorted(users, key=str.casefold)) + ' | [command]map %d[/command]' % m.db_id
 		if m.topic:
 			names += ' (📅[i]"%s" by %s[/i])' % (m.topic, m.topic_username)
