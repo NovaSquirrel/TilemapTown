@@ -2631,7 +2631,7 @@ def fn_whereare(map, client, context, arg):
 				if u.is_client() and (override or (u.connection_attr('user_flags') & userflag['hide_location'] == 0)):
 					name = u.name_and_username()
 					if u.status_type in ("idle", "away", "busy", "rp", "lfrp", "chat", "ooc", "dnd", "ic", "iic"):
-						name = "%s [small](%s)[/small]" % (name, u.status_type)
+						name = "%s [small]-%s-[/small]" % (name, u.status_type)
 					if arg == 'c' or arg == 'C':
 						users.append('%s<%d,%d>' % (name, u.x, u.y))
 					else:
