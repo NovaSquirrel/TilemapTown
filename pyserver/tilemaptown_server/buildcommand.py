@@ -1833,7 +1833,7 @@ def fn_listeners(map, client, context, arg):
 	if out:
 		parts.append('[b]Remote listeners here:[/b] ' + (", ".join(sorted(out, key=str.casefold))))
 	if out_forward:
-		parts.append('️[b]Forwarders here:[/b] ' + (", ".join(sorted(out_forward, key=str.casefold))))
+		parts.append('[b]Forwarders here:[/b] ' + (", ".join(sorted(out_forward, key=str.casefold))))
 	if out_listening_to_chat:
 		parts.append('[b]Chat listeners:[/b] ' + (", ".join(sorted(out_listening_to_chat, key=str.casefold))))
 	if not parts:
