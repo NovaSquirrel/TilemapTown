@@ -3153,6 +3153,24 @@ def fn_entity(map, client, context, arg):
 	if subcommand == '':
 		subcommand = 'info'
 
+	# This command directly uses the database, so do it before entity lookups
+	subcommand = subcommand.lower()
+	if subcommand == 'when':
+		c = Database.cursor()
+		c.execute('SELECT created_at, acquired_at from Entity WHERE id=?', (provided_id,))
+		result = c.fetchone()
+		if result:
+			created = result[0].strftime("%Y-%m-%d, %I:%M %p") if result[0] else "?"
+			acquired = result[1].strftime("%Y-%m-%d, %I:%M %p") if result[1] else "?"
+			if result[1]:
+				respond(context, "Entity [b]%s[/b] created at \"%s\", and acquired at \"%s\"" % (provided_id, created, acquired))
+			else:
+				respond(context, "Entity [b]%s[/b] created at \"%s\"" % (provided_id, created))
+			return
+		else:
+			respond(context, "Couldn\'t find [b]%s[/b] in database" % provided_id)
+			return
+
 	# Can use "me" and "here" as special IDs
 	e = None
 	if provided_id == 'me' and self_is_entity:
@@ -3169,7 +3187,6 @@ def fn_entity(map, client, context, arg):
 			return
 		respond(context, '"%s" not a valid ID' % provided_id, error=True)
 		return
-	subcommand = subcommand.lower()
 
 	# ---------------------------------
 
