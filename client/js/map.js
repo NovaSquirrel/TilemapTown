@@ -377,6 +377,33 @@ function tileSheetUses(sheet) {
 	}
 }
 
+function tilesetUses(tileset) {
+	tileset += ":";
+	for (let mapId in MapsByID) {
+		let map = MapsByID[mapId];
+		let width = map.Width;
+		let height = map.Height;
+		let uses = [];
+		for (let y=0; y<height; y++) {
+			for (let x=0; x<width; x++) {
+				let found = typeof map.Tiles[x][y] === "string" && map.Tiles[x][y].startsWith(tileset);
+				if (Array.isArray(map.Objs[x][y])) {
+					for (let objName of map.Objs[x][y]) {
+						if (typeof objName === "string" && objName.startsWith(tileset)) {
+							found = true;
+							break;
+						}
+					}
+				}
+				if (found)
+					uses.push(`${x},${y}`);
+			}
+		}
+		if (uses.length > 0)
+			console.log(`Uses for tileset ${tileset} on map ${mapId}:`, uses)
+	}
+}
+
 function allMapImagesLoaded() {
 	function havePic(atom) {
 		let pic = atom.pic;
