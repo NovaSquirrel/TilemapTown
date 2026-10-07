@@ -75,6 +75,7 @@ let IconSheetRequestList = [];
 
 let Tilesets = {};   // Extra tilesets past just the GlobalTiles list
 let TilesetsRequested = {};
+let DoNotFetchTilesets = new Set();
 
 function RequestImageIfNeeded(id) {
   if(!IconSheets[id] && !IconSheetsRequested[id]) {
@@ -208,7 +209,7 @@ function AtomFromName(str) {
 					// Allow a custom tileset
 					if(Tilesets[s[0]] && Tilesets[s[0]][s[1]]) {
 						return Tilesets[s[0]][s[1]];
-					} else if(!TilesetsRequested[s[0]]) {
+					} else if(!TilesetsRequested[s[0]] && !DoNotFetchTilesets.has(s[0])) {
 						// ask for the tileset
 						TilesetsRequested[s[0]] = true;
 						SendCmd("TSD", {id: s[0]});
