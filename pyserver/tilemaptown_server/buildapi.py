@@ -163,15 +163,15 @@ async def map_info(request):
 async def get_tsd(request):
 	s = request.match_info['id'].split(",")
 	if not s:
-		return web.Response(status=400, text="No image IDs provided", headers=MAIN_API_CORS_HEADERS)
+		return web.Response(status=400, text="No tileset IDs provided", headers=MAIN_API_CORS_HEADERS)
 	if len(s) == 1:
-		if not entity_id.isdecimal():
+		if not s[0].isdecimal():
 			return web.Response(status=400, text="Tileset ID is invalid", headers=MAIN_API_CORS_HEADERS)
-		entity_id = int(entity_id)
+		entity_id = int(s[0])
 
 		# Get and return the data
 		c = Database.cursor()
-		c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type('tileset'), entity_id,))
+		c.execute('SELECT data, compressed_data FROM Entity WHERE type=? AND id=?', (entity_type['tileset'], entity_id,))
 		result = c.fetchone()
 		if result == None:
 			return web.Response(status=404, text="Couldn't find tileset", headers=MAIN_API_CORS_HEADERS)
