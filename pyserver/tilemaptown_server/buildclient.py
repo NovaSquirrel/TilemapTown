@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import asyncio, datetime, time, random, websockets, json, hashlib, ipaddress, weakref
+import asyncio, datetime, time, random, websockets, json, hashlib, ipaddress, weakref, fnmatch
 from .buildglobal import *
 from .buildentity import *
 from collections import deque
@@ -627,39 +627,51 @@ class Connection(object):
 			except:
 				write_to_connect_log("Bad IP: "+self.ip)
 				return False
-			if ip.version == 4:
-				split = ip.exploded.split('.')
-				c.execute("""SELECT id, expires_at, reason FROM Server_Ban WHERE
-                          (ip=?) or (
-                          (ip4_1=? or ip4_1='*') and
-                          (ip4_2=? or ip4_2='*') and
-                          (ip4_3=? or ip4_3='*') and
-                          (ip4_4=? or ip4_4='*'))""", (self.ip, split[0], split[1], split[2], split[3]))
-			elif ip.version == 6:
-				split = ip.exploded.split(':')
-				c.execute("""SELECT id, expires_at, reason FROM Server_Ban WHERE
-                          (ip=?) or (
-                          (ip6_1=? or ip6_1='*') and
-                          (ip6_2=? or ip6_2='*') and
-                          (ip6_3=? or ip6_3='*') and
-                          (ip6_4=? or ip6_4='*') and
-                          (ip6_5=? or ip6_5='*') and
-                          (ip6_6=? or ip6_6='*') and
-                          (ip6_7=? or ip6_7='*') and
-                          (ip6_8=? or ip6_8='*'))""", (self.ip, split[0], split[1], split[2], split[3], split[4], split[5], split[6], split[7]))
-			else:
-				c.execute('SELECT id, expires_at, reason FROM Server_Ban WHERE ip=?', (self.ip,))
+
+			# Wildcard-based bans
+			for row in c.execute('SELECT id, ip, expires_at, reason FROM Server_Ban'):
+				ban_id, ban_ip, expires_at, ban_reason = row
+				if fnmatch.fnmatch(ip.exploded, ban_ip):
+					if expires_at != None and datetime.datetime.now() > expires_at:
+						write_to_connect_log("Ban expired for user %s" % self.ip)
+						c.execute('DELETE FROM Server_Ban WHERE id=?', (ban_id,))
+					else:
+						write_to_connect_log("Denied access to banned user %s" % self.ip)
+						self.disconnect('Banned from the server until %s (%s)' % (str(expires_at), ban_reason), reason='Ban')
+						return True
+			#if ip.version == 4:
+			#	split = ip.exploded.split('.')
+			#	c.execute("""SELECT id, expires_at, reason FROM Server_Ban WHERE
+            #              (ip=?) or (
+            #              (ip4_1=? or ip4_1='*') and
+            #              (ip4_2=? or ip4_2='*') and
+            #              (ip4_3=? or ip4_3='*') and
+            #              (ip4_4=? or ip4_4='*'))""", (self.ip, split[0], split[1], split[2], split[3]))
+			#elif ip.version == 6:
+			#	split = ip.exploded.split(':')
+			#	c.execute("""SELECT id, expires_at, reason FROM Server_Ban WHERE
+            #              (ip=?) or (
+            #              (ip6_1=? or ip6_1='*') and
+            #              (ip6_2=? or ip6_2='*') and
+            #              (ip6_3=? or ip6_3='*') and
+            #              (ip6_4=? or ip6_4='*') and
+            #              (ip6_5=? or ip6_5='*') and
+            #              (ip6_6=? or ip6_6='*') and
+            #              (ip6_7=? or ip6_7='*') and
+            #              (ip6_8=? or ip6_8='*'))""", (self.ip, split[0], split[1], split[2], split[3], split[4], split[5], split[6], split[7]))
+			#else:
+			#	c.execute('SELECT id, expires_at, reason FROM Server_Ban WHERE ip=?', (self.ip,))
 
 			# If there is a result, check to see if it's expired or not
-			result = c.fetchone()
-			if result != None:
-				if result[1] != None and datetime.datetime.now() > result[1]:
-					write_to_connect_log("Ban expired for user %s" % self.ip)
-					c.execute('DELETE FROM Server_Ban WHERE id=?', (result[0],))
-				else:
-					write_to_connect_log("Denied access to banned user %s" % self.ip)
-					self.disconnect('Banned from the server until %s (%s)' % (str(result[1]), result[2]), reason='Ban')
-					return True
+			#result = c.fetchone()
+			#if result != None:
+			#	if result[1] != None and datetime.datetime.now() > result[1]:
+			#		write_to_connect_log("Ban expired for user %s" % self.ip)
+			#		c.execute('DELETE FROM Server_Ban WHERE id=?', (result[0],))
+			#	else:
+			#		write_to_connect_log("Denied access to banned user %s" % self.ip)
+			#		self.disconnect('Banned from the server until %s (%s)' % (str(result[1]), result[2]), reason='Ban')
+			#		return True
 		return False
 
 	def listener_who(self):
