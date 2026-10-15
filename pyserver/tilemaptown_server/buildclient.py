@@ -76,9 +76,10 @@ class BuildSession(object):
 		if not was_data_loaded:
 			map.load_data(load_anyway=True)
 
-		for c in map.contents:
-			if c.is_client():
-				c.start_batch()
+		if map.contents:
+			for c in map.contents:
+				if c.is_client():
+					c.start_batch()
 
 		for e in self.maps.pop(map_id, []):
 			a = e.splitlines()
@@ -109,9 +110,10 @@ class BuildSession(object):
 		if not was_data_loaded:
 			map.save_data()
 			map.unload_data()
-		for c in map.contents:
-			if c.is_client():
-				c.finish_batch()
+		if map.contents:
+			for c in map.contents:
+				if c.is_client():
+					c.finish_batch()
 		return different
 
 class ClientMixin(object):
