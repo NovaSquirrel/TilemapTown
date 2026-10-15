@@ -678,7 +678,7 @@ def fn_tpaccept(map, client, context, arg):
 		respond(context, "User " + username + " isn't online", error=True)
 		return
 
-	respond(context, 'You accepted a %s request from %s' % (request_type_to_friendly[request_type], username))
+	respond(context, 'You accepted a%s %s request from %s' % ("n" if request_type == "giveitem" else "", request_type_to_friendly[request_type], username))
 
 	request_data_for_message = request_data
 	if request_type == 'giveitem': # Get the original item ID
@@ -811,7 +811,7 @@ def fn_tpdeny(map, client, context, arg):
 		return
 	request_key, request_type, request_data, subject_id, username = request
 
-	respond(context, 'You rejected a %s request from %s' % (request_type_to_friendly[request_type], username))
+	respond(context, 'You rejected a%s %s request from %s' % ("n" if request_type == "giveitem" else "", request_type_to_friendly[request_type], username))
 
 	request_data_for_message = request_data
 	if request_type == 'giveitem': # Get the original item ID
