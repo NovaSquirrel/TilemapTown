@@ -593,6 +593,7 @@ def fn_giveitem(map, client, context, arg):
 	arg_name = args[0]
 	arg_item = args[1]
 	arg_givetype = args[2].lower()
+	connection = client.connection() if hasattr(client, "connection") else None
 
 	e = get_entity_by_id(arg_item, load_from_db=False)
 	if e == None:
@@ -603,6 +604,16 @@ def fn_giveitem(map, client, context, arg):
 		if arg_givetype == 'transfer' or not client.has_in_contents_tree(e):
 			respond(context, "That isn't your item", error=True)
 			return
+		if e.creator_temp_id != client.id and (e.owner_id != client.db_id or client.db_id == None) and \
+		not client.has_permission(e, permission['copy'], e.entity_type == entity_type['gadget']):
+			if connection:
+				connection.protocol_error(context, text='You don\'t have permission to clone %s' % arg_item, code='missing_permission', detail='copy', subject_id=e.protocol_id())
+			return
+	if arg_givetype in ("copy", "tempcopy") and entity_type_name[e.entity_type] not in creatable_entity_types:
+		if connection:
+			connection.protocol_error(context, text='Invalid type of item to clone (%s)' % entity_type_name[e.entity_type])
+		return
+
 	if arg_givetype not in ("transfer", "move", "copy", "tempcopy"):
 		respond(context, "Give type must be transfer, move, copy, or tempcopy", error=True)
 		return
@@ -696,6 +707,8 @@ def fn_tpaccept(map, client, context, arg):
 		)
 
 	def clone_item(item, temp):
+		if entity_type_name[item.entity_type] not in creatable_entity_types:
+			return
 		c = Entity
 		if item.entity_type == entity_type['gadget']:
 			c = GlobalData["gadget_class"]
