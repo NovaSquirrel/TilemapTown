@@ -2637,6 +2637,9 @@ function editItemShared(item) {
 				document.getElementById('edittilegadget_preset_doodle_board_map_height').value = "";
 				document.getElementById('edittilegadget_preset_doodle_board_2x1').checked = false;
 				document.getElementById('edittilegadget_preset_doodle_board_ignore_clicks').checked = false;
+				document.getElementById('edittilegadget_preset_give_item_item').value = "";
+				document.getElementById('edittilegadget_preset_give_item_temp').checked = false;
+				document.getElementById('edittilegadget_preset_give_item_owner_only').checked = false;
 				document.getElementById('edittilegadget_preset_choice').value = "nothing";
 				updateDoodleBoardPixelSize();
 
@@ -2783,6 +2786,14 @@ function editItemShared(item) {
 								document.getElementById('edittilegadget_preset_projectile_shooter_break_wall_hit').checked = trait[1].break_wall_hit ?? false;
 								document.getElementById('edittilegadget_preset_projectile_shooter_break_user_hit').checked = trait[1].break_user_hit ?? false;
 								document.getElementById('edittilegadget_preset_projectile_shooter_break_max_distance').checked = trait[1].break_max_distance ?? false;
+
+								document.getElementById('edittilegadget_preset_choice').value = trait[0];
+								document.getElementById('gadgetTypeRaw').checked = false;
+								document.getElementById('gadgetTypePreset').checked = true;
+							} else if(trait[0] === "give_item") {
+								document.getElementById('edittilegadget_preset_give_item_item').value = trait[1].item_id ?? "";
+								document.getElementById('edittilegadget_preset_give_item_temp').checked = trait[1].temp ?? false;
+								document.getElementById('edittilegadget_preset_give_item_owner_only').checked = trait[1].owner_only;
 
 								document.getElementById('edittilegadget_preset_choice').value = trait[0];
 								document.getElementById('gadgetTypeRaw').checked = false;
@@ -3324,6 +3335,13 @@ function editItemApply() {
 							if (document.getElementById('edittilegadget_preset_projectile_shooter_break_max_distance').checked)
 								t.break_max_distance = true;
 							break;
+						case "give_item":
+							t.item_id = document.getElementById('edittilegadget_preset_give_item_item').value;
+							if (document.getElementById('edittilegadget_preset_give_item_temp').checked)
+								t.temp = true;
+							if (document.getElementById('edittilegadget_preset_give_item_owner_only').checked)
+								t.owner_only = true;
+							break;
 					}
 					let data = [];
 					if (document.getElementById('edittilegadget_preset_choice').value === "nothing")
@@ -3496,6 +3514,7 @@ function changeGadgetPreset() {
 	document.getElementById("edittilegadget_preset_pic_cycle").style.display = (preset === "pic_cycle") ? "block" : "none";
 	document.getElementById("edittilegadget_preset_dir_cycle").style.display = (preset === "dir_cycle") ? "block" : "none";
 	document.getElementById("edittilegadget_preset_projectile_shooter").style.display = (preset === "projectile_shooter") ? "block" : "none";
+	document.getElementById("edittilegadget_preset_give_item").style.display = (preset === "give_item") ? "block" : "none";
 }
 
 function changeItemImageType() {

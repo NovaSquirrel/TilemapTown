@@ -733,6 +733,17 @@ class GadgetUserParticle(GadgetTrait):
 		handle_user_command(actor.map, actor, None, "userparticle " + self.get_config('particle', '0 0 0'))
 		return False
 
+class GadgetGiveItem(GadgetTrait):
+	usable = True
+
+	def on_use(self, user):
+		if not self.gadget or not self.get_config('item_id'):
+			return None
+		if self.get_config('owner_only') and not user.has_permission(self.gadget):
+			return False
+		handle_user_command(self.gadget.map, self.gadget, None, "giveitem %s %s %s" % (user.protocol_id(), self.get_config('item_id').split()[0], "tempcopy" if self.get_config('temp') else "copy"))
+		return False
+
 class GadgetDoodleBoard(GadgetTrait):
 	MAP_WIDTH = 8
 	MAP_HEIGHT = 16
@@ -1629,6 +1640,7 @@ gadget_trait_class['pushable'] = GadgetPushable
 gadget_trait_class['draggable'] = GadgetDraggable
 gadget_trait_class['mini_tilemap'] = GadgetMiniTilemap
 gadget_trait_class['user_particle'] = GadgetUserParticle
+gadget_trait_class['give_item'] = GadgetGiveItem
 gadget_trait_class['doodle_board'] = GadgetDoodleBoard
 gadget_trait_class['pic_cycle'] = GadgetPicCycle
 gadget_trait_class['dir_cycle'] = GadgetDirCycle
