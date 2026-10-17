@@ -104,9 +104,13 @@ function openTab(evt, tabName) {
 	document.getElementById(tabName).style.display = "block";
 	evt.currentTarget.className += " active";
 }
+function loaded() {
+	if (new URLSearchParams(window.location.search).get('utm_source') === "chatgpt.com")
+		document.getElementById("no-ai").style.fontWeight = "bold";
+}
 </script>
 </head>
-<body>
+<body onload="loaded()">
 <a href="https://github.com/NovaSquirrel/TilemapTown"><img decoding="async" loading="lazy" width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149" alt="Fork me on GitHub" data-recalc-dims="1" style="position: absolute; top: 0; right: 0; border: 0;"></a>
 
 <div style="max-width:900px; margin-left:auto; margin-right:auto;">
@@ -132,9 +136,11 @@ function openTab(evt, tabName) {
 
 		<p>You can explore a big world, and change tiles on it to build something nice and leave your mark on it. If you register an account (not required) you can make your own personal map or upload your own custom graphics for characters and map tiles. Want to help? <a href="https://novasquirrel.com/contact.html">Get in touch!</a> 
 
-		<p><a href="world.html" class="join">Come visit the world!</a><a href="touch_ui.html" class="join_touch">Come visit the world!</a><noscript><br>Though maybe not with this browser, because the web client requires JavaScript.</noscript></p>
+		<p><a href="world.html" class="join">Come visit the world!</a><a href="touch_ui.html" class="join_touch">Come visit the world!</a><noscript><br>Though maybe not with this browser, because the web client requires JavaScript.</noscript><br><!--# include virtual="/bunnyserv/v1/tt_users_online" --></p>
 
 		<p>The web client will also work offline; you can work on maps privately and save them to your device.</p>
+
+		<p id="no-ai">Tilemap Town is proudly made without generative AI.</p>
 
 		<div class="center">
 		<a href="novahouse.png"><img style="width:320px;" src="novahouse.png" alt="Tilemap Town screenshot of a house"/></a>
@@ -147,19 +153,20 @@ function openTab(evt, tabName) {
 	
 	<div class="tabcontent" id="Features">
 		<h1 class="tab-fallback-heading">Features</h1>
-		<p>In <b>Tilemap Town</b>, you can wander around a top-down 2D pixel art world, and you can play as any character you like, as long as you can draw or find a 32x32 sprite of them! There is support for multiple directions and simple animation, and <a href="https://tilemap.town/help/tutorials">there's a guide on the tutorials page</a> that explains how custom player graphics works; for the most part you just grab a template and fill it in.</p>
+		<p>In <b>Tilemap Town</b>, you can wander around a top-down 2D pixel art world, and you can play as any character you like, as long as you can draw or find a 32x32 sprite of them! There is support for multiple directions and simple animation, and <a href="https://wiki.novasquirrel.com/index.php?title=Custom_player_graphics">there's a guide on the wiki</a> that explains how custom player graphics works; for the most part you just grab a template and fill it in.</p>
 
-		<p>Tilemap Town's world consists of maps, which are 2D grids of tiles that can be modified by players, letting them collaboratively make a world together. If you register then you can even create your own maps. You can restrict building to yourself only, limit entry to specific users, and have a private space if you would like one.</p>
+		<p>Tilemap Town's world consists of maps, which are 2D grids of tiles that can be modified by players, letting them collaboratively make a world together. If you register then you can even create your own maps. You can restrict building to only yourself, limit entry to specific users, and have a private space if you would like one.</p>
 
 		Map features:
 		<ul>
-		<li>You can use your own graphics for the tiles you draw onto maps!</li>
+		<li>You can <a href="https://wiki.novasquirrel.com/index.php?title=Custom_map_tile_graphics">use your own graphics</a> for the tiles you draw onto maps!</li>
 		<li>Small amount of space to upload your own graphics and music to</li>
 		<li>Tons of premade tiles available to build with</li>
 		<li>Autotiling and animation support</li>
 		<li>Can click and edit the properties of tiles directly on the map</li>
 		<li>Place objects in the world to act as props</li>
 		<li>Maps can be linked to each other, so that you can pass over the edge of one and end up on another, to make a big connected world</li>
+		<li>Create <a href="https://wiki.novasquirrel.com/index.php?title=Doodle_boards">"Doodle boards"</a> which are little pixel art canvases you can drop into the world and draw on</li>
 		</ul>
 
 		Chat features:
@@ -175,7 +182,7 @@ function openTab(evt, tabName) {
 		<li>An inventory system, allowing you to hold onto objects and keep notes for yourself</li>
 		<li>A simple mail feature (and private messages sent to offline users will be held until they're online)</li>
 		<li>A profile feature where you can write about yourself</li>
-		<li>Save multiple characters and swap between them easily with commands</li>
+		<li>Save multiple characters and swap between them easily</li>
 		</ul>
 
 		Some advanced features:
@@ -190,37 +197,41 @@ function openTab(evt, tabName) {
 	
 	<div class="tabcontent" id="Community">
 		<h1 class="tab-fallback-heading">Community</h1>
-		<p>There is an official server that's been running since 2017, and it's not especially lively (yet!) but there is quite a lot to explore. If you do want to meet people your best chance is on Tuesday evenings (Eastern Time), which is "Tilemap Town Tuesday." You're welcome to come visit and check it out, and even leave your own mark on the world by building something nice if you like. The official server is the default one on <a href="world.html">the web client</a>!</p>
+		<p>There is an official server that's been running since 2017, and it's not especially lively yet, but there's quite a lot to explore and you're welcome to bring your friends. Come make some cute buildings, add some decoration, or do some landscaping, and help make the world even nicer.</p>
 
-		<p>The community is pro-LGBT+ and is meant to be a safe space to hang out. Be kind to the other people you meet here. Note that it's not really intended to be a space for kids.</p>
+		<p>The official server is generally a furry and queer space, and is generally intended for adults, though anything in public is expected to be kept clean.</p>
 
-		<p>There's also a small <a href="https://discord.gg/N2Eqj2H">Discord server</a> for Tilemap Town and other projects I work on, but like Tilemap Town you should keep in mind that it is meant to be a SFW environment for adults. You can chat with other people interested in Tilemap Town and plan out events/hangouts. You can also get updates about what's been going on through <a href="https://blog.novasquirrel.com/tilemap-town">the Tilemap Town blog</a>, which has RSS and Atom feeds available.</p>
-
-		<p>If you prefer forums, you can post about Tilemap Town <a href="https://crittertime.fun/viewtopic.php?t=282">here</a>. I can give Tilemap Town its own forum if there's demand and people would actually use it.</p>
+		<p>Elsewhere:
+		<ul>
+			<li><a href="https://blog.novasquirrel.com/tilemap-town">Blog</a> with development updates, with RSS and Atom feeds available.</li>
+			<li>Pretty quiet <a href="https://discord.gg/N2Eqj2H">Discord server</a> for Tilemap Town and other projects I work on.</li>
+			<li>There's <a href="https://fluxfur.com/invite/MiW5HsYp">a FluxFur community</a> as an alternate to the Discord one.</li>
+			<li><a href="https://crittertime.fun/viewtopic.php?t=282">Forum thread</a>. Could be cool to give Tilemap Town its own forum someday if there's genuine interest in the future.</li>
+		</ul>
 
 		<h4>Roleplay setting</h4>
 
-		<p>The official server is intended to be a SFW furry roleplay space, like MUCKs usually are, but you're welcome to just hang out and chat if that's more your thing! I think it would be interesting to really embrace the nature of the platform, and treat it in-character as a digital world where it's especially easy to shape the land to your wishes and build things.</p>
+		<p>The official server is intended to be a clean furry roleplay space, like MUCKs usually are, but you're welcome to just hang out and chat if that's more your thing! I think it would be interesting to really embrace the nature of the platform, and have characters treat it as if map editing is diegetic. Perhaps Tilemap Town is a digital world the characters have gotten into where it's especially easy to shape the land to your wishes and build things.</p>
 		<p>The world is sort of a crossroads where characters from lots of other worlds meet up, sometimes because they had to leave home for whatever reason and needed a place to go, like Traverse Town. Fantasy elements and magic are encouraged too, and the tone is supposed to be lighthearted. Explore the world, introduce people to your character, and add your own (literal) worldbuilding.</p>
 
 		<h4>Privacy notice</h4>
 
 		<p>The official server is configured to log when users connect to the server, modify a map, or upload files, for moderation and review purposes. The logs contain the user's IP address and what website they connected from. Chat messages (both private messages and messages sent to maps) are not logged, and are discarded once they reach their destination. Tilemap Town does not use end-to-end encryption, so you should not send sensitive information on this platform.</p>
 
-		<p>Private messages sent to offline users are temporarily kept in memory (not the database) until the recipient logs in, at which point they will be discarded. However, if the server is restarted while there are still private messages waiting to be sent, they will be converted to mail. Mail is stored in the database and is not currently encrypted. <kbd>/userflags add no_offline_pm_mail</kbd> will opt out of this feature for both messages you send and messages sent to you, causing messages to simply be discarded in this case.</p>
+		<p>Private messages sent to offline users are temporarily kept in memory (not the database) until the recipient logs in, at which point they will be discarded after delivery. However, if the server is restarted while there are still private messages waiting to be sent, they will be converted to mail. Mail is stored in the database and is not currently encrypted. <kbd>/userflags add no_offline_pm_mail</kbd> will opt out of this feature for both messages you send and messages sent to you, causing pending messages to be deleted in this case.</p>
 	</div>
 
 	<div class="tabcontent" id="OpenPlatform">
 		<h1 class="tab-fallback-heading">Open platform</h1>
-		<p>Tilemap Town is an open source project, and you can find the web client, server, and documentation <a href="https://github.com/NovaSquirrel/TilemapTown">on GitHub</a>. Anyone can host their own server or make their own client, or customize the official server or client to their liking. It could even be a good head start if you're trying to make your own online game.</p>
+		<p>Tilemap Town is an open source project, and you can find the web client, server, and documentation <a href="https://github.com/NovaSquirrel/TilemapTown">on GitHub</a> or <a href="https://code.novasquirrel.com/Maffi/TilemapTown">here</a>. Anyone can host their own server or make their own client, or customize the server or client software. It could even be a good head start if you're trying to make your own online game (but keep it human-made!)</p>
 
 		<p>The server is written in Python, so it's a lot easier to extend and change than the old MUCK codebases from the 90s. The database is SQLite so there's no setup, and you can use preexisting tools to browse and interface with the database.</p>
 
 		<p>Tilemap Town is designed with making your own clients and bots in mind, and that's encouraged! <a href="https://github.com/NovaSquirrel/TilemapTown/blob/main/docs/protocol.txt">The protocol</a> is built on top of WebSockets and JSON, which most languages should be able to use without too much trouble, and there's advice in the documentation about what a useful subset of the protocol would be. It's designed with the idea of <em>progressive enhancement</em> and is meant to work well with a minimal client, while allowing more advanced clients to have access to fancy features.</p>
 
-		<p>In a way, Tilemap Town is sort of like IRC, in that it's decentralized and easy to connect to and interface with, but its design incorporates some modern features and leaves room for things like metadata and longer messages without needing that stuff to be in the form of extensions.</p>
+		<p>In a way, Tilemap Town is sort of like IRC, in that it's decentralized and easy to connect to and interface with, but its design incorporates some modern features and leaves room for things like metadata and longer messages without needing extensions to do that.</p>
 
-		<p>There's also <a href="https://github.com/NovaSquirrel/TilemapTown/blob/main/docs/api.txt">a simple HTTP API</a> you can hit to find out some basic information about who's currently online. The official server has its API exposed <a href="https://novasquirrel.com/townapi/v1/town_info">here</a>.<br>(You can opt out of showing up on this with <kbd>/userflags add hide_api</kbd>)</p>
+		<p>There's also <a href="https://github.com/NovaSquirrel/TilemapTown/blob/main/docs/api.txt">a simple HTTP API</a> you can hit to find out some basic information about who's currently online. The official server has its API exposed <a href="https://tilemap.town/api/v1/town_info">here</a>.<br>(You can opt out of showing up on this with <kbd>/userflags add hide_api</kbd>)</p>
 
 		<h4>Some projects that interface with Tilemap Town</h4>
 		<ul>
