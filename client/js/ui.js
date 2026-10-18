@@ -847,7 +847,9 @@ function copyTraitPicFromGadget() {
 	let edittiletype = document.getElementById('edittiletype').value;
 	let pic = [edittilesheet, edittilex, edittiley];
 	if ((editItemType === "generic" || editItemType === "gadget") && edittileurl.trim().length) {
-		pic = [edittileurl.trim(), 0, 0];
+		// "edittilegadget_preset_pic_cycle_first_pic" can't use a URL, so do nothing?
+		document.getElementById("edittilegadget_preset_projectile_shooter_pic").value = edittileurl.trim();
+		return;
 	}
 	let picString = pic.join(" ");
 	document.getElementById("edittilegadget_preset_pic_cycle_first_pic").value = picString;
@@ -2780,6 +2782,8 @@ function editItemShared(item) {
 								document.getElementById('gadgetTypePreset').checked = true;
 							} else if(trait[0] === "projectile_shooter") {
 								document.getElementById('edittilegadget_preset_projectile_shooter_pic').value = (trait[1].pic ?? []).join(" ");
+								if (trait[1].pic.length === 3 && typeof trait[1].pic[0] === "string" && trait[1].pic[1] === 0 && trait[1].pic[2] === 0)
+									document.getElementById('edittilegadget_preset_projectile_shooter_pic').value = trait[1].pic[0];
 								document.getElementById('edittilegadget_preset_projectile_shooter_max_distance').value = trait[1].max_distance ?? "";
 								document.getElementById('edittilegadget_preset_projectile_shooter_dir').value = trait[1].dir ?? "none";
 								document.getElementById('edittilegadget_preset_projectile_shooter_break_particle').value = trait[1].break_particle ?? "";
@@ -3312,6 +3316,8 @@ function editItemApply() {
 							break;
 						case "projectile_shooter":
 							t.pic = document.getElementById('edittilegadget_preset_projectile_shooter_pic').value.split(" ");
+							if (t.pic.length === 1)
+								t.pic = [t.pic[0], 0, 0]
 							if (t.pic.length === 3) {
 								let sheetInt = parseInt(t.pic[0]);
 								if (Number.isNaN(sheetInt)) {
