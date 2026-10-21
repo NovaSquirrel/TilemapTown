@@ -347,6 +347,15 @@ function waitForImagesToLoad(timestamp) {
 				let Objs = map.Objs[x][y];
 				if (Objs.length) {
 					for (let o of Objs) {
+						if (o.over)
+							continue;
+						try {
+							drawObj(ctx, x*16, y*16, AtomFromName(o), map, x, y);
+						} catch (error) {}
+					}
+					for (let o of Objs) {
+						if (!o.over)
+							continue;
 						try {
 							drawObj(ctx, x*16, y*16, AtomFromName(o), map, x, y);
 						} catch (error) {}
