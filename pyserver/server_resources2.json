@@ -3138,6 +3138,28 @@
 				"autotile_layout": 2,
 				"obj": true,
 				"density": true
+			},
+			"cornfield": {
+				"name": "corn field",
+				"pic": [-2, 3, 125],
+				"autotile_layout": 3,
+				"obj": true,
+				"density": true
+			},
+			"pumpkin": {
+				"name": "pumpkin",
+				"pic": [-2, 4, 125],
+				"obj": true
+			},
+			"corn": {
+				"name": "corn",
+				"pic": [-2, 4, 126],
+				"obj": true
+			},
+			"gourd": {
+				"name": "gourd",
+				"pic": [-2, 4, 127],
+				"obj": true
 			}
 		}
 	},

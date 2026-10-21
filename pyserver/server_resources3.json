@@ -1395,6 +1395,16 @@
 				"density": true,
 				"autotile_layout": 5
 			},
+			"cabinwall2": {
+				"name": "cabin wall",
+				"pic": [
+					-3,
+					18,
+					50
+				],
+				"density": true,
+				"autotile_layout": 5
+			},
 			"bridge_v": {
 				"name": "bridge vertical",
 				"pic": [
