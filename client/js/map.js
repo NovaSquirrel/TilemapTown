@@ -373,7 +373,7 @@ function tileSheetUses(sheet) {
 			}
 		}
 		if (uses.length > 0)
-			console.log(`Uses for sheet ${sheet} on map ${mapId}:`, uses)
+			console.log(`Uses for sheet ${sheet} on map ${mapId}:`, uses);
 	}
 }
 
@@ -400,7 +400,7 @@ function tilesetUses(tileset) {
 			}
 		}
 		if (uses.length > 0)
-			console.log(`Uses for tileset ${tileset} on map ${mapId}:`, uses)
+			console.log(`Uses for tileset ${tileset} on map ${mapId}:`, uses);
 	}
 }
 

@@ -2992,6 +2992,7 @@ function editItemUpdatePic() {
 	}
 	document.getElementById('edittilepic').style.background = "url(" + src + ") -" + (edittilex * 16) + "px -" + (edittiley * 16) + "px";
 	document.getElementById('edittilesheetselect').src = src;
+	document.getElementById('tileImageSheetOptionsShowID').textContent = "ID:"+(edittilesheet === "keep"?editItemOriginalSheet:edittilesheet);
 }
 
 function editItem(key) {
