@@ -2825,6 +2825,7 @@ function editItemShared(item) {
 				changeGadgetPreset();
 			}
 
+			const isDoodleBoard = item.type === "gadget" && document.getElementById('edittilegadget_preset_choice').value === "doodle_board";
 			if (item.type === "map_tile" || editTypeIsDirectEdit(item.type)) {
 				document.getElementById('edittileautotileoptions').style.display = "block";
 				document.getElementById('edittileanimationoptions').style.display = "block";
@@ -2836,10 +2837,10 @@ function editItemShared(item) {
 				if ("pic" in item && item.pic !== null)
 					itemobj = { pic: item.pic };
 				else
-					itemobj = { pic: DefaultPics['default'] ?? [0, 0, 91] };
+					itemobj = { pic: (isDoodleBoard ? DefaultPics['invisible'] : DefaultPics['default']) ?? [0, 0, 91] };
 			}
 			if (itemobj.pic[0] === INTERNAL_TILESET_ID) {
-				itemobj.pic = DefaultPics['default'] ?? [0, 0, 91];
+				itemobj.pic = (isDoodleBoard ? DefaultPics['invisible'] : DefaultPics['default']) ?? [0, 0, 91];
 			}
 			editItemOriginalSheet = itemobj.pic[0];
 			document.getElementById("tileImageSheetOptions").style.display = document.getElementById("itemImageIsSheet").checked ? "inline" : "none";
