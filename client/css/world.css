@@ -382,6 +382,9 @@ summary {
 	image-rendering: pixelated;
 	background: url('../img/scrolling_grid.gif');
 }
+#tileImageSheetOptionsShowID {
+    font-size: 0.8em;
+}
 
 /* Touch UI buttons */
 #touch-button-container {

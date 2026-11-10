@@ -98,36 +98,6 @@ function keyUpHandler(e) {
 	CtrlPressed = e.ctrlKey;
 }
 
-function sendMessage() {
-	if (chatInput.value.toLowerCase().trim() == "/oops") {
-		chatInput.value = lastChatUsed;
-		sendTyping();
-		return;
-	}
-	if (chatInput.value.length > 5)
-		lastChatUsed = chatInput.value;
-
-	// First, check for commands that are local to the client
-	const startsWithNewline = chatInput.value.startsWith("\n");
-	let trimmedChatText = chatInput.value.trimStart();
-	if (runLocalCommand(trimmedChatText));
-		// commands are CMD while regular room messages are MSG. /me is a room message.
-	else if (trimmedChatText.slice(0, 1) == "/" &&
-		trimmedChatText.toLowerCase().slice(0, 4) != "/me " &&
-	trimmedChatText.toLowerCase().slice(0, 5) != "/ooc " &&
-	trimmedChatText.toLowerCase().slice(0, 7) != "/spoof ") {
-		SendCmd("CMD", { text: trimmedChatText.slice(1) }); // remove the /
-	} else if (trimmedChatText.length > 0) {
-		SendCmd("MSG", { text: (startsWithNewline?"\n":"") + trimmedChatText });
-	} else {
-		chatInput.blur();
-	}
-
-	chatInput.value = "";
-
-	sendTyping();
-}
-
 function keyDownHandler(e) {
 	markNotIdle();
 

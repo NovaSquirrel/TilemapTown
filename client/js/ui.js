@@ -217,6 +217,7 @@ function loadOptions() {
 		document.getElementById("music-volume").value = (saved_options.audio_map_music_volume ?? 1) * 100;
 		document.getElementById("safe-for-command-lists").value = (saved_options.safe_for_command_lists ?? []).join();
 		document.getElementById("option-entity-ext-pic").value = saved_options.show_ext_pics ?? "always";
+		document.getElementById("show-send-button").checked = saved_options.show_send_button ?? false;
 	}
 }
 
@@ -242,6 +243,10 @@ function applyOptions() {
 	for (let i in safeForCommandLists)
 		safeForCommandLists[i] = safeForCommandLists[i].trim().toLowerCase();
 	showExtPics = document.getElementById("option-entity-ext-pic").value;
+	const showSendButton = document.getElementById("show-send-button").checked;
+	if (!messaging_mode) {
+		document.getElementById("sendButton").style.display = showSendButton ? "" : "none";
+	}
 
 	let mapMusicPreviouslyEnabled = mapMusicEnabled;
 	updateMapMusicVolume();
@@ -270,6 +275,7 @@ function applyOptions() {
 		"focus_map_after_chat": focusMapAfterChat,
 		"safe_for_command_lists": safeForCommandLists,
 		"show_ext_pics": showExtPics,
+		"show_send_button": showSendButton,
 		"version": 1,
 	};
 	localStorage.setItem("options", JSON.stringify(saved_options));
@@ -1131,6 +1137,36 @@ function changePreviewPicWindow() {
 
 function editItemExtEdit() {
 	openExtendedPicWindow(editItemID);
+}
+
+function sendMessage() {
+	if (chatInput.value.toLowerCase().trim() == "/oops") {
+		chatInput.value = lastChatUsed;
+		sendTyping();
+		return;
+	}
+	if (chatInput.value.length > 5)
+		lastChatUsed = chatInput.value;
+
+	// First, check for commands that are local to the client
+	const startsWithNewline = chatInput.value.startsWith("\n");
+	let trimmedChatText = chatInput.value.trimStart();
+	if (runLocalCommand(trimmedChatText));
+		// commands are CMD while regular room messages are MSG. /me is a room message.
+	else if (trimmedChatText.slice(0, 1) == "/" &&
+		trimmedChatText.toLowerCase().slice(0, 4) != "/me " &&
+	trimmedChatText.toLowerCase().slice(0, 5) != "/ooc " &&
+	trimmedChatText.toLowerCase().slice(0, 7) != "/spoof ") {
+		SendCmd("CMD", { text: trimmedChatText.slice(1) }); // remove the /
+	} else if (trimmedChatText.length > 0) {
+		SendCmd("MSG", { text: (startsWithNewline?"\n":"") + trimmedChatText });
+	} else {
+		chatInput.blur();
+	}
+
+	chatInput.value = "";
+
+	sendTyping();
 }
 
 ///////////////////////////////////////////////////////////

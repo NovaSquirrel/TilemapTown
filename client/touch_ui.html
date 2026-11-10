@@ -525,7 +525,7 @@
 		<label class="unselectable"><input type="checkbox" id="option-tile-animation" checked>Tile animation</label><br>
 		<label class="unselectable"><input type="checkbox" id="enable-user-particles" checked>Show user particles</label><br>
 		<label class="unselectable"><input type="checkbox" id="lock-zoom-level">Lock zoom level</label><br>
-		<label class="unselectable"><input type="checkbox" id="alwayscenter" checked="true">Always center camera</label>
+		<label class="unselectable"><input type="checkbox" id="alwayscenter" checked>Always center camera</label>
 		<p><label>Extended entity graphics:<br><select id="option-entity-ext-pic">
 			<option value="always">Enabled</option>
 			<option value="if48px">Show if &le;48px</option>
@@ -539,6 +539,7 @@
 		<label class="unselectable"><input type="checkbox" id="chat-timestamp" checked>Show chat timestamps</label><br>
 		<label class="unselectable"><input type="checkbox" id="chat-custom-name-colors" checked>Show custom name colors</label><br>
 		<label class="unselectable"><input type="checkbox" id="focus-map-after-chat">Refocus map after sending chat</label><br>
+		<label class="unselectable"><input type="checkbox" id="show-send-button">Chat send button</label><br>
 	</details>
 	<details class="options-section">
 		<summary class="unselectable">Automatic idle options</summary>
@@ -1450,7 +1451,7 @@
       <option value="/ooc ">/ooc</option>
       <option value="/me ">/me</option>
       <option value="/spoof ">/spoof</option>
-    </select> <button id="filterChatButtonAll" style="font-weight:bold;" onclick="filterChat(null);">All</button> <button id="filterChatButtonMap" onclick="filterChat('map');">Map</button> <button id="filterChatButtonPrivate" onclick="filterChat('private');">Private</button></div>
+    </select> <button id="filterChatButtonAll" style="font-weight:bold;" onclick="filterChat(null);">All</button> <button id="filterChatButtonMap" onclick="filterChat('map');">Map</button> <button id="filterChatButtonPrivate" onclick="filterChat('private');">Private</button> <button id="sendButton" style="display:none;" onclick="sendMessage();">Send &#10148;</button></div>
 </div>
 
 <!-- Mobile buttons --->
