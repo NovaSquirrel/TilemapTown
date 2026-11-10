@@ -737,11 +737,14 @@ class GadgetGiveItem(GadgetTrait):
 	usable = True
 
 	def on_use(self, user):
-		if not self.gadget or not self.get_config('item_id'):
+		item_id = self.get_config('item_id')
+		if not self.gadget or not item_id:
 			return None
 		if self.get_config('owner_only') and not user.has_permission(self.gadget):
 			return False
-		handle_user_command(self.gadget.map, self.gadget, None, "giveitem %s %s %s" % (user.protocol_id(), self.get_config('item_id').split()[0], "tempcopy" if self.get_config('temp') else "copy"))
+		if isinstance(item_id, list):
+			item_id = random.choice(item_id)
+		handle_user_command(self.gadget.map, self.gadget, None, "giveitem %s %s %s" % (user.protocol_id(), item_id.split()[0], "tempcopy" if self.get_config('temp') else "copy"))
 		return False
 
 class GadgetDoodleBoard(GadgetTrait):

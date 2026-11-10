@@ -2831,7 +2831,8 @@ function editItemShared(item) {
 								document.getElementById('gadgetTypeRaw').checked = false;
 								document.getElementById('gadgetTypePreset').checked = true;
 							} else if(trait[0] === "give_item") {
-								document.getElementById('edittilegadget_preset_give_item_item').value = trait[1].item_id ?? "";
+								let item_id = trait[1].item_id ?? "";
+								document.getElementById('edittilegadget_preset_give_item_item').value = Array.isArray(item_id) ? item_id.join(",") : item_id;
 								document.getElementById('edittilegadget_preset_give_item_temp').checked = trait[1].temp ?? false;
 								document.getElementById('edittilegadget_preset_give_item_owner_only').checked = trait[1].owner_only;
 
@@ -3380,7 +3381,9 @@ function editItemApply() {
 								t.break_max_distance = true;
 							break;
 						case "give_item":
-							t.item_id = document.getElementById('edittilegadget_preset_give_item_item').value;
+							t.item_id = document.getElementById('edittilegadget_preset_give_item_item').value.split(",");
+							if (t.item_id.length == 1)
+								t.item_id = t.item_id[0];
 							if (document.getElementById('edittilegadget_preset_give_item_temp').checked)
 								t.temp = true;
 							if (document.getElementById('edittilegadget_preset_give_item_owner_only').checked)
