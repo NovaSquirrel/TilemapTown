@@ -2498,7 +2498,8 @@ def synchronize_offset(map, client):
 def fn_offset(map, client, context, arg):
 	arg = arg.split(' ')
 	if len(arg) == 2:
-		offset_x, offset_y = min(32, max(-32, int(arg[0]))), min(32, max(-32, int(arg[1])))
+		max_offset = Config["Server"]["MaxEntityOffset"]
+		offset_x, offset_y = min(max_offset, max(-max_offset, int(arg[0]))), min(max_offset, max(-max_offset, int(arg[1])))
 		client.offset = [offset_x, offset_y]
 		map.broadcast("MOV", {"id": client.protocol_id(), "offset": [offset_x, offset_y]}, remote_category=maplisten_type['move'])
 	else:
@@ -2513,7 +2514,8 @@ def fn_roffset(map, client, context, arg):
 		offset = client.offset
 		if offset == None:
 			offset = [0, 0]
-		offset_x, offset_y = min(32, max(-32, offset[0] + int(arg[0]))), min(32, max(-32, offset[1] + int(arg[1])))
+		max_offset = Config["Server"]["MaxEntityOffset"]
+		offset_x, offset_y = min(max_offset, max(-max_offset, offset[0] + int(arg[0]))), min(max_offset, max(-max_offset, offset[1] + int(arg[1])))
 		client.offset = [offset_x, offset_y]
 		map.broadcast("MOV", {"id": client.protocol_id(), "offset": [offset_x, offset_y]}, remote_category=maplisten_type['move'])
 	else:
@@ -3615,6 +3617,7 @@ def fn_userparticle(map, client, context, arg):
 		lowered = a.lower()
 		split = lowered.split("=")
 		if len(split) == 2:
+			max_offset = Config["Server"]["MaxUserParticleOffset"]
 			if split[0] == "at":
 				comma = split[1].split(",")
 				if is_two_ints(comma):
@@ -3630,13 +3633,13 @@ def fn_userparticle(map, client, context, arg):
 			elif split[0] in ("offset", "o"):
 				comma = split[1].split(",")
 				if is_two_ints(comma):
-					arg["offset"] = [min(48, max(-48, int(comma[0]))), min(48, max(-48, int(comma[1])))]
+					arg["offset"] = [min(max_offset, max(-max_offset, int(comma[0]))), min(max_offset, max(-max_offset, int(comma[1])))]
 			elif split[0] in ("random_offset", "randomoffset", "ro"):
 				comma = split[1].split(",")
 				if len(comma) == 4 and string_is_int(comma[0]) and string_is_int(comma[1]) and string_is_int(comma[2]) and string_is_int(comma[3]):
 					shake_x = int(comma[2])
 					shake_y = int(comma[3]) 
-					arg["offset"] = [min(48, max(-48, int(comma[0])+random.randint(-shake_x, shake_x))), min(48, max(-48, int(comma[1])+random.randint(-shake_y, shake_y)))]
+					arg["offset"] = [min(max_offset, max(-max_offset, int(comma[0])+random.randint(-shake_x, shake_x))), min(max_offset, max(-max_offset, int(comma[1])+random.randint(-shake_y, shake_y)))]
 			elif split[0] in ("duration", "d"):
 				arg["duration"] = min(Config["Server"]["MaxUserParticleDuration"], max(1, int(split[1])))
 			elif split[0] in ("anim_loops", "anim_frames", "anim_speed", "anim_mode", "anim_offset"):

@@ -92,9 +92,11 @@ def loadConfigJson(clearLogs=True):
 	setConfigDefault("Server",   "RequestExpirationTime", 1200)
 	setConfigDefault("Server",   "MaxEntityWidth", 64)
 	setConfigDefault("Server",   "MaxEntityHeight", 64)
+	setConfigDefault("Server",   "MaxEntityOffset", 32)
 	setConfigDefault("Server",   "MaxUserParticleWidth", 4)
 	setConfigDefault("Server",   "MaxUserParticleHeight", 4)
 	setConfigDefault("Server",   "MaxUserParticleDuration", 50)
+	setConfigDefault("Server",   "MaxUserParticleOffset", 48)
 	setConfigDefault("Server",   "AllowedMusicFileExtensions", [".mod", ".s3m", ".xm", ".it", ".mptm", ".flac", ".mp3", ".ogg", ".opus", ".wav"])
 	setConfigDefault("Server",   "AllowedImageFileExtensions", [".png"])
 	setConfigDefault("Server",   "EntityCompressionThreshold", 600)
@@ -648,7 +650,7 @@ def remove_invalid_dict_fields(data, whitelist):
 def is_list_with_two_ints(data):
 	return isinstance(data, list) and len(data) == 2 and isinstance(data[0], int) and isinstance(data[1], int)
 def offset_is_okay(x):
-	return is_list_with_two_ints(x) and x[0] >= -32 and x[0] <= 32 and x[1] >= -32 and x[1] <= 32
+	return is_list_with_two_ints(x) and x[0] >= -Config["Server"]["MaxEntityOffset"] and x[0] <= Config["Server"]["MaxEntityOffset"] and x[1] >= -Config["Server"]["MaxEntityOffset"] and x[1] <= Config["Server"]["MaxEntityOffset"]
 def check_anim_settings_override(x):
 	if not isinstance(x, list) or len(x) > 3:
 		return False
@@ -675,6 +677,7 @@ def process_entity_pic(pic):
 def process_extended_pic_details(details):
 	if not isinstance(details, dict):
 		return None
+	max_offset = Config["Server"]["MaxEntityOffset"]
 	details = remove_invalid_dict_fields({entity_pic_rename.get(k,k):v for k,v in details.items()}, {
 		"v":   lambda x: x == 0,
 		"u":   image_url_is_okay,
@@ -684,9 +687,9 @@ def process_extended_pic_details(details):
 		"ma":  check_anim_settings_override,
 		"mat": int,
 		"sh":  lambda x: isinstance(x, int) and x > 0 and x <= Config["Server"]["MaxEntityHeight"],
-		"xof": lambda x: isinstance(x, list) and len(x) <= 8 and all(_ > -32 and _ < 32 for _ in x),
-		"yof": lambda x: isinstance(x, list) and len(x) <= 8 and all(_ > -32 and _ < 32 for _ in x),
-		"zof": lambda x: isinstance(x, list) and len(x) <= 8 and all(_ > -32 and _ < 32 for _ in x),
+		"xof": lambda x: isinstance(x, list) and len(x) <= 8 and all(_ > -max_offset and _ < max_offset for _ in x),
+		"yof": lambda x: isinstance(x, list) and len(x) <= 8 and all(_ > -max_offset and _ < max_offset for _ in x),
+		"zof": lambda x: isinstance(x, list) and len(x) <= 8 and all(_ > -max_offset and _ < max_offset for _ in x),
 	})
 	if not details or details.get("v") != 0:
 		return None

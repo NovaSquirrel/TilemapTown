@@ -122,6 +122,10 @@ Server.MaxEntityHeight
 Default: 64
 How tall an entity is allowed to be in pixels, when using extended entity pics.
 
+Server.MaxEntityOffset
+Default: 32
+Maximum amount of offset an entity can have from its usual draw position, in pixels.
+
 Server.MaxUserParticleWidth
 Default: 4
 How width a user particle is allowed to be in 16x16 units.
@@ -133,6 +137,10 @@ How tall a use particle is allowed to be in 16x16 units.
 Server.MaxUserParticleDuration
 Default: 50
 How long a user particle is allowed to go on for, in 0.1 second units.
+
+Server.MaxUserParticleOffset
+Default: 48
+How far a user particle can be from the entity it's attached to, in pixels.
 
 Server.AllowedImageFileExtensions
 Default: [".png"]
