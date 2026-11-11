@@ -3626,7 +3626,7 @@ def fn_userparticle(map, client, context, arg):
 			elif split[0] == "size":
 				comma = split[1].split(",")
 				if is_two_ints(comma):
-					arg["size"] = [min(4, max(1, int(comma[0]))), min(4, max(1, int(comma[1])))]
+					arg["size"] = [min(Config["Server"]["MaxUserParticleWidth"], max(1, int(comma[0]))), min(Config["Server"]["MaxUserParticleHeight"], max(1, int(comma[1])))]
 			elif split[0] in ("offset", "o"):
 				comma = split[1].split(",")
 				if is_two_ints(comma):
@@ -3638,13 +3638,13 @@ def fn_userparticle(map, client, context, arg):
 					shake_y = int(comma[3]) 
 					arg["offset"] = [min(48, max(-48, int(comma[0])+random.randint(-shake_x, shake_x))), min(48, max(-48, int(comma[1])+random.randint(-shake_y, shake_y)))]
 			elif split[0] in ("duration", "d"):
-				arg["duration"] = min(50, max(1, int(split[1])))
+				arg["duration"] = min(Config["Server"]["MaxUserParticleDuration"], max(1, int(split[1])))
 			elif split[0] in ("anim_loops", "anim_frames", "anim_speed", "anim_mode", "anim_offset"):
 				arg[split[0]] = int(split[1])
 		elif lowered == "hide_me":
 			arg["hide_me"] = True
 	if 'duration' not in arg:
-		arg['duration'] = 50 if "anim_loops" in arg else 10
+		arg['duration'] = Config["Server"]["MaxUserParticleDuration"] if "anim_loops" in arg else 10
 	if context.get('script_entity'):
 		script_entity = context.get('script_entity')
 		arg['rc_username'] = find_username_by_db_id(script_entity.owner_id)

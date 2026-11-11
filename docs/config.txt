@@ -122,6 +122,18 @@ Server.MaxEntityHeight
 Default: 64
 How tall an entity is allowed to be in pixels, when using extended entity pics.
 
+Server.MaxUserParticleWidth
+Default: 4
+How width a user particle is allowed to be in 16x16 units.
+
+Server.MaxUserParticleHeight
+Default: 4
+How tall a use particle is allowed to be in 16x16 units.
+
+Server.MaxUserParticleDuration
+Default: 50
+How long a user particle is allowed to go on for, in 0.1 second units.
+
 Server.AllowedImageFileExtensions
 Default: [".png"]
 Which file extensions are allowed with the /userpic command, and other places images are allowed.  Must be lowercase. If null, all extensions are allowed.
