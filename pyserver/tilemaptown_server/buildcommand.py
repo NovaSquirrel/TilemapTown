@@ -584,7 +584,7 @@ givetype_text2 = {
 	"copy":     "give a copy of",
 	"tempcopy": "give a temporary copy of",
 }
-@cmd_command(alias=['itemgive', 'senditem'], syntax="user item transfer/move/copy/tempcopy")
+@cmd_command(alias=['itemgive', 'senditem', 'give_item', 'send_item'], syntax="user item transfer/move/copy/tempcopy")
 def fn_giveitem(map, client, context, arg):
 	args = arg.split(' ')
 	if len(args) != 3:
@@ -3657,7 +3657,7 @@ def fn_userparticle(map, client, context, arg):
 		arg['rc_username'] = context['client'].username_or_id()
 	map.broadcast("EXT", {"user_particle": arg})
 
-@cmd_command()
+@cmd_command(alias=["useitem"])
 def fn_use_item(map, client, context, arg):
 	GlobalData['handle_protocol_command'](client.connection() if hasattr(client, 'connection') else None, map, client, "USE", {"id": int_if_numeric(arg)}, None, None)
 
