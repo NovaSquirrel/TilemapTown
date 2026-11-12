@@ -3657,8 +3657,8 @@ def fn_userparticle(map, client, context, arg):
 		arg['rc_username'] = context['client'].username_or_id()
 	map.broadcast("EXT", {"user_particle": arg})
 
-@cmd_command(alias=["useitem"])
-def fn_use_item(map, client, context, arg):
+@cmd_command(alias=["use_item"])
+def fn_useitem(map, client, context, arg):
 	GlobalData['handle_protocol_command'](client.connection() if hasattr(client, 'connection') else None, map, client, "USE", {"id": int_if_numeric(arg)}, None, None)
 
 # -------------------------------------
