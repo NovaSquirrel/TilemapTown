@@ -623,12 +623,14 @@ def image_format_is_okay(url):
 def image_url_is_okay(url):
 	return user_file_url_is_ok(url) and image_format_is_okay(url)
 
-def pic_is_okay(pic):
+def pic_is_okay(pic, for_particle=False):
 	if not isinstance(pic, list) and not isinstance(pic, tuple):
 		return False
 	if len(pic) != 3:
 		return False
 	if isinstance(pic[0], str):
+		if for_particle:
+			return image_url_is_okay(pic[0]) and isinstance(pic[1], int) and isinstance(pic[2], int) 
 		if not image_url_is_okay(pic[0]) or (not isinstance(pic[1],dict) and pic[1] != 0) or pic[2] != 0:
 			return False
 	elif not isinstance(pic[1], int) or not isinstance(pic[2], int):

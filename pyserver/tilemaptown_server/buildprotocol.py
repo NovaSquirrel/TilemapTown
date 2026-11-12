@@ -1760,7 +1760,7 @@ def ext_user_particle(connection, map, client, context, arg, name):
 	if map == None:
 		return
 	arg = remove_invalid_dict_fields(arg, {
-		"pic":              pic_is_okay,
+		"pic":              lambda x: pic_is_okay(x, for_particle=True),
 		"size":             lambda x: is_list_with_two_ints(x) and x[0] >= 1 and x[0] <= Config["Server"]["MaxUserParticleWidth"] and x[1] >= 1 and x[1] <= Config["Server"]["MaxUserParticleHeight"],
 		"at":               lambda x: x == "me" or is_list_with_two_ints(x),
 		"offset":           lambda x: is_list_with_two_ints(x) and x[0] >= -Config["Server"]["MaxUserParticleOffset"] and x[0] <= Config["Server"]["MaxUserParticleOffset"] and x[1] >= -Config["Server"]["MaxUserParticleOffset"] and x[1] <= Config["Server"]["MaxUserParticleOffset"],

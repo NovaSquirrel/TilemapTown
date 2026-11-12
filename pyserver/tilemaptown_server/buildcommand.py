@@ -3599,7 +3599,7 @@ def fn_userparticle(map, client, context, arg):
 	if len(params) < 3:
 		return
 	pic = [int_if_numeric(params[0]), int_if_numeric(params[1]), int_if_numeric(params[2])]
-	if not pic_is_okay(pic):
+	if not pic_is_okay(pic, for_particle=True):
 		respond(context, 'Invalid picture', error=True)
 		return
 	arg = {
