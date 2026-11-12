@@ -104,6 +104,9 @@ Clears the hotbar
 /cameraxy x y
 Lock the camera to a specific place, or unlock it if no coordinates are provided
 
+/use_item ID
+Acts as if you had clicked on a specific entity
+
 ---Account/customization---
 /nick newname
 Change display name
