@@ -3680,22 +3680,25 @@ function paintPartialUpdate(x1, y1, x2, y2) {
 }
 
 function paintRenderAll() {
-	let ctx = paintCanvas.getContext("2d");
-	ctx.clearRect(0, 0, paintCanvas.width, paintCanvas.height);
-	for(let y=0; y<paintMapHeight; y++) {
-		for(let x=0; x<paintMapWidth; x++) {
-			let data_value = paintMapData[y*paintMapWidth+x];
-			ctx.drawImage(paintTilesetImage,
-				(data_value & 63) * paintTileWidth, ((data_value >> 6) & 63) * paintTileHeight,
-			paintTileWidth, paintTileHeight,
-			x * paintTileWidth,
-			y * paintTileHeight,
-			paintTileWidth, paintTileHeight);
+	try {
+		let ctx = paintCanvas.getContext("2d");
+		ctx.clearRect(0, 0, paintCanvas.width, paintCanvas.height);
+		for(let y=0; y<paintMapHeight; y++) {
+			for(let x=0; x<paintMapWidth; x++) {
+				let data_value = paintMapData[y*paintMapWidth+x];
+				ctx.drawImage(paintTilesetImage,
+					(data_value & 63) * paintTileWidth, ((data_value >> 6) & 63) * paintTileHeight,
+				paintTileWidth, paintTileHeight,
+				x * paintTileWidth,
+				y * paintTileHeight,
+				paintTileWidth, paintTileHeight);
+			}
 		}
+		let previewCtx = paintPreviewCanvas.getContext("2d");
+		previewCtx.clearRect(0, 0, paintPreviewCanvas.width, paintPreviewCanvas.height);
+		previewCtx.drawImage(paintCanvas, 0, 0)
+	} catch (error) {
 	}
-	let previewCtx = paintPreviewCanvas.getContext("2d");
-	previewCtx.clearRect(0, 0, paintPreviewCanvas.width, paintPreviewCanvas.height);
-	previewCtx.drawImage(paintCanvas, 0, 0)
 }
 
 /////////////////////////////
@@ -3724,10 +3727,13 @@ function paintColor(color) {
 	let canvas = document.getElementById('doodleBoardPaintCurrentColor');
 	let ctx = canvas.getContext('2d');
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	if(paintMode2x1) {
-		ctx.drawImage(paintTilesetImage, 1, currentPaintColor, 1, 1, 0, 0, 1, 1);
-	} else {
-		ctx.drawImage(paintTilesetImage, (currentPaintColor&3)*64+8, ((currentPaintColor>>2)&3)*32, 2, 1, 0, 0, 2, 1);
+	try {
+		if(paintMode2x1) {
+			ctx.drawImage(paintTilesetImage, 1, currentPaintColor, 1, 1, 0, 0, 1, 1);
+		} else {
+			ctx.drawImage(paintTilesetImage, (currentPaintColor&3)*64+8, ((currentPaintColor>>2)&3)*32, 2, 1, 0, 0, 2, 1);
+		}
+	} catch(error) {
 	}
 }
 
