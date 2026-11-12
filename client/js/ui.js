@@ -2066,7 +2066,7 @@ function refreshCommandList() {
 					commandValue = [commandValue];
 				}
 				for (let subCommand of commandValue) {
-					if (subCommand.toLowerCase().startsWith("usp ") || subCommand.toLowerCase().startsWith("userparticle ") || safeForCommandLists.includes(subCommand.toLowerCase().split(" ")[0]) || safeForCommandLists.includes(commandListItem.id.toString()) || confirm('Run command "' + subCommand + '"?')) {
+					if (subCommand.toLowerCase().startsWith("usp ") || subCommand.toLowerCase().startsWith("userparticle ") || subCommand.toLowerCase().startsWith("useitem ") || safeForCommandLists.includes(subCommand.toLowerCase().split(" ")[0]) || safeForCommandLists.includes(commandListItem.id.toString()) || confirm('Run command "' + subCommand + '"?')) {
 						if (runLocalCommand("/"+subCommand));
 						else sendChatCommand(subCommand);
 					}
