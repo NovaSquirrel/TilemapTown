@@ -1149,7 +1149,7 @@ class GadgetPicCycle(GadgetTrait):
 		set_and_update_who(self.gadget, 'pic', 'pic', [self.pic[0], self.pic[1]+self.current_frame, self.pic[2]])
 
 	def on_use(self, user):
-		if not self.gadget:
+		if not self.gadget or not (self.gadget.map is user.map):
 			return None
 		if self.get_config('owner_only') and not user.has_permission(self.gadget):
 			return True
@@ -1180,7 +1180,7 @@ class GadgetDirCycle(GadgetTrait):
 			set_and_update_who(self.gadget, 'dir', 'dir', self.pattern[self.current_frame])
 
 	def on_use(self, user):
-		if not self.gadget:
+		if not self.gadget or not (self.gadget.map is user.map):
 			return None
 		if self.get_config('owner_only') and not user.has_permission(self.gadget):
 			return True
