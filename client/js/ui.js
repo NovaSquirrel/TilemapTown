@@ -3901,7 +3901,10 @@ function paintChangedPalette(request) {
 	let value = document.getElementById('paintPaletteSelect').value;
 	document.getElementById('paintCustomPaletteUrl').style.display = value === "custom" ? "block" : "none";
 	if(request) {
-		let url = (value === "custom") ? document.getElementById("paintCustomPaletteUrl").value.trim() : value;
+		let url = document.getElementById("paintCustomPaletteUrl").value;
+		if (url.startsWith("https://lospec.com/palette-list/"))
+			document.getElementById("paintCustomPaletteUrl").value = "https://tilemap.town/lospec-palette/" + url.slice(32) + ".png";
+		url = (value === "custom") ? document.getElementById("paintCustomPaletteUrl").value.trim() : value;
 		let miniTilemap = PlayerWho[paintItemID]?.mini_tilemap;
 		if (!miniTilemap) return; 
 		miniTilemap = structuredClone(miniTilemap);
