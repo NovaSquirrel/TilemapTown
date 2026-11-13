@@ -2976,7 +2976,6 @@ function editItemShared(item) {
 				document.getElementById('edittilecommandlist').style.display = "block";
 				let text = "";
 				for (let command of item.data.data) {
-					if ("comment" in command)    text += "/" + command.command + "\n";
 					if ("name" in command) {
 						if (text !== "")
 							text += "\n"
