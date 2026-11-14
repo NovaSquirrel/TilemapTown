@@ -5014,7 +5014,8 @@ XBBCODE.addTags({
 			let filteredJS = content.replace(/\x22/g, '\\\x22');
 			let filteredHTML = content.replace(/\x22/g, '&quot;');
 			if(params !== undefined) {
-				filteredHTML = params.substr(1).replace(/\x22/g, '&quot;');
+				if (params.length && params[0] === '=') params = params.slice(1);
+				filteredJS = params.replace(/\x22/g, '\\\x22');
 			}
 			return '<input type="button" value="&#x1F916;' + filteredHTML + '" onClick=\'botMessageButton('+JSON.stringify(senderIdForBbcode)+',"' + filteredJS + '"); event.stopPropagation();\'></input>';
 		},
