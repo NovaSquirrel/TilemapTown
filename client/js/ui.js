@@ -2677,6 +2677,7 @@ function editItemShared(item) {
 				document.getElementById('edittilegadget_preset_doodle_board_ignore_clicks').checked = false;
 				document.getElementById('edittilegadget_preset_give_item_item').value = "";
 				document.getElementById('edittilegadget_preset_give_item_temp').checked = false;
+				document.getElementById('edittilegadget_preset_give_item_menu').checked = false;
 				document.getElementById('edittilegadget_preset_give_item_owner_only').checked = false;
 				document.getElementById('edittilegadget_preset_choice').value = "nothing";
 				updateDoodleBoardPixelSize();
@@ -2834,6 +2835,7 @@ function editItemShared(item) {
 								let item_id = trait[1].item_id ?? "";
 								document.getElementById('edittilegadget_preset_give_item_item').value = Array.isArray(item_id) ? item_id.join(",") : item_id;
 								document.getElementById('edittilegadget_preset_give_item_temp').checked = trait[1].temp ?? false;
+								document.getElementById('edittilegadget_preset_give_item_menu').checked = trait[1].show_menu ?? false;
 								document.getElementById('edittilegadget_preset_give_item_owner_only').checked = trait[1].owner_only;
 
 								document.getElementById('edittilegadget_preset_choice').value = trait[0];
@@ -3385,6 +3387,8 @@ function editItemApply() {
 								t.item_id = t.item_id[0];
 							if (document.getElementById('edittilegadget_preset_give_item_temp').checked)
 								t.temp = true;
+							if (document.getElementById('edittilegadget_preset_give_item_menu').checked)
+								t.show_menu = true;
 							if (document.getElementById('edittilegadget_preset_give_item_owner_only').checked)
 								t.owner_only = true;
 							break;

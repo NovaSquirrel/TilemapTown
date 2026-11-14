@@ -736,16 +736,39 @@ class GadgetUserParticle(GadgetTrait):
 class GadgetGiveItem(GadgetTrait):
 	usable = True
 
+	def on_bot_message_button(self, user, arg):
+		print("got message", arg)
+		if not self.gadget:
+			return None
+		picked_item = arg.get('text')
+		if not picked_item:
+			return None
+		print("picked item", picked_item)
+		item_object = get_entity_by_id(picked_item, load_from_db=False)
+		if item_object and item_object.map is self.gadget:
+			handle_user_command(self.gadget.map, self.gadget, None, "giveitem %s %s %s" % (user.protocol_id(), item_object.protocol_id(), "tempcopy" if self.get_config('temp') else "copy"))
+		return True
+
 	def on_use(self, user):
 		item_id = self.get_config('item_id')
 		if not self.gadget or not item_id:
 			return None
 		if self.get_config('owner_only') and not user.has_permission(self.gadget):
 			return False
-		if isinstance(item_id, list):
-			item_id = random.choice(item_id)
-		handle_user_command(self.gadget.map, self.gadget, None, "giveitem %s %s %s" % (user.protocol_id(), item_id.split()[0], "tempcopy" if self.get_config('temp') else "copy"))
-		return False
+		if self.get_config('show_menu') and isinstance(item_id, list):
+			rows = []
+			for item_in_list in item_id:
+				item_object = get_entity_by_id(item_in_list, load_from_db=False)
+				if item_object and item_object.map is self.gadget:
+					rows.append("[li][bot-message-button=%s]%s[/bot-message-button][/li]" % (item_object.protocol_id(), noparse(item_object.name)))
+				if rows:
+					self.tell(user, "[ul]%s[/ul]" % "".join(rows))
+			return False
+		else:
+			if isinstance(item_id, list):
+				item_id = random.choice(item_id)
+			handle_user_command(self.gadget.map, self.gadget, None, "giveitem %s %s %s" % (user.protocol_id(), item_id.split()[0], "tempcopy" if self.get_config('temp') else "copy"))
+			return False
 
 class GadgetDoodleBoard(GadgetTrait):
 	MAP_WIDTH = 8
