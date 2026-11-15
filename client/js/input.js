@@ -1155,6 +1155,7 @@ function useItemAtXY(Placed, x, y) {
 			viewTileset(Placed);
 			break;
 		case "map_tile":
+			if (!Placed.data) break;
 			let ActualAtom = AtomFromName(Placed.data);
 			// place the item on the ground
 
