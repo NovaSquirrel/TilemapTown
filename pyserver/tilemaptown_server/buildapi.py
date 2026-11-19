@@ -211,6 +211,7 @@ async def put_map(request):
 		tile_test = [tile_is_okay(_) for _ in o[2]]
 		if all(_[0] for _ in tile_test):
 			map.objs[o[0]][o[1]] = o[2]
+	map.map_wallpaper = None
 	if "wallpaper" in d:
 		map.map_wallpaper = remove_invalid_dict_fields(d["wallpaper"], {
 			"url": image_url_is_okay,
@@ -223,15 +224,12 @@ async def put_map(request):
 		})
 		if not("url" in map.map_wallpaper):
 			map.map_wallpaper = None
-	else:
-		map.map_wallpaper = None
+	map.map_music = None
 	if "music" in d and user_file_url_is_ok(d["music"]):
-		if user_file_url_is_ok(arg[0]):
+		if user_file_url_is_ok(d["music"]):
 			lower = d["music"].lower()
 			if Config["Server"]["AllowedMusicFileExtensions"] == None or any(lower.endswith(ext) for ext in Config["Server"]["AllowedMusicFileExtensions"]):
 				map.map_music = d["music"]
-	else:
-		map.map_music = None
 	# No support for edge links here
 
 	write_to_file_log(connection, "Imported map %s (user %s)" % (request.match_info['map_id'], connection.entity.name_and_username()))
