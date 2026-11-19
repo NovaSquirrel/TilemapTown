@@ -221,11 +221,17 @@ async def put_map(request):
 			"over_turf": bool,
 			"offset": is_list_with_two_ints,
 		})
+		if not("url" in map.map_wallpaper):
+			map.map_wallpaper = None
+	else:
+		map.map_wallpaper = None
 	if "music" in d and user_file_url_is_ok(d["music"]):
 		if user_file_url_is_ok(arg[0]):
 			lower = d["music"].lower()
 			if Config["Server"]["AllowedMusicFileExtensions"] == None or any(lower.endswith(ext) for ext in Config["Server"]["AllowedMusicFileExtensions"]):
 				map.map_music = d["music"]
+	else:
+		map.map_music = None
 	# No support for edge links here
 
 	write_to_file_log(connection, "Imported map %s (user %s)" % (request.match_info['map_id'], connection.entity.name_and_username()))
