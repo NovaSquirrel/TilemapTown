@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import time, os, random, json, html, hashlib
+import time, os, random, json, html, hashlib, zlib
 from aiohttp import web, ClientSession
 from string import Template
 from .buildglobal import *
@@ -111,7 +111,7 @@ async def server_version(request):
 async def server_resources(request):
 	return web.json_response(ServerResources, headers=MAIN_API_CORS_HEADERS_CACHED)
 
-def map_from_id(map_id):
+def map_from_id(map_id, connection=None):
 	if not map_id.isdecimal():
 		return (False,web.Response(status=400, text="Map ID is invalid", headers=MAIN_API_CORS_HEADERS))
 	map_id = int(map_id)
@@ -124,14 +124,15 @@ def map_from_id(map_id):
 		return (False,web.Response(status=400, text="Couldn't load map", headers=MAIN_API_CORS_HEADERS))
 	#if map.map_flags & mapflag['public'] == 0:
 	#	return (False,web.Response(status=401, text="Map isn't public", headers=MAIN_API_CORS_HEADERS))
-	if (map.deny & permission['entry']) or (map.guest_deny & permission['entry']):
+	if ((map.deny & permission['entry']) or (map.guest_deny & permission['entry'])) and (not connection or not connection.db_id or map.owner_id != connection.db_id):
 		return (False,web.Response(status=401, text="That map is private", headers=MAIN_API_CORS_HEADERS))
 
 	return (True,map)
 
 @routes.get('/v1/map/{map_id}')
-async def map_info(request):
-	map_ok, map = map_from_id(request.match_info['map_id'])
+async def get_map(request):
+	connection = get_connection_from_api_key(request, required=False, for_file_upload=False)
+	map_ok, map = map_from_id(request.match_info['map_id'], connection)
 	if not map_ok:
 		return map
 
@@ -157,7 +158,82 @@ async def map_info(request):
 					data["data"] = {'pos': from_db['pos'], 'default': from_db['default'], 'turf': from_db['turf'], 'obj': from_db['obj']}
 	except:
 		pass
-	return web.json_response(data, headers=MAIN_API_CORS_HEADERS)
+	return web.json_response(data, headers=CORS_HEADERS)
+
+@routes.put('/v1/map/{map_id}')
+async def put_map(request):
+	connection = get_connection_from_api_key(request)
+	map_ok, map = map_from_id(request.match_info['map_id'], connection)
+	if not map_ok:
+		return map
+	if not connection or not connection.db_id or map.owner_id != connection.db_id:
+		raise web.HTTPForbidden(headers=CORS_HEADERS)
+
+	# File must be present and must be in the right format
+	info = await get_info_from_multipart(request, no_extension_check=True)
+	if "file" not in info:
+		raise web.HTTPBadRequest(text="Must include a file to upload", headers=CORS_HEADERS)
+	if info.get("format") != "json_v1":
+		raise web.HTTPBadRequest(text="Unsupported format (must be \"json_v1\")", headers=CORS_HEADERS)
+	file_data = info["file"]
+
+	# Try to read the file
+	try:
+		decompress = zlib.decompressobj()
+		file_data = decompress.decompress(file_data, max_length=Config["FileUpload"]["MaximumDecompressedMapFileSize"]*1024)
+		if decompress.unconsumed_tail:
+			file_data = None
+		file_data = json.loads(file_data.decode("utf-8"))
+	except:
+		raise
+	if not file_data or not isinstance(file_data, dict) or not ("info" in file_data) or not ("data" in file_data):
+		raise web.HTTPBadRequest(text="Bad map file", headers=CORS_HEADERS)
+
+	map.load_data(load_anyway=True)
+	if file_data["info"]["size"][0] > Config["Server"]["MaxMapSize"] or file_data["info"]["size"][1] > Config["Server"]["MaxMapSize"]:
+		raise web.HTTPBadRequest(text="Uploaded map's dimensions are too big", headers=CORS_HEADERS)
+	if tile_is_okay(file_data["info"]["default"]):
+		map.default_turf = file_data["info"]["default"]
+	map.blank_map(file_data["info"]["size"][0], file_data["info"]["size"][1])
+	map.name = filter_displayname(file_data["info"]["name"])
+	map.desc = file_data["info"]["desc"]
+	map.tags = file_data["info"]["tags"]
+
+	# Apply the map data from the file
+	d = file_data["data"]
+	for t in d["turf"]:
+		tile_test = tile_is_okay(t[2])
+		if tile_test[0]:
+			map.turfs[t[0]][t[1]] = t[2]
+	for o in d["obj"]:
+		if not o:
+			continue
+		tile_test = [tile_is_okay(_) for _ in o[2]]
+		if all(_[0] for _ in tile_test):
+			map.objs[o[0]][o[1]] = o[2]
+	if "wallpaper" in d:
+		map.map_wallpaper = remove_invalid_dict_fields(d["wallpaper"], {
+			"url": image_url_is_okay,
+			"center": bool,
+			"repeat": bool,
+			"repeat_x": bool,
+			"repeat_y": bool,
+			"over_turf": bool,
+			"offset": is_list_with_two_ints,
+		})
+	if "music" in d and user_file_url_is_ok(d["music"]):
+		if user_file_url_is_ok(arg[0]):
+			lower = d["music"].lower()
+			if Config["Server"]["AllowedMusicFileExtensions"] == None or any(lower.endswith(ext) for ext in Config["Server"]["AllowedMusicFileExtensions"]):
+				map.map_music = d["music"]
+	# No support for edge links here
+
+	write_to_file_log(connection, "Imported map %s (user %s)" % (request.match_info['map_id'], connection.entity.name_and_username()))
+	map.map_data_modified = True
+	if not map.temporary:
+		map.save_and_commit()
+	map.resend_map_info_to_users(mai_only=False)
+	return web.json_response({"info": map.map_info()}, headers=CORS_HEADERS)
 
 @routes.get('/v1/tsd/{id}')
 async def get_tsd(request):
@@ -251,8 +327,8 @@ def write_to_file_log(connection, text):
 	if UploadLog:
 		UploadLog.write(message + "\n")
 
-def get_connection_from_api_key(request):
-	if not Config["FileUpload"]["Enabled"]:
+def get_connection_from_api_key(request, required=True, for_file_upload=True):
+	if for_file_upload and not Config["FileUpload"]["Enabled"]:
 		raise web.HTTPServiceUnavailable(text="File uploads currently disabled", headers=CORS_HEADERS)
 	authorization = request.headers.get("Authorization")
 	if isinstance(authorization, str) and authorization.startswith("Bearer "):
@@ -260,7 +336,9 @@ def get_connection_from_api_key(request):
 		connection = ConnectionsByApiKey.get(token)
 		if connection:
 			return connection
-	raise web.HTTPUnauthorized(headers=CORS_HEADERS)
+	if required:
+		raise web.HTTPUnauthorized(headers=CORS_HEADERS)
+	return None
 
 def url_for_user_file(db_id, filename):
 	return "%s%s/%s" % (Config["FileUpload"]["URLPrefix"], str(db_id), filename)
@@ -280,10 +358,10 @@ def storage_limit_for_connection(connection):
 def file_is_probably_png(data):
 	return data.startswith(bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]))
 
-multipart_text_names = {"name", "desc", "folder", "set_my_pic_ext"}
+multipart_text_names = {"name", "desc", "folder", "set_my_pic_ext", "format"}
 multipart_bool_names = {"keep_url", "set_my_pic", "create_entity"}
 multipart_file_names = {"file"}
-async def get_info_from_multipart(request):
+async def get_info_from_multipart(request, no_extension_check=False):
 	out = {}
 	reader = await request.multipart()
 	while True:
@@ -310,7 +388,7 @@ async def get_info_from_multipart(request):
 			out[field.name + "_original"]  = field.filename
 			out[field.name + "_name"]      = base_name
 			out[field.name + "_extension"] = file_extension
-			if file_extension not in Config["FileUpload"]["AllowedFileExtensions"]:
+			if not no_extension_check and file_extension not in Config["FileUpload"]["AllowedFileExtensions"]:
 				raise web.HTTPUnsupportedMediaType(text="Uploaded file is not an allowed type", headers=CORS_HEADERS)
 			if file_extension == '.png' and not file_is_probably_png(data):
 				raise web.HTTPUnsupportedMediaType(text="Uploaded file is not a valid image", headers=CORS_HEADERS)
@@ -953,6 +1031,9 @@ async def delete_folder(request):
 	raise web.HTTPNoContent(headers=CORS_HEADERS)
 
 if Config["FileUpload"]["AllowCrossOrigin"]:
+	@routes.options('/v1/map/{map_id}')
+	async def list_options(_: web.Request) -> web.Response:
+		return web.json_response({"message": "Accept all hosts"}, headers=CORS_HEADERS)
 	@routes.options('/v1/my_files')
 	async def list_options(_: web.Request) -> web.Response:
 		return web.json_response({"message": "Accept all hosts"}, headers=CORS_HEADERS)

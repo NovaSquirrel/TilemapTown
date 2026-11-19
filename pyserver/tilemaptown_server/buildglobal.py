@@ -186,6 +186,7 @@ def loadConfigJson(clearLogs=True):
 	setConfigDefault("FileUpload", "URLPrefix",      "")
 	setConfigDefault("FileUpload", "StoragePath",    "")
 	setConfigDefault("FileUpload", "MaximumFileSize",      512)
+	setConfigDefault("FileUpload", "MaximumDecompressedMapFileSize", 512)
 	setConfigDefault("FileUpload", "SizeLimitTotal",       102400)
 	setConfigDefault("FileUpload", "SizeLimitGuest",       0)
 	setConfigDefault("FileUpload", "SizeLimitUser",        128)
@@ -293,7 +294,7 @@ def write_to_connect_log(text):
 
 # Important information shared by each module
 ServerShutdown = [-1, False] # First value is seconds left, second value is true for restarts but false for shutdowns
-AllClients      = weakref.WeakSet()             # All connections curently in the world
+AllClients      = weakref.WeakSet()             # All connections currently in the world
 AllConnections  = weakref.WeakSet()             # All connections, regardless of if they're in the world
 AllMaps         = weakref.WeakSet()             # Maps only; used by /whereare
 AllEntitiesByDB = weakref.WeakValueDictionary() # All entities (indexed by database ID)
@@ -636,6 +637,38 @@ def pic_is_okay(pic, for_particle=False):
 	elif not isinstance(pic[1], int) or not isinstance(pic[2], int):
 		return False
 	return True
+
+def tile_is_okay(tile, parse_json=False):
+	if type(tile) == str:
+		if not len(tile):
+			return (False, 'Empty string')
+		if tile.strip() != tile:
+			return (False, 'Tile has unneeded padding')
+
+		# Sometimes it's a string containing JSON 
+		if tile[0] == '{':
+			if parse_json:
+				tile = json.loads(tile)
+			else:
+				return (False, 'JSON string')
+
+		# Strings that aren't JSON refer to tiles in tilesets and are
+		# definitely OK as long as they're not excessively long.
+		elif len(tile) <= 32:
+			return (True, None)
+		else:
+			return (False, 'Identifier too long')
+
+	# If it's not a string it must be a dictionary
+	if type(tile) != dict:
+		return (False, 'Invalid type')
+
+	if "pic" not in tile or len(tile["pic"]) != 3:
+		return (False, 'No/invalid picture')
+	if not pic_is_okay(tile["pic"]):
+		return (False, 'Invalid picture')
+
+	return (True, None)
 
 def remove_invalid_dict_fields(data, whitelist):
 	out = {}

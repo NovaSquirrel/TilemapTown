@@ -5,7 +5,7 @@ This is very experimental so it could change at any time.
 | Public information; no credentials required
 '----------------------------------------------------------
 
------ /v1/town_info -----
+----- GET /v1/town_info -----
 Gets information about the server's current status.
 
 Example response:
@@ -43,7 +43,7 @@ Example response:
 }
 
 
------ /v1/server_version -----
+----- GET /v1/server_version -----
 Gets information about the software running on the server.
 
 Example response:
@@ -72,40 +72,67 @@ Example response:
 }
 
 
------ /v1/server_resources -----
+----- GET /v1/server_resources -----
 Sends information about all of the built-in tile types the server provides, as well as all of the sprite sheets those tiles use.
 Same information sent in "RSC" protocol messages.
 
 
------ /v1/map/MAP_ID?info=1&data=1 -----
+----- GET /v1/map/MAP_ID?info=1&data=1 -----
 Retrieves information about a map, unless it's private.
+If an authorization header is provided (see file upload section) you can access your own private maps.
 If info is nonzero, an "info" field is added (formatted as in "MAI" protocol messages.) Defaults to 1 if not provided.
 If data is nonzero, a "data" field is added (formatted as in "MAP" protocol messages.) Defaults to 0 if not provided.
 
 Example response:
 {
-  "info": {
-    "name": "Main map",
-    "desc": "the test",
-    "id": 61,
-    "owner_id": 1,
-    "owner_username": "novasquirrel",
-    "default": "grass",
-    "size": [100, 100],
-    "public": true,
-    "private": false,
-    "build_enabled": true,
-    "full_sandbox": true,
-    "edge_links": null
-  }
+	"info": {
+		"name": "Main map"
+		"desc": "",
+		"id": 61,
+		"owner_id": 1,
+		"owner_username": "novasquirrel",
+		"default": "grass",
+		"size": [100, 100],
+		"public": true,
+		"private": false,
+		"build_enabled": true,
+		"full_sandbox": false,
+		"edge_links": [121, 122, 120, 124, 123, 125, 126, 127],
+		"tags": null,
+		"default_allow": [],
+		"default_deny": [],
+	},
+	"data": {
+		"pos": [0, 0, 99, 99],
+		"default": "grass",
+		"turf": [
+			[0,11,"dirt2"],[0,65,"colorwall1"]
+		],
+		"obj": [
+			[1,1,["flower2"],[2,2,["easyrpg:bush"]]
+		]
+	}
 }
 
------ /v1/map_page/MAP_ID -----
+
+----- PUT /v1/map/MAP_ID -----
+Requires an authorization header (see file upload section).
+Upload a map as a file and overwrite the data for a map on the server.
+
+Submit a form with the following fields:
+	file: Binary data for the file in zlib/deflate format; use "application/zlib" content type
+	format: Must be the text "json_v1"
+
+"json_v1" indicates the same format that the GET version of this endpoint returns.
+Currently this endpoint will apply the name, desc, size, tags, default floor, wallpaper, music, and data (turfs and objects) from the uploaded file.
+
+
+----- GET /v1/map_page/MAP_ID -----
 Generates a webpage about the requested map.
 Can take query parameters in the form of /v1/map_page/MAP_ID?x=5&y=5 to have the link to visit the map point to a specific position on the map.
 
 
------ /v1/tsd/TILESET_ID -----
+----- GET /v1/tsd/TILESET_ID -----
 Requests a tileset definition from the server. See "TSD" in the protocol document.
 
 Example response:
@@ -133,7 +160,8 @@ If the tileset ID contains a comma, as in /v1/tsd/1,2,3 or even /v1/tsd/1, then 
 }
 Errors will not be returned if there are problems with individual tileset IDs; instead, they are just left out from the result.
 
------ /v1/img/IMAGE_ID -----
+
+----- GET /v1/img/IMAGE_ID -----
 Requests an image entity's URL from the server. See "IMG" in the protocol document.
 
 Example response:

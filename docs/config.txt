@@ -324,6 +324,10 @@ FileUpload.MaximumFileSize
 Default: 512
 Total limit (in kibibytes) for a single file.
 
+FileUpload.MaximumDecompressedMapFileSize
+Default: 512
+Total limit (in kibibytes) for a single uploaded map file after decompression.
+
 FileUpload.SizeLimitTotal
 Default: 102400
 Total limit (in kibibytes) for all user-uploaded files combined.

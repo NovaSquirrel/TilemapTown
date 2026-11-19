@@ -346,6 +346,47 @@ function importMap(map) {
 	return true;
 }
 
+async function uploadMapOnline(map) {
+	let lines = map.split("\n");
+	if (lines.length == 0 || lines[0] != "TilemapTownMapExport") {
+		alert("File isn't a Tilemap Town map?");
+		return;
+	}
+	let mapInfo = undefined;
+	let uploadMe = {};
+	for (let line of lines) {
+		if (line.startsWith("version=")) {
+			let version = line.slice(8);
+			if (version != "1") {
+				alert("Map file is for a later version of Tilemap Town");
+				return;
+			}
+		} else if (line.startsWith("MAP=")) {
+			uploadMe['data'] = JSON.parse(line.slice(4));
+		} else if (line.startsWith("MAI=")) {
+			uploadMe['info'] = JSON.parse(line.slice(4));
+		}
+	}
+	if (uploadMe.info === undefined || uploadMe.data === undefined) {
+		alert("Map file is missing map info and/or map data");
+		return;
+	}
+
+	const blob = new Blob([JSON.stringify(uploadMe)], {type:'application/json'});
+	const compressionStream = blob.stream().pipeThrough(new CompressionStream("deflate"));
+	const compressedData = await (await new Response(compressionStream)).blob();
+	const formData = new FormData();
+	formData.append("format", "json_v1");
+	formData.append("file", compressedData, "map.json.zlib");
+	let response = await fetch(API_URL + "v1/map/" + MyMap.Info.id , {
+		headers: {'Authorization': 'Bearer ' + API_Key},
+		body: formData,
+		method: "PUT"});
+	if(response.status != 200) {
+		alert("Encountered an error; code "+response.status);
+	}
+}
+
 // Helper command for JavaScript console use
 function tileSheetUses(sheet) {
 	for (let mapId in MapsByID) {

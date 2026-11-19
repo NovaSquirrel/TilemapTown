@@ -155,38 +155,6 @@ def data_disallowed_for_entity_type(type, data):
 				return 'Bad tile in tileset definition: %s (%s)' % (json.dumps(v), tile_reason)
 	return None
 
-def tile_is_okay(tile, parse_json=False):
-	if type(tile) == str:
-		if not len(tile):
-			return (False, 'Empty string')
-		if tile.strip() != tile:
-			return (False, 'Tile has unneeded padding')
-
-		# Sometimes it's a string containing JSON 
-		if tile[0] == '{':
-			if parse_json:
-				tile = json.loads(tile)
-			else:
-				return (False, 'JSON string')
-
-		# Strings that aren't JSON refer to tiles in tilesets and are
-		# definitely OK as long as they're not excessively long.
-		elif len(tile) <= 32:
-			return (True, None)
-		else:
-			return (False, 'Identifier too long')
-
-	# If it's not a string it must be a dictionary
-	if type(tile) != dict:
-		return (False, 'Invalid type')
-
-	if "pic" not in tile or len(tile["pic"]) != 3:
-		return (False, 'No/invalid picture')
-	if not pic_is_okay(tile["pic"]):
-		return (False, 'Invalid picture')
-
-	return (True, None)
-
 def load_json_if_valid(j):
 	try:
 		return json.loads(j)

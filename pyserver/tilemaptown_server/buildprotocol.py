@@ -16,7 +16,7 @@
 
 import json, datetime, time, weakref, secrets
 from .buildglobal import *
-from .buildcommand import handle_user_command, tile_is_okay, data_disallowed_for_entity_type, send_private_message, send_message_to_map, entity_types_users_can_change_data_for, apply_rate_limiting, attach_result_to_context, respond, separate_first_word, find_entity_name
+from .buildcommand import handle_user_command, data_disallowed_for_entity_type, send_private_message, send_message_to_map, entity_types_users_can_change_data_for, apply_rate_limiting, attach_result_to_context, respond, separate_first_word, find_entity_name
 from .buildentity import Entity, GenericEntity
 from .buildclient import Client
 from .buildgadget import Gadget, GadgetDoodleBoard, GadgetMiniTilemap
@@ -860,6 +860,8 @@ def fn_PUT(connection, map, client, arg, context):
 			tile_test = [tile_is_okay(x) for x in arg["atom"]]
 			if all(_[0] for _ in tile_test): # all tiles pass the test
 				write_to_build_log(map, client, "PUT", arg, map.objs[x][y])
+				if not arg["atom"]:
+					arg["atom"] = None
 				connection.build_session.write_put_objs(map.protocol_id(), x, y, arg["atom"], map.objs[x][y])
 				map.objs[x][y] = arg["atom"]
 				notify_listeners()
