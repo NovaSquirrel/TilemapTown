@@ -310,12 +310,12 @@ function exportMap() {
 	for (let y=0; y<height; y++) {
 		for (let x=0; x<width; x++) {
 			let turf = AtomFromName(MyMap.Tiles[x][y]);
-			if (turf?.pic?.[0])
+			if (turf?.pic?.[0] !== undefined)
 				imagesUsedSet.add(turf.pic[0]);
 			if (Array.isArray(MyMap.Objs[x][y])) {
 				for (let objName of MyMap.Objs[x][y]) {
 					let obj = AtomFromName(objName);
-					if (obj?.pic?.[0])
+					if (obj?.pic?.[0] !== undefined)
 						imagesUsedSet.add(obj.pic[0]);
 				}
 			}
