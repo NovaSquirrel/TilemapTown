@@ -5629,11 +5629,18 @@ function runAnimation(timestamp) {
 		drawMap();
 	}
 
-	if (waitingOnMapScreenshot) {
-		waitingOnMapScreenshot++;
-		if (waitingOnMapScreenshot == 300 || allMapImagesLoaded()) {
-			openMapScreenshot();
-			waitingOnMapScreenshot = 0;
+	if (waitingOnMapImagesCounter) {
+		waitingOnMapImagesCounter++;
+		if (waitingOnMapImagesCounter == 300 || allMapImagesLoaded()) {
+			waitingOnMapImagesCounter = 0;
+			switch (waitingOnMapImagesFor) {
+				case "screenshot":
+					openMapScreenshot();
+					break;
+				case "export":
+					downloadExportedMap(exportMapFilename);
+					break;
+			}
 		}
 	}
 

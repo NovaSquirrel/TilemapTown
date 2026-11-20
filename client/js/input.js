@@ -65,7 +65,9 @@ let ctrlZUndoType = null;
 let lastChatUsed = "";
 let alreadyShowedSign = false;
 let alreadyBumped = false;
-let waitingOnMapScreenshot = 0; // Counts up every tick if nonzero
+let waitingOnMapImagesCounter = 0; // Counts up every tick if nonzero
+let waitingOnMapImagesFor = null; // "export" or "screenshot"
+let exportMapFilename = null;
 
 const OK_DRAW_DISTANCE = 5;
 
@@ -89,25 +91,22 @@ function runLocalCommand(t) {
 		playedMusicYet = false;
 		return true;
 	} else if (tl == "/exportmap" || tl == "/mapexport" || tl.startsWith("/exportmap ") || tl.startsWith("/mapexport ")) {
-		//logMessage('<a href="data:,'+encodeURIComponent(exportMap())+'" download="map.txt">Map download (click here)</a>', 'server_message');
-
-		let filename = "map";
+		exportMapFilename = "map";
 		if (t.length >= 12)
-			filename = t.slice(11);
-		//from https://ourcodeworld.com/articles/read/189/how-to-create-a-file-and-generate-a-download-with-javascript-in-the-browser-without-a-server
-		let element = document.createElement('a');
-		element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(exportMap()));
-		element.setAttribute('download', filename+".txt");
-		element.style.display = 'none';
-		document.body.appendChild(element);
-		element.click();
-		document.body.removeChild(element);
+			exportMapFilename = t.slice(11);
+		if (allMapImagesLoaded()) {
+			downloadExportedMap(exportMapFilename);
+		} else {
+			waitingOnMapImagesCounter = 1;
+			waitingOnMapImagesFor = "export";
+		}
 		return true;
 	} else if (tl == "/mapscreenshot") {
 		if (allMapImagesLoaded()) {
 			openMapScreenshot();
 		} else {
-			waitingOnMapScreenshot = 1;
+			waitingOnMapImagesCounter = 1;
+			waitingOnMapImagesFor = "screenshot";
 		}
 		return true;
 	} else if (tl.startsWith("/playmusic ")) {

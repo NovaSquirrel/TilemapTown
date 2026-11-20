@@ -301,7 +301,33 @@ function exportMap() {
 	}
 
 	let map = {'default': MyMap.Info['default'], 'obj': objs, 'turf': turfs, 'pos': [0, 0, MyMap.Width-1, MyMap.Height-1]};
-	return "TilemapTownMapExport\nversion=1\nMAI="+JSON.stringify(MyMap.Info)+"\nMAP="+JSON.stringify(map)+"\n";
+
+	// Record the current URLs for all tile sheets used on this map
+	const imagesUsedSet = new Set();
+	const imageURLs = {};
+	const width = MyMap.Width;
+	const height = MyMap.Height; 
+	for (let y=0; y<height; y++) {
+		for (let x=0; x<width; x++) {
+			let turf = AtomFromName(MyMap.Tiles[x][y]);
+			if (turf?.pic?.[0])
+				imagesUsedSet.add(turf.pic[0]);
+			if (Array.isArray(MyMap.Objs[x][y])) {
+				for (let objName of MyMap.Objs[x][y]) {
+					let obj = AtomFromName(objName);
+					if (obj?.pic?.[0])
+						imagesUsedSet.add(obj.pic[0]);
+				}
+			}
+		}
+	}
+	for (let item of imagesUsedSet) {
+		let src = IconSheets[item]?.src;
+		if (src)
+			imageURLs[item] = src;
+	}
+
+	return `TilemapTownMapExport\nversion=1\nMAI=${JSON.stringify(MyMap.Info)}\nMAP=${JSON.stringify(map)}\nImageURLs=${JSON.stringify(imageURLs)}\n`
 }
 
 // Convert a string from the above function into a map
@@ -344,6 +370,19 @@ function importMap(map) {
 		}
 	}
 	return true;
+}
+
+function downloadExportedMap(filename) {
+	if (!filename)
+		filename = "map";
+	//from https://ourcodeworld.com/articles/read/189/how-to-create-a-file-and-generate-a-download-with-javascript-in-the-browser-without-a-server
+	let element = document.createElement('a');
+	element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(exportMap()));
+	element.setAttribute('download', filename+".txt");
+	element.style.display = 'none';
+	document.body.appendChild(element);
+	element.click();
+	document.body.removeChild(element);
 }
 
 async function uploadMapOnline(map) {
