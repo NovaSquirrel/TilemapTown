@@ -195,9 +195,10 @@ async def put_map(request):
 	if tile_is_okay(file_data["info"]["default"]):
 		map.default_turf = file_data["info"]["default"]
 	map.blank_map(file_data["info"]["size"][0], file_data["info"]["size"][1])
-	map.name = filter_displayname(file_data["info"]["name"])
-	map.desc = file_data["info"]["desc"]
-	map.tags = file_data["info"]["tags"]
+	if "name" in file_data["info"]:
+		map.name = filter_displayname(file_data["info"]["name"])
+	map.desc = file_data["info"].get("desc")
+	map.tags = file_data["info"].get("tags")
 
 	# Apply the map data from the file
 	d = file_data["data"]
