@@ -6310,7 +6310,7 @@ function initWorld() {
 				document.getElementById('mapname').value = MyMap.Info.name ?? "";
 				document.getElementById('mapdesc').value = MyMap.Info.desc ?? "";
 				document.getElementById('mapowner').value = MyMap.Info.owner_username ?? "";
-				document.getElementById('importOnlineMapInput').style.display = (PlayerWho[PlayerYou].username === MyMap.Info.owner_username) ? "" : "none";
+				document.getElementById('importOnlineMapInput').style.display = (API_URL && PlayerWho[PlayerYou].username === MyMap.Info.owner_username) ? "" : "none";
 				document.getElementById('mapid').value = MyMap.Info.id;
 				document.getElementById('shareMapLink').href = "/map/"+MyMap.Info.id;
 				document.getElementById('permission_build').checked = true;
