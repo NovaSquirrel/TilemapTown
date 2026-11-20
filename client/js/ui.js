@@ -1296,7 +1296,7 @@ function importLocalMap() {
 
 function importOnlineMap() {
 	let file = document.getElementById("import_online_map_file").files[0];
-	if (file) {
+	if (file && confirm(`Are you sure you want to overwrite map ${MyMap.Info['id']}?`)) {
 		let reader = new FileReader();
 		reader.onload = function (evt) {
 			uploadMapOnline(evt.target.result);

@@ -196,7 +196,7 @@ async def put_map(request):
 		map.default_turf = file_data["info"]["default"]
 	map.blank_map(file_data["info"]["size"][0], file_data["info"]["size"][1])
 	if "name" in file_data["info"]:
-		map.name = filter_displayname(file_data["info"]["name"])
+		map.name = filter_displayname(file_data["info"]["name"]) or "Map"
 	map.desc = file_data["info"].get("desc")
 	map.tags = file_data["info"].get("tags")
 
