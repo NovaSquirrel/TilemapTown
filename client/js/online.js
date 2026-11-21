@@ -1198,15 +1198,21 @@ function ConnectToServer() {
 			idn_args["client_name"] = CLIENT_NAME + " (messaging)";
 			idn_args["client_mode"] = "messaging";
 		} else {
-			let initialMap = document.getElementById("loginMapID").value.trim();
-			if (initialMap) {
-				let split = initialMap.split(' ');
-				for (let i=0; i<split.length; i++) {
-					let asInt = parseInt(split[i]);
-					if (!Number.isNaN(asInt))
-						split[i] = asInt;
+			if (DidConnectOnce) {
+				idn_args["map"] = [MyMap.Info.id, PlayerWho[PlayerYou].x, PlayerWho[PlayerYou].y];
+				if (!PlayerWho[PlayerYou].username)
+					idn_args["name"] = PlayerWho[PlayerYou].name;
+			} else {
+				let initialMap = document.getElementById("loginMapID").value.trim();
+				if (initialMap) {
+					let split = initialMap.split(' ');
+					for (let i=0; i<split.length; i++) {
+						let asInt = parseInt(split[i]);
+						if (!Number.isNaN(asInt))
+							split[i] = asInt;
+					}
+					idn_args["map"] = split;
 				}
-				idn_args["map"] = split;
 			}
 		}
 		if (touch_mode) {
