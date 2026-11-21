@@ -771,7 +771,7 @@ class GadgetGiveItem(GadgetTrait):
 			return False
 		else:
 			item_id = random.choice(self.item_id_list)
-			handle_user_command(self.gadget.map, self.gadget, None, "giveitem %s %s %s" % (user.protocol_id(), item_id, "tempcopy" if self.get_config('temp') else "copy"))
+			handle_user_command(self.gadget.map, self.gadget, None, "giveitem %s %s %s" % (user.protocol_id(), item_id, "tempcopycarry" if self.get_config('auto_carry') else ("tempcopy" if self.get_config('temp') else "copy")))
 			return False
 
 class GadgetDoodleBoard(GadgetTrait):

@@ -545,18 +545,20 @@ givetype_text = {
 	"move":     "put an item in your inventory",
 	"copy":     "give you a copy of an item",
 	"tempcopy": "give you a copy of an item",
+	"tempcopycarry": "give you a copy of an item (to carry)",
 }
 givetype_text2 = {
 	"transfer": "change ownership on",
 	"move":     "give",
 	"copy":     "give a copy of",
 	"tempcopy": "give a temporary copy of",
+	"tempcopycarry": "give a temporary copy of (to carry)",
 }
 @cmd_command(alias=['itemgive', 'senditem', 'give_item', 'send_item'], syntax="user item transfer/move/copy/tempcopy")
 def fn_giveitem(map, client, context, arg):
 	args = arg.split(' ')
 	if len(args) != 3:
-		respond(context, "Syntax is /giveitem user item transfer/move/copy/tempcopy", error=True)
+		respond(context, "Syntax is /giveitem user item transfer/move/copy/tempcopy/tempcopycarry", error=True)
 		return
 	arg_name = args[0]
 	arg_item = args[1]
@@ -577,13 +579,13 @@ def fn_giveitem(map, client, context, arg):
 			if connection:
 				connection.protocol_error(context, text='You don\'t have permission to clone %s' % arg_item, code='missing_permission', detail='copy', subject_id=e.protocol_id())
 			return
-	if arg_givetype in ("copy", "tempcopy") and entity_type_name[e.entity_type] not in creatable_entity_types:
+	if arg_givetype in ("copy", "tempcopy", "tempcopycarry") and entity_type_name[e.entity_type] not in creatable_entity_types:
 		if connection:
 			connection.protocol_error(context, text='Invalid type of item to clone (%s)' % entity_type_name[e.entity_type])
 		return
 
-	if arg_givetype not in ("transfer", "move", "copy", "tempcopy"):
-		respond(context, "Give type must be transfer, move, copy, or tempcopy", error=True)
+	if arg_givetype not in ("transfer", "move", "copy", "tempcopy", "tempcopycarry"):
+		respond(context, "Give type must be transfer, move, copy, tempcopy, or tempcopycarry", error=True)
 		return
 
 	text_for_them = "%s wants to "+givetype_text[arg_givetype]+": "+e.name+" ("+entity_type_name[e.entity_type]+")"
@@ -674,7 +676,7 @@ def fn_tpaccept(map, client, context, arg):
 			}
 		)
 
-	def clone_item(item, temp):
+	def clone_item(item, temp, move_to_inventory=True):
 		if entity_type_name[item.entity_type] not in creatable_entity_types:
 			return
 		c = Entity
@@ -696,7 +698,9 @@ def fn_tpaccept(map, client, context, arg):
 			new_item.temporary = True
 		if not new_item.temporary:
 			new_item.save()
-		client.add_to_contents(new_item)
+		if move_to_inventory:
+			client.add_to_contents(new_item)
+		return new_item
 
 	if request_type == 'tpa':
 		subject.switch_map(client.map or client.map_id, new_pos=[client.x, client.y], on_behalf_of=client)
@@ -755,6 +759,10 @@ def fn_tpaccept(map, client, context, arg):
 			clone_item(item, False)
 		elif givetype == 'tempcopy' and not is_script:
 			clone_item(item, True)
+		elif givetype == 'tempcopycarry' and not is_script:
+			item = clone_item(item, True, move_to_inventory=False)
+			if item:
+				item.ride(client)
 	elif request_type == "syncmove":
 		if client is subject:
 			return

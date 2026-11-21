@@ -2693,6 +2693,7 @@ function editItemShared(item) {
 				document.getElementById('edittilegadget_preset_give_item_item').value = "";
 				document.getElementById('edittilegadget_preset_give_item_temp').checked = false;
 				document.getElementById('edittilegadget_preset_give_item_menu').checked = false;
+				document.getElementById('edittilegadget_preset_give_item_auto_carry').checked = false;
 				document.getElementById('edittilegadget_preset_give_item_owner_only').checked = false;
 				document.getElementById('edittilegadget_preset_choice').value = "nothing";
 				updateDoodleBoardPixelSize();
@@ -2852,6 +2853,7 @@ function editItemShared(item) {
 								document.getElementById('edittilegadget_preset_give_item_temp').checked = trait[1].temp ?? false;
 								document.getElementById('edittilegadget_preset_give_item_menu').checked = trait[1].show_menu ?? false;
 								document.getElementById('edittilegadget_preset_give_item_owner_only').checked = trait[1].owner_only;
+								document.getElementById('edittilegadget_preset_give_item_auto_carry').checked = trait[1].auto_carry;
 
 								document.getElementById('edittilegadget_preset_choice').value = trait[0];
 								document.getElementById('gadgetTypeRaw').checked = false;
@@ -3406,6 +3408,8 @@ function editItemApply() {
 								t.show_menu = true;
 							if (document.getElementById('edittilegadget_preset_give_item_owner_only').checked)
 								t.owner_only = true;
+							if (document.getElementById('edittilegadget_preset_give_item_auto_carry').checked)
+								t.auto_carry = true;
 							break;
 					}
 					let data = [];
