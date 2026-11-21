@@ -742,7 +742,7 @@ class GadgetGiveItem(GadgetTrait):
 			return
 		if not isinstance(self.item_id_list, list):
 			self.item_id_list = [self.item_id_list]
-		self.item_id_list = [str(_).strip().split[0] for _ in self.item_id_list]
+		self.item_id_list = [str(_).strip().split()[0] for _ in self.item_id_list]
 
 	def on_bot_message_button(self, user, arg):
 		if not self.gadget:

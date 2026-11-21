@@ -3397,7 +3397,7 @@ function editItemApply() {
 								t.break_max_distance = true;
 							break;
 						case "give_item":
-							t.item_id = document.getElementById('edittilegadget_preset_give_item_item').value.split(",");
+							t.item_id = document.getElementById('edittilegadget_preset_give_item_item').value.split(",").map((v) => v.trim());
 							if (t.item_id.length == 1)
 								t.item_id = t.item_id[0];
 							if (document.getElementById('edittilegadget_preset_give_item_temp').checked)
