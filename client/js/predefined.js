@@ -105,6 +105,22 @@ GlobalTiles = {
 			26
 		]
 	},
+	"purplesand2": {
+		"name": "purple sand",
+		"pic": [
+			0,
+			2,
+			26
+		]
+	},
+	"redsand": {
+		"name": "red sand",
+		"pic": [
+			0,
+			3,
+			26
+		]
+	},
 	"water": {
 		"name": "water",
 		"pic": [
@@ -1070,56 +1086,6 @@ GlobalTiles = {
 		"density": true,
 		"obj": true
 	},
-	"skull": {
-		"name": "skull",
-		"pic": [
-			0,
-			19,
-			19
-		],
-		"density": true,
-		"obj": true
-	},
-	"bush1": {
-		"name": "bush",
-		"pic": [
-			0,
-			3,
-			12
-		],
-		"density": true,
-		"obj": true
-	},
-	"bush2": {
-		"name": "bush",
-		"pic": [
-			0,
-			4,
-			12
-		],
-		"density": true,
-		"obj": true
-	},
-	"bush3": {
-		"name": "bush",
-		"pic": [
-			0,
-			4,
-			11
-		],
-		"density": true,
-		"obj": true
-	},
-	"bush4": {
-		"name": "bush",
-		"pic": [
-			0,
-			6,
-			12
-		],
-		"density": true,
-		"obj": true
-	},
 	"rocks1": {
 		"name": "mushrooms",
 		"pic": [
@@ -1127,7 +1093,6 @@ GlobalTiles = {
 			14,
 			10
 		],
-		"density": true,
 		"obj": true
 	},
 	"rocks2": {
@@ -1279,6 +1244,17 @@ GlobalTiles = {
 		"pic": [
 			0,
 			1,
+			70
+		],
+		"density": true,
+		"obj": true,
+		"type": "sign"
+	},
+	"stonesign": {
+		"name": "sign",
+		"pic": [
+			0,
+			0,
 			70
 		],
 		"density": true,
@@ -1893,6 +1869,102 @@ GlobalTiles = {
 		"density": true,
 		"obj": true
 	},
+	"bush1": {
+		"name": "bush",
+		"pic": [
+			0,
+			3,
+			12
+		],
+		"density": true,
+		"obj": true
+	},
+	"bush2": {
+		"name": "bush",
+		"pic": [
+			0,
+			4,
+			12
+		],
+		"density": true,
+		"obj": true
+	},
+	"bush3": {
+		"name": "bush",
+		"pic": [
+			0,
+			4,
+			11
+		],
+		"density": true,
+		"obj": true
+	},
+	"bush4": {
+		"name": "bush",
+		"pic": [
+			0,
+			6,
+			12
+		],
+		"density": true,
+		"obj": true
+	},
+	"grasstuft": {
+		"name": "grasstuft",
+		"pic": [
+			0,
+			4,
+			10
+		],
+		"density": false,
+		"obj": true
+	},
+	"treetop": {
+		"name": "tree",
+		"pic": [
+			0,
+			2,
+			10
+		],
+		"density": false,
+		"obj": true,
+		"over": true
+	},
+	"treebot": {
+		"name": "tree",
+		"pic": [
+			0,
+			2,
+			11
+		],
+		"density": true,
+		"obj": true
+	},
+	"leaf": {
+		"name": "leaf",
+		"pic": [
+			0,
+			12,
+			10
+		],
+		"obj": true
+	},
+	"grassfall": {
+		"name": "grass",
+		"pic": [
+			0,
+			0,
+			13
+		]
+	},
+	"grassfall2": {
+		"name": "grass",
+		"pic": [
+			0,
+			1,
+			13
+		]
+	},
 	"treefall": {
 		"name": "tree",
 		"pic": [
@@ -1912,6 +1984,91 @@ GlobalTiles = {
 		],
 		"density": true,
 		"obj": true
+	},
+	"bushfall1": {
+		"name": "bush",
+		"pic": [
+			0,
+			3,
+			15
+		],
+		"density": true,
+		"obj": true
+	},
+	"bushfall2": {
+		"name": "bush",
+		"pic": [
+			0,
+			4,
+			15
+		],
+		"density": true,
+		"obj": true
+	},
+	"bushfall3": {
+		"name": "bush",
+		"pic": [
+			0,
+			4,
+			14
+		],
+		"density": true,
+		"obj": true
+	},
+	"grasstuftfall": {
+		"name": "grasstuft",
+		"pic": [
+			0,
+			4,
+			13
+		],
+		"obj": true
+	},
+	"treefalltop": {
+		"name": "tree",
+		"pic": [
+			0,
+			2,
+			13
+		],
+		"density": false,
+		"obj": true,
+		"over": true
+	},
+	"treefallbot": {
+		"name": "tree",
+		"pic": [
+			0,
+			2,
+			14
+		],
+		"density": true,
+		"obj": true
+	},
+	"leaf2": {
+		"name": "leaf",
+		"pic": [
+			0,
+			13,
+			10
+		],
+		"obj": true
+	},
+	"grasswinter": {
+		"name": "grass",
+		"pic": [
+			0,
+			0,
+			16
+		]
+	},
+	"grasswinter2": {
+		"name": "grass",
+		"pic": [
+			0,
+			1,
+			16
+		]
 	},
 	"treewinter": {
 		"name": "tree",
@@ -1933,23 +2090,62 @@ GlobalTiles = {
 		"density": true,
 		"obj": true
 	},
-	"treetop": {
+	"bushwinter1": {
+		"name": "bush",
+		"pic": [
+			0,
+			3,
+			18
+		],
+		"density": true,
+		"obj": true
+	},
+	"bushwinter2": {
+		"name": "bush",
+		"pic": [
+			0,
+			4,
+			18
+		],
+		"density": true,
+		"obj": true
+	},
+	"bushwinter3": {
+		"name": "bush",
+		"pic": [
+			0,
+			4,
+			17
+		],
+		"density": true,
+		"obj": true
+	},
+	"grasstuftwinter": {
+		"name": "grasstuft",
+		"pic": [
+			0,
+			4,
+			16
+		],
+		"obj": true
+	},
+	"treewintertop": {
 		"name": "tree",
 		"pic": [
 			0,
 			2,
-			10
+			16
 		],
 		"density": false,
 		"obj": true,
 		"over": true
 	},
-	"treebot": {
+	"treewinterbot": {
 		"name": "tree",
 		"pic": [
 			0,
 			2,
-			11
+			17
 		],
 		"density": true,
 		"obj": true
@@ -2345,6 +2541,33 @@ GlobalTiles = {
 		],
 		"obj": true
 	},
+	"window2": {
+		"name": "window",
+		"pic": [
+			0,
+			25,
+			66
+		],
+		"obj": true
+	},
+	"window3": {
+		"name": "window",
+		"pic": [
+			0,
+			24,
+			67
+		],
+		"obj": true
+	},
+	"window4": {
+		"name": "window",
+		"pic": [
+			0,
+			25,
+			67
+		],
+		"obj": true
+	},
 	"pillar": {
 		"name": "pillar",
 		"pic": [
@@ -2360,6 +2583,28 @@ GlobalTiles = {
 		"pic": [
 			0,
 			17,
+			35
+		],
+		"autotile_layout": 10,
+		"obj": true,
+		"over": true
+	},
+	"pillar3": {
+		"name": "pillar3",
+		"pic": [
+			0,
+			18,
+			35
+		],
+		"autotile_layout": 10,
+		"obj": true,
+		"over": true
+	},
+	"pillar4": {
+		"name": "pillar4",
+		"pic": [
+			0,
+			19,
 			35
 		],
 		"autotile_layout": 10,
@@ -2388,6 +2633,16 @@ GlobalTiles = {
 		"obj": true,
 		"density": true
 	},
+	"skull": {
+		"name": "skull",
+		"pic": [
+			0,
+			19,
+			19
+		],
+		"density": true,
+		"obj": true
+	},
 	"tombstone": {
 		"name": "tombstone",
 		"pic": [
@@ -2406,16 +2661,6 @@ GlobalTiles = {
 			15
 		],
 		"density": true,
-		"obj": true
-	},
-	"grasstuft": {
-		"name": "grasstuft",
-		"pic": [
-			0,
-			4,
-			10
-		],
-		"density": false,
 		"obj": true
 	},
 	"door": {
@@ -2485,7 +2730,24 @@ GlobalTiles = {
 			7,
 			73
 		],
-		"density": false,
+		"obj": true
+	},
+	"mushroom2": {
+		"name": "mushroom",
+		"pic": [
+			0,
+			6,
+			74
+		],
+		"obj": true
+	},
+	"mushroom3": {
+		"name": "mushroom",
+		"pic": [
+			0,
+			7,
+			74
+		],
 		"obj": true
 	},
 	"scroll": {
@@ -3479,6 +3741,32 @@ GlobalTiles = {
 			6,
 			69
 		],
+		"obj": true
+	},
+	"bigtorch": {
+		"name": "torch",
+		"pic": [
+			0,
+			0,
+			55
+		],
+		"anim_frames": 3,
+		"anim_speed": 3,
+		"anim_mode": 2,
+		"density": true,
+		"obj": true
+	},
+	"bigtorch2": {
+		"name": "torch",
+		"pic": [
+			0,
+			0,
+			56
+		],
+		"anim_frames": 3,
+		"anim_speed": 3,
+		"anim_mode": 2,
+		"density": true,
 		"obj": true
 	},
 	"torch": {
