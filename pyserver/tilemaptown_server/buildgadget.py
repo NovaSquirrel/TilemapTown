@@ -1187,12 +1187,17 @@ class GadgetPicCycle(GadgetTrait):
 
 		if self.current_frame >= self.length:
 			if self.get_config('destroy_on_end', False):
+				if self.get_config('destroy_particle'):
+					handle_user_command(self.gadget.map, self.gadget, None, "userparticle %s at=%d,%d" % (self.get_config('destroy_particle'), self.gadget.x, self.gadget.y))
 				self.gadget.clean_up()
 				return False
 			else:
 				self.current_frame = 0
 		self.set_config('index', self.current_frame)
 		set_and_update_who(self.gadget, 'pic', 'pic', [self.pic[0], self.pic[1]+self.current_frame, self.pic[2]])
+
+		if self.get_config('use_particle'):
+			handle_user_command(self.gadget.map, self.gadget, None, "userparticle %s" % (self.get_config('use_particle')))
 		return False
 
 class GadgetDirCycle(GadgetTrait):
@@ -1218,6 +1223,8 @@ class GadgetDirCycle(GadgetTrait):
 
 		if self.current_frame < 0 or self.current_frame >= len(self.pattern):
 			if self.get_config('destroy_on_end', False):
+				if self.get_config('destroy_particle'):
+					handle_user_command(self.gadget.map, self.gadget, None, "userparticle %s at=%d,%d" % (self.get_config('destroy_particle'), self.gadget.x, self.gadget.y))
 				self.gadget.clean_up()
 				return False
 			else:
@@ -1225,6 +1232,9 @@ class GadgetDirCycle(GadgetTrait):
 		self.set_config('index', self.current_frame)
 		if self.current_frame >= 0 and self.current_frame < len(self.pattern):
 			set_and_update_who(self.gadget, 'dir', 'dir', self.pattern[self.current_frame])
+
+		if self.get_config('use_particle'):
+			handle_user_command(self.gadget.map, self.gadget, None, "userparticle %s" % (self.get_config('use_particle')))
 		return False
 
 class GadgetProjectileShooter(GadgetTrait):

@@ -2669,14 +2669,18 @@ function editItemShared(item) {
 				document.getElementById('edittilegadget_preset_pic_cycle_first_pic').value = "";
 				document.getElementById('edittilegadget_preset_pic_cycle_length').value = 1;
 				document.getElementById('edittilegadget_preset_pic_cycle_index').value = 0;
-				document.getElementById('edittilegadget_preset_pic_cycle_owner_only').checked = false
-				document.getElementById('edittilegadget_preset_pic_cycle_random').checked = false
-				document.getElementById('edittilegadget_preset_pic_cycle_destroy_on_end').checked = false
+				document.getElementById('edittilegadget_preset_pic_cycle_owner_only').checked = false;
+				document.getElementById('edittilegadget_preset_pic_cycle_random').checked = false;
+				document.getElementById('edittilegadget_preset_pic_cycle_destroy_on_end').checked = false;
+				document.getElementById('edittilegadget_preset_pic_cycle_destroy_particle').value = "";
+				document.getElementById('edittilegadget_preset_pic_cycle_use_particle').value = "";
 				document.getElementById('edittilegadget_preset_dir_cycle_pattern').value = "";
 				document.getElementById('edittilegadget_preset_dir_cycle_index').value = 0;
-				document.getElementById('edittilegadget_preset_dir_cycle_owner_only').checked = false
-				document.getElementById('edittilegadget_preset_dir_cycle_random').checked = false
-				document.getElementById('edittilegadget_preset_dir_cycle_destroy_on_end').checked = false
+				document.getElementById('edittilegadget_preset_dir_cycle_owner_only').checked = false;
+				document.getElementById('edittilegadget_preset_dir_cycle_random').checked = false;
+				document.getElementById('edittilegadget_preset_dir_cycle_destroy_on_end').checked = false;
+				document.getElementById('edittilegadget_preset_dir_cycle_destroy_particle').value = "";
+				document.getElementById('edittilegadget_preset_dir_cycle_use_particle').value = "";
 				document.getElementById('edittilegadget_preset_projectile_shooter_pic').value = "";
 				document.getElementById('edittilegadget_preset_projectile_shooter_max_distance').value = "";
 				document.getElementById('edittilegadget_preset_projectile_shooter_dir').value = "none";
@@ -2819,6 +2823,8 @@ function editItemShared(item) {
 								document.getElementById('edittilegadget_preset_pic_cycle_owner_only').checked = trait[1].owner_only ?? false;
 								document.getElementById('edittilegadget_preset_pic_cycle_random').checked = trait[1].random ?? false;
 								document.getElementById('edittilegadget_preset_pic_cycle_destroy_on_end').checked = trait[1].destroy_on_end ?? false;
+								document.getElementById('edittilegadget_preset_pic_cycle_destroy_particle').value = trait[1].destroy_particle ?? "";
+								document.getElementById('edittilegadget_preset_pic_cycle_use_particle').value = trait[1].use_particle ?? "";
 
 								document.getElementById('edittilegadget_preset_choice').value = trait[0];
 								document.getElementById('gadgetTypeRaw').checked = false;
@@ -2829,6 +2835,8 @@ function editItemShared(item) {
 								document.getElementById('edittilegadget_preset_dir_cycle_owner_only').checked = trait[1].owner_only ?? false;
 								document.getElementById('edittilegadget_preset_dir_cycle_random').checked = trait[1].random ?? false;
 								document.getElementById('edittilegadget_preset_dir_cycle_destroy_on_end').checked = trait[1].destroy_on_end ?? false;
+								document.getElementById('edittilegadget_preset_dir_cycle_destroy_particle').value = trait[1].destroy_particle ?? "";
+								document.getElementById('edittilegadget_preset_dir_cycle_use_particle').value = trait[1].use_particle ?? "";
 
 								document.getElementById('edittilegadget_preset_choice').value = trait[0];
 								document.getElementById('gadgetTypeRaw').checked = false;
@@ -3358,6 +3366,10 @@ function editItemApply() {
 								t.random = true;
 							if (document.getElementById('edittilegadget_preset_pic_cycle_destroy_on_end').checked)
 								t.destroy_on_end = true;
+							if (document.getElementById('edittilegadget_preset_pic_cycle_destroy_particle').value.length)
+								t.destroy_particle = document.getElementById('edittilegadget_preset_pic_cycle_destroy_particle').value;
+							if (document.getElementById('edittilegadget_preset_pic_cycle_use_particle').value.length)
+								t.use_particle = document.getElementById('edittilegadget_preset_pic_cycle_use_particle').value;
 							break;
 						case "dir_cycle":
 							t.pattern = document.getElementById('edittilegadget_preset_dir_cycle_pattern').value.split(",").map((v) => parseInt(v.trim())).filter((v) => !Number.isNaN(v))
@@ -3370,6 +3382,10 @@ function editItemApply() {
 								t.random = true;
 							if (document.getElementById('edittilegadget_preset_dir_cycle_destroy_on_end').checked)
 								t.destroy_on_end = true;
+							if (document.getElementById('edittilegadget_preset_dir_cycle_destroy_particle').value.length)
+								t.destroy_particle = document.getElementById('edittilegadget_preset_dir_cycle_destroy_particle').value;
+							if (document.getElementById('edittilegadget_preset_dir_cycle_use_particle').value.length)
+								t.use_particle = document.getElementById('edittilegadget_preset_dir_cycle_use_particle').value;
 							break;
 						case "projectile_shooter":
 							t.pic = document.getElementById('edittilegadget_preset_projectile_shooter_pic').value.split(" ");
