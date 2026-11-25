@@ -1086,7 +1086,7 @@ GlobalTiles = {
 		"density": true,
 		"obj": true
 	},
-	"rocks1": {
+	"mushrooms": {
 		"name": "mushrooms",
 		"pic": [
 			0,
