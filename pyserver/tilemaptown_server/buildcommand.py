@@ -2199,7 +2199,9 @@ def fn_register(map, client, context, arg):
 			respond(context, 'Syntax is: /register username password', error=True)
 		else:
 			filtered = filter_username(params[0])
-			if filtered != params[0].lower():
+			if filtered.lower() == "username":
+				respond(context, 'Try the command again, but replace [tt]username[/tt] in the command with the actual username you want', error=True)
+			elif filtered != params[0].lower():
 				respond(context, 'Only alphanumeric characters are allowed in your username', error=True)
 			elif valid_id_format(filtered):
 				respond(context, 'Can\'t register a username that\'s just a number', error=True)
