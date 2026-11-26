@@ -1256,6 +1256,15 @@
 				],
 				"autotile_layout": 7
 			},
+			"wood_stairs": {
+				"name": "wood stairs",
+				"pic": [
+					-3,
+					29,
+					61
+				],
+				"autotile_layout": 7
+			},
 			"house_wall1a": {
 				"name": "house wall",
 				"pic": [
@@ -1394,6 +1403,47 @@
 					42
 				],
 				"menu_pic": [-3, 10, 42],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall5c": {
+				"name": "house wall",
+				"pic": [
+					-3,
+					7,
+					40
+				],
+				"menu_pic": [-3, 6, 38],
+				"autotile_layout": 4,
+				"density": true
+			},
+			"house_wall5d": {
+				"name": "house wall",
+				"pic": [
+					-3,
+					7,
+					42
+				],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall5e": {
+				"name": "house wall",
+				"pic": [
+					-3,
+					11,
+					40
+				],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall5f": {
+				"name": "house wall",
+				"pic": [
+					-3,
+					11,
+					39
+				],
 				"autotile_layout": 7,
 				"density": true
 			},
@@ -1672,6 +1722,22 @@
 					24,
 					22
 				],
+				"autotile_layout": 4
+			},
+			"pit12": {
+				"name": "pit",
+				"density": true,
+				"pic": [
+					-3,
+					25,
+					28
+				],
+				"menu_pic": [
+					-3,
+					24,
+					26
+				],
+				"obj": true,
 				"autotile_layout": 4
 			},
 			"sign": {
@@ -2524,6 +2590,150 @@
 				],
 				"obj": true
 			},
+			"painting1": {
+				"name": "painting",
+				"pic": [
+					-3,
+					6,
+					64
+				],
+				"obj": true
+			},
+			"painting2": {
+				"name": "painting",
+				"pic": [
+					-3,
+					7,
+					64
+				],
+				"obj": true
+			},
+			"painting3": {
+				"name": "painting",
+				"pic": [
+					-3,
+					6,
+					65
+				],
+				"obj": true
+			},
+			"painting4": {
+				"name": "painting",
+				"pic": [
+					-3,
+					7,
+					65
+				],
+				"obj": true
+			},
+			"painting5": {
+				"name": "painting",
+				"pic": [
+					-3,
+					6,
+					66
+				],
+				"obj": true
+			},
+			"window": {
+				"name": "window",
+				"pic": [
+					-3,
+					8,
+					64
+				],
+				"obj": true
+			},
+			"window2": {
+				"name": "window",
+				"pic": [
+					-3,
+					9,
+					64
+				],
+				"obj": true
+			},
+			"window9": {
+				"name": "window",
+				"pic": [
+					-3,
+					9,
+					67
+				],
+				"obj": true
+			},
+			"window3": {
+				"name": "window",
+				"pic": [
+					-3,
+					8,
+					65
+				],
+				"obj": true
+			},
+			"window4": {
+				"name": "window",
+				"pic": [
+					-3,
+					9,
+					65
+				],
+				"obj": true
+			},
+			"window5": {
+				"name": "window",
+				"pic": [
+					-3,
+					8,
+					66
+				],
+				"obj": true
+			},
+			"window6": {
+				"name": "window",
+				"pic": [
+					-3,
+					9,
+					66
+				],
+				"obj": true
+			},
+			"window10": {
+				"name": "window",
+				"pic": [
+					-3,
+					8,
+					68
+				],
+				"obj": true
+			},
+			"window11": {
+				"name": "window",
+				"pic": [
+					-3,
+					9,
+					68
+				],
+				"obj": true
+			},
+			"window7": {
+				"name": "window",
+				"pic": [
+					-3,
+					8,
+					70
+				],
+				"obj": true
+			},
+			"window8": {
+				"name": "window",
+				"pic": [
+					-3,
+					9,
+					70
+				],
+				"obj": true
+			},
 			"book": {
 				"name": "book",
 				"pic": [
@@ -2764,150 +2974,6 @@
 					-3,
 					17,
 					14
-				],
-				"obj": true
-			},
-			"painting1": {
-				"name": "painting",
-				"pic": [
-					-3,
-					6,
-					64
-				],
-				"obj": true
-			},
-			"painting2": {
-				"name": "painting",
-				"pic": [
-					-3,
-					7,
-					64
-				],
-				"obj": true
-			},
-			"painting3": {
-				"name": "painting",
-				"pic": [
-					-3,
-					6,
-					65
-				],
-				"obj": true
-			},
-			"painting4": {
-				"name": "painting",
-				"pic": [
-					-3,
-					7,
-					65
-				],
-				"obj": true
-			},
-			"painting5": {
-				"name": "painting",
-				"pic": [
-					-3,
-					6,
-					66
-				],
-				"obj": true
-			},
-			"window": {
-				"name": "window",
-				"pic": [
-					-3,
-					8,
-					64
-				],
-				"obj": true
-			},
-			"window2": {
-				"name": "window",
-				"pic": [
-					-3,
-					9,
-					64
-				],
-				"obj": true
-			},
-			"window9": {
-				"name": "window",
-				"pic": [
-					-3,
-					9,
-					67
-				],
-				"obj": true
-			},
-			"window3": {
-				"name": "window",
-				"pic": [
-					-3,
-					8,
-					65
-				],
-				"obj": true
-			},
-			"window4": {
-				"name": "window",
-				"pic": [
-					-3,
-					9,
-					65
-				],
-				"obj": true
-			},
-			"window5": {
-				"name": "window",
-				"pic": [
-					-3,
-					8,
-					66
-				],
-				"obj": true
-			},
-			"window6": {
-				"name": "window",
-				"pic": [
-					-3,
-					9,
-					66
-				],
-				"obj": true
-			},
-			"window10": {
-				"name": "window",
-				"pic": [
-					-3,
-					8,
-					68
-				],
-				"obj": true
-			},
-			"window11": {
-				"name": "window",
-				"pic": [
-					-3,
-					9,
-					68
-				],
-				"obj": true
-			},
-			"window7": {
-				"name": "window",
-				"pic": [
-					-3,
-					8,
-					70
-				],
-				"obj": true
-			},
-			"window8": {
-				"name": "window",
-				"pic": [
-					-3,
-					9,
-					70
 				],
 				"obj": true
 			},
