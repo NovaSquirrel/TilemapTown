@@ -1281,6 +1281,13 @@ GlobalTiles = {
 		"density": true,
 		"obj": true
 	},
+	"fence": {
+		"name": "fence",
+		"pic": [0, 21, 66],
+		"density": true,
+		"obj": true,
+		"autotile_layout": 2
+	},
 	"pot1": {
 		"name": "pot",
 		"pic": [
@@ -3897,13 +3904,6 @@ GlobalTiles = {
 		"pic": [
 			0, 19, 8
 		]
-	},
-	"fence": {
-		"name": "fence",
-		"pic": [0, 21, 66],
-		"density": true,
-		"obj": true,
-		"autotile_layout": 2
 	},
 	"card": {
 		"name": "card",
