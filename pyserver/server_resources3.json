@@ -1724,8 +1724,8 @@
 				],
 				"autotile_layout": 4
 			},
-			"pit12": {
-				"name": "pit",
+			"wood_frame": {
+				"name": "wood frame",
 				"density": true,
 				"pic": [
 					-3,
