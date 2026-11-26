@@ -179,6 +179,125 @@
 					14
 				]
 			},
+			"path": {
+				"name": "path",
+				"pic": [
+					-3,
+					7,
+					14
+				],
+				"menu_pic": [
+					-3,
+					6,
+					12
+				],
+				"autotile_layout": 4
+			},
+			"path2": {
+				"name": "path",
+				"pic": [
+					-3,
+					10,
+					14
+				],
+				"menu_pic": [
+					-3,
+					9,
+					12
+				],
+				"autotile_layout": 4
+			},
+			"path3": {
+				"name": "path",
+				"pic": [
+					-3,
+					4,
+					14
+				],
+				"menu_pic": [
+					-3,
+					3,
+					12
+				],
+				"autotile_layout": 4
+			},
+			"path4": {
+				"name": "path",
+				"pic": [
+					-3,
+					16,
+					28
+				],
+				"menu_pic": [
+					-3,
+					15,
+					26
+				],
+				"autotile_layout": 4
+			},
+			"path_edge": {
+				"name": "path",
+				"pic": [
+					-3,
+					13,
+					14
+				],
+				"menu_pic": [
+					-3,
+					12,
+					12
+				],
+				"obj": true,
+				"autotile_layout": 4
+			},
+			"arrow_none": {
+				"name": "blank tile",
+				"pic": [
+					-3,
+					26,
+					64
+				]
+			},
+			"arrow_l": {
+				"name": "arrow left",
+				"pic": [
+					-3,
+					29,
+					64
+				]
+			},
+			"arrow_r": {
+				"name": "arrow right",
+				"pic": [
+					-3,
+					27,
+					64
+				]
+			},
+			"arrow_u": {
+				"name": "arrow up",
+				"pic": [
+					-3,
+					30,
+					64
+				]
+			},
+			"arrow_d": {
+				"name": "arrow down",
+				"pic": [
+					-3,
+					28,
+					64
+				]
+			},
+			"arrow_x": {
+				"name": "arrow X",
+				"pic": [
+					-3,
+					31,
+					64
+				]
+			},
 			"woodfloor1": {
 				"name": "floor",
 				"pic": [
@@ -505,77 +624,6 @@
 				],
 				"type": "ice"
 			},
-			"path": {
-				"name": "path",
-				"pic": [
-					-3,
-					7,
-					14
-				],
-				"menu_pic": [
-					-3,
-					6,
-					12
-				],
-				"autotile_layout": 4
-			},
-			"path2": {
-				"name": "path",
-				"pic": [
-					-3,
-					10,
-					14
-				],
-				"menu_pic": [
-					-3,
-					9,
-					12
-				],
-				"autotile_layout": 4
-			},
-			"path3": {
-				"name": "path",
-				"pic": [
-					-3,
-					4,
-					14
-				],
-				"menu_pic": [
-					-3,
-					3,
-					12
-				],
-				"autotile_layout": 4
-			},
-			"path4": {
-				"name": "path",
-				"pic": [
-					-3,
-					16,
-					28
-				],
-				"menu_pic": [
-					-3,
-					15,
-					26
-				],
-				"autotile_layout": 4
-			},
-			"path_edge": {
-				"name": "path",
-				"pic": [
-					-3,
-					13,
-					14
-				],
-				"menu_pic": [
-					-3,
-					12,
-					12
-				],
-				"obj": true,
-				"autotile_layout": 4
-			},
 			"snow_grass": {
 				"name": "snow grass",
 				"pic": [
@@ -856,47 +904,6 @@
 				"anim_speed": 5,
 				"obj": true
 			},
-			"rails": {
-				"name": "rails",
-				"pic": [
-					-3,
-					29,
-					20
-				],
-				"menu_pic": [
-					-3,
-					27,
-					20
-				],
-				"obj": true,
-				"autotile_layout": 2
-			},
-			"rails2": {
-				"name": "rails",
-				"pic": [
-					-3,
-					25,
-					20
-				],
-				"menu_pic": [
-					-3,
-					27,
-					20
-				],
-				"obj": true,
-				"autotile_layout": 2
-			},
-			"campfire": {
-				"name": "campfire",
-				"obj": true,
-				"anim_frames": 4,
-				"anim_speed": 3,
-				"pic": [
-					-3,
-					24,
-					16
-				]
-			},
 			"waterfall": {
 				"name": "waterfall",
 				"anim_frames": 4,
@@ -926,6 +933,36 @@
 					27,
 					34
 				]
+			},
+			"rails": {
+				"name": "rails",
+				"pic": [
+					-3,
+					29,
+					20
+				],
+				"menu_pic": [
+					-3,
+					28,
+					20
+				],
+				"obj": true,
+				"autotile_layout": 2
+			},
+			"rails2": {
+				"name": "rails",
+				"pic": [
+					-3,
+					25,
+					20
+				],
+				"menu_pic": [
+					-3,
+					24,
+					20
+				],
+				"obj": true,
+				"autotile_layout": 2
 			},
 			"cliff_top1": {
 				"name": "cliff top",
@@ -1134,6 +1171,46 @@
 				"autotile_layout": 7,
 				"density": true
 			},
+			"house_wall4a": {
+				"name": "house wall",
+				"pic": [
+					-3,
+					1,
+					20
+				],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall4b": {
+				"name": "house wall",
+				"pic": [
+					-3,
+					1,
+					21
+				],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall6a": {
+				"name": "house wall",
+				"pic": [
+					-3,
+					5,
+					20
+				],
+				"autotile_layout": 7,
+				"density": true
+			},
+			"house_wall6b": {
+				"name": "house wall",
+				"pic": [
+					-3,
+					5,
+					21
+				],
+				"autotile_layout": 7,
+				"density": true
+			},
 			"cliff_stairs1": {
 				"name": "cliff stairs",
 				"pic": [
@@ -1186,6 +1263,7 @@
 					6,
 					56
 				],
+				"menu_pic": [-3, 5, 56],
 				"autotile_layout": 7,
 				"density": true
 			},
@@ -1196,6 +1274,7 @@
 					6,
 					57
 				],
+				"menu_pic": [-3, 5, 57],
 				"autotile_layout": 7,
 				"density": true
 			},
@@ -1221,6 +1300,7 @@
 					15,
 					56
 				],
+				"menu_pic": [-3, 14, 56],
 				"autotile_layout": 7,
 				"density": true
 			},
@@ -1231,6 +1311,7 @@
 					15,
 					57
 				],
+				"menu_pic": [-3, 14, 57],
 				"autotile_layout": 7,
 				"density": true
 			},
@@ -1294,26 +1375,6 @@
 				"autotile_layout": 4,
 				"density": true
 			},
-			"house_wall4a": {
-				"name": "house wall",
-				"pic": [
-					-3,
-					1,
-					20
-				],
-				"autotile_layout": 7,
-				"density": true
-			},
-			"house_wall4b": {
-				"name": "house wall",
-				"pic": [
-					-3,
-					1,
-					21
-				],
-				"autotile_layout": 7,
-				"density": true
-			},
 			"house_wall5a": {
 				"name": "house wall",
 				"pic": [
@@ -1321,6 +1382,7 @@
 					11,
 					41
 				],
+				"menu_pic": [-3, 10, 41],
 				"autotile_layout": 7,
 				"density": true
 			},
@@ -1331,46 +1393,7 @@
 					11,
 					42
 				],
-				"autotile_layout": 7,
-				"density": true
-			},
-			"house_wall6a": {
-				"name": "house wall",
-				"pic": [
-					-3,
-					5,
-					20
-				],
-				"autotile_layout": 7,
-				"density": true
-			},
-			"house_wall6b": {
-				"name": "house wall",
-				"pic": [
-					-3,
-					5,
-					21
-				],
-				"autotile_layout": 7,
-				"density": true
-			},
-			"house_wall7a": {
-				"name": "house wall",
-				"pic": [
-					-3,
-					11,
-					41
-				],
-				"autotile_layout": 7,
-				"density": true
-			},
-			"house_wall7b": {
-				"name": "house wall",
-				"pic": [
-					-3,
-					11,
-					42
-				],
+				"menu_pic": [-3, 10, 42],
 				"autotile_layout": 7,
 				"density": true
 			},
@@ -1465,6 +1488,26 @@
 				"obj": true,
 				"autotile_layout": 7,
 				"density": true
+			},
+			"shipwall1": {
+				"name": "ship wall",
+				"pic": [
+					-3,
+					12,
+					50
+				],
+				"density": true,
+				"autotile_layout": 5
+			},
+			"shipwall2": {
+				"name": "ship wall",
+				"pic": [
+					-3,
+					15,
+					50
+				],
+				"density": true,
+				"autotile_layout": 5
 			},
 			"pit": {
 				"name": "pit",
@@ -1867,6 +1910,95 @@
 				"obj": true,
 				"density": true
 			},
+			"campfire": {
+				"name": "campfire",
+				"obj": true,
+				"anim_frames": 4,
+				"anim_speed": 3,
+				"pic": [
+					-3,
+					24,
+					16
+				]
+			},
+			"torch": {
+				"name": "torch",
+				"pic": [
+					-3,
+					28,
+					16
+				],
+				"obj": true
+			},
+			"torch_top": {
+				"name": "torch",
+				"pic": [
+					-3,
+					29,
+					16
+				],
+				"density": true,
+				"obj": true
+			},
+			"torch_bottom": {
+				"name": "torch",
+				"pic": [
+					-3,
+					29,
+					17
+				],
+				"density": true,
+				"obj": true
+			},
+			"rope": {
+				"name": "rope",
+				"pic": [
+					-3,
+					25,
+					68
+				],
+				"obj": true
+			},
+			"logs": {
+				"name": "logs",
+				"pic": [
+					-3,
+					24,
+					17
+				],
+				"density": true,
+				"obj": true
+			},
+			"mailbox": {
+				"name": "mailbox",
+				"pic": [
+					-3,
+					4,
+					69
+				],
+				"density": true,
+				"obj": true
+			},
+			"mailbox2": {
+				"name": "mailbox",
+				"pic": [
+					-3,
+					5,
+					69
+				],
+				"density": true,
+				"obj": true
+			},
+			"well": {
+				"name": "well",
+				"pic": [
+					-3,
+					19,
+					68
+				],
+				"density": true,
+				"obj": true
+			},
 			"table": {
 				"name": "table",
 				"pic": [
@@ -1960,6 +2092,26 @@
 				"obj": true,
 				"density": true
 			},
+			"counter": {
+				"name": "counter",
+				"pic": [
+					-3,
+					1,
+					49
+				],
+				"autotile_layout": 6,
+				"density": true
+			},
+			"counter2": {
+				"name": "counter",
+				"pic": [
+					-3,
+					7,
+					49
+				],
+				"autotile_layout": 6,
+				"density": true
+			},
 			"chair1": {
 				"name": "chair",
 				"pic": [
@@ -2042,6 +2194,335 @@
 				],
 				"obj": true,
 				"density": true
+			},
+			"pot": {
+				"name": "pot",
+				"pic": [
+					-3,
+					19,
+					69
+				],
+				"density": true,
+				"obj": true
+			},
+			"swords_top": {
+				"name": "swords",
+				"pic": [
+					-3,
+					3,
+					67
+				],
+				"over": true,
+				"obj": true
+			},
+			"swords_bottom": {
+				"name": "swords",
+				"pic": [
+					-3,
+					3,
+					68
+				],
+				"density": true,
+				"obj": true
+			},
+			"crate": {
+				"name": "crate",
+				"pic": [
+					-3,
+					24,
+					65
+				],
+				"density": true,
+				"obj": true
+			},
+			"crate2": {
+				"name": "crate",
+				"pic": [
+					-3,
+					24,
+					66
+				],
+				"density": true,
+				"obj": true
+			},
+			"crate3": {
+				"name": "crate",
+				"pic": [
+					-3,
+					23,
+					68
+				],
+				"density": true,
+				"obj": true
+			},
+			"crate4": {
+				"name": "crate",
+				"pic": [
+					-3,
+					24,
+					68
+				],
+				"density": true,
+				"obj": true
+			},
+			"crate5": {
+				"name": "crate",
+				"pic": [
+					-3,
+					23,
+					69
+				],
+				"density": true,
+				"obj": true
+			},
+			"crate6": {
+				"name": "crate",
+				"pic": [
+					-3,
+					24,
+					69
+				],
+				"density": true,
+				"obj": true
+			},
+			"chest": {
+				"name": "chest",
+				"pic": [
+					-3,
+					4,
+					70
+				],
+				"density": true,
+				"obj": true
+			},
+			"chest3": {
+				"name": "chest",
+				"pic": [
+					-3,
+					5,
+					70
+				],
+				"density": true,
+				"obj": true
+			},
+			"chest2": {
+				"name": "chest",
+				"pic": [
+					-3,
+					3,
+					70
+				],
+				"density": true,
+				"obj": true
+			},
+			"bookshelf_top": {
+				"name": "bookshelf",
+				"pic": [
+					-3,
+					5,
+					54
+				],
+				"density": true,
+				"obj": true
+			},
+			"bookshelf_bottom": {
+				"name": "bookshelf",
+				"pic": [
+					-3,
+					5,
+					55
+				],
+				"obj": true
+			},
+			"shelves_top": {
+				"name": "shelves",
+				"pic": [
+					-3,
+					6,
+					54
+				],
+				"density": true,
+				"obj": true
+			},
+			"shelves_bottom": {
+				"name": "shelves",
+				"pic": [
+					-3,
+					6,
+					55
+				],
+				"obj": true
+			},
+			"wardrobe_top": {
+				"name": "wardrobe",
+				"pic": [
+					-3,
+					7,
+					54
+				],
+				"density": true,
+				"obj": true
+			},
+			"wardrobe_bottom": {
+				"name": "wardrobe",
+				"pic": [
+					-3,
+					7,
+					55
+				],
+				"obj": true
+			},
+			"wardrobe_open_top": {
+				"name": "wardrobe",
+				"pic": [
+					-3,
+					8,
+					54
+				],
+				"density": true,
+				"obj": true
+			},
+			"wardrobe_open_bottom": {
+				"name": "wardrobe",
+				"pic": [
+					-3,
+					8,
+					55
+				],
+				"obj": true
+			},
+			"bigbookshelf": {
+				"name": "big bookshelf",
+				"pic": [
+					-3,
+					1,
+					52
+				],
+				"density": true,
+				"autotile_layout": 2,
+				"autotile_class": "big bookshelf"
+			},
+			"bigshelf": {
+				"name": "big bookshelf",
+				"pic": [
+					-3,
+					5,
+					52
+				],
+				"density": true,
+				"autotile_layout": 2,
+				"autotile_class": "big bookshelf"
+			},
+			"mirror_top": {
+				"name": "mirror",
+				"pic": [
+					-3,
+					3,
+					65
+				],
+				"density": true,
+				"obj": true
+			},
+			"mirror_bottom": {
+				"name": "mirror",
+				"pic": [
+					-3,
+					3,
+					66
+				],
+				"obj": true
+			},
+			"clock_top": {
+				"name": "clock",
+				"pic": [
+					-3,
+					5,
+					65
+				],
+				"obj": true
+			},
+			"clock_bottom": {
+				"name": "clock",
+				"pic": [
+					-3,
+					5,
+					66
+				],
+				"obj": true
+			},
+			"crystal_ball": {
+				"name": "crystal ball",
+				"pic": [
+					-3,
+					15,
+					72
+				],
+				"density": true,
+				"obj": true
+			},
+			"crystal_ball2": {
+				"name": "crystal ball",
+				"pic": [
+					-3,
+					16,
+					72
+				],
+				"density": true,
+				"obj": true
+			},
+			"bed1": {
+				"name": "bed",
+				"pic": [
+					-3,
+					0,
+					64
+				],
+				"obj": true
+			},
+			"bed2": {
+				"name": "bed",
+				"pic": [
+					-3,
+					0,
+					65
+				],
+				"obj": true
+			},
+			"bed3": {
+				"name": "bed",
+				"pic": [
+					-3,
+					1,
+					65
+				],
+				"obj": true
+			},
+			"bed4": {
+				"name": "bed",
+				"pic": [
+					-3,
+					2,
+					65
+				],
+				"obj": true
+			},
+			"bed3_l": {
+				"name": "bed",
+				"pic": [
+					-3,
+					1,
+					64
+				],
+				"obj": true
+			},
+			"bed4_l": {
+				"name": "bed",
+				"pic": [
+					-3,
+					2,
+					64
+				],
+				"obj": true
 			},
 			"book": {
 				"name": "book",
@@ -2286,26 +2767,6 @@
 				],
 				"obj": true
 			},
-			"counter": {
-				"name": "counter",
-				"pic": [
-					-3,
-					1,
-					49
-				],
-				"autotile_layout": 6,
-				"density": true
-			},
-			"counter2": {
-				"name": "counter",
-				"pic": [
-					-3,
-					7,
-					49
-				],
-				"autotile_layout": 6,
-				"density": true
-			},
 			"painting1": {
 				"name": "painting",
 				"pic": [
@@ -2450,124 +2911,6 @@
 				],
 				"obj": true
 			},
-			"chest": {
-				"name": "chest",
-				"pic": [
-					-3,
-					4,
-					70
-				],
-				"density": true,
-				"obj": true
-			},
-			"chest3": {
-				"name": "chest",
-				"pic": [
-					-3,
-					5,
-					70
-				],
-				"density": true,
-				"obj": true
-			},
-			"chest2": {
-				"name": "chest",
-				"pic": [
-					-3,
-					3,
-					70
-				],
-				"density": true,
-				"obj": true
-			},
-			"torch": {
-				"name": "torch",
-				"pic": [
-					-3,
-					28,
-					16
-				],
-				"obj": true
-			},
-			"torch_top": {
-				"name": "torch",
-				"pic": [
-					-3,
-					29,
-					16
-				],
-				"density": true,
-				"obj": true
-			},
-			"torch_bottom": {
-				"name": "torch",
-				"pic": [
-					-3,
-					29,
-					17
-				],
-				"density": true,
-				"obj": true
-			},
-			"rope": {
-				"name": "rope",
-				"pic": [
-					-3,
-					25,
-					68
-				],
-				"obj": true
-			},
-			"logs": {
-				"name": "logs",
-				"pic": [
-					-3,
-					24,
-					17
-				],
-				"density": true,
-				"obj": true
-			},
-			"mailbox": {
-				"name": "mailbox",
-				"pic": [
-					-3,
-					4,
-					69
-				],
-				"density": true,
-				"obj": true
-			},
-			"mailbox2": {
-				"name": "mailbox",
-				"pic": [
-					-3,
-					5,
-					69
-				],
-				"density": true,
-				"obj": true
-			},
-			"well": {
-				"name": "well",
-				"pic": [
-					-3,
-					19,
-					68
-				],
-				"density": true,
-				"obj": true
-			},
-			"pot": {
-				"name": "pot",
-				"pic": [
-					-3,
-					19,
-					69
-				],
-				"density": true,
-				"obj": true
-			},
 			"ladder": {
 				"name": "ladder",
 				"pic": [
@@ -2620,86 +2963,6 @@
 					12,
 					69
 				],
-				"obj": true
-			},
-			"swords_top": {
-				"name": "swords",
-				"pic": [
-					-3,
-					3,
-					67
-				],
-				"over": true,
-				"obj": true
-			},
-			"swords_bottom": {
-				"name": "swords",
-				"pic": [
-					-3,
-					3,
-					68
-				],
-				"density": true,
-				"obj": true
-			},
-			"crate": {
-				"name": "crate",
-				"pic": [
-					-3,
-					24,
-					65
-				],
-				"density": true,
-				"obj": true
-			},
-			"crate2": {
-				"name": "crate",
-				"pic": [
-					-3,
-					24,
-					66
-				],
-				"density": true,
-				"obj": true
-			},
-			"crate3": {
-				"name": "crate",
-				"pic": [
-					-3,
-					23,
-					68
-				],
-				"density": true,
-				"obj": true
-			},
-			"crate4": {
-				"name": "crate",
-				"pic": [
-					-3,
-					24,
-					68
-				],
-				"density": true,
-				"obj": true
-			},
-			"crate5": {
-				"name": "crate",
-				"pic": [
-					-3,
-					23,
-					69
-				],
-				"density": true,
-				"obj": true
-			},
-			"crate6": {
-				"name": "crate",
-				"pic": [
-					-3,
-					24,
-					69
-				],
-				"density": true,
 				"obj": true
 			},
 			"rope2": {
@@ -2845,53 +3108,93 @@
 				],
 				"obj": true
 			},
-			"arrow_none": {
-				"name": "blank tile",
+			"flag": {
+				"name": "flag",
 				"pic": [
 					-3,
 					26,
-					64
-				]
+					69
+				],
+				"obj": true,
+				"anim_frames": 2,
+				"anim_speed": 3
 			},
-			"arrow_l": {
-				"name": "arrow left",
+			"flag2": {
+				"name": "flag",
 				"pic": [
 					-3,
-					29,
-					64
-				]
+					26,
+					68
+				],
+				"obj": true,
+				"anim_frames": 2,
+				"anim_speed": 3
 			},
-			"arrow_r": {
-				"name": "arrow right",
+			"flag_l": {
+				"name": "flag",
 				"pic": [
 					-3,
-					27,
-					64
-				]
+					26,
+					71
+				],
+				"obj": true,
+				"anim_frames": 2,
+				"anim_speed": 3
 			},
-			"arrow_u": {
-				"name": "arrow up",
+			"flag2_l": {
+				"name": "flag",
 				"pic": [
 					-3,
-					30,
-					64
-				]
+					26,
+					70
+				],
+				"obj": true,
+				"anim_frames": 2,
+				"anim_speed": 3
 			},
-			"arrow_d": {
-				"name": "arrow down",
+			"flag3": {
+				"name": "flag",
 				"pic": [
 					-3,
 					28,
-					64
-				]
+					69
+				],
+				"obj": true,
+				"anim_frames": 2,
+				"anim_speed": 3
 			},
-			"arrow_x": {
-				"name": "arrow X",
+			"flag4": {
+				"name": "flag",
 				"pic": [
 					-3,
-					31,
-					64
-				]
+					28,
+					68
+				],
+				"obj": true,
+				"anim_frames": 2,
+				"anim_speed": 3
+			},
+			"flag3_l": {
+				"name": "flag",
+				"pic": [
+					-3,
+					28,
+					71
+				],
+				"obj": true,
+				"anim_frames": 2,
+				"anim_speed": 3
+			},
+			"flag4_l": {
+				"name": "flag",
+				"pic": [
+					-3,
+					28,
+					70
+				],
+				"obj": true,
+				"anim_frames": 2,
+				"anim_speed": 3
 			},
 			"spikes": {
 				"name": "spikes",
@@ -3103,215 +3406,6 @@
 				"density": true,
 				"obj": true
 			},
-			"bookshelf_top": {
-				"name": "bookshelf",
-				"pic": [
-					-3,
-					5,
-					54
-				],
-				"density": true,
-				"obj": true
-			},
-			"bookshelf_bottom": {
-				"name": "bookshelf",
-				"pic": [
-					-3,
-					5,
-					55
-				],
-				"obj": true
-			},
-			"shelves_top": {
-				"name": "shelves",
-				"pic": [
-					-3,
-					6,
-					54
-				],
-				"density": true,
-				"obj": true
-			},
-			"shelves_bottom": {
-				"name": "shelves",
-				"pic": [
-					-3,
-					6,
-					55
-				],
-				"obj": true
-			},
-			"wardrobe_top": {
-				"name": "wardrobe",
-				"pic": [
-					-3,
-					7,
-					54
-				],
-				"density": true,
-				"obj": true
-			},
-			"wardrobe_bottom": {
-				"name": "wardrobe",
-				"pic": [
-					-3,
-					7,
-					55
-				],
-				"obj": true
-			},
-			"wardrobe_open_top": {
-				"name": "wardrobe",
-				"pic": [
-					-3,
-					8,
-					54
-				],
-				"density": true,
-				"obj": true
-			},
-			"wardrobe_open_bottom": {
-				"name": "wardrobe",
-				"pic": [
-					-3,
-					8,
-					55
-				],
-				"obj": true
-			},
-			"bigbookshelf": {
-				"name": "big bookshelf",
-				"pic": [
-					-3,
-					1,
-					52
-				],
-				"density": true,
-				"autotile_layout": 2,
-				"autotile_class": "big bookshelf"
-			},
-			"bigshelf": {
-				"name": "big bookshelf",
-				"pic": [
-					-3,
-					5,
-					52
-				],
-				"density": true,
-				"autotile_layout": 2,
-				"autotile_class": "big bookshelf"
-			},
-			"mirror_top": {
-				"name": "mirror",
-				"pic": [
-					-3,
-					3,
-					65
-				],
-				"density": true,
-				"obj": true
-			},
-			"mirror_bottom": {
-				"name": "mirror",
-				"pic": [
-					-3,
-					3,
-					66
-				],
-				"obj": true
-			},
-			"clock_top": {
-				"name": "clock",
-				"pic": [
-					-3,
-					5,
-					65
-				],
-				"obj": true
-			},
-			"clock_bottom": {
-				"name": "clock",
-				"pic": [
-					-3,
-					5,
-					66
-				],
-				"obj": true
-			},
-			"crystal_ball": {
-				"name": "crystal ball",
-				"pic": [
-					-3,
-					15,
-					72
-				],
-				"density": true,
-				"obj": true
-			},
-			"crystal_ball2": {
-				"name": "crystal ball",
-				"pic": [
-					-3,
-					16,
-					72
-				],
-				"density": true,
-				"obj": true
-			},
-			"bed1": {
-				"name": "bed",
-				"pic": [
-					-3,
-					0,
-					64
-				],
-				"obj": true
-			},
-			"bed2": {
-				"name": "bed",
-				"pic": [
-					-3,
-					0,
-					65
-				],
-				"obj": true
-			},
-			"bed3": {
-				"name": "bed",
-				"pic": [
-					-3,
-					1,
-					65
-				],
-				"obj": true
-			},
-			"bed4": {
-				"name": "bed",
-				"pic": [
-					-3,
-					2,
-					65
-				],
-				"obj": true
-			},
-			"bed3_l": {
-				"name": "bed",
-				"pic": [
-					-3,
-					1,
-					64
-				],
-				"obj": true
-			},
-			"bed4_l": {
-				"name": "bed",
-				"pic": [
-					-3,
-					2,
-					64
-				],
-				"obj": true
-			},
 			"snowman": {
 				"name": "snowman",
 				"autotile_class_edge": "snow",
@@ -3442,94 +3536,6 @@
 				"density": true,
 				"obj": true
 			},
-			"flag": {
-				"name": "flag",
-				"pic": [
-					-3,
-					26,
-					69
-				],
-				"obj": true,
-				"anim_frames": 2,
-				"anim_speed": 3
-			},
-			"flag2": {
-				"name": "flag",
-				"pic": [
-					-3,
-					26,
-					68
-				],
-				"obj": true,
-				"anim_frames": 2,
-				"anim_speed": 3
-			},
-			"flag_l": {
-				"name": "flag",
-				"pic": [
-					-3,
-					26,
-					71
-				],
-				"obj": true,
-				"anim_frames": 2,
-				"anim_speed": 3
-			},
-			"flag2_l": {
-				"name": "flag",
-				"pic": [
-					-3,
-					26,
-					70
-				],
-				"obj": true,
-				"anim_frames": 2,
-				"anim_speed": 3
-			},
-			"flag3": {
-				"name": "flag",
-				"pic": [
-					-3,
-					28,
-					69
-				],
-				"obj": true,
-				"anim_frames": 2,
-				"anim_speed": 3
-			},
-			"flag4": {
-				"name": "flag",
-				"pic": [
-					-3,
-					28,
-					68
-				],
-				"obj": true,
-				"anim_frames": 2,
-				"anim_speed": 3
-			},
-			"flag3_l": {
-				"name": "flag",
-				"pic": [
-					-3,
-					28,
-					71
-				],
-				"obj": true,
-				"anim_frames": 2,
-				"anim_speed": 3
-			},
-			"flag4_l": {
-				"name": "flag",
-				"pic": [
-					-3,
-					28,
-					70
-				],
-				"obj": true,
-				"anim_frames": 2,
-				"anim_speed": 3
-			},
 			"cannon1": {
 				"name": "cannon",
 				"pic": [
@@ -3609,26 +3615,6 @@
 				],
 				"density": true,
 				"obj": true
-			},
-			"shipwall1": {
-				"name": "ship wall",
-				"pic": [
-					-3,
-					12,
-					50
-				],
-				"density": true,
-				"autotile_layout": 5
-			},
-			"shipwall2": {
-				"name": "ship wall",
-				"pic": [
-					-3,
-					15,
-					50
-				],
-				"density": true,
-				"autotile_layout": 5
 			}
 		}
 	},

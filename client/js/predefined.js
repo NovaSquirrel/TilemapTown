@@ -1086,6 +1086,85 @@ GlobalTiles = {
 		"density": true,
 		"obj": true
 	},
+	"sign": {
+		"name": "sign",
+		"pic": [
+			0,
+			1,
+			70
+		],
+		"density": true,
+		"obj": true,
+		"type": "sign"
+	},
+	"stonesign": {
+		"name": "sign",
+		"pic": [
+			0,
+			0,
+			70
+		],
+		"density": true,
+		"obj": true,
+		"type": "sign"
+	},
+	"redwhitesign": {
+		"name": "sign",
+		"pic": [
+			0,
+			23,
+			62
+		],
+		"density": true,
+		"obj": true
+	},
+	"blueyellowsign": {
+		"name": "sign",
+		"pic": [
+			0,
+			23,
+			61
+		],
+		"density": true,
+		"obj": true
+	},
+	"fence": {
+		"name": "fence",
+		"pic": [0, 21, 66],
+		"density": true,
+		"obj": true,
+		"autotile_layout": 2
+	},
+	"well": {
+		"name": "well",
+		"pic": [
+			0,
+			5,
+			32
+		],
+		"density": true,
+		"obj": true
+	},
+	"well2": {
+		"name": "well",
+		"pic": [
+			0,
+			8,
+			30
+		],
+		"density": true,
+		"obj": true
+	},
+	"tombstone": {
+		"name": "tombstone",
+		"pic": [
+			0,
+			20,
+			18
+		],
+		"density": true,
+		"obj": true
+	},
 	"mushrooms": {
 		"name": "mushrooms",
 		"pic": [
@@ -1140,6 +1219,16 @@ GlobalTiles = {
 		"pic": [
 			0,
 			21,
+			15
+		],
+		"density": true,
+		"obj": true
+	},
+	"mossrock": {
+		"name": "mossrock",
+		"pic": [
+			0,
+			22,
 			15
 		],
 		"density": true,
@@ -1239,121 +1328,382 @@ GlobalTiles = {
 		],
 		"obj": true
 	},
-	"sign": {
-		"name": "sign",
+	"tree": {
+		"name": "tree",
+		"pic": [
+			0,
+			3,
+			10
+		],
+		"density": true,
+		"obj": true
+	},
+	"tree2": {
+		"name": "tree",
+		"pic": [
+			0,
+			3,
+			11
+		],
+		"density": true,
+		"obj": true
+	},
+	"tree3": {
+		"name": "tree",
+		"pic": [
+			0,
+			2,
+			12
+		],
+		"density": true,
+		"obj": true
+	},
+	"tree4": {
+		"name": "tree",
+		"pic": [
+			0,
+			6,
+			10
+		],
+		"density": true,
+		"obj": true
+	},
+	"tree5": {
+		"name": "tree",
+		"pic": [
+			0,
+			6,
+			11
+		],
+		"density": true,
+		"obj": true
+	},
+	"tree6": {
+		"name": "tree",
+		"pic": [
+			0,
+			10,
+			12
+		],
+		"density": true,
+		"obj": true
+	},
+	"palmtree": {
+		"name": "tree",
+		"pic": [
+			0,
+			7,
+			10
+		],
+		"density": true,
+		"obj": true
+	},
+	"palmtree2": {
+		"name": "tree",
+		"pic": [
+			0,
+			7,
+			11
+		],
+		"density": true,
+		"obj": true
+	},
+	"cactus": {
+		"name": "cactus",
+		"pic": [
+			0,
+			16,
+			12
+		],
+		"density": true,
+		"obj": true
+	},
+	"bush1": {
+		"name": "bush",
+		"pic": [
+			0,
+			3,
+			12
+		],
+		"density": true,
+		"obj": true
+	},
+	"bush2": {
+		"name": "bush",
+		"pic": [
+			0,
+			4,
+			12
+		],
+		"density": true,
+		"obj": true
+	},
+	"bush3": {
+		"name": "bush",
+		"pic": [
+			0,
+			4,
+			11
+		],
+		"density": true,
+		"obj": true
+	},
+	"bush4": {
+		"name": "bush",
+		"pic": [
+			0,
+			6,
+			12
+		],
+		"density": true,
+		"obj": true
+	},
+	"stump": {
+		"name": "stump",
+		"pic": [
+			0,
+			8,
+			12
+		],
+		"obj": true
+	},
+	"grasstuft": {
+		"name": "grasstuft",
+		"pic": [
+			0,
+			4,
+			10
+		],
+		"density": false,
+		"obj": true
+	},
+	"treetop": {
+		"name": "tree",
+		"pic": [
+			0,
+			2,
+			10
+		],
+		"density": false,
+		"obj": true,
+		"over": true
+	},
+	"treebot": {
+		"name": "tree",
+		"pic": [
+			0,
+			2,
+			11
+		],
+		"density": true,
+		"obj": true
+	},
+	"leaf": {
+		"name": "leaf",
+		"pic": [
+			0,
+			12,
+			10
+		],
+		"obj": true
+	},
+	"grassfall": {
+		"name": "grass",
+		"pic": [
+			0,
+			0,
+			13
+		]
+	},
+	"grassfall2": {
+		"name": "grass",
 		"pic": [
 			0,
 			1,
-			70
+			13
+		]
+	},
+	"treefall": {
+		"name": "tree",
+		"pic": [
+			0,
+			3,
+			13
 		],
 		"density": true,
+		"obj": true
+	},
+	"treefall2": {
+		"name": "tree",
+		"pic": [
+			0,
+			3,
+			14
+		],
+		"density": true,
+		"obj": true
+	},
+	"bushfall1": {
+		"name": "bush",
+		"pic": [
+			0,
+			3,
+			15
+		],
+		"density": true,
+		"obj": true
+	},
+	"bushfall2": {
+		"name": "bush",
+		"pic": [
+			0,
+			4,
+			15
+		],
+		"density": true,
+		"obj": true
+	},
+	"bushfall3": {
+		"name": "bush",
+		"pic": [
+			0,
+			4,
+			14
+		],
+		"density": true,
+		"obj": true
+	},
+	"grasstuftfall": {
+		"name": "grasstuft",
+		"pic": [
+			0,
+			4,
+			13
+		],
+		"obj": true
+	},
+	"treefalltop": {
+		"name": "tree",
+		"pic": [
+			0,
+			2,
+			13
+		],
+		"density": false,
 		"obj": true,
-		"type": "sign"
+		"over": true
 	},
-	"stonesign": {
-		"name": "sign",
+	"treefallbot": {
+		"name": "tree",
+		"pic": [
+			0,
+			2,
+			14
+		],
+		"density": true,
+		"obj": true
+	},
+	"leaf2": {
+		"name": "leaf",
+		"pic": [
+			0,
+			13,
+			10
+		],
+		"obj": true
+	},
+	"grasswinter": {
+		"name": "grass",
 		"pic": [
 			0,
 			0,
-			70
+			16
+		]
+	},
+	"grasswinter2": {
+		"name": "grass",
+		"pic": [
+			0,
+			1,
+			16
+		]
+	},
+	"treewinter": {
+		"name": "tree",
+		"pic": [
+			0,
+			3,
+			16
 		],
 		"density": true,
+		"obj": true
+	},
+	"treewinter2": {
+		"name": "tree",
+		"pic": [
+			0,
+			3,
+			17
+		],
+		"density": true,
+		"obj": true
+	},
+	"bushwinter1": {
+		"name": "bush",
+		"pic": [
+			0,
+			3,
+			18
+		],
+		"density": true,
+		"obj": true
+	},
+	"bushwinter2": {
+		"name": "bush",
+		"pic": [
+			0,
+			4,
+			18
+		],
+		"density": true,
+		"obj": true
+	},
+	"bushwinter3": {
+		"name": "bush",
+		"pic": [
+			0,
+			4,
+			17
+		],
+		"density": true,
+		"obj": true
+	},
+	"grasstuftwinter": {
+		"name": "grasstuft",
+		"pic": [
+			0,
+			4,
+			16
+		],
+		"obj": true
+	},
+	"treewintertop": {
+		"name": "tree",
+		"pic": [
+			0,
+			2,
+			16
+		],
+		"density": false,
 		"obj": true,
-		"type": "sign"
+		"over": true
 	},
-	"redwhitesign": {
-		"name": "sign",
+	"treewinterbot": {
+		"name": "tree",
 		"pic": [
 			0,
-			23,
-			62
-		],
-		"density": true,
-		"obj": true
-	},
-	"blueyellowsign": {
-		"name": "sign",
-		"pic": [
-			0,
-			23,
-			61
-		],
-		"density": true,
-		"obj": true
-	},
-	"fence": {
-		"name": "fence",
-		"pic": [0, 21, 66],
-		"density": true,
-		"obj": true,
-		"autotile_layout": 2
-	},
-	"pot1": {
-		"name": "pot",
-		"pic": [
-			0,
-			10,
-			61
-		],
-		"density": true,
-		"obj": true
-	},
-	"pot2": {
-		"name": "pot",
-		"pic": [
-			0,
-			10,
-			60
-		],
-		"density": true,
-		"obj": true
-	},
-	"barrel": {
-		"name": "barrel",
-		"pic": [
-			0,
-			24,
-			81
-		],
-		"density": true,
-		"obj": true
-	},
-	"barrel2": {
-		"name": "barrel",
-		"pic": [
-			0,
-			9,
-			60
-		],
-		"density": true,
-		"obj": true
-	},
-	"books": {
-		"name": "bookshelves",
-		"pic": [
-			0,
-			26,
-			61
-		],
-		"density": true,
-		"obj": true
-	},
-	"tv1": {
-		"name": "television",
-		"pic": [
-			0,
-			18,
-			68
-		],
-		"density": true,
-		"obj": true
-	},
-	"tv2": {
-		"name": "television",
-		"pic": [
-			0,
-			18,
-			69
+			2,
+			17
 		],
 		"density": true,
 		"obj": true
@@ -1697,6 +2047,26 @@ GlobalTiles = {
 		],
 		"obj": true
 	},
+	"goldchalice": {
+		"name": "gold chalice",
+		"pic": [
+			0,
+			11,
+			75
+		],
+		"density": false,
+		"obj": true
+	},
+	"goldbars": {
+		"name": "gold bars",
+		"pic": [
+			0,
+			12,
+			75
+		],
+		"density": false,
+		"obj": true
+	},
 	"gempile": {
 		"name": "gem pile",
 		"pic": [
@@ -1786,393 +2156,149 @@ GlobalTiles = {
 		"density": false,
 		"obj": true
 	},
-	"tree": {
-		"name": "tree",
-		"pic": [
-			0,
-			3,
-			10
-		],
-		"density": true,
-		"obj": true
-	},
-	"tree2": {
-		"name": "tree",
-		"pic": [
-			0,
-			3,
-			11
-		],
-		"density": true,
-		"obj": true
-	},
-	"tree3": {
-		"name": "tree",
-		"pic": [
-			0,
-			2,
-			12
-		],
-		"density": true,
-		"obj": true
-	},
-	"tree4": {
-		"name": "tree",
-		"pic": [
-			0,
-			6,
-			10
-		],
-		"density": true,
-		"obj": true
-	},
-	"tree5": {
-		"name": "tree",
-		"pic": [
-			0,
-			6,
-			11
-		],
-		"density": true,
-		"obj": true
-	},
-	"tree6": {
-		"name": "tree",
-		"pic": [
-			0,
-			10,
-			12
-		],
-		"density": true,
-		"obj": true
-	},
-	"palmtree": {
-		"name": "tree",
-		"pic": [
-			0,
-			7,
-			10
-		],
-		"density": true,
-		"obj": true
-	},
-	"palmtree2": {
-		"name": "tree",
-		"pic": [
-			0,
-			7,
-			11
-		],
-		"density": true,
-		"obj": true
-	},
-	"cactus": {
-		"name": "cactus",
-		"pic": [
-			0,
-			16,
-			12
-		],
-		"density": true,
-		"obj": true
-	},
-	"bush1": {
-		"name": "bush",
-		"pic": [
-			0,
-			3,
-			12
-		],
-		"density": true,
-		"obj": true
-	},
-	"bush2": {
-		"name": "bush",
-		"pic": [
-			0,
-			4,
-			12
-		],
-		"density": true,
-		"obj": true
-	},
-	"bush3": {
-		"name": "bush",
-		"pic": [
-			0,
-			4,
-			11
-		],
-		"density": true,
-		"obj": true
-	},
-	"bush4": {
-		"name": "bush",
-		"pic": [
-			0,
-			6,
-			12
-		],
-		"density": true,
-		"obj": true
-	},
-	"grasstuft": {
-		"name": "grasstuft",
-		"pic": [
-			0,
-			4,
-			10
-		],
-		"density": false,
-		"obj": true
-	},
-	"treetop": {
-		"name": "tree",
-		"pic": [
-			0,
-			2,
-			10
-		],
-		"density": false,
-		"obj": true,
-		"over": true
-	},
-	"treebot": {
-		"name": "tree",
-		"pic": [
-			0,
-			2,
-			11
-		],
-		"density": true,
-		"obj": true
-	},
-	"leaf": {
-		"name": "leaf",
-		"pic": [
-			0,
-			12,
-			10
-		],
-		"obj": true
-	},
-	"grassfall": {
-		"name": "grass",
-		"pic": [
-			0,
-			0,
-			13
-		]
-	},
-	"grassfall2": {
-		"name": "grass",
+	"bottle": {
+		"name": "bottle",
 		"pic": [
 			0,
 			1,
-			13
-		]
-	},
-	"treefall": {
-		"name": "tree",
-		"pic": [
-			0,
-			3,
-			13
-		],
-		"density": true,
-		"obj": true
-	},
-	"treefall2": {
-		"name": "tree",
-		"pic": [
-			0,
-			3,
-			14
-		],
-		"density": true,
-		"obj": true
-	},
-	"bushfall1": {
-		"name": "bush",
-		"pic": [
-			0,
-			3,
-			15
-		],
-		"density": true,
-		"obj": true
-	},
-	"bushfall2": {
-		"name": "bush",
-		"pic": [
-			0,
-			4,
-			15
-		],
-		"density": true,
-		"obj": true
-	},
-	"bushfall3": {
-		"name": "bush",
-		"pic": [
-			0,
-			4,
-			14
-		],
-		"density": true,
-		"obj": true
-	},
-	"grasstuftfall": {
-		"name": "grasstuft",
-		"pic": [
-			0,
-			4,
-			13
-		],
-		"obj": true
-	},
-	"treefalltop": {
-		"name": "tree",
-		"pic": [
-			0,
-			2,
-			13
+			77
 		],
 		"density": false,
-		"obj": true,
-		"over": true
-	},
-	"treefallbot": {
-		"name": "tree",
-		"pic": [
-			0,
-			2,
-			14
-		],
-		"density": true,
 		"obj": true
 	},
-	"leaf2": {
-		"name": "leaf",
+	"book": {
+		"name": "book",
 		"pic": [
 			0,
-			13,
-			10
-		],
-		"obj": true
-	},
-	"grasswinter": {
-		"name": "grass",
-		"pic": [
-			0,
-			0,
-			16
-		]
-	},
-	"grasswinter2": {
-		"name": "grass",
-		"pic": [
-			0,
-			1,
-			16
-		]
-	},
-	"treewinter": {
-		"name": "tree",
-		"pic": [
-			0,
-			3,
-			16
-		],
-		"density": true,
-		"obj": true
-	},
-	"treewinter2": {
-		"name": "tree",
-		"pic": [
-			0,
-			3,
-			17
-		],
-		"density": true,
-		"obj": true
-	},
-	"bushwinter1": {
-		"name": "bush",
-		"pic": [
-			0,
-			3,
-			18
-		],
-		"density": true,
-		"obj": true
-	},
-	"bushwinter2": {
-		"name": "bush",
-		"pic": [
-			0,
-			4,
-			18
-		],
-		"density": true,
-		"obj": true
-	},
-	"bushwinter3": {
-		"name": "bush",
-		"pic": [
-			0,
-			4,
-			17
-		],
-		"density": true,
-		"obj": true
-	},
-	"grasstuftwinter": {
-		"name": "grasstuft",
-		"pic": [
-			0,
-			4,
-			16
-		],
-		"obj": true
-	},
-	"treewintertop": {
-		"name": "tree",
-		"pic": [
-			0,
-			2,
-			16
+			27,
+			74
 		],
 		"density": false,
-		"obj": true,
-		"over": true
-	},
-	"treewinterbot": {
-		"name": "tree",
-		"pic": [
-			0,
-			2,
-			17
-		],
-		"density": true,
 		"obj": true
 	},
-	"well": {
-		"name": "well",
-		"pic": [
-			0,
-			5,
-			32
-		],
-		"density": true,
-		"obj": true
-	},
-	"well2": {
-		"name": "well",
+	"orb": {
+		"name": "orb",
 		"pic": [
 			0,
 			8,
-			30
+			77
+		],
+		"density": false,
+		"obj": true
+	},
+	"mushroom": {
+		"name": "mushroom",
+		"pic": [
+			0,
+			7,
+			73
+		],
+		"obj": true
+	},
+	"mushroom2": {
+		"name": "mushroom",
+		"pic": [
+			0,
+			6,
+			74
+		],
+		"obj": true
+	},
+	"mushroom3": {
+		"name": "mushroom",
+		"pic": [
+			0,
+			7,
+			74
+		],
+		"obj": true
+	},
+	"scroll": {
+		"name": "scroll",
+		"pic": [
+			0,
+			0,
+			77
+		],
+		"density": false,
+		"obj": true
+	},
+	"sword": {
+		"name": "sword",
+		"pic": [
+			0,
+			23,
+			76
+		],
+		"density": false,
+		"obj": true
+	},
+	"pot1": {
+		"name": "pot",
+		"pic": [
+			0,
+			10,
+			61
+		],
+		"density": true,
+		"obj": true
+	},
+	"pot2": {
+		"name": "pot",
+		"pic": [
+			0,
+			10,
+			60
+		],
+		"density": true,
+		"obj": true
+	},
+	"barrel": {
+		"name": "barrel",
+		"pic": [
+			0,
+			24,
+			81
+		],
+		"density": true,
+		"obj": true
+	},
+	"barrel2": {
+		"name": "barrel",
+		"pic": [
+			0,
+			9,
+			60
+		],
+		"density": true,
+		"obj": true
+	},
+	"books": {
+		"name": "bookshelves",
+		"pic": [
+			0,
+			26,
+			61
+		],
+		"density": true,
+		"obj": true
+	},
+	"tv1": {
+		"name": "television",
+		"pic": [
+			0,
+			18,
+			68
+		],
+		"density": true,
+		"obj": true
+	},
+	"tv2": {
+		"name": "television",
+		"pic": [
+			0,
+			18,
+			69
 		],
 		"density": true,
 		"obj": true
@@ -2520,23 +2646,81 @@ GlobalTiles = {
 		"density": true,
 		"obj": true
 	},
-	"statue": {
-		"name": "statue",
+	"cushion": {
+		"name": "cushion",
 		"pic": [
 			0,
-			28,
-			71
+			6,
+			69
 		],
-		"density": true,
 		"obj": true
 	},
-	"stump": {
-		"name": "stump",
+	"counter": {
+		"name": "counter",
 		"pic": [
 			0,
-			8,
-			12
+			10,
+			33
 		],
+		"autotile_layout": 3,
+		"obj": true,
+		"density": true
+	},
+	"counter_tall": {
+		"name": "tall counter",
+		"pic": [
+			0,
+			14,
+			33
+		],
+		"autotile_layout": 3,
+		"obj": true,
+		"density": true
+	},
+	"redbed_top": {
+		"name": "bed",
+		"pic": [
+			0,
+			15,
+			62
+		],
+		"obj": true
+	},
+	"redbed_bottom": {
+		"name": "bed",
+		"pic": [
+			0,
+			15,
+			63
+		],
+		"obj": true
+	},
+	"bluebed_top": {
+		"name": "bed",
+		"pic": [
+			0,
+			14,
+			60
+		],
+		"obj": true
+	},
+	"bluebed_bottom": {
+		"name": "bed",
+		"pic": [
+			0,
+			18,
+			61
+		],
+		"obj": true
+	},
+	"door": {
+		"name": "door",
+		"pic": [
+			0,
+			0,
+			61
+		],
+		"density": false,
 		"obj": true
 	},
 	"window": {
@@ -2573,6 +2757,33 @@ GlobalTiles = {
 			25,
 			67
 		],
+		"obj": true
+	},
+	"upstairs": {
+		"name": "stairs (up)",
+		"pic": [
+			0,
+			27,
+			66
+		],
+		"obj": true
+	},
+	"downstairs": {
+		"name": "stairs (down)",
+		"pic": [
+			0,
+			27,
+			64
+		]
+	},
+	"statue": {
+		"name": "statue",
+		"pic": [
+			0,
+			28,
+			71
+		],
+		"density": true,
 		"obj": true
 	},
 	"pillar": {
@@ -2617,165 +2828,6 @@ GlobalTiles = {
 		"autotile_layout": 10,
 		"obj": true,
 		"over": true
-	},
-	"counter": {
-		"name": "counter",
-		"pic": [
-			0,
-			10,
-			33
-		],
-		"autotile_layout": 3,
-		"obj": true,
-		"density": true
-	},
-	"counter_tall": {
-		"name": "tall counter",
-		"pic": [
-			0,
-			14,
-			33
-		],
-		"autotile_layout": 3,
-		"obj": true,
-		"density": true
-	},
-	"skull": {
-		"name": "skull",
-		"pic": [
-			0,
-			19,
-			19
-		],
-		"density": true,
-		"obj": true
-	},
-	"tombstone": {
-		"name": "tombstone",
-		"pic": [
-			0,
-			20,
-			18
-		],
-		"density": true,
-		"obj": true
-	},
-	"mossrock": {
-		"name": "mossrock",
-		"pic": [
-			0,
-			22,
-			15
-		],
-		"density": true,
-		"obj": true
-	},
-	"door": {
-		"name": "door",
-		"pic": [
-			0,
-			0,
-			61
-		],
-		"density": false,
-		"obj": true
-	},
-	"goldchalice": {
-		"name": "gold chalice",
-		"pic": [
-			0,
-			11,
-			75
-		],
-		"density": false,
-		"obj": true
-	},
-	"goldbars": {
-		"name": "gold bars",
-		"pic": [
-			0,
-			12,
-			75
-		],
-		"density": false,
-		"obj": true
-	},
-	"book": {
-		"name": "book",
-		"pic": [
-			0,
-			27,
-			74
-		],
-		"density": false,
-		"obj": true
-	},
-	"bottle": {
-		"name": "bottle",
-		"pic": [
-			0,
-			1,
-			77
-		],
-		"density": false,
-		"obj": true
-	},
-	"orb": {
-		"name": "orb",
-		"pic": [
-			0,
-			8,
-			77
-		],
-		"density": false,
-		"obj": true
-	},
-	"mushroom": {
-		"name": "mushroom",
-		"pic": [
-			0,
-			7,
-			73
-		],
-		"obj": true
-	},
-	"mushroom2": {
-		"name": "mushroom",
-		"pic": [
-			0,
-			6,
-			74
-		],
-		"obj": true
-	},
-	"mushroom3": {
-		"name": "mushroom",
-		"pic": [
-			0,
-			7,
-			74
-		],
-		"obj": true
-	},
-	"scroll": {
-		"name": "scroll",
-		"pic": [
-			0,
-			0,
-			77
-		],
-		"density": false,
-		"obj": true
-	},
-	"sword": {
-		"name": "sword",
-		"pic": [
-			0,
-			23,
-			76
-		],
-		"density": false,
-		"obj": true
 	},
 	"colorwall1": {
 		"name": "colored wall",
@@ -3132,21 +3184,16 @@ GlobalTiles = {
 			5
 		]
 	},
-	"upstairs": {
-		"name": "stairs (up)",
+	"white": {
+		"name": "white",
 		"pic": [
-			0,
-			27,
-			66
-		],
-		"obj": true
+			0, 15, 8
+		]
 	},
-	"downstairs": {
-		"name": "stairs (down)",
+	"black": {
+		"name": "black",
 		"pic": [
-			0,
-			27,
-			64
+			0, 19, 8
 		]
 	},
 	"shadow": {
@@ -3346,6 +3393,7 @@ GlobalTiles = {
 			14,
 			87
 		],
+		"menu_pic": [0, 15, 87],
 		"anim_frames": 6,
 		"anim_speed": 2,
 		"obj": true
@@ -3611,42 +3659,6 @@ GlobalTiles = {
 		"density": true,
 		"obj": true
 	},
-	"redbed_top": {
-		"name": "bed",
-		"pic": [
-			0,
-			15,
-			62
-		],
-		"obj": true
-	},
-	"redbed_bottom": {
-		"name": "bed",
-		"pic": [
-			0,
-			15,
-			63
-		],
-		"obj": true
-	},
-	"bluebed_top": {
-		"name": "bed",
-		"pic": [
-			0,
-			14,
-			60
-		],
-		"obj": true
-	},
-	"bluebed_bottom": {
-		"name": "bed",
-		"pic": [
-			0,
-			18,
-			61
-		],
-		"obj": true
-	},
 	"border_lu": {
 		"name": "border",
 		"pic": [
@@ -3739,15 +3751,6 @@ GlobalTiles = {
 		],
 		"menu_pic": [0, 4, 78],
 		"autotile_layout": 2,
-		"obj": true
-	},
-	"cushion": {
-		"name": "cushion",
-		"pic": [
-			0,
-			6,
-			69
-		],
 		"obj": true
 	},
 	"bigtorch": {
@@ -3893,22 +3896,20 @@ GlobalTiles = {
 		"autotile_layout": 2,
 		"obj": true
 	},
-	"white": {
-		"name": "white",
-		"pic": [
-			0, 15, 8
-		]
-	},
-	"black": {
-		"name": "black",
-		"pic": [
-			0, 19, 8
-		]
-	},
 	"card": {
 		"name": "card",
 		"obj": true,
 		"pic": [0, 21, 94]
+	},
+	"skull": {
+		"name": "skull",
+		"pic": [
+			0,
+			19,
+			19
+		],
+		"density": true,
+		"obj": true
 	}
 };
 

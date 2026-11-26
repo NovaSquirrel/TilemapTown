@@ -22,6 +22,14 @@ def scan_database(path):
 		objs = data.get("obj")
 
 		fixed_anything = False
+
+		for turf in turfs:
+			if turf[2] == "easyrpg:house_wall7a":
+				turf[2] = "easyrpg:house_wall5a"
+				fixed_anything = True
+			if turf[2] == "easyrpg:house_wall7b":
+				turf[2] = "easyrpg:house_wall5b"
+				fixed_anything = True
 		for obj in objs:
 			obj[2] = ["mushrooms" if _ == "rocks1" else _ for _ in obj[2]]
 			fixed_anything = fixed_anything or "mushrooms" in obj[2]
