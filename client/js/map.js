@@ -327,7 +327,7 @@ function exportMap() {
 			imageURLs[item] = src;
 	}
 
-	return `TilemapTownMapExport\nversion=1\nMAI=${JSON.stringify(MyMap.Info)}\nMAP=${JSON.stringify(map)}\nImageURLs=${JSON.stringify(imageURLs)}\n`
+	return `TilemapTownMapExport\nversion=1\nMAI=${JSON.stringify(MyMap.Info)}\nMAP=${JSON.stringify(map)}\nImageURLs=${JSON.stringify(imageURLs)}\nAPI_URL=${API_URL}`
 }
 
 // Convert a string from the above function into a map
